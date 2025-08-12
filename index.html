@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Indian Constitution — Parliament Mind‑Palace</title>
+  <style>
+    :root {
+      --bg: #0f172a;           /* slate-900 */
+      --panel: #111827;        /* gray-900 */
+      --card: #0b1220;         /* deep navy */
+      --ink: #e5e7eb;          /* gray-200 */
+      --muted: #94a3b8;        /* slate-400 */
+      --accent: #22d3ee;       /* cyan-400 */
+      --accent2: #a78bfa;      /* violet-400 */
+      --warn: #fb7185;         /* rose-400 */
+      --ok: #34d399;           /* emerald-400 */
+      --gold: #fbbf24;         /* amber-400 */
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+      background: radial-gradient(1200px 800px at 70% -10%, #1e293b, var(--bg));
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    header {
+      padding: 16px 24px;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      position: sticky; top: 0; backdrop-filter: blur(8px);
+      background: linear-gradient(180deg, rgba(15,23,42,0.85), rgba(15,23,42,0.55));
+      z-index: 10;
+    }
+    header h1 { font-size: 18px; margin: 0; letter-spacing: 0.2px; }
+    .sub { color: var(--muted); font-size: 13px; }
+
+    main {
+      display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 16px;
+      padding: 16px; max-width: 1200px; margin: 0 auto;
+    }
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+    }
+
+    .stage {
+      background: linear-gradient(180deg, #0b1220, #0a1020);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px; padding: 12px; position: relative;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      overflow: hidden;
+    }
+    .legend, .panel {
+      background: linear-gradient(180deg, #0b1220, #0a1020);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px; padding: 12px; position: relative;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+
+    .legend { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+    .chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px;
+      border-radius: 999px; font-size: 12px; color: var(--ink);
+      border: 1px dashed rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+    }
+    .chip .dot { width: 10px; height: 10px; border-radius: 999px; }
+
+    .panel { display: grid; grid-template-rows: auto 1fr auto; min-height: 420px; }
+    .panel h2 { margin: 0 0 4px; font-size: 16px; }
+    .panel .hint { color: var(--muted); font-size: 12px; }
+    .panel .content { margin-top: 12px; overflow: auto; }
+
+    .keylist { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+    .keylist li { padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .badge { font-size: 11px; padding: 4px 8px; border-radius: 999px; background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+    button { background: var(--accent2); color: #0b1020; border: none; padding: 10px 12px; border-radius: 12px;
+      font-weight: 600; cursor: pointer; box-shadow: 0 6px 18px rgba(167,139,250,0.25);
+    }
+    button.ghost { background: transparent; color: var(--ink); border: 1px solid rgba(255,255,255,0.15); }
+
+    /* SVG interactivity */
+    svg { width: 100%; height: auto; display: block; }
+    .wing { fill: #101a2f; stroke: rgba(255,255,255,0.14); stroke-width: 1; }
+    .wing:hover { filter: drop-shadow(0 10px 18px rgba(34,211,238,0.2)); }
+    .room { fill: #0f213a; stroke: rgba(255,255,255,0.12); stroke-width: 1; }
+    .room:hover { fill: #123559; }
+
+    .room[data-theme="rights"] { fill: rgba(34,211,238,0.12); }
+    .room[data-theme="legislature"] { fill: rgba(167,139,250,0.12); }
+    .room[data-theme="executive"] { fill: rgba(52,211,153,0.12); }
+    .room[data-theme="judiciary"] { fill: rgba(251,113,133,0.10); }
+    .room[data-theme="federal"] { fill: rgba(251,191,36,0.12); }
+
+    .label { font-size: 12px; fill: #cbd5e1; pointer-events: none; }
+    .prelabel { font-size: 11px; fill: #94a3b8; pointer-events: none; }
+
+    .halo { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 4 4; fill: none; opacity: 0; }
+    .room:focus + .halo, .room.active + .halo { opacity: 1; }
+
+    .toast { position: absolute; bottom: 10px; left: 10px; font-size: 12px; color: var(--muted);
+      padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,0.04);
+      border: 1px dashed rgba(255,255,255,0.12);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🇮🇳 Constitution Mind‑Palace — Parliament Building Map</h1>
+    <div class="sub">Click a room to explore Parts, key Articles, and what to remember for exams.</div>
+  </header>
+
+  <main>
+    <section class="stage" aria-label="Interactive Parliament Map">
+      <div class="legend" aria-label="Legend">
+        <span class="chip"><span class="dot" style="background:rgba(34,211,238,0.6)"></span> Rights & Duties (III, IV, IV‑A)</span>
+        <span class="chip"><span class="dot" style="background:rgba(167,139,250,0.6)"></span> Legislature (V‑II, VI‑III)</span>
+        <span class="chip"><span class="dot" style="background:rgba(52,211,153,0.6)"></span> Executive (V‑I, VI‑II)</span>
+        <span class="chip"><span class="dot" style="background:rgba(251,113,133,0.6)"></span> Judiciary (V‑IV, XIV‑A)</span>
+        <span class="chip"><span class="dot" style="background:rgba(251,191,36,0.8)"></span> Federal/Finance/Trade (XI, XII, XIII)</span>
+      </div>
+
+      <!-- Simplified frontal elevation of Parliament-like complex (not to scale) -->
+      <svg viewBox="0 0 1100 540" role="img" aria-label="Building layout">
+        <!-- Forecourt -->
+        <rect x="30" y="470" width="1040" height="40" fill="#0a1222" stroke="rgba(255,255,255,0.1)"/>
+        
+        <!-- Central Dome (Preamble) -->
+        <ellipse cx="550" cy="120" rx="110" ry="65" class="wing"/>
+        <text x="550" y="125" text-anchor="middle" class="label">PREAMBLE</text>
+        <text x="550" y="145" text-anchor="middle" class="prelabel">Vision & Ideals</text>
+
+        <!-- Main plinth -->
+        <rect x="120" y="180" width="860" height="260" rx="16" class="wing"/>
+
+        <!-- Wings -->
+        <!-- Legislature (Parliament) left block -->
+        <rect id="room-legislature" class="room" data-theme="legislature" x="140" y="200" width="240" height="220" rx="12" tabindex="0"/>
+        <rect x="140" y="200" width="240" height="220" rx="12" class="halo"/>
+        <text x="260" y="250" text-anchor="middle" class="label">LEGISLATURE</text>
+        <text x="260" y="270" text-anchor="middle" class="prelabel">Part V‑Ch II · Part VI‑Ch III</text>
+
+        <!-- Executive (Union & States) center-left block -->
+        <rect id="room-executive" class="room" data-theme="executive" x="400" y="200" width="160" height="220" rx="12" tabindex="0"/>
+        <rect x="400" y="200" width="160" height="220" rx="12" class="halo"/>
+        <text x="480" y="250" text-anchor="middle" class="label">EXECUTIVE</text>
+        <text x="480" y="270" text-anchor="middle" class="prelabel">Part V‑Ch I · Part VI‑Ch II</text>
+
+        <!-- Judiciary center-right block -->
+        <rect id="room-judiciary" class="room" data-theme="judiciary" x="580" y="200" width="160" height="220" rx="12" tabindex="0"/>
+        <rect x="580" y="200" width="160" height="220" rx="12" class="halo"/>
+        <text x="660" y="250" text-anchor="middle" class="label">JUDICIARY</text>
+        <text x="660" y="270" text-anchor="middle" class="prelabel">Supreme Court · HCs · Tribunals</text>
+
+        <!-- Federal/Finance right block -->
+        <rect id="room-federal" class="room" data-theme="federal" x="760" y="200" width="200" height="220" rx="12" tabindex="0"/>
+        <rect x="760" y="200" width="200" height="220" rx="12" class="halo"/>
+        <text x="860" y="250" text-anchor="middle" class="label">FEDERAL / FINANCE</text>
+        <text x="860" y="270" text-anchor="middle" class="prelabel">Parts XI · XII · XIII</text>
+
+        <!-- Rights & Duties gallery (front colonnade) -->
+        <rect id="room-rights" class="room" data-theme="rights" x="260" y="430" width="580" height="40" rx="10" tabindex="0"/>
+        <rect x="260" y="430" width="580" height="40" rx="10" class="halo"/>
+        <text x="550" y="455" text-anchor="middle" class="label">RIGHTS • DPSP • DUTIES — Parts III · IV · IV‑A</text>
+      </svg>
+
+      <div class="toast">Tip: Long‑press or right‑click a room → “Open in new side panel” (desktop) for split‑view study.</div>
+    </section>
+
+    <aside class="panel" aria-live="polite">
+      <div>
+        <h2 id="panel-title">Welcome 👋</h2>
+        <div class="hint">Pick a room in the building to load its "mind‑objects": Parts covered, key Articles, and memory pegs.</div>
+      </div>
+
+      <div class="content" id="panel-content">
+        <ul class="keylist">
+          <li>Central Dome = <strong>Preamble</strong> (values). Use it as your compass: justice, liberty, equality, fraternity.</li>
+          <li>Lower colonnade = <strong>Rights–DPSP–Duties</strong> corridor. Walk this before any polity test.</li>
+          <li>Left to right flow: <em>Make laws → Run government → Interpret laws → Share power & money</em>.</li>
+        </ul>
+      </div>
+
+      <div class="footer">
+        <button class="ghost" id="btn-reset" title="Reset view">Reset</button>
+        <button id="btn-notes" title="Open your notes">Open Notes (placeholder)</button>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    // Data model for rooms → Parts, quick facts, memory pegs
+    const ROOMS = {
+      "room-legislature": {
+        title: "Legislature — Parliament & State Legislatures",
+        parts: [
+          { code: "Part V – Chapter II", span: "Articles 79–122", note: "Parliament = President + RS + LS (Art. 79)" },
+          { code: "Part VI – Chapter III", span: "Articles 168–212", note: "Vidhan Parishad/Assembly, MLAs, procedures" },
+        ],
+        pegs: [
+          "Money Bill (Art. 110), Budget (Art. 112), Joint Sitting (Art. 108)",
+          "Privileges (Art. 105), Anti‑defection via Tenth Schedule",
+          "State lists mirrored: quorum, Speaker/Chairman, sessions"
+        ],
+        badges: ["Budget", "Money Bill", "Joint Sitting", "Privileges"]
+      },
+      "room-executive": {
+        title: "Executive — Union & States",
+        parts: [
+          { code: "Part V – Chapter I", span: "Articles 52–78", note: "President, PM & Council of Ministers, AGI" },
+          { code: "Part VI – Chapter II", span: "Articles 153–167", note: "Governor, CM & CoM, Advocate‑General" },
+        ],
+        pegs: [
+          "Aid & advice principle (Art. 74/163)",
+          "Collective responsibility (Art. 75(3)/164(2))",
+          "Ordinances connect to law‑making (Art. 123/213)"
+        ],
+        badges: ["Aid & Advice", "Collective Responsibility", "Ordinance"]
+      },
+      "room-judiciary": {
+        title: "Judiciary — Supreme Court, High Courts & Tribunals",
+        parts: [
+          { code: "Part V – Chapter IV", span: "Articles 124–147", note: "Supreme Court: independence & powers" },
+          { code: "Part VI – Chapter V–VI", span: "Articles 214–231", note: "High Courts: jurisdiction & control" },
+          { code: "Part XIV‑A", span: "Articles 323‑A/323‑B", note: "Administrative/other Tribunals" },
+        ],
+        pegs: [
+          "Writs (Art. 32/226), Basic Structure (via judgmts)",
+          "SC/HC appointment & removal (Collegium practice)",
+          "Tribunals as specialized fora (Art. 323‑A/323‑B)"
+        ],
+        badges: ["Writs", "Basic Structure", "Tribunals"]
+      },
+      "room-federal": {
+        title: "Federal • Finance • Trade — Centre–State balance",
+        parts: [
+          { code: "Part XI", span: "Articles 245–263", note: "Legislative/Admin relations; Inter‑State Council" },
+          { code: "Part XII", span: "Articles 264–300‑A", note: "Finance, property, CAG, right to property" },
+          { code: "Part XIII", span: "Articles 301–307", note: "Freedom of trade & commerce" },
+        ],
+        pegs: [
+          "Union/State/Concurrent Lists + residuary powers",
+          "Finance Commission (Art. 280), Consolidated Funds",
+          "GST framework (Const. amendments & Council)"
+        ],
+        badges: ["Lists", "Finance Commission", "GST", "Trade"]
+      },
+      "room-rights": {
+        title: "Rights • DPSP • Duties — Core Citizen Corridor",
+        parts: [
+          { code: "Part III", span: "Articles 12–35", note: "Fundamental Rights" },
+          { code: "Part IV", span: "Articles 36–51", note: "Directive Principles of State Policy" },
+          { code: "Part IV‑A", span: "Article 51‑A", note: "Fundamental Duties" },
+        ],
+        pegs: [
+          "Golden Triangle: Art. 14, 19, 21",
+          "State policy guide: Art. 39, 39‑B/C, 45, 48‑A",
+          "Duties mnemonic: 11 duties → ‘IDEALS OF FRATERNITY’"
+        ],
+        badges: ["FR", "DPSP", "Duties"]
+      }
+    };
+
+    const titleEl = document.getElementById('panel-title');
+    const contentEl = document.getElementById('panel-content');
+
+    function renderRoom(roomId) {
+      const data = ROOMS[roomId];
+      if (!data) return;
+      // Active halo
+      document.querySelectorAll('.room').forEach(r => r.classList.remove('active'));
+      const active = document.getElementById(roomId);
+      if (active) active.classList.add('active');
+
+      titleEl.textContent = data.title;
+      const partsHtml = data.parts.map(p => `
+        <div class="part">
+          <div><strong>${p.code}</strong> <span class="badge">${p.span}</span></div>
+          <div class="hint" style="margin-top:4px">${p.note}</div>
+        </div>
+      `).join('');
+
+      const pegsHtml = data.pegs.map(x => `<li>${x}</li>`).join('');
+      const badgesHtml = data.badges.map(b => `<span class="badge">${b}</span>`).join('');
+
+      contentEl.innerHTML = `
+        <div class="cards" style="display:grid; gap:10px;">
+          ${partsHtml}
+          <div class="badges">${badgesHtml}</div>
+          <div style="margin-top:8px; font-size:13px; color:var(--muted)">Memory pegs</div>
+          <ul class="keylist">${pegsHtml}</ul>
+        </div>
+      `;
+    }
+
+    document.querySelectorAll('.room').forEach(el => {
+      el.addEventListener('click', () => renderRoom(el.id));
+      el.addEventListener('keypress', (e) => { if (e.key === 'Enter') renderRoom(el.id); });
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      document.querySelectorAll('.room').forEach(r => r.classList.remove('active'));
+      titleEl.textContent = 'Welcome 👋';
+      contentEl.innerHTML = `
+        <ul class="keylist">
+          <li>Central Dome = <strong>Preamble</strong> (values). Use it as your compass: justice, liberty, equality, fraternity.</li>
+          <li>Lower colonnade = <strong>Rights–DPSP–Duties</strong> corridor. Walk this before any polity test.</li>
+          <li>Left to right flow: <em>Make laws → Run government → Interpret laws → Share power & money</em>.</li>
+        </ul>`;
+    });
+
+    // Placeholder action
+    document.getElementById('btn-notes').addEventListener('click', () => {
+      alert('Connect this button to your notes app (Notion/Sheets/Canva Code) or open a modal.');
+    });
+  </script>
+</body>
+</html>
