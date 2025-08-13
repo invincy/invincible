@@ -1,326 +1,1200 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Indian Constitution — Parliament Mind‑Palace</title>
-  <style>
-    :root {
-      --bg: #0f172a;           /* slate-900 */
-      --panel: #111827;        /* gray-900 */
-      --card: #0b1220;         /* deep navy */
-      --ink: #e5e7eb;          /* gray-200 */
-      --muted: #94a3b8;        /* slate-400 */
-      --accent: #22d3ee;       /* cyan-400 */
-      --accent2: #a78bfa;      /* violet-400 */
-      --warn: #fb7185;         /* rose-400 */
-      --ok: #34d399;           /* emerald-400 */
-      --gold: #fbbf24;         /* amber-400 */
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JARVIS-Style Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <style>
+        /* CSS Custom Properties for Theming */
+        :root {
+            /* Default JARVIS Theme */
+            --bg-color: #000000;
+            --accent-color: #00ffff;
+            --subtle-color: #003333;
+            --font-color: #e0e6ec;
+            --glow-color: #00ffff;
+            --panel-bg: rgba(0, 51, 51, 0.3);
+            --panel-border: 1px solid rgba(0, 255, 255, 0.2);
+            --panel-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+        }
 
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
-      background: radial-gradient(1200px 800px at 70% -10%, #1e293b, var(--bg));
-      color: var(--ink);
-      line-height: 1.45;
-    }
-    header {
-      padding: 16px 24px;
-      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      position: sticky; top: 0; backdrop-filter: blur(8px);
-      background: linear-gradient(180deg, rgba(15,23,42,0.85), rgba(15,23,42,0.55));
-      z-index: 10;
-    }
-    header h1 { font-size: 18px; margin: 0; letter-spacing: 0.2px; }
-    .sub { color: var(--muted); font-size: 13px; }
+        /* Black Minimal Theme */
+        body.minimal-theme {
+            --bg-color: #1a1a1a;
+            --accent-color: #f1f1f1;
+            --subtle-color: #2c2c2c;
+            --font-color: #e0e0e0;
+            --glow-color: #f1f1f1;
+            --panel-bg: rgba(44, 44, 44, 0.6);
+            --panel-border: 1px solid rgba(150, 150, 150, 0.3);
+            --panel-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+        }
+        body.minimal-theme .streak-button {
+            background-color: transparent;
+            border: none;
+            color: var(--accent-color);
+        }
+        body.minimal-theme .streak-button i,
+        body.minimal-theme .streak-button .streak-number {
+            color: var(--accent-color);
+            text-shadow: none;
+        }
 
-    main {
-      display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 16px;
-      padding: 16px; max-width: 1200px; margin: 0 auto;
-    }
-    @media (max-width: 900px) {
-      main { grid-template-columns: 1fr; }
-    }
+        /* Global & Body Styles */
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Roboto', sans-serif;
+            color: var(--font-color);
+            background-color: var(--bg-color);
+            transition: background-color 0.5s ease;
+        }
 
-    .stage {
-      background: linear-gradient(180deg, #0b1220, #0a1020);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 16px; padding: 12px; position: relative;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-      overflow: hidden;
-    }
-    .legend, .panel {
-      background: linear-gradient(180deg, #0b1220, #0a1020);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 16px; padding: 12px; position: relative;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-    }
+        body {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
 
-    .legend { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
-    .chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px;
-      border-radius: 999px; font-size: 12px; color: var(--ink);
-      border: 1px dashed rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.03);
-    }
-    .chip .dot { width: 10px; height: 10px; border-radius: 999px; }
+        /* Particle Canvas */
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            opacity: 0.5;
+        }
 
-    .panel { display: grid; grid-template-rows: auto 1fr auto; min-height: 420px; }
-    .panel h2 { margin: 0 0 4px; font-size: 16px; }
-    .panel .hint { color: var(--muted); font-size: 12px; }
-    .panel .content { margin-top: 12px; overflow: auto; }
+        /* Subtle grid effect and container glow */
+        #dashboard {
+            display: flex;
+            flex-direction: column;
+            width: 100vw;
+            height: 100vh;
+            padding: 1.5rem;
+            box-sizing: border-box;
+            gap: 1.5rem;
+            position: relative;
+            z-index: 2;
+        }
 
-    .keylist { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
-    .keylist li { padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06);
-    }
-    .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-    .badge { font-size: 11px; padding: 4px 8px; border-radius: 999px; background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.08);
-    }
+        #top-bar {
+            display: flex;
+            flex-direction: column;
+            padding: 1rem 1.5rem;
+            background: var(--panel-bg);
+            border-radius: 0.75rem;
+            border: var(--panel-border);
+            box-shadow: var(--panel-shadow);
+            z-index: 10;
+            transition: all 0.5s ease;
+        }
 
-    .footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
-    button { background: var(--accent2); color: #0b1020; border: none; padding: 10px 12px; border-radius: 12px;
-      font-weight: 600; cursor: pointer; box-shadow: 0 6px 18px rgba(167,139,250,0.25);
-    }
-    button.ghost { background: transparent; color: var(--ink); border: 1px solid rgba(255,255,255,0.15); }
+        #time-and-date-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-    /* SVG interactivity */
-    svg { width: 100%; height: auto; display: block; }
-    .wing { fill: #101a2f; stroke: rgba(255,255,255,0.14); stroke-width: 1; }
-    .wing:hover { filter: drop-shadow(0 10px 18px rgba(34,211,238,0.2)); }
-    .room { fill: #0f213a; stroke: rgba(255,255,255,0.12); stroke-width: 1; }
-    .room:hover { fill: #123559; }
+        #controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(0, 255, 255, 0.2);
+            margin-top: 1rem;
+            transition: all 0.5s ease;
+        }
+        body.minimal-theme #controls-row {
+             border-top: 1px solid rgba(150, 150, 150, 0.2);
+        }
 
-    .room[data-theme="rights"] { fill: rgba(34,211,238,0.12); }
-    .room[data-theme="legislature"] { fill: rgba(167,139,250,0.12); }
-    .room[data-theme="executive"] { fill: rgba(52,211,153,0.12); }
-    .room[data-theme="judiciary"] { fill: rgba(251,113,133,0.10); }
-    .room[data-theme="federal"] { fill: rgba(251,191,36,0.12); }
+        #time-and-date {
+            font-family: 'Roboto', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 300;
+            color: var(--accent-color);
+            text-shadow: 0 0 5px var(--glow-color);
+            opacity: 0.9;
+        }
 
-    .label { font-size: 12px; fill: #cbd5e1; pointer-events: none; }
-    .prelabel { font-size: 11px; fill: #94a3b8; pointer-events: none; }
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
 
-    .halo { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 4 4; fill: none; opacity: 0; }
-    .room:focus + .halo, .room.active + .halo { opacity: 1; }
+        .add-task-btn, #theme-toggle-btn {
+            background: transparent;
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            font-family: 'Roboto', sans-serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 5px var(--glow-color);
+        }
+        .add-task-btn:hover, #theme-toggle-btn:hover {
+            background: rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        .add-task-btn i {
+            margin-right: 0.5rem;
+        }
+        body.minimal-theme .add-task-btn {
+            background: transparent;
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+            box-shadow: none;
+            text-shadow: none;
+        }
+        body.minimal-theme .add-task-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
 
-    .toast { position: absolute; bottom: 10px; left: 10px; font-size: 12px; color: var(--muted);
-      padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,0.04);
-      border: 1px dashed rgba(255,255,255,0.12);
-    }
-  </style>
+        #kanban-container {
+            display: flex;
+            flex: 1;
+            gap: 1.5rem;
+            overflow-x: auto;
+            align-items: stretch;
+            position: relative;
+        }
+
+        .kanban-column {
+            flex: 1;
+            min-width: 250px;
+            max-width: 350px;
+            display: flex;
+            flex-direction: column;
+            background: var(--panel-bg);
+            border: var(--panel-border);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            padding: 1rem 0.5rem;
+            position: relative;
+            z-index: 2;
+            transition: all 0.3s ease;
+        }
+        .kanban-column:hover {
+             box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+        }
+        body.minimal-theme .kanban-column:hover {
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
+        }
+
+        .kanban-column h2 {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 400;
+            text-align: center;
+            text-transform: uppercase;
+            font-size: 1.1rem;
+            padding: 0.5rem 0;
+            margin: 0 0 1rem 0;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+            color: var(--accent-color);
+            text-shadow: 0 0 5px var(--glow-color);
+            opacity: 0.9;
+        }
+        body.minimal-theme .kanban-column h2 {
+            border-bottom: 1px solid rgba(150, 150, 150, 0.2);
+            text-shadow: none;
+        }
+
+
+        .task-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding: 0 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        /* Subtle Scrollbar Styles */
+        ::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 255, 255, 0.4);
+            border-radius: 6px;
+            border: 3px solid rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(0, 255, 255, 0.6);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+        }
+        body.minimal-theme ::-webkit-scrollbar-track {
+             background: rgba(150, 150, 150, 0.05);
+        }
+        body.minimal-theme ::-webkit-scrollbar-thumb {
+            background-color: rgba(150, 150, 150, 0.4);
+            border: 3px solid rgba(150, 150, 150, 0.1);
+            box-shadow: none;
+        }
+        body.minimal-theme ::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(150, 150, 150, 0.6);
+            box-shadow: none;
+        }
+        ::-webkit-scrollbar-corner {
+            background: transparent;
+        }
+
+        .task-card {
+            background: rgba(0, 51, 51, 0.5);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            position: relative;
+            border: var(--panel-border);
+        }
+        .task-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+        body.minimal-theme .task-card {
+            background: rgba(44, 44, 44, 0.5);
+            border: 1px solid rgba(150, 150, 150, 0.2);
+            box-shadow: none;
+        }
+        body.minimal-theme .task-card:hover {
+            border-color: #f1f1f1;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+        }
+
+        .task-card h3 {
+            margin: 0 0 0.25rem 0;
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: var(--font-color);
+            opacity: 0.9;
+            text-shadow: 0 0 2px var(--glow-color);
+        }
+        body.minimal-theme .task-card h3 {
+            text-shadow: none;
+        }
+        .task-card .subtask-count {
+            font-size: 0.7rem;
+            opacity: 0.5;
+            color: var(--font-color);
+        }
+
+        .task-card.dragging {
+            opacity: 0.5;
+            transform: scale(0.98);
+        }
+
+        /* Streaks & Countdowns section */
+        #streaks-countdowns {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .streaks, .countdowns {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 0;
+            background: none;
+            border: none;
+            box-shadow: none;
+        }
+        .streaks h2, .countdowns h2 {
+            font-weight: 300;
+            font-size: 1rem;
+            text-transform: uppercase;
+            color: var(--accent-color);
+            text-shadow: 0 0 5px var(--glow-color);
+            border-bottom: none;
+            padding-bottom: 0;
+            text-align: left;
+            margin-right: 0.5rem;
+        }
+        body.minimal-theme .streaks h2, body.minimal-theme .countdowns h2 {
+            text-shadow: none;
+        }
+        .streak-buttons {
+            display: flex;
+            justify-content: space-around;
+            gap: 1rem;
+        }
+        .streak-button {
+            background: none;
+            border: none;
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .streak-button:hover {
+            box-shadow: 0 0 15px var(--glow-color);
+            background: rgba(0, 255, 255, 0.1);
+        }
+        .streak-button i {
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            text-shadow: 0 0 5px var(--glow-color);
+        }
+        .streak-button .streak-number {
+            color: var(--accent-color);
+            text-shadow: 0 0 5px var(--glow-color);
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        .countdown-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 51, 51, 0.5);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: var(--panel-border);
+            min-width: 250px;
+            transition: all 0.5s ease;
+        }
+        body.minimal-theme .countdown-item {
+            background: rgba(44, 44, 44, 0.5);
+            border: 1px solid rgba(150, 150, 150, 0.2);
+        }
+        .countdown-item span {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        .countdown-item button {
+            background: transparent;
+            border: none;
+            color: var(--accent-color);
+            cursor: pointer;
+            font-size: 0.9rem;
+            opacity: 0.5;
+            transition: opacity 0.2s ease;
+        }
+        .countdown-item button:hover {
+            opacity: 1;
+        }
+        .countdown-add-form {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            background: var(--panel-bg);
+            border: var(--panel-border);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            box-shadow: var(--panel-shadow);
+            transition: all 0.5s ease;
+        }
+        body.minimal-theme .countdown-add-form {
+            background: rgba(44, 44, 44, 0.6);
+            border: 1px solid rgba(150, 150, 150, 0.3);
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+        }
+        .countdown-add-form input {
+            flex: 1;
+            background: rgba(0, 51, 51, 0.5);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            color: var(--font-color);
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .countdown-add-form input:focus {
+            box-shadow: 0 0 5px var(--glow-color);
+        }
+        body.minimal-theme .countdown-add-form input {
+             background: rgba(44, 44, 44, 0.5);
+             border: 1px solid rgba(150, 150, 150, 0.2);
+        }
+        body.minimal-theme .countdown-add-form input:focus {
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+        }
+        #countdown-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--subtle-color);
+            border: var(--panel-border);
+            box-shadow: var(--panel-shadow);
+            border-radius: 1rem;
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            color: var(--font-color);
+            transition: all 0.5s ease;
+        }
+        body.minimal-theme .modal {
+            background: #2c2c2c;
+            border: 1px solid rgba(150, 150, 150, 0.3);
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+        }
+        .modal h2 {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 300;
+            margin: 0;
+            text-align: center;
+            color: var(--accent-color);
+            text-shadow: 0 0 5px var(--glow-color);
+        }
+        body.minimal-theme .modal h2 {
+            text-shadow: none;
+        }
+        .modal-field {
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-field label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 0.5rem;
+        }
+        .modal input, .modal textarea, .modal select {
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            color: var(--font-color);
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .modal input:focus, .modal textarea:focus, .modal select:focus {
+            box-shadow: 0 0 5px var(--glow-color);
+            border-color: var(--accent-color);
+        }
+        body.minimal-theme .modal input, body.minimal-theme .modal textarea, body.minimal-theme .modal select {
+             background: rgba(150, 150, 150, 0.1);
+             border: 1px solid rgba(150, 150, 150, 0.2);
+        }
+        body.minimal-theme .modal input:focus, body.minimal-theme .modal textarea:focus, body.minimal-theme .modal select:focus {
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+            border-color: #f1f1f1;
+        }
+        .subtasks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .subtask-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .subtask-item input[type="text"] {
+            flex-grow: 1;
+        }
+        .subtask-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+        .modal-button {
+            flex: 1;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            color: var(--font-color);
+            transition: all 0.3s ease;
+        }
+        .modal-button.save {
+            background: var(--accent-color);
+            color: var(--bg-color);
+        }
+        .modal-button.save:hover {
+            box-shadow: 0 0 10px var(--glow-color);
+            transform: translateY(-2px);
+        }
+        body.minimal-theme .modal-button.save {
+            background: #e0e0e0;
+            color: #1a1a1a;
+            box-shadow: none;
+        }
+        body.minimal-theme .modal-button.save:hover {
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+        }
+        .modal-button.delete {
+            background: #e74c3c;
+        }
+        .modal-button.delete:hover {
+            box-shadow: 0 0 10px #e74c3c;
+            transform: translateY(-2px);
+        }
+        .modal-button.close {
+            background: #7f8c8d;
+        }
+        .modal-button.close:hover {
+            background: #bdc3c7;
+            color: #111;
+            transform: translateY(-2px);
+        }
+
+        /* Responsive layout for smaller screens */
+        @media (max-width: 768px) {
+            #dashboard {
+                padding: 0.5rem;
+                gap: 0.5rem;
+            }
+            #top-bar {
+                flex-direction: column;
+                gap: 0.5rem;
+                padding: 0.5rem;
+            }
+            .controls {
+                justify-content: center;
+                width: 100%;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            #kanban-container {
+                flex-direction: column;
+                overflow-x: hidden;
+                overflow-y: auto;
+            }
+            .kanban-column {
+                min-width: unset;
+                max-width: unset;
+                min-height: unset;
+            }
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <h1>🇮🇳 Constitution Mind‑Palace — Parliament Building Map</h1>
-    <div class="sub">Click a room to explore Parts, key Articles, and what to remember for exams.</div>
-  </header>
+    <canvas id="particles-js"></canvas>
 
-  <main>
-    <section class="stage" aria-label="Interactive Parliament Map">
-      <div class="legend" aria-label="Legend">
-        <span class="chip"><span class="dot" style="background:rgba(34,211,238,0.6)"></span> Rights & Duties (III, IV, IV‑A)</span>
-        <span class="chip"><span class="dot" style="background:rgba(167,139,250,0.6)"></span> Legislature (V‑II, VI‑III)</span>
-        <span class="chip"><span class="dot" style="background:rgba(52,211,153,0.6)"></span> Executive (V‑I, VI‑II)</span>
-        <span class="chip"><span class="dot" style="background:rgba(251,113,133,0.6)"></span> Judiciary (V‑IV, XIV‑A)</span>
-        <span class="chip"><span class="dot" style="background:rgba(251,191,36,0.8)"></span> Federal/Finance/Trade (XI, XII, XIII)</span>
-      </div>
+    <div id="dashboard">
+        <div id="top-bar">
+            <div id="time-and-date-row">
+                <div id="time-and-date">Loading...</div>
+                <div class="controls">
+                    <button id="theme-toggle-btn" class="add-task-btn"><i class="fas fa-adjust"></i> Theme</button>
+                    <button id="add-task-btn-top" class="add-task-btn"><i class="fas fa-plus"></i> New Task</button>
+                </div>
+            </div>
+            <div id="controls-row">
+                <div class="streaks">
+                    <div class="streak-buttons">
+                        <button class="streak-button" data-type="body">
+                            <i class="fas fa-dumbbell"></i>
+                            <span class="streak-number" id="streak-body">0</span>
+                        </button>
+                        <button class="streak-button" data-type="mind">
+                            <i class="fas fa-brain"></i>
+                            <span class="streak-number" id="streak-mind">0</span>
+                        </button>
+                        <button class="streak-button" data-type="spirit">
+                            <i class="fas fa-spa"></i>
+                            <span class="streak-number" id="streak-spirit">0</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="countdowns">
+                    <h2 style="margin: 0;">Countdowns</h2>
+                    <div id="countdown-list"></div>
+                </div>
+            </div>
+        </div>
+        <div id="kanban-container">
+            <div id="kanban-backlog" class="kanban-column">
+                <h2>Backlog</h2>
+                <div class="task-list" data-status="Backlog"></div>
+            </div>
+            <div id="kanban-today" class="kanban-column">
+                <h2>Today</h2>
+                <div class="task-list" data-status="Today"></div>
+            </div>
+            <div id="kanban-in-progress" class="kanban-column">
+                <h2>In Progress</h2>
+                <div class="task-list" data-status="In Progress"></div>
+            </div>
+            <div id="kanban-done" class="kanban-column">
+                <h2>Done</h2>
+                <div class="task-list" data-status="Done"></div>
+            </div>
+        </div>
+        <div class="countdown-add-form">
+            <input type="text" id="countdown-title" placeholder="Event Title">
+            <input type="datetime-local" id="countdown-datetime">
+            <button id="add-countdown-btn" class="modal-button save"><i class="fas fa-plus"></i> Add</button>
+        </div>
+    </div>
 
-      <!-- Simplified frontal elevation of Parliament-like complex (not to scale) -->
-      <svg viewBox="0 0 1100 540" role="img" aria-label="Building layout">
-        <!-- Forecourt -->
-        <rect x="30" y="470" width="1040" height="40" fill="#0a1222" stroke="rgba(255,255,255,0.1)"/>
+    <!-- Task Edit/Add Modal -->
+    <div id="task-modal-overlay" class="modal-overlay">
+        <div id="task-modal" class="modal">
+            <h2>Edit Task</h2>
+            <div class="modal-field">
+                <label for="modal-title">Title</label>
+                <input type="text" id="modal-title">
+            </div>
+            <div class="modal-field">
+                <label for="modal-description">Description</label>
+                <textarea id="modal-description" rows="4"></textarea>
+            </div>
+            <div class="modal-field">
+                <label for="modal-status">Status</label>
+                <select id="modal-status">
+                    <option value="Backlog">Backlog</option>
+                    <option value="Today">Today</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Done">Done</option>
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>Subtasks</label>
+                <div id="modal-subtasks-list" class="subtasks-list"></div>
+                <button id="add-subtask-btn" class="modal-button save" style="margin-top: 0.5rem;"><i class="fas fa-plus"></i> Add Subtask</button>
+            </div>
+            <div class="modal-buttons">
+                <button id="save-task-btn" class="modal-button save">Save</button>
+                <button id="delete-task-btn" class="modal-button delete" style="display: none;">Delete</button>
+                <button id="close-modal-btn" class="modal-button close">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- State Management and Initial Setup ---
+        let tasks = [];
+        let streaks = {
+            counts: { body: 0, mind: 0, spirit: 0 },
+            lastPing: { body: 0, mind: 0, spirit: 0 }
+        };
+        let countdowns = [];
+        let draggedTask = null;
+        let originalStatus = null;
+        const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+        // Elements
+        const taskLists = {
+            "Backlog": document.querySelector('#kanban-backlog .task-list'),
+            "Today": document.querySelector('#kanban-today .task-list'),
+            "In Progress": document.querySelector('#kanban-in-progress .task-list'),
+            "Done": document.querySelector('#kanban-done .task-list'),
+        };
+        const modalOverlay = document.getElementById('task-modal-overlay');
+        const modal = document.getElementById('task-modal');
+        const modalTitleEl = modal.querySelector('h2');
+        const modalTitle = document.getElementById('modal-title');
+        const modalDescription = document.getElementById('modal-description');
+        const modalStatus = document.getElementById('modal-status');
+        const modalSubtasks = document.getElementById('modal-subtasks-list');
+        const saveTaskBtn = document.getElementById('save-task-btn');
+        const deleteTaskBtn = document.getElementById('delete-task-btn');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const addSubtaskBtn = document.getElementById('add-subtask-btn');
+        const addTaskBtnTop = document.getElementById('add-task-btn-top');
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        const controlsRow = document.getElementById('controls-row');
         
-        <!-- Central Dome (Preamble) -->
-        <ellipse cx="550" cy="120" rx="110" ry="65" class="wing"/>
-        <text x="550" y="125" text-anchor="middle" class="label">PREAMBLE</text>
-        <text x="550" y="145" text-anchor="middle" class="prelabel">Vision & Ideals</text>
+        // --- Local Storage Functions ---
 
-        <!-- Main plinth -->
-        <rect x="120" y="180" width="860" height="260" rx="16" class="wing"/>
+        function saveData() {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            localStorage.setItem('streaks', JSON.stringify(streaks));
+            localStorage.setItem('countdowns', JSON.stringify(countdowns));
+        }
 
-        <!-- Wings -->
-        <!-- Legislature (Parliament) left block -->
-        <rect id="room-legislature" class="room" data-theme="legislature" x="140" y="200" width="240" height="220" rx="12" tabindex="0"/>
-        <rect x="140" y="200" width="240" height="220" rx="12" class="halo"/>
-        <text x="260" y="250" text-anchor="middle" class="label">LEGISLATURE</text>
-        <text x="260" y="270" text-anchor="middle" class="prelabel">Part V‑Ch II · Part VI‑Ch III</text>
+        function loadData() {
+            try {
+                const storedTasks = localStorage.getItem('tasks');
+                const storedStreaks = localStorage.getItem('streaks');
+                const storedCountdowns = localStorage.getItem('countdowns');
 
-        <!-- Executive (Union & States) center-left block -->
-        <rect id="room-executive" class="room" data-theme="executive" x="400" y="200" width="160" height="220" rx="12" tabindex="0"/>
-        <rect x="400" y="200" width="160" height="220" rx="12" class="halo"/>
-        <text x="480" y="250" text-anchor="middle" class="label">EXECUTIVE</text>
-        <text x="480" y="270" text-anchor="middle" class="prelabel">Part V‑Ch I · Part VI‑Ch II</text>
+                tasks = storedTasks ? JSON.parse(storedTasks) : [];
+                streaks = storedStreaks ? JSON.parse(storedStreaks) : {
+                    counts: { body: 0, mind: 0, spirit: 0 },
+                    lastPing: { body: 0, mind: 0, spirit: 0 }
+                };
+                countdowns = storedCountdowns ? JSON.parse(storedCountdowns) : [];
+            } catch (e) {
+                console.error("Failed to load data from localStorage:", e);
+                // Reset to defaults if parsing fails
+                tasks = [];
+                streaks = {
+                    counts: { body: 0, mind: 0, spirit: 0 },
+                    lastPing: { body: 0, mind: 0, spirit: 0 }
+                };
+                countdowns = [];
+            }
+        }
 
-        <!-- Judiciary center-right block -->
-        <rect id="room-judiciary" class="room" data-theme="judiciary" x="580" y="200" width="160" height="220" rx="12" tabindex="0"/>
-        <rect x="580" y="200" width="160" height="220" rx="12" class="halo"/>
-        <text x="660" y="250" text-anchor="middle" class="label">JUDICIARY</text>
-        <text x="660" y="270" text-anchor="middle" class="prelabel">Supreme Court · HCs · Tribunals</text>
+        function updateDataAndRender() {
+            saveData();
+            renderTasks();
+            renderStreaks();
+            renderCountdowns();
+        }
 
-        <!-- Federal/Finance right block -->
-        <rect id="room-federal" class="room" data-theme="federal" x="760" y="200" width="200" height="220" rx="12" tabindex="0"/>
-        <rect x="760" y="200" width="200" height="220" rx="12" class="halo"/>
-        <text x="860" y="250" text-anchor="middle" class="label">FEDERAL / FINANCE</text>
-        <text x="860" y="270" text-anchor="middle" class="prelabel">Parts XI · XII · XIII</text>
+        // --- Initial Data Loading and Rendering ---
 
-        <!-- Rights & Duties gallery (front colonnade) -->
-        <rect id="room-rights" class="room" data-theme="rights" x="260" y="430" width="580" height="40" rx="10" tabindex="0"/>
-        <rect x="260" y="430" width="580" height="40" rx="10" class="halo"/>
-        <text x="550" y="455" text-anchor="middle" class="label">RIGHTS • DPSP • DUTIES — Parts III · IV · IV‑A</text>
-      </svg>
+        function renderTasks() {
+            // Clear all task lists
+            Object.values(taskLists).forEach(list => list.innerHTML = '');
 
-      <div class="toast">Tip: Long‑press or right‑click a room → “Open in new side panel” (desktop) for split‑view study.</div>
-    </section>
+            tasks.forEach(task => {
+                const taskCard = document.createElement('div');
+                taskCard.className = 'task-card';
+                taskCard.draggable = true;
+                taskCard.dataset.id = task.id;
 
-    <aside class="panel" aria-live="polite">
-      <div>
-        <h2 id="panel-title">Welcome 👋</h2>
-        <div class="hint">Pick a room in the building to load its "mind‑objects": Parts covered, key Articles, and memory pegs.</div>
-      </div>
+                const completedSubtasks = task.subtasks ? task.subtasks.filter(st => st.done).length : 0;
+                const totalSubtasks = task.subtasks ? task.subtasks.length : 0;
+                const subtaskCountText = totalSubtasks > 0 ? `${completedSubtasks}/${totalSubtasks}` : 'No subtasks';
 
-      <div class="content" id="panel-content">
-        <ul class="keylist">
-          <li>Central Dome = <strong>Preamble</strong> (values). Use it as your compass: justice, liberty, equality, fraternity.</li>
-          <li>Lower colonnade = <strong>Rights–DPSP–Duties</strong> corridor. Walk this before any polity test.</li>
-          <li>Left to right flow: <em>Make laws → Run government → Interpret laws → Share power & money</em>.</li>
-        </ul>
-      </div>
+                taskCard.innerHTML = `
+                    <h3>${task.title}</h3>
+                    <div class="subtask-count">${subtaskCountText} subtasks</div>
+                `;
 
-      <div class="footer">
-        <button class="ghost" id="btn-reset" title="Reset view">Reset</button>
-        <button id="btn-notes" title="Open your notes">Open Notes (placeholder)</button>
-      </div>
-    </aside>
-  </main>
+                // Add click listener to open modal
+                taskCard.addEventListener('click', () => openModal(task));
 
-  <script>
-    // Data model for rooms → Parts, quick facts, memory pegs
-    const ROOMS = {
-      "room-legislature": {
-        title: "Legislature — Parliament & State Legislatures",
-        parts: [
-          { code: "Part V – Chapter II", span: "Articles 79–122", note: "Parliament = President + RS + LS (Art. 79)" },
-          { code: "Part VI – Chapter III", span: "Articles 168–212", note: "Vidhan Parishad/Assembly, MLAs, procedures" },
-        ],
-        pegs: [
-          "Money Bill (Art. 110), Budget (Art. 112), Joint Sitting (Art. 108)",
-          "Privileges (Art. 105), Anti‑defection via Tenth Schedule",
-          "State lists mirrored: quorum, Speaker/Chairman, sessions"
-        ],
-        badges: ["Budget", "Money Bill", "Joint Sitting", "Privileges"]
-      },
-      "room-executive": {
-        title: "Executive — Union & States",
-        parts: [
-          { code: "Part V – Chapter I", span: "Articles 52–78", note: "President, PM & Council of Ministers, AGI" },
-          { code: "Part VI – Chapter II", span: "Articles 153–167", note: "Governor, CM & CoM, Advocate‑General" },
-        ],
-        pegs: [
-          "Aid & advice principle (Art. 74/163)",
-          "Collective responsibility (Art. 75(3)/164(2))",
-          "Ordinances connect to law‑making (Art. 123/213)"
-        ],
-        badges: ["Aid & Advice", "Collective Responsibility", "Ordinance"]
-      },
-      "room-judiciary": {
-        title: "Judiciary — Supreme Court, High Courts & Tribunals",
-        parts: [
-          { code: "Part V – Chapter IV", span: "Articles 124–147", note: "Supreme Court: independence & powers" },
-          { code: "Part VI – Chapter V–VI", span: "Articles 214–231", note: "High Courts: jurisdiction & control" },
-          { code: "Part XIV‑A", span: "Articles 323‑A/323‑B", note: "Administrative/other Tribunals" },
-        ],
-        pegs: [
-          "Writs (Art. 32/226), Basic Structure (via judgmts)",
-          "SC/HC appointment & removal (Collegium practice)",
-          "Tribunals as specialized fora (Art. 323‑A/323‑B)"
-        ],
-        badges: ["Writs", "Basic Structure", "Tribunals"]
-      },
-      "room-federal": {
-        title: "Federal • Finance • Trade — Centre–State balance",
-        parts: [
-          { code: "Part XI", span: "Articles 245–263", note: "Legislative/Admin relations; Inter‑State Council" },
-          { code: "Part XII", span: "Articles 264–300‑A", note: "Finance, property, CAG, right to property" },
-          { code: "Part XIII", span: "Articles 301–307", note: "Freedom of trade & commerce" },
-        ],
-        pegs: [
-          "Union/State/Concurrent Lists + residuary powers",
-          "Finance Commission (Art. 280), Consolidated Funds",
-          "GST framework (Const. amendments & Council)"
-        ],
-        badges: ["Lists", "Finance Commission", "GST", "Trade"]
-      },
-      "room-rights": {
-        title: "Rights • DPSP • Duties — Core Citizen Corridor",
-        parts: [
-          { code: "Part III", span: "Articles 12–35", note: "Fundamental Rights" },
-          { code: "Part IV", span: "Articles 36–51", note: "Directive Principles of State Policy" },
-          { code: "Part IV‑A", span: "Article 51‑A", note: "Fundamental Duties" },
-        ],
-        pegs: [
-          "Golden Triangle: Art. 14, 19, 21",
-          "State policy guide: Art. 39, 39‑B/C, 45, 48‑A",
-          "Duties mnemonic: 11 duties → ‘IDEALS OF FRATERNITY’"
-        ],
-        badges: ["FR", "DPSP", "Duties"]
-      }
-    };
+                // Drag and drop listeners
+                taskCard.addEventListener('dragstart', (e) => {
+                    draggedTask = task.id;
+                    originalStatus = task.status;
+                    e.dataTransfer.setData('text/plain', task.id);
+                    taskCard.classList.add('dragging');
+                });
+                taskCard.addEventListener('dragend', () => {
+                    taskCard.classList.remove('dragging');
+                    draggedTask = null;
+                });
 
-    const titleEl = document.getElementById('panel-title');
-    const contentEl = document.getElementById('panel-content');
+                if (taskLists[task.status]) {
+                    taskLists[task.status].appendChild(taskCard);
+                }
+            });
+        }
 
-    function renderRoom(roomId) {
-      const data = ROOMS[roomId];
-      if (!data) return;
-      // Active halo
-      document.querySelectorAll('.room').forEach(r => r.classList.remove('active'));
-      const active = document.getElementById(roomId);
-      if (active) active.classList.add('active');
+        // --- Modal Functionality ---
 
-      titleEl.textContent = data.title;
-      const partsHtml = data.parts.map(p => `
-        <div class="part">
-          <div><strong>${p.code}</strong> <span class="badge">${p.span}</span></div>
-          <div class="hint" style="margin-top:4px">${p.note}</div>
-        </div>
-      `).join('');
+        let currentTask = null;
 
-      const pegsHtml = data.pegs.map(x => `<li>${x}</li>`).join('');
-      const badgesHtml = data.badges.map(b => `<span class="badge">${b}</span>`).join('');
+        function openModal(task) {
+            currentTask = task;
 
-      contentEl.innerHTML = `
-        <div class="cards" style="display:grid; gap:10px;">
-          ${partsHtml}
-          <div class="badges">${badgesHtml}</div>
-          <div style="margin-top:8px; font-size:13px; color:var(--muted)">Memory pegs</div>
-          <ul class="keylist">${pegsHtml}</ul>
-        </div>
-      `;
-    }
+            modalTitle.value = task.title || '';
+            modalDescription.value = task.description || '';
+            modalStatus.value = task.status || 'Backlog';
 
-    document.querySelectorAll('.room').forEach(el => {
-      el.addEventListener('click', () => renderRoom(el.id));
-      el.addEventListener('keypress', (e) => { if (e.key === 'Enter') renderRoom(el.id); });
-    });
+            renderSubtasks(task.subtasks || []);
 
-    document.getElementById('btn-reset').addEventListener('click', () => {
-      document.querySelectorAll('.room').forEach(r => r.classList.remove('active'));
-      titleEl.textContent = 'Welcome 👋';
-      contentEl.innerHTML = `
-        <ul class="keylist">
-          <li>Central Dome = <strong>Preamble</strong> (values). Use it as your compass: justice, liberty, equality, fraternity.</li>
-          <li>Lower colonnade = <strong>Rights–DPSP–Duties</strong> corridor. Walk this before any polity test.</li>
-          <li>Left to right flow: <em>Make laws → Run government → Interpret laws → Share power & money</em>.</li>
-        </ul>`;
-    });
+            modalTitleEl.textContent = task.id ? 'Edit Task' : 'New Task';
+            deleteTaskBtn.style.display = task.id ? 'block' : 'none';
+            modalOverlay.classList.add('open');
+        }
 
-    // Placeholder action
-    document.getElementById('btn-notes').addEventListener('click', () => {
-      alert('Connect this button to your notes app (Notion/Sheets/Canva Code) or open a modal.');
-    });
-  </script>
+        function renderSubtasks(subtasks) {
+            modalSubtasks.innerHTML = '';
+            subtasks.forEach(subtask => {
+                const subtaskItem = document.createElement('div');
+                subtaskItem.className = 'subtask-item';
+                subtaskItem.innerHTML = `
+                    <input type="checkbox" ${subtask.done ? 'checked' : ''}>
+                    <input type="text" value="${subtask.text}">
+                    <button class="delete-subtask-btn" style="background:none; border:none; color:white; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                `;
+                subtaskItem.querySelector('button').addEventListener('click', (e) => {
+                    e.target.closest('.subtask-item').remove();
+                });
+                modalSubtasks.appendChild(subtaskItem);
+            });
+        }
+
+        function closeModal() {
+            modalOverlay.classList.remove('open');
+            currentTask = null;
+        }
+
+        saveTaskBtn.addEventListener('click', () => {
+            const newSubtasks = Array.from(modalSubtasks.querySelectorAll('.subtask-item')).map(item => ({
+                text: item.querySelector('input[type="text"]').value,
+                done: item.querySelector('input[type="checkbox"]').checked
+            }));
+
+            const updatedTask = {
+                id: currentTask ? currentTask.id : Date.now().toString(), // Generate a unique ID
+                title: modalTitle.value,
+                description: modalDescription.value,
+                status: modalStatus.value,
+                subtasks: newSubtasks
+            };
+
+            const taskIndex = tasks.findIndex(t => t.id === updatedTask.id);
+            if (taskIndex !== -1) {
+                tasks[taskIndex] = updatedTask;
+            } else {
+                tasks.push(updatedTask);
+            }
+
+            updateDataAndRender();
+            closeModal();
+        });
+
+        deleteTaskBtn.addEventListener('click', () => {
+            if (!currentTask) return;
+            tasks = tasks.filter(t => t.id !== currentTask.id);
+            updateDataAndRender();
+            closeModal();
+        });
+
+        closeModalBtn.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target.id === 'task-modal-overlay') {
+                closeModal();
+            }
+        });
+
+        addSubtaskBtn.addEventListener('click', () => {
+            const newSubtaskItem = document.createElement('div');
+            newSubtaskItem.className = 'subtask-item';
+            newSubtaskItem.innerHTML = `
+                <input type="checkbox">
+                <input type="text" placeholder="New subtask text">
+                <button class="delete-subtask-btn" style="background:none; border:none; color:white; cursor:pointer;"><i class="fas fa-trash"></i></button>
+            `;
+            newSubtaskItem.querySelector('button').addEventListener('click', (e) => {
+                e.target.closest('.subtask-item').remove();
+            });
+            modalSubtasks.appendChild(newSubtaskItem);
+        });
+
+        // Add a single task button functionality at the top
+        addTaskBtnTop.addEventListener('click', () => {
+            openModal({
+                id: null,
+                title: '',
+                description: '',
+                status: 'Backlog',
+                subtasks: []
+            });
+        });
+
+        // --- Drag and Drop Handlers for Columns ---
+        const columns = document.querySelectorAll('.kanban-column');
+        columns.forEach(column => {
+            column.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const isMinimal = document.body.classList.contains('minimal-theme');
+                column.style.boxShadow = isMinimal ? `0 0 15px rgba(255, 255, 255, 0.15)` : `0 0 15px rgba(0, 255, 255, 0.4)`;
+            });
+            column.addEventListener('dragleave', (e) => {
+                const isMinimal = document.body.classList.contains('minimal-theme');
+                column.style.boxShadow = isMinimal ? `0 0 5px rgba(255, 255, 255, 0.1)` : `0 0 15px rgba(0, 255, 255, 0.2)`;
+            });
+            column.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const isMinimal = document.body.classList.contains('minimal-theme');
+                column.style.boxShadow = isMinimal ? `0 0 5px rgba(255, 255, 255, 0.1)` : `0 0 15px rgba(0, 255, 255, 0.2)`;
+
+                if (draggedTask) {
+                    const taskId = draggedTask;
+                    const newStatus = column.querySelector('.task-list').dataset.status;
+                    const taskToUpdate = tasks.find(task => task.id === taskId);
+
+                    if (taskToUpdate && taskToUpdate.status !== newStatus) {
+                        taskToUpdate.status = newStatus;
+                        updateDataAndRender();
+                    }
+                }
+            });
+        });
+
+        // --- Streaks Functionality ---
+        const streakButtons = document.querySelectorAll('.streak-button');
+        streakButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const type = button.dataset.type;
+                const now = Date.now();
+                const lastPing = streaks.lastPing[type];
+
+                if (!lastPing) {
+                    // First time clicking this streak
+                    streaks.counts[type] = 1;
+                } else {
+                    const timeDifference = now - lastPing;
+
+                    // Streak is broken if more than 24 hours (1 day) have passed
+                    if (timeDifference > ONE_DAY_MS) {
+                        streaks.counts[type] = 1;
+                    } else if (new Date(now).toDateString() !== new Date(lastPing).toDateString()) {
+                        // It's a new day, increment the streak
+                        streaks.counts[type] = (streaks.counts[type] || 0) + 1;
+                    }
+                    // Otherwise, if it's the same day, do nothing.
+                }
+
+                streaks.lastPing[type] = now;
+                updateDataAndRender();
+            });
+        });
+
+        function renderStreaks() {
+            document.getElementById('streak-body').textContent = streaks.counts.body || 0;
+            document.getElementById('streak-mind').textContent = streaks.counts.mind || 0;
+            document.getElementById('streak-spirit').textContent = streaks.counts.spirit || 0;
+        }
+
+        // --- Theme Toggle Functionality ---
+        themeToggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('minimal-theme');
+            const isMinimal = document.body.classList.contains('minimal-theme');
+            localStorage.setItem('theme', isMinimal ? 'minimal' : 'jarvis');
+
+            // Re-create particles to update colors
+            particles = [];
+            createParticles();
+
+            // Adjust the border-top of #controls-row based on the theme
+            if (isMinimal) {
+                controlsRow.style.borderTop = '1px solid rgba(150, 150, 150, 0.2)';
+            } else {
+                controlsRow.style.borderTop = '1px solid rgba(0, 255, 255, 0.2)';
+            }
+        });
+
+        function applySavedTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'minimal') {
+                document.body.classList.add('minimal-theme');
+            } else {
+                document.body.classList.remove('minimal-theme');
+            }
+            // Apply initial border style based on the theme
+            const isMinimal = document.body.classList.contains('minimal-theme');
+            controlsRow.style.borderTop = isMinimal ? '1px solid rgba(150, 150, 150, 0.2)' : '1px solid rgba(0, 255, 255, 0.2)';
+        }
+
+        // --- Countdown Functionality ---
+        const countdownListEl = document.getElementById('countdown-list');
+        const countdownTitleInput = document.getElementById('countdown-title');
+        const countdownDatetimeInput = document.getElementById('countdown-datetime');
+        const addCountdownBtn = document.getElementById('add-countdown-btn');
+
+        addCountdownBtn.addEventListener('click', () => {
+            const title = countdownTitleInput.value;
+            const target_iso = new Date(countdownDatetimeInput.value).toISOString();
+
+            if (title && target_iso) {
+                countdowns.push({
+                    id: Date.now().toString(),
+                    title,
+                    target_iso
+                });
+                updateDataAndRender();
+                countdownTitleInput.value = '';
+                countdownDatetimeInput.value = '';
+            }
+        });
+
+        function renderCountdowns() {
+            countdownListEl.innerHTML = '';
+            countdowns.forEach(countdown => {
+                const countdownItem = document.createElement('div');
+                countdownItem.className = 'countdown-item';
+                countdownItem.dataset.id = countdown.id;
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteBtn.addEventListener('click', () => {
+                    countdowns = countdowns.filter(c => c.id !== countdown.id);
+                    updateDataAndRender();
+                });
+
+                countdownItem.innerHTML = `<span>${countdown.title}: <span class="time-left"></span></span>`;
+                countdownItem.appendChild(deleteBtn);
+                countdownListEl.appendChild(countdownItem);
+            });
+        }
+
+        // Update clock and countdowns every second
+        setInterval(() => {
+            const now = new Date();
+            const timeAndDate = document.getElementById('time-and-date');
+            timeAndDate.textContent = now.toLocaleTimeString() + ' | ' + now.toLocaleDateString();
+
+            document.querySelectorAll('.countdown-item').forEach(item => {
+                const countdown = countdowns.find(c => c.id === item.dataset.id);
+                if (countdown) {
+                    const target = new Date(countdown.target_iso);
+                    const diff = target - now;
+                    if (diff > 0) {
+                        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                        item.querySelector('.time-left').textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+                    } else {
+                        item.querySelector('.time-left').textContent = 'EXPIRED';
+                    }
+                }
+            });
+        }, 1000);
+
+        // Particle animation logic
+        let particles = [];
+        let canvas, ctx, width, height;
+        const particleCount = 100;
+        const maxDistance = 100;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.radius = Math.random() * 1.5 + 0.5;
+                this.color = getComputedStyle(document.body).getPropertyValue('--accent-color');
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.fillStyle = this.color;
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function createParticles() {
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function connectParticles() {
+            const lineColor = getComputedStyle(document.body).getPropertyValue('--accent-color');
+            for (let a = 0; a < particleCount; a++) {
+                for (let b = a; b < particleCount; b++) {
+                    let dx = particles[a].x - particles[b].x;
+                    let dy = particles[a].y - particles[b].y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < maxDistance) {
+                        ctx.beginPath();
+                        const opacity = 1 - distance / maxDistance;
+                        ctx.strokeStyle = `rgba(${parseInt(lineColor.slice(1, 3), 16)}, ${parseInt(lineColor.slice(3, 5), 16)}, ${parseInt(lineColor.slice(5, 7), 16)}, ${opacity})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(particles[a].x, particles[a].y);
+                        ctx.lineTo(particles[b].x, particles[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            for (let i = 0; i < particleCount; i++) {
+                particles[i].update();
+                particles[i].draw();
+            }
+
+            connectParticles();
+
+            requestAnimationFrame(animate);
+        }
+
+        // Initial call to set up the dashboard
+        window.onload = function() {
+            canvas = document.getElementById('particles-js');
+            if (canvas) {
+                ctx = canvas.getContext('2d');
+                function resizeCanvas() {
+                    width = window.innerWidth;
+                    height = window.innerHeight;
+                    canvas.width = width;
+                    canvas.height = height;
+                }
+                window.addEventListener('resize', resizeCanvas);
+                resizeCanvas();
+
+                loadData();
+                applySavedTheme();
+                createParticles();
+                animate();
+                updateDataAndRender();
+            }
+        };
+    </script>
 </body>
 </html>
