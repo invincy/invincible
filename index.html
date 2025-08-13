@@ -9,7 +9,10 @@
   <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="%23003333"/><path d="M12 48 L24 16 L32 36 L40 16 L52 48" stroke="%2300ffff" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' />
   <meta name="theme-color" content="#003333"/>
 
+  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+  <!-- Futuristic clock font -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 
   <style>
@@ -53,49 +56,42 @@
     /* Title on the left */
     #app-title{font-size:1.3rem;letter-spacing:.12rem;text-transform:uppercase;color:var(--accent-color);text-shadow:0 0 6px var(--glow-color)}
 
-    /* Small clock chip on the right */
-    .clock-chip{margin-left:1rem;background:rgba(0,255,255,.08);border:1px solid rgba(0,255,255,.35);padding:.35rem .6rem;border-radius:.6rem;color:var(--accent-color);text-shadow:0 0 4px var(--glow-color);font-weight:400}
-
     .controls{display:flex;align-items:center;gap:1rem}
     .add-task-btn{background:transparent;color:var(--accent-color);border:1px solid var(--accent-color);padding:.6rem .9rem;border-radius:.75rem;font-size:1rem;cursor:pointer;transition:.2s;text-shadow:0 0 5px var(--glow-color)}
     .add-task-btn:hover{background:rgba(0,255,255,.1);box-shadow:0 0 10px rgba(0,255,255,.5)}
 
-    /* Kanban */
+    /* Kanban + Right Panel */
     #kanban-container{display:flex;flex:1;gap:1.5rem;overflow-x:auto;align-items:stretch;position:relative}
     .kanban-column{flex:1;min-width:250px;max-width:350px;display:flex;flex-direction:column;background:var(--panel-bg);border:var(--panel-border);border-radius:.75rem;overflow:hidden;padding:1rem .5rem;position:relative;z-index:2;transition:.2s}
     .kanban-column:hover{box-shadow:0 0 20px rgba(0,255,255,.4)}
     .kanban-column h2{font-weight:400;text-align:center;text-transform:uppercase;font-size:1.1rem;padding:.5rem 0;margin:0 0 1rem;border-bottom:1px solid rgba(0,255,255,.3);color:var(--accent-color);text-shadow:0 0 5px var(--glow-color);opacity:.9}
     .task-list{flex-grow:1;overflow-y:auto;display:flex;flex-direction:column;gap:.75rem;padding:0 .5rem}
 
-    /* Scrollbars */
-    ::-webkit-scrollbar{width:12px;height:12px}
-    ::-webkit-scrollbar-track{background:rgba(0,255,255,.05);border-radius:6px}
-    ::-webkit-scrollbar-thumb{background:rgba(0,255,255,.4);border-radius:6px;border:3px solid rgba(0,255,255,.1);box-shadow:0 0 5px rgba(0,255,255,.5)}
-    ::-webkit-scrollbar-thumb:hover{background:rgba(0,255,255,.6);box-shadow:0 0 10px rgba(0,255,255,.8)}
+    /* RIGHT SIDE WIDGET (Clock + Countdowns) */
+    #right-info{flex:0 0 360px;display:flex;flex-direction:column;gap:1rem;background:var(--panel-bg);border:var(--panel-border);border-radius:.75rem;padding:1rem;position:relative;z-index:2}
+    #right-info .section-title{font-weight:400;text-transform:uppercase;letter-spacing:.5px;margin:0;color:var(--accent-color);text-shadow:0 0 6px var(--glow-color);opacity:.9;border-bottom:1px solid rgba(0,255,255,.3);padding-bottom:.5rem}
 
-    /* Streaks & Countdowns */
-    .streak-buttons{display:flex;gap:1rem}
-    .streak-button{background:none;border:none;font-size:.9rem;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:.5rem;color:var(--accent-color)}
-    .streak-button:hover{box-shadow:0 0 15px var(--glow-color);background:rgba(0,255,255,.1)}
-    .streak-button i{font-size:1.2rem;color:var(--accent-color);text-shadow:0 0 5px var(--glow-color)}
-    .streak-number{color:var(--accent-color);text-shadow:0 0 5px var(--glow-color);font-weight:700;font-size:1.2rem}
+    /* Big funky clock */
+    .mega-clock{font-family:'Orbitron', system-ui, Arial, sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(0,255,255,.08), rgba(0,255,255,.02));border:var(--panel-border);border-radius:.75rem;padding:1rem 1rem 1.25rem;box-shadow:0 0 20px rgba(0,255,255,.25) inset, 0 0 25px rgba(0,255,255,.15);position:relative;overflow:hidden}
+    .time{font-size:3.2rem;line-height:1;letter-spacing:.06em;color:var(--accent-color);text-shadow:0 0 10px var(--glow-color), 0 0 20px rgba(0,255,255,.4);animation:pulse 2.2s ease-in-out infinite}
+    .date{margin-top:.4rem;font-size:1rem;opacity:.9;color:var(--accent-color);text-shadow:0 0 6px var(--glow-color)}
+    @keyframes pulse{0%,100%{transform:translateZ(0) scale(1)}50%{transform:translateZ(0) scale(1.02)}}
 
-    .countdowns{display:flex;flex-direction:column;align-items:flex-end;gap:.6rem}
-    .countdowns-header{display:flex;align-items:center;gap:.5rem}
-    .countdowns>h2,.countdowns-header h2{color:var(--accent-color);text-shadow:0 0 6px var(--glow-color);font-weight:400;text-transform:uppercase;letter-spacing:.5px;margin:0}
+    /* Countdowns */
+    .countdowns{display:flex;flex-direction:column;gap:.6rem}
+    .countdowns-header{display:flex;align-items:center;gap:.5rem;justify-content:space-between}
+    .countdowns-header h2{color:var(--accent-color);text-shadow:0 0 6px var(--glow-color);font-weight:400;text-transform:uppercase;letter-spacing:.5px;margin:0}
     .icon-btn{display:inline-grid;place-items:center;height:30px;width:30px;border-radius:.6rem;background:rgba(0,255,255,.08);border:1px solid rgba(0,255,255,.35);color:var(--accent-color);cursor:pointer}
     .icon-btn:hover{background:rgba(0,255,255,.18)}
-
     .countdown-item{display:flex;justify-content:space-between;align-items:center;background:rgba(0,51,51,.5);padding:.5rem 1rem;border-radius:.5rem;border:var(--panel-border);color:var(--neon);min-width:260px}
     .countdown-item button{background:transparent;border:none;color:var(--accent-color);cursor:pointer;opacity:.6}
     .countdown-item button:hover{opacity:1}
-
     .mini-form{display:flex;gap:.4rem;align-items:center;background:var(--panel-bg);border:var(--panel-border);border-radius:.6rem;padding:.5rem;box-shadow:var(--panel-shadow)}
     .mini-form input{background:rgba(0,51,51,.5);border:1px solid rgba(0,255,255,.2);color:var(--font-color);padding:.4rem;border-radius:.4rem}
     .hidden{display:none}
 
-    /* Modal */
-    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);display:flex;justify-content:center;align-items:center;z-index:1000;opacity:0;visibility:hidden;transition:.25s}
+    /* Modal (RESTORED & FIXED) */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);display:flex;justify-content:center;align-items:center;z-index:9999;opacity:0;visibility:hidden;transition:.25s}
     .modal-overlay.open{opacity:1;visibility:visible}
     .modal{background:var(--subtle-color);border:var(--panel-border);box-shadow:var(--panel-shadow);border-radius:1rem;padding:2rem;width:90%;max-width:600px;max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:1rem;color:var(--font-color)}
     .modal h2{font-weight:300;margin:0;text-align:center;color:var(--accent-color);text-shadow:0 0 5px var(--glow-color)}
@@ -108,13 +104,21 @@
     .modal-button.delete{background:#e74c3c}
     .modal-button.close{background:#7f8c8d}
 
-    @media (max-width:768px){
-      #dashboard{padding:.5rem;gap:.5rem}
-      #top-bar{padding:.5rem}
-      #kanban-container{flex-direction:column;overflow-y:auto;overflow-x:hidden}
-      .kanban-column{min-width:unset;max-width:unset;min-height:unset}
-      .countdowns{align-items:stretch}
-    }
+    /* Scrollbars */
+    ::-webkit-scrollbar{width:12px;height:12px}
+    ::-webkit-scrollbar-track{background:rgba(0,255,255,.05);border-radius:6px}
+    ::-webkit-scrollbar-thumb{background:rgba(0,255,255,.4);border-radius:6px;border:3px solid rgba(0,255,255,.1);box-shadow:0 0 5px rgba(0,255,255,.5)}
+    ::-webkit-scrollbar-thumb:hover{background:rgba(0,255,255,.6);box-shadow:0 0 10px rgba(0,255,255,.8)}
+
+    /* Streaks */
+    .streak-buttons{display:flex;gap:1rem}
+    .streak-button{background:none;border:none;font-size:.9rem;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:.5rem;color:var(--accent-color)}
+    .streak-button:hover{box-shadow:0 0 15px var(--glow-color);background:rgba(0,255,255,.1)}
+    .streak-button i{font-size:1.2rem;color:var(--accent-color);text-shadow:0 0 5px var(--glow-color)}
+    .streak-number{color:var(--accent-color);text-shadow:0 0 5px var(--glow-color);font-weight:700;font-size:1.2rem}
+
+    @media (max-width:1024px){#kanban-container{flex-direction:column;overflow-y:auto;overflow-x:hidden}.kanban-column{min-width:unset;max-width:unset;min-height:unset}#right-info{flex:unset}}
+    @media (max-width:768px){#dashboard{padding:.5rem;gap:.5rem}#top-bar{padding:.5rem}}
   </style>
 </head>
 <body>
@@ -137,19 +141,8 @@
             <button class="streak-button" data-type="spirit"><i class="fas fa-spa"></i><span class="streak-number" id="streak-spirit">0</span></button>
           </div>
         </div>
-        <div class="countdowns">
-          <div class="countdowns-header">
-            <h2>Countdowns</h2>
-            <button id="toggle-ctd-form" class="icon-btn" title="Add countdown"><i class="fas fa-plus"></i></button>
-            <span id="live-clock" class="clock-chip">--:--:--</span>
-          </div>
-          <div id="countdown-list"></div>
-          <div id="countdown-mini" class="mini-form hidden">
-            <input type="text" id="countdown-mini-title" placeholder="Event" />
-            <input type="datetime-local" id="countdown-mini-datetime" />
-            <button id="mini-add" class="icon-btn" title="Save"><i class="fas fa-check"></i></button>
-          </div>
-        </div>
+        <!-- Countdown/clock moved to right panel -->
+        <div style="height:1px;"></div>
       </div>
     </div>
 
@@ -158,6 +151,30 @@
       <div id="kanban-today" class="kanban-column"><h2>Today</h2><div class="task-list" data-status="Today"></div></div>
       <div id="kanban-in-progress" class="kanban-column"><h2>In Progress</h2><div class="task-list" data-status="In Progress"></div></div>
       <div id="kanban-done" class="kanban-column"><h2>Done</h2><div class="task-list" data-status="Done"></div></div>
+
+      <!-- RIGHT SIDE WIDGET -->
+      <aside id="right-info">
+        <h2 class="section-title">Clock</h2>
+        <div class="mega-clock">
+          <div id="live-clock-time" class="time">--:--:--</div>
+          <div id="live-clock-date" class="date">-- --- ----</div>
+        </div>
+
+        <div class="countdowns">
+          <div class="countdowns-header">
+            <h2>Countdowns</h2>
+            <div style="display:flex;gap:.5rem">
+              <button id="toggle-ctd-form" class="icon-btn" title="Add countdown"><i class="fas fa-plus"></i></button>
+            </div>
+          </div>
+          <div id="countdown-list"></div>
+          <div id="countdown-mini" class="mini-form hidden">
+            <input type="text" id="countdown-mini-title" placeholder="Event" />
+            <input type="datetime-local" id="countdown-mini-datetime" />
+            <button id="mini-add" class="icon-btn" title="Save"><i class="fas fa-check"></i></button>
+          </div>
+        </div>
+      </aside>
     </div>
   </div>
 
@@ -387,16 +404,20 @@
       await api("addCountdown", { title, target_iso }); miniTitle.value=''; miniDate.value=''; miniWrap.classList.add('hidden'); await fetchDataAndRender();
     });
 
-    // Live clock (nice chip on the right)
-    const liveClockEl = document.getElementById('live-clock');
+    // Big live clock + date in right panel
+    const timeEl = document.getElementById('live-clock-time');
+    const dateEl = document.getElementById('live-clock-date');
     setInterval(()=>{
       const now = new Date();
-      liveClockEl.textContent = now.toLocaleTimeString();
+      timeEl.textContent = now.toLocaleTimeString([], { hour12:false });
+      dateEl.textContent = now.toLocaleDateString([], { weekday:'short', day:'2-digit', month:'short', year:'numeric' });
+
       // update countdown displays
       document.querySelectorAll('.countdown-item').forEach(item=>{
         const c = countdowns.find(x=> x.id === item.dataset.id);
         if(!c) return; const diff = new Date(c.target_iso) - now;
-        item.querySelector('.time-left').textContent = diff>0 ? `${Math.floor(diff/86400000)}d ${Math.floor(diff%86400000/3600000)}h ${Math.floor(diff%3600000/60000)}m ${Math.floor(diff%60000/1000)}s` : 'EXPIRED';
+        item.querySelector('.time-left').textContent =
+          diff>0 ? `${Math.floor(diff/86400000)}d ${Math.floor(diff%86400000/3600000)}h ${Math.floor(diff%3600000/60000)}m ${Math.floor(diff%60000/1000)}s` : 'EXPIRED';
       });
     },1000);
 
