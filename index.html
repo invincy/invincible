@@ -14,7 +14,7 @@
 
   <style>
     :root {
-       --neon: #00ffff;
+      --neon:#00ffff;
       --bg-color:#000;
       --accent-color:#00ffff;
       --subtle-color:#003333;
@@ -31,17 +31,34 @@
     /* Particles */
     #particles-js{position:absolute;inset:0;z-index:1;opacity:.5}
 
+    /* Cards */
+    .task-card{position:relative;padding:1.2rem 1rem .9rem; padding-top:2rem; overflow:visible; background:transparent; border:var(--panel-border); border-radius:.5rem; color:var(--accent-color); transition:.15s}
+    .task-card:hover{transform:translateY(-2px);border-color:var(--accent-color);box-shadow:0 0 10px rgba(0,255,255,.3)}
+    .task-card h3{margin:0 0 .25rem;font-size:.95rem;font-weight:400;color:var(--accent-color);text-shadow:0 0 2px var(--glow-color)}
+    .task-card .subtask-count{font-size:.75rem;opacity:.75;color:var(--accent-color)}
+    .task-card.dragging{opacity:.5;transform:scale(.98)}
+
+    /* Card arrows */
+    .card-nav{position:absolute;top:6px;right:8px;display:flex;gap:6px;z-index:10}
+    .card-nav button{display:inline-grid;place-items:center;height:22px;width:22px;background:rgba(0,255,255,.08);border:1px solid rgba(0,255,255,.35);color:var(--accent-color);border-radius:6px;cursor:pointer;box-shadow:0 0 6px rgba(0,255,255,.25)}
+    .card-nav button:hover{background:rgba(0,255,255,.18)}
+    .card-nav button:disabled{opacity:.35;cursor:default}
+
     /* Layout */
     #dashboard{display:flex;flex-direction:column;width:100vw;height:100vh;padding:1.5rem;box-sizing:border-box;gap:1.5rem;position:relative;z-index:2}
     #top-bar{display:flex;flex-direction:column;padding:1rem 1.5rem;background:var(--panel-bg);border-radius:.75rem;border:var(--panel-border);box-shadow:var(--panel-shadow);z-index:10}
     #time-and-date-row{display:flex;justify-content:space-between;align-items:center}
     #controls-row{display:flex;justify-content:space-between;align-items:center;padding-top:1rem;border-top:1px solid rgba(0,255,255,.2);margin-top:1rem}
 
-    #time-and-date{font-size:1.2rem;font-weight:300;color:var(--accent-color);text-shadow:0 0 5px var(--glow-color);opacity:.9}
-    .controls{display:flex;align-items:center;gap:1.5rem}
-    .add-task-btn{background:transparent;color:var(--accent-color);border:1px solid var(--accent-color);padding:.75rem 1rem;border-radius:.75rem;font-size:1rem;cursor:pointer;transition:.2s;text-shadow:0 0 5px var(--glow-color)}
+    /* Title on the left */
+    #app-title{font-size:1.3rem;letter-spacing:.12rem;text-transform:uppercase;color:var(--accent-color);text-shadow:0 0 6px var(--glow-color)}
+
+    /* Small clock chip on the right */
+    .clock-chip{margin-left:1rem;background:rgba(0,255,255,.08);border:1px solid rgba(0,255,255,.35);padding:.35rem .6rem;border-radius:.6rem;color:var(--accent-color);text-shadow:0 0 4px var(--glow-color);font-weight:400}
+
+    .controls{display:flex;align-items:center;gap:1rem}
+    .add-task-btn{background:transparent;color:var(--accent-color);border:1px solid var(--accent-color);padding:.6rem .9rem;border-radius:.75rem;font-size:1rem;cursor:pointer;transition:.2s;text-shadow:0 0 5px var(--glow-color)}
     .add-task-btn:hover{background:rgba(0,255,255,.1);box-shadow:0 0 10px rgba(0,255,255,.5)}
-    .add-task-btn i{margin-right:.5rem}
 
     /* Kanban */
     #kanban-container{display:flex;flex:1;gap:1.5rem;overflow-x:auto;align-items:stretch;position:relative}
@@ -56,29 +73,26 @@
     ::-webkit-scrollbar-thumb{background:rgba(0,255,255,.4);border-radius:6px;border:3px solid rgba(0,255,255,.1);box-shadow:0 0 5px rgba(0,255,255,.5)}
     ::-webkit-scrollbar-thumb:hover{background:rgba(0,255,255,.6);box-shadow:0 0 10px rgba(0,255,255,.8)}
 
-    /* Cards */
-    .task-card{background:rgba(0,51,51,.5);padding:.75rem 1rem;border-radius:.5rem;cursor:pointer;transition:.15s;position:relative;border:var(--panel-border)}
-    .task-card:hover{transform:translateY(-2px);border-color:var(--accent-color);box-shadow:0 0 10px rgba(0,255,255,.3)}
-    .task-card h3{margin:0 0 .25rem;font-size:.9rem;font-weight:400;color:var(--font-color);opacity:.9;text-shadow:0 0 2px var(--glow-color)}
-    .task-card .subtask-count{font-size:.7rem;opacity:.5;color:var(--font-color)}
-    .task-card.dragging{opacity:.5;transform:scale(.98)}
-
     /* Streaks & Countdowns */
-    #streaks-countdowns{display:flex;align-items:center;gap:1.5rem}
     .streak-buttons{display:flex;gap:1rem}
     .streak-button{background:none;border:none;font-size:.9rem;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:.5rem;color:var(--accent-color)}
     .streak-button:hover{box-shadow:0 0 15px var(--glow-color);background:rgba(0,255,255,.1)}
     .streak-button i{font-size:1.2rem;color:var(--accent-color);text-shadow:0 0 5px var(--glow-color)}
     .streak-number{color:var(--accent-color);text-shadow:0 0 5px var(--glow-color);font-weight:700;font-size:1.2rem}
 
-    .countdowns > h2 {  color: var(--accent-color);  text-shadow: 0 0 6px var(--glow-color); font-weight: 400; text-transform: uppercase;
-  letter-spacing: .5px;
-}
-    .countdown-item{display:flex;justify-content:space-between;align-items:center;background:rgba(0,51,51,.5);padding:.5rem 1rem;border-radius:.5rem;border:var(--panel-border); color: var(--neon);min-width:250px}
-    .countdown-item button{background:transparent;border:none;color:var(--accent-color);cursor:pointer;opacity:.5}
+    .countdowns{display:flex;flex-direction:column;align-items:flex-end;gap:.6rem}
+    .countdowns-header{display:flex;align-items:center;gap:.5rem}
+    .countdowns>h2,.countdowns-header h2{color:var(--accent-color);text-shadow:0 0 6px var(--glow-color);font-weight:400;text-transform:uppercase;letter-spacing:.5px;margin:0}
+    .icon-btn{display:inline-grid;place-items:center;height:30px;width:30px;border-radius:.6rem;background:rgba(0,255,255,.08);border:1px solid rgba(0,255,255,.35);color:var(--accent-color);cursor:pointer}
+    .icon-btn:hover{background:rgba(0,255,255,.18)}
+
+    .countdown-item{display:flex;justify-content:space-between;align-items:center;background:rgba(0,51,51,.5);padding:.5rem 1rem;border-radius:.5rem;border:var(--panel-border);color:var(--neon);min-width:260px}
+    .countdown-item button{background:transparent;border:none;color:var(--accent-color);cursor:pointer;opacity:.6}
     .countdown-item button:hover{opacity:1}
-    .countdown-add-form{display:flex;gap:.5rem;margin-top:1rem;background:var(--panel-bg);border:var(--panel-border);border-radius:.75rem;padding:1rem;box-shadow:var(--panel-shadow)}
-    .countdown-add-form input{flex:1;background:rgba(0,51,51,.5);border:1px solid rgba(0,255,255,.2);color:var(--font-color);padding:.5rem;border-radius:.5rem}
+
+    .mini-form{display:flex;gap:.4rem;align-items:center;background:var(--panel-bg);border:var(--panel-border);border-radius:.6rem;padding:.5rem;box-shadow:var(--panel-shadow)}
+    .mini-form input{background:rgba(0,51,51,.5);border:1px solid rgba(0,255,255,.2);color:var(--font-color);padding:.4rem;border-radius:.4rem}
+    .hidden{display:none}
 
     /* Modal */
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);display:flex;justify-content:center;align-items:center;z-index:1000;opacity:0;visibility:hidden;transition:.25s}
@@ -99,6 +113,7 @@
       #top-bar{padding:.5rem}
       #kanban-container{flex-direction:column;overflow-y:auto;overflow-x:hidden}
       .kanban-column{min-width:unset;max-width:unset;min-height:unset}
+      .countdowns{align-items:stretch}
     }
   </style>
 </head>
@@ -108,7 +123,7 @@
   <div id="dashboard">
     <div id="top-bar">
       <div id="time-and-date-row">
-        <div id="time-and-date">Loading...</div>
+        <div id="app-title">Invincible</div>
         <div class="controls">
           <button id="add-task-btn-top" class="add-task-btn"><i class="fas fa-plus"></i> New Task</button>
         </div>
@@ -123,8 +138,17 @@
           </div>
         </div>
         <div class="countdowns">
-          <h2 style="margin:0">Countdowns</h2>
+          <div class="countdowns-header">
+            <h2>Countdowns</h2>
+            <button id="toggle-ctd-form" class="icon-btn" title="Add countdown"><i class="fas fa-plus"></i></button>
+            <span id="live-clock" class="clock-chip">--:--:--</span>
+          </div>
           <div id="countdown-list"></div>
+          <div id="countdown-mini" class="mini-form hidden">
+            <input type="text" id="countdown-mini-title" placeholder="Event" />
+            <input type="datetime-local" id="countdown-mini-datetime" />
+            <button id="mini-add" class="icon-btn" title="Save"><i class="fas fa-check"></i></button>
+          </div>
         </div>
       </div>
     </div>
@@ -134,12 +158,6 @@
       <div id="kanban-today" class="kanban-column"><h2>Today</h2><div class="task-list" data-status="Today"></div></div>
       <div id="kanban-in-progress" class="kanban-column"><h2>In Progress</h2><div class="task-list" data-status="In Progress"></div></div>
       <div id="kanban-done" class="kanban-column"><h2>Done</h2><div class="task-list" data-status="Done"></div></div>
-    </div>
-
-    <div class="countdown-add-form">
-      <input type="text" id="countdown-title" placeholder="Event Title"/>
-      <input type="datetime-local" id="countdown-datetime"/>
-      <button id="add-countdown-btn" class="modal-button save"><i class="fas fa-plus"></i> Add</button>
     </div>
   </div>
 
@@ -172,10 +190,9 @@
   </div>
 
   <script>
-    /* ===== CONFIG: use your working Apps Script deployment ===== */
+    /* ===== CONFIG: your Apps Script deployment ===== */
     const API = "https://script.google.com/macros/s/AKfycbyFO00mXXPQvrq7mSNhlmaaSerOlDIfhNeMhkT0De__97vTTNZ0CKxsTDfLtkCVW_h8JA/exec";
 
-    /* ===== Minimal API helper (no headers → avoids CORS preflight) ===== */
     async function api(action, body={}) {
       try{
         const res = await fetch(API, { method:'POST', body: JSON.stringify({ action, body }) });
@@ -189,10 +206,11 @@
     }
 
     /* ===== State ===== */
+    let dragId = null;
     let tasks=[], streaks={}, countdowns=[];
     let draggedTask=null, originalStatus=null;
+    const STATUSES = ['Backlog','Today','In Progress','Done'];
 
-    // Normalize streaks from any backend shape → { body:number, mind:number, spirit:number }
     function normalizeStreaks(s){
       const read = (x)=> typeof x === 'number' ? x : (x && (x.streak ?? x.value ?? x.count ?? 0)) || 0;
       return { body: read(s?.body), mind: read(s?.mind), spirit: read(s?.spirit) };
@@ -218,6 +236,14 @@
     const addSubtaskBtn = document.getElementById('add-subtask-btn');
     const addTaskBtnTop = document.getElementById('add-task-btn-top');
 
+    // Countdowns (mini form)
+    const countdownListEl = document.getElementById('countdown-list');
+    const toggleMini = document.getElementById('toggle-ctd-form');
+    const miniWrap = document.getElementById('countdown-mini');
+    const miniTitle = document.getElementById('countdown-mini-title');
+    const miniDate  = document.getElementById('countdown-mini-datetime');
+    const miniAdd   = document.getElementById('mini-add');
+
     /* ===== Load + render ===== */
     async function fetchDataAndRender(){
       const data = await api("getAll");
@@ -232,12 +258,29 @@
       tasks.forEach(task=>{
         const el = document.createElement('div');
         el.className = 'task-card'; el.draggable = true; el.dataset.id = task.id;
-        const done = (task.subtasks||[]).filter(s=>s.done).length;
-        const total = (task.subtasks||[]).length;
-        el.innerHTML = `<h3>${escapeHtml(task.title||'')}</h3><div class="subtask-count">${ total? `${done}/${total}` : 'No'} subtasks</div>`;
+        const subs = task.subtasks || []; const done = subs.filter(s=>s.done).length; const total = subs.length;
+        el.innerHTML = `
+          <div class="card-nav">
+            <button class="nav-left" title="Move left">‹</button>
+            <button class="nav-right" title="Move right">›</button>
+          </div>
+          <h3>${escapeHtml(task.title||'')}</h3>
+          <div class="subtask-count">${ total? `${done}/${total}` : 'No'} subtasks</div>`;
+
+        const pos = STATUSES.indexOf(task.status);
+        const leftBtn = el.querySelector('.nav-left');
+        const rightBtn = el.querySelector('.nav-right');
+        leftBtn.disabled = (pos<=0); rightBtn.disabled = (pos>=STATUSES.length-1);
+        leftBtn.addEventListener('click', ev=>{ ev.stopPropagation(); moveTask(task.id,-1); });
+        rightBtn.addEventListener('click',ev=>{ ev.stopPropagation(); moveTask(task.id,+1); });
+
         el.addEventListener('click', ()=> openModal(task));
-        el.addEventListener('dragstart', (e)=>{ draggedTask = task.id; originalStatus = task.status; e.dataTransfer.setData('text/plain', task.id); el.classList.add('dragging'); });
-        el.addEventListener('dragend', ()=>{ el.classList.remove('dragging'); draggedTask = null; });
+        el.addEventListener('dragstart', e=>{
+          draggedTask = task.id; dragId = task.id; originalStatus = task.status;
+          if(e.dataTransfer){ e.dataTransfer.setData('text/plain', task.id); e.dataTransfer.effectAllowed='move'; }
+          el.classList.add('dragging');
+        });
+        el.addEventListener('dragend', ()=>{ el.classList.remove('dragging'); draggedTask=null; dragId=null; });
         (taskLists[task.status] || taskLists.Backlog).appendChild(el);
       });
     }
@@ -263,7 +306,7 @@
           <input type="checkbox" ${st.done ? 'checked' : ''}>
           <input type="text" value="${escapeHtml(st.text||'')}">
           <button class="delete-subtask-btn" style="background:none;border:none;color:white;cursor:pointer"><i class="fas fa-trash"></i></button>`;
-        row.querySelector('.delete-subtask-btn').addEventListener('click', e=> row.remove());
+        row.querySelector('.delete-subtask-btn').addEventListener('click', ()=> row.remove());
         modalSubtasks.appendChild(row);
       });
     }
@@ -273,32 +316,15 @@
         text: item.querySelector('input[type="text"]').value,
         done: item.querySelector('input[type="checkbox"]').checked
       }));
-      const updatedTask = {
-        id: currentTask ? currentTask.id : null,
-        title: modalTitle.value,
-        description: modalDescription.value,
-        status: modalStatus.value,
-        subtasks: newSubtasks
-      };
-      await api("upsertTask", updatedTask);
-      await fetchDataAndRender();
-      closeModal();
+      const updatedTask = { id: currentTask ? currentTask.id : null, title: modalTitle.value, description: modalDescription.value, status: modalStatus.value, subtasks: newSubtasks };
+      await api("upsertTask", updatedTask); await fetchDataAndRender(); closeModal();
     });
-    deleteTaskBtn.addEventListener('click', async ()=>{
-      if(!currentTask) return;
-      await api("deleteTask", { id: currentTask.id });
-      await fetchDataAndRender();
-      closeModal();
-    });
+    deleteTaskBtn.addEventListener('click', async ()=>{ if(!currentTask) return; await api("deleteTask", { id: currentTask.id }); await fetchDataAndRender(); closeModal(); });
     closeModalBtn.addEventListener('click', closeModal);
     modalOverlay.addEventListener('click', e=>{ if(e.target.id==='task-modal-overlay') closeModal(); });
     addSubtaskBtn.addEventListener('click', ()=>{
-      const row = document.createElement('div');
-      row.className = 'subtask-item';
-      row.innerHTML = `
-        <input type="checkbox">
-        <input type="text" placeholder="New subtask text">
-        <button class="delete-subtask-btn" style="background:none;border:none;color:white;cursor:pointer"><i class="fas fa-trash"></i></button>`;
+      const row = document.createElement('div'); row.className='subtask-item';
+      row.innerHTML = `<input type="checkbox"><input type="text" placeholder="New subtask text"><button class="delete-subtask-btn" style="background:none;border:none;color:white;cursor:pointer"><i class="fas fa-trash"></i></button>`;
       row.querySelector('.delete-subtask-btn').addEventListener('click', ()=> row.remove());
       modalSubtasks.appendChild(row);
     });
@@ -306,41 +332,26 @@
 
     /* ===== Drag & Drop ===== */
     document.querySelectorAll('.kanban-column').forEach(column=>{
-      column.addEventListener('dragover', e=>{ e.preventDefault(); column.style.boxShadow='0 0 15px rgba(0,255,255,.4)'; });
+      column.addEventListener('dragover', e=>{ e.preventDefault(); column.style.boxShadow='0 0 15px rgba(0,255,255,.4)'; if(e.dataTransfer) e.dataTransfer.dropEffect='move'; });
       column.addEventListener('dragleave', ()=>{ column.style.boxShadow='0 0 15px rgba(0,255,255,.2)'; });
       column.addEventListener('drop', async e=>{
         e.preventDefault(); column.style.boxShadow='0 0 15px rgba(0,255,255,.2)';
-        if(!draggedTask) return;
-        const taskId = draggedTask;
+        const taskId = e.dataTransfer?.getData('text/plain') || dragId || draggedTask; if(!taskId) return;
         const newStatus = column.querySelector('.task-list').dataset.status;
-        const card = document.querySelector(`.task-card[data-id="${taskId}"]`);
-        const oldParent = card?.parentElement;
-
+        const card = document.querySelector(`.task-card[data-id="${taskId}"]`); const oldParent = card?.parentElement;
         if(taskLists[newStatus] && card){ taskLists[newStatus].appendChild(card); }
         const taskObj = tasks.find(t=> t.id === taskId);
         if(taskObj && taskObj.status !== newStatus){
-          const prev = taskObj.status;
-          taskObj.status = newStatus;
-          try{
-            await api("upsertTask", taskObj);
-            await fetchDataAndRender();
-          }catch(err){
-            console.error('Update failed, rolling back', err);
-            if(oldParent) oldParent.appendChild(card);
-            await fetchDataAndRender();
-            taskObj.status = prev;
-          }
+          const prev = taskObj.status; taskObj.status = newStatus;
+          try{ await api("upsertTask", taskObj); await fetchDataAndRender(); }
+          catch(err){ console.error('Update failed, rolling back', err); if(oldParent) oldParent.appendChild(card); taskObj.status = prev; await fetchDataAndRender(); }
         }
       });
     });
 
     /* ===== Streaks ===== */
     document.querySelectorAll('.streak-button').forEach(btn=>{
-      btn.addEventListener('click', async ()=>{
-        const type = btn.dataset.type;
-        await api("pingStreak", { type });
-        await fetchDataAndRender();
-      });
+      btn.addEventListener('click', async ()=>{ const type = btn.dataset.type; await api("pingStreak", { type }); await fetchDataAndRender(); });
     });
     function renderStreaks(){
       const n = (v)=> typeof v === 'number' ? v : (v && (v.streak ?? v.value ?? v.count ?? 0)) || 0;
@@ -349,81 +360,61 @@
       document.getElementById('streak-spirit').textContent = n(streaks.spirit);
     }
 
+    async function moveTask(taskId, delta){
+      const idx = tasks.findIndex(t => t.id === taskId); if (idx < 0) return;
+      const t = tasks[idx]; const curPos = STATUSES.indexOf(t.status);
+      const nextPos = Math.min(STATUSES.length-1, Math.max(0, curPos + delta)); if (nextPos === curPos) return;
+      const newStatus = STATUSES[nextPos]; const prevStatus = t.status; t.status = newStatus; renderTasks();
+      try{ await api('upsertTask', t); await fetchDataAndRender(); }catch(err){ console.error('Move failed, rolling back', err); t.status = prevStatus; renderTasks(); }
+    }
+
     /* ===== Countdowns ===== */
-    const countdownListEl = document.getElementById('countdown-list');
-    const countdownTitleInput = document.getElementById('countdown-title');
-    const countdownDatetimeInput = document.getElementById('countdown-datetime');
-    const addCountdownBtn = document.getElementById('add-countdown-btn');
-
-    addCountdownBtn.addEventListener('click', async ()=>{
-      const title = countdownTitleInput.value;
-      const val = countdownDatetimeInput.value;
-      if(!title || !val) return;
-      const target_iso = new Date(val).toISOString();
-      await api("addCountdown", { title, target_iso });
-      countdownTitleInput.value=''; countdownDatetimeInput.value='';
-      await fetchDataAndRender();
-    });
-
     function renderCountdowns(){
       countdownListEl.innerHTML='';
       countdowns.forEach(c=>{
-        const item = document.createElement('div');
-        item.className='countdown-item'; item.dataset.id=c.id;
+        const item = document.createElement('div'); item.className='countdown-item'; item.dataset.id=c.id;
         const del = document.createElement('button'); del.innerHTML='<i class="fas fa-trash"></i>';
         del.addEventListener('click', async ()=>{ await api("deleteCountdown", { id:c.id }); await fetchDataAndRender(); });
         item.innerHTML = `<span>${escapeHtml(c.title)}: <span class="time-left"></span></span>`;
-        item.appendChild(del);
-        countdownListEl.appendChild(item);
+        item.appendChild(del); countdownListEl.appendChild(item);
       });
     }
 
+    toggleMini.addEventListener('click', ()=>{ miniWrap.classList.toggle('hidden'); });
+    miniAdd.addEventListener('click', async ()=>{
+      const title = miniTitle.value.trim(); const val = miniDate.value;
+      if(!title || !val) return; const target_iso = new Date(val).toISOString();
+      await api("addCountdown", { title, target_iso }); miniTitle.value=''; miniDate.value=''; miniWrap.classList.add('hidden'); await fetchDataAndRender();
+    });
+
+    // Live clock (nice chip on the right)
+    const liveClockEl = document.getElementById('live-clock');
     setInterval(()=>{
       const now = new Date();
-      document.getElementById('time-and-date').textContent = now.toLocaleTimeString() + ' | ' + now.toLocaleDateString();
+      liveClockEl.textContent = now.toLocaleTimeString();
+      // update countdown displays
       document.querySelectorAll('.countdown-item').forEach(item=>{
         const c = countdowns.find(x=> x.id === item.dataset.id);
-        if(!c) return;
-        const diff = new Date(c.target_iso) - now;
-        item.querySelector('.time-left').textContent =
-          diff>0 ? `${Math.floor(diff/86400000)}d ${Math.floor(diff%86400000/3600000)}h ${Math.floor(diff%3600000/60000)}m ${Math.floor(diff%60000/1000)}s` : 'EXPIRED';
+        if(!c) return; const diff = new Date(c.target_iso) - now;
+        item.querySelector('.time-left').textContent = diff>0 ? `${Math.floor(diff/86400000)}d ${Math.floor(diff%86400000/3600000)}h ${Math.floor(diff%3600000/60000)}m ${Math.floor(diff%60000/1000)}s` : 'EXPIRED';
       });
-    }, 1000);
+    },1000);
 
     /* ===== Particles ===== */
     (function(){
       const canvas = document.getElementById('particles-js');
       const ctx = canvas.getContext('2d');
       let width,height; let particles=[]; const count=100; const maxDist=100;
-
       function resize(){ width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
       window.addEventListener('resize', resize); resize();
-
-      class Particle{
-        constructor(){ this.x=Math.random()*width; this.y=Math.random()*height; this.vx=(Math.random()-.5)*.5; this.vy=(Math.random()-.5)*.5; this.r=Math.random()*1.5+.5; }
-        update(){ this.x+=this.vx; this.y+=this.vy; if(this.x<0||this.x>width) this.vx*=-1; if(this.y<0||this.y>height) this.vy*=-1; }
-        draw(){ ctx.beginPath(); ctx.fillStyle='#00ffff'; ctx.arc(this.x,this.y,this.r,0,Math.PI*2); ctx.fill(); }
-      }
-      function connect(){
-        for(let a=0;a<count;a++){
-          for(let b=a+1;b<count;b++){
-            const dx=particles[a].x-particles[b].x, dy=particles[a].y-particles[b].y;
-            const d=Math.hypot(dx,dy);
-            if(d<maxDist){ ctx.beginPath(); ctx.strokeStyle=`rgba(0,255,255,${1-d/maxDist})`; ctx.lineWidth=.5; ctx.moveTo(particles[a].x,particles[a].y); ctx.lineTo(particles[b].x,particles[b].y); ctx.stroke(); }
-          }
-        }
-      }
+      class Particle{ constructor(){ this.x=Math.random()*width; this.y=Math.random()*height; this.vx=(Math.random()-.5)*.5; this.vy=(Math.random()-.5)*.5; this.r=Math.random()*1.5+.5; } update(){ this.x+=this.vx; this.y+=this.vy; if(this.x<0||this.x>width) this.vx*=-1; if(this.y<0||this.y>height) this.vy*=-1; } draw(){ ctx.beginPath(); ctx.fillStyle='#00ffff'; ctx.arc(this.x,this.y,this.r,0,Math.PI*2); ctx.fill(); }}
+      function connect(){ for(let a=0;a<count;a++){ for(let b=a+1;b<count;b++){ const dx=particles[a].x-particles[b].x, dy=particles[a].y-particles[b].y; const d=Math.hypot(dx,dy); if(d<maxDist){ ctx.beginPath(); ctx.strokeStyle=`rgba(0,255,255,${1-d/maxDist})`; ctx.lineWidth=.5; ctx.moveTo(particles[a].x,particles[a].y); ctx.lineTo(particles[b].x,particles[b].y); ctx.stroke(); } } } }
       particles = Array.from({length:count}, ()=> new Particle());
-      (function loop(){
-        ctx.clearRect(0,0,width,height);
-        particles.forEach(p=>{ p.update(); p.draw(); });
-        connect();
-        requestAnimationFrame(loop);
-      })();
+      (function loop(){ ctx.clearRect(0,0,width,height); particles.forEach(p=>{ p.update(); p.draw(); }); connect(); requestAnimationFrame(loop); })();
     })();
 
     /* ===== Helpers ===== */
-    function escapeHtml(s){ return (s||'').replace(/[&<>\"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;' }[m])); }
+    function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;' }[m])); }
 
     // boot
     fetchDataAndRender();
