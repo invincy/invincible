@@ -3,21 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JARVIS-Style Dashboard</title>
+    <title>JARVIS Dashboard</title>
+    <link rel="icon" href="https://www.flaticon.com/svg/static/icons/svg/2591/2591460.svg" type="image/svg+xml">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-  
-    <!-- Use a single emoji as a favicon. Just change the emoji! -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
-    
-    <!-- Use a simple placeholder image for the home screen icon on iOS. -->
-    <link rel="apple-touch-icon" href="https://placehold.co/180x180/000/fff?text=App+Icon">
-    
-
     <style>
         /* CSS Custom Properties for Theming */
         :root {
-            /* Default JARVIS Theme */
             --bg-color: #000000;
             --accent-color: #00ffff;
             --subtle-color: #003333;
@@ -28,28 +20,6 @@
             --panel-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
         }
 
-        /* Black Minimal Theme */
-        body.minimal-theme {
-            --bg-color: #1a1a1a;
-            --accent-color: #f1f1f1;
-            --subtle-color: #2c2c2c;
-            --font-color: #e0e0e0;
-            --glow-color: #f1f1f1;
-            --panel-bg: rgba(44, 44, 44, 0.6);
-            --panel-border: 1px solid rgba(150, 150, 150, 0.3);
-            --panel-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
-        }
-        body.minimal-theme .streak-button {
-            background-color: transparent;
-            border: none;
-            color: var(--accent-color);
-        }
-        body.minimal-theme .streak-button i,
-        body.minimal-theme .streak-button .streak-number {
-            color: var(--accent-color);
-            text-shadow: none;
-        }
-
         /* Global & Body Styles */
         html, body {
             height: 100%;
@@ -58,7 +28,6 @@
             font-family: 'Roboto', sans-serif;
             color: var(--font-color);
             background-color: var(--bg-color);
-            transition: background-color 0.5s ease;
         }
 
         body {
@@ -100,7 +69,6 @@
             border: var(--panel-border);
             box-shadow: var(--panel-shadow);
             z-index: 10;
-            transition: all 0.5s ease;
         }
 
         #time-and-date-row {
@@ -116,10 +84,6 @@
             padding-top: 1rem;
             border-top: 1px solid rgba(0, 255, 255, 0.2);
             margin-top: 1rem;
-            transition: all 0.5s ease;
-        }
-        body.minimal-theme #controls-row {
-             border-top: 1px solid rgba(150, 150, 150, 0.2);
         }
 
         #time-and-date {
@@ -137,7 +101,7 @@
             gap: 1.5rem;
         }
 
-        .add-task-btn, #theme-toggle-btn {
+        .add-task-btn {
             background: transparent;
             color: var(--accent-color);
             border: 1px solid var(--accent-color);
@@ -149,23 +113,12 @@
             transition: all 0.3s ease;
             text-shadow: 0 0 5px var(--glow-color);
         }
-        .add-task-btn:hover, #theme-toggle-btn:hover {
+        .add-task-btn:hover {
             background: rgba(0, 255, 255, 0.1);
             box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
         }
         .add-task-btn i {
             margin-right: 0.5rem;
-        }
-        body.minimal-theme .add-task-btn {
-            background: transparent;
-            color: var(--accent-color);
-            border: 1px solid var(--accent-color);
-            box-shadow: none;
-            text-shadow: none;
-        }
-        body.minimal-theme .add-task-btn:hover {
-            background: rgba(255, 255, 255, 0.05);
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
         }
 
         #kanban-container {
@@ -193,10 +146,7 @@
             transition: all 0.3s ease;
         }
         .kanban-column:hover {
-             box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
-        }
-        body.minimal-theme .kanban-column:hover {
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
         }
 
         .kanban-column h2 {
@@ -212,11 +162,6 @@
             text-shadow: 0 0 5px var(--glow-color);
             opacity: 0.9;
         }
-        body.minimal-theme .kanban-column h2 {
-            border-bottom: 1px solid rgba(150, 150, 150, 0.2);
-            text-shadow: none;
-        }
-
 
         .task-list {
             flex-grow: 1;
@@ -247,18 +192,6 @@
             background-color: rgba(0, 255, 255, 0.6);
             box-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
         }
-        body.minimal-theme ::-webkit-scrollbar-track {
-             background: rgba(150, 150, 150, 0.05);
-        }
-        body.minimal-theme ::-webkit-scrollbar-thumb {
-            background-color: rgba(150, 150, 150, 0.4);
-            border: 3px solid rgba(150, 150, 150, 0.1);
-            box-shadow: none;
-        }
-        body.minimal-theme ::-webkit-scrollbar-thumb:hover {
-            background-color: rgba(150, 150, 150, 0.6);
-            box-shadow: none;
-        }
         ::-webkit-scrollbar-corner {
             background: transparent;
         }
@@ -277,15 +210,6 @@
             border-color: var(--accent-color);
             box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
         }
-        body.minimal-theme .task-card {
-            background: rgba(44, 44, 44, 0.5);
-            border: 1px solid rgba(150, 150, 150, 0.2);
-            box-shadow: none;
-        }
-        body.minimal-theme .task-card:hover {
-            border-color: #f1f1f1;
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
-        }
 
         .task-card h3 {
             margin: 0 0 0.25rem 0;
@@ -294,9 +218,6 @@
             color: var(--font-color);
             opacity: 0.9;
             text-shadow: 0 0 2px var(--glow-color);
-        }
-        body.minimal-theme .task-card h3 {
-            text-shadow: none;
         }
         .task-card .subtask-count {
             font-size: 0.7rem;
@@ -337,17 +258,16 @@
             text-align: left;
             margin-right: 0.5rem;
         }
-        body.minimal-theme .streaks h2, body.minimal-theme .countdowns h2 {
-            text-shadow: none;
-        }
         .streak-buttons {
             display: flex;
             justify-content: space-around;
             gap: 1rem;
         }
         .streak-button {
-            background: none;
-            border: none;
+            background: rgba(0, 51, 51, 0.5); /* Added a background for better visibility */
+            border: var(--panel-border);
+            border-radius: 0.75rem;
+            padding: 0.5rem 1rem;
             font-family: 'Roboto', sans-serif;
             font-size: 0.9rem;
             cursor: pointer;
@@ -357,6 +277,7 @@
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
+            text-shadow: 0 0 5px var(--glow-color);
         }
         .streak-button:hover {
             box-shadow: 0 0 15px var(--glow-color);
@@ -384,11 +305,6 @@
             border-radius: 0.5rem;
             border: var(--panel-border);
             min-width: 250px;
-            transition: all 0.5s ease;
-        }
-        body.minimal-theme .countdown-item {
-            background: rgba(44, 44, 44, 0.5);
-            border: 1px solid rgba(150, 150, 150, 0.2);
         }
         .countdown-item span {
             font-size: 0.9rem;
@@ -415,12 +331,6 @@
             border-radius: 0.75rem;
             padding: 1rem;
             box-shadow: var(--panel-shadow);
-            transition: all 0.5s ease;
-        }
-        body.minimal-theme .countdown-add-form {
-            background: rgba(44, 44, 44, 0.6);
-            border: 1px solid rgba(150, 150, 150, 0.3);
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
         }
         .countdown-add-form input {
             flex: 1;
@@ -435,13 +345,6 @@
         }
         .countdown-add-form input:focus {
             box-shadow: 0 0 5px var(--glow-color);
-        }
-        body.minimal-theme .countdown-add-form input {
-             background: rgba(44, 44, 44, 0.5);
-             border: 1px solid rgba(150, 150, 150, 0.2);
-        }
-        body.minimal-theme .countdown-add-form input:focus {
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
         }
         #countdown-list {
             display: flex;
@@ -490,12 +393,6 @@
             flex-direction: column;
             gap: 1rem;
             color: var(--font-color);
-            transition: all 0.5s ease;
-        }
-        body.minimal-theme .modal {
-            background: #2c2c2c;
-            border: 1px solid rgba(150, 150, 150, 0.3);
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
         }
         .modal h2 {
             font-family: 'Roboto', sans-serif;
@@ -504,9 +401,6 @@
             text-align: center;
             color: var(--accent-color);
             text-shadow: 0 0 5px var(--glow-color);
-        }
-        body.minimal-theme .modal h2 {
-            text-shadow: none;
         }
         .modal-field {
             display: flex;
@@ -530,14 +424,6 @@
         .modal input:focus, .modal textarea:focus, .modal select:focus {
             box-shadow: 0 0 5px var(--glow-color);
             border-color: var(--accent-color);
-        }
-        body.minimal-theme .modal input, body.minimal-theme .modal textarea, body.minimal-theme .modal select {
-             background: rgba(150, 150, 150, 0.1);
-             border: 1px solid rgba(150, 150, 150, 0.2);
-        }
-        body.minimal-theme .modal input:focus, body.minimal-theme .modal textarea:focus, body.minimal-theme .modal select:focus {
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
-            border-color: #f1f1f1;
         }
         .subtasks-list {
             display: flex;
@@ -580,14 +466,6 @@
         .modal-button.save:hover {
             box-shadow: 0 0 10px var(--glow-color);
             transform: translateY(-2px);
-        }
-        body.minimal-theme .modal-button.save {
-            background: #e0e0e0;
-            color: #1a1a1a;
-            box-shadow: none;
-        }
-        body.minimal-theme .modal-button.save:hover {
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
         }
         .modal-button.delete {
             background: #e74c3c;
@@ -643,7 +521,6 @@
             <div id="time-and-date-row">
                 <div id="time-and-date">Loading...</div>
                 <div class="controls">
-                    <button id="theme-toggle-btn" class="add-task-btn"><i class="fas fa-adjust"></i> Theme</button>
                     <button id="add-task-btn-top" class="add-task-btn"><i class="fas fa-plus"></i> New Task</button>
                 </div>
             </div>
@@ -695,7 +572,6 @@
         </div>
     </div>
 
-    <!-- Task Edit/Add Modal -->
     <div id="task-modal-overlay" class="modal-overlay">
         <div id="task-modal" class="modal">
             <h2>Edit Task</h2>
@@ -729,17 +605,35 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script>
+        // API Base URL and helper function
+        const API = "https://script.google.com/macros/s/AKfycbyFO00mXXPQvrq7mSNhlmaaSerOlDIfhNeMhkT0De__97vTTNZ0CKxsTDfLtkCVW_h8JA/exec";
+
+        async function api(action, body = {}) {
+            try {
+                const res = await fetch(API, {
+                    method: "POST",
+                    body: JSON.stringify({ action, body })
+                });
+                const json = await res.json();
+                if (!json.ok) {
+                    throw new Error(json.error || "API error");
+                }
+                return json.data;
+            } catch (error) {
+                console.error("API call failed:", error);
+                return { tasks: [], streaks: { body: 0, mind: 0, spirit: 0 }, countdowns: [] };
+            }
+        }
+
         // --- State Management and Initial Setup ---
         let tasks = [];
-        let streaks = {
-            counts: { body: 0, mind: 0, spirit: 0 },
-            lastPing: { body: 0, mind: 0, spirit: 0 }
-        };
+        let streaks = {};
         let countdowns = [];
         let draggedTask = null;
         let originalStatus = null;
-        const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+        let countdownIntervals = {};
 
         // Elements
         const taskLists = {
@@ -760,49 +654,24 @@
         const closeModalBtn = document.getElementById('close-modal-btn');
         const addSubtaskBtn = document.getElementById('add-subtask-btn');
         const addTaskBtnTop = document.getElementById('add-task-btn-top');
-        const themeToggleBtn = document.getElementById('theme-toggle-btn');
-        const controlsRow = document.getElementById('controls-row');
-        
-        // --- Local Storage Functions ---
+        const timeAndDateEl = document.getElementById('time-and-date');
+        const countdownListEl = document.getElementById('countdown-list');
+        const countdownTitleInput = document.getElementById('countdown-title');
+        const countdownDatetimeInput = document.getElementById('countdown-datetime');
+        const addCountdownBtn = document.getElementById('add-countdown-btn');
 
-        function saveData() {
-            localStorage.setItem('tasks', JSON.stringify(tasks));
-            localStorage.setItem('streaks', JSON.stringify(streaks));
-            localStorage.setItem('countdowns', JSON.stringify(countdowns));
-        }
 
-        function loadData() {
-            try {
-                const storedTasks = localStorage.getItem('tasks');
-                const storedStreaks = localStorage.getItem('streaks');
-                const storedCountdowns = localStorage.getItem('countdowns');
+        // --- Data Fetching and Rendering ---
 
-                tasks = storedTasks ? JSON.parse(storedTasks) : [];
-                streaks = storedStreaks ? JSON.parse(storedStreaks) : {
-                    counts: { body: 0, mind: 0, spirit: 0 },
-                    lastPing: { body: 0, mind: 0, spirit: 0 }
-                };
-                countdowns = storedCountdowns ? JSON.parse(storedCountdowns) : [];
-            } catch (e) {
-                console.error("Failed to load data from localStorage:", e);
-                // Reset to defaults if parsing fails
-                tasks = [];
-                streaks = {
-                    counts: { body: 0, mind: 0, spirit: 0 },
-                    lastPing: { body: 0, mind: 0, spirit: 0 }
-                };
-                countdowns = [];
-            }
-        }
-
-        function updateDataAndRender() {
-            saveData();
+        async function fetchDataAndRender() {
+            const data = await api("getAll");
+            tasks = data.tasks || [];
+            streaks = data.streaks || {};
+            countdowns = data.countdowns || [];
             renderTasks();
             renderStreaks();
             renderCountdowns();
         }
-
-        // --- Initial Data Loading and Rendering ---
 
         function renderTasks() {
             // Clear all task lists
@@ -845,7 +714,6 @@
         }
 
         // --- Modal Functionality ---
-
         let currentTask = null;
 
         function openModal(task) {
@@ -884,35 +752,29 @@
             currentTask = null;
         }
 
-        saveTaskBtn.addEventListener('click', () => {
+        saveTaskBtn.addEventListener('click', async () => {
             const newSubtasks = Array.from(modalSubtasks.querySelectorAll('.subtask-item')).map(item => ({
                 text: item.querySelector('input[type="text"]').value,
                 done: item.querySelector('input[type="checkbox"]').checked
             }));
 
             const updatedTask = {
-                id: currentTask ? currentTask.id : Date.now().toString(), // Generate a unique ID
+                id: currentTask ? currentTask.id : null,
                 title: modalTitle.value,
                 description: modalDescription.value,
                 status: modalStatus.value,
                 subtasks: newSubtasks
             };
 
-            const taskIndex = tasks.findIndex(t => t.id === updatedTask.id);
-            if (taskIndex !== -1) {
-                tasks[taskIndex] = updatedTask;
-            } else {
-                tasks.push(updatedTask);
-            }
-
-            updateDataAndRender();
+            await api("upsertTask", updatedTask);
+            await fetchDataAndRender();
             closeModal();
         });
 
-        deleteTaskBtn.addEventListener('click', () => {
+        deleteTaskBtn.addEventListener('click', async () => {
             if (!currentTask) return;
-            tasks = tasks.filter(t => t.id !== currentTask.id);
-            updateDataAndRender();
+            await api("deleteTask", { id: currentTask.id });
+            await fetchDataAndRender();
             closeModal();
         });
 
@@ -953,256 +815,24 @@
         columns.forEach(column => {
             column.addEventListener('dragover', (e) => {
                 e.preventDefault();
-                const isMinimal = document.body.classList.contains('minimal-theme');
-                column.style.boxShadow = isMinimal ? `0 0 15px rgba(255, 255, 255, 0.15)` : `0 0 15px rgba(0, 255, 255, 0.4)`;
+                column.style.boxShadow = `0 0 15px rgba(0, 255, 255, 0.4)`;
             });
             column.addEventListener('dragleave', (e) => {
-                const isMinimal = document.body.classList.contains('minimal-theme');
-                column.style.boxShadow = isMinimal ? `0 0 5px rgba(255, 255, 255, 0.1)` : `0 0 15px rgba(0, 255, 255, 0.2)`;
+                column.style.boxShadow = `0 0 15px rgba(0, 255, 255, 0.2)`;
             });
-            column.addEventListener('drop', (e) => {
+            column.addEventListener('drop', async (e) => {
                 e.preventDefault();
-                const isMinimal = document.body.classList.contains('minimal-theme');
-                column.style.boxShadow = isMinimal ? `0 0 5px rgba(255, 255, 255, 0.1)` : `0 0 15px rgba(0, 255, 255, 0.2)`;
+                column.style.boxShadow = `0 0 15px rgba(0, 255, 255, 0.2)`;
 
                 if (draggedTask) {
                     const taskId = draggedTask;
                     const newStatus = column.querySelector('.task-list').dataset.status;
-                    const taskToUpdate = tasks.find(task => task.id === taskId);
+                    const taskCard = document.querySelector(`.task-card[data-id="${taskId}"]`);
+                    const oldParent = taskCard.parentElement;
 
-                    if (taskToUpdate && taskToUpdate.status !== newStatus) {
-                        taskToUpdate.status = newStatus;
-                        updateDataAndRender();
+                    // Optimistic UI update: immediately move the card
+                    if (taskLists[newStatus]) {
+                        taskLists[newStatus].appendChild(taskCard);
                     }
-                }
-            });
-        });
 
-        // --- Streaks Functionality ---
-        const streakButtons = document.querySelectorAll('.streak-button');
-        streakButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                const type = button.dataset.type;
-                const now = Date.now();
-                const lastPing = streaks.lastPing[type];
-
-                if (!lastPing) {
-                    // First time clicking this streak
-                    streaks.counts[type] = 1;
-                } else {
-                    const timeDifference = now - lastPing;
-
-                    // Streak is broken if more than 24 hours (1 day) have passed
-                    if (timeDifference > ONE_DAY_MS) {
-                        streaks.counts[type] = 1;
-                    } else if (new Date(now).toDateString() !== new Date(lastPing).toDateString()) {
-                        // It's a new day, increment the streak
-                        streaks.counts[type] = (streaks.counts[type] || 0) + 1;
-                    }
-                    // Otherwise, if it's the same day, do nothing.
-                }
-
-                streaks.lastPing[type] = now;
-                updateDataAndRender();
-            });
-        });
-
-        function renderStreaks() {
-            document.getElementById('streak-body').textContent = streaks.counts.body || 0;
-            document.getElementById('streak-mind').textContent = streaks.counts.mind || 0;
-            document.getElementById('streak-spirit').textContent = streaks.counts.spirit || 0;
-        }
-
-        // --- Theme Toggle Functionality ---
-        themeToggleBtn.addEventListener('click', () => {
-            document.body.classList.toggle('minimal-theme');
-            const isMinimal = document.body.classList.contains('minimal-theme');
-            localStorage.setItem('theme', isMinimal ? 'minimal' : 'jarvis');
-
-            // Re-create particles to update colors
-            particles = [];
-            createParticles();
-
-            // Adjust the border-top of #controls-row based on the theme
-            if (isMinimal) {
-                controlsRow.style.borderTop = '1px solid rgba(150, 150, 150, 0.2)';
-            } else {
-                controlsRow.style.borderTop = '1px solid rgba(0, 255, 255, 0.2)';
-            }
-        });
-
-        function applySavedTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'minimal') {
-                document.body.classList.add('minimal-theme');
-            } else {
-                document.body.classList.remove('minimal-theme');
-            }
-            // Apply initial border style based on the theme
-            const isMinimal = document.body.classList.contains('minimal-theme');
-            controlsRow.style.borderTop = isMinimal ? '1px solid rgba(150, 150, 150, 0.2)' : '1px solid rgba(0, 255, 255, 0.2)';
-        }
-
-        // --- Countdown Functionality ---
-        const countdownListEl = document.getElementById('countdown-list');
-        const countdownTitleInput = document.getElementById('countdown-title');
-        const countdownDatetimeInput = document.getElementById('countdown-datetime');
-        const addCountdownBtn = document.getElementById('add-countdown-btn');
-
-        addCountdownBtn.addEventListener('click', () => {
-            const title = countdownTitleInput.value;
-            const target_iso = new Date(countdownDatetimeInput.value).toISOString();
-
-            if (title && target_iso) {
-                countdowns.push({
-                    id: Date.now().toString(),
-                    title,
-                    target_iso
-                });
-                updateDataAndRender();
-                countdownTitleInput.value = '';
-                countdownDatetimeInput.value = '';
-            }
-        });
-
-        function renderCountdowns() {
-            countdownListEl.innerHTML = '';
-            countdowns.forEach(countdown => {
-                const countdownItem = document.createElement('div');
-                countdownItem.className = 'countdown-item';
-                countdownItem.dataset.id = countdown.id;
-
-                const deleteBtn = document.createElement('button');
-                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-                deleteBtn.addEventListener('click', () => {
-                    countdowns = countdowns.filter(c => c.id !== countdown.id);
-                    updateDataAndRender();
-                });
-
-                countdownItem.innerHTML = `<span>${countdown.title}: <span class="time-left"></span></span>`;
-                countdownItem.appendChild(deleteBtn);
-                countdownListEl.appendChild(countdownItem);
-            });
-        }
-
-        // Update clock and countdowns every second
-        setInterval(() => {
-            const now = new Date();
-            const timeAndDate = document.getElementById('time-and-date');
-            timeAndDate.textContent = now.toLocaleTimeString() + ' | ' + now.toLocaleDateString();
-
-            document.querySelectorAll('.countdown-item').forEach(item => {
-                const countdown = countdowns.find(c => c.id === item.dataset.id);
-                if (countdown) {
-                    const target = new Date(countdown.target_iso);
-                    const diff = target - now;
-                    if (diff > 0) {
-                        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                        item.querySelector('.time-left').textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-                    } else {
-                        item.querySelector('.time-left').textContent = 'EXPIRED';
-                    }
-                }
-            });
-        }, 1000);
-
-        // Particle animation logic
-        let particles = [];
-        let canvas, ctx, width, height;
-        const particleCount = 100;
-        const maxDistance = 100;
-
-        class Particle {
-            constructor() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.vx = (Math.random() - 0.5) * 0.5;
-                this.vy = (Math.random() - 0.5) * 0.5;
-                this.radius = Math.random() * 1.5 + 0.5;
-                this.color = getComputedStyle(document.body).getPropertyValue('--accent-color');
-            }
-
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-
-                if (this.x < 0 || this.x > width) this.vx *= -1;
-                if (this.y < 0 || this.y > height) this.vy *= -1;
-            }
-
-            draw() {
-                ctx.beginPath();
-                ctx.fillStyle = this.color;
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        function createParticles() {
-            particles = [];
-            for (let i = 0; i < particleCount; i++) {
-                particles.push(new Particle());
-            }
-        }
-
-        function connectParticles() {
-            const lineColor = getComputedStyle(document.body).getPropertyValue('--accent-color');
-            for (let a = 0; a < particleCount; a++) {
-                for (let b = a; b < particleCount; b++) {
-                    let dx = particles[a].x - particles[b].x;
-                    let dy = particles[a].y - particles[b].y;
-                    let distance = Math.sqrt(dx * dx + dy * dy);
-
-                    if (distance < maxDistance) {
-                        ctx.beginPath();
-                        const opacity = 1 - distance / maxDistance;
-                        ctx.strokeStyle = `rgba(${parseInt(lineColor.slice(1, 3), 16)}, ${parseInt(lineColor.slice(3, 5), 16)}, ${parseInt(lineColor.slice(5, 7), 16)}, ${opacity})`;
-                        ctx.lineWidth = 0.5;
-                        ctx.moveTo(particles[a].x, particles[a].y);
-                        ctx.lineTo(particles[b].x, particles[b].y);
-                        ctx.stroke();
-                    }
-                }
-            }
-        }
-
-        function animate() {
-            ctx.clearRect(0, 0, width, height);
-
-            for (let i = 0; i < particleCount; i++) {
-                particles[i].update();
-                particles[i].draw();
-            }
-
-            connectParticles();
-
-            requestAnimationFrame(animate);
-        }
-
-        // Initial call to set up the dashboard
-        window.onload = function() {
-            canvas = document.getElementById('particles-js');
-            if (canvas) {
-                ctx = canvas.getContext('2d');
-                function resizeCanvas() {
-                    width = window.innerWidth;
-                    height = window.innerHeight;
-                    canvas.width = width;
-                    canvas.height = height;
-                }
-                window.addEventListener('resize', resizeCanvas);
-                resizeCanvas();
-
-                loadData();
-                applySavedTheme();
-                createParticles();
-                animate();
-                updateDataAndRender();
-            }
-        };
-    </script>
-</body>
-</html>
+                    // Find the task in the local array to get the full object
