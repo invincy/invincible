@@ -90,7 +90,7 @@
     .mini-form input{background:rgba(0,51,51,.5);border:1px solid rgba(0,255,255,.2);color:var(--font-color);padding:.4rem;border-radius:.4rem}
     .hidden{display:none}
 
-    /* Modal (RESTORED & FIXED) */
+    /* Modal */
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);display:flex;justify-content:center;align-items:center;z-index:9999;opacity:0;visibility:hidden;transition:.25s}
     .modal-overlay.open{opacity:1;visibility:visible}
     .modal{background:var(--subtle-color);border:var(--panel-border);box-shadow:var(--panel-shadow);border-radius:1rem;padding:2rem;width:90%;max-width:600px;max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:1rem;color:var(--font-color)}
@@ -218,7 +218,7 @@
         return json.data;
       }catch(err){
         console.error('API call failed:', err);
-        return { tasks:[], streaks:{ body:0, mind:0, spirit:0 }, countdowns:[] };
+        throw err; // Re-throw to be caught by the calling function
       }
     }
 
@@ -253,7 +253,9 @@
     const addSubtaskBtn = document.getElementById('add-subtask-btn');
     const addTaskBtnTop = document.getElementById('add-task-btn-top');
 
-    // Countdowns (mini form)
+    let saving = false;
+    let deleting = false;
+
     const countdownListEl = document.getElementById('countdown-list');
     const toggleMini = document.getElementById('toggle-ctd-form');
     const miniWrap = document.getElementById('countdown-mini');
@@ -302,7 +304,6 @@
       });
     }
 
-    /* ===== Modal ===== */
     let currentTask=null;
     function openModal(task){
       currentTask = task;
@@ -328,23 +329,89 @@
       });
     }
     function closeModal(){ modalOverlay.classList.remove('open'); currentTask=null; }
-    saveTaskBtn.addEventListener('click', async ()=>{
+
+    saveTaskBtn.addEventListener('click', async () => {
+      if (saving) return;
+      saving = true;
+
       const newSubtasks = Array.from(modalSubtasks.querySelectorAll('.subtask-item')).map(item=>({
         text: item.querySelector('input[type="text"]').value,
         done: item.querySelector('input[type="checkbox"]').checked
       }));
-      const updatedTask = { id: currentTask ? currentTask.id : null, title: modalTitle.value, description: modalDescription.value, status: modalStatus.value, subtasks: newSubtasks };
-      await api("upsertTask", updatedTask); await fetchDataAndRender(); closeModal();
+
+      const updatedTask = {
+        id: currentTask ? currentTask.id : null,
+        title: modalTitle.value,
+        description: modalDescription.value,
+        status: modalStatus.value,
+        subtasks: newSubtasks
+      };
+
+      const originalState = JSON.parse(JSON.stringify(tasks));
+      closeModal();
+      
+      const isNewTask = !updatedTask.id;
+      if (isNewTask) {
+        updatedTask.id = 't_' + Date.now();
+        tasks.push(updatedTask);
+      } else {
+        const index = tasks.findIndex(t => t.id === updatedTask.id);
+        if (index !== -1) {
+          tasks[index] = updatedTask;
+        }
+      }
+      renderTasks();
+
+      try {
+        await api('upsertTask', updatedTask);
+      } catch (err) {
+        console.error('Save failed', err);
+        alert('Save failed. Rolling back changes.');
+        tasks = originalState;
+        renderTasks();
+      } finally {
+        saving = false;
+        saveTaskBtn.disabled = false;
+        saveTaskBtn.textContent = 'Save';
+      }
     });
-    deleteTaskBtn.addEventListener('click', async ()=>{ if(!currentTask) return; await api("deleteTask", { id: currentTask.id }); await fetchDataAndRender(); closeModal(); });
+
+    async function handleDelete(){
+      if (deleting) return;
+      const id = currentTask && currentTask.id;
+      if (!id) { alert('Cannot delete: missing task id.'); return; }
+      deleting = true;
+      
+      const originalState = JSON.parse(JSON.stringify(tasks));
+      closeModal();
+      
+      tasks = tasks.filter(t => t.id !== id);
+      renderTasks();
+      
+      try {
+        await api('deleteTask', { id });
+      } catch (err) {
+        console.error('Delete failed', err);
+        alert('Delete failed. Rolling back changes.');
+        tasks = originalState;
+        renderTasks();
+      } finally {
+        deleting = false;
+      }
+    }
+
+    deleteTaskBtn.addEventListener('click', handleDelete);
     closeModalBtn.addEventListener('click', closeModal);
     modalOverlay.addEventListener('click', e=>{ if(e.target.id==='task-modal-overlay') closeModal(); });
+    window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal(); });
+
     addSubtaskBtn.addEventListener('click', ()=>{
       const row = document.createElement('div'); row.className='subtask-item';
       row.innerHTML = `<input type="checkbox"><input type="text" placeholder="New subtask text"><button class="delete-subtask-btn" style="background:none;border:none;color:white;cursor:pointer"><i class="fas fa-trash"></i></button>`;
       row.querySelector('.delete-subtask-btn').addEventListener('click', ()=> row.remove());
       modalSubtasks.appendChild(row);
     });
+
     addTaskBtnTop.addEventListener('click', ()=> openModal({ id:null, title:'', description:'', status:'Backlog', subtasks:[] }));
 
     /* ===== Drag & Drop ===== */
@@ -357,19 +424,45 @@
         const newStatus = column.querySelector('.task-list').dataset.status;
         const card = document.querySelector(`.task-card[data-id="${taskId}"]`); const oldParent = card?.parentElement;
         if(taskLists[newStatus] && card){ taskLists[newStatus].appendChild(card); }
+        
         const taskObj = tasks.find(t=> t.id === taskId);
         if(taskObj && taskObj.status !== newStatus){
-          const prev = taskObj.status; taskObj.status = newStatus;
-          try{ await api("upsertTask", taskObj); await fetchDataAndRender(); }
-          catch(err){ console.error('Update failed, rolling back', err); if(oldParent) oldParent.appendChild(card); taskObj.status = prev; await fetchDataAndRender(); }
+          const prev = taskObj.status;
+          taskObj.status = newStatus;
+          // Optimistically update UI
+          renderTasks(); 
+          try{ await api('upsertTask', taskObj); }
+          catch(err){ 
+            console.error('Update failed, rolling back', err); 
+            taskObj.status = prev; 
+            renderTasks(); 
+          }
         }
       });
     });
 
     /* ===== Streaks ===== */
     document.querySelectorAll('.streak-button').forEach(btn=>{
-      btn.addEventListener('click', async ()=>{ const type = btn.dataset.type; await api("pingStreak", { type }); await fetchDataAndRender(); });
+      btn.addEventListener('click', async ()=>{ 
+        const type = btn.dataset.type;
+        const prevStreaks = JSON.parse(JSON.stringify(streaks));
+        const oldStreak = streaks[type];
+        streaks[type] = oldStreak + 1;
+        renderStreaks(); // Optimistically update UI
+        try{ 
+          await api('pingStreak', { type }); 
+          // Re-fetch to get the canonical streak value
+          const data = await api("getAll");
+          streaks = normalizeStreaks(data.streaks || {});
+          renderStreaks();
+        } catch(err){
+          console.error('Ping failed, rolling back', err);
+          streaks = prevStreaks;
+          renderStreaks();
+        }
+      });
     });
+
     function renderStreaks(){
       const n = (v)=> typeof v === 'number' ? v : (v && (v.streak ?? v.value ?? v.count ?? 0)) || 0;
       document.getElementById('streak-body').textContent = n(streaks.body);
@@ -378,11 +471,26 @@
     }
 
     async function moveTask(taskId, delta){
-      const idx = tasks.findIndex(t => t.id === taskId); if (idx < 0) return;
-      const t = tasks[idx]; const curPos = STATUSES.indexOf(t.status);
-      const nextPos = Math.min(STATUSES.length-1, Math.max(0, curPos + delta)); if (nextPos === curPos) return;
-      const newStatus = STATUSES[nextPos]; const prevStatus = t.status; t.status = newStatus; renderTasks();
-      try{ await api('upsertTask', t); await fetchDataAndRender(); }catch(err){ console.error('Move failed, rolling back', err); t.status = prevStatus; renderTasks(); }
+      const idx = tasks.findIndex(t => t.id === taskId); 
+      if (idx < 0) return;
+      const t = tasks[idx]; 
+      const curPos = STATUSES.indexOf(t.status);
+      const nextPos = Math.min(STATUSES.length-1, Math.max(0, curPos + delta)); 
+      if (nextPos === curPos) return;
+
+      const newStatus = STATUSES[nextPos];
+      const prevStatus = t.status;
+      t.status = newStatus;
+
+      renderTasks(); // Optimistically update UI
+
+      try{
+        await api('upsertTask', t);
+      }catch(err){ 
+        console.error('Move failed, rolling back', err); 
+        t.status = prevStatus; 
+        renderTasks(); 
+      }
     }
 
     /* ===== Countdowns ===== */
@@ -391,7 +499,18 @@
       countdowns.forEach(c=>{
         const item = document.createElement('div'); item.className='countdown-item'; item.dataset.id=c.id;
         const del = document.createElement('button'); del.innerHTML='<i class="fas fa-trash"></i>';
-        del.addEventListener('click', async ()=>{ await api("deleteCountdown", { id:c.id }); await fetchDataAndRender(); });
+        del.addEventListener('click', async ()=>{ 
+          const originalState = JSON.parse(JSON.stringify(countdowns));
+          countdowns = countdowns.filter(cd => cd.id !== c.id);
+          renderCountdowns(); // Optimistically update
+          try{
+            await api('deleteCountdown', { id:c.id });
+          } catch (err){
+            console.error('Delete failed, rolling back', err);
+            countdowns = originalState;
+            renderCountdowns();
+          }
+        });
         item.innerHTML = `<span>${escapeHtml(c.title)}: <span class="time-left"></span></span>`;
         item.appendChild(del); countdownListEl.appendChild(item);
       });
@@ -400,8 +519,23 @@
     toggleMini.addEventListener('click', ()=>{ miniWrap.classList.toggle('hidden'); });
     miniAdd.addEventListener('click', async ()=>{
       const title = miniTitle.value.trim(); const val = miniDate.value;
-      if(!title || !val) return; const target_iso = new Date(val).toISOString();
-      await api("addCountdown", { title, target_iso }); miniTitle.value=''; miniDate.value=''; miniWrap.classList.add('hidden'); await fetchDataAndRender();
+      if(!title || !val) return; 
+
+      const target_iso = new Date(val).toISOString();
+      const newCountdown = { id: 'c_' + Date.now(), title, target_iso };
+      const originalState = JSON.parse(JSON.stringify(countdowns));
+
+      countdowns.push(newCountdown);
+      miniTitle.value=''; miniDate.value=''; miniWrap.classList.add('hidden');
+      renderCountdowns(); // Optimistically update
+
+      try{
+        await api('addCountdown', newCountdown);
+      } catch(err) {
+        console.error('Add failed, rolling back', err);
+        countdowns = originalState;
+        renderCountdowns();
+      }
     });
 
     // Big live clock + date in right panel
@@ -412,10 +546,10 @@
       timeEl.textContent = now.toLocaleTimeString([], { hour12:false });
       dateEl.textContent = now.toLocaleDateString([], { weekday:'short', day:'2-digit', month:'short', year:'numeric' });
 
-      // update countdown displays
       document.querySelectorAll('.countdown-item').forEach(item=>{
         const c = countdowns.find(x=> x.id === item.dataset.id);
-        if(!c) return; const diff = new Date(c.target_iso) - now;
+        if(!c) return; 
+        const diff = new Date(c.target_iso) - now;
         item.querySelector('.time-left').textContent =
           diff>0 ? `${Math.floor(diff/86400000)}d ${Math.floor(diff%86400000/3600000)}h ${Math.floor(diff%3600000/60000)}m ${Math.floor(diff%60000/1000)}s` : 'EXPIRED';
       });
@@ -437,8 +571,37 @@
     /* ===== Helpers ===== */
     function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;' }[m])); }
 
-    // boot
-    fetchDataAndRender();
+    /* ===== Boot (wrap awaits inside async) ===== */
+    async function init(){
+      await fetchDataAndRender();
+    }
+    init();
+
+    /* ===== Tests (toggle on when needed) ===== */
+    const DEV_TESTS = false; // set to true in console to run
+    if (DEV_TESTS) {
+      (async function runTests(){
+        console.log('[TEST] starting');
+        // Test 1: modal open/close
+        const fake = { id:null, title:'Test', description:'', status:'Backlog', subtasks:[] };
+        openModal(fake);
+        console.assert(modalOverlay.classList.contains('open'), 'Modal should open');
+        closeModal();
+        console.assert(!modalOverlay.classList.contains('open'), 'Modal should close');
+
+        // Test 2: deleting captures id BEFORE closeModal
+        const realApi = api; // mock API
+        const calls = [];
+        api = async (action, body)=>{ calls.push({action, body}); return action==='getAll'?{tasks:[],streaks:{},countdowns:[]}:{ } };
+        const deletable = { id:'t1', title:'X', description:'', status:'Backlog', subtasks:[] };
+        openModal(deletable);
+        await handleDelete();
+        console.assert(calls.some(c=>c.action==='deleteTask' && c.body && c.body.id==='t1'), 'deleteTask should be called with correct id');
+        api = realApi; // restore
+
+        console.log('[TEST] passed');
+      })();
+    }
   </script>
 </body>
 </html>
