@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Portfolio Viewer</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:16px}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+    .card{border:1px solid #ddd;border-radius:10px;padding:12px}
+    .title{font-weight:700;margin-bottom:6px}
+    table{width:100%;border-collapse:collapse}
+    th,td{border-bottom:1px solid #eee;padding:8px;text-align:left}
+    th{background:#fafafa}
+    .row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+    input[type="text"],input[type="number"]{padding:6px;border:1px solid #ccc;border-radius:6px}
+    button{padding:8px 12px;border:1px solid #ccc;border-radius:8px;background:#fff;cursor:pointer}
+    button.primary{background:#0b57d0;color:#fff;border-color:#0b57d0}
+    .muted{color:#777}
+  </style>
+</head>
+<body>
+  <div class="grid">
+    <div class="card">
+      <div class="title">Invested</div>
+      <div id="invested" class="muted">₹0</div>
+    </div>
+    <div class="card">
+      <div class="title">Current Value</div>
+      <div id="value" class="muted">₹0</div>
+    </div>
+    <div class="card">
+      <div class="title">Today’s Gain</div>
+      <div id="today" class="muted">₹0</div>
+    </div>
+    <div class="card">
+      <div class="title">Overall P/L</div>
+      <div id="pl" class="muted">₹0 ( <span id="pct">0%</span> )</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <button class="primary" onclick="rebuild()">Rebuild Portfolio</button>
+    <button onclick="scan()">Scan ±2% Movers</button>
+    <div class="row">
+      <label>Threshold %</label>
+      <input id="thr" type="number" step="0.01" value="2" style="width:70px">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="title">Holdings</div>
+    <table id="tbl"><thead>
+      <tr><th>Name</th><th>Symbol</th><th>Qty</th><th>Avg Buy</th><th>Actions</th></tr>
+    </thead><tbody></tbody></table>
+  </div>
+
+  <div class="card">
+    <div class="title">Add / Update Stock</div>
+    <div class="row">
+      <input id="nm"  type="text"   placeholder="Name (e.g., TCS)">
+      <input id="sym" type="text"   placeholder="Symbol (e.g., NSE:TCS)">
+      <input id="qty" type="number" step="1"   placeholder="Qty">
+      <input id="avg" type="number" step="0.01"placeholder="Avg buy">
+      <button class="primary" onclick="addOrUpdate()">Save</button>
+    </div>
+  </div>
+
+  <script>
+    function fmtINR(x){ return '₹'+Number(x||0).toLocaleString('en-IN',{maximumFractionDigits:2}); }
+    function pct(x){ return (Number(x||0)*100).toFixed(2)+'%'; }
+
+    function load() {
+      google.script.run.withSuccessHandler(s=>{
+        document.getElementById('invested').textContent = fmtINR(s.invested);
+        document.getElementById('value').textContent    = fmtINR(s.value);
+        document.getElementById('today').textContent    = fmtINR(s.today);
+        document.getElementById('pl').textContent       = fmtINR(s.pl)+' ( '+pct(s.overallPct)+' )';
+        document.getElementById('pct').textContent      = pct(s.overallPct);
+      }).api_getSummary();
+
+      google.script.run.withSuccessHandler(rows=>{
+        const tb = document.querySelector('#tbl tbody'); tb.innerHTML='';
+        rows.forEach(r=>{
+          const tr=document.createElement('tr');
+          tr.innerHTML = `<td>${r[0]}</td><td>${r[1]}</td>
+            <td><input type="number" value="${r[2]}" step="1" style="width:90px"></td>
+            <td><input type="number" value="${r[3]}" step="0.01" style="width:110px"></td>
+            <td>
+              <button onclick="saveRow(this)">Update</button>
+              <button onclick="removeRow('${r[1]}')">Remove</button>
+            </td>`;
+          tb.appendChild(tr);
+        });
+      }).api_getRows();
+    }
+
+    function addOrUpdate(){
+      const nm = document.getElementById('nm').value.trim();
+      const sym= document.getElementById('sym').value.trim();
+      const qty= Number(document.getElementById('qty').value);
+      const avg= Number(document.getElementById('avg').value);
+      if(!(nm&&sym)) return;
+      google.script.run.withSuccessHandler(load).api_addOrUpdate(nm,sym,qty,avg);
+    }
+    function saveRow(btn){
+      const tr = btn.closest('tr');
+      const name = tr.children[0].textContent.trim();
+      const sym  = tr.children[1].textContent.trim();
+      const qty  = Number(tr.children[2].querySelector('input').value);
+      const avg  = Number(tr.children[3].querySelector('input').value);
+      google.script.run.withSuccessHandler(load).api_addOrUpdate(name,sym,qty,avg);
+    }
+    function removeRow(sym){
+      if(!confirm('Remove '+sym+'?')) return;
+      google.script.run.withSuccessHandler(load).api_remove(sym);
+    }
+    function rebuild(){ google.script.run.withSuccessHandler(load).api_rebuild(); }
+    function scan(){
+      const thr = Number(document.getElementById('thr').value||2)/100;
+      google.script.run.api_scan(thr);
+      alert('Movers sheet updated at threshold ±'+(thr*100).toFixed(2)+'%.');
+    }
+
+    load();
+  </script>
+</body>
+</html>
