@@ -88,6 +88,10 @@
     .countdown-item button:hover{opacity:1}
     .mini-form{display:flex;gap:.4rem;align-items:center;background:var(--panel-bg);border:var(--panel-border);border-radius:.6rem;padding:.5rem;box-shadow:var(--panel-shadow)}
     .mini-form input{background:rgba(0,51,51,.5);border:1px solid rgba(0,255,255,.2);color:var(--font-color);padding:.4rem;border-radius:.4rem}
+    /* Portfolio */
+    #portfolio-summary{display:flex;flex-direction:column;gap:.4rem;background:var(--panel-bg);border:var(--panel-border);border-radius:.75rem;padding:1rem;cursor:pointer}
+    #portfolio-summary:hover{box-shadow:0 0 10px rgba(0,255,255,.3)}
+    .portfolio-row{display:flex;justify-content:space-between}
     .hidden{display:none}
 
     /* Modal */
@@ -174,6 +178,12 @@
             <button id="mini-add" class="icon-btn" title="Save"><i class="fas fa-check"></i></button>
           </div>
         </div>
+        <div id="portfolio-summary">
+          <h2 class="section-title">Portfolio</h2>
+          <div class="portfolio-row"><span>Invested</span><span id="pf-invested">₹0</span></div>
+          <div class="portfolio-row"><span>Current Value</span><span id="pf-value">₹0</span></div>
+          <div class="portfolio-row"><span>P/L</span><span id="pf-pl">₹0</span></div>
+        </div>
       </aside>
     </div>
   </div>
@@ -209,6 +219,7 @@
   <script>
     /* ===== CONFIG: your Apps Script deployment ===== */
     const API = "https://script.google.com/macros/s/AKfycbyFO00mXXPQvrq7mSNhlmaaSerOlDIfhNeMhkT0De__97vTTNZ0CKxsTDfLtkCVW_h8JA/exec";
+    const PORTFOLIO_API = "https://script.google.com/macros/s/AKfycbxNhdIsU2vIKzHritjkJ8RmXkEyOv4UWxRExKpW29OWjqMX3vDvnLb4TNoPN0QbTd_P/exec";
 
     async function api(action, body={}) {
       try{
@@ -571,9 +582,26 @@
     /* ===== Helpers ===== */
     function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;' }[m])); }
 
+    async function loadPortfolioSummary(){
+      try{
+        const url = new URL(PORTFOLIO_API);
+        url.searchParams.set('action','getsummary');
+        const res = await fetch(url);
+        const s = await res.json();
+        const fmtINR = x=>'₹'+Number(x||0).toLocaleString('en-IN',{maximumFractionDigits:2});
+        document.getElementById('pf-invested').textContent=fmtINR(s.invested);
+        document.getElementById('pf-value').textContent   =fmtINR(s.value);
+        document.getElementById('pf-pl').textContent      =fmtINR(s.pl);
+      }catch(err){
+        console.error('Portfolio summary failed',err);
+      }
+    }
+
     /* ===== Boot (wrap awaits inside async) ===== */
     async function init(){
       await fetchDataAndRender();
+      loadPortfolioSummary();
+      document.getElementById('portfolio-summary').addEventListener('click',()=>{location.href='portfolio.html';});
     }
     init();
 
