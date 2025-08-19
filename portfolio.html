@@ -20,22 +20,10 @@
 </head>
 <body>
   <div class="grid">
-    <div class="card">
-      <div class="title">Invested</div>
-      <div id="invested" class="muted">₹0</div>
-    </div>
-    <div class="card">
-      <div class="title">Current Value</div>
-      <div id="value" class="muted">₹0</div>
-    </div>
-    <div class="card">
-      <div class="title">Today’s Gain</div>
-      <div id="today" class="muted">₹0</div>
-    </div>
-    <div class="card">
-      <div class="title">Overall P/L</div>
-      <div id="pl" class="muted">₹0 ( <span id="pct">0%</span> )</div>
-    </div>
+    <div class="card"><div class="title">Invested</div><div id="invested" class="muted">₹0</div></div>
+    <div class="card"><div class="title">Current Value</div><div id="value" class="muted">₹0</div></div>
+    <div class="card"><div class="title">Today’s Gain</div><div id="today" class="muted">₹0</div></div>
+    <div class="card"><div class="title">Overall P/L</div><div id="pl" class="muted">₹0 ( <span id="pct">0%</span> )</div></div>
   </div>
 
   <div class="row">
@@ -66,58 +54,71 @@
   </div>
 
   <script>
-    function fmtINR(x){ return '₹'+Number(x||0).toLocaleString('en-IN',{maximumFractionDigits:2}); }
-    function pct(x){ return (Number(x||0)*100).toFixed(2)+'%'; }
+    // Use your deployment ID here:
+    const API = "https://script.google.com/macros/s/AKfycbxNhdIsU2vIKzHritjkJ8RmXkEyOv4UWxRExKpW29OWjqMX3vDvnLb4TNoPN0QbTd_P/exec";
 
-    function load() {
-      google.script.run.withSuccessHandler(s=>{
-        document.getElementById('invested').textContent = fmtINR(s.invested);
-        document.getElementById('value').textContent    = fmtINR(s.value);
-        document.getElementById('today').textContent    = fmtINR(s.today);
-        document.getElementById('pl').textContent       = fmtINR(s.pl)+' ( '+pct(s.overallPct)+' )';
-        document.getElementById('pct').textContent      = pct(s.overallPct);
-      }).api_getSummary();
-
-      google.script.run.withSuccessHandler(rows=>{
-        const tb = document.querySelector('#tbl tbody'); tb.innerHTML='';
-        rows.forEach(r=>{
-          const tr=document.createElement('tr');
-          tr.innerHTML = `<td>${r[0]}</td><td>${r[1]}</td>
-            <td><input type="number" value="${r[2]}" step="1" style="width:90px"></td>
-            <td><input type="number" value="${r[3]}" step="0.01" style="width:110px"></td>
-            <td>
-              <button onclick="saveRow(this)">Update</button>
-              <button onclick="removeRow('${r[1]}')">Remove</button>
-            </td>`;
-          tb.appendChild(tr);
-        });
-      }).api_getRows();
+    async function call(action, params={}) {
+      const url = new URL(API);
+      url.searchParams.set("action", action);
+      Object.entries(params).forEach(([k,v])=>url.searchParams.set(k, v));
+      const r = await fetch(url, {method:"GET", redirect:"follow"});
+      return r.json();
     }
 
-    function addOrUpdate(){
-      const nm = document.getElementById('nm').value.trim();
-      const sym= document.getElementById('sym').value.trim();
-      const qty= Number(document.getElementById('qty').value);
-      const avg= Number(document.getElementById('avg').value);
+    const fmtINR = x => '₹'+Number(x||0).toLocaleString('en-IN',{maximumFractionDigits:2});
+    const pct    = x => (Number(x||0)*100).toFixed(2)+'%';
+
+    async function load() {
+      const s = await call("getsummary");
+      document.getElementById('invested').textContent = fmtINR(s.invested);
+      document.getElementById('value').textContent    = fmtINR(s.value);
+      document.getElementById('today').textContent    = fmtINR(s.today);
+      document.getElementById('pl').textContent       = fmtINR(s.pl)+' ( '+pct(s.overallPct)+' )';
+      document.getElementById('pct').textContent      = pct(s.overallPct);
+
+      const res = await call("getrows");
+      const rows = res.rows || res; // router returns {rows:[...]}
+      const tb = document.querySelector('#tbl tbody'); tb.innerHTML='';
+      rows.forEach(r=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td>${r[0]}</td><td>${r[1]}</td>
+          <td><input type="number" value="${r[2]}" step="1" style="width:90px"></td>
+          <td><input type="number" value="${r[3]}" step="0.01" style="width:110px"></td>
+          <td>
+            <button onclick="saveRow(this)">Update</button>
+            <button onclick="removeRow('${r[1]}')">Remove</button>
+          </td>`;
+        tb.appendChild(tr);
+      });
+    }
+
+    async function addOrUpdate(){
+      const nm  = document.getElementById('nm').value.trim();
+      const sym = document.getElementById('sym').value.trim();
+      const qty = Number(document.getElementById('qty').value);
+      const avg = Number(document.getElementById('avg').value);
       if(!(nm&&sym)) return;
-      google.script.run.withSuccessHandler(load).api_addOrUpdate(nm,sym,qty,avg);
+      await call("add",{name:nm,symbol:sym,qty:String(qty),avg:String(avg)});
+      await load();
     }
-    function saveRow(btn){
+    async function saveRow(btn){
       const tr = btn.closest('tr');
       const name = tr.children[0].textContent.trim();
       const sym  = tr.children[1].textContent.trim();
       const qty  = Number(tr.children[2].querySelector('input').value);
       const avg  = Number(tr.children[3].querySelector('input').value);
-      google.script.run.withSuccessHandler(load).api_addOrUpdate(name,sym,qty,avg);
+      await call("add",{name,symbol:sym,qty:String(qty),avg:String(avg)});
+      await load();
     }
-    function removeRow(sym){
+    async function removeRow(sym){
       if(!confirm('Remove '+sym+'?')) return;
-      google.script.run.withSuccessHandler(load).api_remove(sym);
+      await call("remove",{symbol:sym});
+      await load();
     }
-    function rebuild(){ google.script.run.withSuccessHandler(load).api_rebuild(); }
-    function scan(){
+    async function rebuild(){ await call("rebuild"); await load(); }
+    async function scan(){
       const thr = Number(document.getElementById('thr').value||2)/100;
-      google.script.run.api_scan(thr);
+      await call("scan",{th:String(thr)});
       alert('Movers sheet updated at threshold ±'+(thr*100).toFixed(2)+'%.');
     }
 
