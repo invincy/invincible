@@ -60,16 +60,16 @@
     .add-task-btn{background:transparent;color:var(--accent-color);border:1px solid var(--accent-color);padding:.6rem .9rem;border-radius:.75rem;font-size:1rem;cursor:pointer;transition:.2s;text-shadow:0 0 5px var(--glow-color)}
     .add-task-btn:hover{background:rgba(0,255,255,.1);box-shadow:0 0 10px rgba(0,255,255,.5)}
 
-    /* Kanban + Right Panel */
+    /* Kanban + Side Panel */
     #kanban-container{display:flex;flex:1;gap:1.5rem;overflow-x:auto;align-items:stretch;position:relative}
     .kanban-column{flex:1;min-width:250px;max-width:350px;display:flex;flex-direction:column;background:var(--panel-bg);border:var(--panel-border);border-radius:.75rem;overflow:hidden;padding:1rem .5rem;position:relative;z-index:2;transition:.2s}
     .kanban-column:hover{box-shadow:0 0 20px rgba(0,255,255,.4)}
     .kanban-column h2{font-weight:400;text-align:center;text-transform:uppercase;font-size:1.1rem;padding:.5rem 0;margin:0 0 1rem;border-bottom:1px solid rgba(0,255,255,.3);color:var(--accent-color);text-shadow:0 0 5px var(--glow-color);opacity:.9}
     .task-list{flex-grow:1;overflow-y:auto;display:flex;flex-direction:column;gap:.75rem;padding:0 .5rem}
 
-    /* RIGHT SIDE WIDGET (Clock + Countdowns) */
-    #right-info{flex:0 0 360px;display:flex;flex-direction:column;gap:1rem;background:var(--panel-bg);border:var(--panel-border);border-radius:.75rem;padding:1rem;position:relative;z-index:2}
-    #right-info .section-title{font-weight:400;text-transform:uppercase;letter-spacing:.5px;margin:0;color:var(--accent-color);text-shadow:0 0 6px var(--glow-color);opacity:.9;border-bottom:1px solid rgba(0,255,255,.3);padding-bottom:.5rem}
+    /* SIDE WIDGET (Clock + Countdowns) */
+    #left-info{flex:0 0 360px;display:flex;flex-direction:column;gap:1rem;background:var(--panel-bg);border:var(--panel-border);border-radius:.75rem;padding:1rem;position:relative;z-index:2}
+    #left-info .section-title{font-weight:400;text-transform:uppercase;letter-spacing:.5px;margin:0;color:var(--accent-color);text-shadow:0 0 6px var(--glow-color);opacity:.9;border-bottom:1px solid rgba(0,255,255,.3);padding-bottom:.5rem}
 
     /* Big funky clock */
     .mega-clock{font-family:'Orbitron', system-ui, Arial, sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(0,255,255,.08), rgba(0,255,255,.02));border:var(--panel-border);border-radius:.75rem;padding:1rem 1rem 1.25rem;box-shadow:0 0 20px rgba(0,255,255,.25) inset, 0 0 25px rgba(0,255,255,.15);position:relative;overflow:hidden}
@@ -88,10 +88,6 @@
     .countdown-item button:hover{opacity:1}
     .mini-form{display:flex;gap:.4rem;align-items:center;background:var(--panel-bg);border:var(--panel-border);border-radius:.6rem;padding:.5rem;box-shadow:var(--panel-shadow)}
     .mini-form input{background:rgba(0,51,51,.5);border:1px solid rgba(0,255,255,.2);color:var(--font-color);padding:.4rem;border-radius:.4rem}
-    /* Portfolio */
-    #portfolio-summary{display:flex;flex-direction:column;gap:.4rem;background:var(--panel-bg);border:var(--panel-border);border-radius:.75rem;padding:1rem;cursor:pointer}
-    #portfolio-summary:hover{box-shadow:0 0 10px rgba(0,255,255,.3)}
-    .portfolio-row{display:flex;justify-content:space-between}
     .hidden{display:none}
 
     /* Modal */
@@ -121,7 +117,7 @@
     .streak-button i{font-size:1.2rem;color:var(--accent-color);text-shadow:0 0 5px var(--glow-color)}
     .streak-number{color:var(--accent-color);text-shadow:0 0 5px var(--glow-color);font-weight:700;font-size:1.2rem}
 
-    @media (max-width:1024px){#kanban-container{flex-direction:column;overflow-y:auto;overflow-x:hidden}.kanban-column{min-width:unset;max-width:unset;min-height:unset}#right-info{flex:unset}}
+    @media (max-width:1024px){#kanban-container{flex-direction:column;overflow-y:auto;overflow-x:hidden}.kanban-column{min-width:unset;max-width:unset;min-height:unset}#left-info{flex:unset}}
     @media (max-width:768px){#dashboard{padding:.5rem;gap:.5rem}#top-bar{padding:.5rem}}
   </style>
 </head>
@@ -151,13 +147,8 @@
     </div>
 
     <div id="kanban-container">
-      <div id="kanban-backlog" class="kanban-column"><h2>Backlog</h2><div class="task-list" data-status="Backlog"></div></div>
-      <div id="kanban-today" class="kanban-column"><h2>Today</h2><div class="task-list" data-status="Today"></div></div>
-      <div id="kanban-in-progress" class="kanban-column"><h2>In Progress</h2><div class="task-list" data-status="In Progress"></div></div>
-      <div id="kanban-done" class="kanban-column"><h2>Done</h2><div class="task-list" data-status="Done"></div></div>
-
-      <!-- RIGHT SIDE WIDGET -->
-      <aside id="right-info">
+      <!-- LEFT SIDE WIDGET -->
+      <aside id="left-info">
         <h2 class="section-title">Clock</h2>
         <div class="mega-clock">
           <div id="live-clock-time" class="time">--:--:--</div>
@@ -178,13 +169,12 @@
             <button id="mini-add" class="icon-btn" title="Save"><i class="fas fa-check"></i></button>
           </div>
         </div>
-        <div id="portfolio-summary">
-          <h2 class="section-title">Portfolio</h2>
-          <div class="portfolio-row"><span>Invested</span><span id="pf-invested">₹0</span></div>
-          <div class="portfolio-row"><span>Current Value</span><span id="pf-value">₹0</span></div>
-          <div class="portfolio-row"><span>P/L</span><span id="pf-pl">₹0</span></div>
-        </div>
       </aside>
+
+      <div id="kanban-backlog" class="kanban-column"><h2>Backlog</h2><div class="task-list" data-status="Backlog"></div></div>
+      <div id="kanban-today" class="kanban-column"><h2>Today</h2><div class="task-list" data-status="Today"></div></div>
+      <div id="kanban-in-progress" class="kanban-column"><h2>In Progress</h2><div class="task-list" data-status="In Progress"></div></div>
+      <div id="kanban-done" class="kanban-column"><h2>Done</h2><div class="task-list" data-status="Done"></div></div>
     </div>
   </div>
 
@@ -219,7 +209,6 @@
   <script>
     /* ===== CONFIG: your Apps Script deployment ===== */
     const API = "https://script.google.com/macros/s/AKfycbyFO00mXXPQvrq7mSNhlmaaSerOlDIfhNeMhkT0De__97vTTNZ0CKxsTDfLtkCVW_h8JA/exec";
-    const PORTFOLIO_API = "https://script.google.com/macros/s/AKfycbxNhdIsU2vIKzHritjkJ8RmXkEyOv4UWxRExKpW29OWjqMX3vDvnLb4TNoPN0QbTd_P/exec";
 
     async function api(action, body={}) {
       try{
@@ -242,6 +231,18 @@
     function normalizeStreaks(s){
       const read = (x)=> typeof x === 'number' ? x : (x && (x.streak ?? x.value ?? x.count ?? 0)) || 0;
       return { body: read(s?.body), mind: read(s?.mind), spirit: read(s?.spirit) };
+    }
+
+    async function resetStreaksIfNeeded(){
+      const now = Date.now();
+      for(const type of ['body','mind','spirit']){
+        const last = Number(localStorage.getItem('streak-last-'+type) || 0);
+        if(now - last > 86400000 && streaks[type] !== 0){
+          streaks[type] = 0;
+          try{ await api('updateStreak', { type, value: 0 }); }catch(err){ console.error('Reset failed', err); }
+        }
+      }
+      renderStreaks();
     }
 
     /* ===== Elements ===== */
@@ -280,7 +281,9 @@
       tasks = data.tasks || [];
       streaks = normalizeStreaks(data.streaks || {});
       countdowns = data.countdowns || [];
-      renderTasks(); renderStreaks(); renderCountdowns();
+      renderTasks();
+      await resetStreaksIfNeeded();
+      renderCountdowns();
     }
 
     function renderTasks(){
@@ -454,20 +457,22 @@
 
     /* ===== Streaks ===== */
     document.querySelectorAll('.streak-button').forEach(btn=>{
-      btn.addEventListener('click', async ()=>{ 
+      btn.addEventListener('click', async ()=>{
         const type = btn.dataset.type;
         const prevStreaks = JSON.parse(JSON.stringify(streaks));
-        const oldStreak = streaks[type];
-        streaks[type] = oldStreak + 1;
-        renderStreaks(); // Optimistically update UI
-        try{ 
-          await api('pingStreak', { type }); 
-          // Re-fetch to get the canonical streak value
-          const data = await api("getAll");
-          streaks = normalizeStreaks(data.streaks || {});
-          renderStreaks();
+        const now = Date.now();
+        const last = Number(localStorage.getItem('streak-last-'+type) || 0);
+        if(now - last > 86400000){
+          streaks[type] = 1;
+        } else {
+          streaks[type] = streaks[type] + 1;
+        }
+        localStorage.setItem('streak-last-'+type, now);
+        renderStreaks();
+        try{
+          await api('updateStreak',{ type, value: streaks[type] });
         } catch(err){
-          console.error('Ping failed, rolling back', err);
+          console.error('Streak update failed, rolling back', err);
           streaks = prevStreaks;
           renderStreaks();
         }
@@ -527,7 +532,10 @@
       });
     }
 
-    toggleMini.addEventListener('click', ()=>{ miniWrap.classList.toggle('hidden'); });
+    toggleMini.addEventListener('click', ()=>{
+      miniWrap.classList.toggle('hidden');
+      if(!miniWrap.classList.contains('hidden')) miniTitle.focus();
+    });
     miniAdd.addEventListener('click', async ()=>{
       const title = miniTitle.value.trim(); const val = miniDate.value;
       if(!title || !val) return; 
@@ -582,26 +590,9 @@
     /* ===== Helpers ===== */
     function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;' }[m])); }
 
-    async function loadPortfolioSummary(){
-      try{
-        const url = new URL(PORTFOLIO_API);
-        url.searchParams.set('action','getsummary');
-        const res = await fetch(url);
-        const s = await res.json();
-        const fmtINR = x=>'₹'+Number(x||0).toLocaleString('en-IN',{maximumFractionDigits:2});
-        document.getElementById('pf-invested').textContent=fmtINR(s.invested);
-        document.getElementById('pf-value').textContent   =fmtINR(s.value);
-        document.getElementById('pf-pl').textContent      =fmtINR(s.pl);
-      }catch(err){
-        console.error('Portfolio summary failed',err);
-      }
-    }
-
     /* ===== Boot (wrap awaits inside async) ===== */
     async function init(){
       await fetchDataAndRender();
-      loadPortfolioSummary();
-      document.getElementById('portfolio-summary').addEventListener('click',()=>{location.href='portfolio.html';});
     }
     init();
 
