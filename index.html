@@ -119,6 +119,25 @@
 
     @media (max-width:1024px){#kanban-container{flex-direction:column;overflow-y:auto;overflow-x:hidden}.kanban-column{min-width:unset;max-width:unset;min-height:unset}#left-info{flex:unset}}
     @media (max-width:768px){#dashboard{padding:.5rem;gap:.5rem}#top-bar{padding:.5rem}}
+
+    /* Authentication and cloud-sync status */
+    #auth-overlay{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;background:rgba(0,0,0,.92);backdrop-filter:blur(10px)}
+    #auth-overlay.hidden{display:none}
+    .auth-card{width:min(420px,calc(100vw - 40px));box-sizing:border-box;padding:2rem;text-align:center;background:rgba(0,51,51,.72);border:1px solid rgba(0,255,255,.35);border-radius:16px;box-shadow:0 0 35px rgba(0,255,255,.18)}
+    .auth-card h2{margin:.5rem 0;color:var(--accent-color);font-family:Orbitron,sans-serif;letter-spacing:.16em}
+    .auth-card p{line-height:1.5;color:var(--font-color);opacity:.86}
+    .auth-icon{font-size:2rem;color:var(--accent-color)}
+    #google-sign-in,#legacy-import,#sign-out{border:1px solid rgba(0,255,255,.45);background:rgba(0,255,255,.12);color:var(--font-color);border-radius:8px;padding:.65rem .9rem;cursor:pointer}
+    #google-sign-in{margin-top:.8rem;font-size:1rem}
+    #google-sign-in:hover,#legacy-import:hover,#sign-out:hover{background:rgba(0,255,255,.22)}
+    #google-sign-in:disabled,#legacy-import:disabled{opacity:.55;cursor:wait}
+    #auth-error{min-height:1.2rem;margin-top:.8rem;color:#ff8b8b;font-size:.85rem}
+    #user-bar{position:fixed;right:18px;bottom:12px;z-index:50;display:none;align-items:center;gap:.55rem;padding:.45rem .55rem;background:rgba(0,18,18,.9);border:1px solid rgba(0,255,255,.25);border-radius:10px;box-shadow:0 0 12px rgba(0,255,255,.15);font-size:.72rem}
+    #user-bar.visible{display:flex}
+    #sync-status{color:#7fffd4}
+    #user-email{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #legacy-import,#sign-out{padding:.38rem .55rem;font-size:.7rem}
+    @media(max-width:700px){#user-email{display:none}#user-bar{right:8px;bottom:8px}#legacy-import{max-width:92px}}
   </style>
 </head>
 <body>
@@ -206,25 +225,208 @@
     </div>
   </div>
 
-  <script>
-    /* ===== CONFIG: your Apps Script deployment ===== */
-    const API = "https://script.google.com/macros/s/AKfycbyFO00mXXPQvrq7mSNhlmaaSerOlDIfhNeMhkT0De__97vTTNZ0CKxsTDfLtkCVW_h8JA/exec";
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
-    async function api(action, body={}) {
-      try{
-        const res = await fetch(API, { method:'POST', body: JSON.stringify({ action, body }) });
-        const json = await res.json();
-        if(!json.ok) throw new Error(json.error || 'API error');
-        return json.data;
-      }catch(err){
-        console.error('API call failed:', err);
-        throw err; // Re-throw to be caught by the calling function
+  <script>
+    /* ===== Firebase: authenticated, per-user cloud sync ===== */
+    const firebaseConfig = {
+      apiKey: "AIzaSyBeVpUqcRO_VXfQrGVL5OaSGHKFB8XEQMc",
+      authDomain: "life-by-adichimp.firebaseapp.com",
+      projectId: "life-by-adichimp",
+      storageBucket: "life-by-adichimp.firebasestorage.app",
+      messagingSenderId: "761981819700",
+      appId: "1:761981819700:web:8e88516817ed40b9866361",
+      measurementId: "G-Z0Q8WJDSMH"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const googleProvider = new firebase.auth.GoogleAuthProvider();
+    googleProvider.setCustomParameters({ prompt: 'select_account' });
+    const LEGACY_API = "https://script.google.com/macros/s/AKfycbyFO00mXXPQvrq7mSNhlmaaSerOlDIfhNeMhkT0De__97vTTNZ0CKxsTDfLtkCVW_h8JA/exec";
+    let currentUser = null;
+    let liveUnsubscribers = [];
+
+    function userRoot(){
+      if(!currentUser) throw new Error('Sign in is required.');
+      return db.collection('users').doc(currentUser.uid);
+    }
+
+    async function legacyApi(action, body={}){
+      const res = await fetch(LEGACY_API, { method:'POST', body: JSON.stringify({ action, body }) });
+      const json = await res.json();
+      if(!json.ok) throw new Error(json.error || 'Legacy API error');
+      return json.data;
+    }
+
+    async function api(action, body={}){
+      const root = userRoot();
+      switch(action){
+        case 'getAll': {
+          const [taskSnap, countdownSnap, streakSnap] = await Promise.all([
+            root.collection('tasks').get(),
+            root.collection('countdowns').get(),
+            root.collection('streaks').get()
+          ]);
+          const streakValues = {};
+          const streakTimes = {};
+          streakSnap.docs.forEach(doc => {
+            const item = doc.data();
+            streakValues[doc.id] = Number(item.value || 0);
+            streakTimes[doc.id] = Number(item.updatedAt || 0);
+          });
+          return {
+            tasks: taskSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+            countdowns: countdownSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+            streaks: streakValues,
+            streakLast: streakTimes
+          };
+        }
+        case 'upsertTask':
+          await root.collection('tasks').doc(body.id).set({ ...body, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
+          return {};
+        case 'deleteTask':
+          await root.collection('tasks').doc(body.id).delete();
+          return {};
+        case 'updateStreak':
+          await root.collection('streaks').doc(body.type).set({
+            value: body.value,
+            updatedAt: body.updatedAt || Date.now()
+          }, { merge:true });
+          return {};
+        case 'addCountdown':
+          await root.collection('countdowns').doc(body.id).set({ ...body, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
+          return {};
+        case 'deleteCountdown':
+          await root.collection('countdowns').doc(body.id).delete();
+          return {};
+        default:
+          throw new Error('Unknown data action: ' + action);
       }
+    }
+
+    function stopRealtimeSync(){
+      liveUnsubscribers.forEach(unsubscribe => unsubscribe());
+      liveUnsubscribers = [];
+    }
+
+    function startRealtimeSync(){
+      stopRealtimeSync();
+      const root = userRoot();
+      liveUnsubscribers.push(
+        root.collection('tasks').onSnapshot(snapshot => {
+          tasks = snapshot.docs.map(doc => ({ id:doc.id, ...doc.data() }));
+          renderTasks();
+        }, showSyncError),
+        root.collection('countdowns').onSnapshot(snapshot => {
+          countdowns = snapshot.docs.map(doc => ({ id:doc.id, ...doc.data() }));
+          renderCountdowns();
+        }, showSyncError),
+        root.collection('streaks').onSnapshot(snapshot => {
+          const values = {};
+          const times = {};
+          snapshot.docs.forEach(doc => {
+            const item = doc.data();
+            values[doc.id] = Number(item.value || 0);
+            times[doc.id] = Number(item.updatedAt || 0);
+          });
+          streaks = normalizeStreaks(values);
+          streakLast = times;
+          renderStreaks();
+        }, showSyncError)
+      );
+    }
+
+    function showSyncError(err){
+      console.error('Cloud sync failed:', err);
+      const status = document.getElementById('sync-status');
+      if(status) status.textContent = 'Sync error';
+    }
+
+    function setupAuthUi(){
+      const overlay = document.createElement('div');
+      overlay.id = 'auth-overlay';
+      overlay.innerHTML = `
+        <div class="auth-card">
+          <i class="fab fa-google auth-icon"></i>
+          <h2>INVINCIBLE</h2>
+          <p>Sign in with the same Google account on every device to keep your dashboard synced.</p>
+          <button id="google-sign-in"><i class="fab fa-google"></i> Continue with Google</button>
+          <div id="auth-error"></div>
+        </div>`;
+      document.body.appendChild(overlay);
+
+      const userBar = document.createElement('div');
+      userBar.id = 'user-bar';
+      userBar.innerHTML = `
+        <span id="sync-status">Synced</span>
+        <span id="user-email"></span>
+        <button id="legacy-import" title="Merge data from the old dashboard">Import old data</button>
+        <button id="sign-out">Sign out</button>`;
+      document.body.appendChild(userBar);
+
+      document.getElementById('google-sign-in').addEventListener('click', async ()=>{
+        const button = document.getElementById('google-sign-in');
+        button.disabled = true;
+        document.getElementById('auth-error').textContent = '';
+        try{
+          await auth.signInWithPopup(googleProvider);
+        }catch(err){
+          console.error('Sign-in failed:', err);
+          document.getElementById('auth-error').textContent = err.message || 'Sign-in failed.';
+        }finally{
+          button.disabled = false;
+        }
+      });
+      document.getElementById('sign-out').addEventListener('click', ()=> auth.signOut());
+      document.getElementById('legacy-import').addEventListener('click', importLegacyData);
+    }
+
+    async function importLegacyData(){
+      if(!currentUser || !confirm('Merge tasks, streaks and countdowns from the old dashboard into this account?')) return;
+      const button = document.getElementById('legacy-import');
+      button.disabled = true;
+      button.textContent = 'Importing...';
+      try{
+        const old = await legacyApi('getAll');
+        const writes = [];
+        (old.tasks || []).forEach(task => {
+          if(task.id) writes.push(userRoot().collection('tasks').doc(task.id).set(task, { merge:true }));
+        });
+        (old.countdowns || []).forEach(item => {
+          if(item.id) writes.push(userRoot().collection('countdowns').doc(item.id).set(item, { merge:true }));
+        });
+        if(old.streaks){
+          const importedStreaks = normalizeStreaks(old.streaks);
+          ['body','mind','spirit'].forEach(type => {
+            writes.push(userRoot().collection('streaks').doc(type).set({
+              value: importedStreaks[type],
+              updatedAt: Date.now()
+            }, { merge:true }));
+          });
+        }
+        await Promise.all(writes);
+        alert('Old dashboard data imported.');
+      }catch(err){
+        console.error('Legacy import failed:', err);
+        alert('Old data could not be imported. Your Firestore data was not removed.');
+      }finally{
+        button.disabled = false;
+        button.textContent = 'Import old data';
+      }
+    }
+
+    function updateAuthUi(user){
+      document.getElementById('auth-overlay').classList.toggle('hidden', !!user);
+      document.getElementById('user-bar').classList.toggle('visible', !!user);
+      document.getElementById('user-email').textContent = user ? user.email : '';
     }
 
     /* ===== State ===== */
     let dragId = null;
-    let tasks=[], streaks={}, countdowns=[];
+    let tasks=[], streaks={}, streakLast={}, countdowns=[];
     let draggedTask=null, originalStatus=null;
     const STATUSES = ['Backlog','Today','In Progress','Done'];
 
@@ -236,7 +438,7 @@
     async function resetStreaksIfNeeded(){
       const now = Date.now();
       for(const type of ['body','mind','spirit']){
-        const last = Number(localStorage.getItem('streak-last-'+type) || 0);
+        const last = Number(streakLast[type] || 0);
         if(now - last > 86400000 && streaks[type] !== 0){
           streaks[type] = 0;
           try{ await api('updateStreak', { type, value: 0 }); }catch(err){ console.error('Reset failed', err); }
@@ -281,6 +483,7 @@
       tasks = data.tasks || [];
       streaks = normalizeStreaks(data.streaks || {});
       countdowns = data.countdowns || [];
+      streakLast = data.streakLast || {};
       renderTasks();
       await resetStreaksIfNeeded();
       renderCountdowns();
@@ -461,16 +664,16 @@
         const type = btn.dataset.type;
         const prevStreaks = JSON.parse(JSON.stringify(streaks));
         const now = Date.now();
-        const last = Number(localStorage.getItem('streak-last-'+type) || 0);
+        const last = Number(streakLast[type] || 0);
         if(now - last > 86400000){
           streaks[type] = 1;
         } else {
           streaks[type] = streaks[type] + 1;
         }
-        localStorage.setItem('streak-last-'+type, now);
+        streakLast[type] = now;
         renderStreaks();
         try{
-          await api('updateStreak',{ type, value: streaks[type] });
+          await api('updateStreak',{ type, value: streaks[type], updatedAt: now });
         } catch(err){
           console.error('Streak update failed, rolling back', err);
           streaks = prevStreaks;
@@ -592,7 +795,25 @@
 
     /* ===== Boot (wrap awaits inside async) ===== */
     async function init(){
-      await fetchDataAndRender();
+      setupAuthUi();
+      await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+      auth.onAuthStateChanged(async user => {
+        stopRealtimeSync();
+        currentUser = user;
+        updateAuthUi(user);
+        if(!user){
+          tasks = []; streaks = {}; streakLast = {}; countdowns = [];
+          renderTasks(); renderStreaks(); renderCountdowns();
+          return;
+        }
+        try{
+          await fetchDataAndRender();
+          startRealtimeSync();
+          document.getElementById('sync-status').textContent = 'Synced';
+        }catch(err){
+          showSyncError(err);
+        }
+      });
     }
     init();
 
