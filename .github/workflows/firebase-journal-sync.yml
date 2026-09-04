@@ -1,59 +1,55 @@
-name: Deploy Journal sync fix
+name: Publish Journal on GitHub Pages
 
 on:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/firebase-journal-sync.yml'
   workflow_dispatch:
 
 permissions:
-  contents: read
-  checks: write
-  pull-requests: write
+  contents: write
 
 jobs:
-  deploy:
+  publish-journal:
     runs-on: ubuntu-latest
     steps:
-      - name: Recover current hosted app
+      - uses: actions/checkout@v4
+
+      - name: Recover and adapt the existing Journal
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p .firebase-deploy/public
-          curl -fsSL https://life-by-adichimp.web.app/ -o .firebase-deploy/public/index.html
-          script_path=$(grep -oE '/assets/index-[A-Za-z0-9_-]+\.js' .firebase-deploy/public/index.html | head -1)
-          css_path=$(grep -oE '/assets/index-[A-Za-z0-9_-]+\.css' .firebase-deploy/public/index.html | head -1)
+          rm -rf journal
+          mkdir -p journal/assets
+          curl -fsSL https://life-by-adichimp.web.app/ -o journal/index.html
+          script_path=$(grep -oE '/assets/index-[A-Za-z0-9_-]+\.js' journal/index.html | head -1)
+          css_path=$(grep -oE '/assets/index-[A-Za-z0-9_-]+\.css' journal/index.html | head -1)
           test -n "$script_path"
           test -n "$css_path"
-          mkdir -p .firebase-deploy/public/assets
-          curl -fsSL "https://life-by-adichimp.web.app$script_path" -o ".firebase-deploy/public$script_path"
-          curl -fsSL "https://life-by-adichimp.web.app$css_path" -o ".firebase-deploy/public$css_path"
+          curl -fsSL "https://life-by-adichimp.web.app$script_path" -o "journal$script_path"
+          curl -fsSL "https://life-by-adichimp.web.app$css_path" -o "journal$css_path"
 
-      - name: Fix authenticated Journal path
-        shell: bash
-        run: |
-          set -euo pipefail
-          script_file=$(find .firebase-deploy/public/assets -name 'index-*.js' -print -quit)
+          script_file=$(find journal/assets -name 'index-*.js' -print -quit)
           grep -F 'HP(y,"users",l.uid,"journals",t,"strokes")' "$script_file"
           perl -0pi -e 's/HP\(y,"users",l\.uid,"journals",t,"strokes"\)/HP(y,"users",w.uid,"journals",t,"strokes")/' "$script_file"
+          perl -0pi -e 's|path:"/journal"|path:"/invincible/journal/*"|g; s|path:"/finance"|path:"/invincible/journal/finance"|g; s|href:"/dashboard\.html"|href:"/invincible/"|g; s|href:"/journal"|href:"/invincible/journal/"|g; s|href:"/finance"|href:"/invincible/journal/finance"|g; s|return\(window\.location\.pathname\|\|"/journal"\)==="/finance"\?"finance":"canvas"|return(window.location.pathname||"").endsWith("/finance")?"finance":"canvas"|g' "$script_file"
+          perl -0pi -e 's|/assets/|assets/|g' journal/index.html
+
           grep -F 'HP(y,"users",w.uid,"journals",t,"strokes")' "$script_file"
+          grep -F 'path:"/invincible/journal/*"' "$script_file"
           if grep -Fq 'HP(y,"users",l.uid,"journals",t,"strokes")' "$script_file"; then
             echo "Old null-UID path remains" >&2
             exit 1
           fi
-          cat > .firebase-deploy/firebase.json <<'JSON'
-          {
-            "hosting": {
-              "site": "life-by-adichimp",
-              "public": "public",
-              "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-              "rewrites": [{"source": "**", "destination": "/index.html"}]
-            }
-          }
-          JSON
 
-      - name: Deploy Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_LIFE_BY_ADICHIMP }}
-          projectId: life-by-adichimp
-          channelId: live
-          entryPoint: .firebase-deploy
+      - name: Commit Journal files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add journal
+          git diff --cached --quiet && exit 0
+          git commit -m "Publish synced Journal on GitHub Pages [skip ci]"
+          git push
