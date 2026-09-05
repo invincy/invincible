@@ -11,5 +11,15 @@
   </head>
   <body>
     <div id="root"></div>
-  </body>
+    <script>
+    document.addEventListener("click", function (event) {
+      const button = event.target.closest("button");
+      if (button && button.textContent.trim() === "Monthly Finance") {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        window.location.href = "/invincible/journal/finance.html";
+      }
+    }, true);
+  </script>
+</body>
 </html>
