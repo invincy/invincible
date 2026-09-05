@@ -161,12 +161,13 @@
     #sync-status{color:#7fffd4}
     #user-email{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     #legacy-import,#sign-out{padding:.38rem .55rem;font-size:.7rem}
-    @media(max-width:700px){#user-email{display:none}#user-bar{right:8px;bottom:8px}#legacy-import{max-width:92px}}
+    @media(max-width:700px){#user-email{display:none}#user-bar{position:relative;right:auto;bottom:auto;width:calc(100% - 1.3rem);max-width:none;margin:.65rem;box-sizing:border-box;justify-content:flex-end;flex-wrap:nowrap;padding:.45rem}#sync-status{margin-right:auto}#legacy-import{max-width:88px;padding:.38rem .48rem}#sign-out{padding:.38rem .48rem}}
   </style>
   <link rel="stylesheet" href="site-nav.css?v=6">
 </head>
 <body class="home-page">
-<nav class="global-nav" aria-label="Primary navigation">\n  <a title="Home and tasks" href="/invincible/" aria-current="page"><span class="nav-icon">⌂</span><span class="nav-label">Home · Tasks</span></a>
+<nav class="global-nav" aria-label="Primary navigation">
+  <a title="Home and tasks" href="/invincible/" aria-current="page"><span class="nav-icon">⌂</span><span class="nav-label">Home · Tasks</span></a>
   <a title="Journal" href="/invincible/journal/"><span class="nav-icon">✎</span><span class="nav-label">Journal</span></a>
   <a title="Monthly Finance" href="/invincible/journal/finance.html"><span class="nav-icon">₹</span><span class="nav-label">Finance</span></a>
   <a title="Portfolio" href="https://script.google.com/macros/s/AKfycbxbdgQqTwHIYw_dS9ko_tTieVM1PAQKNAHsTqy7bFPlVNg2P-9FNoccrZwHgbeXALoY/exec" target="_blank" rel="noopener"><span class="nav-icon">↗</span><span class="nav-label">Portfolio</span></a>
