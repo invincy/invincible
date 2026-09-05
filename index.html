@@ -117,8 +117,32 @@
     .streak-button i{font-size:1.2rem;color:var(--accent-color);text-shadow:0 0 5px var(--glow-color)}
     .streak-number{color:var(--accent-color);text-shadow:0 0 5px var(--glow-color);font-weight:700;font-size:1.2rem}
 
-    @media (max-width:1024px){#kanban-container{flex-direction:column;overflow-y:auto;overflow-x:hidden}.kanban-column{min-width:unset;max-width:unset;min-height:unset}#left-info{flex:unset}}
-    @media (max-width:768px){#dashboard{padding:.5rem;gap:.5rem}#top-bar{padding:.5rem}}
+    @media (max-width:1024px){
+      html,body{height:auto;min-height:100%;overflow-x:hidden;overflow-y:auto}
+      body{display:block}
+      #dashboard{width:100%;height:auto!important;min-height:calc(100vh - 54px);padding:1rem;gap:1rem;overflow:visible}
+      #kanban-container{display:flex;flex-direction:column;overflow:visible;gap:1rem}
+      .kanban-column{flex:none;width:100%;min-width:0;max-width:none;min-height:150px;overflow:visible;box-sizing:border-box}
+      .task-list{overflow:visible;max-height:none;min-height:70px}
+      #left-info{flex:none;width:100%;box-sizing:border-box;order:5}
+    }
+    @media (max-width:768px){
+      #dashboard{padding:.65rem;gap:.75rem}
+      #top-bar{padding:.75rem;border-radius:.6rem}
+      #time-and-date-row,#controls-row{flex-wrap:wrap;gap:.75rem}
+      #controls-row{align-items:flex-start}
+      .controls{width:100%;justify-content:flex-end}
+      .add-task-btn{min-height:44px;padding:.7rem 1rem}
+      .streak-buttons{flex-wrap:wrap;gap:.45rem}
+      .streak-button{min-height:40px;padding:.45rem .6rem}
+      .kanban-column{padding:.75rem .4rem}
+      .kanban-column h2{position:sticky;top:50px;z-index:4;background:rgba(0,24,24,.96);border-radius:6px;padding:.7rem}
+      .task-card{min-height:64px;padding:1.85rem .85rem .8rem;touch-action:manipulation}
+      .card-nav button{width:32px;height:30px}
+      #left-info{padding:.75rem}
+      #user-bar{position:static;margin:.5rem;max-width:calc(100% - 1rem);flex-wrap:wrap;justify-content:center}
+      .modal{width:calc(100vw - 24px);max-height:calc(100vh - 24px);overflow-y:auto;padding:1rem}
+    }
 
     /* Authentication and cloud-sync status */
     #auth-overlay{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;background:rgba(0,0,0,.92);backdrop-filter:blur(10px)}
