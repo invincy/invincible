@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Content Project · Invincible</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../site-nav.css?v=9">
+  <link rel="stylesheet" href="project.css?v=2">
+</head>
+<body class="project-page">
+  <nav class="global-nav" aria-label="Primary navigation"><div class="nav-head"><a class="nav-brand" href="/invincible/"><span class="nav-mark">I</span><strong>INVINCIBLE</strong></a><button class="nav-trigger" type="button" aria-expanded="false">Menu</button></div><div class="nav-links"><a href="/invincible/"><span class="nav-icon">01</span><span class="nav-label">Dashboard</span></a><a href="/invincible/journal/"><span class="nav-icon">02</span><span class="nav-label">Journal</span></a><a href="/invincible/journal/finance.html"><span class="nav-icon">03</span><span class="nav-label">Finance</span></a><a href="/invincible/garage/"><span class="nav-icon">04</span><span class="nav-label">Garage</span></a><a href="/invincible/creator/" aria-current="page"><span class="nav-icon">05</span><span class="nav-label">Creator Studio</span></a><a href="https://script.google.com/macros/s/AKfycbxbdgQqTwHIYw_dS9ko_tTieVM1PAQKNAHsTqy7bFPlVNg2P-9FNoccrZwHgbeXALoY/exec" target="_blank" rel="noopener"><span class="nav-icon">06</span><span class="nav-label">Portfolio</span><span class="nav-external">↗</span></a></div><div class="nav-footer">PERSONAL OPERATING SYSTEM</div></nav><div class="nav-backdrop" aria-hidden="true"></div>
+  <script defer src="../site-nav.js?v=1"></script>
+
+  <header class="project-header">
+    <div><a class="back" href="/invincible/creator/">← Creator Studio</a><span id="projectMeta" class="eyebrow">CONTENT PROJECT</span><h1 id="projectTitle">Loading…</h1></div>
+    <div class="project-stats"><div><strong id="sceneCount">0</strong><span>Scenes</span></div><div><strong id="totalDuration">0s</strong><span>Runtime</span></div><div><strong id="assetProgress">0%</strong><span>Assets ready</span></div></div>
+  </header>
+  <div id="status" class="sync-status" role="status" aria-live="polite">Connecting to Firebase…</div>
+
+  <main id="app" hidden>
+    <section class="setup-grid">
+      <article class="panel script-panel"><div class="panel-title"><div><span class="eyebrow">SOURCE</span><h2>Full script</h2></div><button id="splitScript" class="secondary">Split into 5–10s scenes</button></div><textarea id="fullScript" rows="9" placeholder="Paste the complete voiceover script here…"></textarea><p class="hint">Automatic splitting estimates spoken time. You can adjust every scene afterward.</p></article>
+      <article class="panel settings-panel"><div class="panel-title"><div><span class="eyebrow">VISUAL BIBLE</span><h2>Continuity settings</h2></div></div><label>Visual style<input id="visualStyle" placeholder="Cinematic realistic, warm documentary…"></label><div class="two"><label>Aspect ratio<select id="aspectRatio"><option>9:16</option><option>16:9</option><option>1:1</option></select></label><label>Language<input id="language" placeholder="Gujarati + English"></label></div><label>Character and continuity notes<textarea id="continuityNotes" rows="4" placeholder="Same person, clothing, locations, colour palette…"></textarea></label></article>
+    </section>
+
+    <section class="panel importer">
+      <div class="panel-title"><div><span class="eyebrow">FAST IMPORT</span><h2>Paste a ChatGPT table</h2><p>Columns are detected automatically and aligned scene by scene.</p></div><div class="import-actions"><select id="importMode" aria-label="Import mode"><option value="replace">Replace scenes</option><option value="append">Append scenes</option></select><button id="importTable" class="primary">Import table</button></div></div>
+      <textarea id="tableInput" rows="6" spellcheck="false" placeholder="| Scene | Duration | Voiceover | Image Prompt | Video Prompt |&#10;|---|---|---|---|---|&#10;| 1 | 7 sec | Your narration… | Visual prompt… | Motion prompt… |"></textarea>
+      <div class="import-footer"><span id="importFeedback" class="hint">Recognises VO, Narration, Image Gen Prompt, Visual Prompt, Motion Prompt and similar headings.</span><button id="pasteClipboard" class="text-button">Paste from clipboard</button></div>
+    </section>
+
+    <section class="scene-section">
+      <div class="scene-heading"><div><span class="eyebrow">TIMELINE</span><h2>Scene workspace</h2></div><button id="addScene" class="primary">+ Add scene</button></div>
+      <div id="sceneList" class="scene-list"></div>
+      <div id="emptyScenes" class="empty-state"><strong>No scenes yet</strong><span>Paste a ChatGPT table, split your full script, or add a scene manually.</span></div>
+    </section>
+  </main>
+  <div id="focusEditor" class="focus-editor" hidden>
+    <div class="focus-shell" role="dialog" aria-modal="true" aria-labelledby="focusTitle">
+      <div class="focus-top"><div><span id="focusScene" class="eyebrow">SCENE 01</span><h2 id="focusTitle">Voiceover</h2></div><button id="closeFocus" aria-label="Close focused editor">×</button></div>
+      <div id="focusTabs" class="focus-tabs"><button data-focus-field="voiceover">Voiceover</button><button data-focus-field="imagePrompt">Image Prompt</button><button data-focus-field="videoPrompt">Video Prompt</button></div>
+      <textarea id="focusTextarea" spellcheck="true"></textarea>
+      <div class="focus-controls"><button id="previousScene">↑ Previous scene</button><button id="previousField">← Previous field</button><span id="focusPosition"></span><button id="nextField">Next field →</button><button id="nextScene">Next scene ↓</button><button id="copyFocus" class="primary">Copy</button></div>
+    </div>
+  </div>
+  <script type="module" src="project.js?v=2"></script>
+</body>
+</html>
