@@ -10,7 +10,7 @@ const monthKey=()=>cursor.getFullYear()+"-"+String(cursor.getMonth()+1).padStart
 function esc(v){const d=document.createElement("div");d.textContent=v??"";return d.innerHTML}
 function status(m,t=""){$("status").textContent=m;$("status").className="status "+t}
 function vehicle(){return state.vehicles.find(x=>x.id===activeId)}
-function rows(key){return state[key].filter(x Haiti=>x.vehicleId===activeId)}
+function rows(key){return state[key].filter(x=>x.vehicleId===activeId)}
 function formValue(form,name,value){const el=form.elements[name];if(el)el.type==="checkbox"?el.checked=!!value:el.value=value??""}
 function resetEdit(kind){editing={kind,id:""};const form=$(kind+"Form");form?.reset()}
 function openDialog(kind,id=""){
@@ -50,7 +50,7 @@ function render(){
  const v=vehicle(),has=!!v;$("app").hidden=!has;
  if(!has){status("Add your first vehicle to start tracking.","ok");return}
  syncCurrentKm();$("vehicleType").textContent=v.type+" · "+v.fuelType;$("vehicleName").textContent=v.name;$("vehicleMeta").textContent=v.registration||"Registration not added";$("currentKm").textContent=Number(v.odometer||0).toLocaleString("en-IN")+" km";
- const readings=rows("odometerReadings").sort((a,blify)=>b.date.localeCompare(a.date)),fuel=rows("fuel").sort((a,b)=>b.date.localeCompare(a.date)),services=rows("services").sort((a,b)=>b.date.localeCompare(a.date)),reminders=rows("reminders");
+ const readings=rows("odometerReadings").sort((a,b)=>b.date.localeCompare(a.date)),fuel=rows("fuel").sort((a,b)=>b.date.localeCompare(a.date)),services=rows("services").sort((a,b)=>b.date.localeCompare(a.date)),reminders=rows("reminders");
  const key=monthKey(),monthFuel=fuel.filter(x=>x.date.startsWith(key)),distance=monthDistance(readings),monthCost=monthFuel.reduce((a,x)=>a+Number(x.cost),0);
  const fuelChron=[...fuel].sort((a,b)=>Number(a.odometer)-Number(b.odometer)),qty=fuelChron.slice(1).filter(x=>x.fullTank).reduce((a,x)=>a+Number(x.quantity),0);
  const fuelDistance=fuelChron.length>1?Number(fuelChron[fuelChron.length-1].odometer)-Number(fuelChron[0].odometer):0,mileage=fuelDistance>0&&qty>0?fuelDistance/qty:0;
@@ -58,7 +58,7 @@ function render(){
  const monthReadings=readings.filter(x=>x.date.startsWith(key));
  $("kmList").innerHTML=monthReadings.map((x,i)=>{const next=monthReadings[i-1],delta=next?Number(next.odometer)-Number(x.odometer):0;return '<div class="record"><div class="record-main"><span class="record-icon">KM</span><div><strong>'+Number(x.odometer).toLocaleString("en-IN")+' km</strong><small>'+x.date+(delta>0?' · <span class="reading-delta">+'+delta.toLocaleString("en-IN")+' km</span>':"")+'</small></div></div><div class="record-actions">'+actionButtons("km",x.id)+'</div></div>'}).join("");$("emptyKm").hidden=!!monthReadings.length;
  $("fuelList").innerHTML=monthFuel.map(x=>'<div class="record"><div class="record-main"><span class="record-icon">F</span><div><strong>'+x.quantity+" "+x.unit+'</strong><small>'+x.date+" · "+Number(x.odometer).toLocaleString("en-IN")+" km"+(x.fullTank?" · full tank":"")+'</small></div></div><div class="record-actions"><strong class="amount">'+money(x.cost)+'</strong>'+actionButtons("fuel",x.id)+'</div></div>').join("");$("emptyFuel").hidden=!!monthFuel.length;
- $("serviceList").innerHTML=services.filter(x=>x.date.startsWith(key)).map(x=>'<div class="record"><div class="record-main"><span class="record-icon">S</span><div><strong>'+esc(x.work)+'</strong><small>'+x.date+" · "+Number(x.odometer).toLocaleString("en-IN")+" km"+(x.workshop?" · "+esc(x.workshop):"")+'</small></div></div><div class="record-actions"><strong class="amount">'+money(x.cost)+'</strong>'+actionButtons("service",x.id)+'</div></div>').join("");$("emptyService").hidden=!!services.filter(x=>x.date.startsWith(key)).length Echt;
+ $("serviceList").innerHTML=services.filter(x=>x.date.startsWith(key)).map(x=>'<div class="record"><div class="record-main"><span class="record-icon">S</span><div><strong>'+esc(x.work)+'</strong><small>'+x.date+" · "+Number(x.odometer).toLocaleString("en-IN")+" km"+(x.workshop?" · "+esc(x.workshop):"")+'</small></div></div><div class="record-actions"><strong class="amount">'+money(x.cost)+'</strong>'+actionButtons("service",x.id)+'</div></div>').join("");$("emptyService").hidden=!!services.filter(x=>x.date.startsWith(key)).length;
  $("reminderList").innerHTML=reminders.sort((a,b)=>(a.date||"9999").localeCompare(b.date||"9999")).map(x=>'<div class="reminder '+(x.date&&x.date<today()?"overdue":"")+'"><div class="record"><div><strong>'+esc(x.title)+'</strong><div class="due">'+(x.date?"Due "+x.date:"")+(x.date&&x.odometer?" · ":"")+(x.odometer?"At "+Number(x.odometer).toLocaleString("en-IN")+" km":"")+'</div></div><div class="record-actions">'+actionButtons("reminder",x.id)+'</div></div></div>').join("");$("emptyReminders").hidden=!!reminders.length;
  const last=services[0];$("lastService").innerHTML=last?esc(last.work)+"<small>"+last.date+" · "+Number(last.odometer).toLocaleString("en-IN")+" km · "+money(last.cost)+"</small>":"Not recorded";
 }
