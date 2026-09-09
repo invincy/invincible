@@ -37,8 +37,8 @@
     /* Cards */
     .task-card{position:relative;padding:1.2rem 1rem .9rem; padding-top:2rem; overflow:visible; background:transparent; border:var(--panel-border); border-radius:.5rem; color:var(--accent-color); transition:.15s}
     .task-card:hover{transform:translateY(-2px);border-color:var(--accent-color);box-shadow:0 0 10px rgba(0,255,255,.3)}
-    .task-card h3{margin:0 0 .25rem;font-size:.95rem;font-weight:400;color:var(--accent-color);text-shadow:0 0 2px var(--glow-color)}
-    .task-card .subtask-count{font-size:.75rem;opacity:.75;color:var(--accent-color)}
+    .task-card h3{margin:0 0 .35rem;font-size:1rem;font-weight:500;line-height:1.4;color:var(--accent-color);text-shadow:0 0 2px var(--glow-color)}
+    .task-card .subtask-count{font-size:.875rem;line-height:1.4;opacity:.82;color:var(--accent-color)}
     .task-card.dragging{opacity:.5;transform:scale(.98)}
 
     /* Card arrows */
@@ -48,7 +48,7 @@
     .card-nav button:disabled{opacity:.35;cursor:default}
 
     /* Layout */
-    #dashboard{display:flex;flex-direction:column;width:100vw;height:100vh;padding:1.5rem;box-sizing:border-box;gap:1.5rem;position:relative;z-index:2}
+    #dashboard{display:flex;flex-direction:column;width:100vw;height:100vh;padding:1.25rem 1.5rem 1.5rem;box-sizing:border-box;gap:1.25rem;position:relative;z-index:2}
     #top-bar{display:flex;flex-direction:column;padding:1rem 1.5rem;background:var(--panel-bg);border-radius:.75rem;border:var(--panel-border);box-shadow:var(--panel-shadow);z-index:10}
     #time-and-date-row{display:flex;justify-content:space-between;align-items:center}
     #controls-row{display:flex;justify-content:space-between;align-items:center;padding-top:1rem;border-top:1px solid rgba(0,255,255,.2);margin-top:1rem}
@@ -68,12 +68,12 @@
     .task-list{flex-grow:1;overflow-y:auto;display:flex;flex-direction:column;gap:.75rem;padding:0 .5rem}
 
     /* SIDE WIDGET (Clock + Countdowns) */
-    #left-info{flex:0 1 320px;min-width:280px;display:flex;flex-direction:column;gap:1rem;background:var(--panel-bg);border:var(--panel-border);border-radius:.75rem;padding:1rem;position:relative;z-index:2}
+    #left-info{flex:0 0 clamp(320px,19vw,370px);min-width:320px;display:flex;flex-direction:column;gap:1rem;background:var(--panel-bg);border:var(--panel-border);border-radius:.75rem;padding:1rem;position:relative;z-index:2}
     #left-info .section-title{font-weight:400;text-transform:uppercase;letter-spacing:.5px;margin:0;color:var(--accent-color);text-shadow:0 0 6px var(--glow-color);opacity:.9;border-bottom:1px solid rgba(0,255,255,.3);padding-bottom:.5rem}
 
     /* Big funky clock */
-    .mega-clock{font-family:'Orbitron', system-ui, Arial, sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(0,255,255,.08), rgba(0,255,255,.02));border:var(--panel-border);border-radius:.75rem;padding:1rem 1rem 1.25rem;box-shadow:0 0 20px rgba(0,255,255,.25) inset, 0 0 25px rgba(0,255,255,.15);position:relative;overflow:hidden}
-    .time{font-size:3.2rem;line-height:1;letter-spacing:.06em;color:var(--accent-color);text-shadow:0 0 10px var(--glow-color), 0 0 20px rgba(0,255,255,.4);animation:pulse 2.2s ease-in-out infinite}
+    .mega-clock{font-family:'Orbitron', system-ui, Arial, sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;min-width:0;background:linear-gradient(180deg, rgba(0,255,255,.08), rgba(0,255,255,.02));border:var(--panel-border);border-radius:.75rem;padding:1rem .65rem 1.25rem;box-shadow:0 0 20px rgba(0,255,255,.25) inset, 0 0 25px rgba(0,255,255,.15);position:relative;overflow:hidden}
+    .time{width:100%;font-size:clamp(2.35rem,2.65vw,3.15rem);font-variant-numeric:tabular-nums;line-height:1;letter-spacing:.015em;text-align:center;white-space:nowrap;color:var(--accent-color);text-shadow:0 0 10px var(--glow-color), 0 0 20px rgba(0,255,255,.4);animation:pulse 2.2s ease-in-out infinite}
     .date{margin-top:.4rem;font-size:1rem;opacity:.9;color:var(--accent-color);text-shadow:0 0 6px var(--glow-color)}
     @keyframes pulse{0%,100%{transform:translateZ(0) scale(1)}50%{transform:translateZ(0) scale(1.02)}}
 
@@ -156,14 +156,14 @@
     #google-sign-in:hover,#legacy-import:hover,#sign-out:hover{background:rgba(0,255,255,.22)}
     #google-sign-in:disabled,#legacy-import:disabled{opacity:.55;cursor:wait}
     #auth-error{min-height:1.2rem;margin-top:.8rem;color:#ff8b8b;font-size:.85rem}
-    #user-bar{position:fixed;right:12px;top:6px;bottom:auto;z-index:10001;display:none;align-items:center;gap:.55rem;padding:.45rem .55rem;background:rgba(0,18,18,.9);border:1px solid rgba(0,255,255,.25);border-radius:10px;box-shadow:0 0 12px rgba(0,255,255,.15);font-size:.72rem}
+    #user-bar{position:fixed;right:16px;top:76px;bottom:auto;z-index:10001;display:none;align-items:center;gap:.65rem;padding:.55rem .65rem;background:rgba(0,18,18,.94);border:1px solid rgba(0,255,255,.25);border-radius:10px;box-shadow:0 0 12px rgba(0,255,255,.15);font-size:.82rem}
     #user-bar.visible{display:flex}
     #sync-status{color:#7fffd4}
     #user-email{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    #legacy-import,#sign-out{padding:.38rem .55rem;font-size:.7rem}
-    @media(max-width:700px){#user-email{display:none}#user-bar{position:relative;right:auto;bottom:auto;width:calc(100% - 1.3rem);max-width:none;margin:.65rem;box-sizing:border-box;justify-content:flex-end;flex-wrap:nowrap;padding:.45rem}#sync-status{margin-right:auto}#legacy-import{max-width:88px;padding:.38rem .48rem}#sign-out{padding:.38rem .48rem}}
+    #legacy-import,#sign-out{padding:.45rem .65rem;font-size:.8rem}
+    @media(max-width:700px){#user-email{display:none}#user-bar{position:relative;right:auto;top:auto;bottom:auto;width:calc(100% - 1.3rem);max-width:none;margin:.65rem;box-sizing:border-box;justify-content:flex-end;flex-wrap:nowrap;padding:.55rem}#sync-status{margin-right:auto}#legacy-import{max-width:100px;padding:.45rem .55rem}#sign-out{padding:.45rem .55rem}}
   </style>
-  <link rel="stylesheet" href="site-nav.css?v=8">
+  <link rel="stylesheet" href="site-nav.css?v=9">
 </head>
 <body class="home-page">
 <nav class="global-nav" aria-label="Primary navigation"><div class="nav-head"><a class="nav-brand" href="/invincible/"><span class="nav-mark">I</span><strong>INVINCIBLE</strong></a><button class="nav-trigger" type="button" aria-expanded="false">Menu</button></div><div class="nav-links"><a href="/invincible/" aria-current="page"><span class="nav-icon">01</span><span class="nav-label">Dashboard</span></a><a href="/invincible/journal/"><span class="nav-icon">02</span><span class="nav-label">Journal</span></a><a href="/invincible/journal/finance.html"><span class="nav-icon">03</span><span class="nav-label">Finance</span></a><a href="/invincible/garage/"><span class="nav-icon">04</span><span class="nav-label">Garage</span></a><a href="/invincible/creator/"><span class="nav-icon">05</span><span class="nav-label">Creator Studio</span></a><a href="https://script.google.com/macros/s/AKfycbxbdgQqTwHIYw_dS9ko_tTieVM1PAQKNAHsTqy7bFPlVNg2P-9FNoccrZwHgbeXALoY/exec" target="_blank" rel="noopener"><span class="nav-icon">06</span><span class="nav-label">Portfolio</span><span class="nav-external">↗</span></a></div><div class="nav-footer">PERSONAL OPERATING SYSTEM</div></nav><div class="nav-backdrop" aria-hidden="true"></div>
