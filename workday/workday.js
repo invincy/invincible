@@ -25,9 +25,9 @@ async function discoverSpaces(){
  const [ownedSnap,sharedSnap]=await Promise.all([getDocs(owned),getDocs(shared)]),map=new Map();
  [...ownedSnap.docs,...sharedSnap.docs].forEach(item=>map.set(item.id,{id:item.id,...item.data()}));spaces=[...map.values()];
  if(!spaces.length){const id=newId(),fresh={...blankState(),ownerUid:user.uid,ownerEmail:email(user.email),name:(user.displayName?.split(" ")[0]||"My")+" Workday",createdAt:serverTimestamp(),updatedAt:serverTimestamp()};await setDoc(doc(db,"workdaySpaces",id),fresh);spaces=[{id,...fresh}];}
- spaceId=spaces.some(space=>space.id===spaceId)?spaceId:spaces[0].id;renderSpaceSelect();watchSpace();
+ const preferred=spaces.find(space=>space.ownerUid!==user.uid)||spaces[0];spaceId=spaces.some(space=>space.id===spaceId)?spaceId:preferred.id;renderSpaceSelect();watchSpace();
 }
-function renderSpaceSelect(){$("spaceSelect").innerHTML=spaces.map(space=>`<option value="${space.id}">${esc(space.name||"Workday")}${space.ownerUid===user.uid?"":" · shared"}</option>`).join("");$("spaceSelect").value=spaceId}
+function renderSpaceSelect(){$("spaceSelect").innerHTML=spaces.map(space=>`<option value="${space.id}">${esc(space.name||"Workday")}${space.ownerUid===user.uid?"":" · shared with me"}</option>`).join("");$("spaceSelect").value=spaceId}
 function watchSpace(){unsubscribe?.();setConnection("Syncing workspace…");unsubscribe=onSnapshot(doc(db,"workdaySpaces",spaceId),snap=>{if(!snap.exists())return;state={...blankState(),...snap.data(),tasks:snap.data().tasks||[],routines:snap.data().routines||[],editorEmails:snap.data().editorEmails||[]};const i=spaces.findIndex(s=>s.id===spaceId);if(i>=0)spaces[i]={id:spaceId,...state};renderSpaceSelect();render();setConnection("Synced · "+(user.email||"Google account"),"ok");carryForward()},error=>setConnection(error.message,"error"))}
 async function save(immediate=false){
  if(!user||!spaceId)return;clearTimeout(saveTimer);

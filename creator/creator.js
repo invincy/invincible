@@ -5,7 +5,7 @@ import{collection,deleteDoc,doc,getDoc,getDocs,getFirestore,onSnapshot,query,ser
 const config={apiKey:"AIzaSyBeVpUqcRO_VXfQrGVL5OaSGHKFB8XEQMc",authDomain:"life-by-adichimp.firebaseapp.com",projectId:"life-by-adichimp",storageBucket:"life-by-adichimp.firebasestorage.app",messagingSenderId:"761981819700",appId:"1:761981819700:web:8e88516817ed40b9866361"};
 const auth=getAuth(initializeApp(config)),db=getFirestore(),$=id=>document.getElementById(id);
 const stages=["Ideas","Research","Script","Record","Edit","Scheduled","Published"];
-let user=null,state={items:[]},ownedItems=new Map(),sharedItems=new Map(),editingId="",filter="All",queryText="",mobileStage="Ideas";
+let user=null,state={items:[]},ownedItems=new Map(),sharedItems=new Map(),editingId="",filter="All",queryText="",mobileStage="Ideas",metricFilter="";
 
 const newId=()=>crypto.randomUUID?.()||String(Date.now()+Math.random());
 const today=()=>new Date().toISOString().slice(0,10);
@@ -13,7 +13,8 @@ function esc(value){const node=document.createElement("div");node.textContent=va
 function attr(value){return esc(value).replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
 function status(message,type=""){$("status").textContent=message;$("status").className="sync-status "+type;}
 function isOwner(item){return item.ownerUid===user?.uid;}
-function filtered(){return state.items.filter(item=>(filter==="All"||item.format===filter)&&(!queryText||[item.title,item.hook,item.series].join(" ").toLowerCase().includes(queryText)));}
+function metricMatch(item){if(!metricFilter)return true;if(metricFilter==="pipeline")return item.stage!=="Published";if(metricFilter==="record")return item.stage==="Record";if(metricFilter==="published")return item.stage==="Published";if(metricFilter==="next"){const next=state.items.filter(row=>row.stage==="Scheduled"&&row.publishDate).sort((a,b)=>a.publishDate.localeCompare(b.publishDate))[0];return item.id===next?.id;}return true;}
+function filtered(){return state.items.filter(item=>metricMatch(item)&&(filter==="All"||item.format===filter)&&(!queryText||[item.title,item.hook,item.series].join(" ").toLowerCase().includes(queryText)));}
 function dateLabel(date){if(!date)return"";return new Date(date+"T00:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short"});}
 function moveButton(item,direction){const index=stages.indexOf(item.stage),next=index+direction;return '<button data-move="'+direction+'" data-id="'+item.id+'" aria-label="Move '+(direction<0?'back':'forward')+'" '+(next<0||next>=stages.length?'disabled':'')+'>'+(direction<0?'‹':'›')+'</button>';}
 
@@ -29,6 +30,8 @@ function renderMetrics(){
 
 function render(){
   renderMetrics();const items=filtered();
+  const metricLabels={pipeline:"Active projects in the pipeline",record:"Projects ready to record",next:"Next scheduled release",published:"Published projects"};
+  $("metricView").hidden=!metricFilter;$("metricViewLabel").textContent=metricLabels[metricFilter]||"";document.querySelectorAll("[data-metric]").forEach(card=>card.classList.toggle("active",card.dataset.metric===metricFilter));
   $("stageTabs").innerHTML=stages.map(stage=>'<button data-stage="'+stage+'" class="'+(mobileStage===stage?'active':'')+'">'+stage+' · '+items.filter(item=>item.stage===stage).length+'</button>').join("");
   $("board").innerHTML=stages.map(stage=>{const rows=items.filter(item=>item.stage===stage).sort((a,b)=>(a.publishDate||"9999").localeCompare(b.publishDate||"9999"));return '<section class="column '+(mobileStage===stage?'mobile-active':'')+'" data-stage="'+stage+'"><div class="column-head"><h2>'+stage+'</h2><span class="column-count">'+rows.length+'</span></div><div class="cards">'+(rows.length?rows.map(card).join(""):'<div class="empty">No content here</div>')+'</div></section>';}).join("");
   bindDrag();
@@ -86,6 +89,8 @@ $("testProject").onclick=async()=>{
 $("addContent").onclick=()=>openDialog();
 document.querySelectorAll("dialog .close").forEach(button=>button.onclick=()=>$("contentDialog").close());
 $("stageTabs").onclick=event=>{const button=event.target.closest("[data-stage]");if(!button)return;mobileStage=button.dataset.stage;render();};
+document.querySelector(".metrics").onclick=event=>{const card=event.target.closest("[data-metric]");if(!card)return;metricFilter=metricFilter===card.dataset.metric?"":card.dataset.metric;const first=state.items.find(metricMatch);if(first)mobileStage=first.stage;render();$("board").scrollIntoView({behavior:"smooth",block:"start"});};
+$("clearMetric").onclick=()=>{metricFilter="";render();};
 document.querySelector(".filter-group").onclick=event=>{const button=event.target.closest("[data-filter]");if(!button)return;filter=button.dataset.filter;document.querySelectorAll(".filter").forEach(item=>item.classList.toggle("active",item===button));render();};
 $("searchInput").oninput=event=>{queryText=event.target.value.trim().toLowerCase();render();};
 
