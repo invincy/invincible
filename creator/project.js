@@ -7,7 +7,7 @@ const config={apiKey:"AIzaSyBeVpUqcRO_VXfQrGVL5OaSGHKFB8XEQMc",authDomain:"life-
 const auth=getAuth(initializeApp(config)),db=getFirestore(),$=id=>document.getElementById(id),projectId=new URLSearchParams(location.search).get("id");
 const focusFields=["voiceover","characterPrompt","imagePrompt","videoPrompt"];
 const focusLabels={voiceover:"Voiceover",characterPrompt:"Character reference",imagePrompt:"Image prompt",videoPrompt:"Video prompt"};
-let user=null,project=null,projectRef=null,saveTimer=null,localDirty=false,pendingImport=[],focusState={sceneId:"",field:"voiceover"},touchStart=null;
+let user=null,project=null,projectRef=null,saveTimer=null,localDirty=false,pendingImport=[],focusState={sceneId:"",field:"voiceover"},touchStart=null,expandedSceneId="";
 
 const newId=()=>crypto.randomUUID?.()||String(Date.now()+Math.random());
 function esc(value){const node=document.createElement("div");node.textContent=value??"";return node.innerHTML;}
@@ -65,10 +65,10 @@ function field(label,name,value,placeholder){
 }
 
 function sceneTemplate(scene,index){
-  const stateLabel=sceneState(scene),summary=scene.voiceover||"Untitled scene";
-  return '<article class="scene-card '+(scene.completed?'complete ':scene.skipped?'skipped ':'')+'" data-id="'+scene.id+'">'
+  const stateLabel=sceneState(scene),summary=scene.voiceover||"Untitled scene",expanded=expandedSceneId===scene.id;
+  return '<article class="scene-card '+(expanded?'':'collapsed ')+(scene.completed?'complete ':scene.skipped?'skipped ':'')+'" data-id="'+scene.id+'">'
     +'<div class="scene-top"><div class="scene-ident"><span class="drag-handle" draggable="true" title="Drag to reorder">⠿</span><span class="scene-number">'+String(index+1).padStart(2,"0")+'</span><div class="scene-summary"><strong>'+esc(summary)+'</strong><label class="duration-wrap">Duration <input data-field="duration" type="number" min="1" max="60" value="'+Number(scene.duration||5)+'"> sec</label><span class="status-pill">'+stateLabel+'</span></div></div>'
-    +'<div class="scene-actions"><button data-action="production" class="produce">Produce scene →</button><button data-action="copyPack">Copy full pack</button><button data-action="up" aria-label="Move up">↑</button><button data-action="down" aria-label="Move down">↓</button><button data-action="duplicate">Duplicate</button><button data-action="collapse">Collapse</button><button data-action="delete" class="delete">Delete</button></div></div>'
+    +'<div class="scene-actions"><button data-action="production" class="produce">Produce scene →</button><button data-action="copyPack">Copy full pack</button><button data-action="up" aria-label="Move up">↑</button><button data-action="down" aria-label="Move down">↓</button><button data-action="duplicate">Duplicate</button><button data-action="collapse">'+(expanded?'Hide details':'View details')+'</button><button data-action="delete" class="delete">Delete</button></div></div>'
     +'<div class="scene-body">'
     +field("Voiceover","voiceover",scene.voiceover,"Narration for this scene")
     +field("Character prompt","characterPrompt",scene.characterPrompt,"Reusable character or subject reference; leave blank when not needed")
@@ -96,7 +96,10 @@ function render(){
   $("emptyScenes").hidden=!!scenes.length;
   $("startProduction").hidden=!scenes.length;
   $("openAssets").hidden=!scenes.length;
-  if(scenes.length)$("startProduction").textContent=project.productionState?.sceneId?"Resume production →":"Start production →";
+  if(scenes.length){
+    const savedScene=scenes.find(scene=>scene.id===project.productionState?.sceneId),unfinished=scenes.some(scene=>!scene.completed&&!scene.skipped);
+    $("startProduction").textContent=savedScene&&!savedScene.completed&&!savedScene.skipped?"Resume current scene →":unfinished?"Start next scene →":"Review production →";
+  }
   $("workspaceHint").textContent=scenes.length?complete+" of "+scenes.length+" scenes complete · open any scene to continue":"Move through every prompt without leaving the production view.";
   updateStats();
   bindDrag();
@@ -404,8 +407,8 @@ $("tableInput").addEventListener("input",()=>{$("importPreview").hidden=true;pen
 
 $("addScene").onclick=()=>{const scene=makeScene();project.scenes.push(scene);render();save();openFocus(scene.id,"voiceover");};
 $("startProduction").onclick=()=>{
-  const saved=project.productionState,preferred=project.scenes.find(scene=>scene.id===saved?.sceneId),next=preferred||project.scenes.find(scene=>!scene.completed&&!scene.skipped)||project.scenes[0];
-  if(next)openFocus(next.id,saved?.field||"voiceover");
+  const saved=project.productionState,preferred=project.scenes.find(scene=>scene.id===saved?.sceneId&&!scene.completed&&!scene.skipped),next=preferred||project.scenes.find(scene=>!scene.completed&&!scene.skipped)||project.scenes[0];
+  if(next)openFocus(next.id,preferred?saved?.field||"voiceover":"voiceover");
 };
 
 $("sceneList").addEventListener("input",event=>{
@@ -432,13 +435,13 @@ $("sceneList").addEventListener("click",async event=>{
   const action=event.target.closest("[data-action]")?.dataset.action;
   if(!action)return;
   if(action==="delete"){
-    if(confirm("Delete this scene?")){project.scenes=project.scenes.filter(item=>item.id!==scene.id);render();save();}
+    if(confirm("Delete this scene?")){project.scenes=project.scenes.filter(item=>item.id!==scene.id);if(expandedSceneId===scene.id)expandedSceneId="";render();save();}
   }else if(action==="duplicate"){
     const index=project.scenes.indexOf(scene),copyScene=makeScene({...scene,id:"",completed:false,skipped:false});project.scenes.splice(index+1,0,copyScene);render();save();
   }else if(action==="up")moveScene(scene.id,-1);
   else if(action==="down")moveScene(scene.id,1);
   else if(action==="collapse"){
-    card.classList.toggle("collapsed");event.target.textContent=card.classList.contains("collapsed")?"Expand":"Collapse";
+    expandedSceneId=expandedSceneId===scene.id?"":scene.id;render();
   }else if(action==="production")openFocus(scene.id,project.productionState?.sceneId===scene.id?project.productionState.field:"voiceover");
   else if(action==="copyPack"){
     await copyText(scenePack(scene,project.scenes.indexOf(scene)));status("Full scene pack copied.","ok");
@@ -543,7 +546,10 @@ async function load(){
     project.scenes=(project.scenes||[]).map(makeScene);
     render();$("app").hidden=false;status("Synced · "+(user.email||"signed in"),"ok");
     const saved=project.productionState;
-    if(saved?.open&&project.scenes.some(scene=>scene.id===saved.sceneId))setTimeout(()=>openFocus(saved.sceneId,saved.field,false),0);
+    if(saved?.open){
+      const preferred=project.scenes.find(scene=>scene.id===saved.sceneId&&!scene.completed&&!scene.skipped),next=preferred||project.scenes.find(scene=>!scene.completed&&!scene.skipped)||project.scenes.find(scene=>scene.id===saved.sceneId)||project.scenes[0];
+      if(next)setTimeout(()=>openFocus(next.id,preferred?saved.field:"voiceover",false),0);
+    }
     onSnapshot(projectRef,live=>{
       if(!live.exists()){status("This shared project is no longer available.","error");return;}
       if(localDirty)return;
