@@ -44,5 +44,26 @@ service cloud.firestore {
 
       allow delete: if owns(resource.data);
     }
+
+    match /workdaySpaces/{spaceId} {
+      allow read: if owns(resource.data) || edits(resource.data);
+
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerEmail == signedInEmail()
+        && request.resource.data.editorEmails is list;
+
+      allow update: if (
+          owns(resource.data)
+          && request.resource.data.ownerUid == resource.data.ownerUid
+          && request.resource.data.ownerEmail == resource.data.ownerEmail
+        ) || (
+          edits(resource.data)
+          && !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['ownerUid', 'ownerEmail', 'editorEmails', 'createdAt'])
+        );
+
+      allow delete: if owns(resource.data);
+    }
   }
 }

@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#090b14">
+  <title>Workday · Invincible</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../site-nav.css?v=10">
+  <link rel="stylesheet" href="workday.css?v=1">
+</head>
+<body class="workday-page">
+  <nav class="global-nav" aria-label="Primary navigation"><div class="nav-head"><a class="nav-brand" href="/invincible/"><span class="nav-mark">I</span><strong>INVINCIBLE</strong></a><button class="nav-trigger" type="button" aria-expanded="false">Menu</button></div><div class="nav-links"><a href="/invincible/"><span class="nav-icon">01</span><span class="nav-label">Dashboard</span></a><a href="/invincible/journal/"><span class="nav-icon">02</span><span class="nav-label">Journal</span></a><a href="/invincible/journal/finance.html"><span class="nav-icon">03</span><span class="nav-label">Finance</span></a><a href="/invincible/garage/"><span class="nav-icon">04</span><span class="nav-label">Garage</span></a><a href="/invincible/creator/"><span class="nav-icon">05</span><span class="nav-label">Creator Studio</span></a><a href="/invincible/workday/" aria-current="page"><span class="nav-icon">06</span><span class="nav-label">Workday</span></a><a href="https://script.google.com/macros/s/AKfycbxbdgQqTwHIYw_dS9ko_tTieVM1PAQKNAHsTqy7bFPlVNg2P-9FNoccrZwHgbeXALoY/exec" target="_blank" rel="noopener"><span class="nav-icon">07</span><span class="nav-label">Portfolio</span><span class="nav-external">↗</span></a></div><div class="nav-footer">PERSONAL OPERATING SYSTEM</div></nav><div class="nav-backdrop" aria-hidden="true"></div>
+  <script defer src="../site-nav.js?v=1"></script>
+
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <span class="eyebrow">DAILY OPERATIONS</span>
+        <h1>Workday</h1>
+        <p id="heroLine">Do the work. The report writes itself.</p>
+      </div>
+      <div class="hero-actions">
+        <select id="spaceSelect" aria-label="Work workspace"></select>
+        <button id="shareButton" class="ghost" type="button">Share</button>
+      </div>
+    </header>
+
+    <div id="connectionStatus" class="connection" role="status" aria-live="polite">Connecting to Firebase…</div>
+
+    <section id="app" hidden>
+      <section class="day-strip">
+        <div class="date-control">
+          <button id="previousDay" class="square" aria-label="Previous day">‹</button>
+          <button id="dateButton" class="date-button"><strong id="dayTitle">Today</strong><span id="dayDate"></span></button>
+          <input id="datePicker" type="date" aria-label="Choose date">
+          <button id="nextDay" class="square" aria-label="Next day">›</button>
+        </div>
+        <div class="metrics" aria-label="Daily task totals">
+          <span><strong id="totalCount">0</strong> Tasks</span>
+          <span class="done"><strong id="doneCount">0</strong> Done</span>
+          <span class="progress"><strong id="progressCount">0</strong> In progress</span>
+          <span class="pending"><strong id="pendingCount">0</strong> Pending</span>
+        </div>
+      </section>
+
+      <form id="quickAdd" class="quick-add">
+        <span class="quick-icon">+</span>
+        <input id="quickTask" maxlength="140" required autocomplete="off" placeholder="Add work…  e.g. PF challan — ABC">
+        <button>Add</button>
+      </form>
+
+      <section class="utility-row">
+        <button id="addRoutine" class="ghost" type="button">Add today’s routine</button>
+        <button id="manageRoutine" class="text-button" type="button">Recurring work</button>
+        <span class="spacer"></span>
+        <button id="generateReportTop" class="report-button" type="button">Generate daily report</button>
+      </section>
+
+      <section id="board" class="board" aria-label="Workday tasks">
+        <article class="lane" data-lane="todo"><header><span class="lane-dot"></span><h2>To Do</h2><b id="todoBadge">0</b></header><div class="task-list" data-status="todo"></div></article>
+        <article class="lane" data-lane="progress"><header><span class="lane-dot"></span><h2>In Progress</h2><b id="progressBadge">0</b></header><div class="task-list" data-status="progress"></div></article>
+        <article class="lane" data-lane="pending"><header><span class="lane-dot"></span><h2>Pending</h2><b id="pendingBadge">0</b></header><div class="task-list" data-status="pending"></div></article>
+        <article class="lane" data-lane="done"><header><span class="lane-dot"></span><h2>Done</h2><b id="doneBadge">0</b></header><div class="task-list" data-status="done"></div></article>
+      </section>
+
+      <section id="emptyState" class="empty-state" hidden><span>✦</span><h2>Clear runway</h2><p>Add the first task, or load today’s routine.</p></section>
+      <button id="generateReportBottom" class="report-button mobile-report" type="button">Generate daily report</button>
+    </section>
+  </main>
+
+  <dialog id="pendingDialog">
+    <form id="pendingForm">
+      <div class="dialog-head"><div><span class="eyebrow">BLOCKER NOTE</span><h2>What is holding this up?</h2></div><button type="button" class="close" aria-label="Close">×</button></div>
+      <p id="pendingTaskTitle" class="dialog-task"></p>
+      <label>Why pending?<textarea name="pendingReason" rows="3" required maxlength="300" placeholder="Waiting for client data"></textarea></label>
+      <label>Next action <small>optional</small><textarea name="nextAction" rows="2" maxlength="300" placeholder="Complete once attendance sheet is received"></textarea></label>
+      <div class="dialog-actions"><button type="button" class="ghost close">Cancel</button><button class="primary">Mark pending</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="editDialog">
+    <form id="editForm">
+      <div class="dialog-head"><div><span class="eyebrow">TASK DETAILS</span><h2>Edit work</h2></div><button type="button" class="close" aria-label="Close">×</button></div>
+      <label>Task<input name="title" required maxlength="140"></label>
+      <label>Progress note <small>optional</small><textarea name="progressNote" rows="3" maxlength="300" placeholder="Processing completed up to final verification"></textarea></label>
+      <div class="dialog-actions split"><button id="deleteTask" class="danger" type="button">Delete</button><span></span><button type="button" class="ghost close">Cancel</button><button class="primary">Save</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="routineDialog">
+    <form id="routineForm">
+      <div class="dialog-head"><div><span class="eyebrow">REUSABLE LIST</span><h2>Recurring work</h2></div><button type="button" class="close" aria-label="Close">×</button></div>
+      <div id="routineList" class="routine-list"></div>
+      <div class="routine-add"><input id="routineTitle" maxlength="140" placeholder="Attendance verification"><button class="primary" type="submit">Add</button></div>
+      <p class="hint">Save routine jobs once, then add all of them to any workday in one tap.</p>
+    </form>
+  </dialog>
+
+  <dialog id="shareDialog">
+    <form id="shareForm">
+      <div class="dialog-head"><div><span class="eyebrow">WORKSPACE ACCESS</span><h2>Share Workday</h2></div><button type="button" class="close" aria-label="Close">×</button></div>
+      <p class="hint">Add a Google-account email. Editors can add and update work, but cannot change access.</p>
+      <div class="routine-add"><input id="shareEmail" type="email" required placeholder="name@gmail.com"><button class="primary">Invite</button></div>
+      <div id="editorList" class="routine-list"></div>
+    </form>
+  </dialog>
+
+  <dialog id="reportDialog" class="report-dialog">
+    <div class="dialog-head"><div><span class="eyebrow">READY TO SEND</span><h2>Daily report</h2></div><button type="button" class="close" aria-label="Close">×</button></div>
+    <textarea id="reportText" readonly aria-label="Generated daily report"></textarea>
+    <div class="dialog-actions"><button type="button" class="ghost close">Close</button><button id="copyReport" class="primary" type="button">Copy report</button></div>
+  </dialog>
+
+  <section id="authGate" class="auth-gate" hidden>
+    <div><span class="auth-mark">W</span><h2>Open your Workday</h2><p>Sign in with Google to access your own or shared workspace.</p><button id="signIn" class="primary">Sign in with Google</button><small id="authError"></small></div>
+  </section>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="workday.js?v=1"></script>
+</body>
+</html>
