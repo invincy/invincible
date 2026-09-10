@@ -1,0 +1,18 @@
+.task-composer{display:block;padding:14px 15px}
+.composer-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:11px}
+.composer-head strong{display:block;margin-top:5px;font-size:14px}
+.composer-head>span{color:var(--muted);font-size:11px}
+.action-chips{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;scrollbar-width:none}
+.action-chips button{flex:none;align-self:auto;min-height:32px;margin:0;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(157,140,255,.06);color:#bbb5e9;font-size:11px}
+.action-chips button:hover{border-color:rgba(157,140,255,.55);background:rgba(157,140,255,.13);color:#fff}
+.task-builder{display:grid;grid-template-columns:.72fr 1fr 1.2fr auto;align-items:end;gap:8px}
+.task-builder label{gap:6px;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+.task-builder label span{display:flex;align-items:center;gap:6px}
+.task-builder label b{display:grid;place-items:center;width:17px;height:17px;border-radius:6px;background:rgba(157,140,255,.12);color:var(--violet);font-size:9px}
+.task-builder input{min-width:0;height:44px;padding:10px 11px;border:1px solid var(--line);background:#0d101a;box-shadow:none;text-transform:none;letter-spacing:normal}
+.task-builder .add-work{align-self:auto;height:44px;margin:0;border-radius:10px;background:linear-gradient(135deg,var(--violet),var(--violet-2));color:#080a12;padding:0 18px;font-weight:800;white-space:nowrap}
+.task-action{display:inline-flex;margin:0 0 5px;padding:3px 7px;border-radius:7px;background:rgba(157,140,255,.11);color:#bcb2ff;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em}
+.task-copy{flex:1;min-width:0}.task-copy .task-title{font-weight:600}.task-copy .task-title:empty{display:none}
+.task-outcome{margin:9px 0 0;padding-top:9px;border-top:1px solid var(--line);color:#c3c7d6;font-size:11px;line-height:1.45}
+@media(max-width:820px){.task-composer{position:static}.task-builder{grid-template-columns:1fr 1fr}.task-builder label:last-of-type{grid-column:1/-1}.task-builder .add-work{grid-column:1/-1}}
+@media(max-width:560px){.task-composer{position:static;padding:13px;margin-top:14px}.composer-head{align-items:flex-start}.composer-head>span{max-width:90px;text-align:right}.task-builder{grid-template-columns:1fr}.task-builder label:last-of-type,.task-builder .add-work{grid-column:auto}.task-builder input{height:46px}.task-builder .add-work{height:48px}.action-chips{margin-inline:-2px}}

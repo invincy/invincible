@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../site-nav.css?v=10">
   <link rel="stylesheet" href="workday.css?v=1">
+  <link rel="stylesheet" href="workday-fields.css?v=2">
   <style>.auth-gate[hidden]{display:none!important}</style>
 </head>
 <body class="workday-page">
@@ -47,10 +48,15 @@
         </div>
       </section>
 
-      <form id="quickAdd" class="quick-add">
-        <span class="quick-icon">+</span>
-        <input id="quickTask" maxlength="140" required autocomplete="off" placeholder="Add work…  e.g. PF challan — ABC">
-        <button>Add</button>
+      <form id="quickAdd" class="quick-add task-composer">
+        <div class="composer-head"><div><span class="eyebrow">QUICK ENTRY</span><strong>Add work without filling a form</strong></div><span>Any one field is enough</span></div>
+        <div class="action-chips" aria-label="Common actions"><button type="button" data-quick-action="Reviewed">Reviewed</button><button type="button" data-quick-action="Mailed">Mailed</button><button type="button" data-quick-action="Telephonic talk">Called</button><button type="button" data-quick-action="Confirmed">Confirmed</button><button type="button" data-quick-action="Processed">Processed</button></div>
+        <div class="task-builder">
+          <label><span><b>1</b> Action</span><input id="taskAction" maxlength="80" autocomplete="off" placeholder="Reviewed, mailed, called…"></label>
+          <label><span><b>2</b> To whom / what</span><input id="taskSubject" maxlength="140" autocomplete="off" placeholder="ABC Pvt Ltd, PF challan…"></label>
+          <label><span><b>3</b> Outcome / further action</span><input id="taskOutcome" maxlength="240" autocomplete="off" placeholder="Confirmed, awaiting data, call tomorrow…"></label>
+          <button class="add-work" type="submit">Add work</button>
+        </div>
       </form>
 
       <section class="utility-row">
@@ -76,7 +82,7 @@
     <form id="pendingForm">
       <div class="dialog-head"><div><span class="eyebrow">BLOCKER NOTE</span><h2>What is holding this up?</h2></div><button type="button" class="close" aria-label="Close">×</button></div>
       <p id="pendingTaskTitle" class="dialog-task"></p>
-      <label>Why pending?<textarea name="pendingReason" rows="3" required maxlength="300" placeholder="Waiting for client data"></textarea></label>
+      <label>Why pending? <small>optional</small><textarea name="pendingReason" rows="3" maxlength="300" placeholder="Waiting for client data"></textarea></label>
       <label>Next action <small>optional</small><textarea name="nextAction" rows="2" maxlength="300" placeholder="Complete once attendance sheet is received"></textarea></label>
       <div class="dialog-actions"><button type="button" class="ghost close">Cancel</button><button class="primary">Mark pending</button></div>
     </form>
@@ -85,8 +91,9 @@
   <dialog id="editDialog">
     <form id="editForm">
       <div class="dialog-head"><div><span class="eyebrow">TASK DETAILS</span><h2>Edit work</h2></div><button type="button" class="close" aria-label="Close">×</button></div>
-      <label>Task<input name="title" required maxlength="140"></label>
-      <label>Progress note <small>optional</small><textarea name="progressNote" rows="3" maxlength="300" placeholder="Processing completed up to final verification"></textarea></label>
+      <label>Action <small>optional</small><input name="action" maxlength="80" placeholder="Reviewed, mailed, called…"></label>
+      <label>To whom / what <small>optional</small><input name="subject" maxlength="140" placeholder="ABC Pvt Ltd, PF challan…"></label>
+      <label>Outcome / further action <small>optional</small><textarea name="outcome" rows="3" maxlength="300" placeholder="Confirmed, awaiting data, call tomorrow…"></textarea></label>
       <div class="dialog-actions split"><button id="deleteTask" class="danger" type="button">Delete</button><span></span><button type="button" class="ghost close">Cancel</button><button class="primary">Save</button></div>
     </form>
   </dialog>
@@ -120,6 +127,6 @@
   </section>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="workday.js?v=2"></script>
+  <script type="module" src="workday.js?v=3"></script>
 </body>
 </html>
