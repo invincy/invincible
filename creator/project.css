@@ -91,7 +91,7 @@ main{max-width:1540px;margin:auto;padding:10px clamp(18px,4vw,56px) 70px}
 .preview-row strong{margin:0;font:700 11px Orbitron,sans-serif}
 .preview-row span{margin-top:4px;color:var(--muted);font-size:11px}
 
-.scene-section{margin-top:31px}
+.scene-section{margin-top:15px}.production-panel .collapse-body{gap:14px}.production-panel .workspace-actions{justify-content:flex-end;padding-top:17px}.production-panel .scene-list{margin-top:0}
 .scene-heading{margin-bottom:15px}
 .scene-heading h2{font-size:26px}
 .workspace-actions{gap:9px;flex:none}
