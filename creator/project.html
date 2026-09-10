@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../site-nav.css?v=9">
-  <link rel="stylesheet" href="project.css?v=3">
+  <link rel="stylesheet" href="project.css?v=4">
 </head>
 <body class="project-page">
   <nav class="global-nav" aria-label="Primary navigation"><div class="nav-head"><a class="nav-brand" href="/invincible/"><span class="nav-mark">I</span><strong>INVINCIBLE</strong></a><button class="nav-trigger" type="button" aria-expanded="false">Menu</button></div><div class="nav-links"><a href="/invincible/"><span class="nav-icon">01</span><span class="nav-label">Dashboard</span></a><a href="/invincible/journal/"><span class="nav-icon">02</span><span class="nav-label">Journal</span></a><a href="/invincible/journal/finance.html"><span class="nav-icon">03</span><span class="nav-label">Finance</span></a><a href="/invincible/garage/"><span class="nav-icon">04</span><span class="nav-label">Garage</span></a><a href="/invincible/creator/" aria-current="page"><span class="nav-icon">05</span><span class="nav-label">Creator Studio</span></a><a href="https://script.google.com/macros/s/AKfycbxbdgQqTwHIYw_dS9ko_tTieVM1PAQKNAHsTqy7bFPlVNg2P-9FNoccrZwHgbeXALoY/exec" target="_blank" rel="noopener"><span class="nav-icon">06</span><span class="nav-label">Portfolio</span><span class="nav-external">↗</span></a></div><div class="nav-footer">PERSONAL OPERATING SYSTEM</div></nav><div class="nav-backdrop" aria-hidden="true"></div>
@@ -58,7 +58,7 @@
     </section>
 
     <section class="scene-section" aria-labelledby="workspaceHeading">
-      <div class="scene-heading"><div><span class="eyebrow">03 · PRODUCTION</span><h2 id="workspaceHeading">Scene workspace</h2><p id="workspaceHint">Move through every prompt and asset without leaving the production view.</p></div><div class="workspace-actions"><button id="addScene" class="secondary">+ Add scene</button><button id="startProduction" class="primary" hidden>Start production →</button></div></div>
+      <div class="scene-heading"><div><span class="eyebrow">03 · PRODUCTION</span><h2 id="workspaceHeading">Scene workspace</h2><p id="workspaceHint">Move through every prompt without leaving the production view.</p></div><div class="workspace-actions"><button id="addScene" class="secondary">+ Add scene</button><button id="openAssets" class="secondary" hidden>Project assets</button><button id="startProduction" class="primary" hidden>Start production →</button></div></div>
       <div id="sceneList" class="scene-list"></div>
       <div id="emptyScenes" class="empty-state"><strong>No scenes yet</strong><span>Copy the ChatGPT brief above, then paste and review its completed scene table.</span></div>
     </section>
@@ -77,11 +77,9 @@
           <button data-focus-field="characterPrompt" role="tab">Character</button>
           <button data-focus-field="imagePrompt" role="tab">Image</button>
           <button data-focus-field="videoPrompt" role="tab">Video</button>
-          <button data-focus-field="assets" role="tab">Assets</button>
         </div>
         <div id="focusToast" class="focus-toast" role="status" aria-live="polite"></div>
         <textarea id="focusTextarea" spellcheck="true" aria-label="Focused scene content"></textarea>
-        <div id="focusAssets" class="focus-assets" hidden></div>
         <div class="focus-controls">
           <button id="previousScene" class="scene-nav">↑ Previous scene</button>
           <button id="previousField">← Previous step</button>
@@ -96,6 +94,13 @@
     </div>
   </div>
 
+  <dialog id="assetsDialog" class="assets-dialog">
+    <div class="assets-shell">
+      <div class="assets-head"><div><span class="eyebrow">PROJECT ASSETS</span><h2>Asset workspace</h2><p id="assetsProgress">Track generated characters, images and videos for the whole project.</p></div><button id="closeAssets" aria-label="Close asset workspace">×</button></div>
+      <div id="assetList" class="project-asset-list"></div>
+    </div>
+  </dialog>
+
   <dialog id="shareDialog" class="share-dialog">
     <form method="dialog" class="share-shell">
       <div class="share-head"><div><span class="eyebrow">COLLABORATION</span><h2>Share this project</h2><p>Editors sign in with their own Google account and work on the same scenes.</p></div><button value="cancel" aria-label="Close sharing">×</button></div>
@@ -105,6 +110,6 @@
       <div class="share-footer"><button id="copyProjectLink" type="button" class="secondary">Copy project link</button><button value="cancel" class="primary">Done</button></div>
     </form>
   </dialog>
-  <script type="module" src="project.js?v=3"></script>
+  <script type="module" src="project.js?v=4"></script>
 </body>
 </html>

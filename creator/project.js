@@ -5,8 +5,8 @@ import{estimateSeconds,inspectScenes,parseSceneInput,splitVoiceoverScript}from".
 
 const config={apiKey:"AIzaSyBeVpUqcRO_VXfQrGVL5OaSGHKFB8XEQMc",authDomain:"life-by-adichimp.firebaseapp.com",projectId:"life-by-adichimp",storageBucket:"life-by-adichimp.firebasestorage.app",messagingSenderId:"761981819700",appId:"1:761981819700:web:8e88516817ed40b9866361"};
 const auth=getAuth(initializeApp(config)),db=getFirestore(),$=id=>document.getElementById(id),projectId=new URLSearchParams(location.search).get("id");
-const focusFields=["voiceover","characterPrompt","imagePrompt","videoPrompt","assets"];
-const focusLabels={voiceover:"Voiceover",characterPrompt:"Character reference",imagePrompt:"Image prompt",videoPrompt:"Video prompt",assets:"Generated assets"};
+const focusFields=["voiceover","characterPrompt","imagePrompt","videoPrompt"];
+const focusLabels={voiceover:"Voiceover",characterPrompt:"Character reference",imagePrompt:"Image prompt",videoPrompt:"Video prompt"};
 let user=null,project=null,projectRef=null,saveTimer=null,localDirty=false,pendingImport=[],focusState={sceneId:"",field:"voiceover"},touchStart=null;
 
 const newId=()=>crypto.randomUUID?.()||String(Date.now()+Math.random());
@@ -65,7 +65,7 @@ function field(label,name,value,placeholder){
 }
 
 function sceneTemplate(scene,index){
-  const stateLabel=sceneState(scene),summary=scene.voiceover||"Untitled scene",characterCheck=hasCharacterPrompt(scene)?'<label><input data-field="characterDone" type="checkbox" '+(scene.characterDone?'checked':'')+'> Character ready</label>':"";
+  const stateLabel=sceneState(scene),summary=scene.voiceover||"Untitled scene";
   return '<article class="scene-card '+(scene.completed?'complete ':scene.skipped?'skipped ':'')+'" data-id="'+scene.id+'">'
     +'<div class="scene-top"><div class="scene-ident"><span class="drag-handle" draggable="true" title="Drag to reorder">⠿</span><span class="scene-number">'+String(index+1).padStart(2,"0")+'</span><div class="scene-summary"><strong>'+esc(summary)+'</strong><label class="duration-wrap">Duration <input data-field="duration" type="number" min="1" max="60" value="'+Number(scene.duration||5)+'"> sec</label><span class="status-pill">'+stateLabel+'</span></div></div>'
     +'<div class="scene-actions"><button data-action="production" class="produce">Produce scene →</button><button data-action="copyPack">Copy full pack</button><button data-action="up" aria-label="Move up">↑</button><button data-action="down" aria-label="Move down">↓</button><button data-action="duplicate">Duplicate</button><button data-action="collapse">Collapse</button><button data-action="delete" class="delete">Delete</button></div></div>'
@@ -74,7 +74,7 @@ function sceneTemplate(scene,index){
     +field("Character prompt","characterPrompt",scene.characterPrompt,"Reusable character or subject reference; leave blank when not needed")
     +field("Image prompt","imagePrompt",scene.imagePrompt,"Still-image generation prompt")
     +field("Video prompt","videoPrompt",scene.videoPrompt,"Movement, camera and animation prompt")
-    +'</div><div class="scene-footer"><div class="ready-checks">'+characterCheck+'<label><input data-field="imageDone" type="checkbox" '+(scene.imageDone?'checked':'')+'> Image generated</label><label><input data-field="videoDone" type="checkbox" '+(scene.videoDone?'checked':'')+'> Video generated</label></div><button data-action="complete" class="complete-mini '+(scene.completed?'secondary':'primary')+'">'+(scene.completed?'Reopen scene':'Scene complete →')+'</button></div></article>';
+    +'</div><div class="scene-footer"><span class="completion-note">Asset tracking is available in Project assets.</span><button data-action="complete" class="complete-mini '+(scene.completed?'secondary':'primary')+'">'+(scene.completed?'Reopen scene':assetsReady(scene)?'Scene complete →':'Complete anyway →')+'</button></div></article>';
 }
 
 function render(){
@@ -95,8 +95,9 @@ function render(){
   $("sceneList").innerHTML=scenes.map(sceneTemplate).join("");
   $("emptyScenes").hidden=!!scenes.length;
   $("startProduction").hidden=!scenes.length;
+  $("openAssets").hidden=!scenes.length;
   if(scenes.length)$("startProduction").textContent=project.productionState?.sceneId?"Resume production →":"Start production →";
-  $("workspaceHint").textContent=scenes.length?complete+" of "+scenes.length+" scenes complete · open any scene to continue":"Move through every prompt and asset without leaving the production view.";
+  $("workspaceHint").textContent=scenes.length?complete+" of "+scenes.length+" scenes complete · open any scene to continue":"Move through every prompt without leaving the production view.";
   updateStats();
   bindDrag();
   document.querySelectorAll(".field textarea").forEach(autoGrow);
@@ -213,19 +214,20 @@ function renderRail(){
 }
 
 function assetCard(scene,field,urlField,label,description){
-  return '<article class="asset-card '+(scene[field]?'ready':'')+'"><label><input type="checkbox" data-focus-check="'+field+'" '+(scene[field]?'checked':'')+'> '+label+'</label><p>'+description+'</p><label>Optional output link<input type="url" data-focus-url="'+urlField+'" value="'+attr(scene[urlField]||"")+'" placeholder="Paste the generated asset link"></label></article>';
+  return '<article class="asset-card '+(scene[field]?'ready':'')+'"><label><input type="checkbox" data-asset-check="'+field+'" '+(scene[field]?'checked':'')+'> '+label+'</label><p>'+description+'</p><label>Optional output link<input type="url" data-asset-url="'+urlField+'" value="'+attr(scene[urlField]||"")+'" placeholder="Paste the generated asset link"></label></article>';
 }
 
-function renderAssets(scene){
-  const characterRequired=hasCharacterPrompt(scene),missing=[];
-  if(characterRequired&&!scene.characterDone)missing.push("character");
-  if(!scene.imageDone)missing.push("image");
-  if(!scene.videoDone)missing.push("video");
-  $("focusAssets").innerHTML='<div class="asset-board">'
-    +assetCard(scene,"characterDone","characterAssetUrl","Character/reference ready",characterRequired?"Required because this scene contains a character prompt.":"Optional for scenes without a character prompt.")
-    +assetCard(scene,"imageDone","imageAssetUrl","Image generated","Generate the still image using the scene image prompt.")
-    +assetCard(scene,"videoDone","videoAssetUrl","Video generated","Generate or animate the final clip using the video prompt.")
-    +'</div><div class="asset-completion"><strong>'+(missing.length?"Still needed: "+missing.join(", ")+".":"All required assets are ready.")+'</strong> '+(missing.length?"Tick them after generation to unlock Scene complete.":"Complete the scene to move automatically to the next unfinished one.")+'</div>';
+function renderProjectAssets(){
+  const scenes=project.scenes||[],ready=scenes.filter(assetsReady).length;
+  $("assetsProgress").textContent=ready+" of "+scenes.length+" scenes have all expected assets. This tracker never blocks scene completion.";
+  $("assetList").innerHTML=scenes.map((scene,index)=>{
+    const characterRequired=hasCharacterPrompt(scene);
+    return '<section class="project-asset-scene" data-asset-scene="'+attr(scene.id)+'"><div class="project-asset-head"><div><span class="eyebrow">SCENE '+String(index+1).padStart(2,"0")+'</span><strong>'+esc(scene.voiceover||"Untitled scene")+'</strong></div><span class="status-pill">'+(assetsReady(scene)?"assets ready":"assets pending")+'</span></div><div class="asset-board">'
+      +assetCard(scene,"characterDone","characterAssetUrl","Character/reference ready",characterRequired?"Useful for the recurring person or subject in this scene.":"Optional because this scene has no character prompt.")
+      +assetCard(scene,"imageDone","imageAssetUrl","Image generated","Track the still image created from the scene image prompt.")
+      +assetCard(scene,"videoDone","videoAssetUrl","Video generated","Track the final clip created from the scene video prompt.")
+      +'</div></section>';
+  }).join("");
 }
 
 function renderFocus(){
@@ -235,23 +237,19 @@ function renderFocus(){
   $("focusTitle").textContent=focusLabels[focusState.field];
   $("focusPosition").textContent="Scene "+(sceneIndex+1)+" of "+project.scenes.length+" · Step "+(fieldIndex+1)+" of "+focusFields.length;
   $("focusTabs").querySelectorAll("button").forEach(button=>{
-    const field=button.dataset.focusField,done=field==="assets"?assetsReady(scene):!!scene[field]?.trim();
+    const field=button.dataset.focusField,done=!!scene[field]?.trim();
     button.classList.toggle("active",field===focusState.field);
     button.classList.toggle("done",done);
     button.setAttribute("aria-selected",String(field===focusState.field));
   });
-  const showingAssets=focusState.field==="assets";
-  $("focusTextarea").hidden=showingAssets;
-  $("focusAssets").hidden=!showingAssets;
-  if(showingAssets)renderAssets(scene);
-  else $("focusTextarea").value=scene[focusState.field]||"";
+  $("focusTextarea").value=scene[focusState.field]||"";
   $("previousScene").disabled=sceneIndex===0;
   $("nextScene").disabled=sceneIndex===project.scenes.length-1;
   $("previousField").disabled=fieldIndex===0;
   $("nextField").disabled=fieldIndex===focusFields.length-1;
-  $("copyFocus").textContent=showingAssets?"Copy full scene pack":"Copy "+focusLabels[focusState.field].toLowerCase();
+  $("copyFocus").textContent="Copy "+focusLabels[focusState.field].toLowerCase();
   $("skipScene").textContent=scene.skipped?"Reopen scene":"Skip for now";
-  $("completeScene").textContent=scene.completed?"Reopen scene":"Scene complete →";
+  $("completeScene").textContent=scene.completed?"Reopen scene":assetsReady(scene)?"Scene complete →":"Complete anyway →";
   $("completeScene").classList.toggle("primary",!scene.completed);
   $("completeScene").classList.toggle("secondary",scene.completed);
   renderRail();
@@ -270,7 +268,7 @@ function openFocus(sceneId,field="voiceover",persist=true){
   focusMessage("");
   renderFocus();
   if(persist)rememberFocus(true);
-  if(field!=="assets")setTimeout(()=>$("focusTextarea").focus(),0);
+  setTimeout(()=>$("focusTextarea").focus(),0);
 }
 
 function closeFocus(){
@@ -284,13 +282,13 @@ function changeFocusField(direction){
   if(focusFields[next]){
     focusState.field=focusFields[next];
     focusMessage("");renderFocus();rememberFocus(true);
-    if(focusState.field!=="assets")$("focusTextarea").focus();
+    $("focusTextarea").focus();
   }
 }
 
 function changeFocusScene(direction){
   const index=project.scenes.findIndex(scene=>scene.id===focusState.sceneId),next=project.scenes[index+direction];
-  if(next){focusState.sceneId=next.id;focusMessage("");renderFocus();rememberFocus(true);if(focusState.field!=="assets")$("focusTextarea").focus();}
+  if(next){focusState.sceneId=next.id;focusMessage("");renderFocus();rememberFocus(true);$("focusTextarea").focus();}
 }
 
 function nextOpenScene(currentIndex){
@@ -302,9 +300,6 @@ async function completeFocusedScene(){
   const scene=project.scenes.find(item=>item.id===focusState.sceneId),index=project.scenes.indexOf(scene);
   if(!scene)return;
   if(scene.completed){scene.completed=false;focusMessage("Scene reopened.","ok");render();renderFocus();await save();return;}
-  if(!assetsReady(scene)){
-    focusState.field="assets";renderFocus();focusMessage("Finish the required assets before completing this scene.","error");rememberFocus(true);return;
-  }
   scene.completed=true;scene.skipped=false;
   const next=nextOpenScene(index);
   render();await save();
@@ -418,8 +413,7 @@ $("sceneList").addEventListener("input",event=>{
   if(!scene||!field)return;
   scene[field]=event.target.type==="checkbox"?event.target.checked:field==="duration"?Number(event.target.value):event.target.value;
   if(field!=="duration"&&event.target.tagName==="TEXTAREA")autoGrow(event.target);
-  if(scene.completed&&!assetsReady(scene))scene.completed=false;
-  if(event.target.type==="checkbox")render();else updateStats();
+  updateStats();
   queueSave();
 });
 
@@ -449,7 +443,7 @@ $("sceneList").addEventListener("click",async event=>{
   else if(action==="copyPack"){
     await copyText(scenePack(scene,project.scenes.indexOf(scene)));status("Full scene pack copied.","ok");
   }else if(action==="complete"){
-    openFocus(scene.id,"assets");await completeFocusedScene();
+    openFocus(scene.id,project.productionState?.sceneId===scene.id?project.productionState.field:"voiceover");await completeFocusedScene();
   }
 });
 
@@ -474,7 +468,7 @@ $("completeScene").onclick=completeFocusedScene;
 
 $("focusTabs").onclick=event=>{
   const button=event.target.closest("[data-focus-field]");
-  if(button){focusState.field=button.dataset.focusField;focusMessage("");renderFocus();rememberFocus(true);if(focusState.field!=="assets")$("focusTextarea").focus();}
+  if(button){focusState.field=button.dataset.focusField;focusMessage("");renderFocus();rememberFocus(true);$("focusTextarea").focus();}
 };
 
 $("sceneRail").onclick=event=>{
@@ -487,20 +481,22 @@ $("focusTextarea").oninput=event=>{
   if(scene){scene[focusState.field]=event.target.value;if(scene.completed)scene.completed=false;queueSave();}
 };
 
-$("focusAssets").addEventListener("input",event=>{
-  const scene=project.scenes.find(item=>item.id===focusState.sceneId);
+$("openAssets").onclick=()=>{renderProjectAssets();$("assetsDialog").showModal();};
+$("closeAssets").onclick=()=>$("assetsDialog").close();
+$("assetList").addEventListener("input",event=>{
+  const container=event.target.closest("[data-asset-scene]"),scene=project.scenes.find(item=>item.id===container?.dataset.assetScene);
   if(!scene)return;
-  if(event.target.dataset.focusCheck){scene[event.target.dataset.focusCheck]=event.target.checked;if(scene.completed&&!assetsReady(scene))scene.completed=false;render();renderFocus();}
-  if(event.target.dataset.focusUrl)scene[event.target.dataset.focusUrl]=event.target.value;
+  if(event.target.dataset.assetCheck){scene[event.target.dataset.assetCheck]=event.target.checked;render();renderProjectAssets();}
+  if(event.target.dataset.assetUrl)scene[event.target.dataset.assetUrl]=event.target.value;
   queueSave();
 });
 
 $("copyFocus").onclick=async()=>{
-  const scene=project.scenes.find(item=>item.id===focusState.sceneId),index=project.scenes.indexOf(scene);
+  const scene=project.scenes.find(item=>item.id===focusState.sceneId);
   if(!scene)return;
-  const value=focusState.field==="assets"?scenePack(scene,index):scene[focusState.field]||"";
+  const value=scene[focusState.field]||"";
   if(!value.trim())return focusMessage("This field is empty.","error");
-  try{await copyText(value);focusMessage((focusState.field==="assets"?"Full scene pack":focusLabels[focusState.field])+" copied. Paste it into your GPT.","ok");}
+  try{await copyText(value);focusMessage(focusLabels[focusState.field]+" copied. Paste it into your GPT.","ok");}
   catch(error){focusMessage(error.message,"error");}
 };
 
