@@ -11,6 +11,15 @@ if(links&&!links.querySelector('a[href="/invincible/workday/"]')){
  links.insertBefore(workday,portfolio||null);
  portfolio?.querySelector('.nav-icon')&&(portfolio.querySelector('.nav-icon').textContent='07');
 }
+if(links&&!links.querySelector('a[href="/invincible/lic/"]')){
+ const portfolio=[...links.querySelectorAll('a')].find(link=>link.textContent.includes('Portfolio'));
+ const lic=document.createElement('a');
+ lic.href='/invincible/lic/';
+ lic.innerHTML='<span class="nav-icon">07</span><span class="nav-label">LIC</span>';
+ if(document.body.classList.contains('lic-page'))lic.setAttribute('aria-current','page');
+ links.insertBefore(lic,portfolio||null);
+ portfolio?.querySelector('.nav-icon')&&(portfolio.querySelector('.nav-icon').textContent='08');
+}
 function closeNav(){document.body.classList.remove('nav-open');trigger?.setAttribute('aria-expanded','false')}
 trigger?.addEventListener('click',()=>{const open=document.body.classList.toggle('nav-open');trigger.setAttribute('aria-expanded',String(open))});
 backdrop?.addEventListener('click',closeNav);
