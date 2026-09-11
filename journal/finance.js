@@ -1,47 +1,48 @@
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import{getAuth}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import{getFirestore,doc,onSnapshot,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import{getFirestore,doc,onSnapshot,setDoc,serverTimestamp,getDoc}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const config={apiKey:"AIzaSyBeVpUqcRO_VXfQrGVL5OaSGHKFB8XEQMc",authDomain:"life-by-adichimp.firebaseapp.com",projectId:"life-by-adichimp",storageBucket:"life-by-adichimp.firebasestorage.app",messagingSenderId:"761981819700",appId:"1:761981819700:web:8e88516817ed40b9866361"};
 const auth=getAuth(initializeApp(config)),db=getFirestore();
-const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:2}).format(Number(n)||0);
+const $=id=>document.getElementById(id),money=n=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0}).format(Number(n)||0);
 const defaults=[["rent","Rent"],["maid","Maid"],["internet","Internet"],["electricity","Electricity"],["upi","HDFC UPI due"],["cc","Credit-card due"]].map(([id,label])=>({id,label,done:false}));
-let cursor=new Date(),unsubscribe=null,user=null,state={accounts:[],transactions:[],checklist:defaults};
-const monthKey=()=>`${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,"0")}`;
-const newId=()=>crypto.randomUUID?.()||`${Date.now()}-${Math.random()}`;
+const series={cash:{label:"Cash & bank",color:"#2f80ed"},portfolio:{label:"Stock portfolio",color:"#8b5cf6"},mutualFunds:{label:"Mutual funds",color:"#ec4899"},pf:{label:"PF",color:"#f59e0b"},other:{label:"Other assets",color:"#14b8a6"},liabilities:{label:"Liabilities",color:"#ef6262"},netWorth:{label:"Net worth",color:"#172033"}};
+let cursor=new Date(),unsubscribe=null,user=null,state={accounts:[],transactions:[],checklist:defaults},history=[];
+const monthKey=(date=cursor)=>`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}`,newId=()=>crypto.randomUUID?.()||`${Date.now()}-${Math.random()}`;
+const category=x=>x.category||(x.type==="liability"?"liabilities":/portfolio|stock|share|zerodha|kite/i.test(x.name||"")?"portfolio":"cash");
 
 function setStatus(message,type=""){const el=$("status");el.textContent=message;el.className=`status ${type}`}
-function totals(){const assets=state.accounts.filter(x=>x.type==="asset").reduce((a,x)=>a+Number(x.balance||0),0),liabilities=state.accounts.filter(x=>x.type==="liability").reduce((a,x)=>a+Number(x.balance||0),0),income=state.transactions.filter(x=>x.type==="income").reduce((a,x)=>a+Number(x.amount||0),0),expense=state.transactions.filter(x=>x.type==="expense").reduce((a,x)=>a+Number(x.amount||0),0);return{assets,liabilities,income,expense}}
+function totalsFor(accounts=[]){const values={cash:0,portfolio:0,mutualFunds:0,pf:0,other:0,liabilities:0};accounts.forEach(x=>values[category(x)]=(values[category(x)]||0)+Number(x.balance||0));values.assets=values.cash+values.portfolio+values.mutualFunds+values.pf+values.other;values.netWorth=values.assets-values.liabilities;return values}
+function totals(){const balances=totalsFor(state.accounts),income=state.transactions.filter(x=>x.type==="income").reduce((a,x)=>a+Number(x.amount||0),0),expense=state.transactions.filter(x=>x.type==="expense").reduce((a,x)=>a+Number(x.amount||0),0);return{...balances,income,expense}}
 function render(){
-  $("monthLabel").textContent=cursor.toLocaleString(undefined,{month:"long",year:"numeric"});
-  const t=totals();$("totalAssets").textContent=money(t.assets);$("totalLiabilities").textContent=money(t.liabilities);$("netWorth").textContent=money(t.assets-t.liabilities);$("netFlow").textContent=money(t.income-t.expense);
-  $("accounts").innerHTML=state.accounts.map(x=>`<article class="account ${x.type}"><div class="row"><h3>${escapeHtml(x.name)}</h3><button class="icon remove-account" data-id="${x.id}" title="Remove">×</button></div><span class="badge">${x.type}</span><strong>${money(x.balance)}</strong></article>`).join("");
-  $("emptyAccounts").hidden=state.accounts.length>0;
-  const max=Math.max(t.income,t.expense,1),height=n=>Math.max(3,Math.round(n/max*155));
-  $("chart").innerHTML=`<div class="bar-wrap"><div class="bar income" style="height:${height(t.income)}px"><span>${money(t.income)}</span></div><div class="bar expense" style="height:${height(t.expense)}px"><span>${money(t.expense)}</span></div></div>`;
-  $("transactions").innerHTML=[...state.transactions].sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<div class="transaction"><div><strong>${escapeHtml(x.description)}</strong><small>${x.date} · ${x.type}</small></div><div><strong class="amount ${x.type}">${x.type==="expense"?"−":"+"}${money(x.amount)}</strong><button class="icon remove-transaction" data-id="${x.id}" title="Remove">×</button></div></div>`).join("");
-  $("emptyTransactions").hidden=state.transactions.length>0;
-  $("checklist").innerHTML=state.checklist.map(x=>`<label class="check-item ${x.done?"done":""}"><input type="checkbox" data-id="${x.id}" ${x.done?"checked":""}><span>${escapeHtml(x.label)}</span><button class="icon remove-check" data-id="${x.id}" type="button" title="Remove">×</button></label>`).join("");
-  const done=state.checklist.filter(x=>x.done).length;$("checkProgress").textContent=`${done}/${state.checklist.length} done`;
+  $("monthLabel").textContent=cursor.toLocaleString(undefined,{month:"long",year:"numeric"});const t=totals();
+  $("totalAssets").textContent=money(t.assets);$("totalLiabilities").textContent=money(t.liabilities);$("netWorth").textContent=money(t.netWorth);$("netFlow").textContent=money(t.income-t.expense);
+  $("accounts").innerHTML=state.accounts.map(x=>`<article class="account ${category(x)==="liabilities"?"liability":"asset"}"><div class="row"><h3>${escapeHtml(x.name)}</h3><button class="icon remove-account" data-id="${x.id}" title="Remove">×</button></div><span class="badge">${series[category(x)]?.label||"Asset"}</span><strong>${money(x.balance)}</strong></article>`).join("");$("emptyAccounts").hidden=state.accounts.length>0;
+  const max=Math.max(t.income,t.expense,1),height=n=>Math.max(3,Math.round(n/max*155));$("chart").innerHTML=`<div class="bar-wrap"><div class="bar income" style="height:${height(t.income)}px"><span>${money(t.income)}</span></div><div class="bar expense" style="height:${height(t.expense)}px"><span>${money(t.expense)}</span></div></div>`;
+  $("transactions").innerHTML=[...state.transactions].sort((a,b)=>b.date.localeCompare(a.date)).map(x=>`<div class="transaction"><div><strong>${escapeHtml(x.description)}</strong><small>${x.date} · ${x.type}</small></div><div><strong class="amount ${x.type}">${x.type==="expense"?"−":"+"}${money(x.amount)}</strong><button class="icon remove-transaction" data-id="${x.id}" title="Remove">×</button></div></div>`).join("");$("emptyTransactions").hidden=state.transactions.length>0;
+  $("checklist").innerHTML=state.checklist.map(x=>`<label class="check-item ${x.done?"done":""}"><input type="checkbox" data-id="${x.id}" ${x.done?"checked":""}><span>${escapeHtml(x.label)}</span><button class="icon remove-check" data-id="${x.id}" type="button" title="Remove">×</button></label>`).join("");const done=state.checklist.filter(x=>x.done).length;$("checkProgress").textContent=`${done}/${state.checklist.length} done`;renderWealth();
 }
+function selectedSeries(){return [...document.querySelectorAll('#wealthFilters input:checked')].map(x=>x.value)}
+function renderWealth(){
+  const selected=selectedSeries(),el=$("wealthChart");if(!history.length||!selected.length){el.innerHTML="";$("emptyWealth").hidden=false;return}$("emptyWealth").hidden=true;
+  const w=900,h=270,p={l:70,r:18,t:22,b:42},values=history.flatMap(x=>selected.map(k=>x[k]||0)),min=Math.min(0,...values),max=Math.max(1,...values),range=max-min||1,x=i=>p.l+(history.length===1?(w-p.l-p.r)/2:i*(w-p.l-p.r)/(history.length-1)),y=v=>p.t+(max-v)*(h-p.t-p.b)/range;
+  const ticks=[0,.25,.5,.75,1],grid=ticks.map(q=>{const v=max-q*range,py=y(v);return`<line x1="${p.l}" y1="${py}" x2="${w-p.r}" y2="${py}"/><text x="${p.l-10}" y="${py+4}" text-anchor="end">${compact(v)}</text>`}).join("");
+  const lines=selected.map(k=>{const points=history.map((d,i)=>`${x(i)},${y(d[k]||0)}`).join(" "),dots=history.map((d,i)=>`<circle cx="${x(i)}" cy="${y(d[k]||0)}" r="4"><title>${d.label} · ${series[k].label}: ${money(d[k])}</title></circle>`).join("");return`<g class="wealth-series" style="--line:${series[k].color}"><polyline points="${points}"/>${dots}</g>`}).join("");
+  const labels=history.map((d,i)=>`<text class="month-axis" x="${x(i)}" y="${h-13}" text-anchor="middle">${d.short}</text>`).join("");el.innerHTML=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Wealth trend for selected categories"><g class="grid-lines">${grid}</g>${lines}${labels}</svg>`;
+}
+function compact(n){const a=Math.abs(n);return`${n<0?"−":""}₹${a>=1e7?(a/1e7).toFixed(1)+"Cr":a>=1e5?(a/1e5).toFixed(1)+"L":a>=1e3?Math.round(a/1e3)+"K":Math.round(a)}`}
+async function loadHistory(){const months=Array.from({length:12},(_,i)=>new Date(cursor.getFullYear(),cursor.getMonth()-11+i,1)),snaps=await Promise.all(months.map(d=>getDoc(doc(db,"users",user.uid,"finance",monthKey(d)))));history=snaps.map((s,i)=>{const t=totalsFor(s.exists()?(s.data().accounts||[]):[]),d=months[i];return{...t,label:d.toLocaleString(undefined,{month:"long",year:"numeric"}),short:d.toLocaleString(undefined,{month:"short"})}});renderWealth()}
 function escapeHtml(v){const d=document.createElement("div");d.textContent=v;return d.innerHTML}
-async function save(){if(!user)return;setStatus("Saving…");await setDoc(doc(db,"users",user.uid,"finance",monthKey()),{...state,updatedAt:serverTimestamp()},{merge:true});setStatus("Saved to Firebase","ok")}
-function listen(){
-  unsubscribe?.();setStatus("Loading month…");const ref=doc(db,"users",user.uid,"finance",monthKey());
-  unsubscribe=onSnapshot(ref,s=>{state=s.exists()?{accounts:[],transactions:[],checklist:defaults,...s.data()}:{accounts:[],transactions:[],checklist:defaults.map(x=>({...x}))};render();$("app").hidden=false;setStatus(`Synced · ${user.email||"signed in"}`,"ok")},e=>setStatus(e.message,"error"));
-}
+async function save(){if(!user)return;setStatus("Saving…");await setDoc(doc(db,"users",user.uid,"finance",monthKey()),{...state,updatedAt:serverTimestamp()},{merge:true});setStatus("Saved to Firebase","ok");await loadHistory()}
+function listen(){unsubscribe?.();setStatus("Loading month…");const ref=doc(db,"users",user.uid,"finance",monthKey());unsubscribe=onSnapshot(ref,s=>{state=s.exists()?{accounts:[],transactions:[],checklist:defaults,...s.data()}:{accounts:[],transactions:[],checklist:defaults.map(x=>({...x}))};render();$("app").hidden=false;setStatus(`Synced · ${user.email||"signed in"}`,"ok");loadHistory()},e=>setStatus(e.message,"error"))}
 function moveMonth(delta){cursor=new Date(cursor.getFullYear(),cursor.getMonth()+delta,1);listen()}
 function openDialog(id){const d=$(id);if(id==="transactionDialog")d.querySelector('[name="date"]').value=`${monthKey()}-01`;d.showModal()}
-document.querySelectorAll("dialog .close").forEach(b=>b.onclick=()=>b.closest("dialog").close());
-$("prevMonth").onclick=()=>moveMonth(-1);$("nextMonth").onclick=()=>moveMonth(1);
-["addAccount","addAccountInline"].forEach(id=>$(id).onclick=()=>openDialog("accountDialog"));
-["addTransaction","addTransactionInline"].forEach(id=>$(id).onclick=()=>openDialog("transactionDialog"));
-$("accountForm").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.currentTarget);state.accounts.push({id:newId(),name:f.get("name").trim(),type:f.get("type"),balance:Number(f.get("balance"))});render();await save();e.currentTarget.reset();$("accountDialog").close()};
+document.querySelectorAll("dialog .close").forEach(b=>b.onclick=()=>b.closest("dialog").close());$("prevMonth").onclick=()=>moveMonth(-1);$("nextMonth").onclick=()=>moveMonth(1);["addAccount","addAccountInline"].forEach(id=>$(id).onclick=()=>openDialog("accountDialog"));["addTransaction","addTransactionInline"].forEach(id=>$(id).onclick=()=>openDialog("transactionDialog"));
+$("accountForm").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.currentTarget),cat=f.get("category");state.accounts.push({id:newId(),name:f.get("name").trim(),category:cat,type:cat==="liabilities"?"liability":"asset",balance:Number(f.get("balance"))});render();await save();e.currentTarget.reset();$("accountDialog").close()};
 $("transactionForm").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.currentTarget);state.transactions.push({id:newId(),description:f.get("description").trim(),type:f.get("type"),amount:Number(f.get("amount")),date:f.get("date")});render();await save();e.currentTarget.reset();$("transactionDialog").close()};
-$("checkForm").onsubmit=async e=>{e.preventDefault();state.checklist.push({id:newId(),label:$("checkLabel").value.trim(),done:false});$("checkLabel").value="";render();await save()};
-$("checklist").onchange=async e=>{if(!e.target.matches("input[type=checkbox]"))return;const x=state.checklist.find(x=>x.id===e.target.dataset.id);if(x)x.done=e.target.checked;render();await save()};
+$("checkForm").onsubmit=async e=>{e.preventDefault();state.checklist.push({id:newId(),label:$("checkLabel").value.trim(),done:false});$("checkLabel").value="";render();await save()};$("checklist").onchange=async e=>{if(!e.target.matches("input[type=checkbox]"))return;const x=state.checklist.find(x=>x.id===e.target.dataset.id);if(x)x.done=e.target.checked;render();await save()};
+$("wealthFilters").onchange=()=>{localStorage.setItem("invincible.wealthSeries",JSON.stringify(selectedSeries()));document.querySelectorAll(".preset").forEach(x=>x.classList.remove("active"));renderWealth()};
+document.querySelectorAll(".preset").forEach(b=>b.onclick=()=>{const presets={cash:["cash"],investments:["portfolio","mutualFunds","pf"],full:Object.keys(series)},chosen=presets[b.dataset.preset];document.querySelectorAll('#wealthFilters input').forEach(x=>x.checked=chosen.includes(x.value));document.querySelectorAll(".preset").forEach(x=>x.classList.toggle("active",x===b));localStorage.setItem("invincible.wealthSeries",JSON.stringify(chosen));renderWealth()});
+try{const saved=JSON.parse(localStorage.getItem("invincible.wealthSeries"));if(Array.isArray(saved)&&saved.length)document.querySelectorAll('#wealthFilters input').forEach(x=>x.checked=saved.includes(x.value))}catch{}
 document.body.onclick=async e=>{const b=e.target.closest("[data-id]");if(!b||!b.classList.contains("icon"))return;if(b.classList.contains("remove-account"))state.accounts=state.accounts.filter(x=>x.id!==b.dataset.id);if(b.classList.contains("remove-transaction"))state.transactions=state.transactions.filter(x=>x.id!==b.dataset.id);if(b.classList.contains("remove-check"))state.checklist=state.checklist.filter(x=>x.id!==b.dataset.id);render();await save()};
-
-await auth.authStateReady();
-user=auth.currentUser;
-if(user)listen();else{setStatus("Sign in on the Dashboard first, then return to Monthly Finance.","error");$("status").insertAdjacentHTML("beforeend",' <a href="/invincible/">Open Dashboard</a>')}
+await auth.authStateReady();user=auth.currentUser;if(user)listen();else{setStatus("Sign in on the Dashboard first, then return to Monthly Finance.","error");$("status").insertAdjacentHTML("beforeend",' <a href="/invincible/">Open Dashboard</a>')}
