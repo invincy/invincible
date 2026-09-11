@@ -49,7 +49,7 @@ function render(){
  $("monthLabel").textContent=cursor.toLocaleString(undefined,{month:"short",year:"numeric"});
  const v=vehicle(),has=!!v;$("app").hidden=!has;
  if(!has){status("Add your first vehicle to start tracking.","ok");return}
- syncCurrentKm();$("vehicleType").textContent=v.type+" · "+v.fuelType;$("vehicleName").textContent=v.name;$("vehicleMeta").textContent=v.registration||"Registration not added";$("currentKm").textContent=Number(v.odometer||0).toLocaleString("en-IN")+" km";
+ syncCurrentKm();$("vehicleType").textContent=v.type+" · "+v.fuelType;$("vehicleName").textContent=v.name;$("vehicleMeta").textContent=v.registration||"Registration not added";$("currentKm").textContent=Number(v.odometer||0).toLocaleString("en-IN")+" km";$("vehicleArt").dataset.kind=/bike|motorcycle|scooter/i.test(v.type+" "+v.name)?"bike":"car";
  const readings=rows("odometerReadings").sort((a,b)=>b.date.localeCompare(a.date)),fuel=rows("fuel").sort((a,b)=>b.date.localeCompare(a.date)),services=rows("services").sort((a,b)=>b.date.localeCompare(a.date)),reminders=rows("reminders");
  const key=monthKey(),monthFuel=fuel.filter(x=>x.date.startsWith(key)),distance=monthDistance(readings),monthCost=monthFuel.reduce((a,x)=>a+Number(x.cost),0);
  const fuelChron=[...fuel].sort((a,b)=>Number(a.odometer)-Number(b.odometer)),qty=fuelChron.slice(1).filter(x=>x.fullTank).reduce((a,x)=>a+Number(x.quantity),0);
