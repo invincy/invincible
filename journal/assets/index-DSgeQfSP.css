@@ -80,7 +80,8 @@ canvas { display: block; }
     radial-gradient(circle at 88% 12%, rgba(56, 189, 248, 0.10), transparent 30rem),
     linear-gradient(145deg, #f7f9ff 0%, #eef3fb 50%, #f8fbff 100%);
 }
-.journal-page .app-container {
+.journal-page,
+.journal-page * {
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
