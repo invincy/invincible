@@ -71,6 +71,108 @@ body { background: linear-gradient(180deg,var(--bg-gradient-start),var(--bg-grad
 .panel-label { color: rgb(68, 68, 68); margin-bottom: 6px; font-size: 12px; }
 .tool-panel.right { left: auto; right: 12px; }
 canvas { display: block; }
+
+/* Journal canvas: light glass UI + stylus-safe interaction */
+.journal-page {
+  overscroll-behavior: none;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(124, 77, 255, 0.10), transparent 28rem),
+    radial-gradient(circle at 88% 12%, rgba(56, 189, 248, 0.10), transparent 30rem),
+    linear-gradient(145deg, #f7f9ff 0%, #eef3fb 50%, #f8fbff 100%);
+}
+.journal-page .app-container {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.journal-page input,
+.journal-page textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+.journal-page .topbar,
+.journal-page .toolbar {
+  background: linear-gradient(135deg, rgba(255,255,255,.80), rgba(247,249,255,.60));
+  border: 1px solid rgba(255,255,255,.92);
+  -webkit-backdrop-filter: blur(22px) saturate(155%);
+  backdrop-filter: blur(22px) saturate(155%);
+  box-shadow: 0 14px 38px rgba(40,54,90,.10), inset 0 1px 0 rgba(255,255,255,.96);
+}
+.journal-page .toolbar {
+  min-height: 54px;
+  padding: 8px 12px;
+  border-radius: 18px;
+}
+.journal-page .icon-btn {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  color: #536078;
+  background: rgba(255,255,255,.68);
+  border-color: rgba(110,123,156,.14);
+  box-shadow: 0 4px 12px rgba(48,58,86,.06), inset 0 1px 0 #fff;
+  transition: transform .16s ease, color .16s ease, background .16s ease, box-shadow .16s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.journal-page .icon-btn svg { width: 20px; height: 20px; stroke-width: 1.9; }
+.journal-page .icon-btn:hover { color: #6d43ed; transform: translateY(-1px); box-shadow: 0 7px 18px rgba(77,61,140,.12); }
+.journal-page .icon-btn:active { transform: scale(.96); }
+.journal-page .icon-btn:focus-visible { outline: 3px solid rgba(124,77,255,.22); outline-offset: 2px; }
+.journal-page .icon-btn.active {
+  color: #7047ea;
+  background: linear-gradient(145deg, rgba(139,92,246,.18), rgba(99,102,241,.10));
+  border-color: rgba(124,77,255,.34);
+  box-shadow: 0 8px 22px rgba(99,72,190,.16), inset 0 1px 0 rgba(255,255,255,.9);
+}
+.journal-page .tool-panel {
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255,255,255,.88);
+  border: 1px solid rgba(255,255,255,.95);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+  box-shadow: 0 20px 55px rgba(34,42,70,.16), inset 0 1px 0 #fff;
+}
+.journal-page .swatch { width: 30px; height: 30px; border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.5), 0 3px 9px rgba(25,34,56,.10); }
+.journal-page .panel-label { color: #657087; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.journal-page .canvas-container {
+  margin: 0 24px 18px;
+  border: 1px solid rgba(255,255,255,.95);
+  border-radius: 22px;
+  overflow: hidden !important;
+  background: rgba(255,255,255,.72);
+  box-shadow: 0 20px 55px rgba(45,57,92,.11), inset 0 1px 0 #fff;
+  touch-action: none;
+  -webkit-touch-callout: none;
+}
+.journal-page #live-canvas,
+.journal-page #base-canvas { touch-action: none; -webkit-user-select: none; user-select: none; }
+.journal-page .pencil-ready {
+  order: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 4px;
+  padding: 7px 10px;
+  border-radius: 12px;
+  color: #58647a;
+  background: rgba(255,255,255,.58);
+  border: 1px solid rgba(116,130,162,.12);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.journal-page .pencil-ready span { color: #7650eb; font-size: 14px; }
+.journal-page .pencil-ready strong { color: #354158; font-size: 12px; }
+.journal-page .pencil-ready small { color: #8490a5; }
+.journal-page .canvas-container > div[style*="rgba(0, 0, 0, 0.6)"] { display: none !important; }
+@media (max-width: 760px) {
+  .journal-page .topbar, .journal-page .toolbar { margin-left: 10px; margin-right: 10px; }
+  .journal-page .canvas-container { margin: 0 10px 10px; border-radius: 17px; }
+  .journal-page .toolbar { gap: 6px !important; overflow-x: auto; scrollbar-width: none; }
+  .journal-page .toolbar::-webkit-scrollbar { display: none; }
+  .journal-page .pencil-ready small { display: none; }
+}
 .fin-card { background: linear-gradient(rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.88)); border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 24px; min-width: 220px; padding: 14px 18px; box-shadow: rgba(0, 0, 0, 0.06) 0px 4px 25px; }
 .fin-card .title { color: rgb(11, 18, 32); margin-bottom: 6px; font-size: 1rem; font-weight: 600; }
 .fin-card .subtitle { color: rgb(75, 85, 99); margin-bottom: 8px; font-size: 1rem; }

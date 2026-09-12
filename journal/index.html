@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <script type="module" crossorigin src="assets/journal-v5.js"></script>
-    <link rel="stylesheet" crossorigin href="assets/index-DSgeQfSP.css?v=20260904-4">
+    <link rel="stylesheet" crossorigin href="assets/index-DSgeQfSP.css?v=20260912-1">
     <link rel="stylesheet" href="../site-nav.css?v=9">
 </head>
   <body class="journal-page">
@@ -15,6 +15,68 @@
 <script defer src="../site-nav.js?v=1"></script>
     <div id="root"></div>
     <script>
+    /* iPad/Pencil guard: a palm is reported as touch, while Pencil is `pen`. */
+    (function journalInputGuard() {
+      const isDrawingCanvas = (target) => target && target.id === "live-canvas";
+      const isPalmPointer = (event) => isDrawingCanvas(event.target) && event.pointerType === "touch";
+
+      ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach((type) => {
+        document.addEventListener(type, function (event) {
+          if (!isPalmPointer(event)) return;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }, { capture: true, passive: false });
+      });
+
+      document.addEventListener("contextmenu", function (event) {
+        if (event.target.closest(".canvas-container, .toolbar")) event.preventDefault();
+      }, { capture: true });
+
+      document.addEventListener("selectstart", function (event) {
+        if (event.target.closest(".app-container") && !event.target.closest("input, textarea")) {
+          event.preventDefault();
+        }
+      }, { capture: true });
+
+      const upgradeTools = () => {
+        const toolbar = document.querySelector(".toolbar");
+        const canvas = document.getElementById("live-canvas");
+        if (!toolbar || !canvas) return false;
+
+        canvas.setAttribute("aria-label", "Journal drawing canvas. Apple Pencil, stylus, or mouse input only.");
+        canvas.setAttribute("draggable", "false");
+        toolbar.setAttribute("aria-label", "Drawing tools");
+
+        toolbar.querySelectorAll(".icon-btn").forEach((tool) => {
+          const label = tool.getAttribute("title") || "Drawing tool";
+          tool.setAttribute("role", "button");
+          tool.setAttribute("tabindex", "0");
+          tool.setAttribute("aria-label", label);
+          tool.dataset.toolLabel = label;
+          tool.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              tool.click();
+            }
+          });
+        });
+
+        if (!toolbar.querySelector(".pencil-ready")) {
+          const status = document.createElement("div");
+          status.className = "pencil-ready";
+          status.innerHTML = '<span aria-hidden="true">✦</span><strong>Pencil ready</strong><small> Palm rejection on</small>';
+          toolbar.appendChild(status);
+        }
+        return true;
+      };
+
+      const observer = new MutationObserver(() => {
+        if (upgradeTools()) observer.disconnect();
+      });
+      observer.observe(document.documentElement, { childList: true, subtree: true });
+      window.addEventListener("load", upgradeTools, { once: true });
+    })();
+
     document.addEventListener("click", function (event) {
       const button = event.target.closest("button");
       if (button && button.textContent.trim() === "Monthly Finance") {
