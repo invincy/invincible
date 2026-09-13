@@ -2,6 +2,7 @@
   "use strict";
 
   const state = { mode: "pen", ids: new Set(), box: null, gesture: null };
+  const batchHistory = window.__journalBatchHistory ||= { undo: [], redo: [] };
   const $ = (selector, root = document) => root.querySelector(selector);
   const svg = (body) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
   const icons = {
@@ -36,6 +37,10 @@
       group.append(toolButton("text", "Add text"));
       group.append(toolButton("handwriting", "Handwriting tools"));
     }
+    if (!toolbar.dataset.advancedToolSync) {
+      toolbar.dataset.advancedToolSync = "true";
+      toolbar.addEventListener("click", () => requestAnimationFrame(() => requestAnimationFrame(syncModeFromApp)), true);
+    }
     if (!canvas.dataset.advancedTools) {
       canvas.dataset.advancedTools = "true";
       canvas.addEventListener("pointerdown", canvasDown, true);
@@ -44,12 +49,20 @@
     updateButtons();
   }
   function activate(mode) {
+    if (state.mode !== mode) clearSelection();
     state.mode = mode;
     api().setTool(mode);
     updateButtons();
     if (mode === "handwriting") showHandwritingPanel();
     else closePanel();
-    if (mode === "select") selectAll();
+  }
+  function syncModeFromApp() {
+    const current = api()?.tool?.();
+    if (!current || current === state.mode) return updateButtons();
+    state.mode = current;
+    clearSelection();
+    if (current !== "handwriting") closePanel();
+    updateButtons();
   }
   function updateButtons() {
     document.querySelectorAll(".advanced-tool").forEach((button) => button.classList.toggle("active", button.dataset.mode === state.mode));
@@ -62,14 +75,32 @@
     return { x: Math.min(...xs), y: Math.min(...ys), width: Math.max(24, Math.max(...xs) - Math.min(...xs)), height: Math.max(24, Math.max(...ys) - Math.min(...ys)) };
   }
   function selectedStrokes() { return api().strokes().filter((stroke) => state.ids.has(stroke.id)); }
-  function selectAll() {
-    state.ids = new Set(api().strokes().map((stroke) => stroke.id));
-    showSelection();
-  }
   function selectRect(rect) {
     const right = rect.x + rect.width, bottom = rect.y + rect.height;
     state.ids = new Set(api().strokes().filter((stroke) => (stroke.points || []).some((p) => p.x >= rect.x && p.x <= right && p.y >= rect.y && p.y <= bottom)).map((stroke) => stroke.id));
     showSelection();
+  }
+  function distanceToSegment(p, a, b) {
+    const dx = b.x - a.x, dy = b.y - a.y;
+    if (!dx && !dy) return Math.hypot(p.x - a.x, p.y - a.y);
+    const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / (dx * dx + dy * dy)));
+    return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+  }
+  function hitStroke(at) {
+    const strokes = api().strokes();
+    for (let index = strokes.length - 1; index >= 0; index--) {
+      const stroke = strokes[index], points = stroke.points || [];
+      if (!points.length) continue;
+      if (stroke.tool === "text") {
+        const size = stroke.fontSize || 26, lines = String(stroke.text || "").split("\n");
+        const width = Math.max(...lines.map((line) => line.length), 1) * size * .62;
+        if (at.x >= points[0].x - 8 && at.x <= points[0].x + width + 8 && at.y >= points[0].y - 8 && at.y <= points[0].y + lines.length * size * 1.3 + 8) return stroke;
+      }
+      const tolerance = Math.max(10, (stroke.width || 2) / 2 + 7);
+      if (points.length === 1 && Math.hypot(at.x - points[0].x, at.y - points[0].y) <= tolerance) return stroke;
+      for (let i = 0; i < points.length - 1; i++) if (distanceToSegment(at, points[i], points[i + 1]) <= tolerance) return stroke;
+    }
+    return null;
   }
   function clearSelection() {
     state.ids.clear();
@@ -95,7 +126,10 @@
   }
 
   function canvasDown(event) {
-    if (!["select", "text", "handwriting"].includes(state.mode)) return;
+    if (!["select", "text", "handwriting"].includes(state.mode)) {
+      batchHistory.redo.length = 0;
+      return;
+    }
     if (event.pointerType === "touch") return;
     event.preventDefault();
     event.stopImmediatePropagation();
@@ -118,7 +152,11 @@
       marquee.remove();
       const rect = state.gesture || { x: start.x, y: start.y, width: 0, height: 0 };
       state.gesture = null;
-      if (rect.width < 8 && rect.height < 8) selectAll(); else selectRect(rect);
+      if (rect.width < 8 && rect.height < 8) {
+        const hit = hitStroke(start);
+        state.ids = hit ? new Set([hit.id]) : new Set();
+        showSelection();
+      } else selectRect(rect);
     };
     window.addEventListener("pointermove", move, true);
     window.addEventListener("pointerup", up, true);
@@ -154,7 +192,14 @@
     const clones = selectedStrokes().map((stroke) => ({ ...stroke, id: crypto.randomUUID(), createdAtMs: Date.now(), points: (stroke.points || []).map((p) => ({ ...p, x: p.x + 24, y: p.y + 24 })) }));
     clones.forEach((stroke) => api().save(stroke)); state.ids = new Set(clones.map((stroke) => stroke.id)); setTimeout(showSelection, 80);
   }
-  function deleteSelected() { [...state.ids].forEach((id) => api().remove(id)); clearSelection(); }
+  function deleteSelected() {
+    const strokes = selectedStrokes().map((stroke) => structuredClone(stroke));
+    if (!strokes.length) return;
+    batchHistory.undo.push({ type: "delete", strokes });
+    batchHistory.redo.length = 0;
+    strokes.forEach((stroke) => api().remove(stroke.id));
+    clearSelection();
+  }
   function redrawSoon() { requestAnimationFrame(() => requestAnimationFrame(() => api()?.redraw())); }
 
   function placeText(at, existing = null) {
