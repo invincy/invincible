@@ -127,24 +127,24 @@
       #left-info{flex:none;width:100%;box-sizing:border-box;order:0}
     }
     @media (max-width:768px){
-      #dashboard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto auto;align-items:start;min-height:0!important;padding:.65rem;column-gap:0;row-gap:.65rem}
+      #dashboard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto auto auto;align-items:start;min-height:0!important;padding:.65rem;gap:.65rem}
       #kanban-container{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:.65rem}
-      #top-bar,#left-info{width:auto;min-width:0;height:clamp(140px,38vw,165px);min-height:0;overflow:hidden;padding:.62rem;background:rgba(0,40,40,.48);box-shadow:0 0 18px rgba(0,255,255,.14)}
-      #top-bar{grid-column:1;border-radius:.7rem 0 0 .7rem;border-right:0}
-      #left-info{grid-column:2;gap:.3rem;border-radius:0 .7rem .7rem 0}
-      #time-and-date-row{display:flex;flex-direction:column;align-items:stretch;gap:.55rem}
+      #top-bar,#left-info{grid-column:1/-1;width:auto;min-width:0;height:auto;min-height:0;overflow:hidden;padding:.62rem;background:rgba(0,40,40,.48);box-shadow:0 0 18px rgba(0,255,255,.14)}
+      #top-bar{border-radius:.7rem .7rem 0 0;border-bottom:0}
+      #left-info{gap:.35rem;margin-top:-.65rem;border-radius:0 0 .7rem .7rem;border-top:1px solid rgba(0,255,255,.14)}
+      #time-and-date-row{display:flex;flex-direction:row;align-items:center;gap:.55rem}
       #app-title{display:none}
       .controls{width:100%;justify-content:center}
       .add-task-btn{width:100%;min-height:36px;padding:.42rem .3rem;font-size:.78rem;border-radius:.55rem}
-      #controls-row{margin-top:.55rem;padding-top:.5rem;justify-content:center}
+      #controls-row{margin-top:.4rem;padding-top:.4rem;justify-content:center}
       .streak-buttons{justify-content:center;gap:.12rem}
       .streak-button{min-height:30px;padding:.25rem .3rem;gap:.25rem;font-size:.7rem}
       .streak-button i{font-size:.78rem}
       .streak-number{font-size:.82rem}
       #left-info .section-title{display:none}
-      .mega-clock{padding:.45rem .15rem .5rem;border-radius:.5rem}
-      .time{font-size:clamp(1.05rem,5.4vw,1.5rem)}
-      .date{font-size:clamp(.53rem,2.5vw,.7rem);white-space:nowrap}
+      .mega-clock{padding:.5rem .2rem .55rem;border-radius:.5rem}
+      .time{font-size:clamp(1.45rem,8vw,2.1rem)}
+      .date{font-size:clamp(.62rem,3vw,.8rem);white-space:nowrap}
       .countdowns{gap:.2rem}
       .countdowns-header h2{font-size:.72rem}
       .countdowns-header .icon-btn{width:24px;height:24px;font-size:.65rem}
