@@ -153,11 +153,13 @@
       .kanban-column{width:auto;min-height:0;aspect-ratio:1/1;padding:.45rem;cursor:pointer;overflow:hidden;transition:grid-column .28s ease,aspect-ratio .28s ease,min-height .28s ease,box-shadow .28s ease}
       #kanban-container .kanban-column h2{position:relative;top:0!important;z-index:4;display:flex;align-items:center;justify-content:center;gap:.45rem;background:rgba(0,24,24,.96);border-radius:6px;padding:.6rem .25rem;margin-bottom:.45rem;font-size:clamp(.72rem,3.2vw,.95rem);white-space:nowrap;cursor:pointer}
       .kanban-column h2::after{content:attr(data-count);display:grid;place-items:center;min-width:1.25rem;height:1.25rem;padding:0 .18rem;border-radius:999px;background:rgba(0,255,255,.1);border:1px solid rgba(0,255,255,.28);font-size:.66rem;line-height:1;text-shadow:none}
-      .kanban-column .task-list{display:none;min-height:0;overflow:hidden;padding:0 .15rem;gap:.45rem;pointer-events:none}
-      .kanban-column .task-card{min-height:0;padding:1.55rem .55rem .55rem;opacity:.82;transform:scale(.98)}
-      .kanban-column .task-card h3{font-size:.78rem;line-height:1.25;margin:.1rem 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-      .kanban-column .subtask-count{font-size:.68rem}
-      .kanban-column.is-expanded{grid-column:1/-1;aspect-ratio:1/1;min-height:min(92vw,430px);cursor:default;box-shadow:0 0 24px rgba(0,255,255,.34)}
+      .kanban-column .task-list{display:flex;min-height:0;overflow-y:auto;padding:0 .15rem .25rem;gap:.35rem;pointer-events:none}
+      .kanban-column .task-card{min-height:0;padding:.48rem .52rem;opacity:.88;transform:none;background:rgba(0,255,255,.025)}
+      .kanban-column .task-card h3{font-size:.76rem;line-height:1.2;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .kanban-column .subtask-count{font-size:.62rem;margin-top:.18rem}
+      .kanban-column:not(.is-expanded) .card-nav{display:none}
+      .kanban-column.is-expanded{position:absolute;inset:0;z-index:30;width:100%;height:100%;aspect-ratio:auto;min-height:0;cursor:default;box-shadow:0 0 34px rgba(0,255,255,.48);animation:kanban-focus-in .22s ease-out}
+      @keyframes kanban-focus-in{from{opacity:.4;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
       .kanban-column.is-expanded h2{font-size:1rem;padding:.72rem}
       .kanban-column.is-expanded h2::before{content:'Tap to collapse';position:absolute;left:.6rem;font-family:Rajdhani,sans-serif;font-size:.58rem;letter-spacing:0;text-transform:none;opacity:.55;text-shadow:none}
       .kanban-column.is-expanded .task-list{display:flex;overflow-y:auto;pointer-events:auto;padding:0 .35rem .45rem}
