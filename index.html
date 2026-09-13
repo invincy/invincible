@@ -521,7 +521,7 @@
       tasks.forEach(task=>{
         const el = document.createElement('div');
         el.className = 'task-card'; el.draggable = true; el.dataset.id = task.id;
-        const subs = task.subtasks || []; const done = subs.filter(s=>s.done).length; const total = subs.length;
+        const subs = (Array.isArray(task.steps) && task.steps.length ? task.steps : task.subtasks) || []; const done = subs.filter(s=>s.done || s.status === 'Done').length; const total = subs.length;
         el.innerHTML = `
           <div class="card-nav">
             <button class="nav-left" title="Move left">‹</button>
@@ -537,7 +537,7 @@
         leftBtn.addEventListener('click', ev=>{ ev.stopPropagation(); moveTask(task.id,-1); });
         rightBtn.addEventListener('click',ev=>{ ev.stopPropagation(); moveTask(task.id,+1); });
 
-        el.addEventListener('click', ()=> openModal(task));
+        el.addEventListener('click', ()=> { window.location.href = `/invincible/task/?id=${encodeURIComponent(task.id)}`; });
         el.addEventListener('dragstart', e=>{
           draggedTask = task.id; dragId = task.id; originalStatus = task.status;
           if(e.dataTransfer){ e.dataTransfer.setData('text/plain', task.id); e.dataTransfer.effectAllowed='move'; }

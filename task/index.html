@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#071013">
+  <title>Task Workspace · Invincible</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../site-nav.css?v=10">
+  <link rel="stylesheet" href="task.css?v=1">
+</head>
+<body class="task-workspace-page">
+  <nav class="global-nav" aria-label="Primary navigation"><div class="nav-head"><a class="nav-brand" href="/invincible/"><span class="nav-mark">I</span><strong>INVINCIBLE</strong></a><button class="nav-trigger" type="button" aria-expanded="false">Menu</button></div><div class="nav-links"><a href="/invincible/"><span class="nav-icon">01</span><span class="nav-label">Dashboard</span></a><a href="/invincible/journal/"><span class="nav-icon">02</span><span class="nav-label">Journal</span></a><a href="/invincible/journal/finance.html"><span class="nav-icon">03</span><span class="nav-label">Finance</span></a><a href="/invincible/garage/"><span class="nav-icon">04</span><span class="nav-label">Garage</span></a><a href="/invincible/creator/"><span class="nav-icon">05</span><span class="nav-label">Creator Studio</span></a><a href="https://script.google.com/macros/s/AKfycbxbdgQqTwHIYw_dS9ko_tTieVM1PAQKNAHsTqy7bFPlVNg2P-9FNoccrZwHgbeXALoY/exec" target="_blank" rel="noopener"><span class="nav-icon">06</span><span class="nav-label">Portfolio</span><span class="nav-external">↗</span></a></div><div class="nav-footer">PERSONAL OPERATING SYSTEM</div></nav><div class="nav-backdrop" aria-hidden="true"></div>
+
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-card"><span class="auth-logo">I</span><h1>Task Workspace</h1><p>Sign in to open your synced project workspace.</p><button id="sign-in">Continue with Google</button><small id="auth-error"></small></div>
+  </div>
+
+  <main id="workspace" class="workspace is-hidden">
+    <header class="workspace-header">
+      <a class="back-link" href="/invincible/" aria-label="Back to dashboard">← <span>Dashboard</span></a>
+      <div class="sync-wrap"><span id="sync-dot" class="sync-dot"></span><span id="save-state">Synced</span></div>
+      <button id="delete-task" class="ghost-button danger-button" type="button">Delete task</button>
+      <button id="sign-out" class="ghost-button" type="button">Sign out</button>
+    </header>
+
+    <section class="hero panel">
+      <div class="hero-main">
+        <div class="eyebrow">TASK WORKSPACE</div>
+        <input id="task-title" class="task-title" aria-label="Task title" placeholder="Untitled task">
+        <textarea id="task-description" class="task-description" rows="2" placeholder="What does finished look like?"></textarea>
+      </div>
+      <div class="hero-side">
+        <label class="field-label" for="task-status">Status</label>
+        <select id="task-status">
+          <option>Backlog</option><option>Today</option><option>In Progress</option><option>Done</option>
+        </select>
+        <div class="progress-ring" id="progress-ring" style="--progress:0"><strong id="progress-value">0%</strong><span>complete</span></div>
+      </div>
+    </section>
+
+    <div class="workspace-grid">
+      <section class="steps-panel panel">
+        <div class="section-head"><div><div class="eyebrow">EXECUTION PLAN</div><h2>Steps</h2></div><div class="head-actions"><button id="open-import" class="secondary-button" type="button">Paste AI plan</button><button id="add-step" class="primary-button" type="button">+ Add step</button></div></div>
+        <div class="progress-track"><span id="progress-bar"></span></div>
+        <div id="steps-list" class="steps-list"></div>
+        <div id="empty-steps" class="empty-state"><div class="empty-orbit">+</div><h3>Build the path, one step at a time.</h3><p>Add a step manually or paste a numbered/Markdown plan from ChatGPT.</p></div>
+      </section>
+
+      <aside class="reference-column">
+        <section class="panel compact-panel">
+          <div class="section-head"><div><div class="eyebrow">PROJECT MEMORY</div><h2>References</h2></div><label class="upload-button">+ Add image<input id="image-input" type="file" accept="image/*" multiple hidden></label></div>
+          <div id="reference-gallery" class="reference-gallery"></div>
+          <p id="reference-empty" class="muted">Store screenshots, dimensions, diagrams or inspiration here.</p>
+        </section>
+        <section class="panel compact-panel">
+          <div class="section-head"><div><div class="eyebrow">QUICK NOTES</div><h2>Scratchpad</h2></div></div>
+          <textarea id="scratchpad" class="scratchpad" placeholder="Loose thoughts, measurements, things to verify…"></textarea>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <dialog id="import-dialog" class="dialog">
+    <form method="dialog">
+      <div class="dialog-head"><div><div class="eyebrow">PLAN IMPORTER</div><h2>Turn a ChatGPT plan into steps</h2></div><button class="close-button" value="cancel" aria-label="Close">×</button></div>
+      <p>Paste a numbered list, bullet list, or Markdown table. Each row becomes one editable step.</p>
+      <textarea id="plan-input" rows="11" placeholder="1. Create accurate full LVM3 model&#10;2. Split rocket into printable components&#10;3. Design male–female joints"></textarea>
+      <div class="dialog-actions"><button value="cancel" class="secondary-button">Cancel</button><button id="import-plan" value="default" class="primary-button">Create steps</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="sketch-dialog" class="dialog sketch-dialog">
+    <div class="dialog-head"><div><div class="eyebrow">HANDWRITTEN NOTE</div><h2 id="sketch-title">Sketch</h2></div><button id="close-sketch" class="close-button" aria-label="Close">×</button></div>
+    <div class="sketch-tools"><button class="tool active" data-tool="pen">Pen</button><button class="tool" data-tool="eraser">Eraser</button><label>Size <input id="brush-size" type="range" min="2" max="24" value="4"></label><button id="undo-stroke" class="tool">Undo</button><button id="clear-sketch" class="tool danger">Clear</button></div>
+    <div class="canvas-wrap"><canvas id="sketch-canvas"></canvas></div>
+    <div class="dialog-actions"><button id="cancel-sketch" class="secondary-button">Cancel</button><button id="save-sketch" class="primary-button">Save sketch</button></div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script defer src="../site-nav.js?v=1"></script>
+  <script defer src="task.js?v=1"></script>
+</body>
+</html>
