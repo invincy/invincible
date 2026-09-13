@@ -162,7 +162,7 @@
       #kanban-container .kanban-column h2{position:relative;top:0!important;z-index:4;display:flex;align-items:center;justify-content:center;gap:.45rem;background:rgba(2,15,18,.58);border:1px solid color-mix(in srgb,var(--status-accent) 30%,transparent);border-radius:6px;padding:.6rem .25rem;margin-bottom:.45rem;font-size:clamp(.72rem,3.2vw,.95rem);white-space:nowrap;cursor:pointer;color:var(--status-accent);text-shadow:0 0 7px color-mix(in srgb,var(--status-accent) 55%,transparent)}
       .kanban-column h2::after{content:attr(data-count);display:grid;place-items:center;min-width:1.25rem;height:1.25rem;padding:0 .18rem;border-radius:999px;background:color-mix(in srgb,var(--status-accent) 12%,transparent);border:1px solid color-mix(in srgb,var(--status-accent) 38%,transparent);color:var(--status-accent);font-size:.66rem;line-height:1;text-shadow:none}
       .kanban-column .task-list{display:flex;min-height:0;overflow-y:auto;padding:0 .15rem .25rem;gap:.35rem;pointer-events:auto}
-      .kanban-column .task-card{min-height:0;padding:.48rem .52rem;opacity:.92;transform:none;background:rgba(0,0,0,.14);border-color:color-mix(in srgb,var(--status-accent) 28%,transparent);color:var(--status-accent)}
+      .kanban-column .task-card{min-height:0;padding:.48rem .52rem;opacity:.92;transform:none;background:rgba(0,0,0,.14);border-color:color-mix(in srgb,var(--status-accent) 28%,transparent);color:var(--status-accent);touch-action:none;user-select:none;-webkit-user-select:none}
       .kanban-column .task-card h3{font-size:.76rem;line-height:1.2;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       .kanban-column .subtask-count{font-size:.62rem;margin-top:.18rem}
       .kanban-column:not(.is-expanded) .card-nav{display:none}
@@ -260,8 +260,8 @@
 
     <div id="kanban-container">
       <div id="kanban-backlog" class="kanban-column"><h2>Backlog</h2><div class="task-list" data-status="Backlog"></div></div>
-      <div id="kanban-in-progress" class="kanban-column"><h2>In Progress</h2><div class="task-list" data-status="In Progress"></div></div>
       <div id="kanban-today" class="kanban-column"><h2>Today</h2><div class="task-list" data-status="Today"></div></div>
+      <div id="kanban-in-progress" class="kanban-column"><h2>In Progress</h2><div class="task-list" data-status="In Progress"></div></div>
       <div id="kanban-done" class="kanban-column"><h2>Completed</h2><div class="task-list" data-status="Done"></div></div>
     </div>
   </div>
@@ -562,7 +562,7 @@
       Object.values(taskLists).forEach(list=> list.innerHTML='');
       tasks.forEach(task=>{
         const el = document.createElement('div');
-        el.className = 'task-card'; el.draggable = true; el.dataset.id = task.id;
+        el.className = 'task-card'; el.draggable = !window.matchMedia('(pointer: coarse)').matches; el.dataset.id = task.id;
         const subs = (Array.isArray(task.steps) && task.steps.length ? task.steps : task.subtasks) || []; const done = subs.filter(s=>s.done || s.status === 'Done').length; const total = subs.length;
         el.innerHTML = `
           <div class="card-nav">
@@ -604,34 +604,34 @@
       const clearTargets=()=> document.querySelectorAll('.kanban-column.touch-drop-target').forEach(col=>col.classList.remove('touch-drop-target'));
       const cancel=()=>{ const wasDragging=!!state?.dragging; clearTimeout(holdTimer); state?.ghost?.remove(); clearTargets(); state=null; if(wasDragging) setTimeout(()=>{ suppressCardClick=false; },350); };
 
-      card.addEventListener('touchstart', event=>{
-        if(!window.matchMedia('(max-width: 768px)').matches || event.touches.length!==1) return;
-        const touch=event.touches[0];
-        state={startX:touch.clientX,startY:touch.clientY,x:touch.clientX,y:touch.clientY,dragging:false,ghost:null};
-        holdTimer=setTimeout(()=>{
-          if(!state) return;
-          state.dragging=true; suppressCardClick=true;
-          const rect=card.getBoundingClientRect();
-          const ghost=card.cloneNode(true); ghost.classList.add('touch-drag-ghost');
-          ghost.style.width=rect.width+'px'; ghost.style.left=(state.x-rect.width/2)+'px'; ghost.style.top=(state.y-rect.height/2)+'px';
-          document.body.appendChild(ghost); state.ghost=ghost;
-          if(navigator.vibrate) navigator.vibrate(25);
-        },220);
-      },{passive:true});
+      const begin=()=>{
+        if(!state || state.dragging) return;
+        state.dragging=true; suppressCardClick=true;
+        const rect=card.getBoundingClientRect();
+        const ghost=card.cloneNode(true); ghost.classList.add('touch-drag-ghost');
+        ghost.style.width=rect.width+'px'; ghost.style.left=(state.x-rect.width/2)+'px'; ghost.style.top=(state.y-rect.height/2)+'px';
+        document.body.appendChild(ghost); state.ghost=ghost;
+        if(navigator.vibrate) navigator.vibrate(25);
+      };
 
-      card.addEventListener('touchmove', event=>{
-        if(!state || event.touches.length!==1) return;
-        const touch=event.touches[0]; state.x=touch.clientX; state.y=touch.clientY;
-        if(!state.dragging){
-          if(Math.hypot(state.x-state.startX,state.y-state.startY)>10) cancel();
-          return;
-        }
+      card.addEventListener('pointerdown', event=>{
+        if(!window.matchMedia('(max-width: 768px)').matches || event.pointerType==='mouse' || !event.isPrimary) return;
+        state={pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,x:event.clientX,y:event.clientY,dragging:false,ghost:null};
+        try{ card.setPointerCapture(event.pointerId); }catch{}
+        holdTimer=setTimeout(begin,180);
+      });
+
+      card.addEventListener('pointermove', event=>{
+        if(!state || event.pointerId!==state.pointerId) return;
+        state.x=event.clientX; state.y=event.clientY;
+        if(!state.dragging && Math.hypot(state.x-state.startX,state.y-state.startY)>6) begin();
+        if(!state.dragging) return;
         event.preventDefault();
         const rect=state.ghost.getBoundingClientRect();
         state.ghost.style.left=(state.x-rect.width/2)+'px'; state.ghost.style.top=(state.y-rect.height/2)+'px';
         clearTargets();
         document.elementFromPoint(state.x,state.y)?.closest('.kanban-column')?.classList.add('touch-drop-target');
-      },{passive:false});
+      });
 
       const finish=event=>{
         clearTimeout(holdTimer);
@@ -643,8 +643,8 @@
         if(newStatus && newStatus!==task.status) moveTaskToStatus(task.id,newStatus);
         setTimeout(()=>{ suppressCardClick=false; },350);
       };
-      card.addEventListener('touchend',finish,{passive:false});
-      card.addEventListener('touchcancel',cancel,{passive:false});
+      card.addEventListener('pointerup',finish);
+      card.addEventListener('pointercancel',cancel);
     }
 
     async function moveTaskToStatus(taskId,newStatus){
