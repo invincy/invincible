@@ -166,6 +166,8 @@
       .kanban-column .task-card h3{font-size:.76rem;line-height:1.2;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       .kanban-column .subtask-count{font-size:.62rem;margin-top:.18rem}
       .kanban-column:not(.is-expanded) .card-nav{display:none}
+      .touch-drag-ghost{position:fixed!important;z-index:10050!important;margin:0!important;pointer-events:none!important;opacity:.92!important;transform:scale(1.04) rotate(1deg)!important;background:#102b30!important;box-shadow:0 14px 38px rgba(0,0,0,.55),0 0 22px rgba(0,255,255,.35)!important}
+      .kanban-column.touch-drop-target{outline:2px solid var(--status-accent);outline-offset:-3px;box-shadow:0 0 28px color-mix(in srgb,var(--status-accent) 42%,transparent)!important}
       #kanban-container.has-expanded .kanban-column:not(.is-expanded){opacity:0;visibility:hidden}
       .kanban-column.is-expanded{position:absolute;inset:0;z-index:30;width:100%;height:100%;aspect-ratio:auto;min-height:0;cursor:default;background-color:#031d20!important;background-image:repeating-linear-gradient(100deg,rgba(255,255,255,.018) 0,rgba(255,255,255,.018) 1px,transparent 1px,transparent 5px),linear-gradient(145deg,#073032 0%,#031d20 55%,#021518 100%)!important;border:1px solid rgba(74,255,244,.52);backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:0 0 34px rgba(0,255,255,.42),inset 0 1px 0 rgba(190,255,250,.16),inset 0 0 42px rgba(0,255,255,.055);animation:kanban-focus-in .22s ease-out}
       #kanban-today.is-expanded{background-color:#241d0d!important;background-image:repeating-linear-gradient(100deg,rgba(255,245,205,.025) 0,rgba(255,245,205,.025) 1px,transparent 1px,transparent 5px),linear-gradient(145deg,#423417 0%,#241d0d 55%,#171207 100%)!important;border-color:rgba(255,209,102,.78);box-shadow:0 0 38px rgba(255,190,55,.3),inset 0 1px 0 rgba(255,245,210,.2)}
@@ -494,7 +496,7 @@
     /* ===== State ===== */
     let dragId = null;
     let tasks=[], streaks={}, streakLast={}, countdowns=[];
-    let draggedTask=null, originalStatus=null;
+    let draggedTask=null, originalStatus=null, suppressCardClick=false;
     const STATUSES = ['Backlog','In Progress','Today','Done'];
 
     function normalizeStreaks(s){
@@ -577,13 +579,17 @@
         leftBtn.addEventListener('click', ev=>{ ev.stopPropagation(); moveTask(task.id,-1); });
         rightBtn.addEventListener('click',ev=>{ ev.stopPropagation(); moveTask(task.id,+1); });
 
-        el.addEventListener('click', ()=> { window.location.href = `/invincible/task/?id=${encodeURIComponent(task.id)}`; });
+        el.addEventListener('click', event=> {
+          if(suppressCardClick){ event.preventDefault(); event.stopPropagation(); return; }
+          window.location.href = `/invincible/task/?id=${encodeURIComponent(task.id)}`;
+        });
         el.addEventListener('dragstart', e=>{
           draggedTask = task.id; dragId = task.id; originalStatus = task.status;
           if(e.dataTransfer){ e.dataTransfer.setData('text/plain', task.id); e.dataTransfer.effectAllowed='move'; }
           el.classList.add('dragging');
         });
         el.addEventListener('dragend', ()=>{ el.classList.remove('dragging'); draggedTask=null; dragId=null; });
+        attachMobileDrag(el, task);
         (taskLists[task.status] || taskLists.Backlog).appendChild(el);
       });
       document.querySelectorAll('.kanban-column').forEach(column=>{
@@ -591,6 +597,61 @@
         const count = column.querySelectorAll('.task-card').length;
         if(heading) heading.dataset.count = count;
       });
+    }
+
+    function attachMobileDrag(card, task){
+      let state=null, holdTimer=null;
+      const clearTargets=()=> document.querySelectorAll('.kanban-column.touch-drop-target').forEach(col=>col.classList.remove('touch-drop-target'));
+      const cancel=()=>{ const wasDragging=!!state?.dragging; clearTimeout(holdTimer); state?.ghost?.remove(); clearTargets(); state=null; if(wasDragging) setTimeout(()=>{ suppressCardClick=false; },350); };
+
+      card.addEventListener('touchstart', event=>{
+        if(!window.matchMedia('(max-width: 768px)').matches || event.touches.length!==1) return;
+        const touch=event.touches[0];
+        state={startX:touch.clientX,startY:touch.clientY,x:touch.clientX,y:touch.clientY,dragging:false,ghost:null};
+        holdTimer=setTimeout(()=>{
+          if(!state) return;
+          state.dragging=true; suppressCardClick=true;
+          const rect=card.getBoundingClientRect();
+          const ghost=card.cloneNode(true); ghost.classList.add('touch-drag-ghost');
+          ghost.style.width=rect.width+'px'; ghost.style.left=(state.x-rect.width/2)+'px'; ghost.style.top=(state.y-rect.height/2)+'px';
+          document.body.appendChild(ghost); state.ghost=ghost;
+          if(navigator.vibrate) navigator.vibrate(25);
+        },220);
+      },{passive:true});
+
+      card.addEventListener('touchmove', event=>{
+        if(!state || event.touches.length!==1) return;
+        const touch=event.touches[0]; state.x=touch.clientX; state.y=touch.clientY;
+        if(!state.dragging){
+          if(Math.hypot(state.x-state.startX,state.y-state.startY)>10) cancel();
+          return;
+        }
+        event.preventDefault();
+        const rect=state.ghost.getBoundingClientRect();
+        state.ghost.style.left=(state.x-rect.width/2)+'px'; state.ghost.style.top=(state.y-rect.height/2)+'px';
+        clearTargets();
+        document.elementFromPoint(state.x,state.y)?.closest('.kanban-column')?.classList.add('touch-drop-target');
+      },{passive:false});
+
+      const finish=event=>{
+        clearTimeout(holdTimer);
+        if(!state?.dragging){ state=null; return; }
+        event.preventDefault();
+        const target=document.elementFromPoint(state.x,state.y)?.closest('.kanban-column');
+        const newStatus=target?.querySelector('.task-list')?.dataset.status;
+        state.ghost?.remove(); clearTargets(); state=null;
+        if(newStatus && newStatus!==task.status) moveTaskToStatus(task.id,newStatus);
+        setTimeout(()=>{ suppressCardClick=false; },350);
+      };
+      card.addEventListener('touchend',finish,{passive:false});
+      card.addEventListener('touchcancel',cancel,{passive:false});
+    }
+
+    async function moveTaskToStatus(taskId,newStatus){
+      const taskObj=tasks.find(item=>item.id===taskId); if(!taskObj || taskObj.status===newStatus) return;
+      const previous=taskObj.status; taskObj.status=newStatus; renderTasks();
+      try{ await api('upsertTask',taskObj); }
+      catch(err){ console.error('Touch move failed, rolling back',err); taskObj.status=previous; renderTasks(); }
     }
 
     /* Mobile Kanban: four glanceable tiles, one focused board at a time. */
