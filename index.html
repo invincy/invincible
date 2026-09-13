@@ -48,8 +48,8 @@
     .card-nav button:disabled{opacity:.35;cursor:default}
 
     /* Layout */
-    #dashboard{display:flex;flex-direction:column;width:100vw;height:100vh;padding:1.25rem 1.5rem 1.5rem;box-sizing:border-box;gap:1.25rem;position:relative;z-index:2}
-    #top-bar{display:flex;flex-direction:column;padding:1rem 1.5rem;background:var(--panel-bg);border-radius:.75rem;border:var(--panel-border);box-shadow:var(--panel-shadow);z-index:10}
+    #dashboard{display:grid;grid-template-columns:clamp(320px,19vw,370px) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);width:100vw;height:100vh;padding:1.25rem 1.5rem 1.5rem;box-sizing:border-box;gap:1.25rem;position:relative;z-index:2}
+    #top-bar{grid-column:1/-1;display:flex;flex-direction:column;padding:1rem 1.5rem;background:var(--panel-bg);border-radius:.75rem;border:var(--panel-border);box-shadow:var(--panel-shadow);z-index:10}
     #time-and-date-row{display:flex;justify-content:space-between;align-items:center}
     #controls-row{display:flex;justify-content:space-between;align-items:center;padding-top:1rem;border-top:1px solid rgba(0,255,255,.2);margin-top:1rem}
 
@@ -68,7 +68,7 @@
     .task-list{flex-grow:1;overflow-y:auto;display:flex;flex-direction:column;gap:.75rem;padding:0 .5rem}
 
     /* SIDE WIDGET (Clock + Countdowns) */
-    #left-info{flex:0 0 clamp(320px,19vw,370px);min-width:320px;display:flex;flex-direction:column;gap:1rem;background:var(--panel-bg);border:var(--panel-border);border-radius:.75rem;padding:1rem;position:relative;z-index:2}
+    #left-info{min-width:320px;display:flex;flex-direction:column;gap:1rem;background:var(--panel-bg);border:var(--panel-border);border-radius:.75rem;padding:1rem;position:relative;z-index:2}
     #left-info .section-title{font-weight:400;text-transform:uppercase;letter-spacing:.5px;margin:0;color:var(--accent-color);text-shadow:0 0 6px var(--glow-color);opacity:.9;border-bottom:1px solid rgba(0,255,255,.3);padding-bottom:.5rem}
 
     /* Big funky clock */
@@ -120,7 +120,7 @@
     @media (max-width:1024px){
       html,body{height:auto;min-height:100%;overflow-x:hidden;overflow-y:auto}
       body{display:block}
-      #dashboard{width:100%;height:auto!important;min-height:calc(100vh - 54px);padding:1rem;gap:1rem;overflow:visible}
+      #dashboard{display:flex;flex-direction:column;width:100%;height:auto!important;min-height:calc(100vh - 54px);padding:1rem;gap:1rem;overflow:visible}
       #kanban-container{display:flex;flex-direction:column;overflow:visible;gap:1rem}
       .kanban-column{flex:none;width:100%;min-width:0;max-width:none;min-height:150px;overflow:visible;box-sizing:border-box}
       .task-list{overflow:visible;max-height:none;min-height:70px}
@@ -128,8 +128,8 @@
     }
     @media (max-width:768px){
       #dashboard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;padding:.65rem;gap:.65rem}
-      #kanban-container{display:contents}
-      #top-bar,#left-info{width:auto;height:clamp(152px,43vw,185px);min-height:0;overflow:hidden;padding:.62rem;border-radius:.7rem}
+      #kanban-container{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:.65rem}
+      #top-bar,#left-info{width:auto;min-width:0;height:clamp(152px,43vw,185px);min-height:0;overflow:hidden;padding:.62rem;border-radius:.7rem}
       #top-bar{grid-column:1}
       #left-info{grid-column:2;gap:.4rem}
       #time-and-date-row{display:flex;flex-direction:column;align-items:stretch;gap:.55rem}
@@ -219,9 +219,8 @@
       </div>
     </div>
 
-    <div id="kanban-container">
-      <!-- LEFT SIDE WIDGET -->
-      <aside id="left-info">
+    <!-- LEFT SIDE WIDGET -->
+    <aside id="left-info">
         <h2 class="section-title">Clock</h2>
         <div class="mega-clock">
           <div id="live-clock-time" class="time">--:--:--</div>
@@ -242,8 +241,9 @@
             <button id="mini-add" class="icon-btn" title="Save"><i class="fas fa-check"></i></button>
           </div>
         </div>
-      </aside>
+    </aside>
 
+    <div id="kanban-container">
       <div id="kanban-backlog" class="kanban-column"><h2>Backlog</h2><div class="task-list" data-status="Backlog"></div></div>
       <div id="kanban-today" class="kanban-column"><h2>Today</h2><div class="task-list" data-status="Today"></div></div>
       <div id="kanban-in-progress" class="kanban-column"><h2>In Progress</h2><div class="task-list" data-status="In Progress"></div></div>
