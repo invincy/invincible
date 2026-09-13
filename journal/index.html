@@ -19,10 +19,18 @@
     (function journalInputGuard() {
       const isDrawingCanvas = (target) => target && target.id === "live-canvas";
       const isPalmPointer = (event) => isDrawingCanvas(event.target) && event.pointerType === "touch";
+      let pencilActive = false;
+      let pencilGraceUntil = 0;
 
       ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach((type) => {
         document.addEventListener(type, function (event) {
+          if (isDrawingCanvas(event.target) && event.pointerType === "pen") {
+            pencilActive = type !== "pointerup" && type !== "pointercancel";
+            pencilGraceUntil = performance.now() + 250;
+            return;
+          }
           if (!isPalmPointer(event)) return;
+          if (pencilActive || performance.now() < pencilGraceUntil) event.preventDefault();
           event.stopImmediatePropagation();
         }, { capture: true, passive: false });
       });
