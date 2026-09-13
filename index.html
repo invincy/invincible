@@ -150,7 +150,7 @@
       .countdowns-header .icon-btn{width:24px;height:24px;font-size:.65rem}
       #countdown-list{max-height:28px;overflow-y:auto}
       .countdown-item{min-width:0;padding:.25rem .35rem;font-size:.62rem;border-radius:.35rem}
-      .kanban-column{width:auto;min-height:0;aspect-ratio:1/1;padding:.45rem;cursor:pointer;overflow:hidden;transition:grid-column .28s ease,aspect-ratio .28s ease,min-height .28s ease,box-shadow .28s ease}
+      .kanban-column{width:auto;min-height:0;aspect-ratio:1/1;padding:.45rem;cursor:pointer;overflow:hidden;background:linear-gradient(145deg,rgba(4,38,39,.94),rgba(1,24,27,.97));backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:inset 0 1px 0 rgba(180,255,250,.08),0 8px 24px rgba(0,0,0,.28);transition:opacity .18s ease,visibility .18s ease,box-shadow .28s ease}
       #kanban-container .kanban-column h2{position:relative;top:0!important;z-index:4;display:flex;align-items:center;justify-content:center;gap:.45rem;background:rgba(0,24,24,.96);border-radius:6px;padding:.6rem .25rem;margin-bottom:.45rem;font-size:clamp(.72rem,3.2vw,.95rem);white-space:nowrap;cursor:pointer}
       .kanban-column h2::after{content:attr(data-count);display:grid;place-items:center;min-width:1.25rem;height:1.25rem;padding:0 .18rem;border-radius:999px;background:rgba(0,255,255,.1);border:1px solid rgba(0,255,255,.28);font-size:.66rem;line-height:1;text-shadow:none}
       .kanban-column .task-list{display:flex;min-height:0;overflow-y:auto;padding:0 .15rem .25rem;gap:.35rem;pointer-events:none}
@@ -158,7 +158,8 @@
       .kanban-column .task-card h3{font-size:.76rem;line-height:1.2;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       .kanban-column .subtask-count{font-size:.62rem;margin-top:.18rem}
       .kanban-column:not(.is-expanded) .card-nav{display:none}
-      .kanban-column.is-expanded{position:absolute;inset:0;z-index:30;width:100%;height:100%;aspect-ratio:auto;min-height:0;cursor:default;background:linear-gradient(145deg,rgba(3,38,38,.96),rgba(0,20,22,.92)),repeating-linear-gradient(100deg,rgba(255,255,255,.025) 0,rgba(255,255,255,.025) 1px,transparent 1px,transparent 5px);border:1px solid rgba(74,255,244,.48);backdrop-filter:blur(16px) saturate(135%);-webkit-backdrop-filter:blur(16px) saturate(135%);box-shadow:0 0 34px rgba(0,255,255,.42),inset 0 1px 0 rgba(190,255,250,.16),inset 0 0 42px rgba(0,255,255,.055);animation:kanban-focus-in .22s ease-out}
+      #kanban-container.has-expanded .kanban-column:not(.is-expanded){opacity:0;visibility:hidden}
+      .kanban-column.is-expanded{position:absolute;inset:0;z-index:30;width:100%;height:100%;aspect-ratio:auto;min-height:0;cursor:default;background-color:#031d20!important;background-image:repeating-linear-gradient(100deg,rgba(255,255,255,.018) 0,rgba(255,255,255,.018) 1px,transparent 1px,transparent 5px),linear-gradient(145deg,#073032 0%,#031d20 55%,#021518 100%)!important;border:1px solid rgba(74,255,244,.52);backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:0 0 34px rgba(0,255,255,.42),inset 0 1px 0 rgba(190,255,250,.16),inset 0 0 42px rgba(0,255,255,.055);animation:kanban-focus-in .22s ease-out}
       @keyframes kanban-focus-in{from{opacity:.4;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
       .kanban-column.is-expanded h2{font-size:1rem;padding:.72rem}
       .kanban-column.is-expanded h2::before{content:'Tap to collapse';position:absolute;left:.6rem;font-family:Rajdhani,sans-serif;font-size:.58rem;letter-spacing:0;text-transform:none;opacity:.55;text-shadow:none}
@@ -593,10 +594,12 @@
       const toggleMobileColumn = ()=>{
         if(!window.matchMedia('(max-width: 768px)').matches) return;
         const opening = !column.classList.contains('is-expanded');
+        const board = document.getElementById('kanban-container');
         document.querySelectorAll('.kanban-column').forEach(other=>{
           other.classList.remove('is-expanded');
           other.querySelector('h2')?.setAttribute('aria-expanded','false');
         });
+        board.classList.toggle('has-expanded', opening);
         if(opening){
           column.classList.add('is-expanded');
           heading.setAttribute('aria-expanded','true');
