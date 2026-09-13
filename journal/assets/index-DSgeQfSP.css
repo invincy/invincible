@@ -148,7 +148,7 @@ canvas { display: block; }
   -webkit-touch-callout: none;
 }
 .journal-page #live-canvas,
-.journal-page #base-canvas { touch-action: pan-y; -webkit-user-select: none; user-select: none; }
+.journal-page #base-canvas { touch-action: none; -webkit-user-select: none; user-select: none; }
 .journal-page .pencil-ready {
   order: 20;
   display: inline-flex;
@@ -237,7 +237,7 @@ canvas { display: block; }
   flex: 0 0 auto !important;
   height: max(1800px, calc(100vh - 230px));
   min-height: 1800px;
-  touch-action: pan-y !important;
+  touch-action: none !important;
 }
 @media (max-width: 760px) {
   .journal-page .app-container {
