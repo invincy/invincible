@@ -148,7 +148,7 @@ canvas { display: block; }
   -webkit-touch-callout: none;
 }
 .journal-page #live-canvas,
-.journal-page #base-canvas { touch-action: none; -webkit-user-select: none; user-select: none; }
+.journal-page #base-canvas { touch-action: pan-y; -webkit-user-select: none; user-select: none; }
 .journal-page .pencil-ready {
   order: 20;
   display: inline-flex;
@@ -216,6 +216,35 @@ canvas { display: block; }
   color: #6842df;
   border-color: rgba(124,77,255,.24);
   background: rgba(250,248,255,.88);
+}
+.journal-page .app-container {
+  height: calc(100vh - var(--site-nav-height, 72px)) !important;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.journal-page .app-container > .topbar {
+  position: sticky;
+  top: 0;
+}
+.journal-page .app-container > .toolbar {
+  position: sticky !important;
+  top: 84px;
+}
+.journal-page .canvas-container {
+  flex: 0 0 auto !important;
+  height: max(1800px, calc(100vh - 230px));
+  min-height: 1800px;
+  touch-action: pan-y !important;
+}
+@media (max-width: 760px) {
+  .journal-page .app-container {
+    height: calc(100vh - var(--site-nav-mobile, 66px)) !important;
+  }
+  .journal-page .app-container > .toolbar { top: 76px; }
+  .journal-page .canvas-container { min-height: 2200px; height: 2200px; }
 }
 @media (max-width: 760px) {
   .journal-page .topbar, .journal-page .toolbar { margin-left: 10px; margin-right: 10px; }
