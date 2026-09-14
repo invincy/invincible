@@ -10,7 +10,7 @@
   <meta name="theme-color" content="#003333"/>
 
   <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;900&display=swap" rel="stylesheet">
   <!-- Futuristic clock font -->
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
@@ -28,7 +28,7 @@
       --panel-shadow:0 0 15px rgba(0,255,255,.2);
     }
 
-    html,body{height:100%;margin:0;overflow:hidden;font-family:Roboto,system-ui,Arial,sans-serif;color:var(--font-color);background:var(--bg-color)}
+    html,body{height:100%;margin:0;overflow:hidden;font-family:Roboto,system-ui,Arial,sans-serif;font-size:17px;font-weight:500;color:var(--font-color);background:var(--bg-color)}
     body{display:flex;flex-direction:column;position:relative}
 
     /* Particles */
@@ -37,8 +37,8 @@
     /* Cards */
     .task-card{position:relative;padding:1.2rem 1rem .9rem; padding-top:2rem; overflow:visible; background:transparent; border:var(--panel-border); border-radius:.5rem; color:var(--accent-color); transition:.15s}
     .task-card:hover{transform:translateY(-2px);border-color:var(--accent-color);box-shadow:0 0 10px rgba(0,255,255,.3)}
-    .task-card h3{margin:0 0 .4rem;font-size:1.16rem;font-weight:700;line-height:1.4;color:var(--accent-color);text-shadow:0 0 2px var(--glow-color)}
-    .task-card .subtask-count{font-size:1rem;line-height:1.4;opacity:.82;color:var(--accent-color)}
+    .task-card h3{margin:0 0 .4rem;font-family:Orbitron,Roboto,sans-serif;font-size:1.12rem;font-weight:700;line-height:1.38;letter-spacing:.01em;color:var(--accent-color);text-shadow:0 1px 0 #000}
+    .task-card .subtask-count{font-size:1rem;font-weight:600;line-height:1.4;opacity:1;color:var(--accent-color)}
     .task-card.dragging{opacity:.5;transform:scale(.98)}
 
     .task-card.is-focus-task{border-color:var(--status-accent,#ffe08a);background:linear-gradient(145deg,rgba(255,224,138,.12),rgba(0,0,0,.08));box-shadow:0 0 22px color-mix(in srgb,var(--status-accent,#ffe08a) 28%,transparent)}
@@ -47,7 +47,7 @@
     .focus-panel:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(#ffe08a,#70dcff);box-shadow:0 0 18px rgba(255,224,138,.55)}
     .focus-kicker{font:700 11px Orbitron,sans-serif;letter-spacing:.18em;color:#ffe08a;text-transform:uppercase}
     .focus-title{margin:.45rem 0 .35rem;font-size:1.5rem;line-height:1.12;color:#fff4cc;text-shadow:0 0 16px rgba(255,209,102,.22)}
-    .focus-detail{margin:0;color:#b7d4d4;font-size:1rem;line-height:1.45}
+    .focus-detail{margin:0;color:#d3e6e6;font-size:1rem;font-weight:600;line-height:1.5}
     .focus-progress{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;min-width:0}
     .focus-meter{flex:1;height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid rgba(255,255,255,.08)}
     .focus-meter span{display:block;width:0;height:100%;background:linear-gradient(90deg,#ffe08a,#83dfb4);transition:width .25s}
@@ -72,7 +72,7 @@
     #app-title{font-size:1.3rem;letter-spacing:.12rem;text-transform:uppercase;color:var(--accent-color);text-shadow:0 0 6px var(--glow-color)}
 
     .controls{display:flex;align-items:center;gap:1rem}
-    .add-task-btn{background:transparent;color:var(--accent-color);border:1px solid var(--accent-color);padding:.6rem .9rem;border-radius:.75rem;font-size:1rem;cursor:pointer;transition:.2s;text-shadow:0 0 5px var(--glow-color)}
+    .add-task-btn{font-family:Orbitron,Roboto,sans-serif;font-weight:700;background:transparent;color:var(--accent-color);border:1px solid var(--accent-color);padding:.6rem .9rem;border-radius:.75rem;font-size:1rem;cursor:pointer;transition:.2s;text-shadow:0 0 5px var(--glow-color)}
     .add-task-btn:hover{background:rgba(0,255,255,.1);box-shadow:0 0 10px rgba(0,255,255,.5)}
 
     /* Kanban + Side Panel */
@@ -83,13 +83,13 @@
     #kanban-in-progress{--status-accent:#70dcff;background:linear-gradient(145deg,#123d52,#0a2634);border-color:#288bb0}
     #kanban-done{--status-accent:#83dfb4;background:linear-gradient(145deg,#1d4838,#0d2a21);border-color:#347e60}
     .kanban-column:hover{box-shadow:0 0 20px color-mix(in srgb,var(--status-accent,#70dcff) 32%,transparent)}
-    .kanban-column h2{display:flex;align-items:center;justify-content:center;gap:.65rem;min-height:54px;box-sizing:border-box;font-family:Roboto,system-ui,sans-serif;font-weight:900;text-align:center;text-transform:uppercase;font-size:1.32rem;line-height:1.1;padding:.75rem .45rem;margin:0 0 1rem;border:2px solid color-mix(in srgb,var(--status-accent,#70dcff) 52%,transparent);border-radius:7px;color:var(--status-accent,#70dcff);background:color-mix(in srgb,var(--status-accent,#70dcff) 13%,#071315);text-shadow:0 1px 0 #000;opacity:1}
+    .kanban-column h2{display:flex;align-items:center;justify-content:center;gap:.65rem;min-height:54px;box-sizing:border-box;font-family:Orbitron,Roboto,sans-serif;font-weight:900;text-align:center;text-transform:uppercase;font-size:1.24rem;letter-spacing:.03em;line-height:1.1;padding:.75rem .45rem;margin:0 0 1rem;border:2px solid color-mix(in srgb,var(--status-accent,#70dcff) 52%,transparent);border-radius:7px;color:var(--status-accent,#70dcff);background:color-mix(in srgb,var(--status-accent,#70dcff) 13%,#071315);text-shadow:0 1px 0 #000;opacity:1}
     .kanban-column h2::after{content:attr(data-count);display:grid;place-items:center;min-width:1.75rem;height:1.75rem;padding:0 .25rem;border-radius:999px;background:color-mix(in srgb,var(--status-accent,#70dcff) 22%,#071315);border:2px solid color-mix(in srgb,var(--status-accent,#70dcff) 62%,transparent);color:var(--status-accent,#70dcff);font-size:.9rem;font-weight:900;line-height:1;text-shadow:none}
     .task-list{flex-grow:1;overflow-y:auto;display:flex;flex-direction:column;gap:.75rem;padding:0 .5rem}
 
     /* SIDE WIDGET (Clock + Countdowns) */
     #left-info{min-width:320px;display:flex;flex-direction:column;gap:1rem;background:var(--panel-bg);border:var(--panel-border);border-radius:.75rem;padding:1rem;position:relative;z-index:2}
-    #left-info .section-title{font-weight:400;text-transform:uppercase;letter-spacing:.5px;margin:0;color:var(--accent-color);text-shadow:0 0 6px var(--glow-color);opacity:.9;border-bottom:1px solid rgba(0,255,255,.3);padding-bottom:.5rem}
+    #left-info .section-title{font-family:Orbitron,Roboto,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:0;color:var(--accent-color);text-shadow:0 0 6px var(--glow-color);opacity:.9;border-bottom:1px solid rgba(0,255,255,.3);padding-bottom:.5rem}
 
     /* Big funky clock */
     .mega-clock{font-family:'Orbitron', system-ui, Arial, sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;min-width:0;background:linear-gradient(180deg, rgba(0,255,255,.08), rgba(0,255,255,.02));border:var(--panel-border);border-radius:.75rem;padding:1rem .65rem 1.25rem;box-shadow:0 0 20px rgba(0,255,255,.25) inset, 0 0 25px rgba(0,255,255,.15);position:relative;overflow:hidden}
@@ -100,10 +100,10 @@
     /* Countdowns */
     .countdowns{display:flex;flex-direction:column;gap:.6rem}
     .countdowns-header{display:flex;align-items:center;gap:.5rem;justify-content:space-between}
-    .countdowns-header h2{font-size:1.15rem;color:var(--accent-color);text-shadow:0 0 6px var(--glow-color);font-weight:400;text-transform:uppercase;letter-spacing:.5px;margin:0}
+    .countdowns-header h2{font-family:Orbitron,Roboto,sans-serif;font-size:1.1rem;color:var(--accent-color);text-shadow:0 1px 0 #000;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:0}
     .icon-btn{display:inline-grid;place-items:center;height:30px;width:30px;border-radius:.6rem;background:rgba(0,255,255,.08);border:1px solid rgba(0,255,255,.35);color:var(--accent-color);cursor:pointer}
     .icon-btn:hover{background:rgba(0,255,255,.18)}
-    .countdown-item{display:flex;justify-content:space-between;align-items:center;background:rgba(0,51,51,.5);padding:.5rem 1rem;border-radius:.5rem;border:var(--panel-border);color:var(--neon);min-width:260px}
+    .countdown-item{display:flex;justify-content:space-between;align-items:center;background:rgba(0,51,51,.5);padding:.5rem 1rem;border-radius:.5rem;border:var(--panel-border);color:var(--neon);min-width:260px;font-weight:700}
     .countdown-item button{background:transparent;border:none;color:var(--accent-color);cursor:pointer;opacity:.6}
     .countdown-item button:hover{opacity:1}
     .mini-form{display:flex;gap:.4rem;align-items:center;background:var(--panel-bg);border:var(--panel-border);border-radius:.6rem;padding:.5rem;box-shadow:var(--panel-shadow)}
@@ -138,7 +138,7 @@
     .streak-number{color:var(--accent-color);text-shadow:0 0 5px var(--glow-color);font-weight:700;font-size:1.2rem}
 
     @media (max-width:1024px){
-      html,body{height:auto;min-height:100%;overflow-x:hidden;overflow-y:auto}
+      html,body{height:auto;font-size:16px;min-height:100%;overflow-x:hidden;overflow-y:auto}
       body{display:block}
       #dashboard{display:flex;flex-direction:column;width:100%;height:auto!important;min-height:calc(100vh - 54px);padding:1rem;gap:1rem;overflow:visible}
       #kanban-container{display:flex;flex-direction:column;overflow:visible;gap:1rem}
@@ -183,7 +183,7 @@
       #kanban-today h2{background:linear-gradient(90deg,#8a641c,#594211)!important;border-color:#ffd166!important;color:#fff0b8!important}
       #kanban-in-progress h2{background:#10445c!important}
       #kanban-done h2{background:#20503e!important}
-      #kanban-container .kanban-column h2{position:relative;top:0!important;z-index:4;display:flex;align-items:center;justify-content:center;gap:.4rem;min-height:42px;box-sizing:border-box;font-family:Roboto,system-ui,sans-serif;font-weight:900;background:color-mix(in srgb,var(--status-accent) 13%,#071315);border:2px solid color-mix(in srgb,var(--status-accent) 52%,transparent);border-radius:6px;padding:.55rem .2rem;margin-bottom:.45rem;font-size:clamp(.82rem,3.7vw,1.05rem);line-height:1.05;white-space:nowrap;cursor:pointer;color:var(--status-accent);text-shadow:0 1px 0 #000}
+      #kanban-container .kanban-column h2{position:relative;top:0!important;z-index:4;display:flex;align-items:center;justify-content:center;gap:.4rem;min-height:42px;box-sizing:border-box;font-family:Orbitron,Roboto,sans-serif;font-weight:900;letter-spacing:.01em;background:color-mix(in srgb,var(--status-accent) 13%,#071315);border:2px solid color-mix(in srgb,var(--status-accent) 52%,transparent);border-radius:6px;padding:.55rem .2rem;margin-bottom:.45rem;font-size:clamp(.82rem,3.7vw,1.05rem);line-height:1.05;white-space:nowrap;cursor:pointer;color:var(--status-accent);text-shadow:0 1px 0 #000}
       .kanban-column h2::after{content:attr(data-count);display:grid;place-items:center;min-width:1.4rem;height:1.4rem;padding:0 .18rem;border-radius:999px;background:color-mix(in srgb,var(--status-accent) 22%,#071315);border:1px solid color-mix(in srgb,var(--status-accent) 62%,transparent);color:var(--status-accent);font-size:.74rem;font-weight:900;line-height:1;text-shadow:none}
       .kanban-column .task-list{display:flex;min-height:0;overflow-y:auto;padding:0 .15rem .25rem;gap:.35rem;pointer-events:auto}
       .kanban-column .task-card{min-height:0;padding:.48rem .52rem;opacity:.92;transform:none;background:rgba(0,0,0,.14);border-color:color-mix(in srgb,var(--status-accent) 28%,transparent);color:var(--status-accent);touch-action:none;user-select:none;-webkit-user-select:none}
