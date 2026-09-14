@@ -62,7 +62,7 @@
     .card-nav button:disabled{opacity:.35;cursor:default}
 
     /* Layout */
-    #dashboard{display:grid;grid-template-columns:clamp(320px,19vw,370px) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);width:100vw;height:100vh;padding:1.25rem 1.5rem 1.5rem;box-sizing:border-box;gap:1.25rem;position:relative;z-index:2}
+    #dashboard{display:grid;grid-template-columns:minmax(0,1fr) clamp(320px,19vw,370px);grid-template-rows:auto minmax(0,1fr);width:100vw;height:100vh;padding:1.25rem 1.5rem 1.5rem;box-sizing:border-box;gap:1.25rem;position:relative;z-index:2}
     #mobile-overview{display:contents}
     #top-bar{grid-column:1/-1;display:flex;flex-direction:column;padding:1rem 1.5rem;background:var(--panel-bg);border-radius:.75rem;border:var(--panel-border);box-shadow:var(--panel-shadow);z-index:10}
     #time-and-date-row{display:flex;justify-content:space-between;align-items:center}
@@ -76,19 +76,19 @@
     .add-task-btn:hover{background:rgba(0,255,255,.1);box-shadow:0 0 10px rgba(0,255,255,.5)}
 
     /* Kanban + Side Panel */
-    #kanban-container{grid-column:2;display:flex;flex:1;gap:1.5rem;overflow-x:auto;align-items:stretch;position:relative}
+    #kanban-container{grid-column:1;grid-row:2;display:flex;flex:1;gap:1.5rem;overflow-x:auto;align-items:stretch;position:relative}
     .kanban-column{flex:1 1 0;min-width:0;max-width:none;display:flex;flex-direction:column;background:linear-gradient(145deg,rgba(4,38,39,.94),rgba(1,24,27,.97));border:1px solid rgba(112,225,239,.22);border-radius:.75rem;overflow:hidden;padding:1rem .5rem;position:relative;z-index:2;transition:.2s;box-shadow:inset 0 1px 0 rgba(180,255,250,.08),0 8px 24px rgba(0,0,0,.22)}
     #kanban-backlog{--status-accent:#d0d3d6;background:linear-gradient(145deg,#303236,#191b1e);border-color:#74787d}
     #kanban-today{--status-accent:#ffe08a;background:linear-gradient(145deg,#604817,#30250e);border:2px solid #e9b949;box-shadow:inset 0 1px 0 rgba(255,245,204,.28),0 0 30px rgba(255,184,38,.28)}
     #kanban-in-progress{--status-accent:#70dcff;background:linear-gradient(145deg,#123d52,#0a2634);border-color:#288bb0}
     #kanban-done{--status-accent:#83dfb4;background:linear-gradient(145deg,#1d4838,#0d2a21);border-color:#347e60}
     .kanban-column:hover{box-shadow:0 0 20px color-mix(in srgb,var(--status-accent,#70dcff) 32%,transparent)}
-    .kanban-column h2{display:flex;align-items:center;justify-content:center;gap:.65rem;min-height:54px;box-sizing:border-box;font-family:Orbitron,Roboto,sans-serif;font-weight:900;text-align:center;text-transform:uppercase;font-size:1.24rem;letter-spacing:.03em;line-height:1.1;padding:.75rem .45rem;margin:0 0 1rem;border:2px solid color-mix(in srgb,var(--status-accent,#70dcff) 52%,transparent);border-radius:7px;color:var(--status-accent,#70dcff);background:color-mix(in srgb,var(--status-accent,#70dcff) 13%,#071315);text-shadow:0 1px 0 #000;opacity:1}
+    .kanban-column h2{display:flex;align-items:center;justify-content:center;gap:.7rem;min-height:62px;box-sizing:border-box;font-family:Orbitron,Roboto,sans-serif;font-weight:900;text-align:center;text-transform:uppercase;font-size:1.42rem;letter-spacing:.035em;line-height:1.1;padding:.9rem .5rem;margin:0 0 1rem;border:2px solid color-mix(in srgb,var(--status-accent,#70dcff) 52%,transparent);border-radius:7px;color:var(--status-accent,#70dcff);background:color-mix(in srgb,var(--status-accent,#70dcff) 13%,#071315);text-shadow:0 1px 0 #000;opacity:1}
     .kanban-column h2::after{content:attr(data-count);display:grid;place-items:center;min-width:1.75rem;height:1.75rem;padding:0 .25rem;border-radius:999px;background:color-mix(in srgb,var(--status-accent,#70dcff) 22%,#071315);border:2px solid color-mix(in srgb,var(--status-accent,#70dcff) 62%,transparent);color:var(--status-accent,#70dcff);font-size:.9rem;font-weight:900;line-height:1;text-shadow:none}
     .task-list{flex-grow:1;overflow-y:auto;display:flex;flex-direction:column;gap:.75rem;padding:0 .5rem}
 
     /* SIDE WIDGET (Clock + Countdowns) */
-    #left-info{min-width:320px;display:flex;flex-direction:column;gap:1rem;background:var(--panel-bg);border:var(--panel-border);border-radius:.75rem;padding:1rem;position:relative;z-index:2}
+    #left-info{grid-column:2;grid-row:2;min-width:320px;display:flex;flex-direction:column;gap:1rem;background:var(--panel-bg);border:var(--panel-border);border-radius:.75rem;padding:1rem;position:relative;z-index:2}
     #left-info .section-title{font-family:Orbitron,Roboto,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:0;color:var(--accent-color);text-shadow:0 0 6px var(--glow-color);opacity:.9;border-bottom:1px solid rgba(0,255,255,.3);padding-bottom:.5rem}
 
     /* Big funky clock */
@@ -141,10 +141,10 @@
       html,body{height:auto;font-size:16px;min-height:100%;overflow-x:hidden;overflow-y:auto}
       body{display:block}
       #dashboard{display:flex;flex-direction:column;width:100%;height:auto!important;min-height:calc(100vh - 54px);padding:1rem;gap:1rem;overflow:visible}
-      #kanban-container{display:flex;flex-direction:column;overflow:visible;gap:1rem}
+      #kanban-container{grid-column:auto;grid-row:auto;display:flex;flex-direction:column;overflow:visible;gap:1rem}
       .kanban-column{flex:none;width:100%;min-width:0;max-width:none;min-height:150px;overflow:visible;box-sizing:border-box}
       .task-list{overflow:visible;max-height:none;min-height:70px}
-      #left-info{flex:none;width:100%;box-sizing:border-box;order:0}
+      #left-info{grid-column:auto;grid-row:auto;flex:none;width:100%;box-sizing:border-box;order:0}
     }
     @media (max-width:768px){
       #dashboard{display:flex;flex-direction:column;min-height:0!important;padding:.65rem;gap:.65rem}
