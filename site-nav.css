@@ -1,19 +1,20 @@
-:root{--site-nav-height:68px;--site-nav-mobile:60px}
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap');
+:root{--site-nav-height:82px;--site-nav-mobile:64px}
 *{box-sizing:border-box}
-body{padding-top:var(--site-nav-height)!important;font-size:16px}
-.global-nav{position:fixed;inset:0 0 auto;z-index:10000;height:var(--site-nav-height);display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:clamp(22px,4vw,64px);padding:0 clamp(18px,3vw,48px);background:linear-gradient(180deg,rgba(6,18,20,.98),rgba(3,12,14,.96));border-bottom:1px solid rgba(126,238,255,.18);box-shadow:0 12px 32px rgba(0,0,0,.25);backdrop-filter:blur(18px);font-family:Inter,Roboto,system-ui,sans-serif;color:#e9fbff}
+body{padding-top:var(--site-nav-height)!important}
+.global-nav{position:fixed;inset:0 0 auto;z-index:10000;height:var(--site-nav-height);display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:clamp(24px,3vw,52px);padding:0 clamp(20px,2.5vw,44px);background:linear-gradient(180deg,rgba(6,18,20,.98),rgba(3,12,14,.96));border-bottom:1px solid rgba(126,238,255,.18);box-shadow:0 12px 32px rgba(0,0,0,.25);backdrop-filter:blur(18px);font-family:Rajdhani,Inter,Roboto,system-ui,sans-serif;color:#e9fbff}
 .nav-head{display:flex;align-items:center;margin:0}
 .nav-brand{display:flex!important;align-items:center!important;gap:11px!important;padding:0!important;color:#f4feff!important;background:none!important;border:0!important;box-shadow:none!important;text-decoration:none;white-space:nowrap}
-.nav-mark{display:grid;place-items:center;width:36px;height:36px;border:1px solid rgba(95,230,255,.52);border-radius:11px;background:linear-gradient(145deg,rgba(57,228,255,.16),rgba(57,228,255,.03));color:#78efff;font-size:15px;font-weight:800;box-shadow:0 0 18px rgba(57,228,255,.13)}
-.nav-brand strong{font-size:14px;letter-spacing:.14em}
-.nav-trigger{display:none;border:1px solid rgba(126,238,255,.28);border-radius:10px;padding:9px 13px;background:rgba(126,238,255,.08);color:#e9fcff;font:700 14px Inter,system-ui,sans-serif;cursor:pointer}
+.nav-mark{display:grid;place-items:center;width:44px;height:44px;border:1px solid rgba(95,230,255,.52);border-radius:11px;background:linear-gradient(145deg,rgba(57,228,255,.16),rgba(57,228,255,.03));color:#78efff;font-size:18px;font-weight:800;box-shadow:0 0 18px rgba(57,228,255,.13)}
+.nav-brand strong{font-family:Rajdhani,Roboto,sans-serif;font-size:19px;font-weight:700;letter-spacing:.08em}
+.nav-trigger{display:none;border:1px solid rgba(126,238,255,.28);border-radius:10px;padding:9px 13px;background:rgba(126,238,255,.08);color:#e9fcff;font:700 16px Rajdhani,Inter,system-ui,sans-serif;cursor:pointer}
 .nav-links{display:flex;align-items:center;justify-content:flex-start;gap:5px;min-width:0}
-.global-nav .nav-links>a{display:flex;align-items:center;gap:8px;min-height:42px;padding:9px 13px;border:1px solid transparent;border-radius:11px;color:#9bb7bd;background:transparent;text-decoration:none;white-space:nowrap;transition:background .16s,border-color .16s,color .16s,transform .16s}
+.global-nav .nav-links>a{display:flex;align-items:center;gap:8px;min-height:54px;padding:11px 16px;border:1px solid transparent;border-radius:11px;color:#9bb7bd;background:transparent;text-decoration:none;white-space:nowrap;transition:background .16s,border-color .16s,color .16s,transform .16s}
 .global-nav .nav-links>a:hover,.global-nav .nav-links>a:focus-visible{color:#effeff;background:rgba(109,231,255,.08);border-color:rgba(109,231,255,.15);transform:translateY(-1px);outline:none}
 .global-nav .nav-links>a[aria-current=page]{color:#fff;background:linear-gradient(180deg,rgba(63,224,255,.16),rgba(63,224,255,.05));border-color:rgba(92,231,255,.3);box-shadow:inset 0 -3px #55e9ff,0 8px 24px rgba(0,0,0,.12)}
-.nav-icon{font:700 11px/1.2 Orbitron,Inter,sans-serif;letter-spacing:.04em;color:#65ddef;opacity:.8}
-.nav-label{font-size:14px;font-weight:700;letter-spacing:.01em}
-.nav-external{font-size:13px;opacity:.65}
+.nav-icon{font:700 14px/1.1 Rajdhani,Roboto,sans-serif;letter-spacing:.02em;color:#65ddef;opacity:.8}
+.nav-label{font-size:18px;font-weight:700;line-height:1;letter-spacing:0}
+.nav-external{font-size:16px;opacity:.65}
 .nav-footer{display:none}
 .nav-backdrop,.global-nav-spacer{display:none!important}
 .home-page #dashboard{width:100vw;height:calc(100vh - var(--site-nav-height))}
@@ -22,7 +23,7 @@ body{padding-top:var(--site-nav-height)!important;font-size:16px}
 .finance-page .app-header .back,.finance-page .app-header .header-actions>a{display:none!important}
 .finance-page .app-header{top:var(--site-nav-height)}
 
-@media(max-width:1120px){
+@media(max-width:1280px){
  body{padding-top:var(--site-nav-mobile)!important}
  .global-nav{height:var(--site-nav-mobile);display:flex;justify-content:space-between;padding:0 15px}
  .nav-head{width:100%;justify-content:space-between}
@@ -30,7 +31,7 @@ body{padding-top:var(--site-nav-height)!important;font-size:16px}
  .nav-links{position:fixed;z-index:10002;left:12px;right:12px;top:68px;display:grid;padding:10px;background:rgba(5,15,18,.99);border:1px solid rgba(126,238,255,.22);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.55);opacity:0;visibility:hidden;transform:translateY(-8px) scale(.985);transform-origin:top;transition:.18s}
  .nav-open .nav-links{opacity:1;visibility:visible;transform:none}
  .global-nav .nav-links>a{min-height:50px;padding:10px 13px}
- .nav-label{font-size:15px}
+ .nav-label{font-size:18px}
  .nav-backdrop{position:fixed;z-index:9999;inset:var(--site-nav-mobile) 0 0;background:rgba(0,5,7,.62);backdrop-filter:blur(3px)}
  .nav-open .nav-backdrop{display:block!important}
  .home-page #dashboard{width:100%;height:auto!important;min-height:calc(100vh - var(--site-nav-mobile))}
@@ -38,5 +39,5 @@ body{padding-top:var(--site-nav-height)!important;font-size:16px}
  .finance-page .app-header{top:0}
  .kanban-column h2{top:var(--site-nav-mobile)!important}
 }
-@media(max-width:420px){.nav-brand strong{font-size:13px}.nav-mark{width:34px;height:34px}}
+@media(max-width:420px){.nav-brand strong{font-size:16px}.nav-mark{width:38px;height:38px}}
 @media(prefers-reduced-motion:reduce){.global-nav *{transition:none!important}}
