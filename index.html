@@ -108,6 +108,12 @@
     .controls{display:flex;align-items:center;gap:1rem}
     .add-task-btn{font-family:'Exo 2',Roboto,sans-serif;font-weight:700;background:transparent;color:var(--accent-color);border:1px solid var(--accent-color);padding:.6rem .9rem;border-radius:.75rem;font-size:1rem;cursor:pointer;transition:.2s;text-shadow:0 0 5px var(--glow-color)}
     .add-task-btn:hover{background:rgba(0,255,255,.1);box-shadow:0 0 10px rgba(0,255,255,.5)}
+    .top-current-focus{display:flex;align-items:center;gap:.75rem;min-width:0;max-width:680px;margin:0 auto;padding:.48rem .9rem;border:1px solid rgba(255,224,138,.34);border-radius:.65rem;background:linear-gradient(90deg,rgba(255,209,102,.09),rgba(0,255,255,.04));color:#eef7f7;cursor:pointer;text-align:left;transition:.2s}
+    .top-current-focus:hover{border-color:#ffe08a;box-shadow:0 0 18px rgba(255,209,102,.16)}
+    .top-focus-kicker{flex:0 0 auto;color:#ffe08a;font:800 .66rem Orbitron,sans-serif;letter-spacing:.09em}
+    .top-focus-copy{display:flex;align-items:baseline;gap:.55rem;min-width:0}
+    .top-focus-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff4cc;font:800 .98rem 'Exo 2',sans-serif}
+    .top-focus-next{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#9db2b2;font-size:.78rem;font-weight:700}
 
     /* Kanban + Side Panel */
     #kanban-container{grid-column:1;grid-row:2;display:flex;flex:1;gap:1.5rem;overflow-x:auto;align-items:stretch;position:relative}
@@ -197,6 +203,7 @@
       #app-title{display:none}
       .controls{width:100%;justify-content:center}
       .add-task-btn{width:100%;min-height:36px;padding:.42rem .3rem;font-size:.78rem;border-radius:.55rem}
+      .top-current-focus{display:none!important}
       #controls-row{order:2;margin:0;padding:.4rem 0;justify-content:center;border-top:1px solid rgba(0,255,255,.1);border-bottom:1px solid rgba(0,255,255,.1)}
       .streak-buttons{justify-content:center;gap:.12rem}
       .streak-button{min-height:30px;padding:.25rem .3rem;gap:.25rem;font-size:.7rem}
@@ -293,14 +300,15 @@
             <button class="streak-button" data-type="spirit"><i class="fas fa-spa"></i><span class="streak-number" id="streak-spirit">0</span></button>
           </div>
         </div>
-        <!-- Countdown/clock moved to right panel -->
-        <div style="height:1px;"></div>
+        <button id="top-current-focus" class="top-current-focus" type="button" title="Open current focus controls">
+          <span class="top-focus-kicker">CURRENT FOCUS</span>
+          <span class="top-focus-copy"><strong id="top-focus-title" class="top-focus-title">Choosing your next move...</strong><span id="top-focus-next" class="top-focus-next"></span></span>
+        </button>
       </div>
     </div>
 
     <!-- LEFT SIDE WIDGET -->
     <aside id="left-info">
-        <h2 class="section-title">Clock</h2>
         <div class="mega-clock">
           <div id="live-clock-time" class="time">--:--:--</div>
           <div id="live-clock-date" class="date">-- --- ----</div>
@@ -679,6 +687,7 @@
       const percent = document.getElementById('focus-percent');
       const action = document.getElementById('focus-action');
       const nextEl=document.getElementById('focus-next'),stepsEl=document.getElementById('focus-steps'),noteEl=document.getElementById('focus-note');
+      const topTitle=document.getElementById('top-focus-title'),topNext=document.getElementById('top-focus-next');
       const hasDone = tasks.some(task=>task.status==='Done');
       if(!focusTask){
         title.textContent = hasDone ? 'All active tasks are clear.' : 'Create one clear task for today.';
@@ -689,6 +698,7 @@
         action.textContent = hasDone ? 'Review' : 'New Task';
         action.onclick = hasDone ? null : event => { event.preventDefault(); openModal({ id:null, title:'', description:'', status:'Today', subtasks:[] }); };
         if(nextEl)nextEl.textContent='Nothing queued.';if(stepsEl)stepsEl.innerHTML='';if(noteEl){noteEl.value='';noteEl.disabled=true}
+        if(topTitle)topTitle.textContent=hasDone?'All active tasks are clear':'No current focus';if(topNext)topNext.textContent=hasDone?'':'Add one task for Today';
         return;
       }
       const progress = taskProgress(focusTask);
@@ -701,6 +711,7 @@
       action.textContent = progress.pct >= 80 ? 'Finish' : 'Continue';
       action.onclick = null;
       if(nextEl)nextEl.textContent=next?.title||next?.text||(progress.total?'All steps complete — close the task.':'Add the first small step in the workspace.');
+      if(topTitle)topTitle.textContent=focusTask.title||'Untitled task';if(topNext)topNext.textContent=`→ ${next?.title||next?.text||'Define the first step'}`;
       if(noteEl){const latest=(focusTask.quickNotes||[]).at(-1)?.text;noteEl.disabled=false;noteEl.placeholder=latest?`Last note: ${latest}`:'Quick note for this task...';if(document.activeElement!==noteEl)noteEl.value=''}
       if(stepsEl){stepsEl.innerHTML='';steps.slice(0,5).forEach((step,index)=>{const done=step.done||step.status==='Done',button=document.createElement('button');button.type='button';button.className=`focus-step ${done?'is-done':''} ${step===next?'is-next':''}`.trim();button.innerHTML=`<span class="focus-step-marker">${done?'✓':index+1}</span><span>${escapeHtml(step.title||step.text||`Step ${index+1}`)}</span>`;button.addEventListener('click',()=>toggleDashboardStep(focusTask,step));stepsEl.appendChild(button)})}
       renderFocusTimer();
@@ -812,6 +823,7 @@
     function showDashboardToast(message){let toast=document.getElementById('dashboard-toast');if(!toast){toast=document.createElement('div');toast.id='dashboard-toast';toast.style.cssText='position:fixed;right:28px;bottom:28px;z-index:9999;padding:12px 16px;border:1px solid #83dfb4;border-radius:10px;background:#09251c;color:#baffdc;font-weight:800;box-shadow:0 12px 35px rgba(0,0,0,.4);transition:.2s';document.body.appendChild(toast)}toast.textContent=message;toast.style.opacity='1';clearTimeout(toast._hide);toast._hide=setTimeout(()=>toast.style.opacity='0',2200)}
     async function toggleDashboardStep(task,step){const done=step.done||step.status==='Done';step.done=!done;step.status=done?'Not Started':'Done';if(!done&&taskSteps(task).every(item=>item.done||item.status==='Done'))task.status='Done';else if(done&&task.status==='Done')task.status='In Progress';await saveFocusedTask(task,!done?'Step complete. Next action loaded.':'Step reopened.')}
     document.getElementById('focus-start').addEventListener('click',toggleFocusTimer);
+    document.getElementById('top-current-focus').addEventListener('click',()=>{if(!isDesktop())return;document.getElementById('focus-panel').scrollIntoView({behavior:'smooth',block:'nearest'});document.getElementById('focus-start').focus({preventScroll:true})});
     document.getElementById('focus-change').addEventListener('click',()=>{stopFocusTimer(true);selectedTaskId=null;renderTasks()});
     document.getElementById('focus-save-note').addEventListener('click',async()=>{const task=selectedFocusTask(),field=document.getElementById('focus-note'),note=field.value.trim();if(!task||!note)return;task.quickNotes=[...(task.quickNotes||[]),{text:note,createdAt:Date.now()}];field.value='';await saveFocusedTask(task,'Note saved to this task.')});
     document.getElementById('focus-blocked').addEventListener('click',async()=>{const task=selectedFocusTask();if(!task)return;const reason=prompt('What is blocking this task?');if(reason===null)return;task.blockedReason=reason.trim();task.status='Backlog';stopFocusTimer(true);await saveFocusedTask(task,reason.trim()?'Blocker saved and task moved to Backlog.':'Task moved to Backlog.')});
