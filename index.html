@@ -37,17 +37,17 @@
     /* Cards */
     .task-card{position:relative;padding:1.2rem 1rem .9rem; padding-top:2rem; overflow:visible; background:transparent; border:var(--panel-border); border-radius:.5rem; color:var(--accent-color); transition:.15s}
     .task-card:hover{transform:translateY(-2px);border-color:var(--accent-color);box-shadow:0 0 10px rgba(0,255,255,.3)}
-    .task-card h3{margin:0 0 .35rem;font-size:1rem;font-weight:500;line-height:1.4;color:var(--accent-color);text-shadow:0 0 2px var(--glow-color)}
-    .task-card .subtask-count{font-size:.875rem;line-height:1.4;opacity:.82;color:var(--accent-color)}
+    .task-card h3{margin:0 0 .35rem;font-size:1.08rem;font-weight:500;line-height:1.4;color:var(--accent-color);text-shadow:0 0 2px var(--glow-color)}
+    .task-card .subtask-count{font-size:.95rem;line-height:1.4;opacity:.82;color:var(--accent-color)}
     .task-card.dragging{opacity:.5;transform:scale(.98)}
 
     .task-card.is-focus-task{border-color:var(--status-accent,#ffe08a);background:linear-gradient(145deg,rgba(255,224,138,.12),rgba(0,0,0,.08));box-shadow:0 0 22px color-mix(in srgb,var(--status-accent,#ffe08a) 28%,transparent)}
     .task-card.is-focus-task:before{content:"NEXT";position:absolute;left:10px;top:7px;padding:3px 7px;border-radius:999px;background:color-mix(in srgb,var(--status-accent,#ffe08a) 18%,transparent);border:1px solid color-mix(in srgb,var(--status-accent,#ffe08a) 45%,transparent);color:var(--status-accent,#ffe08a);font:700 9px Orbitron,sans-serif;letter-spacing:.1em}
     .focus-panel{display:grid;grid-template-columns:1fr;gap:.75rem;align-items:center;min-height:0;padding:1rem;border:1px solid rgba(255,209,102,.48);border-radius:.75rem;background:radial-gradient(circle at 88% 18%,rgba(255,209,102,.18),transparent 13rem),linear-gradient(145deg,rgba(58,43,13,.96),rgba(7,27,30,.94));box-shadow:0 0 34px rgba(255,184,38,.16),inset 0 1px 0 rgba(255,245,204,.16);position:relative;z-index:3;overflow:hidden}
     .focus-panel:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(#ffe08a,#70dcff);box-shadow:0 0 18px rgba(255,224,138,.55)}
-    .focus-kicker{font:700 10px Orbitron,sans-serif;letter-spacing:.18em;color:#ffe08a;text-transform:uppercase}
-    .focus-title{margin:.45rem 0 .35rem;font-size:1.35rem;line-height:1.12;color:#fff4cc;text-shadow:0 0 16px rgba(255,209,102,.22)}
-    .focus-detail{margin:0;color:#b7d4d4;font-size:.95rem;line-height:1.45}
+    .focus-kicker{font:700 11px Orbitron,sans-serif;letter-spacing:.18em;color:#ffe08a;text-transform:uppercase}
+    .focus-title{margin:.45rem 0 .35rem;font-size:1.5rem;line-height:1.12;color:#fff4cc;text-shadow:0 0 16px rgba(255,209,102,.22)}
+    .focus-detail{margin:0;color:#b7d4d4;font-size:1rem;line-height:1.45}
     .focus-progress{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;min-width:0}
     .focus-meter{flex:1;height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid rgba(255,255,255,.08)}
     .focus-meter span{display:block;width:0;height:100%;background:linear-gradient(90deg,#ffe08a,#83dfb4);transition:width .25s}
@@ -83,7 +83,7 @@
     #kanban-in-progress{--status-accent:#70dcff;background:linear-gradient(145deg,#123d52,#0a2634);border-color:#288bb0}
     #kanban-done{--status-accent:#83dfb4;background:linear-gradient(145deg,#1d4838,#0d2a21);border-color:#347e60}
     .kanban-column:hover{box-shadow:0 0 20px color-mix(in srgb,var(--status-accent,#70dcff) 32%,transparent)}
-    .kanban-column h2{display:flex;align-items:center;justify-content:center;gap:.45rem;font-weight:700;text-align:center;text-transform:uppercase;font-size:1.02rem;padding:.6rem .3rem;margin:0 0 1rem;border:1px solid color-mix(in srgb,var(--status-accent,#70dcff) 30%,transparent);border-radius:7px;color:var(--status-accent,#70dcff);background:rgba(2,15,18,.42);text-shadow:0 0 7px color-mix(in srgb,var(--status-accent,#70dcff) 55%,transparent);opacity:1}
+    .kanban-column h2{display:flex;align-items:center;justify-content:center;gap:.45rem;font-weight:700;text-align:center;text-transform:uppercase;font-size:1.08rem;padding:.65rem .3rem;margin:0 0 1rem;border:1px solid color-mix(in srgb,var(--status-accent,#70dcff) 30%,transparent);border-radius:7px;color:var(--status-accent,#70dcff);background:rgba(2,15,18,.42);text-shadow:0 0 7px color-mix(in srgb,var(--status-accent,#70dcff) 55%,transparent);opacity:1}
     .kanban-column h2::after{content:attr(data-count);display:grid;place-items:center;min-width:1.35rem;height:1.35rem;padding:0 .2rem;border-radius:999px;background:color-mix(in srgb,var(--status-accent,#70dcff) 12%,transparent);border:1px solid color-mix(in srgb,var(--status-accent,#70dcff) 38%,transparent);color:var(--status-accent,#70dcff);font-size:.7rem;line-height:1;text-shadow:none}
     .task-list{flex-grow:1;overflow-y:auto;display:flex;flex-direction:column;gap:.75rem;padding:0 .5rem}
 
@@ -100,7 +100,7 @@
     /* Countdowns */
     .countdowns{display:flex;flex-direction:column;gap:.6rem}
     .countdowns-header{display:flex;align-items:center;gap:.5rem;justify-content:space-between}
-    .countdowns-header h2{color:var(--accent-color);text-shadow:0 0 6px var(--glow-color);font-weight:400;text-transform:uppercase;letter-spacing:.5px;margin:0}
+    .countdowns-header h2{font-size:1.15rem;color:var(--accent-color);text-shadow:0 0 6px var(--glow-color);font-weight:400;text-transform:uppercase;letter-spacing:.5px;margin:0}
     .icon-btn{display:inline-grid;place-items:center;height:30px;width:30px;border-radius:.6rem;background:rgba(0,255,255,.08);border:1px solid rgba(0,255,255,.35);color:var(--accent-color);cursor:pointer}
     .icon-btn:hover{background:rgba(0,255,255,.18)}
     .countdown-item{display:flex;justify-content:space-between;align-items:center;background:rgba(0,51,51,.5);padding:.5rem 1rem;border-radius:.5rem;border:var(--panel-border);color:var(--neon);min-width:260px}
@@ -204,7 +204,6 @@
       .kanban-column.is-expanded .subtask-count{font-size:.9rem}
       .task-card{min-height:64px;padding:1.85rem .85rem .8rem;touch-action:manipulation}
       .card-nav button{width:32px;height:30px}
-      #user-bar{position:static;margin:.5rem;max-width:calc(100% - 1rem);flex-wrap:wrap;justify-content:center}
       .modal{width:calc(100vw - 24px);max-height:calc(100vh - 24px);overflow-y:auto;padding:1rem}
     }
 
@@ -220,12 +219,17 @@
     #google-sign-in:hover,#legacy-import:hover,#sign-out:hover{background:rgba(0,255,255,.22)}
     #google-sign-in:disabled,#legacy-import:disabled{opacity:.55;cursor:wait}
     #auth-error{min-height:1.2rem;margin-top:.8rem;color:#ff8b8b;font-size:.85rem}
-    #user-bar{position:fixed;right:16px;top:76px;bottom:auto;z-index:10001;display:none;align-items:center;gap:.65rem;padding:.55rem .65rem;background:rgba(0,18,18,.94);border:1px solid rgba(0,255,255,.25);border-radius:10px;box-shadow:0 0 12px rgba(0,255,255,.15);font-size:.82rem}
-    #user-bar.visible{display:flex}
-    #sync-status{color:#7fffd4}
-    #user-email{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    #legacy-import,#sign-out{padding:.45rem .65rem;font-size:.8rem}
-    @media(max-width:700px){#user-email{display:none}#user-bar{position:relative;right:auto;top:auto;bottom:auto;width:calc(100% - 1.3rem);max-width:none;margin:.65rem;box-sizing:border-box;justify-content:flex-end;flex-wrap:nowrap;padding:.55rem}#sync-status{margin-right:auto}#legacy-import{max-width:100px;padding:.45rem .55rem}#sign-out{padding:.45rem .55rem}}
+    #user-bar{position:relative;z-index:20;display:none;font-size:.9rem}
+    #user-bar.visible{display:block}
+    #user-bar summary{display:flex;align-items:center;gap:.45rem;min-height:38px;padding:0 .75rem;border:1px solid rgba(0,255,255,.42);border-radius:8px;background:rgba(0,255,255,.09);color:#7fffd4;cursor:pointer;list-style:none;white-space:nowrap}
+    #user-bar summary::-webkit-details-marker{display:none}
+    #user-bar summary:hover{background:rgba(0,255,255,.18)}
+    #user-bar[open] summary{border-color:rgba(0,255,255,.7)}
+    .sync-menu{position:absolute;right:0;top:calc(100% + 8px);display:grid;gap:.55rem;min-width:220px;padding:.75rem;background:rgba(0,18,18,.98);border:1px solid rgba(0,255,255,.32);border-radius:8px;box-shadow:0 12px 28px rgba(0,0,0,.55)}
+    #sync-status{color:#7fffd4;font-weight:700}
+    #user-email{max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--font-color);font-size:.85rem}
+    #legacy-import,#sign-out{width:100%;padding:.55rem .65rem;font-size:.88rem}
+    @media(max-width:700px){#user-bar summary{min-height:36px;padding:0 .6rem}.sync-menu{position:fixed;left:.65rem;right:.65rem;top:auto;bottom:.65rem;min-width:0}#user-email{display:block;max-width:none}}
   </style>
   <link rel="stylesheet" href="site-nav.css?v=9">
 </head>
@@ -297,8 +301,8 @@
 
     <div id="kanban-container">
       <div id="kanban-backlog" class="kanban-column"><h2>Backlog</h2><div class="task-list" data-status="Backlog"></div></div>
-      <div id="kanban-today" class="kanban-column"><h2>Today</h2><div class="task-list" data-status="Today"></div></div>
       <div id="kanban-in-progress" class="kanban-column"><h2>In Progress</h2><div class="task-list" data-status="In Progress"></div></div>
+      <div id="kanban-today" class="kanban-column"><h2>Today</h2><div class="task-list" data-status="Today"></div></div>
       <div id="kanban-done" class="kanban-column"><h2>Completed</h2><div class="task-list" data-status="Done"></div></div>
     </div>
   </div>
@@ -464,14 +468,16 @@
         </div>`;
       document.body.appendChild(overlay);
 
-      const userBar = document.createElement('div');
+      const userBar = document.createElement('details');
       userBar.id = 'user-bar';
       userBar.innerHTML = `
-        <span id="sync-status">Synced</span>
-        <span id="user-email"></span>
-        <button id="legacy-import" title="Merge data from the old dashboard">Import old data</button>
-        <button id="sign-out">Sign out</button>`;
-      document.body.appendChild(userBar);
+        <summary title="Cloud sync and account"><i class="fas fa-cloud" aria-hidden="true"></i><span id="sync-status">Synced</span></summary>
+        <div class="sync-menu">
+          <span id="user-email"></span>
+          <button id="legacy-import" title="Merge data from the old dashboard">Import old data</button>
+          <button id="sign-out">Sign out</button>
+        </div>`;
+      document.querySelector('#time-and-date-row .controls').prepend(userBar);
 
       document.getElementById('google-sign-in').addEventListener('click', async ()=>{
         const button = document.getElementById('google-sign-in');
