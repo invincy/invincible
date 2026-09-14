@@ -35,10 +35,10 @@
     #particles-js{position:absolute;inset:0;z-index:1;opacity:.5}
 
     /* Cards */
-    .task-card{position:relative;padding:1.2rem 1rem .9rem; padding-top:2rem; overflow:visible; background:transparent; border:var(--panel-border); border-radius:.5rem; color:var(--accent-color); transition:.15s}
-    .task-card:hover{transform:translateY(-2px);border-color:var(--accent-color);box-shadow:0 0 10px rgba(0,255,255,.3)}
-    .task-card h3{margin:0 0 .4rem;font-family:'Exo 2',Roboto,sans-serif;font-size:1.32rem;font-weight:700;line-height:1.2;letter-spacing:.005em;color:var(--accent-color);text-shadow:0 1px 0 #000}
-    .task-card .subtask-count{font-size:1.08rem;font-weight:700;line-height:1.4;opacity:1;color:var(--accent-color)}
+    .task-card{position:relative;padding:1.2rem 1rem .9rem;padding-top:2rem;overflow:visible;background:color-mix(in srgb,var(--status-accent,var(--accent-color)) 7%,transparent);border:1px solid color-mix(in srgb,var(--status-accent,var(--accent-color)) 48%,transparent);border-radius:.5rem;color:var(--status-accent,var(--accent-color));transition:.15s}
+    .task-card:hover{transform:translateY(-2px);border-color:var(--status-accent,var(--accent-color));box-shadow:0 0 14px color-mix(in srgb,var(--status-accent,var(--accent-color)) 32%,transparent)}
+    .task-card h3{margin:0 0 .4rem;font-family:'Exo 2',Roboto,sans-serif;font-size:1.32rem;font-weight:700;line-height:1.2;letter-spacing:.005em;color:var(--status-accent,var(--accent-color));text-shadow:0 1px 0 #000}
+    .task-card .subtask-count{font-size:1.08rem;font-weight:700;line-height:1.4;opacity:1;color:color-mix(in srgb,var(--status-accent,var(--accent-color)) 82%,white)}
     .task-card.dragging{opacity:.5;transform:scale(.98)}
 
     .task-card.is-focus-task{border-color:var(--status-accent,#ffe08a);background:linear-gradient(145deg,rgba(255,224,138,.12),rgba(0,0,0,.08));box-shadow:0 0 22px color-mix(in srgb,var(--status-accent,#ffe08a) 28%,transparent)}
