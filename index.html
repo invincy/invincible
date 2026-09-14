@@ -55,6 +55,40 @@
     .focus-action{grid-column:1/-1;display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 18px;border:1px solid #ffe08a;border-radius:.75rem;background:#ffe08a;color:#151006;font-weight:800;text-decoration:none;box-shadow:0 12px 30px rgba(255,184,38,.18)}
     .focus-action:hover{transform:translateY(-1px);box-shadow:0 16px 38px rgba(255,184,38,.28)}
 
+    /* Desktop task controller */
+    .focus-eyebrow-row,.focus-session,.focus-actions,.focus-links{display:flex;align-items:center}
+    .focus-eyebrow-row{justify-content:space-between;gap:.75rem}
+    .focus-state{padding:.25rem .5rem;border:1px solid rgba(255,224,138,.35);border-radius:999px;color:#fff0b8;font:800 .65rem 'Exo 2',sans-serif;text-transform:uppercase;letter-spacing:.08em}
+    .focus-next-label{margin:.7rem 0 .2rem;color:rgba(227,240,240,.65);font-size:.76rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+    .focus-session{justify-content:space-between;gap:.75rem;padding:.75rem;border-radius:.65rem;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.09)}
+    .focus-timer{font:800 2rem Orbitron,sans-serif;color:#fff4cc;font-variant-numeric:tabular-nums;text-shadow:0 0 16px rgba(255,209,102,.3)}
+    .focus-start{min-width:118px;min-height:44px;border:1px solid #ffe08a;border-radius:.65rem;background:#ffe08a;color:#151006;font:900 .82rem 'Exo 2',sans-serif;letter-spacing:.06em;cursor:pointer}
+    .focus-start.is-running{background:rgba(255,224,138,.1);color:#ffe08a}
+    .focus-steps{display:flex;flex-direction:column;gap:.42rem;max-height:150px;overflow:auto}
+    .focus-step{display:flex;align-items:center;gap:.55rem;width:100%;padding:.55rem .65rem;border:1px solid rgba(255,255,255,.09);border-radius:.55rem;background:rgba(0,0,0,.16);color:#dce9e9;text-align:left;font-weight:700;cursor:pointer}
+    .focus-step:hover{border-color:rgba(255,224,138,.4)}
+    .focus-step.is-done{opacity:.55;text-decoration:line-through}
+    .focus-step.is-next{border-color:rgba(255,224,138,.5);color:#fff0b8}
+    .focus-step-marker{display:grid;place-items:center;flex:0 0 22px;height:22px;border-radius:50%;border:1px solid currentColor;font-size:.68rem}
+    .focus-note{width:100%;min-height:58px;resize:vertical;box-sizing:border-box;padding:.6rem .7rem;border-radius:.55rem;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.22);color:#eef7f7;font:600 .82rem Roboto,sans-serif}
+    .focus-actions{gap:.45rem}
+    .focus-quick{flex:1;min-height:38px;border-radius:.55rem;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#e9f5f5;font-weight:800;cursor:pointer}
+    .focus-quick:hover{border-color:#ffe08a;color:#fff0b8}
+    .focus-quick.done{border-color:rgba(131,223,180,.45);color:#83dfb4}
+    .focus-quick.blocked{border-color:rgba(255,130,130,.35);color:#ffaaaa}
+    .focus-links{gap:.5rem}
+    .focus-links .focus-action{flex:1;min-height:38px;font-size:.8rem}
+    .focus-change{min-height:38px;padding:0 .7rem;border:1px solid rgba(112,220,255,.35);border-radius:.65rem;background:rgba(112,220,255,.06);color:#70dcff;font-weight:800;cursor:pointer}
+    .task-card.is-selected{outline:2px solid #fff0b8;outline-offset:2px;box-shadow:0 0 26px rgba(255,224,138,.32)}
+    .task-card.is-completing{animation:task-complete .48s ease both}
+    @keyframes task-complete{50%{transform:scale(1.04);filter:brightness(1.45)}100%{transform:translateX(28px);opacity:0}}
+    .kanban-column.is-drag-target{transform:translateY(-4px);border-color:var(--status-accent)!important;box-shadow:0 0 34px color-mix(in srgb,var(--status-accent) 45%,transparent)!important}
+    .kanban-column.is-drag-target .task-list:after{content:"DROP TASK HERE";display:grid;place-items:center;min-height:70px;margin:.25rem .5rem;border:2px dashed var(--status-accent);border-radius:.55rem;color:var(--status-accent);font:800 .72rem Orbitron,sans-serif;letter-spacing:.08em;background:color-mix(in srgb,var(--status-accent) 8%,transparent)}
+    body.desktop-focus-active #kanban-container .task-card:not(.is-selected){opacity:.42;filter:saturate(.65)}
+    body.desktop-focus-active #particles-js{opacity:.18}
+
+    @media (min-width:1025px){#left-info{overflow-y:auto}.focus-panel{align-items:stretch}}
+
     /* Card arrows */
     .card-nav{position:absolute;top:6px;right:8px;display:flex;gap:6px;z-index:10}
     .card-nav button{display:inline-grid;place-items:center;height:22px;width:22px;background:rgba(0,255,255,.08);border:1px solid rgba(0,255,255,.35);color:var(--accent-color);border-radius:6px;cursor:pointer;box-shadow:0 0 6px rgba(0,255,255,.25)}
@@ -155,6 +189,9 @@
       .focus-detail{font-size:.75rem}
       .focus-progress{min-width:0}
       .focus-action{min-height:38px;padding:0 12px;font-size:.78rem}
+      .focus-eyebrow-row,.focus-session,.focus-steps,.focus-note,.focus-actions,.focus-next-label,#focus-next{display:none!important}
+      .focus-links{display:contents!important}
+      .focus-change{display:none!important}
       #top-bar,#left-info{display:contents}
       #time-and-date-row{order:4;display:flex;flex-direction:row;align-items:center;width:100%;padding-top:.45rem;border-top:1px solid rgba(0,255,255,.14)}
       #app-title{display:none}
@@ -286,15 +323,21 @@
 
         <section id="focus-panel" class="focus-panel" aria-live="polite">
           <div>
-            <div class="focus-kicker">Today's attack</div>
+            <div class="focus-eyebrow-row"><div class="focus-kicker">Desktop focus</div><span id="focus-state" class="focus-state">Ready</span></div>
             <h2 id="focus-title" class="focus-title">Loading your next move...</h2>
             <p id="focus-detail" class="focus-detail">Finding the task closest to momentum.</p>
+            <div class="focus-next-label">Next physical action</div>
+            <p id="focus-next" class="focus-detail">Select a task to begin.</p>
           </div>
           <div class="focus-progress">
             <div class="focus-meter"><span id="focus-meter-bar"></span></div>
             <span id="focus-percent" class="focus-percent">0%</span>
-            <a id="focus-action" class="focus-action" href="/invincible/task/">Open</a>
           </div>
+          <div class="focus-session"><span id="focus-timer" class="focus-timer">25:00</span><button id="focus-start" class="focus-start" type="button">START FOCUS</button></div>
+          <div id="focus-steps" class="focus-steps"></div>
+          <textarea id="focus-note" class="focus-note" placeholder="Quick note for this task..."></textarea>
+          <div class="focus-actions"><button id="focus-done" class="focus-quick done" type="button">Done</button><button id="focus-blocked" class="focus-quick blocked" type="button">Blocked</button><button id="focus-save-note" class="focus-quick" type="button">Save note</button></div>
+          <div class="focus-links"><a id="focus-action" class="focus-action" href="/invincible/task/">Open workspace</a><button id="focus-change" class="focus-change" type="button">Auto pick</button></div>
         </section>
     </aside>
     </div>
@@ -540,6 +583,7 @@
     let dragId = null;
     let tasks=[], streaks={}, streakLast={}, countdowns=[];
     let draggedTask=null, originalStatus=null, suppressCardClick=false;
+    let selectedTaskId=null, focusSeconds=25*60, focusTimerHandle=null, focusRunning=false;
     const STATUSES = ['Backlog','In Progress','Today','Done'];
 
     function normalizeStreaks(s){
@@ -617,6 +661,15 @@
         return priority(b.status) - priority(a.status) || bp.pct - ap.pct || bp.done - ap.done || String(b.updatedAt?.seconds || b.updatedAt || '').localeCompare(String(a.updatedAt?.seconds || a.updatedAt || ''));
       })[0] || null;
     }
+    function selectedFocusTask(){ return tasks.find(task=>task.id===selectedTaskId) || chooseFocusTask(); }
+    function taskSteps(task){ return ((Array.isArray(task?.steps) && task.steps.length ? task.steps : task?.subtasks) || []); }
+    function nextTaskStep(task){ return taskSteps(task).find(step=>!(step.done || step.status==='Done')) || null; }
+    function isDesktop(){ return window.matchMedia('(min-width:1025px)').matches; }
+    function formatFocusTime(seconds){ const m=Math.floor(seconds/60),s=seconds%60; return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; }
+    function stopFocusTimer(reset=false){clearInterval(focusTimerHandle);focusTimerHandle=null;focusRunning=false;if(reset)focusSeconds=25*60;document.body.classList.remove('desktop-focus-active');renderFocusTimer()}
+    function renderFocusTimer(){const timer=document.getElementById('focus-timer'),button=document.getElementById('focus-start'),state=document.getElementById('focus-state');if(timer)timer.textContent=formatFocusTime(focusSeconds);if(button){button.textContent=focusRunning?'PAUSE':'START FOCUS';button.classList.toggle('is-running',focusRunning)}if(state)state.textContent=focusRunning?'In focus':'Ready'}
+    function toggleFocusTimer(){if(!selectedFocusTask())return;if(focusRunning){stopFocusTimer();return}focusRunning=true;document.body.classList.add('desktop-focus-active');renderFocusTimer();focusTimerHandle=setInterval(()=>{focusSeconds=Math.max(0,focusSeconds-1);renderFocusTimer();if(!focusSeconds){stopFocusTimer();alert('Focus session complete. Mark the step done or start another session.')}},1000)}
+    function selectDashboardTask(id,start=false){if(!isDesktop())return;if(selectedTaskId!==id)stopFocusTimer(true);selectedTaskId=id;renderTasks();if(start)toggleFocusTimer()}
     function renderFocusPanel(focusTask){
       const panel = document.getElementById('focus-panel');
       if(!panel) return;
@@ -625,6 +678,7 @@
       const bar = document.getElementById('focus-meter-bar');
       const percent = document.getElementById('focus-percent');
       const action = document.getElementById('focus-action');
+      const nextEl=document.getElementById('focus-next'),stepsEl=document.getElementById('focus-steps'),noteEl=document.getElementById('focus-note');
       const hasDone = tasks.some(task=>task.status==='Done');
       if(!focusTask){
         title.textContent = hasDone ? 'All active tasks are clear.' : 'Create one clear task for today.';
@@ -634,9 +688,11 @@
         action.href = '#';
         action.textContent = hasDone ? 'Review' : 'New Task';
         action.onclick = hasDone ? null : event => { event.preventDefault(); openModal({ id:null, title:'', description:'', status:'Today', subtasks:[] }); };
+        if(nextEl)nextEl.textContent='Nothing queued.';if(stepsEl)stepsEl.innerHTML='';if(noteEl){noteEl.value='';noteEl.disabled=true}
         return;
       }
       const progress = taskProgress(focusTask);
+      const steps=taskSteps(focusTask),next=nextTaskStep(focusTask);
       title.textContent = focusTask.title || 'Untitled task';
       detail.textContent = progress.total ? `${focusTask.status} · ${progress.done} of ${progress.total} steps done · nearest to completion` : `${focusTask.status} · no steps yet · define the first tiny action`;
       bar.style.width = `${progress.pct}%`;
@@ -644,15 +700,19 @@
       action.href = `/invincible/task/?id=${encodeURIComponent(focusTask.id)}`;
       action.textContent = progress.pct >= 80 ? 'Finish' : 'Continue';
       action.onclick = null;
+      if(nextEl)nextEl.textContent=next?.title||next?.text||(progress.total?'All steps complete — close the task.':'Add the first small step in the workspace.');
+      if(noteEl){const latest=(focusTask.quickNotes||[]).at(-1)?.text;noteEl.disabled=false;noteEl.placeholder=latest?`Last note: ${latest}`:'Quick note for this task...';if(document.activeElement!==noteEl)noteEl.value=''}
+      if(stepsEl){stepsEl.innerHTML='';steps.slice(0,5).forEach((step,index)=>{const done=step.done||step.status==='Done',button=document.createElement('button');button.type='button';button.className=`focus-step ${done?'is-done':''} ${step===next?'is-next':''}`.trim();button.innerHTML=`<span class="focus-step-marker">${done?'✓':index+1}</span><span>${escapeHtml(step.title||step.text||`Step ${index+1}`)}</span>`;button.addEventListener('click',()=>toggleDashboardStep(focusTask,step));stepsEl.appendChild(button)})}
+      renderFocusTimer();
     }
 
     function renderTasks(){
       Object.values(taskLists).forEach(list=> list.innerHTML='');
-      const focusTask = chooseFocusTask();
+      const focusTask = selectedFocusTask();
       renderFocusPanel(focusTask);
       tasks.forEach(task=>{
         const el = document.createElement('div');
-        el.className = `task-card ${focusTask?.id === task.id ? 'is-focus-task' : ''}`.trim(); el.draggable = !window.matchMedia('(pointer: coarse)').matches; el.dataset.id = task.id;
+        el.className = `task-card ${focusTask?.id === task.id ? 'is-focus-task' : ''} ${selectedTaskId===task.id?'is-selected':''}`.trim(); el.draggable = !window.matchMedia('(pointer: coarse)').matches; el.dataset.id = task.id;
         const subs = (Array.isArray(task.steps) && task.steps.length ? task.steps : task.subtasks) || []; const done = subs.filter(s=>s.done || s.status === 'Done').length; const total = subs.length;
         el.innerHTML = `
           <div class="card-nav">
@@ -671,14 +731,16 @@
 
         el.addEventListener('click', event=> {
           if(suppressCardClick){ event.preventDefault(); event.stopPropagation(); return; }
+          if(isDesktop()){ selectDashboardTask(task.id); return; }
           window.location.href = `/invincible/task/?id=${encodeURIComponent(task.id)}`;
         });
+        el.addEventListener('dblclick',event=>{if(!isDesktop())return;event.preventDefault();selectDashboardTask(task.id,true)});
         el.addEventListener('dragstart', e=>{
           draggedTask = task.id; dragId = task.id; originalStatus = task.status;
           if(e.dataTransfer){ e.dataTransfer.setData('text/plain', task.id); e.dataTransfer.effectAllowed='move'; }
           el.classList.add('dragging');
         });
-        el.addEventListener('dragend', ()=>{ el.classList.remove('dragging'); draggedTask=null; dragId=null; });
+        el.addEventListener('dragend', ()=>{ el.classList.remove('dragging'); document.querySelectorAll('.kanban-column.is-drag-target').forEach(column=>column.classList.remove('is-drag-target')); draggedTask=null; dragId=null; });
         attachMobileDrag(el, task);
         (taskLists[task.status] || taskLists.Backlog).appendChild(el);
       });
@@ -745,6 +807,15 @@
       try{ await api('upsertTask',taskObj); }
       catch(err){ console.error('Touch move failed, rolling back',err); taskObj.status=previous; renderTasks(); }
     }
+
+    async function saveFocusedTask(task,successMessage){const snapshot=JSON.parse(JSON.stringify(task));renderTasks();try{await api('upsertTask',task);if(successMessage)showDashboardToast(successMessage)}catch(err){console.error(err);Object.assign(task,snapshot);renderTasks();alert('Update failed. Your task was restored.')}}
+    function showDashboardToast(message){let toast=document.getElementById('dashboard-toast');if(!toast){toast=document.createElement('div');toast.id='dashboard-toast';toast.style.cssText='position:fixed;right:28px;bottom:28px;z-index:9999;padding:12px 16px;border:1px solid #83dfb4;border-radius:10px;background:#09251c;color:#baffdc;font-weight:800;box-shadow:0 12px 35px rgba(0,0,0,.4);transition:.2s';document.body.appendChild(toast)}toast.textContent=message;toast.style.opacity='1';clearTimeout(toast._hide);toast._hide=setTimeout(()=>toast.style.opacity='0',2200)}
+    async function toggleDashboardStep(task,step){const done=step.done||step.status==='Done';step.done=!done;step.status=done?'Not Started':'Done';if(!done&&taskSteps(task).every(item=>item.done||item.status==='Done'))task.status='Done';else if(done&&task.status==='Done')task.status='In Progress';await saveFocusedTask(task,!done?'Step complete. Next action loaded.':'Step reopened.')}
+    document.getElementById('focus-start').addEventListener('click',toggleFocusTimer);
+    document.getElementById('focus-change').addEventListener('click',()=>{stopFocusTimer(true);selectedTaskId=null;renderTasks()});
+    document.getElementById('focus-save-note').addEventListener('click',async()=>{const task=selectedFocusTask(),field=document.getElementById('focus-note'),note=field.value.trim();if(!task||!note)return;task.quickNotes=[...(task.quickNotes||[]),{text:note,createdAt:Date.now()}];field.value='';await saveFocusedTask(task,'Note saved to this task.')});
+    document.getElementById('focus-blocked').addEventListener('click',async()=>{const task=selectedFocusTask();if(!task)return;const reason=prompt('What is blocking this task?');if(reason===null)return;task.blockedReason=reason.trim();task.status='Backlog';stopFocusTimer(true);await saveFocusedTask(task,reason.trim()?'Blocker saved and task moved to Backlog.':'Task moved to Backlog.')});
+    document.getElementById('focus-done').addEventListener('click',async()=>{const task=selectedFocusTask();if(!task)return;const card=document.querySelector(`.task-card[data-id="${CSS.escape(task.id)}"]`);card?.classList.add('is-completing');stopFocusTimer(true);await new Promise(resolve=>setTimeout(resolve,430));task.status='Done';taskSteps(task).forEach(step=>{step.done=true;step.status='Done'});selectedTaskId=null;await saveFocusedTask(task,'Task complete. Next mission selected.')});
 
     /* Mobile Kanban: four glanceable tiles, one focused board at a time. */
     document.querySelectorAll('.kanban-column').forEach(column=>{
@@ -894,10 +965,10 @@
 
     /* ===== Drag & Drop ===== */
     document.querySelectorAll('.kanban-column').forEach(column=>{
-      column.addEventListener('dragover', e=>{ e.preventDefault(); column.style.boxShadow='0 0 15px rgba(0,255,255,.4)'; if(e.dataTransfer) e.dataTransfer.dropEffect='move'; });
-      column.addEventListener('dragleave', ()=>{ column.style.boxShadow='0 0 15px rgba(0,255,255,.2)'; });
+      column.addEventListener('dragover', e=>{ e.preventDefault(); document.querySelectorAll('.kanban-column.is-drag-target').forEach(item=>{if(item!==column)item.classList.remove('is-drag-target')});column.classList.add('is-drag-target');if(e.dataTransfer)e.dataTransfer.dropEffect='move'; });
+      column.addEventListener('dragleave', e=>{if(!column.contains(e.relatedTarget))column.classList.remove('is-drag-target')});
       column.addEventListener('drop', async e=>{
-        e.preventDefault(); column.style.boxShadow='0 0 15px rgba(0,255,255,.2)';
+        e.preventDefault(); column.classList.remove('is-drag-target');
         const taskId = e.dataTransfer?.getData('text/plain') || dragId || draggedTask; if(!taskId) return;
         const newStatus = column.querySelector('.task-list').dataset.status;
         const card = document.querySelector(`.task-card[data-id="${taskId}"]`); const oldParent = card?.parentElement;
