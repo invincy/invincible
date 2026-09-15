@@ -403,9 +403,12 @@
       body.home-page #dashboard{height:calc(100vh - 74px);padding:.45rem 1.5vw 1.2rem;grid-template-rows:46px minmax(0,1fr)}
       body.home-page #mission-layout{display:block;width:100%;height:100%;margin:0;position:relative;min-height:0}
       body.home-page #focus-panel{position:absolute;inset:0;display:block;overflow:visible;pointer-events:none}
-      body.home-page .focus-orb-stage{position:absolute;left:0;top:0;width:40%;height:100%;min-width:0;min-height:0;display:grid;align-items:center;justify-items:end;padding-right:4%;pointer-events:none}
-      body.home-page .focus-orb{width:clamp(300px,22vw,430px);pointer-events:auto}
-      body.home-page .focus-control-cluster{position:absolute;left:42%;top:2%;width:clamp(430px,32vw,560px);margin:0;transform:none;pointer-events:auto;display:grid;grid-template-columns:145px minmax(0,1fr);grid-template-rows:auto auto;gap:.42rem .65rem;padding:.65rem .75rem}
+      body.home-page .focus-orb-stage{--orb-size:clamp(300px,21vw,410px);position:absolute;left:0;top:0;width:40%;height:100%;min-width:0;min-height:0;display:grid;align-items:center;justify-items:end;padding-right:4%;pointer-events:none}
+      body.home-page .focus-orb-stage:before{inset:auto;right:4%;top:50%;width:var(--orb-size);height:var(--orb-size);transform:translateY(-50%);border-radius:50%;filter:blur(11px);box-shadow:0 0 48px rgba(255,190,67,.22)}
+      body.home-page .focus-orb{width:var(--orb-size);pointer-events:auto}
+      body.home-page .focus-orb:after{inset:20% 5%;border:1px solid rgba(255,226,165,.55);border-radius:50%;transform:rotate(-24deg) scaleY(.46);animation:orb-tilt 24s ease-in-out infinite}
+      body.home-page .orb-ring.three{inset:20% 5%;transform:rotate(24deg) scaleY(.46);animation:orb-tilt-reverse 28s ease-in-out infinite}
+      body.home-page .focus-control-cluster{position:absolute;left:42%;top:2%;width:clamp(420px,29vw,480px);margin:0;transform:none;pointer-events:auto;display:grid;grid-template-columns:140px minmax(0,1fr);grid-template-rows:auto auto;gap:.42rem .65rem;padding:.62rem .72rem}
       body.home-page .focus-control-cluster .focus-eyebrow-row{display:none}
       body.home-page .focus-control-cluster .focus-session{grid-column:1;grid-row:1/3;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:.32rem;padding:0 .65rem 0 0;border:0;border-right:1px solid rgba(255,224,138,.18);background:transparent}
       body.home-page .focus-control-cluster .focus-timer{font-size:1.72rem;text-align:center}
@@ -413,22 +416,31 @@
       body.home-page .focus-control-cluster .focus-actions{grid-column:2;grid-row:1;gap:.36rem}
       body.home-page .focus-control-cluster .focus-links{grid-column:2;grid-row:2;gap:.36rem}
       body.home-page .focus-control-cluster .focus-quick,body.home-page .focus-control-cluster .focus-links .focus-action,body.home-page .focus-control-cluster .focus-change{min-height:30px}
-      body.home-page #kanban-container{position:absolute;left:42%;right:0;top:35%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.1vw;padding:0;overflow:visible;align-items:start}
-      body.home-page .kanban-column{width:100%;max-height:calc(65vh - 74px);min-height:0}
-      body.home-page .hud-next{left:2%;top:23%;width:132px}
-      body.home-page .hud-progress{right:1%;top:27%;width:82px}
-      body.home-page .hud-subtasks{left:9%;bottom:20%;width:105px}
-      body.home-page .hud-next:after,body.home-page .hud-progress:after,body.home-page .hud-subtasks:after{width:28px}
+      body.home-page #kanban-container{position:absolute;left:42%;right:auto;top:35%;width:min(58%,900px);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:0;overflow:visible;align-items:start}
+      body.home-page .kanban-column{width:100%;max-height:calc(65vh - 74px);min-height:0;padding:0;background:transparent;border:0;box-shadow:none;backdrop-filter:none}
+      body.home-page .kanban-column:hover{box-shadow:none}
+      body.home-page .kanban-column h2{min-height:34px;padding:.32rem .35rem;margin-bottom:.42rem;font:800 .7rem/1 'Exo 2',sans-serif;letter-spacing:.035em}
+      body.home-page .task-card{padding:.68rem .55rem .5rem;padding-top:1.28rem;border-radius:.36rem;background:rgba(3,19,23,.82)}
+      body.home-page .task-card h3{margin:0 0 .22rem;font:700 .82rem/1.2 'Exo 2',sans-serif;letter-spacing:0}
+      body.home-page .task-card .subtask-count{font:650 .67rem/1.3 'Exo 2',sans-serif}
+      body.home-page .hud-next{left:2%;right:auto;top:25%;width:112px}
+      body.home-page .hud-progress{left:auto;right:2%;top:29%;width:72px}
+      body.home-page .hud-subtasks{left:5%;right:auto;bottom:22%;width:92px}
+      body.home-page .hud-next:after,body.home-page .hud-subtasks:after{left:calc(100% + 6px);width:26px}
+      body.home-page .hud-progress:after{right:calc(100% + 5px);width:26px}
     }
     @media(min-width:1441px){
       body.home-page #dashboard{height:calc(100vh - var(--site-nav-height))}
       body.home-page #time-and-date-row{position:fixed;right:1.1vw;top:10px;z-index:10001;display:grid;grid-template-columns:auto;justify-items:end;gap:.35rem}
       body.home-page #mission-layout{max-width:none}
-      body.home-page .focus-orb{width:clamp(340px,22vw,440px)}
       body.home-page #kanban-container{top:34%}
+      .global-nav{grid-template-columns:auto minmax(0,1fr) auto}
+      .global-nav>#time-and-date-row{position:static;display:grid;grid-template-columns:auto;justify-items:end;align-self:center;z-index:auto}
     }
     body.home-page:after{content:"";position:fixed;inset:var(--site-nav-height) 0 0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 44% 70% at 19% 43%,rgba(9,111,142,.42) 0%,rgba(5,72,96,.3) 28%,transparent 72%),radial-gradient(ellipse 48% 54% at 51% 63%,rgba(0,116,126,.28) 0%,rgba(0,67,79,.24) 36%,transparent 74%),radial-gradient(ellipse 35% 66% at 79% 41%,rgba(5,87,104,.22),transparent 70%);filter:blur(28px) saturate(1.35);opacity:.94}
     @media(max-width:1440px){body.home-page:after{inset:74px 0 0}}
+    @keyframes orb-tilt{0%,100%{transform:rotate(-24deg) scaleY(.46)}50%{transform:rotate(-10deg) scaleY(.53)}}
+    @keyframes orb-tilt-reverse{0%,100%{transform:rotate(24deg) scaleY(.46)}50%{transform:rotate(10deg) scaleY(.53)}}
   </style>
   <link rel="stylesheet" href="site-nav.css?v=9">
 </head>
@@ -783,6 +795,19 @@
     const closeModalBtn = document.getElementById('close-modal-btn');
     const addSubtaskBtn = document.getElementById('add-subtask-btn');
     const addTaskBtnTop = document.getElementById('add-task-btn-top');
+
+    const wideHeader = window.matchMedia('(min-width: 1441px)');
+    function placeHeaderStatus(){
+      const statusRow = document.getElementById('time-and-date-row');
+      const destination = wideHeader.matches
+        ? document.querySelector('.global-nav')
+        : document.getElementById('top-bar');
+      if(statusRow && destination && statusRow.parentElement !== destination){
+        destination.appendChild(statusRow);
+      }
+    }
+    placeHeaderStatus();
+    wideHeader.addEventListener?.('change', placeHeaderStatus);
 
     let saving = false;
     let deleting = false;
