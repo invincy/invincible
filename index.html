@@ -48,7 +48,9 @@
     .focus-orb:after{inset:20%;border:1px dashed rgba(120,230,242,.28);animation:orb-turn 36s linear infinite reverse}
     .orb-svg{position:absolute;inset:-5%;width:110%;height:110%;overflow:visible;filter:drop-shadow(0 0 5px rgba(255,213,121,.35));transform:rotate(-90deg)}
     .orb-track{fill:none;stroke:rgba(255,255,255,.09);stroke-width:1.3}
-    .orb-progress{fill:none;stroke:url(#orb-gradient);stroke-width:2.2;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;transition:stroke-dashoffset .55s ease}
+    .orb-progress,.orb-progress-glow{fill:none;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;transition:stroke-dashoffset .7s cubic-bezier(.2,.8,.2,1)}
+    .orb-progress{stroke:url(#orb-gradient);stroke-width:5.5;filter:drop-shadow(0 0 2px #fff3c1) drop-shadow(0 0 6px rgba(255,190,69,.72));animation:progress-shimmer 3.8s ease-in-out infinite}
+    .orb-progress-glow{stroke:#ffd677;stroke-width:11;opacity:.13;filter:blur(3px)}
     .orb-ring{position:absolute;inset:-3%;border:1px solid rgba(255,215,127,.5);border-radius:50%;animation:orb-turn 48s linear infinite}
     .orb-ring.two{inset:13%;border-color:rgba(112,220,255,.27);border-style:dashed;animation-duration:31s;animation-direction:reverse}
     .orb-ring.three{inset:25%;border-color:rgba(255,231,174,.3);transform:rotate(64deg) scaleY(.64);animation:orb-wobble 20s ease-in-out infinite}
@@ -84,6 +86,7 @@
     @keyframes orb-wobble{0%,100%{transform:rotate(64deg) scaleY(.64)}50%{transform:rotate(84deg) scaleY(.72)}}
     @keyframes orb-breathe{0%,100%{opacity:.6;transform:scale(.99)}50%{opacity:1;transform:scale(1.015)}}
     @keyframes orb-pulse{0%{filter:brightness(1)}45%{filter:brightness(1.65);box-shadow:0 0 70px rgba(255,204,92,.5)}100%{filter:brightness(1)}}
+    @keyframes progress-shimmer{0%,100%{filter:drop-shadow(0 0 2px #fff3c1) drop-shadow(0 0 5px rgba(255,190,69,.58))}50%{filter:drop-shadow(0 0 3px #fff7d6) drop-shadow(0 0 9px rgba(255,190,69,.82))}}
     @media (max-width:1180px){#mission-layout{grid-template-columns:minmax(390px,.9fr) minmax(500px,1.2fr)}#focus-panel{grid-template-columns:1fr;grid-template-rows:350px auto}.focus-orb-stage{align-self:start;width:100%;height:350px}.focus-orb{width:300px}.focus-control-cluster{position:static;transform:none;width:260px;margin:-.35rem auto 0}.hud-subtasks{bottom:9%}#kanban-container{padding-top:5rem}}
     @media (max-width:1024px){html,body{height:auto;overflow-x:hidden;overflow-y:auto}#dashboard{height:auto;min-height:calc(100vh - 54px);padding:.75rem}#top-bar{display:flex}#mission-layout{display:flex;flex-direction:column;gap:1rem}.focus-panel{display:flex!important;flex-direction:column;padding:.5rem 0}.focus-orb-stage{width:100%;height:390px;min-width:0}.focus-control-cluster{position:static;transform:none;width:min(92%,420px);align-self:center}.hud-next{left:5%}.hud-progress{right:5%}.hud-subtasks{left:9%;bottom:12%}#kanban-container{display:flex;flex-direction:column;padding-top:0;gap:.75rem}.kanban-column{width:100%;max-height:none;min-height:120px}.task-list{overflow:visible}.focus-note{display:none!important}}
     @media (max-width:620px){#dashboard{padding:.5rem}.streaks{display:none}.header-clock .time{font-size:1.18rem}.header-clock .date{font-size:.5rem}.add-task-btn{font-size:.65rem}.focus-orb-stage{height:340px}.focus-orb{width:270px}.hud-next{left:0;top:10%;width:105px}.hud-progress{right:0;top:16%}.hud-subtasks{left:2%;bottom:9%}.hud-readout:after{display:none}.focus-title{font-size:1.08rem}#kanban-container{display:grid;grid-template-columns:1fr}.kanban-column{display:flex}.kanban-column h2{font-size:.72rem}}
@@ -386,7 +389,7 @@
     .focus-orb-stage:before{content:"";position:absolute;inset:11%;border-radius:50%;background:radial-gradient(circle,rgba(255,209,112,.13),transparent 67%);filter:blur(12px);box-shadow:0 0 70px rgba(255,190,67,.22);z-index:0}
     .focus-orb{background:radial-gradient(circle at 50% 48%,rgba(58,43,18,.86) 0 23%,rgba(15,36,37,.93) 56%,rgba(4,20,25,.74) 73%);box-shadow:inset 0 0 58px rgba(255,211,122,.2),0 0 14px rgba(255,226,161,.7),0 0 48px rgba(255,187,56,.38),0 0 92px rgba(40,177,193,.15)}
     .focus-orb:before{border-color:rgba(255,234,186,.76);box-shadow:0 0 14px rgba(255,207,105,.5),inset 0 0 26px rgba(255,221,144,.15)}
-    .orb-track{stroke:rgba(255,229,170,.2);stroke-width:2.2}.orb-progress{stroke-width:3.5;filter:drop-shadow(0 0 4px #ffd680)}
+    .orb-track{stroke:rgba(255,229,170,.16);stroke-width:4}
     .orb-ring{border-color:rgba(255,226,159,.8);box-shadow:0 0 9px rgba(255,205,95,.45),inset 0 0 8px rgba(255,216,135,.24)}
     .orb-ring.two{border-color:rgba(255,231,178,.52);box-shadow:0 0 10px rgba(255,206,104,.2)}
     .orb-ring.three{border-style:solid;border-color:rgba(255,224,153,.55);box-shadow:0 0 12px rgba(255,210,116,.25)}
@@ -408,10 +411,11 @@
       body.home-page .focus-orb{width:var(--orb-size);pointer-events:auto;background:radial-gradient(circle at 42% 36%,rgba(255,241,188,.2) 0 2%,transparent 13%),radial-gradient(ellipse at 52% 51%,rgba(91,68,24,.72) 0 25%,rgba(12,42,45,.88) 46%,rgba(2,18,24,.96) 70%),conic-gradient(from 28deg,rgba(255,201,86,.13),transparent 18%,rgba(74,225,238,.11) 37%,transparent 57%,rgba(255,217,128,.12) 82%,transparent);box-shadow:inset 20px -18px 55px rgba(0,0,0,.68),inset -12px 8px 34px rgba(255,210,105,.18),inset 0 0 0 1px rgba(255,235,177,.58),0 0 12px rgba(255,221,142,.65),0 0 42px rgba(255,183,59,.34),0 0 92px rgba(25,193,216,.16)}
       body.home-page .focus-orb:before{inset:7%;border:1px solid rgba(255,225,156,.6);box-shadow:0 0 14px rgba(255,195,76,.32),inset 0 0 22px rgba(82,226,240,.12),0 0 0 12px rgba(255,218,130,.018),0 0 0 13px rgba(103,224,237,.13)}
       body.home-page .focus-orb:after{inset:18% 3%;border:1px solid rgba(255,226,165,.7);border-radius:50%;box-shadow:0 0 9px rgba(255,202,91,.25);transform:rotate(-24deg) scaleY(.46);animation:orb-tilt 24s ease-in-out infinite}
-      body.home-page .orb-ring.three{inset:20% 5%;transform:rotate(24deg) scaleY(.46);animation:orb-tilt-reverse 28s ease-in-out infinite}
-      body.home-page .orb-ring{border-width:1.5px;box-shadow:0 0 8px rgba(255,205,100,.18)}
-      body.home-page .orb-ring.two{inset:12%;border-color:rgba(101,231,245,.4)}
-      body.home-page .orb-particles{opacity:.72;filter:drop-shadow(0 0 2px rgba(255,221,139,.9))}
+      body.home-page .orb-svg{inset:-5.5%;width:111%;height:111%;filter:none}
+      body.home-page .orb-ring.three{inset:20% 5%;opacity:.42;transform:rotate(24deg) scaleY(.46);animation:orb-tilt-reverse 28s ease-in-out infinite}
+      body.home-page .orb-ring{border-width:1px;opacity:.55;box-shadow:0 0 7px rgba(255,205,100,.14)}
+      body.home-page .orb-ring.two{inset:12%;border-color:rgba(101,231,245,.32);opacity:.58}
+      body.home-page .orb-particles{opacity:.62;filter:drop-shadow(0 0 2px rgba(255,221,139,.75))}
       body.home-page .focus-control-cluster{position:absolute;left:42%;top:2%;width:clamp(420px,29vw,480px);margin:0;transform:none;pointer-events:auto;display:grid;grid-template-columns:140px minmax(0,1fr);grid-template-rows:auto auto;gap:.42rem .65rem;padding:.62rem .72rem}
       body.home-page .focus-control-cluster .focus-eyebrow-row{display:none}
       body.home-page .focus-control-cluster .focus-session{grid-column:1;grid-row:1/3;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:.32rem;padding:0 .65rem 0 0;border:0;border-right:1px solid rgba(255,224,138,.18);background:transparent}
@@ -488,6 +492,7 @@
             <svg class="orb-svg" viewBox="0 0 360 360" aria-hidden="true">
               <defs><linearGradient id="orb-gradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#64eaff"/><stop offset=".46" stop-color="#fff0bd"/><stop offset="1" stop-color="#d99a36"/></linearGradient></defs>
               <circle class="orb-track" cx="180" cy="180" r="164" pathLength="100"/>
+              <circle class="orb-progress-glow" cx="180" cy="180" r="164" pathLength="100"/>
               <circle id="focus-progress-ring" class="orb-progress" cx="180" cy="180" r="164" pathLength="100"/>
             </svg>
             <span class="orb-ring"></span><span class="orb-ring two"></span><span class="orb-ring three"></span><span class="orb-particles"></span>
@@ -872,7 +877,7 @@
       const percent = document.getElementById('focus-percent');
       const action = document.getElementById('focus-action');
       const nextEl=document.getElementById('focus-next'),stepsEl=document.getElementById('focus-steps'),noteEl=document.getElementById('focus-note');
-      const subtasksEl=document.getElementById('focus-subtasks'),ring=document.getElementById('focus-progress-ring');
+      const subtasksEl=document.getElementById('focus-subtasks'),progressRings=document.querySelectorAll('.orb-progress,.orb-progress-glow');
       const hasDone = tasks.some(task=>task.status==='Done');
       if(!focusTask){
         title.textContent = hasDone ? 'All active tasks are clear.' : 'Create one clear task for today.';
@@ -880,7 +885,7 @@
         bar.style.width = hasDone ? '100%' : '0%';
         percent.textContent = hasDone ? '100%' : '0%';
         if(subtasksEl)subtasksEl.textContent=hasDone?'Clear':'0/0';
-        if(ring)ring.style.strokeDashoffset=hasDone?'0':'100';
+        progressRings.forEach(ring=>ring.style.strokeDashoffset=hasDone?'0':'100');
         action.href = '#';
         action.textContent = hasDone ? 'Review' : 'New Task';
         action.onclick = hasDone ? null : event => { event.preventDefault(); openModal({ id:null, title:'', description:'', status:'Today', subtasks:[] }); };
@@ -894,7 +899,7 @@
       bar.style.width = `${progress.pct}%`;
       percent.textContent = `${progress.pct}%`;
       if(subtasksEl)subtasksEl.textContent=`${progress.done}/${progress.total}`;
-      if(ring)ring.style.strokeDashoffset=String(100-progress.pct);
+      progressRings.forEach(ring=>ring.style.strokeDashoffset=String(100-progress.pct));
       if(panel.dataset.progress!=='' && panel.dataset.progress!==String(progress.pct)){
         panel.classList.remove('energy-pulse');void panel.offsetWidth;panel.classList.add('energy-pulse');
       }
