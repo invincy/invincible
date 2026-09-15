@@ -93,14 +93,6 @@
       #focus-detail,.focus-note{display:none}
       .focus-actions{gap:.6rem}
       .focus-quick{min-height:44px;font-size:.92rem}
-      #top-bar{grid-template-columns:minmax(220px,.72fr) minmax(480px,2fr) minmax(240px,.72fr);gap:0;min-height:64px;padding:0;background:rgba(0,36,36,.56);border:1px solid rgba(0,255,255,.3);border-radius:.75rem;box-shadow:0 0 18px rgba(0,255,255,.14);overflow:visible}
-      #controls-row{display:contents}
-      #controls-row>.streaks{grid-column:1;grid-row:1;display:flex;align-items:center;min-height:62px;padding:0 1.15rem;background:transparent;border:0;border-radius:0;box-shadow:none}
-      #time-and-date-row{grid-column:3;min-height:62px;padding:0 1rem;background:transparent;border:0;border-left:1px solid rgba(255,224,138,.34);border-radius:0;box-shadow:none}
-      .top-current-focus{grid-column:2;grid-row:1;width:auto;min-height:62px;margin:0;padding:.65rem 1.35rem;box-sizing:border-box;grid-template-columns:auto minmax(0,1fr);border:0;border-left:1px solid rgba(255,224,138,.48);border-right:1px solid rgba(255,224,138,.48);border-radius:0;background:linear-gradient(90deg,rgba(255,209,102,.13),rgba(255,209,102,.2),rgba(255,209,102,.1));box-shadow:inset 0 1px 0 rgba(255,245,204,.1),inset 0 -1px 0 rgba(255,209,102,.08)}
-      .top-focus-copy{display:flex;align-items:center;gap:.65rem;min-width:0}
-      .top-focus-title{flex:0 1 auto;max-width:55%}
-      .top-focus-next{flex:1 1 auto}
     }
 
     /* Card arrows */
@@ -128,6 +120,18 @@
     .top-focus-copy{display:grid;grid-template-columns:minmax(0,1fr);gap:.14rem;min-width:0}
     .top-focus-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff7d8;font:900 1.25rem/1.05 'Exo 2',sans-serif;text-shadow:0 0 14px rgba(255,224,138,.18)}
     .top-focus-next{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#c8d8d8;font-size:.92rem;font-weight:800}
+
+    /* Keep these after the base header rules so the desktop segmented strip wins the cascade. */
+    @media (min-width:1025px){
+      #top-bar{grid-template-columns:minmax(220px,.72fr) minmax(480px,2fr) minmax(240px,.72fr);gap:0;min-height:64px;padding:0;background:rgba(0,36,36,.56);border:1px solid rgba(0,255,255,.3);border-radius:.75rem;box-shadow:0 0 18px rgba(0,255,255,.14);overflow:visible}
+      #controls-row{display:contents}
+      #controls-row>.streaks{grid-column:1;grid-row:1;display:flex;align-items:center;min-height:62px;padding:0 1.15rem;background:transparent;border:0;border-radius:0;box-shadow:none}
+      #time-and-date-row{grid-column:3;min-height:62px;padding:0 1rem;background:transparent;border:0;border-left:1px solid rgba(255,224,138,.34);border-radius:0;box-shadow:none}
+      .top-current-focus{grid-column:2;grid-row:1;width:auto;min-height:62px;margin:0;padding:.65rem 1.35rem;box-sizing:border-box;grid-template-columns:auto minmax(0,1fr);border:0;border-left:1px solid rgba(255,224,138,.48);border-right:1px solid rgba(255,224,138,.48);border-radius:0;background:linear-gradient(90deg,rgba(255,209,102,.13),rgba(255,209,102,.2),rgba(255,209,102,.1));box-shadow:inset 0 1px 0 rgba(255,245,204,.1),inset 0 -1px 0 rgba(255,209,102,.08)}
+      .top-focus-copy{display:flex;align-items:center;gap:.65rem;min-width:0}
+      .top-focus-title{flex:0 1 auto;max-width:55%}
+      .top-focus-next{flex:1 1 auto}
+    }
 
     /* Kanban + Side Panel */
     #kanban-container{grid-column:1;grid-row:2;display:flex;flex:1;gap:1.5rem;overflow-x:auto;align-items:stretch;position:relative}
