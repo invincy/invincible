@@ -49,8 +49,8 @@
     .orb-svg{position:absolute;inset:-5%;width:110%;height:110%;overflow:visible;filter:drop-shadow(0 0 5px rgba(255,213,121,.35));transform:rotate(-90deg)}
     .orb-track{fill:none;stroke:rgba(255,255,255,.09);stroke-width:1.3}
     .orb-progress,.orb-progress-glow{fill:none;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;transition:stroke-dashoffset .7s cubic-bezier(.2,.8,.2,1)}
-    .orb-progress{stroke:url(#orb-gradient);stroke-width:5.5;filter:drop-shadow(0 0 2px #fff3c1) drop-shadow(0 0 6px rgba(255,190,69,.72));animation:progress-shimmer 3.8s ease-in-out infinite}
-    .orb-progress-glow{stroke:#ffd677;stroke-width:11;opacity:.13;filter:blur(3px)}
+    .orb-progress{stroke:url(#orb-gradient);stroke-width:7;filter:drop-shadow(0 0 2px #b9fbff) drop-shadow(0 0 7px rgba(53,225,235,.68));animation:progress-shimmer 4.2s ease-in-out infinite}
+    .orb-progress-glow{stroke:#58e5ed;stroke-width:14;opacity:.14;filter:blur(4px)}
     .orb-ring{position:absolute;inset:-3%;border:1px solid rgba(255,215,127,.5);border-radius:50%;animation:orb-turn 48s linear infinite}
     .orb-ring.two{inset:13%;border-color:rgba(112,220,255,.27);border-style:dashed;animation-duration:31s;animation-direction:reverse}
     .orb-ring.three{inset:25%;border-color:rgba(255,231,174,.3);transform:rotate(64deg) scaleY(.64);animation:orb-wobble 20s ease-in-out infinite}
@@ -86,7 +86,7 @@
     @keyframes orb-wobble{0%,100%{transform:rotate(64deg) scaleY(.64)}50%{transform:rotate(84deg) scaleY(.72)}}
     @keyframes orb-breathe{0%,100%{opacity:.6;transform:scale(.99)}50%{opacity:1;transform:scale(1.015)}}
     @keyframes orb-pulse{0%{filter:brightness(1)}45%{filter:brightness(1.65);box-shadow:0 0 70px rgba(255,204,92,.5)}100%{filter:brightness(1)}}
-    @keyframes progress-shimmer{0%,100%{filter:drop-shadow(0 0 2px #fff3c1) drop-shadow(0 0 5px rgba(255,190,69,.58))}50%{filter:drop-shadow(0 0 3px #fff7d6) drop-shadow(0 0 9px rgba(255,190,69,.82))}}
+    @keyframes progress-shimmer{0%,100%{filter:drop-shadow(0 0 2px #b9fbff) drop-shadow(0 0 5px rgba(53,225,235,.55))}50%{filter:drop-shadow(0 0 3px #e7feff) drop-shadow(0 0 10px rgba(53,225,235,.82))}}
     @media (max-width:1180px){#mission-layout{grid-template-columns:minmax(390px,.9fr) minmax(500px,1.2fr)}#focus-panel{grid-template-columns:1fr;grid-template-rows:350px auto}.focus-orb-stage{align-self:start;width:100%;height:350px}.focus-orb{width:300px}.focus-control-cluster{position:static;transform:none;width:260px;margin:-.35rem auto 0}.hud-subtasks{bottom:9%}#kanban-container{padding-top:5rem}}
     @media (max-width:1024px){html,body{height:auto;overflow-x:hidden;overflow-y:auto}#dashboard{height:auto;min-height:calc(100vh - 54px);padding:.75rem}#top-bar{display:flex}#mission-layout{display:flex;flex-direction:column;gap:1rem}.focus-panel{display:flex!important;flex-direction:column;padding:.5rem 0}.focus-orb-stage{width:100%;height:390px;min-width:0}.focus-control-cluster{position:static;transform:none;width:min(92%,420px);align-self:center}.hud-next{left:5%}.hud-progress{right:5%}.hud-subtasks{left:9%;bottom:12%}#kanban-container{display:flex;flex-direction:column;padding-top:0;gap:.75rem}.kanban-column{width:100%;max-height:none;min-height:120px}.task-list{overflow:visible}.focus-note{display:none!important}}
     @media (max-width:620px){#dashboard{padding:.5rem}.streaks{display:none}.header-clock .time{font-size:1.18rem}.header-clock .date{font-size:.5rem}.add-task-btn{font-size:.65rem}.focus-orb-stage{height:340px}.focus-orb{width:270px}.hud-next{left:0;top:10%;width:105px}.hud-progress{right:0;top:16%}.hud-subtasks{left:2%;bottom:9%}.hud-readout:after{display:none}.focus-title{font-size:1.08rem}#kanban-container{display:grid;grid-template-columns:1fr}.kanban-column{display:flex}.kanban-column h2{font-size:.72rem}}
@@ -389,7 +389,7 @@
     .focus-orb-stage:before{content:"";position:absolute;inset:11%;border-radius:50%;background:radial-gradient(circle,rgba(255,209,112,.13),transparent 67%);filter:blur(12px);box-shadow:0 0 70px rgba(255,190,67,.22);z-index:0}
     .focus-orb{background:radial-gradient(circle at 50% 48%,rgba(58,43,18,.86) 0 23%,rgba(15,36,37,.93) 56%,rgba(4,20,25,.74) 73%);box-shadow:inset 0 0 58px rgba(255,211,122,.2),0 0 14px rgba(255,226,161,.7),0 0 48px rgba(255,187,56,.38),0 0 92px rgba(40,177,193,.15)}
     .focus-orb:before{border-color:rgba(255,234,186,.76);box-shadow:0 0 14px rgba(255,207,105,.5),inset 0 0 26px rgba(255,221,144,.15)}
-    .orb-track{stroke:rgba(255,229,170,.16);stroke-width:4}
+    .orb-track{stroke:rgba(95,205,214,.18);stroke-width:5}
     .orb-ring{border-color:rgba(255,226,159,.8);box-shadow:0 0 9px rgba(255,205,95,.45),inset 0 0 8px rgba(255,216,135,.24)}
     .orb-ring.two{border-color:rgba(255,231,178,.52);box-shadow:0 0 10px rgba(255,206,104,.2)}
     .orb-ring.three{border-style:solid;border-color:rgba(255,224,153,.55);box-shadow:0 0 12px rgba(255,210,116,.25)}
@@ -408,14 +408,11 @@
       body.home-page #focus-panel{position:absolute;inset:0;display:block;overflow:visible;pointer-events:none}
       body.home-page .focus-orb-stage{--orb-size:clamp(300px,21vw,410px);position:absolute;left:0;top:0;width:40%;height:100%;min-width:0;min-height:0;display:grid;align-items:center;justify-items:end;padding-right:4%;pointer-events:none}
       body.home-page .focus-orb-stage:before{inset:auto;right:4%;top:50%;width:var(--orb-size);height:var(--orb-size);transform:translateY(-50%);border-radius:50%;filter:blur(11px);box-shadow:0 0 48px rgba(255,190,67,.22)}
-      body.home-page .focus-orb{width:var(--orb-size);pointer-events:auto;background:radial-gradient(circle at 42% 36%,rgba(255,241,188,.2) 0 2%,transparent 13%),radial-gradient(ellipse at 52% 51%,rgba(91,68,24,.72) 0 25%,rgba(12,42,45,.88) 46%,rgba(2,18,24,.96) 70%),conic-gradient(from 28deg,rgba(255,201,86,.13),transparent 18%,rgba(74,225,238,.11) 37%,transparent 57%,rgba(255,217,128,.12) 82%,transparent);box-shadow:inset 20px -18px 55px rgba(0,0,0,.68),inset -12px 8px 34px rgba(255,210,105,.18),inset 0 0 0 1px rgba(255,235,177,.58),0 0 12px rgba(255,221,142,.65),0 0 42px rgba(255,183,59,.34),0 0 92px rgba(25,193,216,.16)}
-      body.home-page .focus-orb:before{inset:7%;border:1px solid rgba(255,225,156,.6);box-shadow:0 0 14px rgba(255,195,76,.32),inset 0 0 22px rgba(82,226,240,.12),0 0 0 12px rgba(255,218,130,.018),0 0 0 13px rgba(103,224,237,.13)}
-      body.home-page .focus-orb:after{inset:18% 3%;border:1px solid rgba(255,226,165,.7);border-radius:50%;box-shadow:0 0 9px rgba(255,202,91,.25);transform:rotate(-24deg) scaleY(.46);animation:orb-tilt 24s ease-in-out infinite}
-      body.home-page .orb-svg{inset:-5.5%;width:111%;height:111%;filter:none}
-      body.home-page .orb-ring.three{inset:20% 5%;opacity:.42;transform:rotate(24deg) scaleY(.46);animation:orb-tilt-reverse 28s ease-in-out infinite}
-      body.home-page .orb-ring{border-width:1px;opacity:.55;box-shadow:0 0 7px rgba(255,205,100,.14)}
-      body.home-page .orb-ring.two{inset:12%;border-color:rgba(101,231,245,.32);opacity:.58}
-      body.home-page .orb-particles{opacity:.62;filter:drop-shadow(0 0 2px rgba(255,221,139,.75))}
+      body.home-page .focus-orb{width:var(--orb-size);pointer-events:auto;background:radial-gradient(circle at 38% 30%,rgba(117,237,245,.16),transparent 24%),radial-gradient(circle at 52% 55%,#093944 0 28%,#062831 52%,#03161d 72%,#010b10 100%);box-shadow:inset 18px -22px 56px rgba(0,0,0,.66),inset -12px 10px 34px rgba(73,218,230,.13),inset 0 0 0 1px rgba(112,226,236,.3),0 0 0 7px rgba(4,29,36,.85),0 0 32px rgba(32,205,218,.2)}
+      body.home-page .focus-orb:before{inset:16%;border:1px solid rgba(93,222,232,.38);background:radial-gradient(circle at 42% 34%,rgba(112,239,246,.08),transparent 34%),rgba(1,15,20,.46);box-shadow:inset 0 0 32px rgba(0,0,0,.56),0 0 0 8px rgba(6,43,51,.5),0 0 0 9px rgba(105,224,233,.12);animation:orb-breathe 6s ease-in-out infinite}
+      body.home-page .focus-orb:after{inset:8%;border:0;border-radius:50%;background:linear-gradient(135deg,rgba(255,255,255,.09),transparent 28% 72%,rgba(0,0,0,.18));transform:none;animation:none}
+      body.home-page .orb-svg{inset:-7%;width:114%;height:114%;filter:none}
+      body.home-page .orb-ring,body.home-page .orb-particles{display:none}
       body.home-page .focus-control-cluster{position:absolute;left:42%;top:2%;width:clamp(420px,29vw,480px);margin:0;transform:none;pointer-events:auto;display:grid;grid-template-columns:140px minmax(0,1fr);grid-template-rows:auto auto;gap:.42rem .65rem;padding:.62rem .72rem}
       body.home-page .focus-control-cluster .focus-eyebrow-row{display:none}
       body.home-page .focus-control-cluster .focus-session{grid-column:1;grid-row:1/3;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:.32rem;padding:0 .65rem 0 0;border:0;border-right:1px solid rgba(255,224,138,.18);background:transparent}
@@ -425,12 +422,15 @@
       body.home-page .focus-control-cluster .focus-links{grid-column:2;grid-row:2;gap:.36rem}
       body.home-page .focus-control-cluster .focus-quick,body.home-page .focus-control-cluster .focus-links .focus-action,body.home-page .focus-control-cluster .focus-change{min-height:30px}
       body.home-page #kanban-container{position:absolute;left:42%;right:auto;top:35%;width:min(56.5%,1020px);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding:0;overflow:visible;align-items:start}
-      body.home-page .kanban-column{width:100%;max-height:calc(65vh - 74px);min-height:0;padding:0;background:transparent;border:0;box-shadow:none;backdrop-filter:none}
+      body.home-page .kanban-column{width:100%;max-height:calc(65vh - 74px);min-height:0;padding:0;background:transparent;border:0;box-shadow:none;backdrop-filter:none;align-self:start}
       body.home-page .kanban-column:hover{box-shadow:none}
-      body.home-page .kanban-column h2{min-height:34px;padding:.32rem .35rem;margin-bottom:.42rem;font:800 .7rem/1 'Exo 2',sans-serif;letter-spacing:.035em}
-      body.home-page .task-card{padding:.68rem .55rem .5rem;padding-top:1.28rem;border-radius:.36rem;background:rgba(3,19,23,.82)}
-      body.home-page .task-card h3{margin:0 0 .22rem;font:700 .82rem/1.2 'Exo 2',sans-serif;letter-spacing:0}
-      body.home-page .task-card .subtask-count{font:650 .67rem/1.3 'Exo 2',sans-serif}
+      body.home-page .kanban-column h2{min-height:43px;padding:.48rem .5rem;margin-bottom:.7rem;font:800 clamp(.88rem,.82vw,1rem)/1 'Exo 2',sans-serif;letter-spacing:.035em}
+      body.home-page .kanban-column h2::after{min-width:1.55rem;height:1.55rem;font-size:.72rem}
+      body.home-page .task-list{display:grid;grid-auto-rows:max-content;align-content:start;gap:.72rem;padding:0}
+      body.home-page .task-card{min-height:0;height:auto;padding:1rem .82rem .78rem;padding-top:1.8rem;border-radius:.52rem;background:linear-gradient(145deg,rgba(5,31,37,.88),rgba(2,17,22,.82));backdrop-filter:blur(10px);box-shadow:0 10px 24px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.035)}
+      body.home-page .task-card h3{margin:0 0 .38rem;font:700 clamp(1rem,.95vw,1.16rem)/1.25 'Exo 2',sans-serif;letter-spacing:0;text-wrap:pretty}
+      body.home-page .task-card .subtask-count{font:650 clamp(.82rem,.76vw,.94rem)/1.35 'Exo 2',sans-serif}
+      body.home-page .card-nav button{width:23px;height:23px;font-size:.78rem}
       body.home-page .hud-next{--connector:clamp(24px,calc(18vw - 165px),180px);left:2%;right:auto;top:25%;width:112px}
       body.home-page .hud-progress{left:calc(96% + 16px);right:auto;top:29%;width:72px}
       body.home-page .hud-subtasks{--connector:clamp(24px,calc(17vw - 145px),170px);left:5%;right:auto;bottom:22%;width:92px}
@@ -490,7 +490,7 @@
           <div class="hud-readout hud-subtasks"><small>Subtasks</small><strong id="focus-subtasks">0/0</strong></div>
           <div class="focus-orb">
             <svg class="orb-svg" viewBox="0 0 360 360" aria-hidden="true">
-              <defs><linearGradient id="orb-gradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#64eaff"/><stop offset=".46" stop-color="#fff0bd"/><stop offset="1" stop-color="#d99a36"/></linearGradient></defs>
+              <defs><linearGradient id="orb-gradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8af7ff"/><stop offset=".55" stop-color="#36dce8"/><stop offset="1" stop-color="#f7dc8f"/></linearGradient></defs>
               <circle class="orb-track" cx="180" cy="180" r="164" pathLength="100"/>
               <circle class="orb-progress-glow" cx="180" cy="180" r="164" pathLength="100"/>
               <circle id="focus-progress-ring" class="orb-progress" cx="180" cy="180" r="164" pathLength="100"/>
