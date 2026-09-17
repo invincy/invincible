@@ -1,0 +1,1 @@
+{"name":"Invincible","short_name":"Invincible","description":"Your personal operating system","id":"/invincible/","start_url":"/invincible/?source=pwa","scope":"/invincible/","display":"standalone","background_color":"#061013","theme_color":"#071315","icons":[{"src":"/invincible/pwa-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
