@@ -1,8 +1,10 @@
-import{getFirestore,collection,doc,addDoc,updateDoc,deleteDoc,onSnapshot,query,orderBy,serverTimestamp,Timestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-
 const config={apiKey:"AIzaSyBeVpUqcRO_VXfQrGVL5OaSGHKFB8XEQMc",authDomain:"life-by-adichimp.firebaseapp.com",projectId:"life-by-adichimp",storageBucket:"life-by-adichimp.firebasestorage.app",messagingSenderId:"761981819700",appId:"1:761981819700:web:8e88516817ed40b9866361"};
 if(!firebase.apps.length)firebase.initializeApp(config);
-const auth=firebase.auth(),db=getFirestore(firebase.app()._delegate),$=id=>document.getElementById(id),todayKey=(d=new Date())=>{const x=new Date(d.getTime()-d.getTimezoneOffset()*60000);return x.toISOString().slice(0,10)};
+const auth=firebase.auth(),db=firebase.firestore(),Timestamp=firebase.firestore.Timestamp;
+const collection=(_db,...parts)=>{let ref=db;for(let i=0;i<parts.length;i+=2){ref=ref.collection(parts[i]);if(parts[i+1]!==undefined)ref=ref.doc(parts[i+1])}return ref};
+const doc=(_db,...parts)=>{let ref=db;for(let i=0;i<parts.length;i+=2){ref=ref.collection(parts[i]).doc(parts[i+1])}return ref};
+const addDoc=(ref,data)=>ref.add(data),updateDoc=(ref,data)=>ref.update(data),deleteDoc=ref=>ref.delete(),onSnapshot=(ref,next,error)=>ref.onSnapshot(next,error),orderBy=(field,direction="asc")=>({field,direction}),query=(ref,sort)=>ref.orderBy(sort.field,sort.direction),serverTimestamp=()=>firebase.firestore.FieldValue.serverTimestamp();
+const $=id=>document.getElementById(id),todayKey=(d=new Date())=>{const x=new Date(d.getTime()-d.getTimezoneOffset()*60000);return x.toISOString().slice(0,10)};
 let user,items=[],unsubscribe,registration,editingId="",knownIds=new Set(),firstLoad=true;
 const tomorrow=()=>{const d=new Date();d.setDate(d.getDate()+1);return todayKey(d)};
 const esc=v=>{const e=document.createElement("div");e.textContent=v||"";return e.innerHTML};
@@ -34,8 +36,11 @@ function bindSwipes(){document.querySelectorAll(".reminder-wrap").forEach(w=>{co
 async function requestNotifications(){if(!("Notification"in window))return toast("Notifications are not supported here");const p=await Notification.requestPermission();$("notifyButton").classList.toggle("enabled",p==="granted");toast(p==="granted"?"Notifications enabled":"Notification permission not granted");if(p==="granted")scheduleVisible(items.filter(x=>!x.completed))}
 $("notifyButton").onclick=requestNotifications;
 async function scheduleVisible(list){if(Notification.permission!=="granted"||!registration?.active)return;registration.active.postMessage({type:"SCHEDULE_REMINDERS",items:list.map(x=>({id:x.id,title:x.title,dueAt:dt(x.dueAt).getTime()}))})}
-if("serviceWorker"in navigator){registration=await navigator.serviceWorker.register("service-worker.js?v=4",{scope:"./",updateViaCache:"none"});await registration.update();await navigator.serviceWorker.ready}
-$("notifyButton").classList.toggle("enabled",window.Notification?.permission==="granted");
-$("signIn").onclick=async()=>{try{$("authError").textContent="";await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())}catch(e){$("authError").textContent=e.message}};
-await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-auth.onAuthStateChanged(current=>{if(current){if(user?.uid===current.uid)return;user=current;$("authGate").hidden=true;watch();return}unsubscribe?.();user=null;$("authGate").hidden=false});
+async function boot(){
+ if("serviceWorker"in navigator){registration=await navigator.serviceWorker.register("service-worker.js?v=5",{scope:"./",updateViaCache:"none"});await registration.update();await navigator.serviceWorker.ready}
+ $("notifyButton").classList.toggle("enabled",window.Notification?.permission==="granted");
+ $("signIn").onclick=async()=>{try{$("authError").textContent="";await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())}catch(e){$("authError").textContent=e.message}};
+ await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+ auth.onAuthStateChanged(current=>{if(current){if(user?.uid===current.uid)return;user=current;$("authGate").hidden=true;watch();return}unsubscribe?.();user=null;$("authGate").hidden=false});
+}
+boot().catch(error=>{console.error("Reminders failed to start",error);$("authError").textContent=error.message||"Could not start Reminders";$("authGate").hidden=false});
