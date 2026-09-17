@@ -40,7 +40,7 @@ async function requestNotifications(){if(!("Notification"in window))return toast
 $("notifyButton").onclick=requestNotifications;
 async function scheduleVisible(list){if(Notification.permission!=="granted"||!registration?.active)return;registration.active.postMessage({type:"SCHEDULE_REMINDERS",items:list.map(x=>({id:x.id,title:x.title,dueAt:dt(x.dueAt).getTime()}))})}
 async function boot(){
- if("serviceWorker"in navigator){registration=await navigator.serviceWorker.register("service-worker.js?v=7",{scope:"./",updateViaCache:"none"});await registration.update();await navigator.serviceWorker.ready}
+ if("serviceWorker"in navigator){const oldRegistrations=await navigator.serviceWorker.getRegistrations();await Promise.all(oldRegistrations.filter(item=>item.scope.endsWith("/invincible/reminders/")).map(item=>item.unregister()));registration=await navigator.serviceWorker.ready}
  $("notifyButton").classList.toggle("enabled",window.Notification?.permission==="granted");
  await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
  auth.onAuthStateChanged(current=>{user=current||null;cloudFailed=false;watch()});
