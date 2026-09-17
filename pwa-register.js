@@ -1,0 +1,1 @@
+if("serviceWorker" in navigator){navigator.serviceWorker.register("/invincible/service-worker.js",{scope:"/invincible/",updateViaCache:"none"}).catch(console.error)}
