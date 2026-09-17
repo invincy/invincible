@@ -1,9 +1,8 @@
-import{initializeApp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import{getAuth,GoogleAuthProvider,signInWithPopup,setPersistence,browserLocalPersistence,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import{getFirestore,collection,doc,addDoc,updateDoc,deleteDoc,onSnapshot,query,orderBy,serverTimestamp,Timestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const config={apiKey:"AIzaSyBeVpUqcRO_VXfQrGVL5OaSGHKFB8XEQMc",authDomain:"life-by-adichimp.firebaseapp.com",projectId:"life-by-adichimp",storageBucket:"life-by-adichimp.firebasestorage.app",messagingSenderId:"761981819700",appId:"1:761981819700:web:8e88516817ed40b9866361"};
-const auth=getAuth(initializeApp(config)),db=getFirestore(),$=id=>document.getElementById(id),todayKey=(d=new Date())=>{const x=new Date(d.getTime()-d.getTimezoneOffset()*60000);return x.toISOString().slice(0,10)};
+if(!firebase.apps.length)firebase.initializeApp(config);
+const auth=firebase.auth(),db=getFirestore(firebase.app()._delegate),$=id=>document.getElementById(id),todayKey=(d=new Date())=>{const x=new Date(d.getTime()-d.getTimezoneOffset()*60000);return x.toISOString().slice(0,10)};
 let user,items=[],unsubscribe,registration,editingId="",knownIds=new Set(),firstLoad=true;
 const tomorrow=()=>{const d=new Date();d.setDate(d.getDate()+1);return todayKey(d)};
 const esc=v=>{const e=document.createElement("div");e.textContent=v||"";return e.innerHTML};
@@ -35,10 +34,8 @@ function bindSwipes(){document.querySelectorAll(".reminder-wrap").forEach(w=>{co
 async function requestNotifications(){if(!("Notification"in window))return toast("Notifications are not supported here");const p=await Notification.requestPermission();$("notifyButton").classList.toggle("enabled",p==="granted");toast(p==="granted"?"Notifications enabled":"Notification permission not granted");if(p==="granted")scheduleVisible(items.filter(x=>!x.completed))}
 $("notifyButton").onclick=requestNotifications;
 async function scheduleVisible(list){if(Notification.permission!=="granted"||!registration?.active)return;registration.active.postMessage({type:"SCHEDULE_REMINDERS",items:list.map(x=>({id:x.id,title:x.title,dueAt:dt(x.dueAt).getTime()}))})}
-if("serviceWorker"in navigator){registration=await navigator.serviceWorker.register("service-worker.js?v=3",{scope:"./",updateViaCache:"none"});await registration.update();await navigator.serviceWorker.ready}
+if("serviceWorker"in navigator){registration=await navigator.serviceWorker.register("service-worker.js?v=4",{scope:"./",updateViaCache:"none"});await registration.update();await navigator.serviceWorker.ready}
 $("notifyButton").classList.toggle("enabled",window.Notification?.permission==="granted");
-$("signIn").onclick=async()=>{try{$("authError").textContent="";await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){$("authError").textContent=e.message}};
-await setPersistence(auth,browserLocalPersistence);
-await auth.authStateReady();
-if(auth.currentUser){user=auth.currentUser;$("authGate").hidden=true;watch()}else{$("authGate").hidden=false}
-onAuthStateChanged(auth,current=>{if(current){if(user?.uid===current.uid)return;user=current;$("authGate").hidden=true;watch();return}unsubscribe?.();user=null;$("authGate").hidden=false});
+$("signIn").onclick=async()=>{try{$("authError").textContent="";await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())}catch(e){$("authError").textContent=e.message}};
+await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+auth.onAuthStateChanged(current=>{if(current){if(user?.uid===current.uid)return;user=current;$("authGate").hidden=true;watch();return}unsubscribe?.();user=null;$("authGate").hidden=false});
