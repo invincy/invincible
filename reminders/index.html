@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#071013">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Reminders · Invincible</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../site-nav.css?v=11">
+  <link rel="stylesheet" href="reminders.css?v=1">
+</head>
+<body class="reminders-page">
+  <nav class="global-nav" aria-label="Primary navigation"><div class="nav-head"><a class="nav-brand" href="/invincible/"><span class="nav-mark">I</span><strong>INVINCIBLE</strong></a><button class="nav-trigger" type="button" aria-expanded="false">Menu</button></div><div class="nav-links"><a href="/invincible/"><span class="nav-icon">01</span><span class="nav-label">Dashboard</span></a><a href="/invincible/journal/"><span class="nav-icon">02</span><span class="nav-label">Journal</span></a><a href="/invincible/journal/finance.html"><span class="nav-icon">03</span><span class="nav-label">Finance</span></a><a href="/invincible/garage/"><span class="nav-icon">04</span><span class="nav-label">Garage</span></a><a href="/invincible/creator/"><span class="nav-icon">05</span><span class="nav-label">Creator Studio</span></a><a href="/invincible/workday/"><span class="nav-icon">06</span><span class="nav-label">Workday</span></a><a href="/invincible/lic/"><span class="nav-icon">07</span><span class="nav-label">LIC</span></a><a href="/invincible/reminders/" aria-current="page"><span class="nav-icon">08</span><span class="nav-label">Reminders</span></a><a href="https://script.google.com/macros/s/AKfycbxbdgQqTwHIYw_dS9ko_tTieVM1PAQKNAHsTqy7bFPlVNg2P-9FNoccrZwHgbeXALoY/exec" target="_blank" rel="noopener"><span class="nav-icon">09</span><span class="nav-label">Portfolio</span><span class="nav-external">↗</span></a></div><div class="nav-footer">PERSONAL OPERATING SYSTEM</div></nav><div class="nav-backdrop" aria-hidden="true"></div>
+  <script defer src="../site-nav.js?v=2"></script>
+
+  <main class="reminder-shell">
+    <header class="page-head">
+      <div><span id="todayDate" class="date-line"></span><h1>Today</h1><p id="thingsLeft">Loading reminders…</p></div>
+      <button id="notifyButton" class="notify-button" type="button" title="Enable notifications" aria-label="Enable notifications">◌</button>
+    </header>
+
+    <section id="todayList" class="reminder-list today-list" aria-label="Today's reminders"></section>
+    <section id="todayEmpty" class="empty-state" hidden><span>✓</span><h2>Clear for today</h2><p>Nothing waiting. Add only what matters.</p></section>
+
+    <section class="upcoming-block">
+      <div class="section-heading"><span>Upcoming</span><b id="upcomingCount">0</b></div>
+      <div id="upcomingList" class="upcoming-list"></div>
+    </section>
+  </main>
+
+  <button id="addButton" class="fab" type="button" aria-label="Add reminder">+</button>
+
+  <dialog id="quickDialog" class="quick-dialog">
+    <form id="quickForm" method="dialog">
+      <div class="sheet-grip"></div>
+      <div class="quick-top"><span>Quick reminder</span><button id="closeQuick" type="button" aria-label="Close">×</button></div>
+      <input id="reminderTitle" name="title" maxlength="160" autocomplete="off" placeholder="Buy Feviquick" required>
+      <div class="chips" aria-label="Quick schedule">
+        <button type="button" data-preset="tonight">Tonight</button><button type="button" data-preset="tomorrow-morning">Tomorrow morning</button><button type="button" data-preset="daily">Daily</button>
+      </div>
+      <div class="when-row">
+        <label><span>Day</span><select id="daySelect"><option value="today">Today</option><option value="tomorrow">Tomorrow</option><option value="custom">Custom</option></select></label>
+        <label><span>Date</span><input id="customDate" type="date" disabled></label>
+        <label><span>Time</span><input id="reminderTime" type="time" value="19:00"></label>
+      </div>
+      <label class="repeat-toggle"><input id="dailyRepeat" type="checkbox"><span>Repeat daily</span></label>
+      <button class="save-reminder" type="submit">Save reminder</button>
+    </form>
+  </dialog>
+
+  <div id="authGate" class="auth-gate" hidden><div><span class="auth-mark">R</span><h2>Your reminders, everywhere</h2><p>Continue with the same Google account used by Invincible.</p><button id="signIn">Continue with Invincible</button><small id="authError"></small></div></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="reminders.js?v=1"></script>
+</body>
+</html>
