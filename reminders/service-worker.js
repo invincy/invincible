@@ -1,5 +1,5 @@
-const CACHE="invincible-reminders-v4",timers=new Map();
-self.addEventListener("install",event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(["./","reminders.css?v=1","reminders.js?v=4","manifest.webmanifest"])).then(()=>self.skipWaiting())));
+const CACHE="invincible-reminders-v5",timers=new Map();
+self.addEventListener("install",event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(["./","reminders.css?v=1","reminders.js?v=5","manifest.webmanifest"])).then(()=>self.skipWaiting())));
 self.addEventListener("activate",event=>event.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith("invincible-reminders-")&&key!==CACHE).map(key=>caches.delete(key)))),self.clients.claim()])));
 self.addEventListener("fetch",event=>{if(event.request.method!=="GET")return;event.respondWith(fetch(event.request).then(response=>{const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy));return response}).catch(()=>caches.match(event.request)))});
 self.addEventListener("message",event=>{if(event.data?.type!=="SCHEDULE_REMINDERS")return;for(const timer of timers.values())clearTimeout(timer);timers.clear();for(const item of event.data.items||[]){const delay=item.dueAt-Date.now();if(delay<0||delay>2147483647)continue;timers.set(item.id,setTimeout(()=>{self.registration.showNotification(item.title,{body:"Invincible reminder",tag:"reminder-"+item.id,renotify:true,data:{url:"./"},vibrate:[120,60,120]});timers.delete(item.id)},delay))}});
