@@ -1,5 +1,5 @@
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import{getAuth,GoogleAuthProvider,signInWithPopup}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import{getAuth,GoogleAuthProvider,signInWithPopup,setPersistence,browserLocalPersistence,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import{getFirestore,collection,doc,addDoc,updateDoc,deleteDoc,onSnapshot,query,orderBy,serverTimestamp,Timestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const config={apiKey:"AIzaSyBeVpUqcRO_VXfQrGVL5OaSGHKFB8XEQMc",authDomain:"life-by-adichimp.firebaseapp.com",projectId:"life-by-adichimp",storageBucket:"life-by-adichimp.firebasestorage.app",messagingSenderId:"761981819700",appId:"1:761981819700:web:8e88516817ed40b9866361"};
@@ -38,4 +38,5 @@ async function scheduleVisible(list){if(Notification.permission!=="granted"||!re
 if("serviceWorker"in navigator){registration=await navigator.serviceWorker.register("service-worker.js",{scope:"./"});await navigator.serviceWorker.ready}
 $("notifyButton").classList.toggle("enabled",window.Notification?.permission==="granted");
 $("signIn").onclick=async()=>{try{$("authError").textContent="";await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){$("authError").textContent=e.message}};
-await auth.authStateReady();user=auth.currentUser;if(!user){$("authGate").hidden=false;auth.onAuthStateChanged(u=>{if(!u)return;user=u;$("authGate").hidden=true;watch()})}else watch();
+await setPersistence(auth,browserLocalPersistence);
+onAuthStateChanged(auth,current=>{if(current){user=current;$("authGate").hidden=true;watch();return}unsubscribe?.();user=null;$("authGate").hidden=false});
