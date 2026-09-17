@@ -35,8 +35,10 @@ function bindSwipes(){document.querySelectorAll(".reminder-wrap").forEach(w=>{co
 async function requestNotifications(){if(!("Notification"in window))return toast("Notifications are not supported here");const p=await Notification.requestPermission();$("notifyButton").classList.toggle("enabled",p==="granted");toast(p==="granted"?"Notifications enabled":"Notification permission not granted");if(p==="granted")scheduleVisible(items.filter(x=>!x.completed))}
 $("notifyButton").onclick=requestNotifications;
 async function scheduleVisible(list){if(Notification.permission!=="granted"||!registration?.active)return;registration.active.postMessage({type:"SCHEDULE_REMINDERS",items:list.map(x=>({id:x.id,title:x.title,dueAt:dt(x.dueAt).getTime()}))})}
-if("serviceWorker"in navigator){registration=await navigator.serviceWorker.register("service-worker.js",{scope:"./"});await navigator.serviceWorker.ready}
+if("serviceWorker"in navigator){registration=await navigator.serviceWorker.register("service-worker.js?v=3",{scope:"./",updateViaCache:"none"});await registration.update();await navigator.serviceWorker.ready}
 $("notifyButton").classList.toggle("enabled",window.Notification?.permission==="granted");
 $("signIn").onclick=async()=>{try{$("authError").textContent="";await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){$("authError").textContent=e.message}};
 await setPersistence(auth,browserLocalPersistence);
-onAuthStateChanged(auth,current=>{if(current){user=current;$("authGate").hidden=true;watch();return}unsubscribe?.();user=null;$("authGate").hidden=false});
+await auth.authStateReady();
+if(auth.currentUser){user=auth.currentUser;$("authGate").hidden=true;watch()}else{$("authGate").hidden=false}
+onAuthStateChanged(auth,current=>{if(current){if(user?.uid===current.uid)return;user=current;$("authGate").hidden=true;watch();return}unsubscribe?.();user=null;$("authGate").hidden=false});
