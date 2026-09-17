@@ -1,0 +1,1 @@
+{"name":"Invincible Reminders","short_name":"Reminders","description":"Fast reminders inside Invincible","start_url":"/invincible/reminders/","scope":"/invincible/reminders/","display":"standalone","background_color":"#061013","theme_color":"#071013","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
