@@ -159,6 +159,58 @@ body{padding-top:var(--site-nav-height)!important}
   box-shadow:inset 0 -2px var(--nav-accent);
 }
 .more-sheet-grid .app-nav-external{margin-left:auto}
+.more-sheet-grid .app-nav-link[data-page="journal"],
+.more-sheet-grid .app-nav-link[data-page="workday"],
+.more-sheet-grid .app-nav-link[data-page="reminders"]{display:none}
+.customize-tabs-trigger{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  margin-top:12px;
+  padding:13px 14px;
+  border:1px solid rgba(100,230,247,.18);
+  border-radius:15px;
+  color:#dffbff;
+  background:rgba(100,230,247,.065);
+  text-align:left;
+  cursor:pointer;
+}
+.customize-tabs-trigger>span:first-child{display:grid;width:22px;color:var(--nav-accent)}
+.customize-tabs-trigger svg{width:22px;fill:currentColor}
+.customize-tabs-trigger strong,.customize-tabs-trigger small{display:block}
+.customize-tabs-trigger strong{font:800 14px 'Exo 2',sans-serif}
+.customize-tabs-trigger small{margin-top:3px;color:#88a8ae;font:600 11px Inter,system-ui,sans-serif}
+.tab-customizer[hidden],.customize-tabs-trigger[hidden]{display:none!important}
+.tab-customizer{margin-top:10px;padding-top:14px;border-top:1px solid var(--nav-line)}
+.tab-customizer-copy h3{margin:0;color:#f2fdff;font-size:20px}
+.tab-customizer-copy p{margin:4px 0 13px;color:#8ca9af;font:600 12px Inter,system-ui,sans-serif}
+.tab-choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tab-choice{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-height:50px;
+  padding:9px 10px;
+  border:1px solid rgba(100,230,247,.13);
+  border-radius:12px;
+  color:#9eb9be;
+  background:rgba(255,255,255,.025);
+  font:800 12px 'Exo 2',sans-serif;
+  text-align:left;
+  cursor:pointer;
+}
+.tab-choice .app-nav-icon{width:18px;height:18px;flex-basis:18px}
+.tab-choice>span:nth-child(2){flex:1}
+.tab-choice b{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;color:#6e8b91;background:rgba(255,255,255,.05)}
+.tab-choice.is-selected{color:#edfeff;border-color:rgba(100,230,247,.4);background:rgba(100,230,247,.1)}
+.tab-choice.is-selected b{color:#061316;background:var(--nav-accent)}
+.tab-customizer-actions{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:8px;margin-top:12px}
+.tab-choice-count{color:#87a6ac;font:700 11px Inter,system-ui,sans-serif}
+.tab-customizer-actions button{min-height:38px;padding:0 13px;border-radius:10px;font:800 12px 'Exo 2',sans-serif;cursor:pointer}
+.tab-customizer-cancel{border:1px solid var(--nav-line);color:#a9c0c5;background:transparent}
+.tab-customizer-save{border:1px solid var(--nav-accent);color:#061316;background:var(--nav-accent)}
+.tab-customizer-save:disabled{opacity:.35;cursor:not-allowed}
 
 .nav-backdrop,.global-nav-spacer{display:none!important}
 .home-page #dashboard{width:100vw;height:calc(100vh - var(--site-nav-height))}
@@ -270,6 +322,9 @@ body{padding-top:var(--site-nav-height)!important}
   .more-sheet-head h2{font-size:23px}
   .more-sheet-grid{gap:9px}
   .more-sheet-grid .app-nav-link{min-height:66px;padding:12px;font-size:14px}
+  .more-sheet-grid .app-nav-link[data-page="journal"],
+  .more-sheet-grid .app-nav-link[data-page="workday"],
+  .more-sheet-grid .app-nav-link[data-page="reminders"]{display:flex}
 
   .home-page #dashboard{width:100%;height:auto!important;min-height:calc(100vh - var(--site-nav-mobile) - var(--mobile-tabbar-height))}
   .journal-page #root{height:calc(100vh - var(--site-nav-mobile) - var(--mobile-tabbar-height))}

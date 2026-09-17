@@ -32,6 +32,20 @@
   };
 
   const path = location.pathname.replace(/index\.html$/, '');
+  const MOBILE_TABS_KEY = 'invincible.mobileTabs.v1';
+  const defaultMobileTabs = ['workday', 'reminders', 'journal'];
+  const selectableMobilePages = pages.filter(page => !page.external && page.id !== 'dashboard');
+
+  function readMobileTabs() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(MOBILE_TABS_KEY));
+      const validIds = new Set(selectableMobilePages.map(page => page.id));
+      if (Array.isArray(saved) && saved.length === 3 && new Set(saved).size === 3 && saved.every(id => validIds.has(id))) return saved;
+    } catch (_) {}
+    return [...defaultMobileTabs];
+  }
+
+  let selectedMobileIds = readMobileTabs();
   const activePage = pages.find(page => {
     if (page.external) return false;
     const target = page.href.replace(/index\.html$/, '');
@@ -82,13 +96,6 @@
   const mobileTabs = document.createElement('nav');
   mobileTabs.className = 'mobile-tabbar';
   mobileTabs.setAttribute('aria-label', 'Primary navigation');
-  const mobileOrder = ['dashboard', 'workday', 'reminders', 'journal'];
-  mobileTabs.innerHTML = mobileOrder
-    .map(id => linkMarkup(pages.find(page => page.id === id), true))
-    .join('') +
-    '<button class="mobile-more-trigger' + (activePage.primary ? '' : ' is-current') + '" type="button" aria-expanded="false" aria-controls="appMoreSheet">' +
-      '<span class="app-nav-icon">' + icons.more + '</span><span class="app-nav-label">More</span>' +
-    '</button>';
   document.body.appendChild(mobileTabs);
 
   const moreSheet = document.createElement('dialog');
@@ -99,29 +106,91 @@
     '<div class="more-sheet-grip" aria-hidden="true"></div>' +
     '<div class="more-sheet-head"><div><span>INVINCIBLE</span><h2 id="appMoreTitle">More</h2></div>' +
       '<button class="more-sheet-close" type="button" aria-label="Close">×</button></div>' +
-    '<div class="more-sheet-grid">' + secondary.map(page => linkMarkup(page)).join('') + '</div>';
+    '<div class="more-sheet-grid">' + pages.filter(page => page.id !== 'dashboard').map(page => linkMarkup(page)).join('') + '</div>' +
+    '<button class="customize-tabs-trigger" type="button"><span>' + icons.more + '</span><span><strong>Edit bottom tabs</strong><small>Choose the three pages kept one tap away</small></span></button>' +
+    '<section class="tab-customizer" hidden aria-labelledby="tabCustomizerTitle">' +
+      '<div class="tab-customizer-copy"><h3 id="tabCustomizerTitle">Bottom tabs</h3><p>Choose exactly three. Home and More stay fixed.</p></div>' +
+      '<div class="tab-choice-grid"></div>' +
+      '<div class="tab-customizer-actions"><span class="tab-choice-count"></span><button class="tab-customizer-cancel" type="button">Cancel</button><button class="tab-customizer-save" type="button">Save</button></div>' +
+    '</section>';
   document.body.appendChild(moreSheet);
 
-  const triggers = [
-    globalNav.querySelector('.nav-trigger'),
-    mobileTabs.querySelector('.mobile-more-trigger')
-  ].filter(Boolean);
+  const desktopTrigger = globalNav.querySelector('.nav-trigger');
+  const allTriggers = () => [desktopTrigger, mobileTabs.querySelector('.mobile-more-trigger')].filter(Boolean);
+
+  function renderMobileTabs() {
+    const mobileOrder = ['dashboard', ...selectedMobileIds];
+    const selectedIsActive = selectedMobileIds.includes(activePage.id) || activePage.id === 'dashboard';
+    mobileTabs.innerHTML = mobileOrder
+      .map(id => linkMarkup(pages.find(page => page.id === id), true))
+      .join('') +
+      '<button class="mobile-more-trigger' + (selectedIsActive ? '' : ' is-current') + '" type="button" aria-expanded="false" aria-controls="appMoreSheet">' +
+        '<span class="app-nav-icon">' + icons.more + '</span><span class="app-nav-label">More</span>' +
+      '</button>';
+    mobileTabs.querySelector('.mobile-more-trigger')?.addEventListener('click', openMore);
+  }
 
   function openMore() {
     if (typeof moreSheet.showModal === 'function') moreSheet.showModal();
     else moreSheet.setAttribute('open', '');
     document.body.classList.add('app-more-open');
-    triggers.forEach(trigger => trigger.setAttribute('aria-expanded', 'true'));
+    allTriggers().forEach(trigger => trigger.setAttribute('aria-expanded', 'true'));
   }
 
   function closeMore() {
     if (moreSheet.open && typeof moreSheet.close === 'function') moreSheet.close();
     else moreSheet.removeAttribute('open');
     document.body.classList.remove('app-more-open');
-    triggers.forEach(trigger => trigger.setAttribute('aria-expanded', 'false'));
+    allTriggers().forEach(trigger => trigger.setAttribute('aria-expanded', 'false'));
   }
 
-  triggers.forEach(trigger => trigger.addEventListener('click', openMore));
+  desktopTrigger?.addEventListener('click', openMore);
+  renderMobileTabs();
+
+  const customizeTrigger = moreSheet.querySelector('.customize-tabs-trigger');
+  const customizer = moreSheet.querySelector('.tab-customizer');
+  const choiceGrid = moreSheet.querySelector('.tab-choice-grid');
+  const choiceCount = moreSheet.querySelector('.tab-choice-count');
+  const saveTabs = moreSheet.querySelector('.tab-customizer-save');
+  let draftMobileIds = [...selectedMobileIds];
+
+  function renderTabChoices() {
+    choiceGrid.innerHTML = selectableMobilePages.map(page => {
+      const selected = draftMobileIds.includes(page.id);
+      return '<button type="button" class="tab-choice' + (selected ? ' is-selected' : '') + '" data-page-id="' + page.id + '" aria-pressed="' + selected + '">' +
+        '<span class="app-nav-icon">' + icons[page.icon] + '</span><span>' + page.label + '</span><b>' + (selected ? '✓' : '+') + '</b>' +
+      '</button>';
+    }).join('');
+    choiceCount.textContent = draftMobileIds.length + ' of 3 selected';
+    saveTabs.disabled = draftMobileIds.length !== 3;
+    choiceGrid.querySelectorAll('.tab-choice').forEach(button => button.addEventListener('click', () => {
+      const id = button.dataset.pageId;
+      if (draftMobileIds.includes(id)) draftMobileIds = draftMobileIds.filter(item => item !== id);
+      else if (draftMobileIds.length < 3) draftMobileIds.push(id);
+      renderTabChoices();
+    }));
+  }
+
+  function hideCustomizer() {
+    customizer.hidden = true;
+    customizeTrigger.hidden = false;
+  }
+
+  customizeTrigger.addEventListener('click', () => {
+    draftMobileIds = [...selectedMobileIds];
+    renderTabChoices();
+    customizeTrigger.hidden = true;
+    customizer.hidden = false;
+  });
+  moreSheet.querySelector('.tab-customizer-cancel')?.addEventListener('click', hideCustomizer);
+  saveTabs.addEventListener('click', () => {
+    if (draftMobileIds.length !== 3) return;
+    selectedMobileIds = [...draftMobileIds];
+    localStorage.setItem(MOBILE_TABS_KEY, JSON.stringify(selectedMobileIds));
+    renderMobileTabs();
+    hideCustomizer();
+    closeMore();
+  });
   moreSheet.querySelector('.more-sheet-close')?.addEventListener('click', closeMore);
   moreSheet.addEventListener('click', event => {
     if (event.target === moreSheet) closeMore();
