@@ -464,8 +464,9 @@
     .home-page .toast.show{opacity:1;transform:translate(-50%,0)}
     .home-page .modal-overlay{z-index:1300}
     @media(max-width:1024px){body.home-page #dashboard{height:auto;min-height:calc(100dvh - 138px)}body.home-page .toast{bottom:calc(102px + env(safe-area-inset-bottom))}}
-  /* Real 3D scene; HTML labels and the progress indicator remain crisp. */
-    body.home-page .focus-orb{background:transparent;box-shadow:none;isolation:isolate}
+  /* Interactive particle scene; HTML task labels remain crisp. */
+    body.home-page .focus-orb{background:transparent;box-shadow:none;isolation:isolate;touch-action:none;cursor:grab}
+    body.home-page .focus-orb[data-dragging=true]{cursor:grabbing}
     body.home-page .focus-orb:before,body.home-page .focus-orb:after{display:none}
     .focus-orb-3d{position:absolute;inset:-40%;z-index:0;pointer-events:none}
     .focus-orb-3d canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -475,12 +476,12 @@
     body.home-page .orb-copy{z-index:2;pointer-events:none}
     body.home-page .orb-progress,body.home-page .orb-progress-glow{animation:none}
   </style>
-  <link rel="stylesheet" href="react-dist/assets/invincible-app.css?v=6">
+  <link rel="stylesheet" href="react-dist/assets/invincible-app.css?v=7">
   <link rel="manifest" href="/invincible/manifest.webmanifest"><meta name="theme-color" content="#071315">
 </head>
 <body class="home-page">
 <div id="root"></div>
-<script type="module" src="react-dist/assets/invincible-app.js?v=6"></script>
+<script type="module" src="react-dist/assets/invincible-app.js?v=7"></script>
 <script src="pwa-register.js?v=1"></script>
 </body>
 </html>

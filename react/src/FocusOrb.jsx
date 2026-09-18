@@ -4,45 +4,66 @@ import{useEffect,useRef}from'react';
 function shader(gl,type,source){const value=gl.createShader(type);gl.shaderSource(value,source);gl.compileShader(value);if(!gl.getShaderParameter(value,gl.COMPILE_STATUS)){gl.deleteShader(value);throw Error('Orb shader could not compile')}return value}
 function program(gl,vertex,fragment){const value=gl.createProgram(),vs=shader(gl,gl.VERTEX_SHADER,vertex),fs=shader(gl,gl.FRAGMENT_SHADER,fragment);gl.attachShader(value,vs);gl.attachShader(value,fs);gl.linkProgram(value);gl.deleteShader(vs);gl.deleteShader(fs);if(!gl.getProgramParameter(value,gl.LINK_STATUS)){gl.deleteProgram(value);throw Error('Orb program could not link')}return value}
 // Every visible mark belongs to the particle field; there is no solid mesh or orbit ring.
-const particleVertex=`attribute vec3 position;attribute vec2 appearance;uniform mat4 projection;uniform float pixelRatio;varying float opacity;void main(){vec4 projected=projection*vec4(position,1.0);gl_Position=projected;gl_PointSize=max(1.0,appearance.x*pixelRatio*4.6/projected.w);opacity=appearance.y*(0.35+0.65*smoothstep(-1.0,1.0,position.z));}`;
+const particleVertex=`attribute vec3 position;attribute vec2 appearance;uniform mat4 projection;uniform float pixelRatio;uniform vec2 rotation;uniform vec3 influence;varying float opacity;void main(){
+vec3 p=position;float cx=cos(rotation.y),sx=sin(rotation.y),cy=cos(rotation.x),sy=sin(rotation.x);
+p=vec3(p.x,p.y*cx-p.z*sx,p.y*sx+p.z*cx);p=vec3(p.x*cy+p.z*sy,p.y,-p.x*sy+p.z*cy);
+vec2 delta=p.xy-influence.xy;float pull=exp(-dot(delta,delta)*3.0)*influence.z;
+p.xy+=delta*pull*0.10;p.z+=pull*0.12;
+vec4 projected=projection*vec4(p,1.0);gl_Position=projected;gl_PointSize=max(1.0,appearance.x*pixelRatio*4.6/projected.w);opacity=appearance.y*(0.35+0.65*smoothstep(-1.0,1.0,p.z));}`;
 const particleFragment=`precision mediump float;varying float opacity;void main(){float radius=length(gl_PointCoord-vec2(0.5))*2.0;if(radius>1.0)discard;float core=1.0-smoothstep(0.0,1.0,radius);gl_FragColor=vec4(mix(vec3(0.08,0.55,0.78),vec3(0.55,1.0,1.0),core),core*opacity);}`;
 function perspective(aspect){const f=1/Math.tan(Math.PI/8),near=.1,far=30,distance=4.6;return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)/(near-far),-1,0,0,(far+near)/(near-far)*-distance+2*far*near/(near-far),distance])}
 function flowPosition(seed,phase,time){
  const latitude=seed*Math.PI+0.32*Math.sin(phase*2+seed*12),longitude=phase+0.55*Math.sin(seed*9+phase*2)+0.18*Math.sin(phase*5-seed*7);
- const radius=1.24+0.045*Math.sin(seed*17+phase*4+time*.3);
+ const radius=1.09+0.045*Math.sin(seed*17+phase*4+time*.3);
  const x=radius*Math.sin(latitude)*Math.cos(longitude),y=radius*Math.cos(latitude),z=radius*Math.sin(latitude)*Math.sin(longitude),turn=time*.075+.35;
  return[x*Math.cos(turn)+z*Math.sin(turn),y,-x*Math.sin(turn)+z*Math.cos(turn)];
 }
 export function FocusOrb(){
  const canvas=useRef(null),host=useRef(null);
  useEffect(()=>{
-  const c=canvas.current,container=host.current;let gl,dots,particleBuffer,frame=null,resizeObserver,intersectionObserver;let disposed=false,inView=true,contextLost=false,start=performance.now(),last=0;const reduced=matchMedia('(prefers-reduced-motion: reduce)'),mobile=matchMedia('(max-width:1024px)');
+  const c=canvas.current,container=host.current,surface=container.parentElement;let gl,dots,particleBuffer,frame=null,resizeObserver,intersectionObserver;let disposed=false,inView=true,contextLost=false,start=performance.now(),last=0;const reduced=matchMedia('(prefers-reduced-motion: reduce)'),mobile=matchMedia('(max-width:1024px)');
   const stop=()=>{if(frame!==null)cancelAnimationFrame(frame);frame=null};
   try{
    gl=c.getContext('webgl',{alpha:true,antialias:true,premultipliedAlpha:false,powerPreference:'low-power'});if(!gl)return;
    dots=program(gl,particleVertex,particleFragment);particleBuffer=gl.createBuffer();
    const dotPosition=gl.getAttribLocation(dots,'position'),dotAppearance=gl.getAttribLocation(dots,'appearance'),dotProjection=gl.getUniformLocation(dots,'projection'),dotRatio=gl.getUniformLocation(dots,'pixelRatio');
-   let projection,ratio=1;
+   const dotRotation=gl.getUniformLocation(dots,'rotation'),dotInfluence=gl.getUniformLocation(dots,'influence');
+   let projection,ratio=1,drag=null,yaw=0,pitch=0,velocityX=0,velocityY=0,hoverX=0,hoverY=0,hoverStrength=0,targetX=0,targetY=0,targetStrength=0;
+   const pointerLocation=event=>{const rect=surface.getBoundingClientRect();targetX=((event.clientX-rect.left)/rect.width-.5)*2.5;targetY=(.5-(event.clientY-rect.top)/rect.height)*2.5;targetStrength=1};
+   const pointerDown=event=>{if(!event.isPrimary||event.button!==0||drag)return;drag={id:event.pointerId,x:event.clientX,y:event.clientY};velocityX=velocityY=0;surface.setPointerCapture(event.pointerId);surface.dataset.dragging='true';pointerLocation(event);resume()};
+   const pointerMove=event=>{
+    if(drag&&event.pointerId!==drag.id)return;
+    if(event.pointerType==='mouse'||drag)pointerLocation(event);
+    if(drag){const rect=surface.getBoundingClientRect();velocityX=(event.clientX-drag.x)/rect.width*3.5;velocityY=(event.clientY-drag.y)/rect.height*3.5;yaw+=velocityX;pitch+=velocityY;drag.x=event.clientX;drag.y=event.clientY}
+    if(reduced.matches)resume();
+   };
+   const pointerUp=event=>{if(!drag||event.pointerId!==drag.id)return;drag=null;delete surface.dataset.dragging;if(surface.hasPointerCapture(event.pointerId))surface.releasePointerCapture(event.pointerId);if(event.pointerType!=='mouse')targetStrength=0;if(event.type==='pointercancel'||reduced.matches)velocityX=velocityY=0;resume()};
+   const pointerLeave=()=>{if(!drag){targetStrength=0;if(reduced.matches)resume()}};
+   const lostCapture=event=>{if(drag?.id===event.pointerId){drag=null;velocityX=velocityY=0;targetStrength=0;delete surface.dataset.dragging;resume()}};
+   const events={pointerdown:pointerDown,pointermove:pointerMove,pointerup:pointerUp,pointercancel:pointerUp,pointerleave:pointerLeave,lostpointercapture:lostCapture};
    const render=timestamp=>{
     frame=null;if(disposed||contextLost||document.hidden||!inView)return;
-    const interval=mobile.matches?1000/30:1000/45;if(!reduced.matches&&timestamp-last<interval){frame=requestAnimationFrame(render);return}last=timestamp;
+    const interval=mobile.matches?1000/30:1000/45;if(!reduced.matches&&timestamp-last<interval){frame=requestAnimationFrame(render);return}const dt=Math.min((timestamp-last)/1000||1/45,.05);last=timestamp;
     const time=reduced.matches?8:(timestamp-start)/1000;
     gl.viewport(0,0,c.width,c.height);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);gl.disable(gl.DEPTH_TEST);
-    const particles=[],streams=mobile.matches?72:120,trailCount=mobile.matches?72:140;
+    const smoothing=reduced.matches?1:1-Math.exp(-dt*9);
+    hoverX+=(targetX-hoverX)*smoothing;hoverY+=(targetY-hoverY)*smoothing;hoverStrength+=(targetStrength-hoverStrength)*smoothing;
+    if(!drag&&!reduced.matches){const decay=Math.exp(-dt*5);yaw+=velocityX*dt*30;pitch+=velocityY*dt*30;velocityX*=decay;velocityY*=decay}
+    const particles=[],streams=mobile.matches?90:150,trailCount=mobile.matches?72:140;
     for(let stream=0;stream<streams;stream++){
-     const seed=(stream+.5)/streams,phase=stream*2.399963+time*(.10+.035*Math.sin(stream));
+     const seed=(stream+.5)/streams,phase=stream*2.399963+time*(.10+.035*Math.sin(stream))+.12*Math.sin(time*.23+stream*1.71);
      for(let trail=0;trail<trailCount;trail++){
       const point=flowPosition(seed,phase-trail*.018,time),head=trail===0;
       particles.push(...point,head?5.5:4.2,(head?1.0:.85)*(1-trail/trailCount));
      }
     }
     // A scattered shell fills the dark gaps without drawing latitude or longitude lines.
-    const flecks=mobile.matches?600:1400;
+    const flecks=mobile.matches?850:1900;
     for(let dot=0;dot<flecks;dot++){
      const seed=Math.acos(1-2*(dot+.5)/flecks)/Math.PI,phase=dot*2.399963+time*.045;
      particles.push(...flowPosition(seed,phase,time),dot%11===0?4.0:2.6,.40+.30*Math.sin(dot*7.13+time*.5)**2);
     }
-    gl.useProgram(dots);gl.uniformMatrix4fv(dotProjection,false,projection);gl.uniform1f(dotRatio,ratio);gl.bindBuffer(gl.ARRAY_BUFFER,particleBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(particles),gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(dotPosition);gl.vertexAttribPointer(dotPosition,3,gl.FLOAT,false,20,0);gl.enableVertexAttribArray(dotAppearance);gl.vertexAttribPointer(dotAppearance,2,gl.FLOAT,false,20,12);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);gl.depthMask(false);gl.drawArrays(gl.POINTS,0,particles.length/5);gl.depthMask(true);
+    gl.useProgram(dots);gl.uniformMatrix4fv(dotProjection,false,projection);gl.uniform1f(dotRatio,ratio);gl.uniform2f(dotRotation,yaw+hoverX*hoverStrength*.10,pitch-hoverY*hoverStrength*.10);gl.uniform3f(dotInfluence,hoverX,hoverY,hoverStrength);gl.bindBuffer(gl.ARRAY_BUFFER,particleBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(particles),gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(dotPosition);gl.vertexAttribPointer(dotPosition,3,gl.FLOAT,false,20,0);gl.enableVertexAttribArray(dotAppearance);gl.vertexAttribPointer(dotAppearance,2,gl.FLOAT,false,20,12);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);gl.depthMask(false);gl.drawArrays(gl.POINTS,0,particles.length/5);gl.depthMask(true);
     container.dataset.ready='true';if(!reduced.matches)frame=requestAnimationFrame(render);
    };
    const resume=()=>{stop();if(!disposed&&!contextLost&&!document.hidden&&inView)frame=requestAnimationFrame(render)};
@@ -50,8 +71,8 @@ export function FocusOrb(){
    resizeObserver=new ResizeObserver(resize);resizeObserver.observe(container);
    if(typeof IntersectionObserver!=='undefined'){intersectionObserver=new IntersectionObserver(entries=>{inView=entries[0].isIntersecting;resume()});intersectionObserver.observe(container)}
    const visibility=()=>resume(),preferences=()=>resize(),lost=event=>{event.preventDefault();contextLost=true;stop();delete container.dataset.ready};
-   document.addEventListener('visibilitychange',visibility);reduced.addEventListener('change',preferences);mobile.addEventListener('change',preferences);c.addEventListener('webglcontextlost',lost);resize();
-   return()=>{disposed=true;stop();resizeObserver.disconnect();intersectionObserver?.disconnect();document.removeEventListener('visibilitychange',visibility);reduced.removeEventListener('change',preferences);mobile.removeEventListener('change',preferences);c.removeEventListener('webglcontextlost',lost);gl.deleteBuffer(particleBuffer);gl.deleteProgram(dots)};
+   document.addEventListener('visibilitychange',visibility);reduced.addEventListener('change',preferences);mobile.addEventListener('change',preferences);c.addEventListener('webglcontextlost',lost);for(const [name,handler]of Object.entries(events))surface.addEventListener(name,handler);resize();
+   return()=>{disposed=true;stop();for(const [name,handler]of Object.entries(events))surface.removeEventListener(name,handler);if(drag&&surface.hasPointerCapture(drag.id))surface.releasePointerCapture(drag.id);delete surface.dataset.dragging;resizeObserver.disconnect();intersectionObserver?.disconnect();document.removeEventListener('visibilitychange',visibility);reduced.removeEventListener('change',preferences);mobile.removeEventListener('change',preferences);c.removeEventListener('webglcontextlost',lost);gl.deleteBuffer(particleBuffer);gl.deleteProgram(dots)};
   }catch(error){console.warn('3D orb unavailable; keeping the particle fallback.',error);stop();resizeObserver?.disconnect();intersectionObserver?.disconnect();if(gl){if(particleBuffer)gl.deleteBuffer(particleBuffer);if(dots)gl.deleteProgram(dots)}}
  },[]);
  return <div ref={host} className="focus-orb-3d" aria-hidden="true"><div className="orb-3d-fallback"/><canvas ref={canvas}/></div>;
