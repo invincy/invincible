@@ -23,7 +23,7 @@ body{padding-top:var(--site-nav-height)!important}
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:28px;
+  gap:18px;
   padding:0 clamp(18px,2.4vw,38px);
   background:linear-gradient(180deg,rgba(6,18,21,.98),rgba(4,13,16,.96));
   border-bottom:1px solid var(--nav-line);
@@ -67,11 +67,15 @@ body{padding-top:var(--site-nav-height)!important}
 .mobile-page-name{display:none}
 
 .desktop-nav{
-  justify-content:flex-end;
+  justify-content:flex-start;
   gap:6px;
   min-width:0;
+  overflow-x:auto;
+  scrollbar-width:thin;
+  padding:4px 0;
 }
 .desktop-nav .app-nav-link,.nav-trigger{
+  flex-shrink:0;
   gap:8px;
   min-height:44px;
   padding:0 13px;
@@ -109,6 +113,8 @@ body{padding-top:var(--site-nav-height)!important}
   z-index:12000;
   width:min(440px,calc(100vw - 32px));
   max-width:none;
+  max-height:calc(100dvh - 24px);
+  overflow-y:auto;
   margin:auto;
   padding:18px;
   border:1px solid rgba(100,230,247,.24);
@@ -159,9 +165,6 @@ body{padding-top:var(--site-nav-height)!important}
   box-shadow:inset 0 -2px var(--nav-accent);
 }
 .more-sheet-grid .app-nav-external{margin-left:auto}
-.more-sheet-grid .app-nav-link[data-page="journal"],
-.more-sheet-grid .app-nav-link[data-page="workday"],
-.more-sheet-grid .app-nav-link[data-page="reminders"]{display:none}
 .customize-tabs-trigger{
   display:flex;
   align-items:center;
@@ -348,4 +351,11 @@ body{padding-top:var(--site-nav-height)!important}
 
 @media(prefers-reduced-motion:reduce){
   .global-nav *,.mobile-tabbar *,.app-more-sheet{transition:none!important;animation:none!important}
+}
+
+@media(min-width:1025px) and (max-width:1450px){
+  .global-nav{padding-inline:18px;gap:14px}
+  .nav-brand strong{font-size:17px;letter-spacing:.04em}
+  .desktop-nav{gap:2px}
+  .desktop-nav .app-nav-link{padding-inline:9px}
 }

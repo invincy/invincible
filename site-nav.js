@@ -73,9 +73,6 @@
   const globalNav = document.querySelector('.global-nav');
   if (!globalNav) return;
 
-  const primary = pages.filter(page => page.primary);
-  const secondary = pages.filter(page => !page.primary);
-
   globalNav.innerHTML =
     '<div class="nav-head">' +
       '<a class="nav-brand" href="' + BASE + '" aria-label="Invincible dashboard">' +
@@ -84,10 +81,7 @@
       '<span class="mobile-page-name">' + activePage.label + '</span>' +
     '</div>' +
     '<div class="desktop-nav" aria-label="Primary navigation">' +
-      primary.map(page => linkMarkup(page)).join('') +
-      '<button class="nav-trigger' + (activePage.primary ? '' : ' is-current') + '" type="button" aria-expanded="false" aria-controls="appMoreSheet">' +
-        '<span class="app-nav-icon">' + icons.more + '</span><span>More</span>' +
-      '</button>' +
+      pages.map(page => linkMarkup(page)).join('') +
     '</div>';
   globalNav.setAttribute('aria-label', 'App navigation');
 
@@ -115,8 +109,8 @@
     '</section>';
   document.body.appendChild(moreSheet);
 
-  const desktopTrigger = globalNav.querySelector('.nav-trigger');
-  const allTriggers = () => [desktopTrigger, mobileTabs.querySelector('.mobile-more-trigger')].filter(Boolean);
+  const mobileViewport = window.matchMedia('(max-width: 1024px)');
+  const allTriggers = () => [mobileTabs.querySelector('.mobile-more-trigger')].filter(Boolean);
 
   function renderMobileTabs() {
     const mobileOrder = ['dashboard', ...selectedMobileIds];
@@ -131,6 +125,7 @@
   }
 
   function openMore() {
+    if (!mobileViewport.matches) return;
     if (typeof moreSheet.showModal === 'function') moreSheet.showModal();
     else moreSheet.setAttribute('open', '');
     document.body.classList.add('app-more-open');
@@ -144,7 +139,9 @@
     allTriggers().forEach(trigger => trigger.setAttribute('aria-expanded', 'false'));
   }
 
-  desktopTrigger?.addEventListener('click', openMore);
+  mobileViewport.addEventListener('change', event => {
+    if (!event.matches) { closeMore(); hideCustomizer(); }
+  });
   renderMobileTabs();
 
   const customizeTrigger = moreSheet.querySelector('.customize-tabs-trigger');
