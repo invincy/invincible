@@ -51,7 +51,7 @@ export function FocusOrb(){
     if(!drag&&!reduced.matches){const decay=Math.exp(-dt*5);yaw+=velocityX*dt*30;pitch+=velocityY*dt*30;velocityX*=decay;velocityY*=decay}
     if(particleMobile!==mobile.matches){
      particleMobile=mobile.matches;
-     const streams=particleMobile?180:300,trailCount=particleMobile?72:140,flecks=particleMobile?1700:3800;
+     const streams=particleMobile?320:300,trailCount=particleMobile?120:140,flecks=particleMobile?3800:3800;
      particleCount=streams*trailCount+flecks;
      const particles=new Float32Array(particleCount*5);let offset=0;
      for(let stream=0;stream<streams;stream++){
