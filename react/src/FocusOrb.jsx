@@ -1,23 +1,22 @@
 import{useEffect,useRef}from'react';
 
-// A flowing 3D particle sphere, rendered without a 3D framework.
+// A flowing 3D particle wave field, rendered without a 3D framework.
 function shader(gl,type,source){const value=gl.createShader(type);gl.shaderSource(value,source);gl.compileShader(value);if(!gl.getShaderParameter(value,gl.COMPILE_STATUS)){gl.deleteShader(value);throw Error('Orb shader could not compile')}return value}
 function program(gl,vertex,fragment){const value=gl.createProgram(),vs=shader(gl,gl.VERTEX_SHADER,vertex),fs=shader(gl,gl.FRAGMENT_SHADER,fragment);gl.attachShader(value,vs);gl.attachShader(value,fs);gl.linkProgram(value);gl.deleteShader(vs);gl.deleteShader(fs);if(!gl.getProgramParameter(value,gl.LINK_STATUS)){gl.deleteProgram(value);throw Error('Orb program could not link')}return value}
 // Every visible mark belongs to the particle field; there is no solid mesh or orbit ring.
-const particleVertex=`attribute vec3 position;attribute vec2 appearance;uniform mat4 projection;uniform float pixelRatio;uniform vec2 rotation;uniform vec3 influence;varying float opacity;void main(){
-vec3 p=position;float cx=cos(rotation.y),sx=sin(rotation.y),cy=cos(rotation.x),sy=sin(rotation.x);
+const particleVertex=`attribute vec3 position;attribute vec2 appearance;uniform mat4 projection;uniform float pixelRatio;uniform float time;uniform vec2 rotation;uniform vec3 influence;varying float opacity;void main(){
+float travel=fract(position.x+time*position.z);float x=(travel-.5)*3.0;float lane=position.y;
+float wave=sin(x*2.7-time*1.25+lane*2.0)*.27+sin(x*4.1+time*.72+lane*6.0)*.12;
+vec3 p=vec3(x,(lane-.5)*1.15+wave,sin(x*2.0-time*.85+lane*5.0)*.48+(lane-.5)*.35);
+float edge=smoothstep(0.0,.09,travel)*(1.0-smoothstep(.91,1.0,travel));
+float center=mix(.42,1.0,smoothstep(.0,.45,length(p.xy)));
+float cx=cos(rotation.y),sx=sin(rotation.y),cy=cos(rotation.x),sy=sin(rotation.x);
 p=vec3(p.x,p.y*cx-p.z*sx,p.y*sx+p.z*cx);p=vec3(p.x*cy+p.z*sy,p.y,-p.x*sy+p.z*cy);
 vec2 delta=p.xy-influence.xy;float pull=exp(-dot(delta,delta)*3.0)*influence.z;
 p.xy+=delta*pull*0.10;p.z+=pull*0.12;
-vec4 projected=projection*vec4(p,1.0);gl_Position=projected;gl_PointSize=max(1.0,appearance.x*pixelRatio*4.6/projected.w);opacity=appearance.y*(0.35+0.65*smoothstep(-1.0,1.0,p.z));}`;
+vec4 projected=projection*vec4(p,1.0);gl_Position=projected;gl_PointSize=max(1.0,appearance.x*pixelRatio*4.6/projected.w);opacity=appearance.y*edge*center*(0.35+0.65*smoothstep(-1.0,1.0,p.z));}`;
 const particleFragment=`precision mediump float;varying float opacity;void main(){float radius=length(gl_PointCoord-vec2(0.5))*2.0;if(radius>1.0)discard;float core=1.0-smoothstep(0.0,1.0,radius);gl_FragColor=vec4(mix(vec3(0.08,0.55,0.78),vec3(0.55,1.0,1.0),core),core*opacity);}`;
 function perspective(aspect){const f=1/Math.tan(Math.PI/8),near=.1,far=30,distance=4.6;return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)/(near-far),-1,0,0,(far+near)/(near-far)*-distance+2*far*near/(near-far),distance])}
-function flowPosition(seed,phase,time){
- const latitude=seed*Math.PI+0.32*Math.sin(phase*2+seed*12),longitude=phase+0.55*Math.sin(seed*9+phase*2)+0.18*Math.sin(phase*5-seed*7);
- const radius=1.09+0.045*Math.sin(seed*17+phase*4+time*.3);
- const x=radius*Math.sin(latitude)*Math.cos(longitude),y=radius*Math.cos(latitude),z=radius*Math.sin(latitude)*Math.sin(longitude),turn=time*.075+.35;
- return[x*Math.cos(turn)+z*Math.sin(turn),y,-x*Math.sin(turn)+z*Math.cos(turn)];
-}
 export function FocusOrb(){
  const canvas=useRef(null),host=useRef(null);
  useEffect(()=>{
@@ -26,8 +25,9 @@ export function FocusOrb(){
   try{
    gl=c.getContext('webgl',{alpha:true,antialias:true,premultipliedAlpha:false,powerPreference:'low-power'});if(!gl)return;
    dots=program(gl,particleVertex,particleFragment);particleBuffer=gl.createBuffer();
-   const dotPosition=gl.getAttribLocation(dots,'position'),dotAppearance=gl.getAttribLocation(dots,'appearance'),dotProjection=gl.getUniformLocation(dots,'projection'),dotRatio=gl.getUniformLocation(dots,'pixelRatio');
+   const dotPosition=gl.getAttribLocation(dots,'position'),dotAppearance=gl.getAttribLocation(dots,'appearance'),dotProjection=gl.getUniformLocation(dots,'projection'),dotRatio=gl.getUniformLocation(dots,'pixelRatio'),dotTime=gl.getUniformLocation(dots,'time');
    const dotRotation=gl.getUniformLocation(dots,'rotation'),dotInfluence=gl.getUniformLocation(dots,'influence');
+   let particleCount=0,particleMobile=null;
    let projection,ratio=1,drag=null,yaw=0,pitch=0,velocityX=0,velocityY=0,hoverX=0,hoverY=0,hoverStrength=0,targetX=0,targetY=0,targetStrength=0;
    const pointerLocation=event=>{const rect=surface.getBoundingClientRect();targetX=((event.clientX-rect.left)/rect.width-.5)*2.5;targetY=(.5-(event.clientY-rect.top)/rect.height)*2.5;targetStrength=1};
    const pointerDown=event=>{if(!event.isPrimary||event.button!==0||drag)return;drag={id:event.pointerId,x:event.clientX,y:event.clientY};velocityX=velocityY=0;surface.setPointerCapture(event.pointerId);surface.dataset.dragging='true';pointerLocation(event);resume()};
@@ -49,21 +49,23 @@ export function FocusOrb(){
     const smoothing=reduced.matches?1:1-Math.exp(-dt*9);
     hoverX+=(targetX-hoverX)*smoothing;hoverY+=(targetY-hoverY)*smoothing;hoverStrength+=(targetStrength-hoverStrength)*smoothing;
     if(!drag&&!reduced.matches){const decay=Math.exp(-dt*5);yaw+=velocityX*dt*30;pitch+=velocityY*dt*30;velocityX*=decay;velocityY*=decay}
-    const particles=[],streams=mobile.matches?90:150,trailCount=mobile.matches?72:140;
-    for(let stream=0;stream<streams;stream++){
-     const seed=(stream+.5)/streams,phase=stream*2.399963+time*(.10+.035*Math.sin(stream))+.12*Math.sin(time*.23+stream*1.71);
-     for(let trail=0;trail<trailCount;trail++){
-      const point=flowPosition(seed,phase-trail*.018,time),head=trail===0;
-      particles.push(...point,head?5.5:4.2,(head?1.0:.85)*(1-trail/trailCount));
+    if(particleMobile!==mobile.matches){
+     particleMobile=mobile.matches;
+     const streams=particleMobile?180:300,trailCount=particleMobile?72:140,flecks=particleMobile?1700:3800;
+     particleCount=streams*trailCount+flecks;
+     const particles=new Float32Array(particleCount*5);let offset=0;
+     for(let stream=0;stream<streams;stream++){
+      const seed=(stream+.5)/streams,phase=(stream*.61803398875)%1,speed=.14+.065*(.5+.5*Math.sin(stream*1.71));
+      for(let trail=0;trail<trailCount;trail++){
+       particles.set([phase-trail*.0025,seed,speed,trail===0?5.5:3.6,(trail===0?1:.68)*(1-trail/trailCount)],offset);offset+=5;
+      }
      }
+     for(let dot=0;dot<flecks;dot++){
+      particles.set([(dot*.61803398875)%1,((dot+.5)*.754877666)%1,.12+.10*((dot*.41421356)%1),dot%11===0?4.0:2.8,.45+.30*Math.sin(dot*7.13)**2],offset);offset+=5;
+     }
+     gl.bindBuffer(gl.ARRAY_BUFFER,particleBuffer);gl.bufferData(gl.ARRAY_BUFFER,particles,gl.STATIC_DRAW);
     }
-    // A scattered shell fills the dark gaps without drawing latitude or longitude lines.
-    const flecks=mobile.matches?850:1900;
-    for(let dot=0;dot<flecks;dot++){
-     const seed=Math.acos(1-2*(dot+.5)/flecks)/Math.PI,phase=dot*2.399963+time*.045;
-     particles.push(...flowPosition(seed,phase,time),dot%11===0?4.0:2.6,.40+.30*Math.sin(dot*7.13+time*.5)**2);
-    }
-    gl.useProgram(dots);gl.uniformMatrix4fv(dotProjection,false,projection);gl.uniform1f(dotRatio,ratio);gl.uniform2f(dotRotation,yaw+hoverX*hoverStrength*.10,pitch-hoverY*hoverStrength*.10);gl.uniform3f(dotInfluence,hoverX,hoverY,hoverStrength);gl.bindBuffer(gl.ARRAY_BUFFER,particleBuffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(particles),gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(dotPosition);gl.vertexAttribPointer(dotPosition,3,gl.FLOAT,false,20,0);gl.enableVertexAttribArray(dotAppearance);gl.vertexAttribPointer(dotAppearance,2,gl.FLOAT,false,20,12);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);gl.depthMask(false);gl.drawArrays(gl.POINTS,0,particles.length/5);gl.depthMask(true);
+    gl.useProgram(dots);gl.uniformMatrix4fv(dotProjection,false,projection);gl.uniform1f(dotRatio,ratio);gl.uniform1f(dotTime,time);gl.uniform2f(dotRotation,yaw+hoverX*hoverStrength*.10,pitch-hoverY*hoverStrength*.10);gl.uniform3f(dotInfluence,hoverX,hoverY,hoverStrength);gl.bindBuffer(gl.ARRAY_BUFFER,particleBuffer);gl.enableVertexAttribArray(dotPosition);gl.vertexAttribPointer(dotPosition,3,gl.FLOAT,false,20,0);gl.enableVertexAttribArray(dotAppearance);gl.vertexAttribPointer(dotAppearance,2,gl.FLOAT,false,20,12);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);gl.depthMask(false);gl.drawArrays(gl.POINTS,0,particleCount);gl.depthMask(true);
     container.dataset.ready='true';if(!reduced.matches)frame=requestAnimationFrame(render);
    };
    const resume=()=>{stop();if(!disposed&&!contextLost&&!document.hidden&&inView)frame=requestAnimationFrame(render)};
