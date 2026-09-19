@@ -1,15 +1,20 @@
 import{useEffect,useRef}from'react';
 
-// A flowing 3D particle wave field, rendered without a 3D framework.
+// A planet-like field made from irregular particle spirals, rendered without a 3D framework.
 function shader(gl,type,source){const value=gl.createShader(type);gl.shaderSource(value,source);gl.compileShader(value);if(!gl.getShaderParameter(value,gl.COMPILE_STATUS)){gl.deleteShader(value);throw Error('Orb shader could not compile')}return value}
 function program(gl,vertex,fragment){const value=gl.createProgram(),vs=shader(gl,gl.VERTEX_SHADER,vertex),fs=shader(gl,gl.FRAGMENT_SHADER,fragment);gl.attachShader(value,vs);gl.attachShader(value,fs);gl.linkProgram(value);gl.deleteShader(vs);gl.deleteShader(fs);if(!gl.getProgramParameter(value,gl.LINK_STATUS)){gl.deleteProgram(value);throw Error('Orb program could not link')}return value}
 // Every visible mark belongs to the particle field; there is no solid mesh or orbit ring.
 const particleVertex=`attribute vec3 position;attribute vec2 appearance;uniform mat4 projection;uniform float pixelRatio;uniform float time;uniform vec2 rotation;uniform vec3 influence;varying float opacity;void main(){
-float travel=fract(position.x+time*position.z);float x=(travel-.5)*3.0;float lane=position.y;
-float wave=sin(x*2.7-time*1.25+lane*2.0)*.27+sin(x*4.1+time*.72+lane*6.0)*.12;
-vec3 p=vec3(x,(lane-.5)*1.15+wave,sin(x*2.0-time*.85+lane*5.0)*.48+(lane-.5)*.35);
-float edge=smoothstep(0.0,.09,travel)*(1.0-smoothstep(.91,1.0,travel));
-float center=mix(.42,1.0,smoothstep(.0,.45,length(p.xy)));
+float travel=fract(position.x+time*position.z);float lane=position.y;float tau=6.2831853;
+float hash=fract(sin(lane*913.73)*43758.5453);float angle=travel*tau+hash*tau;
+float latitude=asin(clamp(lane*2.0-1.0,-.98,.98));
+latitude+=sin(angle*(1.0+floor(hash*3.0))+hash*tau)*(.09+.17*hash);
+float longitude=angle+.28*sin(angle*(2.0+floor(hash*2.0))+lane*17.0)+time*.055;
+float radius=1.03+.055*sin(angle*3.0+lane*31.0)+.035*sin(angle*7.0-time*.7+hash*19.0);
+vec3 p=vec3(radius*cos(latitude)*cos(longitude),radius*sin(latitude),radius*cos(latitude)*sin(longitude));
+float tilt=(hash-.5)*1.45,ct=cos(tilt),st=sin(tilt);p=vec3(p.x,p.y*ct-p.z*st,p.y*st+p.z*ct);
+float edge=smoothstep(0.0,.075,travel)*(1.0-smoothstep(.925,1.0,travel));
+float center=mix(.48,1.0,smoothstep(.0,.42,length(p.xy)));
 float cx=cos(rotation.y),sx=sin(rotation.y),cy=cos(rotation.x),sy=sin(rotation.x);
 p=vec3(p.x,p.y*cx-p.z*sx,p.y*sx+p.z*cx);p=vec3(p.x*cy+p.z*sy,p.y,-p.x*sy+p.z*cy);
 vec2 delta=p.xy-influence.xy;float pull=exp(-dot(delta,delta)*3.0)*influence.z;
