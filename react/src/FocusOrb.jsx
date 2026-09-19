@@ -28,16 +28,16 @@ float packet=pow(packetWave,7.0);
 float secondary=pow(.5+.5*sin(angle*3.0-time*.54+hash*19.0),10.0);
 p*=1.0+.035*packet+.018*secondary;
 vec3 resting=p;
-float breathing=.018*sin(time*.52)+.012*sin(time*.31+1.7);
-float disturbance=.022*sin(time*.67+resting.y*5.0+resting.z*2.0)+.014*sin(time*.43+resting.x*7.0-resting.z*3.0);
+float breathing=.032*sin(time*.52)+.020*sin(time*.31+1.7);
+float disturbance=.040*sin(time*.67+resting.y*3.2+resting.z*1.4)+.026*sin(time*.43+resting.x*4.0-resting.z*2.1);
 p*=1.0+breathing+disturbance;
-p+=vec3(.018*sin(time*.58+resting.y*4.0),.015*sin(time*.49+resting.z*5.0),.018*sin(time*.55+resting.x*4.5));
-float autoPitch=.09*sin(time*.28),autoYaw=time*.052,cap=cos(autoPitch),sap=sin(autoPitch),cay=cos(autoYaw),say=sin(autoYaw);
+p+=vec3(.050*sin(time*.58+resting.y*2.35)+.014*sin(time*.31+resting.z*4.1),.043*sin(time*.49+resting.z*2.55)+.012*sin(time*.36+resting.x*3.8),.050*sin(time*.55+resting.x*2.4)+.014*sin(time*.29+resting.y*4.0));
+float autoPitch=.14*sin(time*.28)+.035*sin(time*.17+1.4),autoYaw=time*.068,cap=cos(autoPitch),sap=sin(autoPitch),cay=cos(autoYaw),say=sin(autoYaw);
 p=vec3(p.x,p.y*cap-p.z*sap,p.y*sap+p.z*cap);p=vec3(p.x*cay+p.z*say,p.y,-p.x*say+p.z*cay);
 float cx=cos(rotation.y),sx=sin(rotation.y),cy=cos(rotation.x),sy=sin(rotation.x);
 p=vec3(p.x,p.y*cx-p.z*sx,p.y*sx+p.z*cx);p=vec3(p.x*cy+p.z*sy,p.y,-p.x*sy+p.z*cy);
-vec2 delta=p.xy-influence.xy;float pull=exp(-dot(delta,delta)*3.0)*influence.z;
-p.xy+=delta*pull*0.10;p.z+=pull*0.12;
+vec2 delta=p.xy-influence.xy;float pull=exp(-dot(delta,delta)*2.7)*influence.z;
+p.xy+=delta*pull*0.13;p.z+=pull*0.16;
 vec4 projected=projection*vec4(p,1.0);gl_Position=projected;float size=mix(1.0,1.22,step(.5,style)*(1.0-step(1.5,style)));size*=1.0+.42*packet+.2*secondary;gl_PointSize=max(1.0,appearance.x*size*pixelRatio*4.6/projected.w);opacity=appearance.y*edge*center*(0.35+0.65*smoothstep(-1.0,1.0,p.z));opacity*=.48+1.05*packet+.48*secondary;opacity*=mix(1.0,.68,step(1.5,style)*(1.0-step(.76,appearance.y)));}`;
 const particleFragment=`precision mediump float;uniform vec3 colorA;uniform vec3 colorB;varying float opacity;void main(){float radius=length(gl_PointCoord-vec2(0.5))*2.0;if(radius>1.0)discard;float core=1.0-smoothstep(0.0,1.0,radius);gl_FragColor=vec4(mix(colorA,colorB,core),core*opacity);}`;
 function perspective(aspect){const f=1/Math.tan(Math.PI/8),near=.1,far=30,distance=4.6;return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)/(near-far),-1,0,0,(far+near)/(near-far)*-distance+2*far*near/(near-far),distance])}
@@ -103,8 +103,8 @@ export function FocusOrb({theme='cyan'}){
      }
      gl.bindBuffer(gl.ARRAY_BUFFER,particleBuffer);gl.bufferData(gl.ARRAY_BUFFER,particles,gl.STATIC_DRAW);
     }
-    const autoInfluenceX=Math.cos(time*.43)*.72,autoInfluenceY=Math.sin(time*.37)*.58,manualMix=Math.min(1,hoverStrength),influenceX=autoInfluenceX*(1-manualMix)+hoverX*manualMix,influenceY=autoInfluenceY*(1-manualMix)+hoverY*manualMix,influenceStrength=.9+.1*manualMix;
-    gl.useProgram(dots);gl.uniformMatrix4fv(dotProjection,false,projection);gl.uniform1f(dotRatio,ratio);gl.uniform1f(dotTime,time);gl.uniform1f(dotStyle,palette.style);gl.uniform3fv(dotColorA,palette.a);gl.uniform3fv(dotColorB,palette.b);gl.uniform2f(dotRotation,yaw+influenceX*influenceStrength*.10,pitch-influenceY*influenceStrength*.10);gl.uniform3f(dotInfluence,influenceX,influenceY,influenceStrength);gl.bindBuffer(gl.ARRAY_BUFFER,particleBuffer);gl.enableVertexAttribArray(dotPosition);gl.vertexAttribPointer(dotPosition,3,gl.FLOAT,false,20,0);gl.enableVertexAttribArray(dotAppearance);gl.vertexAttribPointer(dotAppearance,2,gl.FLOAT,false,20,12);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);gl.depthMask(false);gl.drawArrays(gl.POINTS,0,particleCount);gl.depthMask(true);
+    const autoInfluenceX=Math.cos(time*.43)*.78+Math.sin(time*.19+1.2)*.18,autoInfluenceY=Math.sin(time*.37)*.65+Math.cos(time*.23+.4)*.16,manualMix=Math.min(1,hoverStrength),influenceX=autoInfluenceX*(1-manualMix)+hoverX*manualMix,influenceY=autoInfluenceY*(1-manualMix)+hoverY*manualMix,influenceStrength=1+.4*manualMix;
+    gl.useProgram(dots);gl.uniformMatrix4fv(dotProjection,false,projection);gl.uniform1f(dotRatio,ratio);gl.uniform1f(dotTime,time);gl.uniform1f(dotStyle,palette.style);gl.uniform3fv(dotColorA,palette.a);gl.uniform3fv(dotColorB,palette.b);gl.uniform2f(dotRotation,yaw+influenceX*influenceStrength*.16,pitch-influenceY*influenceStrength*.16);gl.uniform3f(dotInfluence,influenceX,influenceY,influenceStrength);gl.bindBuffer(gl.ARRAY_BUFFER,particleBuffer);gl.enableVertexAttribArray(dotPosition);gl.vertexAttribPointer(dotPosition,3,gl.FLOAT,false,20,0);gl.enableVertexAttribArray(dotAppearance);gl.vertexAttribPointer(dotAppearance,2,gl.FLOAT,false,20,12);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);gl.depthMask(false);gl.drawArrays(gl.POINTS,0,particleCount);gl.depthMask(true);
     container.dataset.ready='true';if(!reduced.matches)frame=requestAnimationFrame(render);
    };
    const resume=()=>{stop();if(!disposed&&!contextLost&&!document.hidden&&inView)frame=requestAnimationFrame(render)};
