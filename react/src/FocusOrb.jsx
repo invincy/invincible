@@ -5,18 +5,22 @@ function shader(gl,type,source){const value=gl.createShader(type);gl.shaderSourc
 function program(gl,vertex,fragment){const value=gl.createProgram(),vs=shader(gl,gl.VERTEX_SHADER,vertex),fs=shader(gl,gl.FRAGMENT_SHADER,fragment);gl.attachShader(value,vs);gl.attachShader(value,fs);gl.linkProgram(value);gl.deleteShader(vs);gl.deleteShader(fs);if(!gl.getProgramParameter(value,gl.LINK_STATUS)){gl.deleteProgram(value);throw Error('Orb program could not link')}return value}
 // Every visible mark belongs to the particle field; there is no solid mesh or orbit ring.
 const particleVertex=`attribute vec3 position;attribute vec2 appearance;uniform mat4 projection;uniform float pixelRatio;uniform float time;uniform float style;uniform vec2 rotation;uniform vec3 influence;varying float opacity;void main(){
-float travel=fract(position.x+time*position.z);float rawLane=position.y;float ring=step(1.5,rawLane);float lane=fract(rawLane);float tau=6.2831853;
+float travel=fract(position.x+time*position.z);float rawLane=position.y;float cell=step(3.5,rawLane);float ring=step(1.5,rawLane)*(1.0-cell);float lane=fract(rawLane);float tau=6.2831853;
 float hash=fract(sin(lane*913.73)*43758.5453);float angle=travel*tau+hash*tau;
 float latitude=asin(clamp(lane*2.0-1.0,-.98,.98));
 float irregularLatitude=latitude+sin(angle*(1.0+floor(hash*3.0))+hash*tau)*(.09+.17*hash);
 float ringLatitude=latitude*.72+.055*sin(angle*2.0+hash*tau);
 latitude=mix(irregularLatitude,ringLatitude,ring);
+float cellLatitude=.56*sin(angle*(1.0+floor(hash*2.0))+hash*tau)+.14*sin(angle*3.0+hash*21.0);
+latitude=mix(latitude,cellLatitude,cell);
 float longitude=angle+mix(.28,.075,ring)*sin(angle*(2.0+floor(hash*2.0))+lane*17.0)+time*.025;
+longitude=mix(longitude,angle+.34*sin(angle*2.0+hash*tau)+time*.025,cell);
 float radius=1.03+.055*sin(angle*3.0+lane*31.0)+.035*sin(angle*7.0-time*.7+hash*19.0);
 radius=mix(radius,1.09+.026*sin(angle*3.0+hash*13.0),ring);
+radius=mix(radius,1.075+.035*sin(angle*4.0+hash*27.0-time*.3),cell);
 radius+=step(.5,style)*(1.0-step(1.5,style))*.045*sin(angle*11.0+time*1.8+hash*43.0);
 vec3 p=vec3(radius*cos(latitude)*cos(longitude),radius*sin(latitude),radius*cos(latitude)*sin(longitude));
-float tilt=(hash-.5)*mix(1.45,2.1,ring),ct=cos(tilt),st=sin(tilt);p=vec3(p.x,p.y*ct-p.z*st,p.y*st+p.z*ct);
+float tilt=(hash-.5)*mix(1.45,2.1,max(ring,cell)),ct=cos(tilt),st=sin(tilt);p=vec3(p.x,p.y*ct-p.z*st,p.y*st+p.z*ct);
 float edge=smoothstep(0.0,.075,travel)*(1.0-smoothstep(.925,1.0,travel));
 float center=mix(.48,1.0,smoothstep(.0,.42,length(p.xy)));
 float packetWave=.5+.5*sin(angle*5.0-time*.82+hash*tau);
@@ -66,8 +70,8 @@ export function FocusOrb({theme='cyan'}){
     if(!drag&&!reduced.matches){const decay=Math.exp(-dt*5);yaw+=velocityX*dt*30;pitch+=velocityY*dt*30;velocityX*=decay;velocityY*=decay}
     if(particleMobile!==mobile.matches){
      particleMobile=mobile.matches;
-     const streams=particleMobile?320:300,trailCount=particleMobile?120:140,wideStreams=36,wideTrailCount=320,flecks=3800;
-     particleCount=streams*trailCount+wideStreams*wideTrailCount+flecks;
+     const streams=particleMobile?320:300,trailCount=particleMobile?120:140,wideStreams=18,wideTrailCount=320,cellStreams=18,cellTrailCount=420,flecks=3800;
+     particleCount=streams*trailCount+wideStreams*wideTrailCount+cellStreams*cellTrailCount+flecks;
      const particles=new Float32Array(particleCount*5);let offset=0;
      for(let stream=0;stream<streams;stream++){
       const seed=(stream+.5)/streams,phase=(stream*.61803398875)%1,speed=.065+.02*(.5+.5*Math.sin(stream*1.71));
@@ -79,6 +83,12 @@ export function FocusOrb({theme='cyan'}){
       const seed=(stream+.5)/wideStreams+2,phase=(stream*.754877666)%1,speed=.062+.018*(.5+.5*Math.sin(stream*2.13));
       for(let trail=0;trail<wideTrailCount;trail++){
        particles.set([phase-trail*.0028,seed,speed,trail===0?5.2:3.4,(trail===0?.95:.58)*(1-trail/wideTrailCount*.48)],offset);offset+=5;
+      }
+     }
+     for(let stream=0;stream<cellStreams;stream++){
+      const seed=(stream+.5)/cellStreams+4,phase=(stream*.569840291)%1,speed=.064+.016*(.5+.5*Math.sin(stream*1.93));
+      for(let trail=0;trail<cellTrailCount;trail++){
+       particles.set([phase-trail*.00215,seed,speed,trail===0?8.5:6.2,(trail===0?1:.76)*(1-trail/cellTrailCount*.38)],offset);offset+=5;
       }
      }
      for(let dot=0;dot<flecks;dot++){
