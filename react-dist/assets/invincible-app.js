@@ -3134,7 +3134,7 @@ float breathing=.018*sin(time*.52)+.012*sin(time*.31+1.7);
 float disturbance=.022*sin(time*.67+resting.y*5.0+resting.z*2.0)+.014*sin(time*.43+resting.x*7.0-resting.z*3.0);
 p*=1.0+breathing+disturbance;
 p+=vec3(.018*sin(time*.58+resting.y*4.0),.015*sin(time*.49+resting.z*5.0),.018*sin(time*.55+resting.x*4.5));
-float autoPitch=.09*sin(time*.28),autoYaw=time*.042,cap=cos(autoPitch),sap=sin(autoPitch),cay=cos(autoYaw),say=sin(autoYaw);
+float autoPitch=.09*sin(time*.28),autoYaw=time*.052,cap=cos(autoPitch),sap=sin(autoPitch),cay=cos(autoYaw),say=sin(autoYaw);
 p=vec3(p.x,p.y*cap-p.z*sap,p.y*sap+p.z*cap);p=vec3(p.x*cay+p.z*say,p.y,-p.x*say+p.z*cay);
 float cx=cos(rotation.y),sx=sin(rotation.y),cy=cos(rotation.x),sy=sin(rotation.x);
 p=vec3(p.x,p.y*cx-p.z*sx,p.y*sx+p.z*cx);p=vec3(p.x*cy+p.z*sy,p.y,-p.x*sy+p.z*cy);
