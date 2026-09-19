@@ -499,15 +499,15 @@
     body.home-page .orb-progress,body.home-page .orb-progress-glow{animation:none}
   /* Borderless desktop Focus card and relocated clock. */
     @media(min-width:1025px){
-      body.home-page .focus-control-cluster{left:27%;top:12%;width:clamp(510px,36vw,620px);display:block;padding:1rem clamp(2rem,3vw,3.2rem);border:0;border-radius:0;outline:0;background:linear-gradient(90deg,transparent 0%,rgba(7,31,36,.46) 13%,rgba(7,34,39,.78) 31%,rgba(5,28,34,.8) 69%,rgba(5,24,30,.42) 87%,transparent 100%);box-shadow:none;backdrop-filter:blur(15px) saturate(112%);-webkit-backdrop-filter:blur(15px) saturate(112%)}
+      body.home-page .focus-control-cluster{left:27%;top:12%;box-sizing:border-box;width:clamp(570px,39vw,680px);display:block;padding:1.05rem clamp(2.2rem,3vw,3.5rem);border:0;border-radius:0;outline:0;background:linear-gradient(90deg,transparent 0%,rgba(7,31,36,.5) 10%,rgba(7,34,39,.8) 27%,rgba(5,28,34,.84) 73%,rgba(5,24,30,.48) 90%,transparent 100%);box-shadow:none;backdrop-filter:blur(15px) saturate(112%);-webkit-backdrop-filter:blur(15px) saturate(112%)}
       body.home-page .focus-control-cluster:after{display:none}
-      body.home-page .focus-control-cluster .focus-session{display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:auto;align-items:center;gap:clamp(1.15rem,2vw,2rem);padding:0;border:0;background:transparent}
-      body.home-page .focus-card-copy{min-width:0;display:flex;flex-direction:column;gap:.2rem}
+      body.home-page .focus-control-cluster .focus-session{display:grid;grid-template-columns:minmax(210px,1fr) 104px 126px;grid-template-rows:58px;align-items:center;gap:clamp(.8rem,1.2vw,1.35rem);padding:0;border:0;background:transparent}
+      body.home-page .focus-card-copy{grid-column:1;grid-row:1;min-width:0;display:flex;flex-direction:column;gap:.2rem}
       body.home-page .focus-control-cluster .focus-label{position:static;color:#f2d28c;font:900 .78rem 'Exo 2',sans-serif;letter-spacing:.17em;text-transform:uppercase;text-shadow:0 0 12px rgba(255,210,112,.22)}
       body.home-page .focus-card-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff2c7;font:900 clamp(1.15rem,1.28vw,1.45rem)/1.15 'Exo 2',sans-serif;text-shadow:0 0 16px rgba(255,211,115,.2)}
-      body.home-page .focus-control-cluster .focus-timer{position:static;color:#c9fbff;font:800 clamp(1.45rem,1.65vw,1.9rem)/1 Orbitron,sans-serif;letter-spacing:.025em;text-align:center;text-shadow:0 0 15px rgba(72,226,239,.22)}
-      body.home-page .focus-icon-controls{display:flex;align-items:center;gap:1rem}
-      body.home-page .focus-icon{display:grid;place-items:center;width:32px;height:36px;padding:0;border:0;outline:0;border-radius:0;background:transparent;color:#b9e8eb;font-size:1.12rem;line-height:1;cursor:pointer;transition:color .18s ease,text-shadow .18s ease,transform .18s ease,opacity .18s ease}
+      body.home-page .focus-control-cluster .focus-timer{position:static;grid-column:2;grid-row:1;color:#c9fbff;font:800 clamp(1.45rem,1.65vw,1.9rem)/1 Orbitron,sans-serif;letter-spacing:.025em;text-align:center;text-shadow:0 0 15px rgba(72,226,239,.22)}
+      body.home-page .focus-icon-controls{grid-column:3;grid-row:1;display:flex;align-items:center;justify-content:space-between;gap:.65rem}
+      body.home-page .focus-icon{display:grid;place-items:center;width:34px;height:40px;padding:0;border:0;outline:0;border-radius:0;background:transparent;color:#b9e8eb;font-size:1.12rem;line-height:1;cursor:pointer;transition:color .18s ease,text-shadow .18s ease,transform .18s ease,opacity .18s ease}
       body.home-page .focus-icon:hover:not(:disabled),body.home-page .focus-icon:focus-visible{color:#fff0bd;text-shadow:0 0 14px rgba(255,216,126,.72);transform:translateY(-2px) scale(1.08)}
       body.home-page .focus-icon:focus-visible{outline:0}
       body.home-page .focus-icon:disabled{opacity:.28;cursor:default}
@@ -517,12 +517,12 @@
       body.home-page .header-clock .date{margin-top:.32rem;font-size:.78rem;letter-spacing:.05em;color:#a8cfd2;text-shadow:0 0 9px rgba(99,230,239,.22)}
     }
   </style>
-  <link rel="stylesheet" href="react-dist/assets/invincible-app.css?v=23">
+  <link rel="stylesheet" href="react-dist/assets/invincible-app.css?v=24">
   <link rel="manifest" href="/invincible/manifest.webmanifest"><meta name="theme-color" content="#071315">
 </head>
 <body class="home-page">
 <div id="root"></div>
-  <script type="module" src="react-dist/assets/invincible-app.js?v=23"></script>
+  <script type="module" src="react-dist/assets/invincible-app.js?v=24"></script>
 <script src="pwa-register.js?v=1"></script>
 </body>
 </html>
