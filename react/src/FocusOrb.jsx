@@ -19,11 +19,15 @@ vec3 p=vec3(radius*cos(latitude)*cos(longitude),radius*sin(latitude),radius*cos(
 float tilt=(hash-.5)*mix(1.45,2.1,ring),ct=cos(tilt),st=sin(tilt);p=vec3(p.x,p.y*ct-p.z*st,p.y*st+p.z*ct);
 float edge=smoothstep(0.0,.075,travel)*(1.0-smoothstep(.925,1.0,travel));
 float center=mix(.48,1.0,smoothstep(.0,.42,length(p.xy)));
+float packetWave=.5+.5*sin(angle*5.0-time*.82+hash*tau);
+float packet=pow(packetWave,7.0);
+float secondary=pow(.5+.5*sin(angle*3.0-time*.54+hash*19.0),10.0);
+p*=1.0+.035*packet+.018*secondary;
 float cx=cos(rotation.y),sx=sin(rotation.y),cy=cos(rotation.x),sy=sin(rotation.x);
 p=vec3(p.x,p.y*cx-p.z*sx,p.y*sx+p.z*cx);p=vec3(p.x*cy+p.z*sy,p.y,-p.x*sy+p.z*cy);
 vec2 delta=p.xy-influence.xy;float pull=exp(-dot(delta,delta)*3.0)*influence.z;
 p.xy+=delta*pull*0.10;p.z+=pull*0.12;
-vec4 projected=projection*vec4(p,1.0);gl_Position=projected;float size=mix(1.0,1.22,step(.5,style)*(1.0-step(1.5,style)));gl_PointSize=max(1.0,appearance.x*size*pixelRatio*4.6/projected.w);opacity=appearance.y*edge*center*(0.35+0.65*smoothstep(-1.0,1.0,p.z));opacity*=mix(1.0,.68,step(1.5,style)*(1.0-step(.76,appearance.y)));}`;
+vec4 projected=projection*vec4(p,1.0);gl_Position=projected;float size=mix(1.0,1.22,step(.5,style)*(1.0-step(1.5,style)));size*=1.0+.42*packet+.2*secondary;gl_PointSize=max(1.0,appearance.x*size*pixelRatio*4.6/projected.w);opacity=appearance.y*edge*center*(0.35+0.65*smoothstep(-1.0,1.0,p.z));opacity*=.48+1.05*packet+.48*secondary;opacity*=mix(1.0,.68,step(1.5,style)*(1.0-step(.76,appearance.y)));}`;
 const particleFragment=`precision mediump float;uniform vec3 colorA;uniform vec3 colorB;varying float opacity;void main(){float radius=length(gl_PointCoord-vec2(0.5))*2.0;if(radius>1.0)discard;float core=1.0-smoothstep(0.0,1.0,radius);gl_FragColor=vec4(mix(colorA,colorB,core),core*opacity);}`;
 function perspective(aspect){const f=1/Math.tan(Math.PI/8),near=.1,far=30,distance=4.6;return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)/(near-far),-1,0,0,(far+near)/(near-far)*-distance+2*far*near/(near-far),distance])}
 const palettes={cyan:{style:0,a:[.08,.55,.78],b:[.55,1,1]},emerald:{style:1,a:[.03,.32,.12],b:[.46,1,.62]},gold:{style:2,a:[.42,.16,.025],b:[1,.85,.38]}};
@@ -66,19 +70,19 @@ export function FocusOrb({theme='cyan'}){
      particleCount=streams*trailCount+wideStreams*wideTrailCount+flecks;
      const particles=new Float32Array(particleCount*5);let offset=0;
      for(let stream=0;stream<streams;stream++){
-      const seed=(stream+.5)/streams,phase=(stream*.61803398875)%1,speed=.055+.035*(.5+.5*Math.sin(stream*1.71));
+      const seed=(stream+.5)/streams,phase=(stream*.61803398875)%1,speed=.065+.02*(.5+.5*Math.sin(stream*1.71));
       for(let trail=0;trail<trailCount;trail++){
        particles.set([phase-trail*.0025,seed,speed,trail===0?5.5:3.6,(trail===0?1:.68)*(1-trail/trailCount)],offset);offset+=5;
       }
      }
      for(let stream=0;stream<wideStreams;stream++){
-      const seed=(stream+.5)/wideStreams+2,phase=(stream*.754877666)%1,speed=.04+.028*(.5+.5*Math.sin(stream*2.13));
+      const seed=(stream+.5)/wideStreams+2,phase=(stream*.754877666)%1,speed=.062+.018*(.5+.5*Math.sin(stream*2.13));
       for(let trail=0;trail<wideTrailCount;trail++){
        particles.set([phase-trail*.0028,seed,speed,trail===0?5.2:3.4,(trail===0?.95:.58)*(1-trail/wideTrailCount*.48)],offset);offset+=5;
       }
      }
      for(let dot=0;dot<flecks;dot++){
-      particles.set([(dot*.61803398875)%1,((dot+.5)*.754877666)%1,.045+.045*((dot*.41421356)%1),dot%11===0?4.0:2.8,.45+.30*Math.sin(dot*7.13)**2],offset);offset+=5;
+      particles.set([(dot*.61803398875)%1,((dot+.5)*.754877666)%1,.064+.018*((dot*.41421356)%1),dot%11===0?4.0:2.8,.45+.30*Math.sin(dot*7.13)**2],offset);offset+=5;
      }
      gl.bindBuffer(gl.ARRAY_BUFFER,particleBuffer);gl.bufferData(gl.ARRAY_BUFFER,particles,gl.STATIC_DRAW);
     }
