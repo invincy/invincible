@@ -56,7 +56,7 @@ export function FocusOrb({theme='cyan'}){
    let particleCount=0,particleMobile=null;
    let projection,ratio=1,drag=null,yaw=0,pitch=0,velocityX=0,velocityY=0,hoverX=0,hoverY=0,hoverStrength=0,targetX=0,targetY=0,targetStrength=0;
    const pointerLocation=event=>{const rect=surface.getBoundingClientRect();targetX=((event.clientX-rect.left)/rect.width-.5)*2.5;targetY=(.5-(event.clientY-rect.top)/rect.height)*2.5;targetStrength=1};
-   const pointerDown=event=>{if(!event.isPrimary||event.button!==0||drag||event.target.closest('button'))return;drag={id:event.pointerId,x:event.clientX,y:event.clientY};velocityX=velocityY=0;surface.setPointerCapture(event.pointerId);surface.dataset.dragging='true';pointerLocation(event);resume()};
+   const pointerDown=event=>{if(!event.isPrimary||event.button!==0||drag||event.target.closest('button,a'))return;drag={id:event.pointerId,x:event.clientX,y:event.clientY};velocityX=velocityY=0;surface.setPointerCapture(event.pointerId);surface.dataset.dragging='true';pointerLocation(event);resume()};
    const pointerMove=event=>{
     if(drag&&event.pointerId!==drag.id)return;
     if(event.pointerType==='mouse'||drag)pointerLocation(event);
