@@ -497,13 +497,32 @@
     .orb-theme-button.theme-emerald{border-color:#73ff9f80;color:#8dffac}.orb-theme-button.theme-gold{border-color:#ffd47180;color:#ffe097}
     .orb-theme-emerald .orb-3d-fallback{filter:hue-rotate(75deg)}.orb-theme-gold .orb-3d-fallback{filter:hue-rotate(175deg) saturate(1.4)}
     body.home-page .orb-progress,body.home-page .orb-progress-glow{animation:none}
+  /* Borderless desktop Focus card and relocated clock. */
+    @media(min-width:1025px){
+      body.home-page .focus-control-cluster{left:27%;top:12%;width:clamp(510px,36vw,620px);display:block;padding:1rem clamp(2rem,3vw,3.2rem);border:0;border-radius:0;outline:0;background:linear-gradient(90deg,transparent 0%,rgba(7,31,36,.46) 13%,rgba(7,34,39,.78) 31%,rgba(5,28,34,.8) 69%,rgba(5,24,30,.42) 87%,transparent 100%);box-shadow:none;backdrop-filter:blur(15px) saturate(112%);-webkit-backdrop-filter:blur(15px) saturate(112%)}
+      body.home-page .focus-control-cluster:after{display:none}
+      body.home-page .focus-control-cluster .focus-session{display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:auto;align-items:center;gap:clamp(1.15rem,2vw,2rem);padding:0;border:0;background:transparent}
+      body.home-page .focus-card-copy{min-width:0;display:flex;flex-direction:column;gap:.2rem}
+      body.home-page .focus-control-cluster .focus-label{position:static;color:#f2d28c;font:900 .78rem 'Exo 2',sans-serif;letter-spacing:.17em;text-transform:uppercase;text-shadow:0 0 12px rgba(255,210,112,.22)}
+      body.home-page .focus-card-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff2c7;font:900 clamp(1.15rem,1.28vw,1.45rem)/1.15 'Exo 2',sans-serif;text-shadow:0 0 16px rgba(255,211,115,.2)}
+      body.home-page .focus-control-cluster .focus-timer{position:static;color:#c9fbff;font:800 clamp(1.45rem,1.65vw,1.9rem)/1 Orbitron,sans-serif;letter-spacing:.025em;text-align:center;text-shadow:0 0 15px rgba(72,226,239,.22)}
+      body.home-page .focus-icon-controls{display:flex;align-items:center;gap:1rem}
+      body.home-page .focus-icon{display:grid;place-items:center;width:32px;height:36px;padding:0;border:0;outline:0;border-radius:0;background:transparent;color:#b9e8eb;font-size:1.12rem;line-height:1;cursor:pointer;transition:color .18s ease,text-shadow .18s ease,transform .18s ease,opacity .18s ease}
+      body.home-page .focus-icon:hover:not(:disabled),body.home-page .focus-icon:focus-visible{color:#fff0bd;text-shadow:0 0 14px rgba(255,216,126,.72);transform:translateY(-2px) scale(1.08)}
+      body.home-page .focus-icon:focus-visible{outline:0}
+      body.home-page .focus-icon:disabled{opacity:.28;cursor:default}
+      body.home-page .focus-finish:hover:not(:disabled),body.home-page .focus-finish:focus-visible{color:#8ff0bd;text-shadow:0 0 14px rgba(100,235,171,.68)}
+      body.home-page .header-clock{position:absolute;left:44%;top:.8rem;z-index:8;transform:translateX(-50%);align-items:center;min-width:250px;padding:.72rem 2rem .68rem;border:0;border-radius:0;outline:0;background:linear-gradient(90deg,transparent,rgba(9,44,49,.4) 22%,rgba(9,49,54,.58) 50%,rgba(9,44,49,.4) 78%,transparent);box-shadow:none;backdrop-filter:blur(13px) saturate(118%);-webkit-backdrop-filter:blur(13px) saturate(118%);pointer-events:none}
+      body.home-page .header-clock .time{font-size:clamp(2.55rem,3.25vw,3.65rem);font-weight:700;letter-spacing:.035em;color:#7ff6ff;text-shadow:0 0 10px rgba(0,238,255,.58),0 0 25px rgba(0,216,235,.2)}
+      body.home-page .header-clock .date{margin-top:.32rem;font-size:.78rem;letter-spacing:.05em;color:#a8cfd2;text-shadow:0 0 9px rgba(99,230,239,.22)}
+    }
   </style>
-  <link rel="stylesheet" href="react-dist/assets/invincible-app.css?v=22">
+  <link rel="stylesheet" href="react-dist/assets/invincible-app.css?v=23">
   <link rel="manifest" href="/invincible/manifest.webmanifest"><meta name="theme-color" content="#071315">
 </head>
 <body class="home-page">
 <div id="root"></div>
-  <script type="module" src="react-dist/assets/invincible-app.js?v=22"></script>
+  <script type="module" src="react-dist/assets/invincible-app.js?v=23"></script>
 <script src="pwa-register.js?v=1"></script>
 </body>
 </html>
