@@ -465,7 +465,7 @@
     .home-page .modal-overlay{z-index:1300}
     @media(max-width:1024px){body.home-page #dashboard{height:auto;min-height:calc(100dvh - 138px)}body.home-page .toast{bottom:calc(102px + env(safe-area-inset-bottom))}}
   /* Interactive particle scene; HTML task labels remain crisp. */
-    body.home-page .focus-orb{background:transparent;box-shadow:none;isolation:isolate;touch-action:none;cursor:grab}
+    body.home-page .focus-orb{background:transparent;box-shadow:none;isolation:isolate;touch-action:none;cursor:grab;user-select:none}
     body.home-page .focus-orb[data-dragging=true]{cursor:grabbing}
     body.home-page .focus-orb:before,body.home-page .focus-orb:after{display:none}
     .focus-orb-3d{position:absolute;inset:-40%;z-index:0;pointer-events:none}
@@ -474,14 +474,17 @@
     .focus-orb-3d[data-ready=true] .orb-3d-fallback{display:none}
     body.home-page .orb-svg{z-index:1;pointer-events:none}
     body.home-page .orb-copy{z-index:2;pointer-events:none}
+    .orb-theme-button{position:absolute;right:5%;bottom:4%;z-index:4;display:flex;align-items:center;gap:.35rem;padding:.34rem .55rem;border:1px solid #5debf080;border-radius:999px;background:#06181dcc;color:#8cf8ff;font:800 .56rem 'Exo 2',sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;backdrop-filter:blur(8px)}
+    .orb-theme-button.theme-emerald{border-color:#73ff9f80;color:#8dffac}.orb-theme-button.theme-gold{border-color:#ffd47180;color:#ffe097}
+    .orb-theme-emerald .orb-3d-fallback{filter:hue-rotate(75deg)}.orb-theme-gold .orb-3d-fallback{filter:hue-rotate(175deg) saturate(1.4)}
     body.home-page .orb-progress,body.home-page .orb-progress-glow{animation:none}
   </style>
-  <link rel="stylesheet" href="react-dist/assets/invincible-app.css?v=10">
+  <link rel="stylesheet" href="react-dist/assets/invincible-app.css?v=11">
   <link rel="manifest" href="/invincible/manifest.webmanifest"><meta name="theme-color" content="#071315">
 </head>
 <body class="home-page">
 <div id="root"></div>
-  <script type="module" src="react-dist/assets/invincible-app.js?v=10"></script>
+  <script type="module" src="react-dist/assets/invincible-app.js?v=11"></script>
 <script src="pwa-register.js?v=1"></script>
 </body>
 </html>
