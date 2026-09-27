@@ -64,3 +64,51 @@ body.finance-page:before{content:"";position:fixed;inset:0;z-index:-1;background
 @media(max-width:650px){.finance-hero{position:relative;top:auto;grid-template-columns:1fr;padding:.8rem}.finance-hero-copy p{font-size:.7rem}.finance-month-nav{width:100%;box-sizing:border-box}.finance-month-nav strong{flex:1}.finance-hero-actions{display:grid;grid-template-columns:1fr 1fr}.finance-hero-actions .finance-secondary{display:none}.finance-hero-actions .finance-cyan{grid-column:auto}.finance-main{padding:.75rem .55rem calc(2.4rem + 76px + env(safe-area-inset-bottom))}.finance-summary-grid{gap:.5rem}.finance-summary{min-height:108px;padding:.75rem}.finance-summary>span{font-size:.58rem}.finance-summary strong{font-size:1rem}.finance-summary small{font-size:.55rem}.finance-panel{padding:.8rem}.finance-panel-heading{align-items:center}.finance-panel-heading p{display:none}.finance-presets{width:100%;margin-top:.25rem}.finance-wealth-panel .finance-panel-heading{display:block}.finance-presets button{flex:1}.finance-series-picker{gap:.3rem}.finance-series-picker button{min-height:29px;padding:0 .5rem;font-size:.58rem}.finance-wealth-chart{margin-right:-.8rem;width:calc(100% + .8rem)}.finance-account-grid{grid-template-columns:1fr 1fr}.finance-account{padding:.7rem}.finance-account h3{font-size:.72rem}.finance-account>strong{font-size:.92rem}.finance-modal-backdrop{align-items:end;padding:0}.finance-modal{border-radius:1.25rem 1.25rem 0 0;padding-bottom:env(safe-area-inset-bottom)}}
 @media(max-width:390px){.finance-summary-grid,.finance-account-grid{grid-template-columns:1fr}.finance-hero-actions{grid-template-columns:1fr}.finance-panel-heading h2{font-size:.95rem}}
 @media(prefers-reduced-motion:reduce){.finance-art-glow,.finance-art-coin{animation:none}}
+
+/* Finance readability pass: compact the header and size type for large desktop displays. */
+.finance-react{font-size:17px}
+.finance-main{width:min(1680px,100%)}
+.finance-eyebrow{font-size:.68rem}
+.finance-hero-copy h1{font-size:clamp(1.65rem,2vw,2.2rem)}
+.finance-hero-copy p{font-size:.86rem}
+.finance-month-nav strong{min-width:170px;font-size:.92rem}
+.finance-primary,.finance-secondary,.finance-text-button{font-size:.82rem}
+.finance-sync{font-size:.77rem}
+.finance-summary>span{font-size:.78rem}
+.finance-summary strong{font-size:clamp(1.5rem,2.15vw,2.05rem)}
+.finance-summary small{font-size:.74rem}
+.finance-panel-heading h2{font-size:1.2rem}
+.finance-panel-heading p{font-size:.8rem}
+.finance-presets button{font-size:.76rem}
+.finance-series-picker button{font-size:.73rem}
+.finance-account-type{font-size:.66rem}
+.finance-account h3{font-size:.92rem}
+.finance-account>strong{font-size:1.28rem}
+.finance-transactions strong{font-size:.88rem}
+.finance-transactions small{font-size:.72rem}
+.finance-checklist label{font-size:.86rem}
+.finance-progress{font-size:.75rem}
+.finance-empty{font-size:.82rem}
+.finance-form label{font-size:.8rem}
+body.finance-page .react-nav-link,
+body.finance-page .react-desktop-nav button{font-size:15px}
+
+@media(min-width:1101px){
+  .finance-hero{height:88px;min-height:88px;box-sizing:border-box;padding:.55rem clamp(1rem,3vw,2.7rem);align-content:center}
+  .finance-hero-copy p{max-width:610px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
+
+@media(max-width:650px){
+  .finance-react{font-size:16px}
+  .finance-hero{padding:.72rem}
+  .finance-hero-copy h1{font-size:1.45rem}
+  .finance-hero-copy p{display:block;font-size:.78rem}
+  .finance-summary>span{font-size:.68rem}
+  .finance-summary strong{font-size:1.22rem}
+  .finance-summary small{font-size:.66rem}
+  .finance-panel-heading h2{font-size:1.05rem}
+  .finance-series-picker button{font-size:.66rem}
+  .finance-account h3{font-size:.82rem}
+  .finance-account>strong{font-size:1.05rem}
+  .finance-checklist label{font-size:.82rem}
+}
