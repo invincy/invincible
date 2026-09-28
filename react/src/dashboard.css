@@ -257,8 +257,8 @@ body.home-page #dashboard.finance-window-open #mission-layout{
 }
 
 @media(max-width:620px){
-  .finance-reminder-backdrop{align-items:end;padding:0}
-  .finance-reminder-dialog{width:100%;padding:1.6rem 1.1rem calc(1rem + env(safe-area-inset-bottom));border-radius:1.35rem 1.35rem 0 0}
+  .finance-reminder-backdrop{inset:62px 0 calc(var(--app-bottom) + env(safe-area-inset-bottom));place-items:center;padding:.85rem}
+  .finance-reminder-dialog{width:min(420px,100%);max-height:calc(100% - 1rem);padding:1.35rem 1.1rem 1rem;overflow-y:auto;border-radius:1.35rem}
   .finance-reminder-orbit{width:66px;height:66px;font-size:1.5rem}
   .finance-reminder-dialog h2{font-size:1.65rem}
   .finance-reminder-dialog p{font-size:.8rem}
