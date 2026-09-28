@@ -6,7 +6,7 @@ const pages=[
  {id:'journal',label:'Journal',href:base+'journal/',icon:'▤'},
  {id:'finance',label:'Finance',href:base+'journal/finance.html',icon:'⌁'},
  {id:'garage',label:'Garage',href:base+'garage/',icon:'◇'},
- {id:'creator',label:'Creator Studio',href:base+'creator/',icon:'▷'},
+ {id:'creator',label:'Creator Studio',short:'Creator',href:base+'creator/',icon:'▷'},
  {id:'workday',label:'Workday',href:base+'workday/',icon:'▣'},
  {id:'lic',label:'LIC',href:base+'lic/',icon:'♢'},
  {id:'reminders',label:'Reminders',href:base+'reminders/',icon:'♧'},
