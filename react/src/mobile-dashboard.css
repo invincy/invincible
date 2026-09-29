@@ -1,12 +1,25 @@
 /* The hand-drawn mobile dashboard translated into the React UI. */
 @media(max-width:768px){
-  html,body.home-page{height:100%;overflow:hidden}
+  html{height:100dvh;overflow:hidden}
+  body.home-page{
+    height:100dvh;
+    min-height:0;
+    box-sizing:border-box;
+    overflow:hidden;
+  }
+  body.home-page .react-app-shell,
+  body.home-page .react-app-shell>main{
+    width:100%;
+    height:100%;
+    min-height:0;
+    overflow:hidden;
+  }
 
   body.home-page #dashboard{
     display:flex;
     flex-direction:column;
     width:100%;
-    height:calc(100dvh - 62px - var(--app-bottom) - env(safe-area-inset-bottom))!important;
+    height:100%!important;
     min-height:0!important;
     box-sizing:border-box;
     padding:.5rem;
@@ -89,13 +102,13 @@
 
   body.home-page #focus-panel{
     order:0;
-    flex:0 1 clamp(138px,28%,178px);
+    flex:0 0 clamp(122px,27%,148px);
     display:grid!important;
-    grid-template-columns:minmax(0,1.08fr) minmax(126px,.92fr);
+    grid-template-columns:minmax(108px,.9fr) minmax(148px,1.1fr);
     align-items:center;
-    gap:.35rem;
-    min-height:126px;
-    padding:.15rem .2rem;
+    gap:.55rem;
+    min-height:118px;
+    padding:.38rem .55rem;
     overflow:hidden;
     border:1px solid rgba(255,218,122,.13);
     border-radius:.9rem;
@@ -110,10 +123,15 @@
     min-height:0;
     display:grid;
     place-items:center;
+    overflow:hidden;
+    border-radius:.75rem;
   }
   body.home-page .focus-orb-stage:before{inset:11%;filter:blur(8px)}
-  body.home-page .focus-orb{width:clamp(116px,36vw,164px)}
-  body.home-page .focus-orb-3d{inset:-34%}
+  body.home-page .focus-orb{
+    width:min(30vw,112px);
+    max-width:100%;
+  }
+  body.home-page .focus-orb-3d{inset:-9%}
   body.home-page .hud-readout{display:none!important}
   body.home-page .orb-theme-button{display:none}
   body.home-page .orb-copy{width:70%}
@@ -122,10 +140,14 @@
 
   body.home-page .focus-control-cluster{
     position:static;
-    align-self:center;
+    align-self:stretch;
+    display:grid;
+    place-items:center;
     width:100%;
+    min-width:0;
+    box-sizing:border-box;
     margin:0;
-    padding:.72rem .48rem;
+    padding:.45rem .4rem;
     border:0;
     border-radius:.7rem;
     background:linear-gradient(90deg,transparent,rgba(232,166,42,.18) 20%,rgba(244,184,60,.27) 50%,rgba(232,166,42,.18) 80%,transparent);
@@ -135,18 +157,20 @@
     display:grid!important;
     grid-template-columns:1fr;
     justify-items:center;
-    gap:.62rem;
-    padding:.22rem 0;
+    align-content:center;
+    gap:.48rem;
+    width:100%;
+    padding:0;
     border:0;
     background:transparent;
   }
-  body.home-page .focus-timer{font-size:clamp(1.45rem,7.8vw,2rem);text-align:center}
-  body.home-page .focus-icon-controls{display:flex;align-items:center;justify-content:center;gap:.62rem}
+  body.home-page .focus-timer{font-size:clamp(1.35rem,7vw,1.78rem);line-height:1;text-align:center}
+  body.home-page .focus-icon-controls{display:flex;align-items:center;justify-content:center;gap:.5rem}
   body.home-page .focus-icon{
     display:grid;
     place-items:center;
-    width:36px;
-    height:36px;
+    width:34px;
+    height:34px;
     padding:0;
     border:1px solid rgba(255,224,138,.31);
     border-radius:50%;
@@ -264,18 +288,19 @@
   body.home-page #top-bar{gap:.35rem}
   body.home-page .streak-buttons{gap:.22rem}
   body.home-page .streak-button{min-width:47px;padding-inline:.42rem}
-  body.home-page #focus-panel{grid-template-columns:minmax(0,1fr) 124px}
-  body.home-page .focus-orb{width:clamp(110px,35vw,145px)}
+  body.home-page #focus-panel{grid-template-columns:minmax(102px,.88fr) minmax(136px,1.12fr)}
+  body.home-page .focus-orb{width:min(29vw,106px)}
 }
 
 @media(max-height:700px) and (max-width:768px){
   body.home-page #dashboard{gap:.42rem;padding:.4rem}
   body.home-page #top-bar{min-height:40px}
-  body.home-page #focus-panel{flex-basis:124px;min-height:112px}
-  body.home-page .focus-orb{width:112px}
-  body.home-page .focus-control-cluster{padding:.45rem .3rem}
-  body.home-page .focus-control-cluster .focus-session{gap:.38rem}
-  body.home-page .focus-icon{width:32px;height:32px}
+  body.home-page #focus-panel{flex-basis:108px;min-height:102px;padding:.25rem .45rem}
+  body.home-page .focus-orb{width:min(27vw,92px)}
+  body.home-page .focus-control-cluster{padding:.3rem .25rem}
+  body.home-page .focus-control-cluster .focus-session{gap:.32rem}
+  body.home-page .focus-timer{font-size:1.22rem}
+  body.home-page .focus-icon{width:29px;height:29px;font-size:.72rem}
   body.home-page .monthly-finance-notice{min-height:52px;padding:.35rem .5rem}
 }
 
