@@ -102,12 +102,16 @@
 
   body.home-page #focus-panel{
     order:0;
-    flex:0 0 clamp(122px,27%,148px);
+    flex:0 0 132px;
     display:grid!important;
     grid-template-columns:minmax(108px,.9fr) minmax(148px,1.1fr);
     align-items:center;
     gap:.55rem;
-    min-height:118px;
+    width:100%;
+    height:132px!important;
+    min-height:0!important;
+    max-height:132px!important;
+    box-sizing:border-box;
     padding:.38rem .55rem;
     overflow:hidden;
     border:1px solid rgba(255,218,122,.13);
@@ -118,7 +122,7 @@
 
   body.home-page .focus-orb-stage{
     width:100%;
-    height:100%;
+    height:100%!important;
     min-width:0;
     min-height:0;
     display:grid;
@@ -128,10 +132,10 @@
   }
   body.home-page .focus-orb-stage:before{inset:11%;filter:blur(8px)}
   body.home-page .focus-orb{
-    width:min(30vw,112px);
+    width:min(36vw,136px);
     max-width:100%;
   }
-  body.home-page .focus-orb-3d{inset:-9%}
+  body.home-page .focus-orb-3d{inset:-25%}
   body.home-page .hud-readout{display:none!important}
   body.home-page .orb-theme-button{display:none}
   body.home-page .orb-copy{width:70%}
@@ -289,14 +293,15 @@
   body.home-page .streak-buttons{gap:.22rem}
   body.home-page .streak-button{min-width:47px;padding-inline:.42rem}
   body.home-page #focus-panel{grid-template-columns:minmax(102px,.88fr) minmax(136px,1.12fr)}
-  body.home-page .focus-orb{width:min(29vw,106px)}
+  body.home-page .focus-orb{width:min(35vw,130px)}
 }
 
 @media(max-height:700px) and (max-width:768px){
   body.home-page #dashboard{gap:.42rem;padding:.4rem}
   body.home-page #top-bar{min-height:40px}
-  body.home-page #focus-panel{flex-basis:108px;min-height:102px;padding:.25rem .45rem}
-  body.home-page .focus-orb{width:min(27vw,92px)}
+  body.home-page #focus-panel{flex-basis:108px;height:108px!important;min-height:0!important;max-height:108px!important;padding:.25rem .45rem}
+  body.home-page .focus-orb{width:min(31vw,112px)}
+  body.home-page .focus-orb-3d{inset:-22%}
   body.home-page .focus-control-cluster{padding:.3rem .25rem}
   body.home-page .focus-control-cluster .focus-session{gap:.32rem}
   body.home-page .focus-timer{font-size:1.22rem}
