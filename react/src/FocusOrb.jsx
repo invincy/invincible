@@ -28,9 +28,8 @@ float packet=pow(packetWave,7.0);
 float secondary=pow(.5+.5*sin(angle*3.0-time*.54+hash*19.0),10.0);
 p*=1.0+.035*packet+.018*secondary;
 vec3 resting=p;
-float breathing=.032*sin(time*.52)+.020*sin(time*.31+1.7);
 float disturbance=.040*sin(time*.67+resting.y*3.2+resting.z*1.4)+.026*sin(time*.43+resting.x*4.0-resting.z*2.1);
-p*=1.0+breathing+disturbance;
+p*=1.0+disturbance;
 p+=vec3(.050*sin(time*.58+resting.y*2.35)+.014*sin(time*.31+resting.z*4.1),.043*sin(time*.49+resting.z*2.55)+.012*sin(time*.36+resting.x*3.8),.050*sin(time*.55+resting.x*2.4)+.014*sin(time*.29+resting.y*4.0));
 // Independent rigid rotation of the entire particle globe, after surface motion.
 // Gently vary both the sideways tilt and depth of the rotation axis.
@@ -42,6 +41,12 @@ float cx=cos(rotation.y),sx=sin(rotation.y),cy=cos(rotation.x),sy=sin(rotation.x
 p=vec3(p.x,p.y*cx-p.z*sx,p.y*sx+p.z*cx);p=vec3(p.x*cy+p.z*sy,p.y,-p.x*sy+p.z*cy);
 vec2 delta=p.xy-influence.xy;float pull=exp(-dot(delta,delta)*2.7)*influence.z;
 p.xy+=delta*pull*0.13;p.z+=pull*0.16;
+// A gentle double heartbeat: contract at most 3%, then return to normal size.
+float heartbeatPhase=fract(time*.8);
+float heartbeatMain=exp(-pow((heartbeatPhase-.22)/.065,2.0));
+float heartbeatEcho=.4*exp(-pow((heartbeatPhase-.40)/.075,2.0));
+float heartbeatScale=1.0-.03*min(1.0,heartbeatMain+heartbeatEcho);
+p*=heartbeatScale;
 vec4 projected=projection*vec4(p,1.0);gl_Position=projected;float size=mix(1.0,1.22,step(.5,style)*(1.0-step(1.5,style)));size*=1.0+.42*packet+.2*secondary;gl_PointSize=max(1.0,appearance.x*size*pixelRatio*4.6/projected.w);opacity=appearance.y*edge*center*(0.35+0.65*smoothstep(-1.0,1.0,p.z));opacity*=.48+1.05*packet+.48*secondary;opacity*=mix(1.0,.68,step(1.5,style)*(1.0-step(.76,appearance.y)));}`;
 const particleFragment=`precision mediump float;uniform vec3 colorA;uniform vec3 colorB;varying float opacity;void main(){float radius=length(gl_PointCoord-vec2(0.5))*2.0;if(radius>1.0)discard;float core=1.0-smoothstep(0.0,1.0,radius);gl_FragColor=vec4(mix(colorA,colorB,core),core*opacity);}`;
 function perspective(aspect){const f=1/Math.tan(Math.PI/8),near=.1,far=30,distance=4.6;return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)/(near-far),-1,0,0,(far+near)/(near-far)*-distance+2*far*near/(near-far),distance])}
