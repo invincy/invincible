@@ -11,7 +11,7 @@ const starterPrompts=[
 ];
 
 function ActionStatus({action}){
- const failed=action.status==='failed';return <div className={'ai-action-status '+(failed?'failed':'')}><span>{failed?'!':'✓'}</span><div><strong>{action.tool.replaceAll('_',' ')}</strong><small>{action.summary}</small></div></div>;
+ const failed=action?.status==='failed',tool=typeof action?.tool==='string'?action.tool.split('_').join(' '):'app action',summary=typeof action?.summary==='string'?action.summary:'';return <div className={'ai-action-status '+(failed?'failed':'')}><span>{failed?'!':'✓'}</span><div><strong>{tool}</strong><small>{summary}</small></div></div>;
 }
 
 function Message({message}){
@@ -21,9 +21,9 @@ function Message({message}){
 export function InvincibleAiPage(){
  const{tasks}=useTasks(),focus=chooseFocusTask(tasks),next=taskSteps(focus).find(step=>!step.done&&step.status!=='Done');
  const{messages,pending,actions,sending,error,send,newConversation}=useAiConversation(),[draft,setDraft]=useState(''),end=useRef(null),input=useRef(null);
- useEffect(()=>end.current?.scrollIntoView({behavior:'smooth',block:'end'}),[messages,pending,sending]);
+ useEffect(()=>{if(typeof end.current?.scrollIntoView==='function')end.current.scrollIntoView({behavior:'smooth',block:'end'})},[messages,pending,sending]);
  const submit=event=>{event.preventDefault();const text=draft.trim();if(!text)return;setDraft('');send(text)};
- const ask=text=>{setDraft(text);requestAnimationFrame(()=>input.current?.focus())};
+ const ask=text=>{setDraft(text);if(typeof requestAnimationFrame==='function')requestAnimationFrame(()=>input.current?.focus());else input.current?.focus()};
  return <div className="invincible-ai-page">
   <div className="ai-ambient" aria-hidden="true"><i/><i/><i/></div>
   <header className="ai-page-header"><div><span className="ai-eyebrow">INTENT → ACTION</span><h1>Invincible <em>AI</em></h1><p>Tell it what you want. It maintains the operational structure.</p></div><button type="button" onClick={newConversation}>＋ New chat</button></header>
