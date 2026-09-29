@@ -32,11 +32,11 @@ float breathing=.032*sin(time*.52)+.020*sin(time*.31+1.7);
 float disturbance=.040*sin(time*.67+resting.y*3.2+resting.z*1.4)+.026*sin(time*.43+resting.x*4.0-resting.z*2.1);
 p*=1.0+breathing+disturbance;
 p+=vec3(.050*sin(time*.58+resting.y*2.35)+.014*sin(time*.31+resting.z*4.1),.043*sin(time*.49+resting.z*2.55)+.012*sin(time*.36+resting.x*3.8),.050*sin(time*.55+resting.x*2.4)+.014*sin(time*.29+resting.y*4.0));
-float autoPitch=.14*sin(time*.28)+.035*sin(time*.17+1.4),autoYaw=time*.136,cap=cos(autoPitch),sap=sin(autoPitch),cay=cos(autoYaw),say=sin(autoYaw);
-p=vec3(p.x,p.y*cap-p.z*sap,p.y*sap+p.z*cap);p=vec3(p.x*cay+p.z*say,p.y,-p.x*say+p.z*cay);
-// Tilt the spinning globe's axis 30 degrees in screen space.
-float axisTilt=.5235988,cat=cos(axisTilt),sat=sin(axisTilt);
-p=vec3(p.x*cat-p.y*sat,p.x*sat+p.y*cat,p.z);
+// Independent rigid rotation of the entire particle globe, after surface motion.
+// The diagonal axis leans 30 degrees and points toward the viewer for visible tumbling.
+vec3 globeAxis=normalize(vec3(-.5,.8660254,.55));
+float globeAngle=time*.28,globeCos=cos(globeAngle),globeSin=sin(globeAngle);
+p=p*globeCos+cross(globeAxis,p)*globeSin+globeAxis*dot(globeAxis,p)*(1.0-globeCos);
 float cx=cos(rotation.y),sx=sin(rotation.y),cy=cos(rotation.x),sy=sin(rotation.x);
 p=vec3(p.x,p.y*cx-p.z*sx,p.y*sx+p.z*cx);p=vec3(p.x*cy+p.z*sy,p.y,-p.x*sy+p.z*cy);
 vec2 delta=p.xy-influence.xy;float pull=exp(-dot(delta,delta)*2.7)*influence.z;
