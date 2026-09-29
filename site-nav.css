@@ -108,6 +108,21 @@ body{padding-top:var(--site-nav-height)!important}
 
 .mobile-tabbar{display:none}
 
+.global-ai-widget{
+  position:fixed;
+  z-index:11000;
+  right:8px;
+  bottom:8px;
+  width:70px;
+  height:70px;
+  border:0;
+  background:transparent;
+  color-scheme:dark;
+  transition:width .2s ease,height .2s ease;
+}
+.global-ai-widget[data-mode="menu"]{width:155px;height:190px}
+.global-ai-widget[data-mode="chat"],.global-ai-widget[data-mode="voice"]{width:min(430px,calc(100vw - 16px));height:min(640px,calc(100dvh - 16px))}
+
 .app-more-sheet{
   position:fixed;
   z-index:12000;
@@ -228,6 +243,8 @@ body{padding-top:var(--site-nav-height)!important}
     padding-bottom:calc(var(--mobile-tabbar-height) + env(safe-area-inset-bottom))!important;
   }
   body.app-more-open{overflow:hidden!important}
+  .global-ai-widget{bottom:calc(var(--mobile-tabbar-height) + env(safe-area-inset-bottom) + 8px)}
+  .global-ai-widget[data-mode="chat"],.global-ai-widget[data-mode="voice"]{width:calc(100vw - 12px);height:min(620px,calc(100dvh - var(--site-nav-mobile) - var(--mobile-tabbar-height) - env(safe-area-inset-bottom) - 12px))}
   .global-nav{
     height:var(--site-nav-mobile);
     padding:0 14px;
