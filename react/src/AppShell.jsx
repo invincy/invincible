@@ -3,6 +3,7 @@ import{useAuth}from'./AuthContext';
 const base='/invincible/';
 const pages=[
  {id:'dashboard',label:'Dashboard',short:'Home',href:base,icon:'⌂'},
+ {id:'ai',label:'Invincible AI',short:'AI',href:base+'ai/',icon:'✦'},
  {id:'journal',label:'Journal',href:base+'journal/',icon:'▤'},
  {id:'finance',label:'Finance',href:base+'journal/finance.html',icon:'⌁'},
  {id:'garage',label:'Garage',href:base+'garage/',icon:'◇'},
@@ -13,7 +14,7 @@ const pages=[
  {id:'portfolio',label:'Portfolio',href:'https://script.google.com/macros/s/AKfycbxbdgQqTwHIYw_dS9ko_tTieVM1PAQKNAHsTqy7bFPlVNg2P-9FNoccrZwHgbeXALoY/exec',icon:'▣',external:true}
 ];
 const mobilePages=pages.filter(page=>!page.external&&page.id!=='dashboard');
-const storageKey='invincible.mobileTabs.v1',defaults=['workday','reminders','journal'];
+const storageKey='invincible.mobileTabs.v1',defaults=['ai','workday','journal'];
 function readTabs(){try{const value=JSON.parse(localStorage.getItem(storageKey)),valid=new Set(mobilePages.map(page=>page.id));if(Array.isArray(value)&&value.length===3&&new Set(value).size===3&&value.every(id=>valid.has(id)))return value}catch{}return defaults}
 function active(page){return !page.external&&(page.id==='dashboard'?location.pathname===base:page.id==='journal'?location.pathname===page.href:location.pathname.startsWith(page.href))}
 function NavLink({page,mobile=false}){return <a className={'react-nav-link'+(active(page)?' active':'')} href={page.href} target={page.external?'_blank':undefined} rel={page.external?'noopener':undefined} aria-current={active(page)?'page':undefined}><span className="react-nav-icon">{page.icon}</span><span>{mobile?page.short||page.label:page.label}</span>{page.external&&<span aria-hidden="true">↗</span>}</a>}
