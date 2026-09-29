@@ -1,12 +1,4 @@
 /* React-owned Dashboard additions. Keep new Dashboard features out of legacy index.html. */
-body.home-page #dashboard.finance-window-open{
-  grid-template-rows:auto auto minmax(0,1fr);
-}
-
-body.home-page #dashboard.finance-window-open #mission-layout{
-  grid-row:3;
-}
-
 .finance-reminder-backdrop{
   position:fixed;
   z-index:12000;
@@ -135,125 +127,9 @@ body.home-page #dashboard.finance-window-open #mission-layout{
   to{opacity:1;transform:none}
 }
 
-.monthly-finance-notice{
-  grid-column:1;
-  grid-row:2;
-  position:relative;
-  isolation:isolate;
-  box-sizing:border-box;
-  display:grid;
-  grid-template-columns:auto minmax(0,1fr) auto;
-  align-items:center;
-  gap:1rem;
-  min-height:78px;
-  margin:.15rem 0 .65rem;
-  padding:.78rem 1.05rem;
-  overflow:hidden;
-  border:1px solid rgba(255,216,124,.68);
-  border-radius:.78rem;
-  background:
-    radial-gradient(circle at 8% 50%,rgba(255,199,64,.24),transparent 24%),
-    linear-gradient(105deg,rgba(54,39,9,.97),rgba(10,47,50,.97) 61%,rgba(5,29,35,.99));
-  color:#f5ffff;
-  text-decoration:none;
-  box-shadow:0 0 32px rgba(255,190,56,.16),inset 0 1px 0 rgba(255,248,218,.17);
-  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
-}
-
-.monthly-finance-notice::before{
-  content:"";
-  position:absolute;
-  z-index:-1;
-  inset:0;
-  background:linear-gradient(110deg,transparent 18%,rgba(255,240,188,.13) 44%,transparent 64%);
-  transform:translateX(-100%);
-  animation:finance-sheen 5s ease-in-out infinite;
-}
-
-.monthly-finance-notice::after{
-  content:"";
-  position:absolute;
-  z-index:-1;
-  inset:auto 8% 0;
-  height:1px;
-  background:linear-gradient(90deg,transparent,#ffe08a 50%,transparent);
-  box-shadow:0 0 12px rgba(255,214,112,.55);
-}
-
-.monthly-finance-notice:hover,
-.monthly-finance-notice:focus-visible{
-  transform:translateY(-2px);
-  border-color:#ffe5a3;
-  box-shadow:0 0 38px rgba(255,196,62,.28),inset 0 1px 0 rgba(255,250,228,.22);
-  outline:none;
-}
-
-.monthly-finance-icon{
-  display:grid;
-  place-items:center;
-  width:50px;
-  height:50px;
-  border:1px solid rgba(255,227,154,.62);
-  border-radius:15px;
-  background:linear-gradient(145deg,rgba(255,220,129,.18),rgba(255,193,48,.07));
-  color:#ffe59e;
-  font-size:1.25rem;
-  box-shadow:inset 0 0 20px rgba(255,209,102,.1),0 0 18px rgba(255,209,102,.12);
-}
-
-.monthly-finance-copy{
-  display:flex;
-  flex-direction:column;
-  min-width:0;
-}
-
-.monthly-finance-copy small{
-  color:#ffe08a;
-  font:900 .58rem Orbitron,sans-serif;
-  letter-spacing:.14em;
-}
-
-.monthly-finance-copy strong{
-  margin:.18rem 0 .1rem;
-  color:#fff5cf;
-  font:900 1.12rem/1.1 'Exo 2',sans-serif;
-  text-shadow:0 0 14px rgba(255,211,106,.15);
-}
-
-.monthly-finance-copy>span{
-  color:#c3d7d9;
-  font-size:.73rem;
-  font-weight:700;
-}
-
-.monthly-finance-action{
-  display:flex;
-  align-items:center;
-  gap:.58rem;
-  min-height:42px;
-  padding:0 1rem;
-  border:1px solid rgba(255,235,180,.82);
-  border-radius:.6rem;
-  background:linear-gradient(135deg,#ffe69d,#ffd268);
-  color:#1b1406;
-  font:900 .74rem 'Exo 2',sans-serif;
-  white-space:nowrap;
-  box-shadow:0 9px 26px rgba(255,185,36,.2),inset 0 1px 0 rgba(255,255,255,.5);
-}
-
 @keyframes finance-sheen{
   0%,58%{transform:translateX(-100%)}
   78%,100%{transform:translateX(100%)}
-}
-
-@media(min-width:1025px){
-  body.home-page #dashboard.finance-window-open{
-    grid-template-rows:46px auto minmax(0,1fr);
-  }
-
-  body.home-page #dashboard.finance-window-open .header-clock{
-    top:10.9rem;
-  }
 }
 
 @media(max-width:620px){
@@ -263,30 +139,8 @@ body.home-page #dashboard.finance-window-open #mission-layout{
   .finance-reminder-dialog h2{font-size:1.65rem}
   .finance-reminder-dialog p{font-size:.8rem}
 
-  .monthly-finance-notice{
-    grid-template-columns:auto minmax(0,1fr);
-    gap:.72rem;
-    margin:.25rem 0 .8rem;
-    padding:.85rem;
-  }
-
-  .monthly-finance-icon{
-    width:44px;
-    height:44px;
-    border-radius:13px;
-    font-size:1.08rem;
-  }
-
-  .monthly-finance-copy strong{font-size:1.02rem}
-  .monthly-finance-copy>span{font-size:.69rem;line-height:1.35}
-
-  .monthly-finance-action{
-    grid-column:1/-1;
-    justify-content:center;
-    min-height:40px;
-  }
 }
 
 @media(prefers-reduced-motion:reduce){
-  .monthly-finance-notice::before,.finance-reminder-dialog,.finance-reminder-dialog::before{animation:none}
+  .finance-reminder-dialog,.finance-reminder-dialog::before{animation:none}
 }

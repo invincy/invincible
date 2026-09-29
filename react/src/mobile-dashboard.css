@@ -73,47 +73,6 @@
   body.home-page .controls{width:auto}
   body.home-page .add-task-btn{width:auto;min-height:35px;padding:.38rem .65rem;border-radius:.6rem;font-size:.72rem;white-space:nowrap}
 
-  body.home-page .monthly-finance-notice{
-    position:absolute;
-    z-index:20;
-    top:.7rem;
-    right:6.3rem;
-    display:grid;
-    place-items:center;
-    width:42px;
-    height:36px;
-    min-height:36px;
-    box-sizing:border-box;
-    margin:0;
-    padding:0;
-    border-radius:999px;
-  }
-  body.home-page .monthly-finance-notice::before,
-  body.home-page .monthly-finance-notice::after{display:none!important}
-  body.home-page .monthly-finance-icon{
-    position:relative;
-    width:34px;
-    height:30px;
-    border:0;
-    border-radius:999px;
-    background:transparent;
-    font-size:.82rem;
-    box-shadow:none;
-  }
-  body.home-page .monthly-finance-icon::after{
-    content:"";
-    position:absolute;
-    top:2px;
-    right:2px;
-    width:6px;
-    height:6px;
-    border-radius:50%;
-    background:#ffe08a;
-    box-shadow:0 0 8px rgba(255,224,138,.75);
-  }
-  body.home-page .monthly-finance-copy,
-  body.home-page .monthly-finance-action{display:none!important}
-
   body.home-page #mission-layout{
     order:1;
     flex:1 1 auto;
@@ -323,7 +282,6 @@
   body.home-page #top-bar{gap:.35rem}
   body.home-page .streak-buttons{gap:.22rem}
   body.home-page .streak-button{min-width:47px;padding-inline:.42rem}
-  body.home-page .monthly-finance-notice{right:5.85rem;width:38px}
   body.home-page #focus-panel{grid-template-columns:minmax(102px,.88fr) minmax(136px,1.12fr)}
   body.home-page .focus-orb{width:min(35vw,130px)}
 }
@@ -340,7 +298,6 @@
   body.home-page .focus-control-cluster .focus-session{gap:.32rem}
   body.home-page .focus-timer{font-size:1.22rem}
   body.home-page .focus-icon{width:29px;height:29px;font-size:.72rem}
-  body.home-page .monthly-finance-notice{height:34px;min-height:34px;padding:0}
 }
 
 @media(prefers-reduced-motion:reduce){
