@@ -3257,7 +3257,7 @@ p+=vec3(.050*sin(time*.58+resting.y*2.35)+.014*sin(time*.31+resting.z*4.1),.043*
 // Independent rigid rotation of the entire particle globe, after surface motion.
 // The diagonal axis leans 30 degrees and points toward the viewer for visible tumbling.
 vec3 globeAxis=normalize(vec3(-.5,.8660254,.55));
-float globeAngle=time*.28,globeCos=cos(globeAngle),globeSin=sin(globeAngle);
+float globeAngle=-time*.28,globeCos=cos(globeAngle),globeSin=sin(globeAngle);
 p=p*globeCos+cross(globeAxis,p)*globeSin+globeAxis*dot(globeAxis,p)*(1.0-globeCos);
 float cx=cos(rotation.y),sx=sin(rotation.y),cy=cos(rotation.x),sy=sin(rotation.x);
 p=vec3(p.x,p.y*cx-p.z*sx,p.y*sx+p.z*cx);p=vec3(p.x*cy+p.z*sy,p.y,-p.x*sy+p.z*cy);
