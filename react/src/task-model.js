@@ -1,6 +1,9 @@
 export const taskStatuses=['Backlog','In Progress','Done'];
 export const newId=prefix=>`${prefix}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
-export const taskSteps=task=>Array.isArray(task?.steps)&&task.steps.length?task.steps:task?.subtasks||[];
+export const taskSteps=task=>{
+ if(Array.isArray(task?.steps)&&task.steps.length)return task.steps;
+ return Array.isArray(task?.subtasks)?task.subtasks:[];
+};
 export const cleanStep=(step,index)=>({...step,id:step.id||`legacy_${index}`,title:step.title||step.text||`Step ${index+1}`,notes:step.notes||'',status:step.status||(step.done?'Done':'Not Started'),done:Boolean(step.done||step.status==='Done')});
 export const normalizeTask=task=>({...task,steps:taskSteps(task).map(cleanStep),scratchpad:task.scratchpad||'',activeStepId:task.activeStepId||null});
 export const stepFields=steps=>({steps:steps.map(cleanStep),subtasks:steps.map(step=>({text:step.title||step.text||'',done:Boolean(step.done||step.status==='Done')}))});
