@@ -33,8 +33,9 @@ float disturbance=.040*sin(time*.67+resting.y*3.2+resting.z*1.4)+.026*sin(time*.
 p*=1.0+breathing+disturbance;
 p+=vec3(.050*sin(time*.58+resting.y*2.35)+.014*sin(time*.31+resting.z*4.1),.043*sin(time*.49+resting.z*2.55)+.012*sin(time*.36+resting.x*3.8),.050*sin(time*.55+resting.x*2.4)+.014*sin(time*.29+resting.y*4.0));
 // Independent rigid rotation of the entire particle globe, after surface motion.
-// The diagonal axis leans 30 degrees and points toward the viewer for visible tumbling.
-vec3 globeAxis=normalize(vec3(-.5,.8660254,.55));
+// Gently vary both the sideways tilt and depth of the rotation axis.
+float globeTilt=.5235988+.14*sin(time*.16)+.035*sin(time*.09+1.2);
+vec3 globeAxis=normalize(vec3(-sin(globeTilt),cos(globeTilt),.55+.10*sin(time*.12+.7)));
 float globeAngle=-time*.28,globeCos=cos(globeAngle),globeSin=sin(globeAngle);
 p=p*globeCos+cross(globeAxis,p)*globeSin+globeAxis*dot(globeAxis,p)*(1.0-globeCos);
 float cx=cos(rotation.y),sx=sin(rotation.y),cy=cos(rotation.x),sy=sin(rotation.x);
