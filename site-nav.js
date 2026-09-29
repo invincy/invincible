@@ -146,6 +146,18 @@
   });
   renderMobileTabs();
 
+  const aiFrame = document.createElement('iframe');
+  aiFrame.className = 'global-ai-widget';
+  aiFrame.title = 'Invincible AI assistant';
+  aiFrame.src = BASE + 'ai/?widget=1&page=' + encodeURIComponent(activePage.label);
+  aiFrame.allow = 'microphone; autoplay';
+  aiFrame.dataset.mode = 'closed';
+  document.body.appendChild(aiFrame);
+  window.addEventListener('message', event => {
+    if (event.origin !== location.origin || event.source !== aiFrame.contentWindow || event.data?.type !== 'invincible-ai-widget') return;
+    aiFrame.dataset.mode = ['closed','menu','chat','voice'].includes(event.data.mode) ? event.data.mode : 'closed';
+  });
+
   const customizeTrigger = moreSheet.querySelector('.customize-tabs-trigger');
   const customizer = moreSheet.querySelector('.tab-customizer');
   const choiceGrid = moreSheet.querySelector('.tab-choice-grid');
