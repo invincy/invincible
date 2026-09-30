@@ -8,3 +8,23 @@
 @media(max-width:1024px){.invincible-ai-dock{right:14px;bottom:calc(var(--app-bottom) + env(safe-area-inset-bottom) + 16px)}.ai-dock-avatar{width:50px;height:50px;border-radius:16px}.ai-dock-panel{position:fixed;right:8px;bottom:calc(var(--app-bottom) + env(safe-area-inset-bottom) + 8px);width:calc(100vw - 16px);border-radius:18px}.ai-dock-chat{height:min(65dvh,590px)}.ai-dock-choices{bottom:62px}.ai-dock-panel>header{min-height:54px}}
 @media(max-width:420px){.ai-dock-chat{height:min(68dvh,560px)}.ai-dock-message>div{max-width:91%}.ai-dock-voice{min-height:min(390px,60dvh)}.ai-voice-body{min-height:230px}}
 @media(prefers-reduced-motion:reduce){.ai-dock-panel,.ai-dock-choices,.ai-dock-thinking i,.ai-voice-orb.listening>i,.ai-voice-orb.thinking>span{animation:none}}
+
+/* Glossy amber and turquoise orb, shared by the launcher and chat. */
+.ai-orb{border:0!important;border-radius:50%!important;background:radial-gradient(ellipse at 32% 25%,rgba(255,255,239,.88),transparent 29%),radial-gradient(ellipse at 72% 70%,#42d8b6,transparent 56%),radial-gradient(ellipse at 28% 75%,#f7cd80,transparent 58%),linear-gradient(135deg,#ffb554 12%,#d6ba75 53%,#66c6a9)!important;box-shadow:inset -5px -7px 15px rgba(43,93,79,.18),inset 2px 3px 8px rgba(255,233,180,.48),0 0 36px rgba(244,183,70,.23)!important}
+.ai-dock-avatar.ai-orb{width:62px;height:62px;border-radius:50%;transition:transform .25s ease,filter .25s ease}
+.ai-dock-avatar.ai-orb:focus-visible{outline:2px solid #f4c768;outline-offset:5px}
+.ai-dock-avatar.ai-orb:hover{filter:brightness(1.08)}
+.ai-dock-mini-avatar.ai-orb{width:34px;height:34px}
+.ai-dock-empty{margin:22px auto 0}
+.ai-dock-empty>.ai-orb{width:88px;height:88px;margin-bottom:20px}
+.ai-dock-chat{grid-template-rows:auto minmax(0,1fr) auto}
+.ai-dock-chat textarea{font-size:16px}
+@media(max-width:1024px){
+ .ai-dock-avatar.ai-orb{width:58px;height:58px}
+ .mode-chat .ai-dock-panel{bottom:calc(var(--dock-visible-bottom,0px) + 8px);height:min(480px,calc(var(--dock-visible-height,100dvh) - 16px));max-height:calc(var(--dock-visible-height,100dvh) - 16px);border-radius:24px 24px 16px 16px;background:#11262d}
+ .ai-dock-chat textarea{min-height:48px;background:#20353d}
+ .ai-dock-chat form button{background:#f4b83e}
+}
+@media(max-height:500px){.ai-dock-empty{margin:8px auto 0}.ai-dock-empty>.ai-orb{width:52px;height:52px;margin-bottom:10px}}
+
+@media(max-width:1024px){.mode-voice .ai-dock-panel{bottom:calc(var(--dock-visible-bottom,0px) + 8px);min-height:0;height:min(420px,calc(var(--dock-visible-height,100dvh) - 16px));grid-template-rows:auto minmax(0,1fr) auto}.ai-dock-voice .ai-voice-body{min-height:0;overflow-y:auto}.ai-dock-voice .ai-voice-orb{flex-shrink:0}}
