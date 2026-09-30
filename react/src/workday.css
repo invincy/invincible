@@ -27,3 +27,41 @@
 .wd-entry-save:disabled{opacity:.6;cursor:wait}
 @media(max-width:1120px){.wd-task-builder{grid-template-columns:1fr 1fr}}
 @media(max-width:700px){.wd-task-builder{grid-template-columns:1fr}.wd-entry-status{align-items:stretch;flex-direction:column}.wd-entry-status label,.wd-entry-status label:first-child{flex:0 0 auto}.wd-entry-save{width:100%;height:46px}}
+
+/* Compact work entry and a keyboard-sized mobile editor. */
+.workday-shell,.wd-modal{box-sizing:border-box;min-width:0}
+.wd-composer{background:linear-gradient(135deg,rgba(27,37,53,.95),rgba(13,20,31,.97));border-color:rgba(157,140,255,.17);box-shadow:0 12px 32px rgba(0,0,0,.12)}
+.wd-entry-close{display:none}
+.wd-entry-error{display:flex;align-items:center;gap:8px;margin:0 0 10px;color:var(--wd-red);font-size:11px;line-height:1.3}
+.wd-entry-error button,.wd-retry{flex:none;padding:6px 9px;border-radius:6px;background:rgba(255,255,255,.06);color:#c8ccda;font-size:11px}
+.wd-workspace-error{display:block;margin:5px 0;line-height:1.4}
+.wd-draft-state{white-space:nowrap}
+@media(max-width:700px){
+ .workday-shell{width:100%;padding:12px 12px 20px;overflow-x:clip}
+ .wd-hero{align-items:center;gap:8px;margin-bottom:9px}.wd-hero .wd-eyebrow,.wd-hero p{display:none}.wd-hero h1{margin:0;font-size:25px}
+ .wd-space-actions{min-width:0;flex-direction:row;gap:5px}.wd-space-actions select{max-width:140px;font-size:12px}.wd-space-actions select:empty{display:none}
+ .wd-connection{margin-bottom:10px;min-height:14px;font-size:11px}
+ .wd-day-strip{gap:10px;padding:10px 12px;border-radius:12px}.wd-date-control{width:100%;justify-content:space-between}.wd-date-control label{flex:1}.wd-date-control strong{font-size:16px}.wd-date-control span{font-size:11px}
+ .wd-metrics{display:flex;justify-content:space-between;gap:6px;font-size:10px}.wd-metrics strong{font-size:13px}
+ .wd-composer{margin:12px 0;padding:12px;border-radius:14px}.wd-composer-head{align-items:center;flex-wrap:nowrap;margin-bottom:10px;gap:8px}.wd-composer-head strong{font-size:14px}.wd-composer-head .wd-eyebrow{font-size:9px;letter-spacing:.12em}
+ .wd-action-chips{gap:5px;margin-bottom:10px}.wd-action-chips button{padding:6px 9px;font-size:10px}
+ .wd-task-builder{gap:8px}.wd-task-builder label{display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;gap:8px;font-size:11px}.wd-task-builder input{height:42px;padding:9px 11px;font-size:16px;border-radius:8px}
+ .wd-entry-status{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:10px;align-items:end}.wd-entry-status label{gap:4px;font-size:10px}.wd-entry-status input,.wd-entry-status select{height:40px;padding:8px;font-size:16px;border-radius:8px}.wd-entry-status label:not(:first-child){grid-column:1/-1;display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;gap:8px}.wd-entry-status label small{display:none}.wd-entry-save{grid-column:2;grid-row:1;height:40px;min-width:0;width:100%;font-size:14px;border-radius:8px}.wd-save-hint{font-size:10px;line-height:1.35;margin-top:9px}
+ .wd-utility{flex-wrap:wrap;gap:5px}.wd-utility button{font-size:11px;padding:8px}.wd-mobile-report{position:static;margin-top:12px;font-size:13px;padding:11px;box-shadow:none}
+ body.wd-entry-focused{overflow:hidden}
+ body.wd-entry-focused .react-topbar,body.wd-entry-focused .react-mobile-tabs,body.wd-entry-focused .invincible-ai-dock{display:none!important}
+ body.wd-entry-focused .wd-composer{position:fixed;z-index:15000;top:var(--wd-editor-top,0px);left:0;right:0;box-sizing:border-box;margin:0;padding:12px 14px;max-height:var(--wd-editor-height,100dvh);overflow-y:auto;border:0;border-bottom:1px solid rgba(157,140,255,.25);border-radius:0;background:#101824;box-shadow:0 20px 60px #000}
+ body.wd-entry-focused .wd-composer-head{margin-bottom:10px;min-height:28px}.wd-composer.is-editing .wd-composer-head strong,.wd-composer.is-editing .wd-draft-state,.wd-composer.is-editing .wd-action-chips,.wd-composer.is-editing .wd-save-hint{display:none}
+ .wd-composer.is-editing .wd-composer-head .wd-eyebrow{font-size:12px;letter-spacing:.05em}.wd-composer.is-editing .wd-entry-close{display:block;margin-left:auto;padding:7px 10px;border-radius:7px;background:rgba(157,140,255,.12);color:#cfc7ff;font-size:12px}
+ body.wd-entry-focused .wd-toast{z-index:16000;top:calc(var(--wd-editor-top,0px) + 4px);bottom:auto}
+}
+@media(max-width:700px){
+ .wd-composer.is-editing{padding:10px 14px}
+ .wd-composer.is-editing .wd-task-builder{gap:6px}
+ .wd-composer.is-editing .wd-task-builder input,
+ .wd-composer.is-editing .wd-entry-status input,
+ .wd-composer.is-editing .wd-entry-status select,
+ .wd-composer.is-editing .wd-entry-save{height:36px}
+ .wd-composer.is-editing .wd-entry-status{gap:6px;margin-top:8px}
+ .wd-composer.is-editing .wd-entry-error{margin-bottom:6px;font-size:10px}
+}
