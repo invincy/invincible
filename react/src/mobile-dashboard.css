@@ -99,10 +99,11 @@
     box-sizing:border-box;
     padding:.38rem .55rem;
     overflow:hidden;
-    border:1px solid rgba(255,218,122,.13);
-    border-radius:.9rem;
-    background:linear-gradient(118deg,rgba(7,34,39,.38),rgba(48,36,9,.23),rgba(4,22,27,.32));
-    box-shadow:inset 0 1px rgba(255,255,255,.035);
+    /* One shared strip for today's actions and their timer, fading at both sides. */
+    border:0;
+    border-radius:0;
+    background:linear-gradient(90deg,transparent,rgba(232,166,42,.13) 12%,rgba(244,184,60,.22) 50%,rgba(232,166,42,.13) 88%,transparent);
+    box-shadow:none;
   }
 
   body.home-page .focus-orb-stage{
@@ -137,8 +138,8 @@
     padding:.45rem .4rem;
     border:0;
     border-radius:.7rem;
-    background:linear-gradient(90deg,transparent,rgba(232,166,42,.18) 20%,rgba(244,184,60,.27) 50%,rgba(232,166,42,.18) 80%,transparent);
-    box-shadow:0 0 24px rgba(255,190,67,.08);
+    background:transparent;
+    box-shadow:none;
   }
   body.home-page .focus-control-cluster .focus-session{
     display:grid!important;
@@ -176,10 +177,20 @@
     margin:0;
     padding:.45rem;
     overflow:hidden;
-    border-radius:.7rem;
-    background:linear-gradient(145deg,rgba(6,31,36,.82),rgba(4,20,25,.7));
+    border:0;
+    border-radius:0;
+    background:transparent;
+    box-shadow:none;
+    backdrop-filter:none;
   }
   body.home-page .today-plan-card>header{margin-bottom:.26rem}
+  body.home-page .today-plan-card>header small{color:#ffe29a}
+  body.home-page .today-plan-card>header button,
+  body.home-page .today-plan-check{border-color:rgba(255,224,138,.31);background:rgba(255,224,138,.06);color:#ffe29a}
+  body.home-page .today-plan-list article,
+  body.home-page .today-plan-list article.is-active{background:transparent}
+  body.home-page .today-plan-copy span{color:#b8a884}
+  body.home-page .today-plan-empty{border:0;background:transparent;color:#d4c39b}
   body.home-page .today-plan-card>header strong{display:none}
   body.home-page .today-plan-card>header button{min-height:23px;padding:.18rem .42rem;font-size:.58rem}
   body.home-page .today-plan-list{max-height:78px;gap:.2rem}
