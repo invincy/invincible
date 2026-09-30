@@ -14,6 +14,12 @@ test('set_next_action passes explicit completion intent',async()=>{
  assert.deepEqual(received,['project_1','Script',true]);assert.match(output.action.summary,/Script/);
 });
 
+test('add_to_today_plan passes only the selected project stage',async()=>{
+ let received=null;const repository={addToTodayPlan:async(...args)=>{received=args;return{item:{title:'Script',projectTitle:'Chandrayaan-3'},active:true}}};
+ const output=await executeInvincibleTool(repository,'add_to_today_plan',{project_id:'project_1',title:null,stage_title:'Script',make_active:true});
+ assert.deepEqual(received,['project_1','Script',true]);assert.match(output.action.summary,/today’s plan and made it active/);
+});
+
 test('rejects arbitrary extra write fields',async()=>{
  await assert.rejects(()=>executeInvincibleTool({},'update_task',{task_id:'task_1',title:'Safe',description:null,status:null,firestore_path:'users/other'}),/Unrecognized key/);
 });

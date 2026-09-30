@@ -6,6 +6,10 @@ function monthKey(){
  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit'}).formatToParts(new Date());
  return `${parts.find(part=>part.type==='year').value}-${parts.find(part=>part.type==='month').value}`;
 }
+function todayKey(){
+ const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()),part=type=>parts.find(value=>value.type===type).value;
+ return `${part('year')}-${part('month')}-${part('day')}`;
+}
 function publicTask(doc){
  const data=doc.data?doc.data():doc;
  return{id:doc.id||data.id,title:data.title||'Untitled',description:data.description||'',kind:data.kind||'task',status:data.status||'Backlog',activeStepId:data.activeStepId||null,steps:(data.steps||data.subtasks||[]).map((step,index)=>({id:step.id||`legacy_${index}`,title:step.title||step.text||`Step ${index+1}`,status:step.status||(step.done?'Done':'Not Started'),done:Boolean(step.done||step.status==='Done')})),progress:taskProgress(data),updatedAtMs:millis(data.updatedAt)};
@@ -35,6 +39,16 @@ class InvincibleRepository{
   const focus=focusTask(active),data=finance.exists?finance.data():{},checklist=Array.isArray(data.checklist)?data.checklist:[],bills=Array.isArray(data.bills)?data.bills:[],transactions=Array.isArray(data.transactions)?data.transactions:[],salaryRecorded=transactions.some(item=>item?.type==='income'&&/salary/i.test(String(item?.description||'')));
   return{focus,activeProjects:active,finance:{month:monthKey(),salaryRecorded,checklistDone:checklist.filter(item=>item.done).length,checklistTotal:checklist.length||4,billsPaid:bills.filter(item=>item.paid).length,billsTotal:bills.length}};
  }
+ async todayPlan(){
+  const dateKey=todayKey(),[snapshot,tasks]=await Promise.all([this.userRef.collection('dailyPlans').doc(dateKey).get(),this.listTasks()]),data=snapshot.exists?snapshot.data():{},references=Array.isArray(data.items)?data.items:[],byId=new Map(tasks.map(task=>[task.id,task]));
+  const items=references.map(reference=>{const task=byId.get(reference.taskId),step=reference.stepId?task?.steps.find(value=>value.id===reference.stepId):null,done=reference.stepId?Boolean(step?.done||step?.status==='Done'):task?.status==='Done';return{id:reference.id,taskId:reference.taskId,stepId:reference.stepId||null,title:step?.title||task?.title||'Unavailable item',projectTitle:task?.title||'Missing project',done:Boolean(done),missing:!task||Boolean(reference.stepId&&!step)};});
+  const active=items.find(item=>item.id===data.activeItemId&&!item.done&&!item.missing)||items.find(item=>!item.done&&!item.missing)||null;
+  return{dateKey,items,activeItem:active};
+ }
+ async addToTodayPlan(identifier,stageTitle,makeActive=true){
+  const task=await this.getTask(identifier);if(!task)throw Error('Project or task not found.');const wanted=String(stageTitle||'').trim().toLowerCase(),available=task.steps.filter(step=>!step.done&&step.status!=='Done');let step=wanted?task.steps.find(value=>value.id===stageTitle||value.title.toLowerCase()===wanted):available[0];if(wanted&&!step)throw Error(`Stage “${stageTitle}” was not found.`);if(step?.done)throw Error(`Stage “${step.title}” is already complete.`);
+  const dateKey=todayKey(),ref=this.userRef.collection('dailyPlans').doc(dateKey),id=`${task.id}__${step?.id||'task'}`;await this.db.runTransaction(async transaction=>{const snapshot=await transaction.get(ref),current=snapshot.exists?snapshot.data():{},items=Array.isArray(current.items)?current.items:[],nextItems=items.some(item=>item.id===id)?items:[...items,{id,taskId:task.id,stepId:step?.id||null,addedAt:Date.now()}];transaction.set(ref,{dateKey,initialized:true,items:nextItems,activeItemId:makeActive||!current.activeItemId?id:current.activeItemId,updatedAt:FieldValue.serverTimestamp()},{merge:true})});return{dateKey,item:{id,taskId:task.id,stepId:step?.id||null,title:step?.title||task.title,projectTitle:task.title},active:makeActive};
+ }
  async demoteOtherFocus(batch,exceptId){
   const snapshot=await this.tasksRef.where('status','==','Today').get();snapshot.docs.filter(doc=>doc.id!==exceptId).forEach(doc=>batch.set(doc.ref,{status:'In Progress',updatedAt:FieldValue.serverTimestamp()},{merge:true}));
  }
@@ -58,8 +72,8 @@ class InvincibleRepository{
   const task=await this.getTaskRecord(identifier);if(!task)throw Error('Project not found.');const patch=setNextAction(task,stageTitle,completeCurrent),batch=this.db.batch();await this.demoteOtherFocus(batch,task.id);batch.set(this.tasksRef.doc(task.id),{...patch,updatedAt:FieldValue.serverTimestamp()},{merge:true});await batch.commit();return publicTask({...task,...patch});
  }
  async contextSnapshot(){
-  const [dashboard,creator]=await Promise.all([this.dashboardState(),this.listCreatorProjects()]);
-  return{currentFocus:dashboard.focus,activeDashboardProjects:dashboard.activeProjects.slice(0,10),creatorProjects:creator.filter(project=>project.stage!=='Published').slice(0,8),finance:dashboard.finance};
+  const [dashboard,creator,todayPlan]=await Promise.all([this.dashboardState(),this.listCreatorProjects(),this.todayPlan()]);
+  return{currentFocus:todayPlan.activeItem||dashboard.focus,todayPlan,activeDashboardProjects:dashboard.activeProjects.slice(0,10),creatorProjects:creator.filter(project=>project.stage!=='Published').slice(0,8),finance:dashboard.finance};
  }
 }
 
