@@ -14,8 +14,9 @@ function DockMessage({message}){
 export function InvincibleAiDock({pageTitle,embedded=false}){
  const{messages,pending,actions,sending,error,send}=useAiConversation();
  const[mode,setMode]=useState('closed'),[draft,setDraft]=useState(''),[listening,setListening]=useState(false),[voiceText,setVoiceText]=useState(''),[voiceStatus,setVoiceStatus]=useState('Tap the orb and speak naturally.');
- const input=useRef(null),dock=useRef(null),stream=useRef(null),recognition=useRef(null),voiceBuffer=useRef(''),waitingForReply=useRef(false),previousReply=useRef('');
+ const historyEntry=useRef(false),input=useRef(null),dock=useRef(null),stream=useRef(null),recognition=useRef(null),voiceBuffer=useRef(''),waitingForReply=useRef(false),previousReply=useRef('');
  const speechRecognition=typeof window!=='undefined'&&(window.SpeechRecognition||window.webkitSpeechRecognition);
+ const isOpen=mode!=='closed';
  const lastAssistant=[...messages].reverse().find(message=>message.role==='assistant');
 
  useEffect(()=>{if(embedded)window.parent.postMessage({type:'invincible-ai-widget',mode},location.origin)},[embedded,mode]);
@@ -29,14 +30,23 @@ export function InvincibleAiDock({pageTitle,embedded=false}){
  useEffect(()=>{if(error&&waitingForReply.current){waitingForReply.current=false;setVoiceStatus('That request stopped. Open Chat to see the error or try again.')}},[error]);
 
  useEffect(()=>{
+  if(!isOpen)return;
+  window.history.pushState({...window.history.state,invincibleAiPopup:true},'');historyEntry.current=true;
+  const back=()=>{historyEntry.current=false;close()};
+  const escape=event=>{if(event.key==='Escape')close()};
+  window.addEventListener('popstate',back);window.addEventListener('keydown',escape);
+  return()=>{window.removeEventListener('popstate',back);window.removeEventListener('keydown',escape)};
+ },[isOpen,embedded]);
+ useEffect(()=>{
   if(mode!=='chat'&&mode!=='voice')return;
   const viewport=window.visualViewport;
-  const resize=()=>{const height=viewport?.height||window.innerHeight;const top=viewport?.offsetTop||0;dock.current?.style.setProperty('--dock-visible-height',`${height}px`);dock.current?.style.setProperty('--dock-visible-bottom',`${Math.max(0,window.innerHeight-height-top)}px`)};
+  let largestHeight=viewport?.height||window.innerHeight,keyboardShown=false,lastWidth=viewport?.width||window.innerWidth;
+  const resize=()=>{const height=viewport?.height||window.innerHeight;const width=viewport?.width||window.innerWidth;if(Math.abs(width-lastWidth)>60){largestHeight=height;keyboardShown=false;lastWidth=width}if(mode==='chat'){if(largestHeight-height>140)keyboardShown=true;else if(keyboardShown&&height>=largestHeight-60){close();return}}largestHeight=Math.max(largestHeight,height);const top=viewport?.offsetTop||0;dock.current?.style.setProperty('--dock-visible-height',`${height}px`);dock.current?.style.setProperty('--dock-visible-bottom',`${Math.max(0,window.innerHeight-height-top)}px`)};
   resize();viewport?.addEventListener('resize',resize);viewport?.addEventListener('scroll',resize);window.addEventListener('resize',resize);
   return()=>{viewport?.removeEventListener('resize',resize);viewport?.removeEventListener('scroll',resize);window.removeEventListener('resize',resize)};
  },[mode]);
  const openChat=()=>{recognition.current?.abort();setListening(false);flushSync(()=>setMode('chat'));input.current?.focus({preventScroll:true})};
- const close=()=>{recognition.current?.abort();setListening(false);setMode('closed')};
+ const close=()=>{if(recognition.current){recognition.current.onend=null;recognition.current.abort()}window.speechSynthesis?.cancel();waitingForReply.current=false;input.current?.blur();setListening(false);setMode('closed');if(historyEntry.current){historyEntry.current=false;if(window.history.state?.invincibleAiPopup)window.history.back()}};
  const submit=event=>{event?.preventDefault();const text=draft.trim();if(!text||sending)return;setDraft('');send(text)};
  const sendVoice=async text=>{if(!text||sending)return;previousReply.current=lastAssistant?.id||'';waitingForReply.current=true;setVoiceStatus('Invincible is working on it…');await send(text)};
  const startListening=()=>{
@@ -50,7 +60,7 @@ export function InvincibleAiDock({pageTitle,embedded=false}){
   listener.start();
  };
  const stopListening=()=>recognition.current?.stop();
- const openMode=next=>{if(next==='chat'){openChat();return}setMode(next);if(next==='voice')setVoiceStatus(speechRecognition?'Tap the orb and speak naturally.':'Voice input is not supported here. Use Chat instead.')};
+ const openMode=next=>{if(next==='chat'){openChat();return}flushSync(()=>setMode(next));if(next==='voice')startListening()};
 
  return <aside ref={dock} className={'invincible-ai-dock mode-'+mode+(embedded?' embedded':'')} aria-label="Invincible AI assistant">
   {mode==='chat'&&<section className="ai-dock-panel ai-dock-chat" role="dialog" aria-label="Chat with Invincible AI">
