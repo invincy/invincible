@@ -12,7 +12,7 @@ Invincible currently uses more than one project-shaped record:
 | Finance | `users/{uid}/finance/{YYYY-MM}` | Monthly accounts, transactions, checklist, and card bills. |
 | Reminders | `users/{uid}/reminders/{reminderId}` | User-scoped reminder documents. |
 
-Dashboard and Focus subscribe directly to `users/{uid}/tasks`. The current Focus item is not stored separately: the client chooses a non-complete task, prioritising `Today`, then `In Progress`, then `Backlog`. Task Workspace reads the same task and treats its ordered steps as the project route.
+Dashboard and Focus subscribe directly to `users/{uid}/tasks`. The dashboard now resolves its active Focus item from `users/{uid}/dailyPlans/{date}`. Status-derived selection (`Today`, then `In Progress`, then `Backlog`) remains a fallback and is still used by `dashboardState().focus` and the `get_current_focus` tool. AI context already prefers the daily plan; the tool responses need reconciliation. Task Workspace reads the same task and treats its ordered steps as the project route.
 
 ## Phase 1 decision
 
@@ -32,8 +32,8 @@ Creator Studio remains an independent content-specific schema in Phase 1. Its pr
 
 1. Generic projects and Creator Studio projects have different schemas and ownership paths.
 2. Generic task steps are duplicated in both `steps` and legacy `subtasks` fields.
-3. Focus is derived from task status rather than a dedicated user preference document.
-4. Several modules are React while Creator Studio and parts of Journal remain standalone JavaScript pages with duplicated Firebase initialization.
+3. AI context prefers the daily plan, but its dashboard/current-focus tools still derive focus from task status.
+4. The main app is React; Garage/Creator remain native pages and Journal has a separate bundle. Firebase configuration and native/React auth persistence are shared, but runtime SDK adapters remain separate.
 5. Some collaborative records are top-level collections while personal records are nested under `users/{uid}`.
 
 Changing those structures now would turn the AI module into a migration project and risk breaking existing pages. The Phase 1 adapter isolates these differences behind validated backend tools.

@@ -1,0 +1,8 @@
+node_modules/
+.env
+.env.*
+firebase-debug.log
+.test-output/
+layout-check.js
+layout-check.css
+layout-check.html

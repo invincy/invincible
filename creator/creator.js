@@ -1,4 +1,4 @@
-import{auth,db,observeAuth,storageError}from'../shared/firebase-client.js';
+import{db,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,serverTimestamp,setDoc,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const $=id=>document.getElementById(id);

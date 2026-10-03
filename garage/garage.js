@@ -13,7 +13,6 @@ function status(m,t=""){$("status").textContent=m;$("status").className="status 
 function vehicle(){return state.vehicles.find(x=>x.id===activeId)}
 function rows(key){return state[key].filter(x=>x.vehicleId===activeId)}
 function formValue(form,name,value){const el=form.elements[name];if(el)el.type==="checkbox"?el.checked=!!value:el.value=value??""}
-function resetEdit(kind){editing={kind,id:""};const form=$(kind+"Form");form?.reset()}
 function openDialog(kind,id=""){
  if(busy||!loaded||!user)return;dialogError("");
  const dialog=$(kind+"Dialog"),form=$(kind+"Form"),v=vehicle();form.reset();editing={kind,id};

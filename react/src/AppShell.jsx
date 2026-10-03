@@ -1,28 +1,13 @@
 import{useEffect,useMemo,useState}from'react';
 import{useAuth}from'./AuthContext';
 import{InvincibleAiDock}from'./features/invincible-ai/InvincibleAiDock';
-const base='/invincible/';
-const pages=[
- {id:'dashboard',label:'Dashboard',short:'Home',href:base,icon:'⌂'},
- {id:'ai',label:'Invincible AI',short:'AI',href:base+'ai/',icon:'✦'},
- {id:'journal',label:'Journal',href:base+'journal/',icon:'▤'},
- {id:'finance',label:'Finance',href:base+'journal/finance.html',icon:'⌁'},
- {id:'garage',label:'Garage',href:base+'garage/',icon:'◇'},
- {id:'creator',label:'Creator Studio',short:'Creator',href:base+'creator/',icon:'▷'},
- {id:'workday',label:'Workday',href:base+'workday/',icon:'▣'},
- {id:'lic',label:'LIC',href:base+'lic/',icon:'♢'},
- {id:'reminders',label:'Reminders',href:base+'reminders/',icon:'♧'},
- {id:'portfolio',label:'Portfolio',href:'https://script.google.com/macros/s/AKfycbxbdgQqTwHIYw_dS9ko_tTieVM1PAQKNAHsTqy7bFPlVNg2P-9FNoccrZwHgbeXALoY/exec',icon:'▣',external:true}
-];
-const mobilePages=pages.filter(page=>!page.external&&page.id!=='dashboard');
-const storageKey='invincible.mobileTabs.v1',defaults=['ai','workday','journal'];
-function readTabs(){try{const value=JSON.parse(localStorage.getItem(storageKey)),valid=new Set(mobilePages.map(page=>page.id));if(Array.isArray(value)&&value.length===3&&new Set(value).size===3&&value.every(id=>valid.has(id)))return value}catch{}return defaults}
-function active(page){return !page.external&&(page.id==='dashboard'?location.pathname===base:page.id==='journal'?location.pathname===page.href:location.pathname.startsWith(page.href))}
+import{APP_BASE as base,navigationPages as pages,mobilePages,MOBILE_TABS_KEY as storageKey,readMobileTabs,isActivePage}from'../../shared/navigation';
+const active=page=>isActivePage(page,location.pathname);
 function NavIcon({id}){const paths={dashboard:'m3 10 9-7 9 7v10h-6v-7H9v7H3Z',ai:'m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z',journal:'M5 3h14v18H5ZM8 7h8M8 11h8M8 15h5',finance:'M3 18 9 12l4 3 8-10M16 5h5v5',garage:'m3 12 9-9 9 9-9 9Z',creator:'m7 4 13 8-13 8Z',workday:'M4 5h16v16H4ZM4 10h16M8 3v4M16 3v4',lic:'m12 3 8 3v6c0 5-8 9-8 9S4 17 4 12V6Z',reminders:'M5 17h14l-2-3V9a5 5 0 0 0-10 0v5ZM10 21h4',portfolio:'M4 20V10M12 20V4M20 20v-7',more:'M5 12h.01M12 12h.01M19 12h.01'};return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={id==='more'?'3.5':'1.7'} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[id]||paths.more}/></svg>}
 function NavLink({page,mobile=false}){return <a className={'react-nav-link'+(active(page)?' active':'')} href={page.href} target={page.external?'_blank':undefined} rel={page.external?'noopener':undefined} aria-current={active(page)?'page':undefined}><span className="react-nav-icon"><NavIcon id={page.id}/></span><span>{mobile?page.short||page.label:page.label}</span>{page.external&&<span aria-hidden="true">↗</span>}</a>}
 export function AppShell({children,pageTitle}){
  const{user,ready,error,login}=useAuth();
- const[moreOpen,setMoreOpen]=useState(false),[editing,setEditing]=useState(false),[tabs,setTabs]=useState(readTabs),[draft,setDraft]=useState(tabs);
+ const[moreOpen,setMoreOpen]=useState(false),[editing,setEditing]=useState(false),[tabs,setTabs]=useState(readMobileTabs),[draft,setDraft]=useState(tabs);
  useEffect(()=>{
   const viewport=window.matchMedia('(max-width: 1024px)');
   const close=()=>{setMoreOpen(false);setEditing(false)};

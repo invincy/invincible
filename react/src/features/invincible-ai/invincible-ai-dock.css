@@ -10,7 +10,7 @@
 @media(prefers-reduced-motion:reduce){.ai-dock-panel,.ai-dock-choices,.ai-dock-thinking i,.ai-voice-orb.listening>i,.ai-voice-orb.thinking>span{animation:none}}
 
 /* Glossy amber and turquoise orb, shared by the launcher and chat. */
-.ai-orb{border:0!important;border-radius:50%!important;background:radial-gradient(ellipse at 32% 25%,rgba(255,255,239,.88),transparent 29%),radial-gradient(ellipse at 72% 70%,#42d8b6,transparent 56%),radial-gradient(ellipse at 28% 75%,#f7cd80,transparent 58%),linear-gradient(135deg,#ffb554 12%,#d6ba75 53%,#66c6a9)!important;box-shadow:inset -5px -7px 15px rgba(43,93,79,.18),inset 2px 3px 8px rgba(255,233,180,.48),0 0 36px rgba(244,183,70,.23)!important}
+.ai-orb{border:0!important;border-radius:50%!important;box-shadow:inset -5px -7px 15px rgba(43,93,79,.18),inset 2px 3px 8px rgba(255,233,180,.48),0 0 36px rgba(244,183,70,.23)!important;position:relative;isolation:isolate;overflow:hidden;background:#c7b270!important}
 .ai-dock-avatar.ai-orb{width:62px;height:62px;border-radius:50%;transition:transform .25s ease,filter .25s ease}
 .ai-dock-avatar.ai-orb:focus-visible{outline:2px solid #f4c768;outline-offset:5px}
 .ai-dock-avatar.ai-orb:hover{filter:brightness(1.08)}
@@ -30,7 +30,6 @@
 @media(max-width:1024px){.mode-voice .ai-dock-panel{bottom:calc(var(--dock-visible-bottom,0px) + 8px);min-height:0;height:min(420px,calc(var(--dock-visible-height,100dvh) - 16px));grid-template-rows:auto minmax(0,1fr) auto}.ai-dock-voice .ai-voice-body{min-height:0;overflow-y:auto}.ai-dock-voice .ai-voice-orb{flex-shrink:0}}
 
 /* Flow the colours inside the sphere while its highlight stays in place. */
-.ai-orb{position:relative;isolation:isolate;overflow:hidden;background:#c7b270!important}
 .ai-orb::before{content:"";position:absolute;inset:-40%;z-index:-2;background:conic-gradient(from 20deg,#ffb554,#f7cd80 25%,#42d8b6 48%,#66c6a9 65%,#ebc177 82%,#ffb554);filter:blur(7px);animation:avatar-colour-flow 14s linear infinite;pointer-events:none}
 .ai-orb::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:radial-gradient(ellipse at 32% 25%,rgba(255,255,239,.85),transparent 34%),radial-gradient(ellipse at 75% 80%,rgba(18,65,62,.22),transparent 65%);pointer-events:none}
 @keyframes avatar-colour-flow{to{transform:rotate(360deg)}}

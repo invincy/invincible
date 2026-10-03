@@ -1,26 +1,7 @@
+import{APP_BASE as BASE,navigationPages as pages,mobilePages as selectableMobilePages,MOBILE_TABS_KEY,readMobileTabs,isActivePage}from'./shared/navigation.js';
 (() => {
-  const BASE = '/invincible/';
-  const pages = [
-    { id: 'dashboard', label: 'Dashboard', short: 'Home', href: BASE, icon: 'home', primary: true },
-    { id: 'ai', label: 'Invincible AI', short: 'AI', href: BASE + 'ai/', icon: 'ai', primary: true },
-    { id: 'journal', label: 'Journal', short: 'Journal', href: BASE + 'journal/', icon: 'journal', primary: true },
-    { id: 'finance', label: 'Finance', href: BASE + 'journal/finance.html', icon: 'finance' },
-    { id: 'garage', label: 'Garage', href: BASE + 'garage/', icon: 'garage' },
-    { id: 'creator', label: 'Creator Studio', href: BASE + 'creator/', icon: 'creator' },
-    { id: 'workday', label: 'Workday', short: 'Workday', href: BASE + 'workday/', icon: 'workday', primary: true },
-    { id: 'lic', label: 'LIC', href: BASE + 'lic/', icon: 'lic' },
-    { id: 'reminders', label: 'Reminders', short: 'Reminders', href: BASE + 'reminders/', icon: 'reminders', primary: true },
-    {
-      id: 'portfolio',
-      label: 'Portfolio',
-      href: 'https://script.google.com/macros/s/AKfycbxbdgQqTwHIYw_dS9ko_tTieVM1PAQKNAHsTqy7bFPlVNg2P-9FNoccrZwHgbeXALoY/exec',
-      icon: 'portfolio',
-      external: true
-    }
-  ];
-
   const icons = {
-    home: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3l8.5 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-4.5v-6h-5v6H5a1.5 1.5 0 0 1-1.5-1.5z"/></svg>',
+    dashboard: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3l8.5 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-4.5v-6h-5v6H5a1.5 1.5 0 0 1-1.5-1.5z"/></svg>',
     ai: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 1.7 5.3L19 9l-5.3 1.7L12 16l-1.7-5.3L5 9l5.3-1.7zM18.5 15l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z"/></svg>',
     journal: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3.5h12.5A1.5 1.5 0 0 1 19 5v15.5H6.5A2.5 2.5 0 0 1 4 18V5a1.5 1.5 0 0 1 1-1.42M7 8h8M7 12h8M7 16h5"/></svg>',
     finance: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10m5 10V4m6 16v-7m5 7V7M2.5 20.5h19"/></svg>',
@@ -33,28 +14,8 @@
     more: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>'
   };
 
-  const path = location.pathname.replace(/index\.html$/, '');
-  const MOBILE_TABS_KEY = 'invincible.mobileTabs.v1';
-  const defaultMobileTabs = ['ai', 'workday', 'journal'];
-  const selectableMobilePages = pages.filter(page => !page.external && page.id !== 'dashboard');
-
-  function readMobileTabs() {
-    try {
-      const saved = JSON.parse(localStorage.getItem(MOBILE_TABS_KEY));
-      const validIds = new Set(selectableMobilePages.map(page => page.id));
-      if (Array.isArray(saved) && saved.length === 3 && new Set(saved).size === 3 && saved.every(id => validIds.has(id))) return saved;
-    } catch (_) {}
-    return [...defaultMobileTabs];
-  }
-
-  let selectedMobileIds = readMobileTabs();
-  const activePage = pages.find(page => {
-    if (page.external) return false;
-    const target = page.href.replace(/index\.html$/, '');
-    if (page.id === 'dashboard') return path === BASE;
-    if (page.id === 'journal') return path === target;
-    return path.startsWith(target);
-  }) || pages[0];
+  let selectedMobileIds=readMobileTabs();
+  const activePage=pages.find(page=>isActivePage(page,location.pathname))||pages[0];
 
   const attrs = page => [
     'class="app-nav-link"',
@@ -66,7 +27,7 @@
   const linkMarkup = (page, compact = false) => {
     const label = compact && page.short ? page.short : page.label;
     return '<a ' + attrs(page) + ' data-page="' + page.id + '">' +
-      '<span class="app-nav-icon">' + icons[page.icon] + '</span>' +
+      '<span class="app-nav-icon">' + icons[page.id] + '</span>' +
       '<span class="app-nav-label">' + label + '</span>' +
       (page.external ? '<span class="app-nav-external">↗</span>' : '') +
     '</a>';
@@ -169,7 +130,7 @@
     choiceGrid.innerHTML = selectableMobilePages.map(page => {
       const selected = draftMobileIds.includes(page.id);
       return '<button type="button" class="tab-choice' + (selected ? ' is-selected' : '') + '" data-page-id="' + page.id + '" aria-pressed="' + selected + '">' +
-        '<span class="app-nav-icon">' + icons[page.icon] + '</span><span>' + page.label + '</span><b>' + (selected ? '✓' : '+') + '</b>' +
+        '<span class="app-nav-icon">' + icons[page.id] + '</span><span>' + page.label + '</span><b>' + (selected ? '✓' : '+') + '</b>' +
       '</button>';
     }).join('');
     choiceCount.textContent = draftMobileIds.length + ' of 3 selected';

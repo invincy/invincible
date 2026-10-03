@@ -9,11 +9,11 @@ import{InvincibleAiPage}from'./features/invincible-ai/InvincibleAiPage';
 import{AppErrorBoundary}from'./AppErrorBoundary';
 import{InvincibleAiDock}from'./features/invincible-ai/InvincibleAiDock';
 import'./app-shell.css';
+import{navigationPages,pageForPath}from'../../shared/navigation';
+const reactPages={dashboard:DashboardPage,ai:InvincibleAiPage,workday:WorkdayPage,reminders:RemindersPage,finance:FinancePage,task:TaskPage};
 export default function App(){
  const search=new URLSearchParams(location.search),widget=search.get('widget')==='1';
  if(widget){document.body.classList.add('ai-widget-body');return <AuthProvider><InvincibleAiDock pageTitle={search.get('page')||'Invincible'} embedded/></AuthProvider>}
- const path=location.pathname;
- const title=path.startsWith('/invincible/ai')?'Invincible AI':path.startsWith('/invincible/workday')?'Workday':path.startsWith('/invincible/reminders')?'Reminders':path.startsWith('/invincible/journal/finance')?'Finance':path.startsWith('/invincible/task')?'Task Workspace':'Dashboard';
- const Page=title==='Invincible AI'?InvincibleAiPage:title==='Workday'?WorkdayPage:title==='Reminders'?RemindersPage:title==='Finance'?FinancePage:title==='Task Workspace'?TaskPage:DashboardPage;
+ const requested=pageForPath(location.pathname),page=reactPages[requested.id]?requested:navigationPages[0],title=page.label,Page=reactPages[page.id];
  return <AppErrorBoundary><AuthProvider><AppShell pageTitle={title}><Page/></AppShell></AuthProvider></AppErrorBoundary>
 }

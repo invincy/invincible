@@ -1,0 +1,10 @@
+{
+  "name": "invincible",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix react run build",
+    "check": "node scripts/check-site.mjs",
+    "test": "node --test tests/*.mjs && npm --prefix functions test",
+    "test:browser": "node tests/storage-browser.cjs && node tests/navigation-browser.cjs"
+  }
+}
