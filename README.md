@@ -40,7 +40,7 @@ Legacy task `subtasks` mirrors are still written alongside `steps` for compatibi
 
 ## Styles and generated assets
 
-Dashboard owns one mobile-first stylesheet, `react/src/dashboard.css`, imported by its React page. The previous base/mobile override files are removed. Phone widths below 700px use four compact lanes in a 2×2 board, tablets from 700–1100px use two, and desktop widths above 1100px use three. Focus controls, project progress and growing text use grid flow. The shared shell owns navigation only. Lanes retain distinct grey/gold/blue/green glass with fading top and bottom, and side rails only; phone lanes scroll internally and expand on tap. Dashboard preserves its dark visual theme across device colour preferences and supports reduced motion; the other pages still need a wider visual audit.
+Dashboard owns one mobile-first stylesheet, `react/src/dashboard.css`, imported by its React page. The previous base/mobile override files are removed. Phone widths below 700px use four compact lanes in a 2×2 board, tablets from 700–1100px use two, and desktop widths above 1100px use three. Focus controls and project progress use grid flow; the active project/action heading sits inside the orb, and smaller task titles share a row with their movement arrows. The shared shell owns navigation only. Lanes retain distinct grey/gold/blue/green glass with fading top and bottom, and side rails only; phone lanes scroll internally and expand on tap. Dashboard preserves its dark visual theme across device colour preferences and supports reduced motion; the other pages still need a wider visual audit.
 
 `npm run build` clears generated assets, builds content-hashed entry/chunk/CSS filenames, and refreshes all six HTML loaders automatically. Do not add query versions to the JavaScript entry: lazy chunks must import the identical entry URL. JavaScript is split by page and the shared Firebase SDK; CSS intentionally remains one generated asset to preserve existing cross-page style order. Native navigation is an ES module; every native page must load it with `type="module"`.
 
@@ -89,3 +89,23 @@ This cleanup changes code organization and removes unreachable implementations. 
 Overdue reminders have their own visible group. Daily completion reads the latest reminder and atomically marks it complete plus creates one deterministic next occurrence. Repeated completion is a no-op. Completing a missed daily reminder schedules the next calendar day at its original local time, skipping missed dates; historical duplicates are not deleted. Save failures retain the card/form for retry. Loading states appear while auth, routes, tasks and reminders restore.
 
 The responsive browser check uses 24 realistic long-text task records across 14 viewports, including 1024×768, 1180×820, 768×1024, 820×1180, and 320–507px split-screen widths. These are controlled records in Chromium, not actual user data or iPad Safari. Signed-in production permissions and physical-device checks remain outstanding.
+
+## Particle orb rendering
+
+`react/src/FocusOrb.jsx` owns the WebGL renderer and interaction lifecycle; `orb-particles.js` owns the deterministic particle tiers. All three stream families taper from a 3.4-point head to a 45% tail, with a power-curve alpha fade and sampling that tightens with the radius. The globe motion, tilt, breathing, pointer/drag/inertia formulas, palettes, fallback dots, reduced-motion fixed time and `theme` prop remain unchanged.
+
+| Setting | Previous | Current |
+| --- | --- | --- |
+| Desktop particles | 59,120 | 19,456 |
+| Particles at ≤1024px | 55,520 | 14,544 |
+| Low-capability desktop / mobile | Same budgets as above | 14,544 / 11,112 |
+| Desktop vertex buffer | 1,182,400 bytes | 389,120 bytes |
+| Mobile vertex buffer | 1,110,400 bytes | 290,880 bytes (222,240 at low tier) |
+| Idle / interactive desktop cadence | 45 fps cap, rAF with skipped frames | 24 / 40 fps target, timer then rAF |
+| Idle / interactive mobile cadence | 30 fps cap, rAF with skipped frames | 24 / 30 fps target, timer then rAF |
+| Maximum pixel ratio, desktop / mobile | 1.5 / 1 | 1.25 / 1 |
+| WebGL antialias | Enabled | Disabled; low-power preference retained |
+
+Low capability means a reported `hardwareConcurrency <= 4` or `deviceMemory <= 4`; absent values do not force that tier. Cadence figures are scheduling targets: display refresh and device load can lower actual fps. Static GL state is initialized once and projection/viewport/point scale update only on resize. Context restoration rebuilds program/buffer/state while keeping interaction and time state. Visibility and intersection pause both scheduling stages; unmount removes observers/listeners and releases GPU resources.
+
+`npm run test:browser` includes `tests/focus-orb-browser.cjs`, which records before/after cyan/emerald/gold screenshots at 280, 480 and 800 CSS pixels with reduced motion and fixed shader time 8. The baseline defaults to PR #59's merged commit; `ORB_BASELINE_REF` can select another baseline, and `ORB_CAPTURE_BASELINE_ONLY=1` captures just that baseline. Comparison images and counts are in ignored `.test-output/orb/`. Browser checks cover paced idle/hover and mobile interaction, context loss/restoration, resize/DPR, drag/inertia, low tiers, reduced motion, offscreen/document visibility pause and unmount cleanup. These are Chromium software-rendering checks, not real-device power, battery, total-memory or Safari measurements.
