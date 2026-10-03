@@ -1,6 +1,8 @@
-const CACHE="invincible-reminders-v7",timers=new Map();
-self.addEventListener("install",event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(["./","reminders.css?v=2","reminders.js?v=7","manifest.webmanifest"])).then(()=>self.skipWaiting())));
-self.addEventListener("activate",event=>event.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith("invincible-reminders-")&&key!==CACHE).map(key=>caches.delete(key)))),self.clients.claim()])));
-self.addEventListener("fetch",event=>{if(event.request.method!=="GET")return;event.respondWith(fetch(event.request).then(response=>{const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy));return response}).catch(()=>caches.match(event.request)))});
-self.addEventListener("message",event=>{if(event.data?.type!=="SCHEDULE_REMINDERS")return;for(const timer of timers.values())clearTimeout(timer);timers.clear();for(const item of event.data.items||[]){const delay=item.dueAt-Date.now();if(delay<0||delay>2147483647)continue;timers.set(item.id,setTimeout(()=>{self.registration.showNotification(item.title,{body:"Invincible reminder",tag:"reminder-"+item.id,renotify:true,data:{url:"./"},vibrate:[120,60,120]});timers.delete(item.id)},delay))}});
-self.addEventListener("notificationclick",event=>{event.notification.close();event.waitUntil(clients.matchAll({type:"window",includeUncontrolled:true}).then(list=>{const existing=list.find(c=>c.url.includes("/reminders/"));return existing?existing.focus():clients.openWindow("./")}))});
+// Retirement endpoint for browsers that still have the pre-React Reminders worker.
+// Keep this URL: deleting it would leave an old worker and stale cached app installed.
+self.addEventListener('install',event=>event.waitUntil(self.skipWaiting()));
+self.addEventListener('activate',event=>event.waitUntil((async()=>{
+ const keys=await caches.keys();
+ await Promise.all(keys.filter(key=>key.startsWith('invincible-reminders-')).map(key=>caches.delete(key)));
+ await self.registration.unregister();
+})()));

@@ -4,7 +4,7 @@ All internal pages use the Firebase project `life-by-adichimp`, the default Fire
 
 | Page | Runtime | Personal data path |
 | --- | --- | --- |
-| Dashboard / Tasks | Main React app | `users/{uid}/tasks`, `streaks`, `countdowns`, `todayPlans` |
+| Dashboard / Tasks | Main React app | `users/{uid}/tasks`, `streaks`, `countdowns`, `dailyPlans` |
 | Finance | Main React app | `users/{uid}/finance/{month}` |
 | Reminders | Main React app | `users/{uid}/reminders` |
 | Workday | Main React app | `users/{uid}/workdaySpaces/main` and invited `workdaySpaces` |
@@ -21,4 +21,4 @@ The repository rules allow authenticated owners of `users/{uid}/**`, and limit s
 
 Validation: `cd react && npm run build`; `node --test tests/storage-regressions.mjs`; `node tests/storage-browser.cjs` (requires Playwright and Chromium; executable path can be overridden via `CHROMIUM_EXECUTABLE`).
 
-Journal's original source project is not included here. Its existing bundle is retained as v10, while v11 redirects the stroke hook to the readable adapter, adjusts auth persistence order, observes account changes, and displays sync status. A future Journal rebuild must retain that adapter or port its behavior into its source hook.
+Journal's original source project is not included here. Only the active v11 application bundle is retained in the working tree; previous versions remain in Git history. The v11 bundle redirects its stroke hook to the readable adapter, adjusts auth persistence order, observes account changes, and displays sync status. A future Journal rebuild must retain that adapter or port its behavior into its source hook.
