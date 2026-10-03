@@ -12,3 +12,5 @@ body[data-theme="amber"]{--cyan:#ffc247;--cyan2:#ff8a00;--orange:#ffe08a;--line:
 body[data-theme="amber"] .vehicle-hero{background:linear-gradient(125deg,rgba(25,15,3,.97),rgba(72,41,5,.92))}
 body[data-theme="green"]{--cyan:#9cff38;--cyan2:#39ff14;--orange:#ff9b42}
 .appearance-fields{padding:12px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.025)}
+
+.garage-save-error{color:#ff8999;font-size:.85rem;line-height:1.45}button:disabled{cursor:wait;opacity:.45}

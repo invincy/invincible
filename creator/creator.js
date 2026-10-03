@@ -1,10 +1,9 @@
-import{initializeApp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import{getAuth}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import{collection,deleteDoc,doc,getDoc,getDocs,getFirestore,onSnapshot,query,serverTimestamp,setDoc,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import{auth,db,observeAuth,storageError}from'../shared/firebase-client.js';
+import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,serverTimestamp,setDoc,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-const config={apiKey:"AIzaSyBeVpUqcRO_VXfQrGVL5OaSGHKFB8XEQMc",authDomain:"life-by-adichimp.firebaseapp.com",projectId:"life-by-adichimp",storageBucket:"life-by-adichimp.firebasestorage.app",messagingSenderId:"761981819700",appId:"1:761981819700:web:8e88516817ed40b9866361"};
-const auth=getAuth(initializeApp(config)),db=getFirestore(),$=id=>document.getElementById(id);
+const $=id=>document.getElementById(id);
 const stages=["Ideas","Research","Script","Record","Edit","Scheduled","Published"];
+let subscriptions=[],authGeneration=0;
 let user=null,state={items:[]},ownedItems=new Map(),sharedItems=new Map(),editingId="",filter="All",queryText="",mobileStage="Ideas",metricFilter="";
 
 const newId=()=>crypto.randomUUID?.()||String(Date.now()+Math.random());
@@ -43,12 +42,12 @@ function mergeProjects(){
 }
 
 async function saveItem(item){
-  if(!user)return;
+  if(!user)throw Error("Restore your Google session on Dashboard before saving.");
   status("Saving…");
   const payload={...item,id:item.id,ownerUid:item.ownerUid||user.uid,ownerEmail:item.ownerEmail||(user.email||"").toLowerCase(),editorEmails:item.editorEmails||[],updatedAt:serverTimestamp()};
   if(!item.createdAt)payload.createdAt=serverTimestamp();
   try{await setDoc(doc(db,"creatorProjects",item.id),payload,{merge:true});status("Synced to Firebase","ok");}
-  catch(error){status("Save failed: "+error.message,"error");throw error;}
+  catch(error){status(storageError(error),"error");throw error;}
 }
 
 async function migrateLegacyProjects(){
@@ -60,8 +59,8 @@ async function migrateLegacyProjects(){
 
 function subscribeProjects(){
   const projects=collection(db,"creatorProjects"),email=(user.email||"").toLowerCase();
-  onSnapshot(query(projects,where("ownerUid","==",user.uid)),snapshot=>{ownedItems=new Map(snapshot.docs.map(row=>[row.id,{...row.data(),id:row.id}]));mergeProjects();},error=>status("Could not load your projects: "+error.message,"error"));
-  if(email)onSnapshot(query(projects,where("editorEmails","array-contains",email)),snapshot=>{sharedItems=new Map(snapshot.docs.map(row=>[row.id,{...row.data(),id:row.id}]));mergeProjects();},error=>status("Could not load shared projects: "+error.message,"error"));
+  subscriptions.push(onSnapshot(query(projects,where("ownerUid","==",user.uid)),snapshot=>{ownedItems=new Map(snapshot.docs.map(row=>[row.id,{...row.data(),id:row.id}]));mergeProjects();},error=>status("Could not load your projects: "+error.message,"error")));
+  if(email)subscriptions.push(onSnapshot(query(projects,where("editorEmails","array-contains",email)),snapshot=>{sharedItems=new Map(snapshot.docs.map(row=>[row.id,{...row.data(),id:row.id}]));mergeProjects();},error=>status("Could not load shared projects: "+error.message,"error")));
 }
 
 function openDialog(item=null){
@@ -115,10 +114,11 @@ $("deleteContent").onclick=async()=>{
   await deleteDoc(doc(db,"creatorProjects",editingId));$("contentDialog").close();
 };
 
-await auth.authStateReady();user=auth.currentUser;
-if(user){
-  try{await migrateLegacyProjects();subscribeProjects();}
-  catch(error){status("Could not prepare shared projects: "+error.message,"error");}
-}else{
-  status("Sign in on the Dashboard first, then return to Creator Studio.","error");$("status").insertAdjacentHTML("beforeend",' <a href="/invincible/">Open Dashboard</a>');
-}
+observeAuth(async current=>{
+ const generation=++authGeneration;subscriptions.forEach(stop=>stop());subscriptions=[];
+ user=current;ownedItems.clear();sharedItems.clear();state.items=[];render();$("app").hidden=true;$("addContent").disabled=!current;$("testProject").disabled=!current;
+ if($("contentDialog").open)$("contentDialog").close();
+ if(!current){status("Sign in once on Dashboard to use Creator Studio.","error");$("status").insertAdjacentHTML("beforeend",' <a href="/invincible/">Open Dashboard</a>');return}
+ subscribeProjects();
+ try{await migrateLegacyProjects()}catch(error){if(generation===authGeneration)status("Legacy import failed. "+storageError(error),"error")}
+}).catch(error=>status("Could not restore your Google session: "+error.message,"error"));

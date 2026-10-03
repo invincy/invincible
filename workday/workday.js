@@ -1,9 +1,8 @@
-import{initializeApp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import{auth,db,authReady}from'../shared/firebase-client.js';
 import{getAuth,GoogleAuthProvider,signInWithPopup}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import{getFirestore,collection,doc,getDocs,onSnapshot,query,setDoc,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-const firebaseConfig={apiKey:"AIzaSyBeVpUqcRO_VXfQrGVL5OaSGHKFB8XEQMc",authDomain:"life-by-adichimp.firebaseapp.com",projectId:"life-by-adichimp",storageBucket:"life-by-adichimp.firebasestorage.app",messagingSenderId:"761981819700",appId:"1:761981819700:web:8e88516817ed40b9866361"};
-const auth=getAuth(initializeApp(firebaseConfig)),db=getFirestore(),$=id=>document.getElementById(id);
+const $=id=>document.getElementById(id);
 const blankState=()=>({name:"My Workday",ownerUid:"",ownerEmail:"",editorEmails:[],tasks:[],routines:[]});
 const newId=()=>crypto.randomUUID?.()||String(Date.now()+Math.random());
 const localDate=(date=new Date())=>{const shifted=new Date(date.getTime()-date.getTimezoneOffset()*60000);return shifted.toISOString().slice(0,10)};
@@ -97,6 +96,6 @@ $("previousDay").onclick=()=>shiftDay(-1);$("nextDay").onclick=()=>shiftDay(1);$
 document.querySelectorAll("dialog .close").forEach(button=>button.onclick=()=>button.closest("dialog").close());
 $("signIn").onclick=async()=>{try{$("authError").textContent="";await signInWithPopup(auth,new GoogleAuthProvider())}catch(error){$("authError").textContent=error.message}};
 
-await auth.authStateReady();user=auth.currentUser;
+await authReady;user=auth.currentUser;
 if(!user){$("authGate").hidden=false;setConnection("Sign in required");auth.onAuthStateChanged(async current=>{if(!current)return;user=current;$("authGate").hidden=true;$("app").hidden=false;await discoverSpaces()})}
 else{$("app").hidden=false;await discoverSpaces()}
