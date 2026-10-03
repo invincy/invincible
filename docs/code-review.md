@@ -99,3 +99,9 @@ Verification: `npm run build`, `npm run check`, `npm run test` (13 frontend/doma
 PR #60 is the baseline. Dashboard now mounts the orb stage only at widths ≥700px, using the same breakpoint as its stylesheet. Phones create no hidden orb canvas, program, buffer or animation scheduler; crossing to tablet restores the component and crossing back cleans it up. The wide gold timer strip remains below the clock. The phone summary renders only a real focus task/action; the empty “Current focus / Move a task to Today” block is removed. No task-selection, daily-plan or database behaviour changed, and the floating AI launcher is a separate control.
 
 Validation: build, site references, diff check and the fourteen-viewport Dashboard/reminders browser check passed, including 834×1112 and 768×1024. Added empty-plan coverage and phone↔tablet mount/unmount assertions. Signed-in data and physical devices were not tested.
+
+## Phone gold focus strip — October 3
+
+Moved the existing mobile focus link into the gold timer strip: real task/action name left, timer centered, controls right. Removed the duplicated project label and the separate row below the strip. Long names clamp to two lines and still link to the task workspace. Phones show play or pause in the same slot according to the existing running state, with completion alongside; tablet/desktop controls and orb remain unchanged. Empty focus leaves the left slot empty. No focus selection, timer state or storage logic changed.
+
+Validation: build, site reference check, diff check and the Dashboard/reminders browser fixture passed across fourteen viewports, including 320px phones, 834×1112 and 768×1024 tablets. Added containment/order/centering assertions for every phone viewport and a phone play/pause swap check. Inspected the phone screenshot with a long action title. Generated assets and all six HTML loaders were rebuilt. Physical-device rendering and signed-in production data were not tested.
