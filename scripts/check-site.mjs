@@ -21,11 +21,19 @@ for(const file of files){
  }
  if(extension==='.js'||extension==='.jsx'){
   // Bundled SDK text can contain example import strings; the active Journal has one real adapter import.
-  const moduleSource=file.includes(path.sep+'assets'+path.sep)?source.split('\n')[0]:source;
-  for(const match of moduleSource.matchAll(/\b(?:import|export)\s*(?:[^;'"\n]+?\s+from\s*)?["']([^"']+)["']/g))checkReference(file,match[1]);
+  const moduleSource=file.includes(path.sep+'journal'+path.sep+'assets'+path.sep)?source.split('\n')[0]:source;
+  for(const match of moduleSource.matchAll(/\b(?:import|export)\s*(?:[^;'"\n]+?\s*from\s*)?["']([^"']+)["']/g))checkReference(file,match[1]);
+  for(const match of moduleSource.matchAll(/\bimport\(\s*["']([^"']+)["']/g))checkReference(file,match[1]);
  }
  if(extension==='.css')for(const match of source.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/g))checkReference(file,match[1].trim());
  if(extension==='.webmanifest'){const manifest=JSON.parse(source);for(const icon of manifest.icons||[])checkReference(file,icon.src)}
+}
+const reactEntries=fs.readdirSync(path.join(root,'react-dist/assets')).filter(file=>/^invincible-app-[\w-]+\.js$/.test(file));
+if(reactEntries.length!==1)errors.push('Expected one content-hashed React entry.');
+for(const file of ['index.html','ai/index.html','task/index.html','workday/index.html','journal/finance.html','reminders/index.html']){
+ const source=fs.readFileSync(path.join(root,file),'utf8');
+ const entry=source.match(/src=["']([^"']*react-dist\/assets\/[^"']+)["']/)?.[1];
+ if(!entry||entry.split('/').pop()!==reactEntries[0])errors.push(`${file} must load the hashed React entry without a query alias.`);
 }
 const journalScripts=fs.readdirSync(path.join(root,'journal/assets')).filter(file=>file.endsWith('.js'));
 if(journalScripts.length!==1)errors.push('Journal assets should contain one active application bundle, with older versions kept in Git history.');

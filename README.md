@@ -12,7 +12,7 @@ This document is the starting point for understanding what runs today, where to 
 | Invincible AI | `ai/index.html` | `react/src/features/invincible-ai/` | Main React app + Firebase callable Function |
 | Task workspace | `task/index.html` | `react/src/TaskPage.jsx`, `task-model.js`, `useTasks.js` | Main React app |
 | Finance | `journal/finance.html` | `react/src/FinancePage.jsx`, `finance-storage.js` | Main React app |
-| Reminders | `reminders/index.html` | `react/src/RemindersPage.jsx`, `reminders/reminders.css` | Main React app |
+| Reminders | `reminders/index.html` | `react/src/RemindersPage.jsx`, `reminder-model.js`, `reminders/reminders.css` | Main React app |
 | Workday | `workday/index.html` | `react/src/WorkdayPage.jsx`, `workday.css` | Main React app |
 | Garage | `garage/index.html` | `garage/garage.js`, `garage-model.js` | Native JavaScript modules |
 | Creator Studio | `creator/index.html`, `project.html` | `creator/creator.js`, `project.js`, `scene-tools.js` | Native JavaScript modules |
@@ -20,7 +20,7 @@ This document is the starting point for understanding what runs today, where to 
 | LIC | `lic/index.html`, `lic/bima-platinum/index.html` | `lic/` | Static/native pages |
 | Portfolio | External Apps Script link; separate legacy `portfolio.html` URL | Apps Script deployment; local viewer remains supported | Separate origin/backend |
 
-The main React app chooses its page in `react/src/App.jsx`. Its HTML entry points load the same generated JS/CSS assets. Garage, Creator, Journal, and LIC have their own entry points; they are not silently redirected through React.
+The main React app chooses and lazily loads its page in `react/src/App.jsx`. Its HTML entry points load the same generated JS/CSS assets. Garage, Creator, Journal, and LIC have their own entry points; they are not silently redirected through React.
 
 ## Shared code and ownership
 
@@ -40,9 +40,9 @@ Legacy task `subtasks` mirrors are still written alongside `steps` for compatibi
 
 ## Styles and generated assets
 
-Dashboard style order is explicit: `dashboard-base.css` → generated app CSS → `dashboard.css` → `mobile-dashboard.css`. Base rules were extracted from the old inline HTML without changing their order. Preserve this cascade until dashboard styles are consolidated with visual coverage.
+Dashboard owns one mobile-first stylesheet, `react/src/dashboard.css`, imported by its React page. The previous base/mobile override files are removed. Phone widths below 700px use one board column, tablets from 700–1100px use two, and desktop widths above 1100px use three. Focus controls, project progress and growing text use grid flow. The shared shell owns navigation only. Dashboard supports light/dark preferences and reduced motion; the other pages still need a wider visual audit.
 
-The main app's HTML asset query versions must change when JS/CSS is rebuilt. Native navigation is an ES module; every native page must load it with `type="module"`.
+`npm run build` clears generated assets, builds content-hashed entry/chunk/CSS filenames, and refreshes all six HTML loaders automatically. Do not add query versions to the JavaScript entry: lazy chunks must import the identical entry URL. JavaScript is split by page and the shared Firebase SDK; CSS intentionally remains one generated asset to preserve existing cross-page style order. Native navigation is an ES module; every native page must load it with `type="module"`.
 
 Journal contains one active application bundle. Its original React source/build project is not present in this repository. The readable stroke hook adapter controls drawing persistence; recovering Journal's source is required before a complete integration into the main React app. Older bundles remain recoverable through Git history.
 
@@ -63,7 +63,7 @@ The Functions deployment targets Node 22. The cleanup checks here also ran under
 npm run build          # Vite build into react-dist/
 npm run check          # local asset references and module navigation loaders
 npm run test           # navigation, storage, worker retirement, and backend tools
-npm run test:browser   # Garage and React/native navigation browser integration
+npm run test:browser   # Garage, navigation, dashboard and reminder browser integration
 ```
 
 Browser tests need Playwright and Chromium. Set `CHROMIUM_EXECUTABLE` to an installed browser executable when the provided runtime path is unavailable. Browser fixtures use a controlled Firestore adapter, not production account data. Optional live-rule tests use `npm --prefix functions run test:emulator`.
@@ -77,9 +77,15 @@ The October 3 cleanup removed 15 obsolete files, including seven old Journal bun
 The [code review](docs/code-review.md) records validation and remaining risks. The next work should follow this order:
 
 1. Verify Google-session reuse and read/write/edit/delete access against deployed Firebase with a real signed-in account.
-2. Resolve the AI's status-derived focus versus the dashboard's daily queue, and review overdue/reminder completion behavior.
+2. Resolve the AI's status-derived focus versus the dashboard's daily queue. Overdue reminders and atomic daily completion are now covered by regression tests.
 3. Add conflict handling for simultaneous Creator edits before broadening collaboration.
 4. Migrate Garage and Creator into the main React app while preserving paths, record IDs, and saved data.
-5. Recover Journal's source, migrate its drawing UI, then review CSS coverage and split the main bundle by page.
+5. Recover Journal's source and migrate its drawing UI. Route splitting and Dashboard CSS consolidation are complete; remaining pages need their own responsive/style audit.
 
 This cleanup changes code organization and removes unreachable implementations. It does not delete user database records or claim that every remaining product issue is resolved.
+
+## Tablet and reminders follow-up
+
+Overdue reminders have their own visible group. Daily completion reads the latest reminder and atomically marks it complete plus creates one deterministic next occurrence. Repeated completion is a no-op. Completing a missed daily reminder schedules the next calendar day at its original local time, skipping missed dates; historical duplicates are not deleted. Save failures retain the card/form for retry. Loading states appear while auth, routes, tasks and reminders restore.
+
+The responsive browser check uses 24 realistic long-text task records across 14 viewports, including 1024×768, 1180×820, 768×1024, 820×1180, and 320–507px split-screen widths. These are controlled records in Chromium, not actual user data or iPad Safari. Signed-in production permissions and physical-device checks remain outstanding.

@@ -2,9 +2,9 @@
   "name": "invincible",
   "private": true,
   "scripts": {
-    "build": "npm --prefix react run build",
+    "build": "node scripts/clean-react-assets.mjs && npm --prefix react run build && node scripts/sync-react-assets.mjs",
     "check": "node scripts/check-site.mjs",
     "test": "node --test tests/*.mjs && npm --prefix functions test",
-    "test:browser": "node tests/storage-browser.cjs && node tests/navigation-browser.cjs"
+    "test:browser": "node tests/storage-browser.cjs && node tests/navigation-browser.cjs && node tests/dashboard-reminders-browser.cjs"
   }
 }

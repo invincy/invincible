@@ -9,7 +9,7 @@ export function AppShell({children,pageTitle}){
  const{user,ready,error,login}=useAuth();
  const[moreOpen,setMoreOpen]=useState(false),[editing,setEditing]=useState(false),[tabs,setTabs]=useState(readMobileTabs),[draft,setDraft]=useState(tabs);
  useEffect(()=>{
-  const viewport=window.matchMedia('(max-width: 1024px)');
+  const viewport=window.matchMedia('(max-width: 1100px)');
   const close=()=>{setMoreOpen(false);setEditing(false)};
   const resize=event=>{if(!event.matches)close()};
   const escape=event=>{if(event.key==='Escape')close()};
@@ -20,7 +20,7 @@ export function AppShell({children,pageTitle}){
  const selected=useMemo(()=>tabs.map(id=>pages.find(page=>page.id===id)).filter(Boolean),[tabs]);
  const toggle=id=>setDraft(current=>current.includes(id)?current.filter(value=>value!==id):current.length<3?[...current,id]:current);
  const save=()=>{if(draft.length!==3)return;localStorage.setItem(storageKey,JSON.stringify(draft));setTabs(draft);setEditing(false);setMoreOpen(false)};
- if(!ready)return <div className="app-loading"><span>I</span><p>Opening Invincible…</p></div>;
+ if(!ready)return <div className="app-loading"><span>I</span><p>Opening Invincible…</p><div className="auth-skeleton" aria-hidden="true"><i/><i/><i/></div></div>;
  if(!user)return <div className="app-login"><div className="login-card"><span className="login-mark">I</span><h1>Invincible</h1><p>One account for your complete personal operating system.</p><button onClick={login}>Continue with Google</button>{error&&<small>{error}</small>}</div></div>;
  return <div className="react-app-shell">
   <header className="react-topbar"><a className="react-brand" href={base}><span>I</span><strong>INVINCIBLE</strong></a><nav className="react-desktop-nav" aria-label="Primary navigation">{pages.map(page=><NavLink key={page.id} page={page}/>)}</nav><span className="react-mobile-title">{pageTitle}</span>{pageTitle==='Dashboard'&&<div id="dashboard-notification-slot"/>}</header>
