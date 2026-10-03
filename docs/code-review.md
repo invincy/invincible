@@ -93,3 +93,9 @@ Baseline: PR #59, merged commit `2acf40fa6ad3f65f9ccb540dcb92bf213f4def94`.
 - Rebuilt `react-dist` with the build script and refreshed all six HTML entries to new content hashes, without query aliases or compiled-bundle edits.
 
 Verification: `npm run build`, `npm run check`, `npm run test` (13 frontend/domain + 8 backend), `npm run test:browser` and diff check passed. Browser suite includes the Dashboard's fourteen viewports (specifically 834×1112 and 768×1024), title/arrow alignment and focus heading containment, storage/navigation/reminder checks, plus all eighteen orb screenshots (three themes × three widths × before/after) at fixed time. Images were visually inspected for thin, continuous tapered lines and spherical form. Separate WebGL checks passed cadence, static GL setup, DPR/resize, loss/restoration and fallback display, drag/inertia, low-capability tiers, reduced motion, visibility/intersection pause and resource cleanup. No real-hardware GPU/CPU/power/battery measurements, physical iPad Safari verification, or signed-in production-data changes were performed.
+
+## Phone focus cleanup — October 3
+
+PR #60 is the baseline. Dashboard now mounts the orb stage only at widths ≥700px, using the same breakpoint as its stylesheet. Phones create no hidden orb canvas, program, buffer or animation scheduler; crossing to tablet restores the component and crossing back cleans it up. The wide gold timer strip remains below the clock. The phone summary renders only a real focus task/action; the empty “Current focus / Move a task to Today” block is removed. No task-selection, daily-plan or database behaviour changed, and the floating AI launcher is a separate control.
+
+Validation: build, site references, diff check and the fourteen-viewport Dashboard/reminders browser check passed, including 834×1112 and 768×1024. Added empty-plan coverage and phone↔tablet mount/unmount assertions. Signed-in data and physical devices were not tested.
