@@ -53,7 +53,14 @@ body.home-page{margin:0;min-height:100dvh;background:radial-gradient(circle at 2
  .subtask-count,.lane-empty{font-size:11px}
  .kanban-column.is-expanded{grid-column:1/-1;height:clamp(320px,65dvh,560px)}
  .kanban-column.is-expanded h3{display:block;font-size:14px}.kanban-column.is-expanded .subtask-count{font-size:12px}
- .focus-panel{padding:0;border:0;background:transparent;box-shadow:none}.mobile-focus-summary small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.mobile-focus-summary strong{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:16px}
+ .focus-panel{padding:0;border:0;background:transparent;box-shadow:none}
+ .focus-session{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:6px;flex-wrap:nowrap}
+ .mobile-focus-summary{order:0;grid-column:1;grid-row:1;gap:0;color:var(--dashboard-gold)}
+ .mobile-focus-summary strong{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px;line-height:1.3}
+ .focus-timer{grid-column:2;grid-row:1;font-size:clamp(20px,5.2vw,30px)}
+ .focus-icon-controls{grid-column:3;grid-row:1;justify-self:end;gap:4px}
+ .focus-session:not(.is-running) .focus-pause,.focus-session.is-running .focus-play{display:none}
+ .focus-control-cluster{padding:8px}
  .focus-control-cluster{border:0;border-radius:0;background:radial-gradient(ellipse at center,#ffdb7940,transparent 72%),linear-gradient(90deg,transparent,#ad741d80 18% 82%,transparent)}
 }
 /* Tablets have a two-column board and a distinct focus/controls grid. */
