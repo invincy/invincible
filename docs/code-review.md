@@ -74,3 +74,9 @@ Baseline: `master` at `53cda787` (cleanup).
 Viewport coverage: 320×640, 393×852, 507×768, 699×900, 700×1024, 768×1024, 820×1180, 834×1112, 1024×768, 1100×820, 1101×768, 1180×820, 1280×600, 1440×900. Tests verify horizontal overflow, timer/clock/progress/board separation, board columns, reachable final tasks and 44px Dashboard buttons. Light preference and reduced-motion styling are exercised. These fixtures do not replace a signed-in test with real data or an iPad Safari check.
 
 Live Firebase permissions, Creator simultaneous-edit conflicts, the AI focus-tool mismatch and missing Journal source remain unresolved. React migration remains partial.
+
+## Dashboard styling restoration — October 3
+
+PR #58 replaced the compact phone board and status glass styling. Restored four compact lanes in a 2×2 phone grid, internal scrolling and tap expansion, grey/gold/blue/green lane backgrounds, fading top/bottom surfaces with side rails only, and the original dark theme regardless of device preference. Desktop retains three project lanes and tablets two columns, with flow-based timer/clock separation. Removed the enclosing focus card appearance and restored the wide gold timer glow. Long titles are visually clamped while complete task content stays available in the workspace. No storage, reminder or auth logic changed.
+
+Validation: production build, asset references, eleven frontend/domain tests, and Chromium fixture checks across fourteen viewports passed, including lane expansion, timer controls, form, scrolling, borders, failed reminder retry and daily recurrence. Fixture screenshots were inspected; live account data and physical iPad Safari were not tested.
