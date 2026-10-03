@@ -1,12 +1,11 @@
-import{initializeApp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import{getAuth}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import{getFirestore,doc,getDoc,onSnapshot,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
+import{doc,getDoc,onSnapshot,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{estimateSeconds,inspectScenes,parseSceneInput,splitVoiceoverScript}from"./scene-tools.js?v=2";
 
-const config={apiKey:"AIzaSyBeVpUqcRO_VXfQrGVL5OaSGHKFB8XEQMc",authDomain:"life-by-adichimp.firebaseapp.com",projectId:"life-by-adichimp",storageBucket:"life-by-adichimp.firebasestorage.app",messagingSenderId:"761981819700",appId:"1:761981819700:web:8e88516817ed40b9866361"};
-const auth=getAuth(initializeApp(config)),db=getFirestore(),$=id=>document.getElementById(id),projectId=new URLSearchParams(location.search).get("id");
+const $=id=>document.getElementById(id),projectId=new URLSearchParams(location.search).get("id");
 const focusFields=["voiceover","characterPrompt","imagePrompt","videoPrompt"];
 const focusLabels={voiceover:"Voiceover",characterPrompt:"Character reference",imagePrompt:"Image prompt",videoPrompt:"Video prompt"};
+let saveChain=Promise.resolve(),editVersion=0,cloudVersion=0;
 let user=null,project=null,projectRef=null,saveTimer=null,localDirty=false,pendingImport=[],focusState={sceneId:"",field:"voiceover"},touchStart=null,expandedSceneId="";
 
 const newId=()=>crypto.randomUUID?.()||String(Date.now()+Math.random());
@@ -114,22 +113,23 @@ function updateStats(){
   $("projectProgressBar").style.width=progress+"%";
 }
 
+function copyProject(value){if(Array.isArray(value))return value.map(copyProject);if(value&&Object.getPrototypeOf(value)===Object.prototype)return Object.fromEntries(Object.entries(value).map(([key,item])=>[key,copyProject(item)]));return value}
+function draftKey(){return 'invincible.creatorDraft.'+user.uid+'.'+projectId}
+function keepDraft(){try{localStorage.setItem(draftKey(),JSON.stringify({project,baseUpdatedAt:cloudVersion}))}catch(error){status("Could not keep a local draft: "+error.message,"error")}}
 async function save(){
-  if(!user||!project||!projectRef)return;
-  clearTimeout(saveTimer);
-  status("Saving…");
+ if(!user||!project||!projectRef)return false;
+ clearTimeout(saveTimer);saveTimer=null;localDirty=true;const version=++editVersion,payload=copyProject(project),ref=projectRef;
+ keepDraft();status("Saving…");
+ const result=saveChain.then(async()=>{
   try{
-    await setDoc(projectRef,{...project,updatedAt:serverTimestamp()},{merge:true});
-    localDirty=false;
-    status("Saved to Firebase","ok");
-  }catch(error){status("Save failed: "+error.message,"error");}
+   await setDoc(ref,{...payload,updatedAt:serverTimestamp()},{merge:true});
+   if(version===editVersion){localDirty=false;localStorage.removeItem(draftKey());status("Saved to Firebase","ok")}
+   return true;
+  }catch(error){status(storageError(error)+" Your draft is kept on this device.","error");return false}
+ });saveChain=result;return result;
 }
-
 function queueSave(){
-  clearTimeout(saveTimer);
-  localDirty=true;
-  status("Unsaved changes…");
-  saveTimer=setTimeout(save,700);
+ clearTimeout(saveTimer);localDirty=true;editVersion++;keepDraft();status("Unsaved changes…");saveTimer=setTimeout(save,700);
 }
 
 function autoGrow(area){
@@ -346,7 +346,7 @@ $("addEditor").onclick=async()=>{
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return $("shareFeedback").textContent="Enter a valid Google-account email.";
   if(email===ownerEmail)return $("shareFeedback").textContent="You already own this project.";
   project.editorEmails=[...new Set([...(project.editorEmails||[]),email])];
-  await save();$("shareEmail").value="";$("shareFeedback").textContent="Editor added. They will see this project after signing in.";renderEditors();render();
+  if(!await save())return;$("shareEmail").value="";$("shareFeedback").textContent="Editor added. They will see this project after signing in.";renderEditors();render();
 };
 
 $("editorList").onclick=async event=>{
@@ -355,7 +355,7 @@ $("editorList").onclick=async event=>{
   const email=button.dataset.removeEditor;
   if(!confirm("Remove "+email+" from this project?"))return;
   project.editorEmails=(project.editorEmails||[]).filter(item=>item!==email);
-  await save();$("shareFeedback").textContent="Editor removed.";renderEditors();render();
+  if(!await save())return;$("shareFeedback").textContent="Editor removed.";renderEditors();render();
 };
 
 $("copyProjectLink").onclick=async()=>{
@@ -527,7 +527,7 @@ document.addEventListener("visibilitychange",()=>{if(document.hidden&&saveTimer)
 
 async function load(){
   if(!projectId){status("No project was selected.","error");return;}
-  await auth.authStateReady();user=auth.currentUser;
+  await authReady;user=auth.currentUser;
   if(!user){status("Sign in on the Dashboard first.","error");$("status").insertAdjacentHTML("beforeend",' <a href="/invincible/">Open Dashboard</a>');return;}
   try{
     projectRef=doc(db,"creatorProjects",projectId);
@@ -541,6 +541,8 @@ async function load(){
     }
     if(snapshot?.exists())project=snapshot.data();
     else if(!project){status("This project was not found or has not been shared with your account.","error");return;}
+    cloudVersion=project.updatedAt?.toMillis?.()||0;
+    try{const draft=JSON.parse(localStorage.getItem(draftKey())||'null');if(draft?.project&&draft.baseUpdatedAt===cloudVersion){project={...draft.project,ownerUid:project.ownerUid,ownerEmail:project.ownerEmail};if(snapshot?.data()?.createdAt)project.createdAt=snapshot.data().createdAt;else delete project.createdAt;delete project.updatedAt;localDirty=true;setTimeout(save,0)}}catch{}
     project.id=projectId;
     project.editorEmails=(project.editorEmails||[]).map(email=>email.toLowerCase());
     project.scenes=(project.scenes||[]).map(makeScene);
@@ -550,7 +552,9 @@ async function load(){
       const preferred=project.scenes.find(scene=>scene.id===saved.sceneId&&!scene.completed&&!scene.skipped),next=preferred||project.scenes.find(scene=>!scene.completed&&!scene.skipped)||project.scenes.find(scene=>scene.id===saved.sceneId)||project.scenes[0];
       if(next)setTimeout(()=>openFocus(next.id,preferred?saved.field:"voiceover",false),0);
     }
-    onSnapshot(projectRef,live=>{
+    onSnapshot(projectRef,{includeMetadataChanges:true},live=>{
+      if(live.metadata.hasPendingWrites)return;
+      cloudVersion=live.data()?.updatedAt?.toMillis?.()||cloudVersion;
       if(!live.exists()){status("This shared project is no longer available.","error");return;}
       if(localDirty)return;
       const incoming={...live.data(),id:projectId};
@@ -567,3 +571,7 @@ async function load(){
 }
 
 load();
+let observedUid;
+observeAuth(current=>{const uid=current?.uid||'';if(observedUid===undefined){observedUid=uid;return}if(uid!==observedUid)location.reload()});
+window.addEventListener('pagehide',()=>{if(localDirty&&project&&user)keepDraft()});
+window.addEventListener('online',()=>{if(localDirty)save()});
