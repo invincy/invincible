@@ -1,3 +1,56 @@
+/* Dashboard owns this single, mobile-first layout. Decorative canvases alone use absolute positioning. */
+:root{--space-1:8px;--space-2:16px;--space-3:24px;--space-4:32px;--dashboard-radius:16px;--dashboard-bg:#071315;--dashboard-panel:#10262be8;--dashboard-text:#eafcff;--dashboard-muted:#9fbcc3;--dashboard-line:#64e6f72e;--dashboard-cyan:#64e6f7;--dashboard-gold:#ffe09b;--dashboard-shadow:0 8px 24px #0002,0 24px 64px #0001}
+body.home-page{margin:0;min-height:100dvh;background:radial-gradient(circle at 20% 20%,#00b8c01a,transparent 55%),var(--dashboard-bg);color:var(--dashboard-text);font-family:Roboto,system-ui,sans-serif;color-scheme:dark}
+.home-page *{box-sizing:border-box}
+#particles-js{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;opacity:.35}
+#dashboard{position:relative;max-width:1920px;margin:auto;min-height:calc(100dvh - var(--app-top) - var(--app-bottom));padding:var(--space-2);display:grid;align-content:start;gap:var(--space-2)}
+#dashboard :is(section,div,h2,h3,a){min-width:0}
+#dashboard :is(button,summary){min-height:44px;cursor:pointer}
+#dashboard button:disabled{cursor:default;opacity:.35}
+#dashboard :is(a,button,summary):focus-visible{outline:2px solid var(--dashboard-cyan);outline-offset:3px}
+#top-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--space-1)}
+.streak-buttons,.controls{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-1)}
+.streak-button{display:flex;align-items:center;gap:8px;min-width:44px;padding:8px;border:1px solid transparent;border-radius:var(--dashboard-radius);background:transparent;color:var(--dashboard-cyan);font-size:clamp(14px,1.6vw,18px)}
+.streak-button.is-complete{background:#64e6f717;border-color:var(--dashboard-line)}.streak-button.is-missed{color:#c0957f}
+.streak-number{font-weight:800}
+#user-bar{position:relative;color:var(--dashboard-muted);font-size:13px}#user-bar summary{display:flex;align-items:center;gap:8px;padding:8px;list-style:none}#user-bar summary::-webkit-details-marker{display:none}
+.sync-menu{position:absolute;z-index:20;right:0;top:100%;width:min(280px,80vw);display:grid;gap:8px;padding:16px;border:1px solid var(--dashboard-line);border-radius:var(--dashboard-radius);background:var(--dashboard-panel);box-shadow:var(--dashboard-shadow);overflow-wrap:anywhere}.sync-menu button{padding:8px;color:var(--dashboard-text);background:transparent;border:1px solid var(--dashboard-line);border-radius:8px}
+.add-task-btn{padding:8px 16px;border:1px solid var(--dashboard-line);border-radius:var(--dashboard-radius);background:#64e6f70d;color:var(--dashboard-cyan);font-weight:700}
+.dashboard-error{margin:0;color:#ffadad;overflow-wrap:anywhere}
+#mission-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--space-2);align-items:start}
+.header-clock{text-align:right;min-width:0}.header-clock .time{color:var(--dashboard-cyan);font:700 clamp(24px,4vw,48px)/1.15 Orbitron,monospace;letter-spacing:-.04em}.header-clock .date{margin-top:8px;color:var(--dashboard-muted);font-size:12px}
+.focus-panel{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--space-2);padding:16px;border:1px solid var(--dashboard-line);border-radius:var(--dashboard-radius);background:var(--dashboard-panel);box-shadow:var(--dashboard-shadow)}
+.focus-control-cluster{order:0;border-radius:var(--dashboard-radius);background:radial-gradient(ellipse at center,#ffdb7940,transparent),linear-gradient(110deg,#59401580,#ad741d80);border:1px solid #ffd47140;padding:8px 16px;color:var(--dashboard-gold)}
+.focus-session{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}.focus-timer{font:800 clamp(26px,4vw,38px)/1.2 Orbitron,monospace;white-space:nowrap;letter-spacing:-.04em}.focus-icon-controls{display:flex;gap:8px}.focus-icon{display:grid;place-items:center;min-width:44px;min-height:44px;border:0;border-radius:12px;background:#ffe09b0d;color:var(--dashboard-gold);font-size:16px}
+.mobile-focus-summary{order:1;display:grid;gap:8px;color:var(--dashboard-text);text-decoration:none;overflow-wrap:anywhere}.mobile-focus-summary small{color:var(--dashboard-muted);font-size:12px}.mobile-focus-summary strong{font-size:clamp(16px,2vw,22px);line-height:1.4}
+.focus-orb-stage{display:none}.focus-orb{position:relative;aspect-ratio:1;width:min(100%,280px);margin:auto;isolation:isolate;touch-action:pan-y;cursor:grab}.focus-orb[data-dragging=true]{cursor:grabbing}
+.focus-orb-3d{position:absolute;inset:0;pointer-events:none}.focus-orb-3d canvas{position:absolute;inset:0;display:block;width:100%;height:100%}.orb-3d-fallback{position:absolute;inset:15%;border-radius:50%;background:radial-gradient(circle,#96ffff 0 1px,transparent 2px) 0 0/12px 13px,radial-gradient(circle,#37bbdb 0 1px,transparent 2px) 5px 6px/17px 19px;mask-image:radial-gradient(circle,#000 35%,transparent 72%);opacity:.75}.focus-orb-3d[data-ready=true] .orb-3d-fallback{display:none}.orb-theme-emerald .orb-3d-fallback{filter:hue-rotate(75deg)}.orb-theme-gold .orb-3d-fallback{filter:hue-rotate(175deg)}
+.orb-theme-button{position:absolute;bottom:0;right:0;z-index:1;display:flex;align-items:center;gap:8px;min-width:44px;min-height:44px;padding:8px 16px;border:1px solid var(--dashboard-line);border-radius:var(--dashboard-radius);background:var(--dashboard-bg);color:var(--dashboard-cyan);font-size:12px;text-transform:uppercase}.orb-theme-button.theme-gold{color:var(--dashboard-gold)}.orb-theme-button.theme-emerald{color:#8dffac}
+.orb-copy{grid-column:1/-1;text-align:center;overflow-wrap:anywhere}.focus-kicker{color:var(--dashboard-muted);font-size:12px;line-height:1.5}.focus-title{margin:8px 0;font:800 clamp(20px,2vw,28px)/1.3 'Exo 2',sans-serif}.focus-title-link{color:var(--dashboard-gold);text-decoration:none}
+.hud-readout{padding:8px;border-top:1px solid var(--dashboard-line);display:grid;gap:8px;align-content:start}.hud-readout small{color:var(--dashboard-muted);font-size:12px}.hud-readout strong{color:var(--dashboard-gold);font-size:clamp(16px,2vw,24px);line-height:1.3;overflow-wrap:anywhere}.hud-next{display:none}.hud-progress{grid-column:1}.hud-subtasks{grid-column:2}
+#kanban-container{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--space-2);align-items:start}.kanban-column{--status-accent:#cedde1;display:grid;gap:16px;align-content:start;border:1px solid var(--dashboard-line);border-radius:var(--dashboard-radius);background:var(--dashboard-panel);padding:16px;box-shadow:var(--dashboard-shadow);container-type:inline-size}
+#kanban-today{--status-accent:#ffe09b}#kanban-in-progress{--status-accent:#64e6f7}#kanban-done{--status-accent:#93e5b8}.kanban-column h2{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0;min-height:44px;color:var(--status-accent);font:800 clamp(14px,1.5vw,18px)/1.2 'Exo 2',sans-serif;overflow-wrap:anywhere}.kanban-column h2:after{content:attr(data-count);flex-shrink:0;padding:8px;min-width:32px;text-align:center;border:1px solid var(--dashboard-line);border-radius:12px;font-size:12px}.task-list{display:grid;gap:16px;align-content:start}.lane-empty{margin:0;padding:16px 0;color:var(--dashboard-muted);font-size:14px}
+.task-card{display:grid;gap:8px;border:1px solid var(--dashboard-line);border-radius:var(--dashboard-radius);padding:16px;background:#0002;color:var(--dashboard-text);overflow-wrap:anywhere;cursor:pointer;touch-action:pan-y}.task-card h3{margin:0;font:700 clamp(16px,1.6vw,20px)/1.4 'Exo 2',sans-serif}.card-nav{display:flex;justify-content:flex-end;gap:8px}.card-nav button{display:grid;place-items:center;width:44px;min-height:44px;border:1px solid var(--dashboard-line);border-radius:12px;background:#64e6f709;color:var(--status-accent);font-size:24px}.subtask-count{color:var(--dashboard-muted);font-size:12px}.card-progress{height:4px;border-radius:8px;background:var(--dashboard-line);overflow:hidden}.card-progress span{display:block;height:100%;background:var(--status-accent)}.task-card.is-selected{border-color:var(--dashboard-gold)}.task-card.dragging{opacity:.4}.touch-drag-ghost{z-index:1400;box-shadow:var(--dashboard-shadow);background:var(--dashboard-panel)}.is-drop-target,.is-drag-target{outline:2px solid var(--dashboard-cyan);outline-offset:4px}
+.dashboard-skeleton{display:grid;gap:16px}.dashboard-skeleton span{height:120px;border-radius:var(--dashboard-radius);background:linear-gradient(100deg,#173239 30%,#24464d 50%,#173239 70%);background-size:220% 100%;animation:dashboard-loading 1.5s infinite}
+.modal-overlay{position:fixed;z-index:1300;inset:0;display:grid;place-items:center;padding:16px;background:#000b;backdrop-filter:blur(8px)}.modal{display:grid;gap:16px;width:min(600px,100%);max-height:calc(100dvh - 32px);overflow:auto;padding:24px;border:1px solid var(--dashboard-line);border-radius:var(--dashboard-radius);background:var(--dashboard-panel);color:var(--dashboard-text);box-shadow:var(--dashboard-shadow)}.modal h2{margin:0;font:800 24px 'Exo 2',sans-serif}.modal-field{display:grid;gap:8px;min-width:0}.modal-field label{color:var(--dashboard-muted);font-size:14px}.modal :is(input,textarea,select){min-width:0;max-width:100%;padding:12px;border:1px solid var(--dashboard-line);border-radius:8px;background:var(--dashboard-bg);color:var(--dashboard-text);font:inherit}.modal select{min-height:44px}.modal-buttons{display:flex;gap:16px}.modal-button{min-height:44px;padding:8px 16px;border:1px solid var(--dashboard-line);border-radius:12px;background:var(--dashboard-cyan);color:#061315;font-weight:800}.modal-button.close{background:transparent;color:var(--dashboard-text)}.subtasks-list{display:grid;gap:8px}.subtask-item{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px}.delete-subtask-btn{min-height:44px;border:0;border-radius:8px;background:#ff88881a;color:#ffadad;font-size:24px}
+#dashboard-toast{position:fixed;z-index:1500;bottom:calc(var(--app-bottom) + 24px + env(safe-area-inset-bottom));left:50%;max-width:calc(100% - 32px);padding:16px;border:1px solid var(--dashboard-line);border-radius:var(--dashboard-radius);background:var(--dashboard-panel);color:var(--dashboard-text);transform:translateX(-50%);opacity:0;pointer-events:none;overflow-wrap:anywhere}#dashboard-toast.show{opacity:1}
+/* Tablets have a two-column board and a distinct focus/controls grid. */
+@media(min-width:700px){
+ #dashboard{padding:24px;gap:24px}#mission-layout{gap:24px}#kanban-container{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+ .focus-panel{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;padding:24px}.focus-orb-stage{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;grid-column:1;grid-row:1/3}.focus-orb{grid-column:1/-1;grid-row:1}.orb-copy{display:none;grid-row:2}.hud-progress,.hud-subtasks{grid-row:2}.focus-control-cluster{grid-column:2;grid-row:1;align-self:end}.mobile-focus-summary{grid-column:2;grid-row:2;align-self:start}.kanban-column.is-expanded{grid-column:1/-1}
+}
+/* Desktop reserves independent columns for focus and project lanes. */
+@media(min-width:1101px){
+ #dashboard{min-height:calc(100dvh - var(--app-top));padding:24px 32px}#mission-layout{grid-template-columns:minmax(280px,.75fr) minmax(0,1.8fr);grid-template-areas:'focus clock' 'focus board'}
+ .header-clock{grid-area:clock}.focus-panel{grid-area:focus;grid-template-columns:minmax(0,1fr);padding:16px}.focus-control-cluster{grid-column:1;grid-row:1}.focus-orb-stage{grid-column:1;grid-row:2}.orb-copy{display:block}.hud-progress,.hud-subtasks{grid-row:3}.mobile-focus-summary{display:none}
+ #kanban-container{grid-area:board;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.kanban-column.is-expanded{grid-column:auto}.kanban-column{padding:16px}
+ #dashboard-toast{bottom:24px}
+}
+@container(max-width:240px){.task-card{padding:8px}.card-nav{justify-content:space-between}.task-card h3{font-size:16px}.kanban-column h2{font-size:14px}}
+@media(pointer:coarse){.task-card{user-select:none}.focus-orb{touch-action:pan-y}}
+@media(prefers-color-scheme:light){body.home-page{color-scheme:light;--dashboard-bg:#edf5f5;--dashboard-panel:#fffffff0;--dashboard-text:#15373f;--dashboard-muted:#476870;--dashboard-line:#25596833;--dashboard-cyan:#007b86;--dashboard-gold:#77510a}.focus-title-link{color:#77510a}.focus-control-cluster{color:#533b0c}.focus-icon{color:#533b0c}.focus-orb{border-radius:50%;background:radial-gradient(circle,#173239 45%,transparent 70%)}.focus-orb-3d{filter:contrast(1.1)}.home-page .kanban-column{--status-accent:#476870}.home-page #kanban-today{--status-accent:#77510a}.home-page #kanban-in-progress{--status-accent:#007b86}.home-page #kanban-done{--status-accent:#26764a}.streak-button.is-complete{background:#007b8615}}
+@keyframes dashboard-loading{to{background-position:-220% 0}}
+@media(prefers-reduced-motion:reduce){.home-page *, .home-page *:before,.home-page *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 /* React-owned Dashboard additions. Keep new Dashboard features out of legacy index.html. */
 .finance-reminder-backdrop{
   position:fixed;
@@ -16,7 +69,8 @@
   width:min(520px,100%);
   box-sizing:border-box;
   padding:2rem 2rem 1.35rem;
-  overflow:hidden;
+  max-height:calc(100dvh - 32px);
+  overflow:auto;
   border:1px solid rgba(255,224,138,.62);
   border-radius:1.35rem;
   background:
@@ -44,8 +98,8 @@
   right:.75rem;
   display:grid;
   place-items:center;
-  width:36px;
-  height:36px;
+  width:44px;
+  height:44px;
   padding:0;
   border:1px solid rgba(174,230,235,.14);
   border-radius:50%;
@@ -110,7 +164,8 @@
 
 .finance-reminder-later{
   margin-top:.8rem;
-  padding:.25rem .6rem;
+  padding:8px 16px;
+  min-height:44px;
   border:0;
   background:transparent;
   color:#77969a;
@@ -143,86 +198,4 @@
 
 @media(prefers-reduced-motion:reduce){
   .finance-reminder-dialog,.finance-reminder-dialog::before{animation:none}
-}
-
-/* Reserve separate rows for the timer/clock and orb/board, including short tablets. */
-body.home-page .mobile-focus-summary{display:none}
-@media(min-width:1025px){
-  body.home-page #mission-layout{
-    display:grid;
-    grid-template-columns:minmax(0,2fr) minmax(0,3fr);
-    grid-template-rows:112px minmax(0,1fr);
-    gap:1rem;
-  }
-  body.home-page #focus-panel{
-    position:static;
-    inset:auto;
-    grid-column:1;
-    grid-row:1 / -1;
-    display:grid;
-    grid-template-columns:minmax(0,1fr);
-    grid-template-rows:112px minmax(0,1fr);
-    gap:1rem;
-    min-width:0;
-  }
-  body.home-page .focus-control-cluster{
-    position:static;
-    grid-column:1;
-    grid-row:1;
-    justify-self:center;
-    align-self:center;
-    width:min(100%,430px);
-    min-width:0;
-    margin:0;
-    padding:1rem;
-    transform:none;
-  }
-  body.home-page .focus-orb-stage{
-    position:relative;
-    inset:auto;
-    grid-column:1;
-    grid-row:2;
-    width:100%;
-    height:100%;
-    min-width:0;
-    min-height:0;
-    --orb-size:clamp(220px,min(21vw,42dvh),410px);
-  }
-  body.home-page .header-clock{
-    position:static;
-    grid-column:2;
-    grid-row:1;
-    justify-self:center;
-    align-self:center;
-    min-width:0;
-    width:100%;
-    box-sizing:border-box;
-    transform:none;
-    padding:.6rem 1rem;
-  }
-  body.home-page #kanban-container{
-    position:static;
-    inset:auto;
-    grid-column:2;
-    grid-row:2;
-    width:100%;
-    height:100%;
-    min-height:0;
-    min-width:0;
-    padding:0;
-    gap:clamp(.6rem,1.2vw,1.4rem);
-    overflow:hidden;
-  }
-  body.home-page .kanban-column{
-    height:100%;
-    min-height:0;
-    max-height:none;
-    min-width:0;
-  }
-  body.home-page .hud-next{left:0;top:18%;width:clamp(100px,10vw,132px)}
-  body.home-page .hud-progress{left:auto;right:0;top:18%;width:98px}
-  body.home-page .hud-subtasks{left:3%;bottom:10%}
-}
-@media(min-width:769px) and (max-width:1024px){
-  body.home-page .header-clock{align-items:center;order:-1}
 }
