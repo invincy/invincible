@@ -5,6 +5,7 @@ const path = require('node:path');
 const http = require('node:http');
 const {chromium, firefox} = require('playwright');
 const root = path.resolve(__dirname, '..');
+const buildDirectory = process.env.V2_BUILD_DIR || 'v2-dist';
 const esbuild = require(path.join(root, 'react/node_modules/esbuild'));
 const output = path.join(root, '.test-output/v2');
 const authMock = `
@@ -52,7 +53,7 @@ window.listenerCount=()=>listeners.size;
     const url=new URL(req.url,'http://localhost');
     if(url.pathname==='/fixture'){res.setHeader('Content-Type','text/html');res.end('<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"></head><body><div id="root"></div><script src="/fixture.js"></script></body></html>');return;}
     const file=url.pathname==='/fixture.js'||url.pathname==='/fixture.css'?path.join(output,url.pathname.slice(1)):
-      url.pathname.startsWith('/invincible/v2/')?path.join(root,'v2-dist',url.pathname.slice('/invincible/v2/'.length)||'index.html'):null;
+      url.pathname.startsWith('/invincible/v2/')?path.join(root,buildDirectory,url.pathname.slice('/invincible/v2/'.length)||'index.html'):null;
     if(!file||!fs.existsSync(file)){res.statusCode=404;res.end('Not found');return;}
     res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':'text/html');
     res.end(fs.readFileSync(file));

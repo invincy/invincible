@@ -29,6 +29,18 @@ The source entry is `react/v2/index.html`; the separate Vite config emits only t
 V2 does not run the V1 asset-cleaning/HTML-sync scripts or register a service worker.
 No V1 generated assets, HTML loaders, routes, workers, Functions, Firebase config or rules are changed.
 
+### Prepared same-origin preview (not published)
+
+GitHub Pages currently publishes the root of `master` at `https://invincy.github.io/invincible/`.
+`npm run stage:v2` generates a separate, checked-in `v2/` directory for a preview at `https://invincy.github.io/invincible/v2/`.
+This command only builds local publishing files; it does not merge, push to master, change Pages settings or deploy.
+CI rebuilds those files, checks that they match the source, and runs the V2 production smoke checks against that exact package.
+
+On the existing origin, V2 uses the same Firebase project, default app and browser-local auth persistence as V1.
+It should reuse a restored V1 session **in the same browser profile**. A session in Chrome is not automatically available in the Codex in-app browser, even on the same URL.
+Publishing requires separate approval because merging this PR into the Pages source branch would deploy the new route.
+No additional Firebase domain authorization is expected for this existing hostname; actual signed-in session reuse remains to be verified after approved publication.
+
 Authentication uses the existing `AuthProvider`, default Firebase app and persistence policy, which in turn use `shared/firebase-config.js` for `life-by-adichimp`.
 Localhost has its own browser session, separate from the production origin; using the same Firebase project does not transfer a Google session across origins.
 No new credential or project is needed. If Firebase reports an unauthorized preview domain, obtain approval for that specific domain before changing its authorization. No domain change was made here.
@@ -86,6 +98,10 @@ V2's read-only boundary avoids these writes; it does **not** fix or close these 
 - Existing Orb regression covers 18 fixed-time renders, palettes, particle tiers, motion, drag/inertia, context loss/restore, DPR/resize, visibility pauses and GPU cleanup.
 - Test fixtures use controlled records and **never production data**. Signed-in production Firebase permissions, real Google session reuse, Safari/iPad, actual-device animation/power behavior and cross-device data synchronization are unverified.
 - Existing locked React/Functions dependencies report audit findings; no unrelated dependency migration or backend change was attempted. Functions tests ran under local Node 24, while deployment targets Node 22.
+
+The first remote Node 22 run passed unit/backend, build, reference and V2 Chromium/Firefox checks. The existing Orb regression failed because the CI runner reported a low-capability tier while the test expected the desktop tier. Its desktop fixture now explicitly supplies 8 cores/8 GB; the separate 4-core/4-GB fixture continues to verify the lower tier. Production Orb code and particle budgets are unchanged.
+
+Cadence assertions now check the requested 24/40/30 fps scheduling delays, ongoing rendering and upper frame-count bounds, rather than requiring a minimum achieved frame rate from the test machine. Local execution of the updated Orb regression and both browser engines against the exact `v2/` publishing package passed. Rendering throughput and battery use still require real-device verification.
 
 Reproduce:
 

@@ -37,8 +37,13 @@ jobs:
       - run: npx playwright install --with-deps chromium firefox
       - run: npm run test
       - run: npm run build:v2
+      - run: npm run stage:v2
+      - name: Check publishing files match source
+        run: git diff --exit-code -- v2
       - run: npm run check
       - run: npm run test:v2:browser
+        env:
+          V2_BUILD_DIR: v2
       - name: V1 browser regressions
         run: |
           export CHROMIUM_EXECUTABLE="$(node -e "console.log(require('playwright').chromium.executablePath())")"

@@ -8,6 +8,7 @@
     "test:browser": "node tests/storage-browser.cjs && node tests/navigation-browser.cjs && node tests/dashboard-reminders-browser.cjs && node tests/focus-orb-browser.cjs && node tests/task-copy-browser.cjs",
     "dev:v2": "npm --prefix react run dev:v2",
     "build:v2": "npm --prefix react run build:v2",
+    "stage:v2": "npm --prefix react run build:v2 -- --outDir ../../v2",
     "preview:v2": "npm --prefix react run preview:v2",
     "test:v2": "node --test tests/v2-*.mjs",
     "test:v2:browser": "node tests/v2-browser.cjs"
