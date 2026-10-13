@@ -134,8 +134,14 @@ window.listenerCount=()=>listeners.size;
         assert.equal(await page.getByRole('dialog').count(),0);
         assert.match(await page.evaluate(()=>document.activeElement.textContent),/Resume work/);
 
+        await page.getByRole('button',{name:'View milestones',exact:true}).click();
+        await page.getByRole('dialog').waitFor();
+        assert.match(await page.getByRole('dialog').textContent(),/Inspect existing records/);
+        await page.keyboard.press('Escape');
+
         // Each region scrolls independently; the outer document never spills horizontally.
-        for(const [width,height] of [[320,640],[393,852],[768,1024],[1024,768],[1440,900]]) {
+        await page.evaluate(()=>window.emitTaskTitle('Updated from another region — a longer project title that should never push the board below the screen'));
+        for(const [width,height] of [[320,640],[393,852],[768,1024],[1024,768],[1280,600],[1366,768],[1500,674],[1870,842],[1440,900]]) {
           await page.setViewportSize({width,height});
           await page.getByRole('link',{name:'01 Main Dashboard'}).click();
           await page.locator('#v2-region-dashboard').evaluate(element=>element.scrollTo(0,0));
@@ -149,11 +155,25 @@ window.listenerCount=()=>listeners.size;
           assert.equal(sizes.outer,true,name+' '+width+' outer width');
           assert.equal(sizes.region,true,name+' '+width+' region width');
           assert.equal(sizes.canvas,true);assert.equal(sizes.orb,1);
+          // The board must be usable before scrolling, even on a short laptop screen.
+          const board=await page.evaluate(()=>{
+            const viewport=document.querySelector('.v2-canvas').getBoundingClientRect();
+            const cards=[...document.querySelectorAll('.v2-lane')].map(lane=>lane.querySelector('.v2-task-card').getBoundingClientRect());
+            return {bottom:viewport.bottom,cards:cards.map(card=>({top:card.top,bottom:card.bottom}))};
+          });
+          for(const card of board.cards.slice(0,width<=600?2:4)) {
+            // The smallest phone shows lane headings and the beginning of each card;
+            // larger phones and desktops show the complete first row.
+            const edge=width<=320?card.top+40:card.bottom;
+            if(edge>board.bottom) await page.screenshot({path:path.join(output,name+'-visibility-failure.png')});
+            assert.ok(edge<=board.bottom,name+' '+width+'x'+height+' first Kanban cards visible: '+JSON.stringify(board));
+          }
           const before=await page.locator('.v2-canvas').evaluate(element=>element.scrollLeft);
           await page.locator('#v2-region-dashboard').evaluate(element=>element.scrollTo(0,element.scrollHeight));
           assert.equal(await page.locator('.v2-canvas').evaluate(element=>element.scrollLeft),before);
-          if(width===393||width===1440){await page.locator('#v2-region-dashboard').evaluate(element=>element.scrollTo(0,0));await page.waitForTimeout(100);await page.screenshot({path:path.join(output,name+'-'+width+'.png')});}
+          if([393,1280,1440,1870].includes(width)){await page.locator('#v2-region-dashboard').evaluate(element=>element.scrollTo(0,0));await page.waitForTimeout(100);await page.screenshot({path:path.join(output,name+'-'+width+'.png')});}
         }
+        await page.evaluate(()=>window.emitTaskTitle('Updated from another region'));
         await page.evaluate(()=>window.failSync());
         await page.getByRole('button',{name:'Retry sync'}).waitFor();
         assert.equal(await page.getByRole('button',{name:/Updated from another region/}).count(),0);
