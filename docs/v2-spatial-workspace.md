@@ -29,7 +29,7 @@ The source entry is `react/v2/index.html`; the separate Vite config emits only t
 V2 does not run the V1 asset-cleaning/HTML-sync scripts or register a service worker.
 No V1 generated assets, HTML loaders, routes, workers, Functions, Firebase config or rules are changed.
 
-### Prepared same-origin preview (not published)
+### Published same-origin preview
 
 GitHub Pages currently publishes the root of `master` at `https://invincy.github.io/invincible/`.
 `npm run stage:v2` generates a separate, checked-in `v2/` directory for a preview at `https://invincy.github.io/invincible/v2/`.
@@ -38,8 +38,8 @@ CI rebuilds those files, checks that they match the source, and runs the V2 prod
 
 On the existing origin, V2 uses the same Firebase project, default app and browser-local auth persistence as V1.
 It should reuse a restored V1 session **in the same browser profile**. A session in Chrome is not automatically available in the Codex in-app browser, even on the same URL.
-Publishing requires separate approval because merging this PR into the Pages source branch would deploy the new route.
-No additional Firebase domain authorization is expected for this existing hostname; actual signed-in session reuse remains to be verified after approved publication.
+PR #65 was merged after explicit publication approval and deployed at the existing `/invincible/v2/` route. The user's subsequent signed-in screenshot confirms the connected Dashboard renders on that origin. Automated checks still use controlled records, not the user's account.
+No Firebase domain authorization was changed.
 
 Authentication uses the existing `AuthProvider`, default Firebase app and persistence policy, which in turn use `shared/firebase-config.js` for `life-by-adichimp`.
 Localhost has its own browser session, separate from the production origin; using the same Firebase project does not transfer a Google session across origins.
@@ -128,4 +128,10 @@ For the older browser suites on Windows, set `CHROMIUM_EXECUTABLE` to the instal
 6. Add AI/Orb access and project resumption only through the existing authorized backend; no new API keys.
 7. Physical-device, Safari, signed-in integration and performance verification.
 
-No production deployment, merge, rules change, account-data deletion or replacement backend is included.
+The initial publication was approved separately. Rules, account data and the backend remain unchanged.
+
+## Dashboard proportions correction (2026-10-13)
+
+The initial mission section and stacked timer/journey cards placed the Kanban below the first screen. The Dashboard now places its compact timer beside the mission and Orb, with a slim journey progress strip. At desktop heights of 700px or less, timer and journey share the right column. Phones place the timer in a single row and prioritize the board before the journey. Long mission, action and card text is clamped; full task content remains available in the inspector. The new View milestones action opens that same inspector. My Workspace retains its expanded widgets.
+
+All layout changes are scoped to V2 in `react/src/dashboard.css`. Verification passed: 19 frontend/domain and eight backend tests, site-reference check, V2 publishing build, isolated V1 build/check, and existing Dashboard/reminders browser checks over 14 viewports. V2 Chromium and Firefox checks cover 320×640, 393×852, 768×1024, 1024×768, 1280×600, 1366×768, 1500×674, 1870×842 and 1440×900, including long titles. They assert the full first card in all four desktop lanes is visible before scrolling; larger phones show the first two cards, while the smallest phone shows headings and the start of each card. Navigation, touch, timer, milestone inspection and account isolation still pass. Screenshots were inspected. Actual account contents and physical devices were not manipulated or retested.
