@@ -132,7 +132,7 @@ function SignedInWorkspace({user, logout}) {
       </Region>)}
     </main>
     <div className={'v2-orb '+(orbBox.compact ? 'is-compact' : '')} style={{left: orbBox.left, top: orbBox.top, width: orbBox.width, height: orbBox.height}}><FocusOrb theme={theme}/>
-      <button className="v2-orb-theme" aria-label={'Orb theme: '+theme+'. Change theme'} onClick={changeTheme}>{orbBox.compact ? '◐' : '◐ '+theme+' · change theme'}</button>
+      <button className="v2-orb-theme" aria-label={'Orb theme: '+theme+'. Change theme'} onClick={changeTheme}>{orbBox.compact ? '◐' : orbBox.width <= 110 ? '◐ '+theme : '◐ '+theme+' · change theme'}</button>
     </div>
     <footer className="v2-footer"><span>ONE CONTINUOUS ENVIRONMENT</span><span>Swipe sideways · Shift + wheel · Arrow keys on canvas</span><span>{active === 'dashboard' ? '01' : '02'} / 02</span></footer>
     {selected && <TaskInspector task={data.tasks.find(task => task.id === selected)} onClose={() => setSelected(null)}/>}

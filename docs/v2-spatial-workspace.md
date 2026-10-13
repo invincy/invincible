@@ -135,3 +135,30 @@ The initial publication was approved separately. Rules, account data and the bac
 The initial mission section and stacked timer/journey cards placed the Kanban below the first screen. The Dashboard now places its compact timer beside the mission and Orb, with a slim journey progress strip. At desktop heights of 700px or less, timer and journey share the right column. Phones place the timer in a single row and prioritize the board before the journey. Long mission, action and card text is clamped; full task content remains available in the inspector. The new View milestones action opens that same inspector. My Workspace retains its expanded widgets.
 
 All layout changes are scoped to V2 in `react/src/dashboard.css`. Verification passed: 19 frontend/domain and eight backend tests, site-reference check, V2 publishing build, isolated V1 build/check, and existing Dashboard/reminders browser checks over 14 viewports. V2 Chromium and Firefox checks cover 320×640, 393×852, 768×1024, 1024×768, 1280×600, 1366×768, 1500×674, 1870×842 and 1440×900, including long titles. They assert the full first card in all four desktop lanes is visible before scrolling; larger phones show the first two cards, while the smallest phone shows headings and the start of each card. Navigation, touch, timer, milestone inspection and account isolation still pass. Screenshots were inspected. Actual account contents and physical devices were not manipulated or retested.
+
+## Coherent Spatial Workspace Redesign (2026-10-14)
+
+Redesigned the frontend composition and visual hierarchy across both Main Dashboard and My Workspace into a unified, polished spatial environment:
+
+1. **Integrated Cockpit Composition**:
+   - Replaced disjointed cards with a harmonious 3-column cockpit:
+     - **Left Column**: Active Mission card with clean daily plan context, next action badge, direct "Resume work ↗" trigger, and integrated Project Journey with a compact progress track and "View milestones" inspector trigger.
+     - **Center Column**: Dedicated Focus Orb stage (`.v2-orb-stage`) with subtle aperture ring, centered 3D living Orb, and an interactive theme switcher (`◐ theme · change theme`) responsive to column width.
+     - **Right Column**: Compact Focus Session timer with status indicator dot, crisp high-contrast golden tabular numerals (`24:59`), and accessible Start/Pause and Reset controls.
+2. **First-Screen Kanban Board**:
+   - Four distinct lanes (`Backlog`, `In progress`, `Today`, `Completed`) with status badges and restrained status color accents (cyan, gold, emerald).
+   - High data-density task cards with progress tracks, step counters, and clean typography.
+   - All 4 lane headers and top task cards remain visible simultaneously without scrolling the outer canvas across standard 16:9/16:10 displays (1440×900, 1920×1080, 2560×1440) as well as constrained laptop viewports (1280×600, 1366×768, 1500×674).
+   - Long task lists scroll independently within `.v2-lane-cards`.
+3. **Dedicated Mobile & Tablet Compositions**:
+   - **Mobile (≤ 600px)**: Active mission and compact Orb anchor share row 1 side-by-side, followed by a streamlined full-width timer bar in row 2, and 2-column Kanban lanes in rows 3-4 so task cards are reachable before scrolling.
+   - **Tablet (601px - 1000px)**: 2-column header adapting mission/journey and Orb alongside a horizontal timer strip and 4-column board.
+4. **Coherent My Workspace Region**:
+   - Consistent visual architecture, typography, and card treatments with Main Dashboard.
+   - Detailed milestone roadmap with step-by-step progress, completion statuses, and expandable task details.
+   - Pipeline overview showing task distributions across all four workflow stages with status badges.
+   - Shared timer state and real-time synchronization between regions.
+5. **Verification**:
+   - Passed all 19 domain and 8 cloud function unit tests (`npm run test`).
+   - Passed full browser suite (`npm run test:v2:browser`) in Chromium and Firefox across 9 viewports (320×640, 393×852, 768×1024, 1024×768, 1280×600, 1366×768, 1500×674, 1870×842, 1440×900).
+   - Verified free horizontal stopping, region seam alignment, history restoration, keyboard navigation, and production auth gate.
