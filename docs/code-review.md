@@ -1,5 +1,11 @@
 # Cleanup review — 2026-10-03
 
+## V2 read-only prototype — 2026-10-13
+
+The initial V2 branch adds a separate React entry/build, continuous Dashboard/My Workspace canvas, existing auth/config and FocusOrb, shared read-only tasks/daily-plan widgets, and a local persistent focus interval. [The V2 audit](v2-spatial-workspace.md) records source evidence for all six Foundation Stability risks, the write gate, checks and remaining phases. Those risks remain unresolved in V1; V2 does not call the auto-seeding daily-plan hook or expose business writes. V1 HTML, generated assets, workers, Firebase rules/config and backend code remain unchanged. Chromium/Firefox fixture checks supplement unit, backend, V1 regression and isolated-build verification; authenticated production permissions and physical-device behavior remain unverified.
+
+The draft now includes a separate `v2/` publishing package for the existing Pages origin, where the same browser profile can restore V1's Firebase session. It is not published. Remote V2 checks passed; the first full CI run exposed a machine-dependent capability assumption in the old Orb test. That test now explicitly models the desktop tier while retaining separate low-capability coverage; the actual Orb remains unchanged.
+
 Baseline: `master` at `0aaa969` (shared auth/Garage fixes). This review covers source organization, active entry points, asset references, and preservation of existing flows. It is not a signed-in production Firebase audit.
 
 ## Cleanup completed

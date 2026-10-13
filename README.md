@@ -50,6 +50,10 @@ Journal contains one active application bundle. Its original React source/build 
 
 ## Local development and checks
 
+Invincible V2 is an isolated, read-only spatial prototype alongside V1. Run `npm ci`, `npm ci --prefix react`, then `npm run dev:v2` and open the printed `/invincible/v2/` URL (normally `http://localhost:5173/invincible/v2/`). Do not open the HTML file directly. `npm run build:v2` writes only to `v2-dist/`; `npm run preview:v2` serves that build. See [V2 implementation and stability audit](docs/v2-spatial-workspace.md) for the two-region scope, shared authentication/data boundary, verification and remaining phases. V1's build commands and entry points remain unchanged.
+
+`npm run stage:v2` prepares the separate `v2/` publishing directory for a same-origin GitHub Pages preview. It does not deploy. Publishing it from `master` requires approval; the existing V1 Google session can be reused only in the same browser profile on `invincy.github.io`.
+
 Install dependencies using the checked-in locks:
 
 ```sh
