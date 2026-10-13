@@ -70,6 +70,8 @@ Browser tests need Playwright and Chromium. Set `CHROMIUM_EXECUTABLE` to an inst
 
 After changing a feature, run the checks relevant to its behavior. Never interpret a mock test or successful build as proof of production Firebase permissions.
 
+The Task workspace shows a Copy button beside Add to today for every open step. It copies that step's complete Working notes text, including line breaks, to the clipboard and briefly confirms success. Copying does not save, edit, or change a step's status. `tests/task-copy-browser.cjs` exercises the shared step view with controlled data, including the Test Runs step and a denied clipboard write.
+
 ## Work completed and next steps
 
 The October 3 cleanup removed 15 obsolete files, including seven old Journal bundles, unused pre-React Workday/Reminders scripts and styling, and the unused Today's Plan card. It removed unused focus-queue methods, an unused Garage helper, an unused import/worker constant, and exact duplicate CSS rules. Navigation configuration is shared, old inline navigation copies are gone, ignore rules are centralized, and Dashboard HTML is now a small entry point.
