@@ -66,6 +66,16 @@ const testRunsNotes = 'Test Runs\nRun the exact checks listed here.\nWait for ap
     assert.equal(await page.evaluate(() => window.copied), notes);
     assert.equal(await page.getByRole('status').innerText(), 'Copied ✓');
     assert.deepEqual(await page.evaluate(() => window.saved), []);
+    for (const width of [393, 320]) {
+      await page.setViewportSize({ width, height: 700 });
+      const mobileToday = await page.getByRole('button', { name: /Add to today/ }).boundingBox();
+      const mobileCopy = await copy.boundingBox();
+      assert.ok(mobileCopy.x > mobileToday.x && Math.abs(mobileCopy.y - mobileToday.y) < 2, `${width}px: Copy stays beside Add to today`);
+      assert.ok(mobileCopy.x + mobileCopy.width <= width, `${width}px: Copy stays in viewport`);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true, `${width}px: no horizontal overflow`);
+      await copy.click();
+      assert.equal(await page.evaluate(() => window.copied), notes);
+    }
     await page.getByRole('button', { name: /Test Runs/ }).click();
     await page.getByText('Synced', { exact: true }).waitFor();
     const savesAfterSelection = await page.evaluate(() => window.saved.length);
@@ -79,7 +89,7 @@ const testRunsNotes = 'Test Runs\nRun the exact checks listed here.\nWait for ap
     assert.equal(await page.evaluate(() => window.saved.length), savesAfterSelection);
     assert.equal(await page.getByRole('combobox', { name: 'Current step status' }).inputValue(), 'Not Started');
     assert.deepEqual(errors, []);
-    console.log('Copy button placement, verbatim multiline notes, step switching, failure feedback and unchanged task state passed.');
+    console.log('Desktop and phone Copy button placement, verbatim multiline notes, step switching, failure feedback and unchanged task state passed.');
   } finally {
     await browser.close();
     server.close();
