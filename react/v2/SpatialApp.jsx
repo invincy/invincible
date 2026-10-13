@@ -1,0 +1,147 @@
+import React, {lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
+import {useAuth} from '../src/AuthContext';
+import {FocusOrb} from '../src/FocusOrb';
+import {taskSteps} from '../src/task-model';
+import {navigationPages} from '../../shared/navigation';
+import {regions, regionFromHash, resolvePlan} from './model';
+import {useWorkspaceData} from './useWorkspaceData';
+import {useFocusSession} from './useFocusSession';
+const Dashboard = lazy(() => import('./DashboardRegion'));
+const Workspace = lazy(() => import('./WorkspaceRegion'));
+const v1 = new URL(navigationPages.find(page => page.id === 'dashboard').href, 'https://invincy.github.io').href;
+
+function Region({region, viewport, children, onScroll}) {
+  const element = useRef(null);
+  const scrollTop = useRef(0);
+  const contentHeight = useRef(600);
+  const [nearby, setNearby] = useState(false);
+  useEffect(() => {
+    const observer = new IntersectionObserver(entries => {
+      if (!entries[0].isIntersecting) contentHeight.current = element.current.scrollHeight;
+      setNearby(entries[0].isIntersecting);
+    },
+      {root: viewport.current, rootMargin: '0px 20% 0px 20%'});
+    observer.observe(element.current);
+    return () => observer.disconnect();
+  }, [viewport]);
+  useLayoutEffect(() => {if (nearby) element.current.scrollTop = scrollTop.current;}, [nearby]);
+  return <section ref={element} className="v2-region" id={'v2-region-'+region.id} aria-labelledby={region.id+'-title'}
+    onScroll={event => {scrollTop.current = event.currentTarget.scrollTop; onScroll();}}>
+    <header className="v2-region-heading"><span>{region.number} /</span><h1 id={region.id+'-title'} tabIndex={-1}>{region.label}</h1><span className="v2-region-tag">CONNECTED SPACE</span></header>
+    {nearby ? <Suspense fallback={<p role="status">Opening this space…</p>}>{children}</Suspense> : <div className="v2-region-placeholder" style={{minHeight:contentHeight.current}} aria-hidden="true"/>}
+  </section>;
+}
+function TaskInspector({task, onClose}) {
+  const dialog = useRef(null);
+  useEffect(() => {
+    const previous = document.activeElement;
+    dialog.current.showModal();
+    return () => {previous?.focus?.({preventScroll: true});};
+  }, []);
+  return <dialog ref={dialog} className="v2-inspector" aria-labelledby="v2-inspector-title" onClose={onClose}>
+    <div className="v2-panel-heading"><span className="v2-eyebrow">SAVED WORK · READ ONLY</span><button autoFocus onClick={onClose} aria-label="Close saved work">Close ×</button></div>
+    <h2 id="v2-inspector-title">{task?.title || 'Task unavailable'}</h2>
+    {task ? <><p className="v2-muted">{task.status || 'Backlog'}</p>{task.description && <p className="v2-saved-notes">{task.description}</p>}
+      <ol className="v2-saved-steps">{taskSteps(task).map((step,index) => <li key={step.id || index}><h3>{step.title || step.text || 'Untitled step'}</h3><small>{step.done || step.status === 'Done' ? 'Completed' : step.status || 'Not started'}</small><p className="v2-saved-notes">{step.notes || 'No working notes saved.'}</p></li>)}</ol>
+      {task.scratchpad && <section><h3>Project notes</h3><p className="v2-saved-notes">{task.scratchpad}</p></section>}
+      <p className="v2-muted">This preview is read only. Open V1 to create or edit tasks.</p></> : <p>This record is no longer available to this account.</p>}
+  </dialog>;
+}
+function SignedInWorkspace({user, logout}) {
+  const data = useWorkspaceData(user.uid), plan = resolvePlan(data.tasks, data.plan), timer = useFocusSession(user.uid);
+  const viewport = useRef(null), orbAnchor = useRef(null), lastFraction = useRef(0), idle = useRef(null);
+  const [active, setActive] = useState(regionFromHash(location.hash)), [selected, setSelected] = useState(null);
+  const [authError, setAuthError] = useState('');
+  const [orbBox, setOrbBox] = useState({left: innerWidth-66, top: 12, width: 48, height: 48, compact: true});
+  const [theme, setTheme] = useState(() => {try {return localStorage.getItem('invincible-orb-theme') || 'cyan';} catch {return 'cyan';}});
+  const moveOrb = useCallback(() => {
+    const rect = orbAnchor.current?.getBoundingClientRect();
+    const canvas = viewport.current;
+    const prominent = rect && rect.top >= canvas.getBoundingClientRect().top && rect.bottom <= innerHeight-36
+      && canvas.scrollLeft < canvas.clientWidth*.35;
+    const box = prominent ? {left: rect.left, top: rect.top, width: rect.width, height: rect.height, compact: false}
+      : {left: innerWidth-66, top: 12, width: 48, height: 48, compact: true};
+    setOrbBox(previous => Object.keys(box).every(key => box[key] === previous[key]) ? previous : box);
+  }, []);
+  const mountOrbAnchor = useCallback(node => {orbAnchor.current = node; if (node) requestAnimationFrame(moveOrb);}, [moveOrb]);
+  const savePosition = () => {
+    const canvas = viewport.current;
+    const fraction = canvas.scrollLeft/canvas.clientWidth;
+    const region = regions[Math.min(regions.length-1, Math.round(fraction))];
+    history.replaceState({...history.state, v2Position: fraction}, '', '#'+region.id);
+  };
+  const navigate = (id, {restore = false, fraction} = {}) => {
+    const canvas = viewport.current, index = regions.findIndex(region => region.id === id);
+    if (!restore) {savePosition(); history.pushState({v2Position: index}, '', '#'+id);}
+    canvas.scrollTo({left: (fraction ?? index)*canvas.clientWidth,
+      behavior: restore || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'});
+    document.getElementById(id+'-title')?.focus({preventScroll: true});
+  };
+  useEffect(() => {
+    const canvas = viewport.current;
+    const restore = () => {clearTimeout(idle.current); navigate(regionFromHash(location.hash), {restore: true, fraction: typeof history.state?.v2Position === 'number' ? history.state.v2Position : undefined});};
+    restore();
+    let previousWidth = canvas.clientWidth;
+    const resize = new ResizeObserver(() => {
+      if (canvas.clientWidth !== previousWidth) {
+        canvas.scrollTo({left: lastFraction.current*canvas.clientWidth, behavior: 'instant'});
+        previousWidth = canvas.clientWidth;
+      }
+      moveOrb();
+    });
+    resize.observe(canvas);
+    window.addEventListener('popstate', restore);
+    // Hash edits and native anchor activation also remain valid direct links.
+    const hash = () => {if (!history.state?.v2Position) navigate(regionFromHash(location.hash), {restore: true});};
+    window.addEventListener('hashchange', hash);
+    return () => {resize.disconnect(); clearTimeout(idle.current); window.removeEventListener('popstate', restore); window.removeEventListener('hashchange', hash);};
+  }, []);
+  useEffect(() => {
+    // Observe lazy content mounting and vertical reflow without another Orb renderer.
+    const observer = new ResizeObserver(moveOrb);
+    const anchor = orbAnchor.current;
+    if (anchor) observer.observe(anchor);
+    const frame = requestAnimationFrame(moveOrb);
+    return () => {observer.disconnect(); cancelAnimationFrame(frame);};
+  }, [active, data.tasksReady, data.planReady]);
+  const scroll = () => {
+    const canvas = viewport.current;
+    lastFraction.current = canvas.scrollLeft/canvas.clientWidth;
+    setActive(regions[Math.min(regions.length-1, Math.round(lastFraction.current))].id);
+    moveOrb(); clearTimeout(idle.current); idle.current = setTimeout(savePosition, 180);
+  };
+  const ready = data.tasksReady && data.planReady;
+  const error = data.taskError || data.planError;
+  const changeTheme = () => setTheme(current => {
+    const themes = ['cyan','gold','emerald'], next = themes[(themes.indexOf(current)+1)%themes.length];
+    try {localStorage.setItem('invincible-orb-theme', next);} catch {}
+    return next;
+  });
+  return <div className="v2-shell">
+    <header className="v2-topbar"><a className="v2-brand" href="#dashboard" onClick={event => {event.preventDefault();navigate('dashboard');}}><span className="v2-brand-mark">I</span><span>INVINCIBLE<small>SPATIAL WORKSPACE / V2</small></span></a>
+      <nav aria-label="Spatial regions">{regions.map(region => <a key={region.id} href={'#'+region.id} aria-current={active === region.id ? 'location' : undefined} onClick={event => {if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;event.preventDefault();navigate(region.id);}}><span>{region.number}</span>{region.label}</a>)}</nav>
+      <div className="v2-account"><a href={v1}>Open V1 ↗</a><button aria-label="Sign out" onClick={async () => {try {await logout();} catch {setAuthError('Sign-out did not complete. Try again.');}}}>Sign out</button></div>
+    </header>
+    <div className="v2-connection" role="status"><span className={error ? 'v2-dot error' : 'v2-dot'}/>{authError || error || (!ready ? 'Restoring your workspace…' : data.tasksCached || data.planCached ? 'Showing cached records · Waiting for connection' : 'Connected to your existing workspace')}<span className="v2-preview-label">READ-ONLY PREVIEW</span>{error && <button onClick={data.retry}>Retry sync</button>}</div>
+    <main ref={viewport} className="v2-canvas" aria-label="Continuous spatial workspace" tabIndex={0} onScroll={scroll}
+      onKeyDown={event => {if (event.target !== event.currentTarget) return;let index = regions.findIndex(region => region.id === active);if (event.key === 'ArrowRight') index++;else if (event.key === 'ArrowLeft') index--;else if (event.key === 'Home') index=0;else if (event.key === 'End') index=regions.length-1;else return;event.preventDefault();navigate(regions[Math.max(0,Math.min(regions.length-1,index))].id);}}>
+      {regions.map(region => <Region key={region.id} region={region} viewport={viewport} onScroll={moveOrb}>
+        {!ready ? <div className="v2-panel v2-loading" role="status">Restoring tasks and your daily plan…</div> :
+          region.id === 'dashboard' ? <Dashboard data={data} plan={plan} timer={timer} onInspect={setSelected} orbAnchor={mountOrbAnchor}/> :
+          <Workspace data={data} plan={plan} timer={timer}/>}
+      </Region>)}
+    </main>
+    <div className={'v2-orb '+(orbBox.compact ? 'is-compact' : '')} style={{left: orbBox.left, top: orbBox.top, width: orbBox.width, height: orbBox.height}}><FocusOrb theme={theme}/>
+      <button className="v2-orb-theme" aria-label={'Orb theme: '+theme+'. Change theme'} onClick={changeTheme}>{orbBox.compact ? '◐' : '◐ '+theme+' · change theme'}</button>
+    </div>
+    <footer className="v2-footer"><span>ONE CONTINUOUS ENVIRONMENT</span><span>Swipe sideways · Shift + wheel · Arrow keys on canvas</span><span>{active === 'dashboard' ? '01' : '02'} / 02</span></footer>
+    {selected && <TaskInspector task={data.tasks.find(task => task.id === selected)} onClose={() => setSelected(null)}/>}
+  </div>;
+}
+export function SpatialApp() {
+  const {user, ready, error, login, logout} = useAuth();
+  if (!ready) return <div className="v2-auth"><p role="status">Restoring your Invincible session…</p></div>;
+  if (!user) return <main className="v2-auth"><div><p className="v2-eyebrow">INVINCIBLE / V2</p><h1>A little more space.<br/>For everything you do.</h1><p>Your existing account. Your existing work.<br/>One continuous environment.</p>{error && <p role="alert">{error}</p>}<button className="v2-primary" onClick={login}>Continue with Google</button><a href={v1}>Open existing Invincible ↗</a><small>Read-only prototype · Main Dashboard + My Workspace</small></div></main>;
+  // Keyed lifetime prevents any frame of the previous account's records or timer.
+  return <SignedInWorkspace key={user.uid} user={user} logout={logout}/>;
+}

@@ -9,7 +9,7 @@ function checkReference(file,reference){
  if(!reference||/^(?:https?:|data:|app:|mailto:|#)/.test(reference)||reference.startsWith('//'))return;
  const raw=reference.split(/[?#]/)[0];
  if(!raw||(!raw.startsWith('/')&&!raw.startsWith('.')&&/\.jsx?$/.test(file)))return;
- const target=raw.startsWith('/invincible/')?path.join(root,raw.slice('/invincible/'.length)):raw.startsWith('/')?path.join(root,raw.slice(1)):path.resolve(path.dirname(file),raw);
+ const target=file.startsWith(path.join(root,'v2-dist')+path.sep)&&raw.startsWith('/invincible/v2/')?path.join(root,'v2-dist',raw.slice('/invincible/v2/'.length)):raw.startsWith('/invincible/')?path.join(root,raw.slice('/invincible/'.length)):raw.startsWith('/')?path.join(root,raw.slice(1)):path.resolve(path.dirname(file),raw);
  const found=[target,target+'.js',target+'.jsx',path.join(target,'index.html')].some(candidate=>fs.existsSync(candidate)&&fs.statSync(candidate).isFile());
  if(!found)errors.push(`${path.relative(root,file)} refers to missing ${reference}`);
 }

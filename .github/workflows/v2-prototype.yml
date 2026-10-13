@@ -1,0 +1,51 @@
+name: V2 prototype verification
+
+on:
+  pull_request:
+    paths:
+      - 'react/**'
+      - 'shared/**'
+      - 'tests/**'
+      - 'scripts/**'
+      - 'functions/**'
+      - 'package*.json'
+      - '.github/workflows/v2-prototype.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            react/package-lock.json
+            functions/package-lock.json
+      - run: npm ci
+      - run: npm ci --prefix react
+      - run: npm ci --prefix functions
+      - run: npx playwright install --with-deps chromium firefox
+      - run: npm run test
+      - run: npm run build:v2
+      - run: npm run check
+      - run: npm run test:v2:browser
+      - name: V1 browser regressions
+        run: |
+          export CHROMIUM_EXECUTABLE="$(node -e "console.log(require('playwright').chromium.executablePath())")"
+          npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: spatial-browser-evidence
+          path: .test-output/v2/*.png
+          if-no-files-found: ignore

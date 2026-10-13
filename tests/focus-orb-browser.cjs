@@ -1,8 +1,8 @@
 // Fixed-time visual comparisons plus real WebGL interaction/resource checks using fixture data.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http'),cp=require('node:child_process');
-const{chromium}=require('playwright'),root=path.resolve(__dirname,'..'),esbuild=require(root+'/react/node_modules/esbuild');
+const{chromium}=require('playwright'),root=path.resolve(__dirname,'..').split(path.sep).join('/'),esbuild=require(root+'/react/node_modules/esbuild');
 (async()=>{
- const output=path.join(root,'.test-output/orb');fs.mkdirSync(output,{recursive:true});
+ const output=path.join(root,'.test-output/orb').split(path.sep).join('/');fs.mkdirSync(output,{recursive:true});
  const baseline=cp.execFileSync('git',['show',(process.env.ORB_BASELINE_REF||'2acf40fa6ad3f65f9ccb540dcb92bf213f4def94')+':react/src/FocusOrb.jsx'],{cwd:root,encoding:'utf8'});
  fs.writeFileSync(output+'/before.jsx',baseline);
  for(const version of ['before','after'])await esbuild.build({stdin:{contents:`import React from'react';import{createRoot}from'react-dom/client';import{FocusOrb}from'${version==='before'?output+'/before.jsx':root+'/react/src/FocusOrb.jsx'}';const root=createRoot(document.getElementById('root'));window.mount=(theme='cyan')=>root.render(<div className="focus-orb"><FocusOrb theme={theme}/></div>);window.unmount=()=>root.render(null);window.mount(new URLSearchParams(location.search).get('theme')||'cyan');`,resolveDir:root+'/react/src',loader:'jsx'},bundle:true,nodePaths:[root+'/react/node_modules'],outfile:output+'/'+version+'.js',jsx:'automatic'});
