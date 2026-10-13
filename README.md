@@ -70,7 +70,7 @@ Browser tests need Playwright and Chromium. Set `CHROMIUM_EXECUTABLE` to an inst
 
 After changing a feature, run the checks relevant to its behavior. Never interpret a mock test or successful build as proof of production Firebase permissions.
 
-The Task workspace shows a Copy button beside Add to today for every open step. It copies that step's complete Working notes text, including line breaks, to the clipboard and briefly confirms success. Copying does not save, edit, or change a step's status. `tests/task-copy-browser.cjs` exercises the shared step view with controlled data, including the Test Runs step and a denied clipboard write.
+The Task workspace shows a Copy button beside Add to today for every open step. It copies that step's complete Working notes text, including line breaks, to the clipboard and briefly confirms success. Copying does not save, edit, or change a step's status. `tests/task-copy-browser.cjs` exercises the shared step view with controlled data, including the Test Runs step and a denied clipboard write. For this change, `npm run test`, `npm run build`, `npm run check`, and the targeted Chromium browser test passed on a GitHub Actions runner. Clipboard behavior in other browsers and a signed-in production session remains unverified.
 
 ## Work completed and next steps
 
