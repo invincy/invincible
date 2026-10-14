@@ -51,7 +51,7 @@ function SignedInWorkspace({user, logout}) {
   const data = useWorkspaceData(user.uid), plan = resolvePlan(data.tasks, data.plan), timer = useFocusSession(user.uid);
   const viewport = useRef(null), orbAnchor = useRef(null), lastFraction = useRef(0), idle = useRef(null);
   const [active, setActive] = useState(regionFromHash(location.hash)), [selected, setSelected] = useState(null);
-  const [isZoomed, setIsZoomed] = useState(false), [travelPage, setTravelPage] = useState(null);
+  const [travelPage, setTravelPage] = useState(null);
   const [authError, setAuthError] = useState('');
   const [orbBox, setOrbBox] = useState({left: innerWidth-66, top: 12, width: 48, height: 48, compact: true});
   const [theme, setTheme] = useState(() => {try {return localStorage.getItem('invincible-orb-theme') || 'gold';} catch {return 'gold';}});
@@ -141,15 +141,15 @@ function SignedInWorkspace({user, logout}) {
       onKeyDown={event => {if (event.target !== event.currentTarget) return;let index = regions.findIndex(region => region.id === active);if (event.key === 'ArrowRight') index++;else if (event.key === 'ArrowLeft') index--;else if (event.key === 'Home') index=0;else if (event.key === 'End') index=regions.length-1;else return;event.preventDefault();navigate(regions[Math.max(0,Math.min(regions.length-1,index))].id);}}>
       {regions.map(region => <Region key={region.id} region={region} viewport={viewport} onScroll={moveOrb}>
         {!ready ? <div className="v2-panel v2-loading" role="status">Restoring tasks and your daily plan…</div> :
-          region.id === 'dashboard' ? <Dashboard data={data} plan={plan} timer={timer} onInspect={setSelected} orbAnchor={mountOrbAnchor} theme={theme} onChangeTheme={changeTheme} onOpenWorkspace={() => navigate('workspace')} onZoomChange={setIsZoomed} onTravel={setTravelPage}/> :
+          region.id === 'dashboard' ? <Dashboard data={data} plan={plan} timer={timer} onInspect={setSelected} orbAnchor={mountOrbAnchor} theme={theme} onChangeTheme={changeTheme} onOpenWorkspace={() => navigate('workspace')} onTravel={setTravelPage}/> :
           <Workspace data={data} plan={plan} timer={timer} onInspect={setSelected}/>}
       </Region>)}
     </main>
-    <div className={'v2-orb '+(orbBox.compact ? 'is-compact' : isZoomed && active === 'dashboard' ? 'is-approaching' : '')} style={{left: orbBox.left, top: orbBox.top, width: orbBox.width, height: orbBox.height}}
-      onWheel={event => {const distance = event.deltaX + (event.shiftKey ? event.deltaY : 0); if (distance && viewport.current) {event.preventDefault(); viewport.current.scrollLeft += distance;}}}><FocusOrb theme={theme} spin={false} allowDrag={false}/>
+    <div className={'v2-orb '+(orbBox.compact ? 'is-compact' : travelPage && active === 'dashboard' ? 'is-approaching' : '')} style={{left: orbBox.left, top: orbBox.top, width: orbBox.width, height: orbBox.height}}
+      onWheel={event => {const distance = event.deltaX + (event.shiftKey ? event.deltaY : 0); if (distance && viewport.current) {event.preventDefault(); viewport.current.scrollLeft += distance;}}}><FocusOrb theme={theme} spin={false} allowDrag={false} richParticles followPagePointer/>
       {orbBox.compact && <button className="v2-orb-theme" aria-label={'Orb theme: '+theme+'. Change theme'} onClick={changeTheme}>◐</button>}
     </div>
-    <footer className="v2-footer"><span>DASHBOARD MAP · PERSONAL WORKSPACE</span><span className="v2-footer-desktop">Scroll over the Orb to approach a place · Swipe sideways for widgets</span><span className="v2-footer-mobile">Tap a point to explore · Swipe sideways for widgets</span><span>{active === 'dashboard' ? '01' : '02'} / 02</span></footer>
+    <footer className="v2-footer"><span>DASHBOARD MAP · PERSONAL WORKSPACE</span><span className="v2-footer-desktop">Choose a glow to enter its page · Swipe sideways for widgets</span><span className="v2-footer-mobile">Tap a glow to enter its page · Swipe sideways for widgets</span><span>{active === 'dashboard' ? '01' : '02'} / 02</span></footer>
     {travelPage && <div className="v2-travel" role="status" aria-live="polite"><span>ENTERING</span><strong>{travelPage.label}</strong><i aria-hidden="true"/></div>}
     {selected && <TaskInspector task={data.tasks.find(task => task.id === selected)} onClose={() => setSelected(null)}/>}
   </div>;
