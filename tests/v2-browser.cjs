@@ -79,7 +79,7 @@ window.listenerCount=()=>listeners.size;
           const orbRect=await page.locator('.v2-orb').boundingBox();
           await page.mouse.move(orbRect.x+orbRect.width/2,orbRect.y+orbRect.height/2);
           await page.mouse.down();
-          assert.equal(await page.locator('.v2-orb').getAttribute('data-dragging'),'true');
+          assert.equal(await page.locator('.v2-orb').getAttribute('data-dragging'),null,'V2 Orb does not rotate away from stable map points');
           await page.mouse.move(orbRect.x+orbRect.width/2+24,orbRect.y+orbRect.height/2+15);
           await page.mouse.up();
           assert.equal(await page.locator('.v2-orb').getAttribute('data-dragging'),null);
@@ -88,6 +88,34 @@ window.listenerCount=()=>listeners.size;
         }
         assert.deepEqual(await page.evaluate(()=>[...new Set(window.reads)].map(value=>value.split('/').slice(0,3).join('/')).sort()),['users/alice/dailyPlans','users/alice/tasks']);
         assert.equal(await page.evaluate(()=>window.writes),0);
+
+        // The dashboard is a spatial map: focus an island, reveal real page routes,
+        // and zoom back out without turning My Workspace into a globe destination.
+        assert.equal(await page.locator('.v2-island').count(),3);
+        assert.equal(await page.locator('.v2-island[data-island="workspace"]').count(),0);
+        await page.locator('.v2-island[data-island="create"]').click();
+        await page.getByRole('group',{name:'Create destinations'}).waitFor();
+        assert.equal(await page.locator('.v2-branch-link').count(),3);
+        assert.equal(await page.locator('.v2-branch-link').first().getAttribute('href'),'/invincible/ai/');
+        assert.equal(await page.locator('.v2-orb').evaluate(node=>node.classList.contains('is-approaching')),true);
+        await page.screenshot({path:path.join(output,name+'-branch.png')});
+        await page.mouse.move(720,500);
+        await page.mouse.wheel(0,-120);
+        await page.waitForFunction(()=>!document.querySelector('.v2-branch'));
+        await page.waitForTimeout(500);
+        await page.mouse.wheel(0,120);
+        await page.getByRole('group',{name:/destinations/}).waitFor();
+        await page.getByRole('button',{name:'Back to map'}).click();
+        await page.screenshot({path:path.join(output,name+'-map.png')});
+        const travelPage=await context.newPage();
+        await travelPage.goto(base+'/fixture');
+        await travelPage.locator('.v2-island[data-island="create"]').click();
+        await travelPage.locator('.v2-branch-link[href="/invincible/ai/"]').click();
+        await travelPage.waitForURL(base+'/invincible/ai/');
+        await travelPage.goBack();
+        await travelPage.locator('.v2-island[data-island="create"]').waitFor();
+        assert.equal(await travelPage.locator('.v2-travel').count(),0);
+        await travelPage.close();
 
         // Native horizontal wheel input reaches the canvas through a vertical region.
         await page.mouse.move(500,600);
@@ -181,6 +209,13 @@ window.listenerCount=()=>listeners.size;
           if(width>=901) assert.ok(scene.orbWidth>=Math.min(width*.55,height*.87,750),name+' '+width+' enlarged desktop Orb');
           if(width>=1101) assert.ok(scene.missionRight<scene.orbLeft+scene.orbWidth*.25,name+' '+width+' mission keeps clear space for Orb');
           if([393,1280,1366,1440,1870,1920,2560].includes(width)){await page.screenshot({path:path.join(output,name+'-'+width+'.png')});}
+          if(width===393){
+            await page.locator('.v2-island[data-island="create"]').click();
+            assert.equal(await page.locator('.v2-branch-link').count(),3);
+            assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
+            await page.screenshot({path:path.join(output,name+'-phone-branch.png')});
+            await page.getByRole('button',{name:'Back to map'}).click();
+          }
           await page.getByRole('button',{name:/Open My Workspace/}).click();
           await page.locator('.v2-workspace-intro h2').waitFor();
           // The detailed board is in My Workspace and is usable before scrolling.
