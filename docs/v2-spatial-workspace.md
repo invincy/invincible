@@ -162,3 +162,13 @@ Redesigned the frontend composition and visual hierarchy across both Main Dashbo
    - Passed all 19 domain and 8 cloud function unit tests (`npm run test`).
    - Passed full browser suite (`npm run test:v2:browser`) in Chromium and Firefox across 9 viewports (320×640, 393×852, 768×1024, 1024×768, 1280×600, 1366×768, 1500×674, 1870×842, 1440×900).
    - Verified free horizontal stopping, region seam alignment, history restoration, keyboard navigation, and production auth gate.
+
+## Orb-as-guide focus scene (2026-10-14, review branch)
+
+This branch replaces the cockpit described immediately above. Main Dashboard now shows one mission, its next saved action, project progress, a focus timer and a direct route to My Workspace as separate foreground fragments around the existing interactive Orb. The Orb is one fixed renderer aligned with a responsive anchor and remains draggable; horizontal wheel input over it still moves the continuous canvas. The four-lane Kanban board is in My Workspace, where task selection opens the same read-only notes and steps inspector. The Workspace also retains the shared journey and timer.
+
+The desktop focus scene uses viewport-aware Orb sizing and positions the fragments without enclosing panel outlines. Long project titles clamp visually while their full text remains in the saved-work inspector. At widths of 900px and below, content follows a vertical tablet/phone composition; phone screens show the Orb first and can scroll vertically. The board uses four columns on desktop and two on narrower screens, with internal lane scrolling. These are deliberately different layouts for different ranges, not separate pages or duplicate data sources.
+
+Source: `react/v2/DashboardRegion.jsx`, `react/v2/KanbanBoard.jsx`, `react/v2/WorkspaceRegion.jsx`, `react/src/dashboard-guide.css` and `react/v2/spatial.css`. Unused V2 cockpit rules were removed from `react/src/dashboard.css`; the V1 rules before that section remain intact. The staged `v2/` assets are review output only and have not been deployed.
+
+Validation: `npm run test:v2`, `npm run test`, `npm run build`, `npm run stage:v2`, `npm run check`, `npm run test:browser`, and the staged V2 Chromium/Firefox browser suite passed. The V2 suite covers 320–2560px widths, short 1280×600 viewports, live fixture updates, history, account isolation, timer continuity, direct Orb dragging and zero writes. Fixture screenshots were inspected. This does not establish visual parity with the illustrative reference, physical-device performance or production Firebase permissions; those need later review.

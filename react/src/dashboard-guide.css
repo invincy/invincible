@@ -1,0 +1,71 @@
+/* V2 focus scene: interface fragments orbit one shared, interactive Orb. */
+#v2-region-dashboard{display:flex;flex-direction:column;overflow-x:hidden}
+#v2-region-dashboard .v2-region-heading{flex:none;margin-bottom:0}
+.v2-dashboard-body{flex:1;min-height:0}
+.v2-guide-scene{position:relative;min-height:480px;height:100%;color:#d9e9ee;overflow:hidden}
+.v2-guide-atmosphere{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 46%,rgba(236,177,63,.105),transparent 22%),radial-gradient(circle at 53% 48%,rgba(45,190,207,.055),transparent 39%),linear-gradient(90deg,rgba(4,12,19,.4),transparent 28% 72%,rgba(4,12,19,.3))}
+.v2-guide-atmosphere:after{content:"";position:absolute;left:50%;top:47%;width:min(45vw,62dvh);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,transparent 45%,rgba(95,210,219,.04) 62%,transparent 72%);box-shadow:0 0 95px rgba(178,141,68,.065)}
+.v2-guide-orb-anchor{position:absolute;left:50%;top:46%;width:clamp(250px,min(38vw,60dvh),520px);aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none}
+.v2-guide-mission,.v2-guide-next,.v2-guide-progress,.v2-guide-timer,.v2-guide-work,.v2-guide-orb-label{position:absolute;z-index:4;min-width:0}
+.v2-guide-mission{top:7%;left:1.5%;width:29%}
+.v2-guide-next{top:46%;left:1.5%;width:26%}
+.v2-guide-progress{bottom:6%;left:1.5%;width:26%}
+.v2-guide-timer{top:7%;right:1.5%;width:25%}
+.v2-guide-work{bottom:6%;right:1.5%;width:29%}
+.v2-guide-orb-label{left:50%;bottom:5%;transform:translateX(-50%);display:grid;justify-items:center;gap:2px;text-align:center;white-space:nowrap}
+.v2-guide-kicker,.v2-guide-orb-label>span{display:block;color:#8ac2ce;font-size:clamp(10px,.75vw,12px);font-weight:750;letter-spacing:.15em}
+.v2-guide-mission h2{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;margin:14px 0 7px;font:750 clamp(24px,2.3vw,44px)/1.12 'Exo 2',sans-serif;letter-spacing:-.035em;overflow-wrap:anywhere}
+.v2-guide-description{max-width:32ch;margin:0 0 18px;color:#93aeb8;font-size:clamp(12px,.91vw,15px);line-height:1.5}
+.v2-guide-scene button{cursor:pointer}
+.v2-shell .v2-guide-primary{display:inline-flex;align-items:center;justify-content:space-between;gap:28px;min-height:46px;padding:9px 17px;border:1px solid #f2cb73;border-radius:10px;background:linear-gradient(115deg,#ffe299,#e9b951);color:#1b1a13;font-weight:800;box-shadow:0 8px 28px #d59d3e26}
+.v2-shell .v2-guide-primary:hover{background:#ffe8ae;border-color:#ffe8ae}
+.v2-guide-next strong,.v2-guide-progress strong{display:block;margin:8px 0 4px;font-size:clamp(16px,1.35vw,22px);line-height:1.3;overflow-wrap:anywhere}
+.v2-shell .v2-guide-text-button{display:inline-block;min-height:38px;padding:5px 0;border:0;border-radius:0;background:transparent;color:#a2e3df;text-align:left;font-size:12px}
+.v2-shell .v2-guide-text-button:hover{background:transparent;color:#d5fffa;text-decoration:underline}
+.v2-guide-progress progress{display:block;width:min(100%,270px);height:4px;margin:10px 0 2px;accent-color:#90e2cd}
+.v2-guide-timer output{display:block;margin:9px 0 10px;font:700 clamp(29px,2.7vw,48px)/1 Orbitron,monospace;letter-spacing:-.06em;color:#ffe1a0;font-variant-numeric:tabular-nums}
+.v2-guide-timer-controls{display:flex;gap:8px;flex-wrap:wrap}
+.v2-shell .v2-guide-timer-controls button{min-height:38px;padding:6px 13px;border:1px solid #78939e45;background:#12212a8a;color:#d6e6eb;font-size:12px}
+.v2-shell .v2-guide-timer-controls button:hover{background:#1c3641}
+.v2-guide-work h3{margin:7px 0 12px;font:700 clamp(16px,1.4vw,22px)/1.25 'Exo 2',sans-serif}
+.v2-guide-statuses{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 14px;color:#a9bdc6;font-size:clamp(11px,.85vw,13px)}
+.v2-guide-statuses span{white-space:nowrap}.v2-guide-statuses b{color:#e3f5f5;font-size:16px}
+.v2-guide-statuses [data-status="Today"] b{color:#f7d287}.v2-guide-statuses [data-status="Done"] b{color:#8fe2c3}
+.v2-shell .v2-guide-work-link{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;max-width:290px;margin-top:16px;padding:9px 0;min-height:42px;border:0;border-top:1px solid #61d5df5a;border-radius:0;background:transparent;color:#a8f1e9;font-weight:700;text-align:left}
+.v2-shell .v2-guide-work-link:hover{background:transparent;color:#e0fffa;border-top-color:#b9fff4}
+.v2-guide-orb-label>span{color:#d3b677}.v2-shell .v2-guide-orb-label button{min-height:34px;padding:4px 12px;border:0;background:#07131aac;color:#9ebbc2;font-size:11px}
+.v2-shell .v2-guide-orb-label button:hover{background:#102733;color:#dceeee}
+@media(max-height:710px) and (min-width:901px){
+  .v2-guide-scene{min-height:390px}
+  .v2-guide-mission{top:3%}.v2-guide-next{top:43%}.v2-guide-progress,.v2-guide-work{bottom:2%}.v2-guide-timer{top:3%}
+  .v2-guide-mission h2{-webkit-line-clamp:2;margin:8px 0 10px;font-size:clamp(22px,2vw,31px)}
+  .v2-guide-description{display:none}
+  .v2-guide-work h3{margin:4px 0 7px}.v2-guide-work-link{margin-top:9px!important}
+}
+@media(max-width:900px){
+  #v2-region-dashboard{overflow-y:auto}
+  .v2-dashboard-body{flex:none}
+  .v2-guide-scene{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start;height:auto;min-height:0;padding:26px 4px 36px;overflow:visible}
+  .v2-guide-atmosphere{inset:150px 0 auto;height:360px;background:radial-gradient(ellipse at 50% 45%,#b58c3925,#24617215 36%,transparent 70%);mask-image:radial-gradient(ellipse,#000 35%,transparent 73%)}
+  .v2-guide-mission,.v2-guide-next,.v2-guide-progress,.v2-guide-timer,.v2-guide-work,.v2-guide-orb-label{position:relative;inset:auto;transform:none;width:auto}
+  .v2-guide-mission{grid-column:1;grid-row:1}
+  .v2-guide-timer{grid-column:2;grid-row:1;justify-self:end;width:min(100%,250px)}
+  .v2-guide-orb-anchor{position:relative;left:auto;top:auto;transform:none;grid-column:1/-1;grid-row:2;justify-self:center;width:clamp(250px,48vw,440px)}
+  .v2-guide-orb-label{grid-column:1/-1;grid-row:3;justify-self:center;margin-top:-22px}
+  .v2-guide-next{grid-column:1;grid-row:4}
+  .v2-guide-progress{grid-column:2;grid-row:4}
+  .v2-guide-work{grid-column:1/-1;grid-row:5;display:grid;grid-template-columns:1fr 1fr auto;align-items:center;gap:16px}
+  .v2-guide-statuses{gap:4px 12px}.v2-guide-work h3{margin-bottom:0}.v2-guide-work-link{margin-top:0!important}
+}
+@media(max-width:620px){
+  .v2-guide-scene{grid-template-columns:1fr;gap:18px;padding:20px 0 34px}
+  .v2-guide-mission,.v2-guide-next,.v2-guide-progress,.v2-guide-timer,.v2-guide-work,.v2-guide-orb-label{grid-column:1;justify-self:stretch}
+  .v2-guide-orb-anchor{grid-column:1;grid-row:1;width:min(78vw,330px)}
+  .v2-guide-orb-label{grid-row:2;justify-self:center;margin-top:-26px}
+  .v2-guide-mission{grid-row:3}
+  .v2-guide-next{grid-row:4}.v2-guide-progress{grid-row:5}
+  .v2-guide-timer{grid-row:6;width:auto}
+  .v2-guide-work{grid-row:7;display:block}
+  .v2-guide-mission h2{font-size:30px}
+  .v2-guide-work-link{max-width:none!important}
+}
