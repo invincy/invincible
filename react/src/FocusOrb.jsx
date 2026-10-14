@@ -10,7 +10,7 @@ function program(gl,vertex,fragment){
  finally{if(vs)gl.deleteShader(vs);if(fs)gl.deleteShader(fs)}
 }
 // Every visible mark belongs to the particle field; there is no solid mesh or orbit ring.
-const particleVertex=`attribute vec3 position;attribute vec2 appearance;uniform mat4 projection;uniform float pixelRatio;uniform float pointScale;uniform float time;uniform float style;uniform vec2 rotation;uniform vec3 influence;varying float opacity;void main(){
+const particleVertex=`attribute vec3 position;attribute vec2 appearance;uniform mat4 projection;uniform float pixelRatio;uniform float pointScale;uniform float time;uniform float style;uniform float spin;uniform vec2 rotation;uniform vec3 influence;varying float opacity;void main(){
 float travel=fract(position.x+time*position.z);float rawLane=position.y;float cell=step(3.5,rawLane);float ring=step(1.5,rawLane)*(1.0-cell);float lane=fract(rawLane);float tau=6.2831853;
 float hash=fract(sin(lane*913.73)*43758.5453);float angle=travel*tau+hash*tau;
 float latitude=asin(clamp(lane*2.0-1.0,-.98,.98));
@@ -41,7 +41,7 @@ p+=vec3(.050*sin(time*.58+resting.y*2.35)+.014*sin(time*.31+resting.z*4.1),.043*
 // Gently vary both the sideways tilt and depth of the rotation axis.
 float globeTilt=.5235988+.14*sin(time*.16)+.035*sin(time*.09+1.2);
 vec3 globeAxis=normalize(vec3(-sin(globeTilt),cos(globeTilt),.55+.10*sin(time*.12+.7)));
-float globeAngle=-time*.28,globeCos=cos(globeAngle),globeSin=sin(globeAngle);
+float globeAngle=-time*.28*spin,globeCos=cos(globeAngle),globeSin=sin(globeAngle);
 p=p*globeCos+cross(globeAxis,p)*globeSin+globeAxis*dot(globeAxis,p)*(1.0-globeCos);
 float cx=cos(rotation.y),sx=sin(rotation.y),cy=cos(rotation.x),sy=sin(rotation.x);
 p=vec3(p.x,p.y*cx-p.z*sx,p.y*sx+p.z*cx);p=vec3(p.x*cy+p.z*sy,p.y,-p.x*sy+p.z*cy);
@@ -54,7 +54,7 @@ vec4 projected=projection*vec4(p,1.0);gl_Position=projected;float size=mix(1.0,1
 const particleFragment=`precision mediump float;uniform vec3 colorA;uniform vec3 colorB;varying float opacity;void main(){float radius=length(gl_PointCoord-vec2(0.5))*2.0;if(radius>1.0)discard;float core=1.0-smoothstep(0.0,1.0,radius);gl_FragColor=vec4(mix(colorA,colorB,core),core*opacity);}`;
 function perspective(aspect){const f=1/Math.tan(Math.PI/8),near=.1,far=30,distance=4.6;return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)/(near-far),-1,0,0,(far+near)/(near-far)*-distance+2*far*near/(near-far),distance])}
 const palettes={cyan:{style:0,a:[.08,.55,.78],b:[.55,1,1]},emerald:{style:1,a:[.03,.32,.12],b:[.46,1,.62]},gold:{style:2,a:[.42,.16,.025],b:[1,.85,.38]}};
-export function FocusOrb({theme='cyan'}){
+export function FocusOrb({theme='cyan',spin=true,allowDrag=true}){
  const canvas=useRef(null),host=useRef(null);
  useEffect(()=>{
   const c=canvas.current,container=host.current,surface=container.parentElement;
@@ -69,11 +69,11 @@ export function FocusOrb({theme='cyan'}){
   const interactive=()=>drag||targetStrength>0||hoverStrength>.015||Math.hypot(velocityX,velocityY)>.0005;
   const initialize=()=>{
    dots=program(gl,particleVertex,particleFragment);particleBuffer=gl.createBuffer();particleTier=null;
-   uniforms=Object.fromEntries(['projection','pixelRatio','pointScale','time','rotation','influence','style','colorA','colorB'].map(name=>[name,gl.getUniformLocation(dots,name)]));
+   uniforms=Object.fromEntries(['projection','pixelRatio','pointScale','time','spin','rotation','influence','style','colorA','colorB'].map(name=>[name,gl.getUniformLocation(dots,name)]));
    gl.useProgram(dots);gl.bindBuffer(gl.ARRAY_BUFFER,particleBuffer);
    for(const [name,size,offset]of[['position',3,0],['appearance',2,12]]){const location=gl.getAttribLocation(dots,name);gl.enableVertexAttribArray(location);gl.vertexAttribPointer(location,size,gl.FLOAT,false,20,offset)}
    gl.clearColor(0,0,0,0);gl.disable(gl.DEPTH_TEST);gl.depthMask(false);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
-   gl.uniform1f(uniforms.style,palette.style);gl.uniform3fv(uniforms.colorA,palette.a);gl.uniform3fv(uniforms.colorB,palette.b);
+   gl.uniform1f(uniforms.style,palette.style);gl.uniform1f(uniforms.spin,spin ? 1 : 0);gl.uniform3fv(uniforms.colorA,palette.a);gl.uniform3fv(uniforms.colorB,palette.b);
   };
   // A timer waits for the next due frame; rAF only aligns that frame with presentation.
   const schedule=renderedAt=>{
@@ -104,7 +104,7 @@ export function FocusOrb({theme='cyan'}){
    resume();
   };
   const pointerLocation=event=>{const rect=surface.getBoundingClientRect();targetX=((event.clientX-rect.left)/rect.width-.5)*2.5;targetY=(.5-(event.clientY-rect.top)/rect.height)*2.5;targetStrength=1};
-  const pointerDown=event=>{if(!event.isPrimary||event.button!==0||drag||event.target.closest('button,a'))return;drag={id:event.pointerId,x:event.clientX,y:event.clientY};velocityX=velocityY=0;surface.setPointerCapture(event.pointerId);surface.dataset.dragging='true';pointerLocation(event);resume()};
+  const pointerDown=event=>{if(!allowDrag||!event.isPrimary||event.button!==0||drag||event.target.closest('button,a'))return;drag={id:event.pointerId,x:event.clientX,y:event.clientY};velocityX=velocityY=0;surface.setPointerCapture(event.pointerId);surface.dataset.dragging='true';pointerLocation(event);resume()};
   const pointerMove=event=>{
    if(drag&&event.pointerId!==drag.id)return;const wasInteractive=interactive();
    if(event.pointerType==='mouse'||drag)pointerLocation(event);
@@ -134,6 +134,6 @@ export function FocusOrb({theme='cyan'}){
    document.addEventListener('visibilitychange',visibility);reduced.addEventListener('change',preferences);mobile.addEventListener('change',preferences);c.addEventListener('webglcontextlost',lost);c.addEventListener('webglcontextrestored',restored);for(const[name,handler]of Object.entries(events))surface.addEventListener(name,handler);resize();
    return cleanup;
   }catch(error){console.warn('3D orb unavailable; keeping the particle fallback.',error);cleanup()}
- },[theme]);
+ },[theme,spin,allowDrag]);
  return <div ref={host} className={'focus-orb-3d orb-theme-'+theme} aria-hidden="true"><div className="orb-3d-fallback"/><canvas ref={canvas}/></div>;
 }

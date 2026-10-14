@@ -1,6 +1,7 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {taskProgress, taskSteps} from '../src/task-model';
 import {formatTimer} from './model';
+import ConstellationNav from './ConstellationNav';
 
 const stages = [
   ['Backlog', 'Backlog'],
@@ -9,15 +10,18 @@ const stages = [
   ['Done', 'Completed'],
 ];
 
-export default function DashboardRegion({data, plan, timer, onInspect, orbAnchor, theme = 'gold', onChangeTheme, onOpenWorkspace}) {
+export default function DashboardRegion({data, plan, timer, onInspect, orbAnchor, theme = 'gold', onChangeTheme, onOpenWorkspace, onZoomChange, onTravel}) {
+  const [selectedIsland, setSelectedIsland] = useState(null);
+  useEffect(() => {onZoomChange(Boolean(selectedIsland)); return () => onZoomChange(false);}, [selectedIsland, onZoomChange]);
   const focus = plan.active?.task;
   const next = plan.active?.step || taskSteps(focus).find(step => !step.done && step.status !== 'Done');
   const progress = taskProgress(focus);
 
   return <div className="v2-dashboard-body">
-    <section className="v2-guide-scene" aria-label="Your focus and connected work">
+    <section className="v2-guide-scene" data-zoom={selectedIsland ? 'branch' : 'overview'} aria-label="Your focus and connected work">
       <div className="v2-guide-atmosphere" aria-hidden="true"/>
       <div className="v2-guide-orb-anchor" ref={orbAnchor} aria-hidden="true"/>
+      <ConstellationNav selected={selectedIsland} onSelect={setSelectedIsland} onTravel={onTravel}/>
 
       <div className="v2-guide-mission">
         <span className="v2-guide-kicker">IN FOCUS</span>
