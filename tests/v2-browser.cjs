@@ -77,10 +77,10 @@ window.listenerCount=()=>listeners.size;
         await page.waitForTimeout(150);
         if(await page.locator('.focus-orb-3d').getAttribute('data-ready')==='true') {
           const orbRect=await page.locator('.v2-orb').boundingBox();
-          await page.mouse.move(orbRect.x+orbRect.width/2,orbRect.y+orbRect.height/2);
+          await page.mouse.move(orbRect.x+orbRect.width/2,orbRect.y+orbRect.height*.12);
           await page.mouse.down();
           assert.equal(await page.locator('.v2-orb').getAttribute('data-dragging'),null,'V2 Orb does not rotate away from stable map points');
-          await page.mouse.move(orbRect.x+orbRect.width/2+24,orbRect.y+orbRect.height/2+15);
+          await page.mouse.move(orbRect.x+orbRect.width/2+24,orbRect.y+orbRect.height*.12+15);
           await page.mouse.up();
           assert.equal(await page.locator('.v2-orb').getAttribute('data-dragging'),null);
         } else {
@@ -89,31 +89,36 @@ window.listenerCount=()=>listeners.size;
         assert.deepEqual(await page.evaluate(()=>[...new Set(window.reads)].map(value=>value.split('/').slice(0,3).join('/')).sort()),['users/alice/dailyPlans','users/alice/tasks']);
         assert.equal(await page.evaluate(()=>window.writes),0);
 
-        // The dashboard is a spatial map: focus an island, reveal real page routes,
-        // and zoom back out without turning My Workspace into a globe destination.
-        assert.equal(await page.locator('.v2-island').count(),3);
-        assert.equal(await page.locator('.v2-island[data-island="workspace"]').count(),0);
-        await page.locator('.v2-island[data-island="create"]').click();
-        await page.getByRole('group',{name:'Create destinations'}).waitFor();
-        assert.equal(await page.locator('.v2-branch-link').count(),3);
-        assert.equal(await page.locator('.v2-branch-link').first().getAttribute('href'),'/invincible/ai/');
-        assert.equal(await page.locator('.v2-orb').evaluate(node=>node.classList.contains('is-approaching')),true);
-        await page.screenshot({path:path.join(output,name+'-branch.png')});
-        await page.mouse.move(720,500);
-        await page.mouse.wheel(0,-120);
-        await page.waitForFunction(()=>!document.querySelector('.v2-branch'));
-        await page.waitForTimeout(500);
-        await page.mouse.wheel(0,120);
-        await page.getByRole('group',{name:/destinations/}).waitFor();
-        await page.getByRole('button',{name:'Back to map'}).click();
+        // All nine real page links sit on the Orb; the Dashboard and Workspace
+        // remain separate, and the center-to-island route lines are gone.
+        const destinations=page.getByRole('navigation',{name:'Explore Invincible pages'}).getByRole('link');
+        assert.equal(await destinations.count(),9);
+        assert.equal(await destinations.locator('.v2-page-glow svg').count(),9,'each page glow has a distinct line icon');
+        assert.deepEqual(await destinations.evaluateAll(links=>links.map(link=>link.dataset.page)),
+          ['ai','journal','finance','garage','creator','workday','lic','reminders','portfolio']);
+        assert.equal(await page.locator('.v2-constellation-lines,.v2-branch-lines').count(),0);
+        assert.equal(await page.locator('.v2-guide-particles').count(),1);
+        assert.equal(await page.getByRole('button',{name:'Open current task: Build the living workspace'}).count(),1);
+        const positions=await page.evaluate(()=>{
+          const orb=document.querySelector('.v2-orb').getBoundingClientRect();
+          return Object.fromEntries(['ai','journal','creator','workday'].map(id=>{
+            const glow=document.querySelector(`[data-page="${id}"] .v2-page-glow`).getBoundingClientRect();
+            return [id,{x:(glow.left+glow.width/2-orb.left)/orb.width,y:(glow.top+glow.height/2-orb.top)/orb.height}];
+          }));
+        });
+        assert.ok(positions.ai.x>.3&&positions.ai.x<.6&&positions.ai.y<.4);
+        assert.ok(positions.workday.x>.2&&positions.workday.x<.5&&positions.workday.y>.5);
+        assert.ok(positions.journal.x<.35&&positions.creator.x>.7);
+        await page.getByRole('button',{name:'Open current task: Build the living workspace'}).click();
+        await page.getByRole('dialog').getByText('Build the living workspace').waitFor();
+        await page.getByRole('button',{name:/Close saved work/}).click();
         await page.screenshot({path:path.join(output,name+'-map.png')});
         const travelPage=await context.newPage();
         await travelPage.goto(base+'/fixture');
-        await travelPage.locator('.v2-island[data-island="create"]').click();
-        await travelPage.locator('.v2-branch-link[href="/invincible/ai/"]').click();
+        await travelPage.locator('.v2-page-point[data-page="ai"]').click();
         await travelPage.waitForURL(base+'/invincible/ai/');
         await travelPage.goBack();
-        await travelPage.locator('.v2-island[data-island="create"]').waitFor();
+        await travelPage.locator('.v2-page-point[data-page="ai"]').waitFor();
         assert.equal(await travelPage.locator('.v2-travel').count(),0);
         await travelPage.close();
 
@@ -210,11 +215,9 @@ window.listenerCount=()=>listeners.size;
           if(width>=1101) assert.ok(scene.missionRight<scene.orbLeft+scene.orbWidth*.25,name+' '+width+' mission keeps clear space for Orb');
           if([393,1280,1366,1440,1870,1920,2560].includes(width)){await page.screenshot({path:path.join(output,name+'-'+width+'.png')});}
           if(width===393){
-            await page.locator('.v2-island[data-island="create"]').click();
-            assert.equal(await page.locator('.v2-branch-link').count(),3);
+            assert.equal(await page.locator('.v2-page-point').count(),9);
             assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
-            await page.screenshot({path:path.join(output,name+'-phone-branch.png')});
-            await page.getByRole('button',{name:'Back to map'}).click();
+            await page.screenshot({path:path.join(output,name+'-phone-map.png')});
           }
           await page.getByRole('button',{name:/Open My Workspace/}).click();
           await page.locator('.v2-workspace-intro h2').waitFor();

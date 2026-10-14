@@ -54,7 +54,7 @@ vec4 projected=projection*vec4(p,1.0);gl_Position=projected;float size=mix(1.0,1
 const particleFragment=`precision mediump float;uniform vec3 colorA;uniform vec3 colorB;varying float opacity;void main(){float radius=length(gl_PointCoord-vec2(0.5))*2.0;if(radius>1.0)discard;float core=1.0-smoothstep(0.0,1.0,radius);gl_FragColor=vec4(mix(colorA,colorB,core),core*opacity);}`;
 function perspective(aspect){const f=1/Math.tan(Math.PI/8),near=.1,far=30,distance=4.6;return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)/(near-far),-1,0,0,(far+near)/(near-far)*-distance+2*far*near/(near-far),distance])}
 const palettes={cyan:{style:0,a:[.08,.55,.78],b:[.55,1,1]},emerald:{style:1,a:[.03,.32,.12],b:[.46,1,.62]},gold:{style:2,a:[.42,.16,.025],b:[1,.85,.38]}};
-export function FocusOrb({theme='cyan',spin=true,allowDrag=true}){
+export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=false,followPagePointer=false}){
  const canvas=useRef(null),host=useRef(null);
  useEffect(()=>{
   const c=canvas.current,container=host.current,surface=container.parentElement;
@@ -98,12 +98,18 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true}){
    stop();const ratio=Math.min(devicePixelRatio||1,mobile.matches?1:1.25);
    c.width=Math.round(rect.width*ratio);c.height=Math.round(rect.height*ratio);
    gl.viewport(0,0,c.width,c.height);gl.uniformMatrix4fv(uniforms.projection,false,perspective(rect.width/rect.height));gl.uniform1f(uniforms.pixelRatio,ratio);gl.uniform1f(uniforms.pointScale,Math.max(.85,Math.min(1.5,rect.width/480)));
-   const tier=orbParticleTier(mobile.matches,lightweight),key=JSON.stringify(tier);
+   const compact=rect.width<100;
+   const tier=orbParticleTier(mobile.matches||compact,lightweight||compact);
+   if(richParticles&&!compact){tier.streams=Math.round(tier.streams*1.3);tier.flecks=Math.round(tier.flecks*1.55)}
+   const key=JSON.stringify(tier);
    if(particleTier!==key){const particles=createOrbParticles(tier);particleCount=particles.length/5;gl.bufferData(gl.ARRAY_BUFFER,particles,gl.STATIC_DRAW);particleTier=key}
    // Resizing clears a canvas, so replace its contents immediately rather than waiting for a paced frame.
    resume();
   };
-  const pointerLocation=event=>{const rect=surface.getBoundingClientRect();targetX=((event.clientX-rect.left)/rect.width-.5)*2.5;targetY=(.5-(event.clientY-rect.top)/rect.height)*2.5;targetStrength=1};
+  const pointerLocation=event=>{
+   if(followPagePointer){targetX=(event.clientX/innerWidth-.5)*2;targetY=(.5-event.clientY/innerHeight)*2;targetStrength=.55;return}
+   const rect=surface.getBoundingClientRect();targetX=((event.clientX-rect.left)/rect.width-.5)*2.5;targetY=(.5-(event.clientY-rect.top)/rect.height)*2.5;targetStrength=1
+  };
   const pointerDown=event=>{if(!allowDrag||!event.isPrimary||event.button!==0||drag||event.target.closest('button,a'))return;drag={id:event.pointerId,x:event.clientX,y:event.clientY};velocityX=velocityY=0;surface.setPointerCapture(event.pointerId);surface.dataset.dragging='true';pointerLocation(event);resume()};
   const pointerMove=event=>{
    if(drag&&event.pointerId!==drag.id)return;const wasInteractive=interactive();
@@ -112,7 +118,9 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true}){
    if(reduced.matches||(!wasInteractive&&interactive()))resume();
   };
   const pointerUp=event=>{if(!drag||event.pointerId!==drag.id)return;drag=null;delete surface.dataset.dragging;if(surface.hasPointerCapture(event.pointerId))surface.releasePointerCapture(event.pointerId);if(event.pointerType!=='mouse')targetStrength=0;if(event.type==='pointercancel'||reduced.matches)velocityX=velocityY=0;resume()};
-  const pointerLeave=()=>{if(!drag){targetStrength=0;if(reduced.matches)resume()}};
+  const pointerLeave=()=>{if(!drag&&!followPagePointer){targetStrength=0;if(reduced.matches)resume()}};
+  const pagePointerMove=event=>{if(reduced.matches||event.pointerType!=='mouse'||drag)return;pointerLocation(event)};
+  const pageBlur=()=>{targetStrength=0;if(reduced.matches)resume()};
   const lostCapture=event=>{if(drag?.id===event.pointerId){drag=null;velocityX=velocityY=0;targetStrength=0;delete surface.dataset.dragging;resume()}};
   const events={pointerdown:pointerDown,pointermove:pointerMove,pointerup:pointerUp,pointercancel:pointerUp,pointerleave:pointerLeave,lostpointercapture:lostCapture};
   const visibility=()=>resume(),preferences=()=>resize();
@@ -124,16 +132,18 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true}){
   const cleanup=()=>{
    disposed=true;stop();for(const[name,handler]of Object.entries(events))surface.removeEventListener(name,handler);
    if(drag&&surface.hasPointerCapture(drag.id))surface.releasePointerCapture(drag.id);delete surface.dataset.dragging;
-   resizeObserver?.disconnect();intersectionObserver?.disconnect();document.removeEventListener('visibilitychange',visibility);reduced.removeEventListener('change',preferences);mobile.removeEventListener('change',preferences);c.removeEventListener('webglcontextlost',lost);c.removeEventListener('webglcontextrestored',restored);
+   resizeObserver?.disconnect();intersectionObserver?.disconnect();document.removeEventListener('visibilitychange',visibility);document.removeEventListener('pointermove',pagePointerMove);window.removeEventListener('blur',pageBlur);reduced.removeEventListener('change',preferences);mobile.removeEventListener('change',preferences);c.removeEventListener('webglcontextlost',lost);c.removeEventListener('webglcontextrestored',restored);
    if(gl){if(particleBuffer)gl.deleteBuffer(particleBuffer);if(dots)gl.deleteProgram(dots)}
   };
   try{
    gl=c.getContext('webgl',{alpha:true,antialias:false,premultipliedAlpha:false,powerPreference:'low-power'});if(!gl)return;
    initialize();resizeObserver=new ResizeObserver(resize);resizeObserver.observe(container);
-   if(typeof IntersectionObserver!=='undefined'){intersectionObserver=new IntersectionObserver(entries=>{inView=entries[0].isIntersecting;resume()});intersectionObserver.observe(container)}
-   document.addEventListener('visibilitychange',visibility);reduced.addEventListener('change',preferences);mobile.addEventListener('change',preferences);c.addEventListener('webglcontextlost',lost);c.addEventListener('webglcontextrestored',restored);for(const[name,handler]of Object.entries(events))surface.addEventListener(name,handler);resize();
+   // V2's Orb is fixed and moves between the Dashboard and header. Observing it
+   // during that transition can mark it offscreen while resize clears the canvas.
+   if(!followPagePointer&&typeof IntersectionObserver!=='undefined'){intersectionObserver=new IntersectionObserver(entries=>{inView=entries[0].isIntersecting;resume()});intersectionObserver.observe(container)}
+   document.addEventListener('visibilitychange',visibility);if(followPagePointer){document.addEventListener('pointermove',pagePointerMove,{passive:true});window.addEventListener('blur',pageBlur)}reduced.addEventListener('change',preferences);mobile.addEventListener('change',preferences);c.addEventListener('webglcontextlost',lost);c.addEventListener('webglcontextrestored',restored);for(const[name,handler]of Object.entries(events))surface.addEventListener(name,handler);resize();
    return cleanup;
   }catch(error){console.warn('3D orb unavailable; keeping the particle fallback.',error);cleanup()}
- },[theme,spin,allowDrag]);
+ },[theme,spin,allowDrag,richParticles,followPagePointer]);
  return <div ref={host} className={'focus-orb-3d orb-theme-'+theme} aria-hidden="true"><div className="orb-3d-fallback"/><canvas ref={canvas}/></div>;
 }
