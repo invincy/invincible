@@ -154,3 +154,18 @@
   .v2-workspace-details{grid-template-columns:1fr}
 }
 
+/* A small route map is the sole visible heading for the two connected spaces. */
+.v2-topbar,.v2-connection,.v2-footer{position:relative;z-index:5}
+.v2-topbar nav{gap:4px;border-bottom:1px solid #5aa1a537}
+.v2-nav-caption{margin-right:10px;color:#7baeb6;font-size:10px;font-weight:700;letter-spacing:.2em}
+.v2-topbar nav a{position:relative;gap:8px;padding:10px 14px 12px;border-radius:0;background:transparent}
+.v2-topbar nav a::before{content:"";flex:none;width:8px;height:8px;border:1px solid #6faab1;border-radius:50%;background:#09141b;box-shadow:0 0 0 4px #6faab10b}
+.v2-topbar nav a[aria-current]{background:transparent;box-shadow:inset 0 -2px #9ae9da;color:#d2fff4}
+.v2-topbar nav a[aria-current]::before{border-color:#9ae9da;background:#9ae9da;box-shadow:0 0 12px #9ae9da96}
+#v2-region-workspace .v2-region-heading{position:absolute;left:0;top:0;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@media(max-width:600px){
+  .v2-nav-caption{display:none}
+  .v2-topbar nav a{justify-content:center;padding:8px 6px 11px;font-size:11px}
+  .v2-topbar nav a::before{width:7px;height:7px}
+}
+

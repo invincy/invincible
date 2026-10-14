@@ -13,7 +13,6 @@ export default function DashboardRegion({data, plan, timer, onInspect, orbAnchor
   const focus = plan.active?.task;
   const next = plan.active?.step || taskSteps(focus).find(step => !step.done && step.status !== 'Done');
   const progress = taskProgress(focus);
-  const percent = progress.total ? Math.round(progress.done / progress.total * 100) : 0;
 
   return <div className="v2-dashboard-body">
     <section className="v2-guide-scene" aria-label="Your focus and connected work">
@@ -21,28 +20,18 @@ export default function DashboardRegion({data, plan, timer, onInspect, orbAnchor
       <div className="v2-guide-orb-anchor" ref={orbAnchor} aria-hidden="true"/>
 
       <div className="v2-guide-mission">
-        <span className="v2-guide-kicker">CURRENT PROJECT · YOUR DAILY PLAN</span>
+        <span className="v2-guide-kicker">IN FOCUS</span>
         <h2 title={focus?.title}>{focus?.title || 'Make space for your next move.'}</h2>
-        <p className="v2-guide-description">{focus ? 'One project in focus. Your saved work stays connected across this space.' : 'Your next project will appear here when it is part of your daily plan.'}</p>
+        {next && <p className="v2-guide-nextline" title={next.title || next.text}><span>Next</span>{next.title || next.text}</p>}
         {focus && <button className="v2-guide-primary" onClick={() => onInspect(focus.id)}>Resume work <span aria-hidden="true">↗</span></button>}
-      </div>
-
-      <div className="v2-guide-next">
-        <span className="v2-guide-kicker">NEXT ACTION</span>
-        <strong title={next?.title || next?.text}>{next?.title || next?.text || (focus ? 'Continue this project' : 'No active action in your saved plan.')}</strong>
-        {focus && <button className="v2-guide-text-button" onClick={() => onInspect(focus.id)}>Read working notes ↗</button>}
+        {focus && <div className="v2-guide-progress" aria-label="Project progress">
+          <span>{progress.total ? `${progress.done} / ${progress.total} steps` : 'No steps yet'}</span>
+          <progress max={progress.total || 1} value={progress.done} aria-label="Completed project steps"/>
+        </div>}
       </div>
 
       <div className="v2-guide-orb-label">
-        <span>FOCUS ORB</span>
-        <button onClick={onChangeTheme} aria-label={'Orb theme: '+theme+'. Change theme'}>◐ {theme} · change theme</button>
-      </div>
-
-      <div className="v2-guide-progress">
-        <span className="v2-guide-kicker">PROJECT JOURNEY</span>
-        <strong>{progress.total ? `${progress.done} of ${progress.total} steps` : 'No milestones yet'}</strong>
-        <progress max={progress.total || 1} value={progress.done} aria-label="Completed project steps"/>
-        {focus && <button className="v2-guide-text-button" onClick={() => onInspect(focus.id)}>View milestones ↗</button>}
+        <button onClick={onChangeTheme} aria-label={'Orb theme: '+theme+'. Change theme'}>◐ {theme}</button>
       </div>
 
       <div className="v2-guide-timer" aria-label="Focus session">
@@ -55,11 +44,11 @@ export default function DashboardRegion({data, plan, timer, onInspect, orbAnchor
       </div>
 
       <div className="v2-guide-work">
-        <div><span className="v2-guide-kicker">CONNECTED WORKSPACE</span><h3>Your work is one move away.</h3></div>
+        <span className="v2-guide-kicker">YOUR WORKSPACE</span>
         <div className="v2-guide-statuses" aria-label="Task counts by status">{stages.map(([status, label]) =>
           <span key={status} data-status={status}><b>{data.tasks.filter(task => (task.status || 'Backlog') === status).length}</b> {label}</span>
         )}</div>
-        <button className="v2-guide-work-link" onClick={onOpenWorkspace}>Enter My Workspace <span aria-hidden="true">→</span></button>
+        <button className="v2-guide-work-link" onClick={onOpenWorkspace}>Open My Workspace <span aria-hidden="true">→</span></button>
       </div>
     </section>
   </div>;

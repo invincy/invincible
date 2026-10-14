@@ -70,6 +70,7 @@ window.listenerCount=()=>listeners.size;
         await page.route('https://**/*',route=>route.abort());
         await page.goto(base+'/fixture');
         await page.locator('.v2-guide-mission h2').getByText('Build the living workspace').waitFor();
+        assert.equal(await page.getByRole('navigation',{name:'Explore spaces'}).getByRole('link').count(),2);
         assert.equal(await page.locator('.focus-orb-3d canvas').count(),1);
         await page.waitForFunction(()=>!document.querySelector('.v2-orb').classList.contains('is-compact'));
         await page.evaluate(()=>window.originalOrb=document.querySelector('.focus-orb-3d canvas'));
@@ -122,7 +123,7 @@ window.listenerCount=()=>listeners.size;
         await page.locator('.v2-canvas').focus();
         await page.keyboard.press('Home');
         await page.waitForFunction(()=>document.querySelector('.v2-canvas').scrollLeft<2);
-        assert.equal(await page.evaluate(()=>document.activeElement.id),'dashboard-title');
+        assert.equal(await page.evaluate(()=>document.activeElement.getAttribute('href')),'#dashboard');
         await page.locator('#v2-region-dashboard').getByRole('button',{name:'Start focus',exact:true}).click();
         await page.waitForTimeout(1150);
         await page.getByRole('link',{name:'02 My Workspace'}).click();
@@ -142,15 +143,11 @@ window.listenerCount=()=>listeners.size;
         await page.getByRole('button',{name:/Resume work/}).click();
         await page.getByRole('dialog').waitFor();
         assert.match(await page.getByRole('dialog').textContent(),/Keep the original data/);
+        assert.match(await page.getByRole('dialog').textContent(),/Inspect existing records/);
         assert.equal(new URL(page.url()).hash,'#dashboard');
         await page.keyboard.press('Escape');
         assert.equal(await page.getByRole('dialog').count(),0);
         assert.match(await page.evaluate(()=>document.activeElement.textContent),/Resume work/);
-
-        await page.getByRole('button',{name:/View milestones/}).click();
-        await page.getByRole('dialog').waitFor();
-        assert.match(await page.getByRole('dialog').textContent(),/Inspect existing records/);
-        await page.keyboard.press('Escape');
 
         // Each region scrolls independently; the outer document never spills horizontally.
         await page.evaluate(()=>window.emitTaskTitle('Updated from another region — a longer project title that should never push the board below the screen'));
@@ -165,6 +162,12 @@ window.listenerCount=()=>listeners.size;
             canvas:document.querySelector('.v2-canvas').scrollWidth>=innerWidth*1.99,
             orb:document.querySelectorAll('.focus-orb-3d canvas').length,
           }));
+          if(!sizes.outer) console.log(name,width,'overflow',await page.evaluate(()=>({
+            document:document.documentElement.scrollWidth,body:document.body.scrollWidth,
+            shell:document.querySelector('.v2-shell').scrollWidth,header:document.querySelector('.v2-topbar').scrollWidth,
+            nav:document.querySelector('.v2-topbar nav').scrollWidth,canvas:document.querySelector('.v2-canvas').scrollWidth,
+            orb:document.querySelector('.v2-orb').getBoundingClientRect().toJSON()
+          })));
           assert.equal(sizes.outer,true,name+' '+width+' outer width');
           assert.equal(sizes.region,true,name+' '+width+' region width');
           assert.equal(sizes.canvas,true);assert.equal(sizes.orb,1);
@@ -175,9 +178,10 @@ window.listenerCount=()=>listeners.size;
           });
           assert.equal(scene.compact,false,name+' '+width+' dashboard Orb remains prominent');
           assert.ok(scene.orbWidth>=200,name+' '+width+' dashboard Orb size');
+          if(width>=901) assert.ok(scene.orbWidth>=Math.min(width*.55,height*.87,750),name+' '+width+' enlarged desktop Orb');
           if(width>=1101) assert.ok(scene.missionRight<scene.orbLeft+scene.orbWidth*.25,name+' '+width+' mission keeps clear space for Orb');
           if([393,1280,1366,1440,1870,1920,2560].includes(width)){await page.screenshot({path:path.join(output,name+'-'+width+'.png')});}
-          await page.getByRole('button',{name:/Enter My Workspace/}).click();
+          await page.getByRole('button',{name:/Open My Workspace/}).click();
           await page.locator('.v2-workspace-intro h2').waitFor();
           // The detailed board is in My Workspace and is usable before scrolling.
           const board=await page.evaluate(()=>{
