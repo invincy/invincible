@@ -57,7 +57,10 @@ function SignedInWorkspace({user, logout}) {
   const moveOrb = useCallback(() => {
     const rect = orbAnchor.current?.getBoundingClientRect();
     const canvas = viewport.current;
-    const prominent = rect && rect.top >= canvas.getBoundingClientRect().top && rect.bottom <= innerHeight-36
+    const viewportRect = canvas?.getBoundingClientRect();
+    const visibleHeight = rect && viewportRect
+      ? Math.max(0, Math.min(rect.bottom, viewportRect.bottom) - Math.max(rect.top, viewportRect.top)) : 0;
+    const prominent = rect && visibleHeight >= Math.min(rect.height * .35, 180)
       && canvas.scrollLeft < canvas.clientWidth*.35;
     const box = prominent ? {left: rect.left, top: rect.top, width: rect.width, height: rect.height, compact: false}
       : {left: innerWidth-66, top: 12, width: 48, height: 48, compact: true};
@@ -75,7 +78,7 @@ function SignedInWorkspace({user, logout}) {
     if (!restore) {savePosition(); history.pushState({v2Position: index}, '', '#'+id);}
     canvas.scrollTo({left: (fraction ?? index)*canvas.clientWidth,
       behavior: restore || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'});
-    document.getElementById(id+'-title')?.focus({preventScroll: true});
+    document.querySelector('.v2-topbar nav a[href="#'+id+'"]')?.focus({preventScroll: true});
   };
   useEffect(() => {
     const canvas = viewport.current;
@@ -119,7 +122,7 @@ function SignedInWorkspace({user, logout}) {
   });
   return <div className="v2-shell">
     <header className="v2-topbar"><a className="v2-brand" href="#dashboard" onClick={event => {event.preventDefault();navigate('dashboard');}}><span className="v2-brand-mark">I</span><span>INVINCIBLE<small>SPATIAL WORKSPACE / V2</small></span></a>
-      <nav aria-label="Spatial regions">{regions.map(region => <a key={region.id} href={'#'+region.id} aria-current={active === region.id ? 'location' : undefined} onClick={event => {if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;event.preventDefault();navigate(region.id);}}><span>{region.number}</span>{region.label}</a>)}</nav>
+      <nav aria-label="Explore spaces"><span className="v2-nav-caption" aria-hidden="true">SPACES</span>{regions.map(region => <a key={region.id} href={'#'+region.id} aria-current={active === region.id ? 'location' : undefined} onClick={event => {if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;event.preventDefault();navigate(region.id);}}><span>{region.number}</span>{region.label}</a>)}</nav>
       <div className="v2-account"><a href={v1}>Open V1 ↗</a><button aria-label="Sign out" onClick={async () => {try {await logout();} catch {setAuthError('Sign-out did not complete. Try again.');}}}>Sign out</button></div>
     </header>
     <div className="v2-connection" role="status"><span className={error ? 'v2-dot error' : 'v2-dot'}/>{authError || error || (!ready ? 'Restoring your workspace…' : data.tasksCached || data.planCached ? 'Showing cached records · Waiting for connection' : 'Connected to your existing workspace')}<span className="v2-preview-label">READ-ONLY PREVIEW</span>{error && <button onClick={data.retry}>Retry sync</button>}</div>
@@ -127,14 +130,15 @@ function SignedInWorkspace({user, logout}) {
       onKeyDown={event => {if (event.target !== event.currentTarget) return;let index = regions.findIndex(region => region.id === active);if (event.key === 'ArrowRight') index++;else if (event.key === 'ArrowLeft') index--;else if (event.key === 'Home') index=0;else if (event.key === 'End') index=regions.length-1;else return;event.preventDefault();navigate(regions[Math.max(0,Math.min(regions.length-1,index))].id);}}>
       {regions.map(region => <Region key={region.id} region={region} viewport={viewport} onScroll={moveOrb}>
         {!ready ? <div className="v2-panel v2-loading" role="status">Restoring tasks and your daily plan…</div> :
-          region.id === 'dashboard' ? <Dashboard data={data} plan={plan} timer={timer} onInspect={setSelected} orbAnchor={mountOrbAnchor} theme={theme} onChangeTheme={changeTheme}/> :
-          <Workspace data={data} plan={plan} timer={timer}/>}
+          region.id === 'dashboard' ? <Dashboard data={data} plan={plan} timer={timer} onInspect={setSelected} orbAnchor={mountOrbAnchor} theme={theme} onChangeTheme={changeTheme} onOpenWorkspace={() => navigate('workspace')}/> :
+          <Workspace data={data} plan={plan} timer={timer} onInspect={setSelected}/>}
       </Region>)}
     </main>
-    <div className={'v2-orb '+(orbBox.compact ? 'is-compact' : '')} style={{left: orbBox.left, top: orbBox.top, width: orbBox.width, height: orbBox.height}}><FocusOrb theme={theme}/>
-      <button className="v2-orb-theme" aria-label={'Orb theme: '+theme+'. Change theme'} onClick={changeTheme}>{orbBox.compact ? '◐' : orbBox.width <= 110 ? '◐ '+theme : '◐ '+theme+' · change theme'}</button>
+    <div className={'v2-orb '+(orbBox.compact ? 'is-compact' : '')} style={{left: orbBox.left, top: orbBox.top, width: orbBox.width, height: orbBox.height}}
+      onWheel={event => {const distance = event.deltaX + (event.shiftKey ? event.deltaY : 0); if (distance && viewport.current) {event.preventDefault(); viewport.current.scrollLeft += distance;}}}><FocusOrb theme={theme}/>
+      {orbBox.compact && <button className="v2-orb-theme" aria-label={'Orb theme: '+theme+'. Change theme'} onClick={changeTheme}>◐</button>}
     </div>
-    <footer className="v2-footer"><span>ONE CONTINUOUS ENVIRONMENT</span><span>Swipe sideways · Shift + wheel · Arrow keys on canvas</span><span>{active === 'dashboard' ? '01' : '02'} / 02</span></footer>
+    <footer className="v2-footer"><span>TWO CONNECTED SPACES</span><span>Choose a space above · Swipe sideways to explore</span><span>{active === 'dashboard' ? '01' : '02'} / 02</span></footer>
     {selected && <TaskInspector task={data.tasks.find(task => task.id === selected)} onClose={() => setSelected(null)}/>}
   </div>;
 }

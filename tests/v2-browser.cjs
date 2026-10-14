@@ -69,10 +69,23 @@ window.listenerCount=()=>listeners.size;
         page.on('pageerror',error=>errors.push(error.message));
         await page.route('https://**/*',route=>route.abort());
         await page.goto(base+'/fixture');
-        await page.getByRole('button',{name:/Build the living workspace/}).waitFor();
+        await page.locator('.v2-guide-mission h2').getByText('Build the living workspace').waitFor();
+        assert.equal(await page.getByRole('navigation',{name:'Explore spaces'}).getByRole('link').count(),2);
         assert.equal(await page.locator('.focus-orb-3d canvas').count(),1);
         await page.waitForFunction(()=>!document.querySelector('.v2-orb').classList.contains('is-compact'));
         await page.evaluate(()=>window.originalOrb=document.querySelector('.focus-orb-3d canvas'));
+        await page.waitForTimeout(150);
+        if(await page.locator('.focus-orb-3d').getAttribute('data-ready')==='true') {
+          const orbRect=await page.locator('.v2-orb').boundingBox();
+          await page.mouse.move(orbRect.x+orbRect.width/2,orbRect.y+orbRect.height/2);
+          await page.mouse.down();
+          assert.equal(await page.locator('.v2-orb').getAttribute('data-dragging'),'true');
+          await page.mouse.move(orbRect.x+orbRect.width/2+24,orbRect.y+orbRect.height/2+15);
+          await page.mouse.up();
+          assert.equal(await page.locator('.v2-orb').getAttribute('data-dragging'),null);
+        } else {
+          assert.equal(await page.locator('.orb-3d-fallback').count(),1);
+        }
         assert.deepEqual(await page.evaluate(()=>[...new Set(window.reads)].map(value=>value.split('/').slice(0,3).join('/')).sort()),['users/alice/dailyPlans','users/alice/tasks']);
         assert.equal(await page.evaluate(()=>window.writes),0);
 
@@ -103,14 +116,14 @@ window.listenerCount=()=>listeners.size;
         await page.goForward();
         await page.waitForFunction(()=>Math.abs(document.querySelector('.v2-canvas').scrollLeft/document.querySelector('.v2-canvas').clientWidth-1)<.01);
         await page.reload();
-        await page.getByRole('heading',{name:'Your essentials.' ,exact:false}).waitFor();
+        await page.locator('.v2-workspace-intro h2').waitFor();
         await page.waitForFunction(()=>Math.abs(document.querySelector('.v2-canvas').scrollLeft/document.querySelector('.v2-canvas').clientWidth-1)<.01);
         await page.screenshot({path:path.join(output,name+'-workspace.png')});
 
         await page.locator('.v2-canvas').focus();
         await page.keyboard.press('Home');
         await page.waitForFunction(()=>document.querySelector('.v2-canvas').scrollLeft<2);
-        assert.equal(await page.evaluate(()=>document.activeElement.id),'dashboard-title');
+        assert.equal(await page.evaluate(()=>document.activeElement.getAttribute('href')),'#dashboard');
         await page.locator('#v2-region-dashboard').getByRole('button',{name:'Start focus',exact:true}).click();
         await page.waitForTimeout(1150);
         await page.getByRole('link',{name:'02 My Workspace'}).click();
@@ -126,19 +139,15 @@ window.listenerCount=()=>listeners.size;
         await page.locator('#v2-region-workspace').getByRole('button',{name:'Pause focus'}).click();
         await page.evaluate(()=>window.emitTaskTitle('Updated from another region'));
         await page.getByRole('link',{name:'01 Main Dashboard'}).click();
-        await page.getByRole('button',{name:/Updated from another region/}).waitFor();
+        await page.locator('.v2-guide-mission h2').getByText('Updated from another region').waitFor();
         await page.getByRole('button',{name:/Resume work/}).click();
         await page.getByRole('dialog').waitFor();
         assert.match(await page.getByRole('dialog').textContent(),/Keep the original data/);
+        assert.match(await page.getByRole('dialog').textContent(),/Inspect existing records/);
         assert.equal(new URL(page.url()).hash,'#dashboard');
         await page.keyboard.press('Escape');
         assert.equal(await page.getByRole('dialog').count(),0);
         assert.match(await page.evaluate(()=>document.activeElement.textContent),/Resume work/);
-
-        await page.getByRole('button',{name:'View milestones',exact:true}).click();
-        await page.getByRole('dialog').waitFor();
-        assert.match(await page.getByRole('dialog').textContent(),/Inspect existing records/);
-        await page.keyboard.press('Escape');
 
         // Each region scrolls independently; the outer document never spills horizontally.
         await page.evaluate(()=>window.emitTaskTitle('Updated from another region — a longer project title that should never push the board below the screen'));
@@ -153,10 +162,28 @@ window.listenerCount=()=>listeners.size;
             canvas:document.querySelector('.v2-canvas').scrollWidth>=innerWidth*1.99,
             orb:document.querySelectorAll('.focus-orb-3d canvas').length,
           }));
+          if(!sizes.outer) console.log(name,width,'overflow',await page.evaluate(()=>({
+            document:document.documentElement.scrollWidth,body:document.body.scrollWidth,
+            shell:document.querySelector('.v2-shell').scrollWidth,header:document.querySelector('.v2-topbar').scrollWidth,
+            nav:document.querySelector('.v2-topbar nav').scrollWidth,canvas:document.querySelector('.v2-canvas').scrollWidth,
+            orb:document.querySelector('.v2-orb').getBoundingClientRect().toJSON()
+          })));
           assert.equal(sizes.outer,true,name+' '+width+' outer width');
           assert.equal(sizes.region,true,name+' '+width+' region width');
           assert.equal(sizes.canvas,true);assert.equal(sizes.orb,1);
-          // The board must be usable before scrolling, even on a short laptop screen.
+          const scene=await page.evaluate(()=>{
+            const orb=document.querySelector('.v2-orb').getBoundingClientRect();
+            const mission=document.querySelector('.v2-guide-mission').getBoundingClientRect();
+            return {orbWidth:orb.width,missionRight:mission.right,orbLeft:orb.left,compact:document.querySelector('.v2-orb').classList.contains('is-compact')};
+          });
+          assert.equal(scene.compact,false,name+' '+width+' dashboard Orb remains prominent');
+          assert.ok(scene.orbWidth>=200,name+' '+width+' dashboard Orb size');
+          if(width>=901) assert.ok(scene.orbWidth>=Math.min(width*.55,height*.87,750),name+' '+width+' enlarged desktop Orb');
+          if(width>=1101) assert.ok(scene.missionRight<scene.orbLeft+scene.orbWidth*.25,name+' '+width+' mission keeps clear space for Orb');
+          if([393,1280,1366,1440,1870,1920,2560].includes(width)){await page.screenshot({path:path.join(output,name+'-'+width+'.png')});}
+          await page.getByRole('button',{name:/Open My Workspace/}).click();
+          await page.locator('.v2-workspace-intro h2').waitFor();
+          // The detailed board is in My Workspace and is usable before scrolling.
           const board=await page.evaluate(()=>{
             const viewport=document.querySelector('.v2-canvas').getBoundingClientRect();
             const cards=[...document.querySelectorAll('.v2-lane')].map(lane=>lane.querySelector('.v2-task-card').getBoundingClientRect());
@@ -186,19 +213,19 @@ window.listenerCount=()=>listeners.size;
           const before=await page.locator('.v2-canvas').evaluate(element=>element.scrollLeft);
           await page.locator('#v2-region-dashboard').evaluate(element=>element.scrollTo(0,element.scrollHeight));
           assert.equal(await page.locator('.v2-canvas').evaluate(element=>element.scrollLeft),before);
-          if([393,1280,1366,1440,1870,1920,2560].includes(width)){await page.locator('#v2-region-dashboard').evaluate(element=>element.scrollTo(0,0));await page.waitForTimeout(100);await page.screenshot({path:path.join(output,name+'-'+width+'.png')});}
+          await page.getByRole('link',{name:'01 Main Dashboard'}).click();
         }
         await page.evaluate(()=>window.emitTaskTitle('Updated from another region'));
         await page.evaluate(()=>window.failSync());
         await page.getByRole('button',{name:'Retry sync'}).waitFor();
-        assert.equal(await page.getByRole('button',{name:/Updated from another region/}).count(),0);
+        assert.equal(await page.locator('.v2-guide-mission h2').getByText('Updated from another region').count(),0);
         await page.getByRole('button',{name:'Retry sync'}).click();
-        await page.getByRole('button',{name:/Updated from another region/}).waitFor();
+        await page.locator('.v2-guide-mission h2').getByText('Updated from another region').waitFor();
 
         await page.evaluate(()=>window.switchAccount('bob'));
         await page.waitForFunction(()=>window.reads.includes('users/bob/tasks'));
         await page.waitForTimeout(100);
-        assert.equal(await page.getByRole('button',{name:/Updated from another region/}).count(),0);
+        assert.equal(await page.locator('.v2-guide-mission h2').getByText('Updated from another region').count(),0);
         assert.equal(await page.locator('#v2-region-dashboard output').textContent(),'25:00');
         await page.getByRole('button',{name:'Sign out',exact:true}).click();
         await page.getByRole('button',{name:'Continue with Google'}).waitFor();
@@ -221,7 +248,7 @@ window.listenerCount=()=>listeners.size;
           const touchContext=await browser.newContext({viewport:{width:393,height:852},isMobile:true,hasTouch:true,reducedMotion:'reduce'});
           const touchPage=await touchContext.newPage();
           await touchPage.goto(base+'/fixture');
-          await touchPage.getByRole('button',{name:/Build the living workspace/}).waitFor();
+          await touchPage.locator('.v2-guide-mission h2').getByText('Build the living workspace').waitFor();
           const cdp=await touchContext.newCDPSession(touchPage);
           await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:350,y:540}]});
           for(let x=330;x>=110;x-=20){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:540}]});await touchPage.waitForTimeout(20);}
