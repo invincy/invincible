@@ -1,2 +1,4 @@
 # Generated SDK bundles contain intentional whitespace inside template literals.
 react-dist/assets/*.js -whitespace
+v2/** text eol=lf
+react/v2/index.html text eol=lf

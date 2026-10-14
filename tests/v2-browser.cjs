@@ -105,6 +105,7 @@ window.listenerCount=()=>listeners.size;
         await page.reload();
         await page.getByRole('heading',{name:'Your essentials.' ,exact:false}).waitFor();
         await page.waitForFunction(()=>Math.abs(document.querySelector('.v2-canvas').scrollLeft/document.querySelector('.v2-canvas').clientWidth-1)<.01);
+        await page.screenshot({path:path.join(output,name+'-workspace.png')});
 
         await page.locator('.v2-canvas').focus();
         await page.keyboard.press('Home');
@@ -141,7 +142,7 @@ window.listenerCount=()=>listeners.size;
 
         // Each region scrolls independently; the outer document never spills horizontally.
         await page.evaluate(()=>window.emitTaskTitle('Updated from another region — a longer project title that should never push the board below the screen'));
-        for(const [width,height] of [[320,640],[393,852],[768,1024],[1024,768],[1280,600],[1366,768],[1500,674],[1870,842],[1440,900]]) {
+        for(const [width,height] of [[320,640],[393,852],[768,1024],[1024,768],[1280,600],[1366,768],[1500,674],[1870,842],[1440,900],[1920,1080],[2560,1440]]) {
           await page.setViewportSize({width,height});
           await page.getByRole('link',{name:'01 Main Dashboard'}).click();
           await page.locator('#v2-region-dashboard').evaluate(element=>element.scrollTo(0,0));
@@ -168,10 +169,24 @@ window.listenerCount=()=>listeners.size;
             if(edge>board.bottom) await page.screenshot({path:path.join(output,name+'-visibility-failure.png')});
             assert.ok(edge<=board.bottom,name+' '+width+'x'+height+' first Kanban cards visible: '+JSON.stringify(board));
           }
+          if(width>=1024){
+            const reachable=await page.evaluate(()=>{
+              const lanes=[...document.querySelectorAll('.v2-lane-cards')];
+              return lanes.every(cards=>{
+                cards.scrollTop=cards.scrollHeight;
+                const last=cards.lastElementChild;
+                if(!last)return true;
+                const r=last.getBoundingClientRect(), p=cards.getBoundingClientRect();
+                return r.bottom<=p.bottom+4;
+              });
+            });
+            assert.ok(reachable, name+' '+width+'x'+height+' last lane card reachable');
+            await page.evaluate(()=>[...document.querySelectorAll('.v2-lane-cards')].forEach(c=>c.scrollTop=0));
+          }
           const before=await page.locator('.v2-canvas').evaluate(element=>element.scrollLeft);
           await page.locator('#v2-region-dashboard').evaluate(element=>element.scrollTo(0,element.scrollHeight));
           assert.equal(await page.locator('.v2-canvas').evaluate(element=>element.scrollLeft),before);
-          if([393,1280,1440,1870].includes(width)){await page.locator('#v2-region-dashboard').evaluate(element=>element.scrollTo(0,0));await page.waitForTimeout(100);await page.screenshot({path:path.join(output,name+'-'+width+'.png')});}
+          if([393,1280,1366,1440,1870,1920,2560].includes(width)){await page.locator('#v2-region-dashboard').evaluate(element=>element.scrollTo(0,0));await page.waitForTimeout(100);await page.screenshot({path:path.join(output,name+'-'+width+'.png')});}
         }
         await page.evaluate(()=>window.emitTaskTitle('Updated from another region'));
         await page.evaluate(()=>window.failSync());
