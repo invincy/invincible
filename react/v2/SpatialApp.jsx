@@ -17,14 +17,14 @@ function Region({region, viewport, children, onScroll}) {
   const [nearby, setNearby] = useState(false);
   useEffect(() => {
     const observer = new IntersectionObserver(entries => {
-      if (!entries[0].isIntersecting) contentHeight.current = element.current.scrollHeight;
+      if (!entries[0].isIntersecting && element.current) contentHeight.current = element.current.scrollHeight;
       setNearby(entries[0].isIntersecting);
     },
       {root: viewport.current, rootMargin: '0px 20% 0px 20%'});
     observer.observe(element.current);
     return () => observer.disconnect();
   }, [viewport]);
-  useLayoutEffect(() => {if (nearby) element.current.scrollTop = scrollTop.current;}, [nearby]);
+  useLayoutEffect(() => {if (nearby && element.current) element.current.scrollTop = scrollTop.current;}, [nearby]);
   return <section ref={element} className="v2-region" id={'v2-region-'+region.id} aria-labelledby={region.id+'-title'}
     onScroll={event => {scrollTop.current = event.currentTarget.scrollTop; onScroll();}}>
     <header className="v2-region-heading"><span>{region.number} /</span><h1 id={region.id+'-title'} tabIndex={-1}>{region.label}</h1><span className="v2-region-tag">CONNECTED SPACE</span></header>
@@ -53,7 +53,7 @@ function SignedInWorkspace({user, logout}) {
   const [active, setActive] = useState(regionFromHash(location.hash)), [selected, setSelected] = useState(null);
   const [authError, setAuthError] = useState('');
   const [orbBox, setOrbBox] = useState({left: innerWidth-66, top: 12, width: 48, height: 48, compact: true});
-  const [theme, setTheme] = useState(() => {try {return localStorage.getItem('invincible-orb-theme') || 'cyan';} catch {return 'cyan';}});
+  const [theme, setTheme] = useState(() => {try {return localStorage.getItem('invincible-orb-theme') || 'gold';} catch {return 'gold';}});
   const moveOrb = useCallback(() => {
     const rect = orbAnchor.current?.getBoundingClientRect();
     const canvas = viewport.current;
@@ -127,7 +127,7 @@ function SignedInWorkspace({user, logout}) {
       onKeyDown={event => {if (event.target !== event.currentTarget) return;let index = regions.findIndex(region => region.id === active);if (event.key === 'ArrowRight') index++;else if (event.key === 'ArrowLeft') index--;else if (event.key === 'Home') index=0;else if (event.key === 'End') index=regions.length-1;else return;event.preventDefault();navigate(regions[Math.max(0,Math.min(regions.length-1,index))].id);}}>
       {regions.map(region => <Region key={region.id} region={region} viewport={viewport} onScroll={moveOrb}>
         {!ready ? <div className="v2-panel v2-loading" role="status">Restoring tasks and your daily plan…</div> :
-          region.id === 'dashboard' ? <Dashboard data={data} plan={plan} timer={timer} onInspect={setSelected} orbAnchor={mountOrbAnchor}/> :
+          region.id === 'dashboard' ? <Dashboard data={data} plan={plan} timer={timer} onInspect={setSelected} orbAnchor={mountOrbAnchor} theme={theme} onChangeTheme={changeTheme}/> :
           <Workspace data={data} plan={plan} timer={timer}/>}
       </Region>)}
     </main>
