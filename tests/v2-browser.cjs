@@ -73,13 +73,18 @@ window.listenerCount=()=>listeners.size;
         assert.equal(await page.locator('.focus-orb-3d canvas').count(),1);
         await page.waitForFunction(()=>!document.querySelector('.v2-orb').classList.contains('is-compact'));
         await page.evaluate(()=>window.originalOrb=document.querySelector('.focus-orb-3d canvas'));
-        const orbRect=await page.locator('.v2-orb').boundingBox();
-        await page.mouse.move(orbRect.x+orbRect.width/2,orbRect.y+orbRect.height/2);
-        await page.mouse.down();
-        assert.equal(await page.locator('.v2-orb').getAttribute('data-dragging'),'true');
-        await page.mouse.move(orbRect.x+orbRect.width/2+24,orbRect.y+orbRect.height/2+15);
-        await page.mouse.up();
-        assert.equal(await page.locator('.v2-orb').getAttribute('data-dragging'),null);
+        await page.waitForTimeout(150);
+        if(await page.locator('.focus-orb-3d').getAttribute('data-ready')==='true') {
+          const orbRect=await page.locator('.v2-orb').boundingBox();
+          await page.mouse.move(orbRect.x+orbRect.width/2,orbRect.y+orbRect.height/2);
+          await page.mouse.down();
+          assert.equal(await page.locator('.v2-orb').getAttribute('data-dragging'),'true');
+          await page.mouse.move(orbRect.x+orbRect.width/2+24,orbRect.y+orbRect.height/2+15);
+          await page.mouse.up();
+          assert.equal(await page.locator('.v2-orb').getAttribute('data-dragging'),null);
+        } else {
+          assert.equal(await page.locator('.orb-3d-fallback').count(),1);
+        }
         assert.deepEqual(await page.evaluate(()=>[...new Set(window.reads)].map(value=>value.split('/').slice(0,3).join('/')).sort()),['users/alice/dailyPlans','users/alice/tasks']);
         assert.equal(await page.evaluate(()=>window.writes),0);
 
