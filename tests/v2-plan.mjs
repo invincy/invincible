@@ -86,3 +86,12 @@ test('content conflicts include nested edits and ignore unrelated lane changes',
   assert.throws(() => validateContent({title: 'Task', steps: [{id: 's', title: ''}]}), /title/);
   assert.throws(() => validateContent({title: 'Task', steps: [{id: 's', title: 'A', substeps: [{id: 's', title: 'B'}]}]}), /own ID/);
 });
+test('spatial workflow layout is normalized and participates in explicit saves', () => {
+  const project = {title:'Task',steps:[{id:'s',title:'Step'}],workflowLayout:{positions:{s:{x:420,y:260},bad:{x:'no',y:10}},viewport:{x:-80,y:30,zoom:9},selectedStepId:'s'}};
+  const content = taskContent(project);
+  assert.deepEqual(content.workflowLayout.positions, {s:{x:420,y:260}});
+  assert.deepEqual(content.workflowLayout.viewport, {x:-80,y:30,zoom:1.8});
+  assert.equal(content.workflowLayout.selectedStepId, 's');
+  assert.notEqual(contentVersion(project), contentVersion({...project,workflowLayout:{...project.workflowLayout,positions:{s:{x:500,y:260}}}}));
+  assert.equal(taskContent({title:'Legacy',steps:[]}).workflowLayout.viewport, null);
+});
