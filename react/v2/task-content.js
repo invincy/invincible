@@ -1,7 +1,13 @@
 import {cleanStep, taskSteps} from '../src/task-model.js';
 
 export function taskContent(task = {}) {
+  const sourceLayout = task.workflowLayout && typeof task.workflowLayout === 'object' ? task.workflowLayout : {};
+  const positions = Object.fromEntries(Object.entries(sourceLayout.positions || {}).filter(([, point]) => Number.isFinite(point?.x) && Number.isFinite(point?.y))
+    .map(([id, point]) => [id, {x: Math.max(40, Math.min(3000, point.x)), y: Math.max(40, Math.min(1200, point.y))}]));
+  const sourceViewport = sourceLayout.viewport || {}, viewport = Number.isFinite(sourceViewport.x) && Number.isFinite(sourceViewport.y) && Number.isFinite(sourceViewport.zoom)
+    ? {x: sourceViewport.x, y: sourceViewport.y, zoom: Math.max(.45, Math.min(1.8, sourceViewport.zoom))} : null;
   return {title: task.title || '', description: task.description || '', scratchpad: task.scratchpad || '',
+    workflowLayout: {positions, viewport, selectedStepId: typeof sourceLayout.selectedStepId === 'string' ? sourceLayout.selectedStepId : ''},
     steps: taskSteps(task).map((step, index) => {
       const parent = cleanStep(step, index), stored = task.stepSubsteps?.[parent.id];
       const children = Array.isArray(stored) ? stored : Array.isArray(step.substeps) ? step.substeps : [];

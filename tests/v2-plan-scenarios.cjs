@@ -44,7 +44,8 @@ module.exports = async function exercisePlanEditor({browser, base, output, name}
     await page.locator('.v2-task-route-select').filter({hasText:'Build refined model'}).click();
     assert.equal(await page.getByLabel('Step 2 title',{exact:true}).inputValue(),'Build refined model');
     await page.locator('.v2-task-route-select').filter({hasText:'Research'}).click();
-    await page.getByLabel('Step 1 notes',{exact:true}).fill('Updated working notes\nwith another line.');
+    await page.getByLabel('Step 1 notes',{exact:true}).fill('Updated working notes\nwith another line.\n- [x] Converted evidence');
+    await page.getByRole('button',{name:'Convert 1 checklist item to subtasks',exact:true}).click();
     await page.getByLabel('Complete substep 1.1',{exact:true}).check();
     assert.equal(await page.getByLabel('Complete step 1',{exact:true}).isChecked(),true);
     await page.getByRole('button',{name:'Save project',exact:true}).click();
@@ -53,7 +54,9 @@ module.exports = async function exercisePlanEditor({browser, base, output, name}
     await page.getByRole('region',{name:/Task workspace/}).waitFor({state:'detached'});
     record=await page.evaluate(id=>window.taskRecords().find(task=>task.id===id),id);
     assert.equal(record.steps[0].done,true); assert.equal(record.subtasks[0].done,true);
-    assert.equal(record.steps[0].notes,'Updated working notes\nwith another line.');
+    assert.equal(record.steps[0].notes,'Updated working notes\nwith another line.\n- [x] Converted evidence','checklist conversion retains the original notes');
+    assert.equal(record.stepSubsteps[record.steps[0].id].filter(child=>child.title==='Converted evidence').length,1,'checklist conversion creates one structured child');
+    assert.equal(record.workflowLayout.selectedStepId,record.steps[0].id,'the selected spatial step is saved with the project layout');
 
     // Editing uses content conflict checks, but unrelated lane changes are preserved.
     await open('t0');
