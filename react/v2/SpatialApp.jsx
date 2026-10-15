@@ -59,7 +59,7 @@ function SignedInWorkspace({user, logout}) {
     const viewportRect = canvas?.getBoundingClientRect();
     const visibleHeight = rect && viewportRect
       ? Math.max(0, Math.min(rect.bottom, viewportRect.bottom) - Math.max(rect.top, viewportRect.top)) : 0;
-    const prominent = rect && visibleHeight >= Math.min(rect.height * .35, 180)
+    const prominent = rect && canvas && visibleHeight >= Math.min(rect.height * .35, 180)
       && canvas.scrollLeft < canvas.clientWidth*.35;
     const box = prominent ? {left: rect.left, top: rect.top, width: rect.width, height: rect.height, compact: false}
       : {left: innerWidth-66, top: 12, width: 48, height: 48, compact: true};
@@ -68,12 +68,14 @@ function SignedInWorkspace({user, logout}) {
   const mountOrbAnchor = useCallback(node => {orbAnchor.current = node; if (node) requestAnimationFrame(moveOrb);}, [moveOrb]);
   const savePosition = () => {
     const canvas = viewport.current;
+    if (!canvas) return;
     const fraction = canvas.scrollLeft/canvas.clientWidth;
     const region = regions[Math.min(regions.length-1, Math.round(fraction))];
     history.replaceState({...history.state, v2Position: fraction}, '', '#'+region.id);
   };
   const navigate = (id, {restore = false, fraction} = {}) => {
     const canvas = viewport.current, index = regions.findIndex(region => region.id === id);
+    if (!canvas || index < 0) return;
     if (!restore) {savePosition(); history.pushState({v2Position: index}, '', '#'+id);}
     canvas.scrollTo({left: (fraction ?? index)*canvas.clientWidth,
       behavior: restore || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'});
@@ -108,6 +110,7 @@ function SignedInWorkspace({user, logout}) {
   }, [active, data.tasksReady, data.planReady]);
   const scroll = () => {
     const canvas = viewport.current;
+    if (!canvas) return;
     lastFraction.current = canvas.scrollLeft/canvas.clientWidth;
     setActive(regions[Math.min(regions.length-1, Math.round(lastFraction.current))].id);
     moveOrb(); clearTimeout(idle.current); idle.current = setTimeout(savePosition, 180);

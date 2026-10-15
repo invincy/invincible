@@ -28,6 +28,15 @@ test('notes stay with their step or substep and checkbox progress is preserved',
   assert.equal(setSubstepDone(completed, completed.substeps[0].id, false).done, false);
   assert.ok(setStepDone(completed, false).substeps.every(child => !child.done));
 });
+test('checkbox indentation flattened by rich-text copy still forms substeps', () => {
+  const result = parseStructuredPlan('Project: Copied plan\nDescription: Pasted from a rendered chat response.\n\n1. Research\n- [ ] Gather references\nNotes: Preserve the source links.\n- [x] Confirm scope\n\n2. Build\n* [ ] Create the first version');
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.steps.length, 2);
+  assert.equal(result.steps[0].substeps.length, 2);
+  assert.equal(result.steps[0].substeps[0].notes, 'Preserve the source links.');
+  assert.equal(result.steps[0].substeps[1].done, true);
+  assert.equal(result.steps[1].substeps[0].title, 'Create the first version');
+});
 test('malformed hierarchy and prose produce visible errors instead of flat invented steps', () => {
   for (const text of ['Plan something useful', '- [ ] Orphan', '1. Research\n   1. Nested numbered item', '1. Research\n   - [ ] Substep\n      - [ ] Too deep']) {
     assert.ok(parseStructuredPlan(text).errors.length, text);
