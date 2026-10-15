@@ -26,7 +26,9 @@ const listeners=new Set();
 window.reads=[];window.writes=0;
 const tasks=Array.from({length:24},(_,i)=>({id:'t'+i,title:i===0?'Build the living workspace':'Project '+i+' — Research, review and prepare the next meaningful action',status:['In Progress','Backlog','Today','Done'][i%4],steps:[{id:'s1',title:'Review the spatial canvas',notes:'Keep the original data.\\nVerify all user journeys.',done:false},{id:'s2',title:'Inspect existing records',done:true}]}));
 const saved=JSON.parse(sessionStorage.getItem('v2-fixture-saved')||'{}');
-for(const task of tasks)Object.assign(task,saved.tasks?.[task.id]||{});
+tasks[0].steps[0].extension={keep:'nested'};
+tasks[0].subtasks=[{text:'Review the spatial canvas',done:false,legacyNotes:'Keep legacy extension'},{text:'Inspect existing records',done:true}];
+if(saved.tasks)tasks.splice(0,tasks.length,...Object.values(saved.tasks));
 let plan=saved.plan||{activeItemId:'q',items:[{id:'q',taskId:'t0',stepId:'s1'}]};
 window.writeLog=[];
 function snapshot(ref) {
@@ -44,14 +46,17 @@ export async function runTransaction(_,callback) {
   await new Promise(resolve=>setTimeout(resolve,100));
   if(window.failNextWrite){window.failNextWrite=false;throw Error('permission-denied');}
   for(const entry of patches){
-    if(entry.path.includes('/tasks/'))Object.assign(tasks.find(task=>task.id===entry.path.split('/').pop()),entry.patch);
+    if(entry.path.includes('/tasks/')){const id=entry.path.split('/').pop(),task=tasks.find(task=>task.id===id);if(task)Object.assign(task,entry.patch);else tasks.push({id,...entry.patch});}
     else plan={...plan,...entry.patch};
   }
   window.writes+=patches.length;window.writeLog.push(...patches);
-  sessionStorage.setItem('v2-fixture-saved',JSON.stringify({tasks:Object.fromEntries(tasks.map(task=>[task.id,{status:task.status}])),plan}));
+  sessionStorage.setItem('v2-fixture-saved',JSON.stringify({tasks:Object.fromEntries(tasks.map(task=>[task.id,task])),plan}));
   for(const listener of listeners)listener.next(snapshot(listener.ref));
+  if(window.loseNextAck){window.loseNextAck=false;throw Error('unavailable');}
   return result;
 }
+window.taskRecords=()=>structuredClone(tasks);
+window.remoteEditTask=(id,patch)=>{Object.assign(tasks.find(task=>task.id===id),patch);for(const listener of listeners)listener.next(snapshot(listener.ref));};
 export function onSnapshot(ref, options, next, error) {
   const listener={ref,next,error};listeners.add(listener);window.reads.push(ref.path);
   const clock=setTimeout(()=>next(snapshot(ref)),35);
@@ -86,6 +91,7 @@ window.listenerCount=()=>listeners.size;
     for(const [name,engine] of [['chromium',chromium],['firefox',firefox]]) {
       const browser=await engine.launch({headless:true});
       try {
+        if (process.env.V2_PLAN_ONLY === '1') {await require('./v2-plan-scenarios.cjs')({browser,base,output,name}); continue;}
         const context=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
         const page=await context.newPage(), errors=[];
         page.on('pageerror',error=>errors.push(error.message));
@@ -197,8 +203,8 @@ window.listenerCount=()=>listeners.size;
         await page.locator('.v2-guide-mission h2').getByText('Updated from another region').waitFor();
         await page.getByRole('button',{name:/Resume work/}).click();
         await page.getByRole('dialog').waitFor();
-        assert.match(await page.getByRole('dialog').textContent(),/Keep the original data/);
-        assert.match(await page.getByRole('dialog').textContent(),/Inspect existing records/);
+        assert.match(await page.getByLabel('Step 1 notes',{exact:true}).inputValue(),/Keep the original data/);
+        assert.equal(await page.getByLabel('Step 2 title',{exact:true}).inputValue(),'Inspect existing records');
         assert.equal(new URL(page.url()).hash,'#dashboard');
         await page.keyboard.press('Escape');
         assert.equal(await page.getByRole('dialog').count(),0);
@@ -330,7 +336,7 @@ window.listenerCount=()=>listeners.size;
         await movePage.locator('.v2-guide-mission h2').getByText('Build the living workspace').waitFor();
         await movePage.getByRole('link',{name:'02 My Workspace'}).click();
         await card('t1').locator('.v2-task-card').click();
-        await movePage.getByRole('dialog').getByText('Keep the original data.',{exact:false}).waitFor();
+        assert.match(await movePage.getByLabel('Step 1 notes',{exact:true}).inputValue(),/Keep the original data/);
         await movePage.keyboard.press('Escape');
         const writes=await movePage.evaluate(()=>window.writes);
         await movePage.evaluate(()=>window.deletedTaskId='t1');
@@ -338,6 +344,7 @@ window.listenerCount=()=>listeners.size;
         await movePage.getByRole('alert').waitFor();
         assert.equal(await movePage.evaluate(()=>window.writes),writes,'a deleted task is never recreated by a move');
         await movePage.close();
+        await require('./v2-plan-scenarios.cjs')({browser,base,output,name});
 
         // Actual production bundle: anonymous startup, no test adapter or auto sign-in.
         await page.goto(base+'/invincible/v2/');

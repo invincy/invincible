@@ -69,7 +69,7 @@ The only business reads are:
 Reads begin only after the existing AuthProvider restores a user. Listeners unsubscribe and ignore late callbacks when disposed; changing UID replaces the whole signed-in subtree. Listener failures clear the affected records. Retry reconnects both sources. The local date is checked on focus and every 15 seconds for daily-plan rollover.
 
 Explicit Kanban moves transactionally update `status` and `updatedAt` on the existing task. Moving into Today also merges the current local day's plan, preserving existing items and activating the next unfinished step (or the task when no step is available). A missing task is rejected rather than recreated. Other lane moves leave plan items and task steps intact, matching V1's lane semantics. There are no automatic seed writes, callable requests, migrated IDs or copied production records.
-Task notes and steps are still view-only in the in-place inspector. Task creation and content editing remain in V1.
+The in-place project editor now supports explicit title, description, notes, parent-step and substep saves. The plan importer previews structured text before creating or appending. Draft recovery, content-conflict checks and idempotent append/create transactions are described below.
 Layout editing and layout persistence are not implemented; no layout records are mixed with tasks.
 Orb theme reuses the existing local preference key. Timer state stores only duration/deadline, under a separate per-account V2 key.
 
@@ -84,7 +84,7 @@ Orb theme reuses the existing local preference key. Timer state stores only dura
 | Dashboard/AI focus mismatch | Dashboard follows dailyPlans; status-based AI tool focus remains documented in `docs/code-review.md` | One shared active-focus resolver across client and tools |
 | Legacy step-field truncation | `stepFields` preserves fields in steps but maps the legacy subtasks mirror down to text/done | Lossless compatibility and round-trip tests before any write/migration |
 
-The initial V2 read-only boundary avoided these writes. The later explicit lane-move action updates status/timestamp and the Today queue only; it does not expose Creator/Workday editing, rewrite step fields, or close the broader findings above. Completed projects are excluded from V2's active focus even when their saved step reference is unfinished.
+The initial V2 read-only boundary avoided these writes. Current V2 task editing adds durable account-scoped drafts, explicit save/retry, transactional content-conflict checks and a child-data map compatible with legacy parent-array writers. The legacy step mirror retains its existing extra fields during V2 edits. These targeted changes do not close the broader V1/Creator/Workday findings above. Completed projects are excluded from V2's active focus even when their saved step reference is unfinished.
 
 ## Verification (2026-10-13)
 
@@ -204,3 +204,15 @@ The read subscription stays separate from the explicit transaction action. Only 
 Browser fixtures verify desktop drag/drop, same-lane no-op, saved status after reload, Today activation and atomic failure, denied-write rollback/retry, preserved task notes, deleted-task rejection and touch-grip movement. Production Firebase permissions and physical-device behavior require a real signed-in check; fixtures do not establish them.
 
 Validation: `npm test`, `npm run build:v2`, `npm run stage:v2`, `npm run check` and `npm run test:v2:browser` passed locally. The browser suite covers Chromium and Firefox, with actual emulated touch input for the phone grip; desktop and phone screenshots were inspected.
+
+## Project editor and structured plan import (2026-10-15)
+
+My Workspace adds New project and Paste plan. Existing card/current-task selection opens the project editor. The importer accepts the documented [custom GPT format](plan-format.md): project metadata, numbered parent steps, one level of indented checkbox substeps, and optional working notes. It parses locally with no model/API call. Malformed lines and deeper ambiguous hierarchy produce visible errors; saving is disabled until the format is corrected. Preview content is editable before saving. New projects start in Backlog; appending preserves the selected project's title, description, notes, lane and existing steps.
+
+Parent steps retain their existing IDs and unknown properties. Child records are stored in an additive `stepSubsteps` map keyed by parent ID in the same task document, instead of relying on legacy parent-array writers to preserve a new nested field. The V2 content adapter combines these records for editing. The compatibility mirror retains existing legacy fields, while keeping text/done current. No new backend service or rules changes are needed. Older pages still show parent steps; V2 owns child editing. Manual lane status remains separate from step completion.
+
+Editor and importer drafts persist locally under account-scoped keys. Closing/reloading retains drafts; no cloud write occurs before an explicit save. Inputs are disabled during save. Task edits compare current content to the opening version inside a Firestore transaction and refuse a conflicting overwrite; the user can copy their changes or explicitly discard the draft to load current data. Appends read current server content, never replace an array from a stale preview, reject missing targets and de-duplicate stable imported IDs on retries. New-project creation uses a stable document ID/token across an interrupted save. Existing steps/notes and unrelated lane changes are preserved.
+
+Verification includes parser/compatibility unit tests and Chromium/Firefox UI scenarios for preview, create, append, child completion, explicit saves, denied writes, draft reload recovery, concurrent-content conflicts, status-only changes, legacy-field preservation, retry after committed-but-unconfirmed append, manual project creation, invalid format rejection, account isolation and phone dialog overflow. Fixture screenshots were inspected. Production permissions, cross-device synchronization with a real account and physical-device/Safari behavior still require live checks.
+
+Validation: 24 frontend/domain tests and eight backend tests passed, along with V2 production build/stage and site-reference checks. The full V2 Chromium/Firefox suite and focused importer/editor scenarios passed locally. V1 source, generated loaders, rules, Firebase config and backend code are unchanged.
