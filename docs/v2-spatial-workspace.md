@@ -219,7 +219,7 @@ Validation: 24 frontend/domain tests and eight backend tests passed, along with 
 
 ## Full-screen task focus workspace (2026-10-15)
 
-Selecting a saved project from My Workspace, the active project on the Orb, or Resume work now opens a dedicated V2 task focus workspace. Wide screens use an approximately 70/30 composition: the active step, working notes and substeps occupy the main work area, while the complete route remains visible on the right. The layout uses the page background and restrained separators instead of nesting the work inside another dashboard card. Phones stack the route below the active work so editing remains usable without horizontal overflow.
+Selecting a saved project from My Workspace, the active project on the Orb, or Resume work now opens a dedicated V2 task focus workspace. Wide screens use an approximately 30/70 composition: the complete route remains visible as a navigation rail on the left, while the active step, working notes and substeps occupy the larger work area on the right. The layout uses the page background and restrained separators instead of nesting the work inside another dashboard card. Phones prioritize active work and stack the route below it so editing remains usable without horizontal overflow.
 
 The workspace keeps the existing explicit-save and account-scoped draft behavior. It supports title and description editing, project lane changes, step selection and ordering, parent and child completion, project notes, adding/removing steps and returning to the plan importer. Escape and the back control return to My Workspace and restore focus. New-project creation continues to use the compact dialog because it has no saved route to focus yet.
 

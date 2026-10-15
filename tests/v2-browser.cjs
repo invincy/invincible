@@ -144,10 +144,11 @@ window.listenerCount=()=>listeners.size;
         await page.setViewportSize({width:1920,height:1080});
         const taskLayout=await page.evaluate(()=>{
           const body=document.querySelector('.v2-task-focus-body').getBoundingClientRect(),stage=document.querySelector('.v2-task-stage').getBoundingClientRect(),route=document.querySelector('.v2-task-route').getBoundingClientRect();
-          return {stageRatio:stage.width/body.width,routeRatio:route.width/body.width,outer:document.documentElement.scrollWidth<=innerWidth+1};
+          return {stageRatio:stage.width/body.width,routeRatio:route.width/body.width,routeIsLeft:route.right<=stage.left+1,outer:document.documentElement.scrollWidth<=innerWidth+1};
         });
         assert.ok(taskLayout.stageRatio>.68&&taskLayout.stageRatio<.72,'wide task workspace keeps the active-work area near 70%');
         assert.ok(taskLayout.routeRatio>.28&&taskLayout.routeRatio<.32,'wide task workspace keeps the route near 30%');
+        assert.equal(taskLayout.routeIsLeft,true,'wide task workspace keeps the route left of active work');
         assert.equal(taskLayout.outer,true);
         await page.screenshot({path:path.join(output,name+'-task-focus-wide.png')});
         await page.setViewportSize({width:393,height:852});
