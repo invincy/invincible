@@ -55,9 +55,8 @@
 .v2-page-point[data-page="lic"]{--x:72%;--y:69%;--glow:#f1d091}
 .v2-page-point[data-page="reminders"]{--x:26%;--y:81%;--glow:#e8a4d5}
 .v2-page-point[data-page="portfolio"]{--x:58%;--y:82%;--glow:#84dccc}
-.v2-shell .v2-orb-task{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;gap:8px;width:min(43%,250px);min-height:66px;padding:8px;border:0;border-radius:0;background:transparent;color:#e6eeec;text-align:center;pointer-events:auto;text-shadow:0 2px 12px #000}
+.v2-shell .v2-orb-task{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;gap:8px;width:min(52%,300px);min-height:66px;padding:8px;border:0;border-radius:0;background:transparent;color:#e6eeec;text-align:center;pointer-events:auto;text-shadow:0 2px 12px #000}
 .v2-shell .v2-orb-task:hover{background:transparent;color:#fff}
-.v2-orb-task small{display:block;color:#99afb2;font-size:9px;font-weight:700;letter-spacing:.18em}
 .v2-orb-task strong{display:block;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(13px,1.25vw,19px);font-weight:750}
 .v2-orb-task>span{color:#e8ca83;font-size:15px}
 .v2-orb.is-approaching{transform:scale(1.16);transition:left .28s cubic-bezier(.2,.8,.2,1),top .28s cubic-bezier(.2,.8,.2,1),width .28s ease,height .28s ease,transform .52s ease}
