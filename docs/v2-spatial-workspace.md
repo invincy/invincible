@@ -84,7 +84,7 @@ Orb theme reuses the existing local preference key. Timer state stores only dura
 | Dashboard/AI focus mismatch | Dashboard follows dailyPlans; status-based AI tool focus remains documented in `docs/code-review.md` | One shared active-focus resolver across client and tools |
 | Legacy step-field truncation | `stepFields` preserves fields in steps but maps the legacy subtasks mirror down to text/done | Lossless compatibility and round-trip tests before any write/migration |
 
-V2's read-only boundary avoids these writes; it does **not** fix or close these existing findings.
+The initial V2 read-only boundary avoided these writes. The later explicit lane-move action updates status/timestamp and the Today queue only; it does not expose Creator/Workday editing, rewrite step fields, or close the broader findings above. Completed projects are excluded from V2's active focus even when their saved step reference is unfinished.
 
 ## Verification (2026-10-13)
 
