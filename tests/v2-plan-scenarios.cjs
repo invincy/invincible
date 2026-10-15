@@ -41,12 +41,16 @@ module.exports = async function exercisePlanEditor({browser, base, output, name}
     assert.equal(record.subtasks.length,2,'legacy mirror contains parent steps, not a flattened child list');
     await page.reload();
     await open(id);
+    await page.locator('.v2-task-route-select').filter({hasText:'Build refined model'}).click();
     assert.equal(await page.getByLabel('Step 2 title',{exact:true}).inputValue(),'Build refined model');
+    await page.locator('.v2-task-route-select').filter({hasText:'Research'}).click();
     await page.getByLabel('Step 1 notes',{exact:true}).fill('Updated working notes\nwith another line.');
     await page.getByLabel('Complete substep 1.1',{exact:true}).check();
     assert.equal(await page.getByLabel('Complete step 1',{exact:true}).isChecked(),true);
     await page.getByRole('button',{name:'Save project',exact:true}).click();
-    await page.getByRole('dialog').waitFor({state:'detached'});
+    await page.waitForFunction(()=>document.querySelector('.v2-task-save-actions .v2-primary')?.disabled);
+    await page.getByRole('button',{name:/Close saved work/}).click();
+    await page.getByRole('region',{name:/Task workspace/}).waitFor({state:'detached'});
     record=await page.evaluate(id=>window.taskRecords().find(task=>task.id===id),id);
     assert.equal(record.steps[0].done,true); assert.equal(record.subtasks[0].done,true);
     assert.equal(record.steps[0].notes,'Updated working notes\nwith another line.');
@@ -66,7 +70,9 @@ module.exports = async function exercisePlanEditor({browser, base, output, name}
     await page.getByLabel('Project description',{exact:true}).fill('Safe edit alongside lane move');
     await page.evaluate(()=>window.remoteEditTask('t0',{status:'Today'}));
     await page.getByRole('button',{name:'Save project',exact:true}).click();
-    await page.getByRole('dialog').waitFor({state:'detached'});
+    await page.waitForFunction(()=>document.querySelector('.v2-task-save-actions .v2-primary')?.disabled);
+    await page.getByRole('button',{name:/Close saved work/}).click();
+    await page.getByRole('region',{name:/Task workspace/}).waitFor({state:'detached'});
     assert.equal(await page.evaluate(()=>window.taskRecords()[0].status),'Today');
 
     // Append reads the latest task, preserves unknown fields and retries idempotently.

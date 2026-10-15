@@ -10,6 +10,7 @@ const Dashboard = lazy(() => import('./DashboardRegion'));
 const Workspace = lazy(() => import('./WorkspaceRegion'));
 const TaskEditor = lazy(() => import('./TaskEditor'));
 const PlanImporter = lazy(() => import('./PlanImporter'));
+const TaskFocusView = lazy(() => import('./TaskFocusView'));
 const v1 = new URL(navigationPages.find(page => page.id === 'dashboard').href, 'https://invincy.github.io').href;
 
 function Region({region, viewport, children, onScroll}) {
@@ -36,10 +37,10 @@ function Region({region, viewport, children, onScroll}) {
 function SignedInWorkspace({user, logout}) {
   const data = useWorkspaceData(user.uid), plan = resolvePlan(data.tasks, data.plan), timer = useFocusSession(user.uid);
   const viewport = useRef(null), orbAnchor = useRef(null), lastFraction = useRef(0), idle = useRef(null);
-  const [active, setActive] = useState(regionFromHash(location.hash)), [selected, setSelected] = useState(null);
+  const [active, setActive] = useState(regionFromHash(location.hash)), [selected, setSelected] = useState(null), [focusedTaskId, setFocusedTaskId] = useState(null);
   const [travelPage, setTravelPage] = useState(null);
   const [importPlan, setImportPlan] = useState(null);
-  const inspect = id => setSelected({id, create: false});
+  const inspect = id => setFocusedTaskId(id);
   const [authError, setAuthError] = useState('');
   const [orbBox, setOrbBox] = useState({left: innerWidth-66, top: 12, width: 48, height: 48, compact: true});
   const [theme, setTheme] = useState(() => {try {return localStorage.getItem('invincible-orb-theme') || 'gold';} catch {return 'gold';}});
@@ -145,6 +146,7 @@ function SignedInWorkspace({user, logout}) {
     <Suspense fallback={<p className="v2-editor-loading" role="status">Opening editor…</p>}>
       {selected && <TaskEditor key={selected.id} uid={user.uid} taskId={selected.id} isNew={selected.create} task={data.tasks.find(task => task.id === selected.id)} onClose={() => setSelected(null)} onPaste={id => {setSelected(null); setImportPlan({targetId: id});}}/>}
       {importPlan && <PlanImporter uid={user.uid} tasks={data.tasks} targetId={importPlan.targetId} onClose={() => setImportPlan(null)}/>}
+      {focusedTaskId && <TaskFocusView key={focusedTaskId} uid={user.uid} task={data.tasks.find(task => task.id === focusedTaskId)} onClose={() => setFocusedTaskId(null)} onPaste={id => {setFocusedTaskId(null); setImportPlan({targetId: id});}}/>}
     </Suspense>
   </div>;
 }
