@@ -19,6 +19,8 @@ Garage applies each operation transactionally to the latest stored document, wai
 
 The repository rules allow authenticated owners of `users/{uid}/**`, and limit shared Creator/Workday documents to their owner and invited editors. Rules were not weakened. Code tests use a controlled Firestore adapter; they do not prove production permission configuration or account access. No signed-in production write/delete test or Firebase rules deployment was performed. If production returns `permission-denied` for the correct UID, the deployed rules must be checked against `firestore.rules` by a project administrator.
 
+V2's My Workspace now writes explicit Kanban lane moves to the same task documents. Each move reads the latest task in a transaction, rejects missing records, and updates only status/timestamp. Entering Today atomically merges the existing daily plan to add and activate the next unfinished step, preserving existing queue entries. Viewing V2 still performs no automatic business writes; notes and steps remain view-only there.
+
 Validation: `cd react && npm run build`; `node --test tests/storage-regressions.mjs`; `node tests/storage-browser.cjs` (requires Playwright and Chromium; executable path can be overridden via `CHROMIUM_EXECUTABLE`).
 
 Journal's original source project is not included here. Only the active v11 application bundle is retained in the working tree; previous versions remain in Git history. The v11 bundle redirects its stroke hook to the readable adapter, adjusts auth persistence order, observes account changes, and displays sync status. A future Journal rebuild must retain that adapter or port its behavior into its source hook.

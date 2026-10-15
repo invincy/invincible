@@ -25,10 +25,32 @@ export const doc=collection;
 const listeners=new Set();
 window.reads=[];window.writes=0;
 const tasks=Array.from({length:24},(_,i)=>({id:'t'+i,title:i===0?'Build the living workspace':'Project '+i+' — Research, review and prepare the next meaningful action',status:['In Progress','Backlog','Today','Done'][i%4],steps:[{id:'s1',title:'Review the spatial canvas',notes:'Keep the original data.\\nVerify all user journeys.',done:false},{id:'s2',title:'Inspect existing records',done:true}]}));
+const saved=JSON.parse(sessionStorage.getItem('v2-fixture-saved')||'{}');
+for(const task of tasks)Object.assign(task,saved.tasks?.[task.id]||{});
+let plan=saved.plan||{activeItemId:'q',items:[{id:'q',taskId:'t0',stepId:'s1'}]};
+window.writeLog=[];
 function snapshot(ref) {
   const owner=ref.path.split('/')[1];
   if(ref.path.endsWith('/tasks')) return {metadata:{fromCache:false},docs:owner==='alice'?tasks.map(task=>({id:task.id,data:()=>({...task})})):[]};
-  return {metadata:{fromCache:false},exists:()=>owner==='alice',data:()=>({activeItemId:'q',items:[{id:'q',taskId:'t0',stepId:'s1'}]})};
+  return {metadata:{fromCache:false},exists:()=>owner==='alice',data:()=>plan};
+}
+export const serverTimestamp=()=>123;
+export async function runTransaction(_,callback) {
+  const patches=[];
+  const result=await callback({get:async ref=>{
+    if(ref.path.includes('/tasks/')){const task=tasks.find(task=>task.id===ref.path.split('/').pop()&&task.id!==window.deletedTaskId);return {exists:()=>Boolean(task)&&ref.path.startsWith('users/alice/'),data:()=>structuredClone(task)};}
+    return snapshot(ref);
+  },set:(ref,patch)=>patches.push({path:ref.path,patch}),update:(ref,patch)=>patches.push({path:ref.path,patch})});
+  await new Promise(resolve=>setTimeout(resolve,100));
+  if(window.failNextWrite){window.failNextWrite=false;throw Error('permission-denied');}
+  for(const entry of patches){
+    if(entry.path.includes('/tasks/'))Object.assign(tasks.find(task=>task.id===entry.path.split('/').pop()),entry.patch);
+    else plan={...plan,...entry.patch};
+  }
+  window.writes+=patches.length;window.writeLog.push(...patches);
+  sessionStorage.setItem('v2-fixture-saved',JSON.stringify({tasks:Object.fromEntries(tasks.map(task=>[task.id,{status:task.status}])),plan}));
+  for(const listener of listeners)listener.next(snapshot(listener.ref));
+  return result;
 }
 export function onSnapshot(ref, options, next, error) {
   const listener={ref,next,error};listeners.add(listener);window.reads.push(ref.path);
@@ -272,6 +294,48 @@ window.listenerCount=()=>listeners.size;
         assert.equal(await page.evaluate(()=>window.writes),0);
         assert.deepEqual(errors,[]);
 
+        // Moves use the existing account records and roll back on a denied commit.
+        const movePage=await context.newPage();
+        await movePage.goto(base+'/fixture#workspace');
+        const card=id=>movePage.locator(`[data-task-id="${id}"]`);
+        await card('t1').waitFor();
+        await card('t1').locator('.v2-task-card').dragTo(movePage.locator('.v2-lane[data-status="In Progress"] .v2-lane-header'));
+        await movePage.getByRole('status').filter({hasText:'Moved to In Progress.'}).waitFor();
+        assert.equal(await movePage.locator('.v2-lane[data-status="In Progress"] [data-task-id="t1"]').count(),1);
+        assert.equal(await movePage.evaluate(()=>window.writeLog[0].path),'users/alice/tasks/t1');
+        assert.deepEqual(await movePage.evaluate(()=>Object.keys(window.writeLog[0].patch).sort()),['status','updatedAt']);
+        await movePage.reload();
+        await movePage.locator('.v2-lane[data-status="In Progress"] [data-task-id="t1"]').waitFor();
+        await card('t1').locator('.v2-task-card').dragTo(movePage.locator('.v2-lane[data-status="In Progress"] .v2-lane-header'));
+        assert.equal(await movePage.evaluate(()=>window.writes),0,'dropping into the same lane is a no-op');
+        await movePage.evaluate(()=>window.failNextWrite=true);
+        await card('t1').locator('select').selectOption('Today');
+        await movePage.getByRole('alert').waitFor();
+        assert.equal(await movePage.evaluate(()=>window.writes),0,'a failed Today move changes neither task nor plan');
+        assert.equal(await movePage.locator('.v2-lane[data-status="In Progress"] [data-task-id="t1"]').count(),1);
+        await card('t1').locator('select').selectOption('Today');
+        await movePage.getByRole('status').filter({hasText:'Moved to Today.'}).waitFor();
+        assert.equal(await movePage.evaluate(()=>window.writeLog.find(entry=>entry.path.includes('/dailyPlans/')).patch.activeItemId),'t1__s1');
+        await movePage.getByRole('link',{name:'01 Main Dashboard'}).click();
+        await movePage.locator('.v2-guide-mission h2').getByText('Project 1').waitFor();
+        await movePage.getByRole('link',{name:'02 My Workspace'}).click();
+        await movePage.evaluate(()=>window.failNextWrite=true);
+        await card('t1').locator('select').selectOption('Done');
+        await movePage.getByRole('alert').filter({hasText:/move could not be saved/}).waitFor();
+        assert.equal(await movePage.locator('.v2-lane[data-status="Today"] [data-task-id="t1"]').count(),1);
+        await card('t1').locator('select').selectOption('Done');
+        await movePage.getByRole('status').filter({hasText:'Moved to Completed.'}).waitFor();
+        assert.equal(await card('t1').locator('select').evaluate(element=>element===document.activeElement),true,'Move control keeps keyboard focus after a lane change');
+        await card('t1').locator('.v2-task-card').click();
+        await movePage.getByRole('dialog').getByText('Keep the original data.',{exact:false}).waitFor();
+        await movePage.keyboard.press('Escape');
+        const writes=await movePage.evaluate(()=>window.writes);
+        await movePage.evaluate(()=>window.deletedTaskId='t1');
+        await card('t1').locator('select').selectOption('Backlog');
+        await movePage.getByRole('alert').waitFor();
+        assert.equal(await movePage.evaluate(()=>window.writes),writes,'a deleted task is never recreated by a move');
+        await movePage.close();
+
         // Actual production bundle: anonymous startup, no test adapter or auto sign-in.
         await page.goto(base+'/invincible/v2/');
         await page.getByRole('button',{name:'Continue with Google'}).waitFor();
@@ -292,6 +356,17 @@ window.listenerCount=()=>listeners.size;
           for(let x=330;x>=110;x-=20){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:540}]});await touchPage.waitForTimeout(20);}
           await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
           await touchPage.waitForFunction(()=>document.querySelector('.v2-canvas').scrollLeft>100);
+          await touchPage.getByRole('link',{name:'02 My Workspace'}).click();
+          const handle=await touchPage.locator('[data-task-id="t1"] .v2-drag-handle').boundingBox();
+          const destination=await touchPage.locator('.v2-lane[data-status="In Progress"] .v2-lane-header').boundingBox();
+          const start={x:handle.x+handle.width/2,y:handle.y+handle.height/2},end={x:destination.x+destination.width/2,y:destination.y+destination.height/2};
+          await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[start]});
+          for(let i=1;i<=8;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:start.x+(end.x-start.x)*i/8,y:start.y+(end.y-start.y)*i/8}]});}
+          await touchPage.locator('.v2-lane[data-status="In Progress"].is-drop-target').waitFor();
+          await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+          await touchPage.getByRole('status').filter({hasText:'Moved to In Progress.'}).waitFor();
+          assert.equal(await touchPage.locator('.v2-lane[data-status="In Progress"] [data-task-id="t1"]').count(),1);
+          await touchPage.screenshot({path:path.join(output,'chromium-touch-kanban.png')});
           await touchContext.close();
         }
         console.log(name+': navigation, free stopping, history, reload, timer, responsive layout, live reads, account isolation and production auth gate passed');
