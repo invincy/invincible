@@ -1,13 +1,15 @@
 import React, {lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {useAuth} from '../src/AuthContext';
 import {FocusOrb} from '../src/FocusOrb';
-import {taskSteps} from '../src/task-model';
+import {newId} from '../src/task-model';
 import {navigationPages} from '../../shared/navigation';
 import {regions, regionFromHash, resolvePlan} from './model';
 import {useWorkspaceData} from './useWorkspaceData';
 import {useFocusSession} from './useFocusSession';
 const Dashboard = lazy(() => import('./DashboardRegion'));
 const Workspace = lazy(() => import('./WorkspaceRegion'));
+const TaskEditor = lazy(() => import('./TaskEditor'));
+const PlanImporter = lazy(() => import('./PlanImporter'));
 const v1 = new URL(navigationPages.find(page => page.id === 'dashboard').href, 'https://invincy.github.io').href;
 
 function Region({region, viewport, children, onScroll}) {
@@ -31,27 +33,13 @@ function Region({region, viewport, children, onScroll}) {
     {nearby ? <Suspense fallback={<p role="status">Opening this space…</p>}>{children}</Suspense> : <div className="v2-region-placeholder" style={{minHeight:contentHeight.current}} aria-hidden="true"/>}
   </section>;
 }
-function TaskInspector({task, onClose}) {
-  const dialog = useRef(null);
-  useEffect(() => {
-    const previous = document.activeElement;
-    dialog.current.showModal();
-    return () => {previous?.focus?.({preventScroll: true});};
-  }, []);
-  return <dialog ref={dialog} className="v2-inspector" aria-labelledby="v2-inspector-title" onClose={onClose}>
-    <div className="v2-panel-heading"><span className="v2-eyebrow">SAVED WORK · READ ONLY</span><button autoFocus onClick={onClose} aria-label="Close saved work">Close ×</button></div>
-    <h2 id="v2-inspector-title">{task?.title || 'Task unavailable'}</h2>
-    {task ? <><p className="v2-muted">{task.status || 'Backlog'}</p>{task.description && <p className="v2-saved-notes">{task.description}</p>}
-      <ol className="v2-saved-steps">{taskSteps(task).map((step,index) => <li key={step.id || index}><h3>{step.title || step.text || 'Untitled step'}</h3><small>{step.done || step.status === 'Done' ? 'Completed' : step.status || 'Not started'}</small><p className="v2-saved-notes">{step.notes || 'No working notes saved.'}</p></li>)}</ol>
-      {task.scratchpad && <section><h3>Project notes</h3><p className="v2-saved-notes">{task.scratchpad}</p></section>}
-      <p className="v2-muted">Move tasks between lanes in My Workspace. Open V1 to create tasks or edit their notes and steps.</p></> : <p>This record is no longer available to this account.</p>}
-  </dialog>;
-}
 function SignedInWorkspace({user, logout}) {
   const data = useWorkspaceData(user.uid), plan = resolvePlan(data.tasks, data.plan), timer = useFocusSession(user.uid);
   const viewport = useRef(null), orbAnchor = useRef(null), lastFraction = useRef(0), idle = useRef(null);
   const [active, setActive] = useState(regionFromHash(location.hash)), [selected, setSelected] = useState(null);
   const [travelPage, setTravelPage] = useState(null);
+  const [importPlan, setImportPlan] = useState(null);
+  const inspect = id => setSelected({id, create: false});
   const [authError, setAuthError] = useState('');
   const [orbBox, setOrbBox] = useState({left: innerWidth-66, top: 12, width: 48, height: 48, compact: true});
   const [theme, setTheme] = useState(() => {try {return localStorage.getItem('invincible-orb-theme') || 'gold';} catch {return 'gold';}});
@@ -141,8 +129,8 @@ function SignedInWorkspace({user, logout}) {
       onKeyDown={event => {if (event.target !== event.currentTarget) return;let index = regions.findIndex(region => region.id === active);if (event.key === 'ArrowRight') index++;else if (event.key === 'ArrowLeft') index--;else if (event.key === 'Home') index=0;else if (event.key === 'End') index=regions.length-1;else return;event.preventDefault();navigate(regions[Math.max(0,Math.min(regions.length-1,index))].id);}}>
       {regions.map(region => <Region key={region.id} region={region} viewport={viewport} onScroll={moveOrb}>
         {!ready ? <div className="v2-panel v2-loading" role="status">Restoring tasks and your daily plan…</div> :
-          region.id === 'dashboard' ? <Dashboard data={data} plan={plan} timer={timer} onInspect={setSelected} orbAnchor={mountOrbAnchor} theme={theme} onChangeTheme={changeTheme} onOpenWorkspace={() => navigate('workspace')} onTravel={setTravelPage}/> :
-          <Workspace data={data} plan={plan} timer={timer} onInspect={setSelected} uid={user.uid}/>}
+          region.id === 'dashboard' ? <Dashboard data={data} plan={plan} timer={timer} onInspect={inspect} orbAnchor={mountOrbAnchor} theme={theme} onChangeTheme={changeTheme} onOpenWorkspace={() => navigate('workspace')} onTravel={setTravelPage}/> :
+          <Workspace data={data} plan={plan} timer={timer} onInspect={inspect} uid={user.uid} onCreate={() => setSelected({id: newId('t'), create: true})} onPaste={() => setImportPlan({targetId: ''})}/>}
       </Region>)}
     </main>
     <div className={'v2-orb '+(orbBox.compact ? 'is-compact' : travelPage && active === 'dashboard' ? 'is-approaching' : '')} style={{left: orbBox.left, top: orbBox.top, width: orbBox.width, height: orbBox.height}}
@@ -151,7 +139,10 @@ function SignedInWorkspace({user, logout}) {
     </div>
     <footer className="v2-footer"><span>DASHBOARD MAP · PERSONAL WORKSPACE</span><span className="v2-footer-desktop">Choose a glow to enter its page · Swipe sideways for widgets</span><span className="v2-footer-mobile">Tap a glow to enter its page · Swipe sideways for widgets</span><span>{active === 'dashboard' ? '01' : '02'} / 02</span></footer>
     {travelPage && <div className="v2-travel" role="status" aria-live="polite"><span>ENTERING</span><strong>{travelPage.label}</strong><i aria-hidden="true"/></div>}
-    {selected && <TaskInspector task={data.tasks.find(task => task.id === selected)} onClose={() => setSelected(null)}/>}
+    <Suspense fallback={<p className="v2-editor-loading" role="status">Opening editor…</p>}>
+      {selected && <TaskEditor key={selected.id} uid={user.uid} taskId={selected.id} isNew={selected.create} task={data.tasks.find(task => task.id === selected.id)} onClose={() => setSelected(null)} onPaste={id => {setSelected(null); setImportPlan({targetId: id});}}/>}
+      {importPlan && <PlanImporter uid={user.uid} tasks={data.tasks} targetId={importPlan.targetId} onClose={() => setImportPlan(null)}/>}
+    </Suspense>
   </div>;
 }
 export function SpatialApp() {

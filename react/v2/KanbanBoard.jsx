@@ -4,8 +4,8 @@ import {kanbanLanes as lanes} from './move-task';
 
 export default function KanbanBoard({tasks, onInspect, onMove, pending = {}}) {
   const [dragId, setDragId] = useState(null), [target, setTarget] = useState(null), [ghost, setGhost] = useState(null);
-  const pointer = useRef(null), suppressClick = useRef(0), restoreFocus = useRef(null), board = useRef(null);
-  const clear = () => {pointer.current = null; setDragId(null); setTarget(null); setGhost(null);};
+  const pointer = useRef(null), dragged = useRef(null), suppressClick = useRef(0), restoreFocus = useRef(null), board = useRef(null);
+  const clear = () => {pointer.current = null; dragged.current = null; setDragId(null); setTarget(null); setGhost(null);};
   useEffect(() => {
     const cancel = event => {if (event.key === 'Escape') clear();};
     window.addEventListener('keydown', cancel); window.addEventListener('blur', clear);
@@ -25,26 +25,26 @@ export default function KanbanBoard({tasks, onInspect, onMove, pending = {}}) {
   return <div ref={board} className="v2-kanban-board" aria-label="Kanban board">{lanes.map(([status, label]) => {
     const cards = tasks.filter(task => (task.status || 'Backlog') === status);
     return <section className={'v2-lane' + (target === status ? ' is-drop-target' : '')} key={status} data-status={status} aria-label={label}
-      onDragOver={event => {if (!dragId) return; event.preventDefault(); event.dataTransfer.dropEffect = 'move'; setTarget(status);}}
+      onDragOver={event => {if (!dragged.current) return; event.preventDefault(); event.dataTransfer.dropEffect = 'move'; setTarget(status);}}
       onDragLeave={event => {if (!event.currentTarget.contains(event.relatedTarget)) setTarget(null);}}
-      onDrop={event => {event.preventDefault(); drop(dragId, status);}}>
+      onDrop={event => {event.preventDefault(); drop(dragged.current, status);}}>
       <div className="v2-lane-header"><h3>{label}</h3><span className="v2-lane-count">{cards.length}</span></div>
       <div className="v2-lane-cards">{cards.length ? cards.map(task => {
         const progress = taskProgress(task), title = task.title || 'Untitled task', saving = Boolean(pending[task.id]);
         return <article className={'v2-task-wrap' + (dragId === task.id ? ' is-dragging' : '')} key={task.id} data-task-id={task.id} aria-busy={saving}>
-          <button className="v2-task-card" draggable={!saving} onDragStart={event => {
-            event.dataTransfer.setData('text/plain', task.id); event.dataTransfer.effectAllowed = 'move'; setDragId(task.id);
+          <div className="v2-task-card" role="button" tabIndex={0} draggable={!saving} onKeyDown={event => {if (event.key === 'Enter' || event.key === ' ') {event.preventDefault(); onInspect(task.id);}}} onDragStart={event => {
+            event.dataTransfer.setData('text/plain', task.id); event.dataTransfer.effectAllowed = 'move'; dragged.current = task.id; setDragId(task.id);
           }} onDragEnd={() => {suppressClick.current = Date.now() + 300; clear();}}
             onClick={() => {if (Date.now() >= suppressClick.current) onInspect(task.id);}}>
             <strong className="v2-task-card-title">{title}</strong>
             <span className="v2-task-card-sub">{saving ? 'Saving move…' : progress.total ? `${progress.done} of ${progress.total} steps` : 'No saved steps'}</span>
             {progress.total > 0 && <progress max={progress.total} value={progress.done} aria-label={'Progress for '+title}/>}
-          </button>
+          </div>
           <button className="v2-drag-handle" tabIndex={-1} disabled={saving} aria-label={'Drag '+title} title="Drag to another lane" onClick={event => event.preventDefault()}
             onPointerDown={event => {
               if (saving || !event.isPrimary || event.button !== 0) return;
               event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId);
-              pointer.current = {id: task.id, pointerId: event.pointerId}; setDragId(task.id);
+              pointer.current = {id: task.id, pointerId: event.pointerId}; dragged.current = task.id; setDragId(task.id);
               setGhost({x: event.clientX, y: event.clientY, title});
             }} onPointerMove={event => {
               if (pointer.current?.pointerId !== event.pointerId) return;

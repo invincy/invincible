@@ -1,5 +1,6 @@
 @import '../src/dashboard.css';
 @import '../src/dashboard-guide.css';
+@import './editor.css';
 /* dashboard.css owns dashboard/orb layout; this sheet owns only the spatial shell and workspace region. */
 :root{font-family:Inter,"Segoe UI",system-ui,sans-serif;color:#e4edf3;background:#080e16;font-synthesis:none;color-scheme:dark}
 *{box-sizing:border-box}body{margin:0}button,a{-webkit-tap-highlight-color:transparent}button,input{font:inherit}button,a{touch-action:manipulation}button{cursor:pointer}
@@ -141,7 +142,7 @@
 .v2-task-card progress{width:100%;height:3px;accent-color:var(--lane-accent)}
 .v2-task-wrap{position:relative;flex:none;min-width:0}
 .v2-task-wrap.is-dragging{opacity:.4}
-.v2-kanban-board .v2-task-card{width:100%;padding-right:42px;padding-bottom:36px;cursor:grab}
+.v2-kanban-board .v2-task-card{width:100%;padding-right:42px;padding-bottom:36px;cursor:grab;user-select:none;touch-action:manipulation}
 .v2-kanban-board .v2-lane.is-drop-target{outline:1px solid var(--lane-accent);outline-offset:-1px;background-color:color-mix(in srgb,var(--lane-accent) 10%,transparent)}
 .v2-shell .v2-drag-handle{position:absolute;right:4px;top:4px;width:34px;min-height:34px;padding:0;border:0;background:transparent;color:var(--lane-accent);font-size:22px;cursor:grab;touch-action:none;user-select:none}
 .v2-drag-handle:active{cursor:grabbing}
