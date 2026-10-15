@@ -11,6 +11,7 @@
     "stage:v2": "npm --prefix react run build:v2 -- --outDir ../../v2",
     "preview:v2": "npm --prefix react run preview:v2",
     "test:v2": "node --test tests/v2-*.mjs",
+    "test:v2:smoke": "node tests/v2-browser.cjs --smoke",
     "test:v2:browser": "node tests/v2-browser.cjs"
   },
   "devDependencies": {

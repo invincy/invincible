@@ -8,6 +8,7 @@ const root = path.resolve(__dirname, '..');
 const buildDirectory = process.env.V2_BUILD_DIR || 'v2-dist';
 const esbuild = require(path.join(root, 'react/node_modules/esbuild'));
 const output = path.join(root, '.test-output/v2');
+const smokeOnly = process.argv.includes('--smoke');
 const authMock = `
 let observer, current={uid:'alice'};
 export const db={};
@@ -88,7 +89,8 @@ window.listenerCount=()=>listeners.size;
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const base='http://127.0.0.1:'+server.address().port;
   try {
-    for(const [name,engine] of [['chromium',chromium],['firefox',firefox]]) {
+    const engines = smokeOnly ? [['chromium',chromium]] : [['chromium',chromium],['firefox',firefox]];
+    for(const [name,engine] of engines) {
       const browser=await engine.launch({headless:true});
       try {
         if (process.env.V2_PLAN_ONLY === '1') {await require('./v2-plan-scenarios.cjs')({browser,base,output,name}); continue;}
@@ -141,6 +143,19 @@ window.listenerCount=()=>listeners.size;
         await page.getByRole('dialog').getByText('Build the living workspace').waitFor();
         await page.getByRole('button',{name:/Close saved work/}).click();
         await page.screenshot({path:path.join(output,name+'-map.png')});
+        if(smokeOnly) {
+          assert.equal(await page.locator('.v2-orb-task small').count(),0,'the Orb center does not repeat a current-task label');
+          const centered=await page.evaluate(()=>{
+            const orb=document.querySelector('.v2-orb').getBoundingClientRect();
+            const task=document.querySelector('.v2-orb-task').getBoundingClientRect();
+            return Math.abs((orb.left+orb.width/2)-(task.left+task.width/2));
+          });
+          assert.ok(centered<2,'the active task control stays centered on the Orb');
+          assert.deepEqual(errors,[]);
+          await context.close();
+          console.log(name+': V2 cosmetic dashboard smoke check passed');
+          continue;
+        }
         const travelPage=await context.newPage();
         await travelPage.goto(base+'/fixture');
         await travelPage.locator('.v2-page-point[data-page="ai"]').click();

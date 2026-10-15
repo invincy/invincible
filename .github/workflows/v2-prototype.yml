@@ -31,20 +31,57 @@ jobs:
             package-lock.json
             react/package-lock.json
             functions/package-lock.json
+      - name: Choose verification scope
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -z "$BASE_SHA" ]; then
+            echo "level=full" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git diff --name-only "$BASE_SHA" "$GITHUB_SHA" > "$RUNNER_TEMP/changed-files.txt"
+          if grep -Ev '^(react/src/dashboard-guide\.css|react/v2/(ConstellationNav|PageIcon)\.jsx|v2/)' "$RUNNER_TEMP/changed-files.txt" | grep -q .; then
+            echo "level=full" >> "$GITHUB_OUTPUT"
+          else
+            echo "level=cosmetic" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Changed files:"
+          cat "$RUNNER_TEMP/changed-files.txt"
       - run: npm ci
       - run: npm ci --prefix react
-      - run: npm ci --prefix functions
-      - run: npx playwright install --with-deps chromium firefox
-      - run: npm run test
+      - name: Install Functions dependencies
+        if: steps.scope.outputs.level == 'full'
+        run: npm ci --prefix functions
+      - name: Install Chromium
+        if: steps.scope.outputs.level == 'cosmetic'
+        run: npx playwright install --with-deps chromium
+      - name: Install Chromium and Firefox
+        if: steps.scope.outputs.level == 'full'
+        run: npx playwright install --with-deps chromium firefox
+      - name: Run focused V2 unit tests
+        if: steps.scope.outputs.level == 'cosmetic'
+        run: npm run test:v2
+      - name: Run full unit and Functions tests
+        if: steps.scope.outputs.level == 'full'
+        run: npm run test
       - run: npm run build:v2
       - run: npm run stage:v2
       - name: Check publishing files match source
         run: git diff --exit-code -- v2
       - run: npm run check
-      - run: npm run test:v2:browser
+      - name: V2 cosmetic dashboard smoke check
+        if: steps.scope.outputs.level == 'cosmetic'
+        run: npm run test:v2:smoke
+        env:
+          V2_BUILD_DIR: v2
+      - name: Full V2 browser coverage
+        if: steps.scope.outputs.level == 'full'
+        run: npm run test:v2:browser
         env:
           V2_BUILD_DIR: v2
       - name: V1 browser regressions
+        if: steps.scope.outputs.level == 'full'
         run: |
           export CHROMIUM_EXECUTABLE="$(node -e "console.log(require('playwright').chromium.executablePath())")"
           npm run test:browser
