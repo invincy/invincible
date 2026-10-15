@@ -37,8 +37,22 @@ test('checkbox indentation flattened by rich-text copy still forms substeps', ()
   assert.equal(result.steps[0].substeps[1].done, true);
   assert.equal(result.steps[1].substeps[0].title, 'Create the first version');
 });
+test('simple dashes form substeps and checkbox syntax remains optional', () => {
+  const result = parseStructuredPlan('Project: Simple plan\n1. Research\n- Gather references\n- Verify dimensions\n2. Build\n   * Create the model');
+  assert.deepEqual(result.errors, []);
+  assert.deepEqual(result.steps.map(step => step.substeps.map(child => child.title)),
+    [['Gather references', 'Verify dimensions'], ['Create the model']]);
+  assert.ok(result.steps.flatMap(step => step.substeps).every(child => !child.done));
+});
+test('plain ChatGPT prose imports as a flat step list when hierarchy markers are absent', () => {
+  const result = parseStructuredPlan('Project: Build LMV 3 model\nDescription: Complete the final model.\n\nConfirm the requirements\nNotes: Resolve uncertain dimensions.\n\nGather the latest reference images\nNotes: Keep the source links.\n\nBuild the model\n\nCreate the base structure');
+  assert.deepEqual(result.errors, []);
+  assert.deepEqual(result.steps.map(step => step.title), ['Confirm the requirements', 'Gather the latest reference images', 'Build the model', 'Create the base structure']);
+  assert.equal(result.steps[0].notes, 'Resolve uncertain dimensions.');
+  assert.equal(result.steps[1].notes, 'Keep the source links.');
+});
 test('malformed hierarchy and prose produce visible errors instead of flat invented steps', () => {
-  for (const text of ['Plan something useful', '- [ ] Orphan', '1. Research\n   1. Nested numbered item', '1. Research\n   - [ ] Substep\n      - [ ] Too deep']) {
+  for (const text of ['1. Research\n   1. Nested numbered item', '1. Research\n   - [ ] Substep\n      - [ ] Too deep']) {
     assert.ok(parseStructuredPlan(text).errors.length, text);
   }
   assert.match(parseStructuredPlan('x'.repeat(100001)).errors[0], /too long/);

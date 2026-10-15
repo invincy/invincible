@@ -124,7 +124,7 @@ module.exports = async function exercisePlanEditor({browser, base, output, name}
     await page.getByRole('button',{name:'Preview plan',exact:true}).click();
     await page.getByRole('alert').filter({hasText:'too long'}).waitFor();
     assert.equal((await page.getByLabel('Plan text',{exact:true}).inputValue()).length,100001,'oversized paste is reported rather than silently truncated');
-    await page.getByLabel('Plan text',{exact:true}).fill('A paragraph with no structured steps.');
+    await page.getByLabel('Plan text',{exact:true}).fill('- Orphaned substep\n1. Valid main step');
     await page.getByRole('button',{name:'Preview plan',exact:true}).click();
     await page.getByRole('alert').filter({hasText:'Check the plan format'}).waitFor();
     assert.equal(await page.getByRole('button',{name:'Create project',exact:true}).isEnabled(),false);
