@@ -1,4 +1,4 @@
-import{r as x,e as v,j as e}from"./index-Djoy4_Ht.js";import{r as k,w as N,E as S,S as D,a as y,d as I,i as L,b as E}from"./draft-store-AHzza3o3.js";const $=`Project: Build LMV 3 model
+import{r as x,e as v,j as e}from"./index-CfYKdSvS.js";import{r as k,w as N,E as S,S as D,a as y,d as I,i as L,b as E}from"./draft-store-C2X5QtnN.js";const $=`Project: Build LMV 3 model
 Description: Complete and validate the final model.
 
 1. Research

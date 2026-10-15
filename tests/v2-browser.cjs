@@ -305,8 +305,13 @@ window.listenerCount=()=>listeners.size;
         await movePage.goto(base+'/fixture#workspace');
         const card=id=>movePage.locator(`[data-task-id="${id}"]`);
         await card('t1').waitFor();
+        await movePage.evaluate(()=>{
+          window.dragTrace=[];
+          for(const name of ['dragstart','dragenter','dragover','drop','dragend'])document.addEventListener(name,event=>window.dragTrace.push({name,lane:event.target.closest?.('.v2-lane')?.dataset.status,task:event.target.closest?.('[data-task-id]')?.dataset.taskId}),true);
+        });
         await card('t1').locator('.v2-task-card').dragTo(movePage.locator('.v2-lane[data-status="In Progress"] .v2-lane-header'));
-        await movePage.getByRole('status').filter({hasText:'Moved to In Progress.'}).waitFor();
+        try {await movePage.getByRole('status').filter({hasText:'Moved to In Progress.'}).waitFor();}
+        catch(error){console.log(name,'native drag trace',await movePage.evaluate(()=>window.dragTrace));await movePage.screenshot({path:path.join(output,name+'-native-drag-failure.png')});throw error;}
         assert.equal(await movePage.locator('.v2-lane[data-status="In Progress"] [data-task-id="t1"]').count(),1);
         assert.equal(await movePage.evaluate(()=>window.writeLog[0].path),'users/alice/tasks/t1');
         assert.deepEqual(await movePage.evaluate(()=>Object.keys(window.writeLog[0].patch).sort()),['status','updatedAt']);
