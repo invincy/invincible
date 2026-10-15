@@ -25,6 +25,6 @@ Description: Complete and validate the final model.
    - [ ] Run the final simulation
 ```
 
-The parser accepts ordinary text and a surrounding text/Markdown code fence. It preserves notes and checkbox states, reports malformed lines instead of guessing, and supports up to 200 steps and 1,000 substeps per project (100,000 pasted characters). Parent completion reflects child checkboxes; a parent checkbox completes/reopens its children. New projects start in Backlog. Use Kanban to change their lane.
+The parser accepts ordinary text and a surrounding text/Markdown code fence. It also accepts checkbox indentation flattened by copying from a rendered chat response, assigning those checkboxes to the preceding numbered step. It preserves notes and checkbox states, reports malformed lines instead of guessing, and supports up to 200 steps and 1,000 substeps per project (100,000 pasted characters). Parent completion reflects child checkboxes; a parent checkbox completes/reopens its children. New projects start in Backlog. Use Kanban to change their lane.
 
 Pasting, previewing and editing drafts do not write to Firebase. The explicit Create/Add/Save action does. Drafts are kept on the current browser/device per account until saved or explicitly cleared. This importer does not generate a plan or interpret an unstructured prompt; your custom GPT supplies the structured text.

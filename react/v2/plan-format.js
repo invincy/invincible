@@ -39,18 +39,20 @@ export function parseStructuredPlan(input, batchId = 'preview') {
       result.steps.push(step); child = null; childIndent = null; noteTarget = null; continue;
     }
     if ((match = text.match(/^[-*]\s+\[([ xX])\]\s+(.+)$/))) {
-      if (!step || indent < 2) {result.errors.push(`Line ${index+1}: indent this checkbox under a numbered step.`); continue;}
+      if (!step) {result.errors.push(`Line ${index+1}: place this checkbox after a numbered step.`); continue;}
       if (childIndent !== null && childIndent !== indent) {result.errors.push(`Line ${index+1}: use one substep level with matching indentation.`); continue;}
       childIndent = indent;
       child = {id: `${step.id}_c${step.substeps.length+1}`, title: titleText(match[2]), notes: '', done: /x/i.test(match[1])};
       step.substeps.push(child); noteTarget = null; continue;
     }
     if ((match = text.match(/^Notes:\s*(.*)$/i)) && step) {
-      noteTarget = child && indent > childIndent ? child : step;
+      // Rich-text copy can flatten Markdown checkbox indentation. In that case,
+      // a note immediately following a child still belongs to that child.
+      noteTarget = child && (indent > childIndent || childIndent === 0) ? child : step;
       noteTarget.notes += (noteTarget.notes ? '\n' : '') + match[1]; noteIndent = indent; continue;
     }
     if (noteTarget && indent > noteIndent) {noteTarget.notes += '\n' + text; continue;}
-    result.errors.push(`Line ${index+1}: use Project:, Description:, numbered steps, Notes:, or indented checkbox substeps.`);
+    result.errors.push(`Line ${index+1}: use Project:, Description:, numbered steps, Notes:, or checkbox substeps.`);
   }
   for (const entry of result.steps) {
     if (entry.substeps.length) entry.done = entry.substeps.every(item => item.done);
