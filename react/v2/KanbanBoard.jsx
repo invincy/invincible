@@ -32,14 +32,14 @@ export default function KanbanBoard({tasks, onInspect, onMove, pending = {}}) {
       <div className="v2-lane-cards">{cards.length ? cards.map(task => {
         const progress = taskProgress(task), title = task.title || 'Untitled task', saving = Boolean(pending[task.id]);
         return <article className={'v2-task-wrap' + (dragId === task.id ? ' is-dragging' : '')} key={task.id} data-task-id={task.id} aria-busy={saving}>
-          <button className="v2-task-card" draggable={!saving} onDragStart={event => {
+          <div className="v2-task-card" role="button" tabIndex={0} draggable={!saving} onKeyDown={event => {if (event.key === 'Enter' || event.key === ' ') {event.preventDefault(); onInspect(task.id);}}} onDragStart={event => {
             event.dataTransfer.setData('text/plain', task.id); event.dataTransfer.effectAllowed = 'move'; dragged.current = task.id; setDragId(task.id);
           }} onDragEnd={() => {suppressClick.current = Date.now() + 300; clear();}}
             onClick={() => {if (Date.now() >= suppressClick.current) onInspect(task.id);}}>
             <strong className="v2-task-card-title">{title}</strong>
             <span className="v2-task-card-sub">{saving ? 'Saving move…' : progress.total ? `${progress.done} of ${progress.total} steps` : 'No saved steps'}</span>
             {progress.total > 0 && <progress max={progress.total} value={progress.done} aria-label={'Progress for '+title}/>}
-          </button>
+          </div>
           <button className="v2-drag-handle" tabIndex={-1} disabled={saving} aria-label={'Drag '+title} title="Drag to another lane" onClick={event => event.preventDefault()}
             onPointerDown={event => {
               if (saving || !event.isPrimary || event.button !== 0) return;

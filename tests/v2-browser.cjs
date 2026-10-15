@@ -309,7 +309,17 @@ window.listenerCount=()=>listeners.size;
           window.dragTrace=[];
           for(const name of ['dragstart','dragenter','dragover','drop','dragend'])document.addEventListener(name,event=>window.dragTrace.push({name,lane:event.target.closest?.('.v2-lane')?.dataset.status,task:event.target.closest?.('[data-task-id]')?.dataset.taskId}),true);
         });
-        await card('t1').locator('.v2-task-card').dragTo(movePage.locator('.v2-lane[data-status="In Progress"] .v2-lane-header'));
+        const dragCardTo = async status => {
+          const source = await card('t1').locator('.v2-task-card').boundingBox();
+          const destination = await movePage.locator(`.v2-lane[data-status="${status}"] .v2-lane-header`).boundingBox();
+          await movePage.mouse.move(source.x+20,source.y+20);
+          await movePage.mouse.down();
+          await movePage.mouse.move(source.x+40,source.y+24,{steps:4});
+          await movePage.mouse.move(destination.x+destination.width/2,destination.y+destination.height/2,{steps:12});
+          await movePage.mouse.move(destination.x+destination.width/2+1,destination.y+destination.height/2+1);
+          await movePage.mouse.up();
+        };
+        await dragCardTo('In Progress');
         try {await movePage.getByRole('status').filter({hasText:'Moved to In Progress.'}).waitFor();}
         catch(error){console.log(name,'native drag trace',await movePage.evaluate(()=>window.dragTrace));await movePage.screenshot({path:path.join(output,name+'-native-drag-failure.png')});throw error;}
         assert.equal(await movePage.locator('.v2-lane[data-status="In Progress"] [data-task-id="t1"]').count(),1);
@@ -317,7 +327,7 @@ window.listenerCount=()=>listeners.size;
         assert.deepEqual(await movePage.evaluate(()=>Object.keys(window.writeLog[0].patch).sort()),['status','updatedAt']);
         await movePage.reload();
         await movePage.locator('.v2-lane[data-status="In Progress"] [data-task-id="t1"]').waitFor();
-        await card('t1').locator('.v2-task-card').dragTo(movePage.locator('.v2-lane[data-status="In Progress"] .v2-lane-header'));
+        await dragCardTo('In Progress');
         assert.equal(await movePage.evaluate(()=>window.writes),0,'dropping into the same lane is a no-op');
         await movePage.evaluate(()=>window.failNextWrite=true);
         await card('t1').locator('select').selectOption('Today');
