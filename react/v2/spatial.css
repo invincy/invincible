@@ -1,6 +1,7 @@
 @import '../src/dashboard.css';
 @import '../src/dashboard-guide.css';
 @import './editor.css';
+@import './task-focus.css';
 /* dashboard.css owns dashboard/orb layout; this sheet owns only the spatial shell and workspace region. */
 :root{font-family:Inter,"Segoe UI",system-ui,sans-serif;color:#e4edf3;background:#080e16;font-synthesis:none;color-scheme:dark}
 *{box-sizing:border-box}body{margin:0}button,a{-webkit-tap-highlight-color:transparent}button,input{font:inherit}button,a{touch-action:manipulation}button{cursor:pointer}

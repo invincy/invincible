@@ -140,7 +140,25 @@ window.listenerCount=()=>listeners.size;
         assert.ok(positions.workday.x>.2&&positions.workday.x<.5&&positions.workday.y>.5);
         assert.ok(positions.journal.x<.35&&positions.creator.x>.7);
         await page.getByRole('button',{name:'Open current task: Build the living workspace'}).click();
-        await page.getByRole('dialog').getByText('Build the living workspace').waitFor();
+        await page.getByRole('region',{name:'Task workspace: Build the living workspace'}).waitFor();
+        await page.setViewportSize({width:1920,height:1080});
+        const taskLayout=await page.evaluate(()=>{
+          const body=document.querySelector('.v2-task-focus-body').getBoundingClientRect(),stage=document.querySelector('.v2-task-stage').getBoundingClientRect(),route=document.querySelector('.v2-task-route').getBoundingClientRect();
+          return {stageRatio:stage.width/body.width,routeRatio:route.width/body.width,outer:document.documentElement.scrollWidth<=innerWidth+1};
+        });
+        assert.ok(taskLayout.stageRatio>.68&&taskLayout.stageRatio<.72,'wide task workspace keeps the active-work area near 70%');
+        assert.ok(taskLayout.routeRatio>.28&&taskLayout.routeRatio<.32,'wide task workspace keeps the route near 30%');
+        assert.equal(taskLayout.outer,true);
+        await page.screenshot({path:path.join(output,name+'-task-focus-wide.png')});
+        await page.setViewportSize({width:393,height:852});
+        const mobileTaskLayout=await page.evaluate(()=>{
+          const stage=document.querySelector('.v2-task-stage').getBoundingClientRect(),route=document.querySelector('.v2-task-route').getBoundingClientRect();
+          return {stacked:route.top>=stage.bottom-1,outer:document.documentElement.scrollWidth<=innerWidth+1};
+        });
+        assert.equal(mobileTaskLayout.stacked,true,'mobile task workspace stacks the route below active work');
+        assert.equal(mobileTaskLayout.outer,true);
+        await page.screenshot({path:path.join(output,name+'-task-focus-phone.png')});
+        await page.setViewportSize({width:1440,height:1000});
         await page.getByRole('button',{name:/Close saved work/}).click();
         await page.screenshot({path:path.join(output,name+'-map.png')});
         if(smokeOnly) {
@@ -217,12 +235,13 @@ window.listenerCount=()=>listeners.size;
         await page.getByRole('link',{name:'01 Main Dashboard'}).click();
         await page.locator('.v2-guide-mission h2').getByText('Updated from another region').waitFor();
         await page.getByRole('button',{name:/Resume work/}).click();
-        await page.getByRole('dialog').waitFor();
+        await page.getByRole('region',{name:/Task workspace/}).waitFor();
         assert.match(await page.getByLabel('Step 1 notes',{exact:true}).inputValue(),/Keep the original data/);
+        await page.locator('.v2-task-route-select').filter({hasText:'Inspect existing records'}).click();
         assert.equal(await page.getByLabel('Step 2 title',{exact:true}).inputValue(),'Inspect existing records');
         assert.equal(new URL(page.url()).hash,'#dashboard');
         await page.keyboard.press('Escape');
-        assert.equal(await page.getByRole('dialog').count(),0);
+        assert.equal(await page.getByRole('region',{name:/Task workspace/}).count(),0);
         assert.match(await page.evaluate(()=>document.activeElement.textContent),/Resume work/);
 
         // Each region scrolls independently; the outer document never spills horizontally.
