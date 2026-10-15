@@ -13,7 +13,7 @@ export function resolvePlan(tasks, plan) {
     const task = tasks.find(value => value.id === reference.taskId);
     const step = reference.stepId ? taskSteps(task).find(value => value.id === reference.stepId) : null;
     const missing = !task || Boolean(reference.stepId && !step);
-    const done = missing ? false : reference.stepId ? Boolean(step.done || step.status === 'Done') : task.status === 'Done';
+    const done = missing ? false : task.status === 'Done' || Boolean(reference.stepId && (step.done || step.status === 'Done'));
     return {...reference, task, step, missing, done};
   });
   return {items, active: items.find(item => item.id === plan?.activeItemId && !item.done && !item.missing)

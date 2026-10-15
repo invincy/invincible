@@ -46,6 +46,9 @@ test('focus uses saved daily-plan order, skips missing/completed references, nev
   assert.equal(resolvePlan(tasks,plan).active.id,'legacy');
   assert.equal(resolvePlan(tasks,{...plan,activeItemId:'a'}).active.step.title,'Next');
   assert.equal(resolvePlan(tasks,{items:'bad'}).active,null);
+  const completed=[{id:'finished',status:'Done',steps:[{id:'open',done:false}]},...tasks];
+  const withCompleted={activeItemId:'finished',items:[{id:'finished',taskId:'finished',stepId:'open'},...plan.items]};
+  assert.equal(resolvePlan(completed,withCompleted).active.id,'legacy','completed projects cannot remain active through an unfinished step');
 });
 test('region links, local calendar day and deadline timer survive elapsed wall time', () => {
   assert.equal(regionFromHash('#workspace'),'workspace');assert.equal(regionFromHash('#unknown'),'dashboard');

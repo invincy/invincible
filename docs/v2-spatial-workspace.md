@@ -53,12 +53,12 @@ No new credential or project is needed. If Firebase reports an unauthorized prev
 - `#dashboard` and `#workspace` direct links, browser back/forward and exact fractional-position restoration within history; viewport resizing preserves that position.
 - Independent vertical region scrolling. Lazy region chunks mount when their region is visible or within a 20% viewport margin. Region shells retain their position; shared data, timer and inspector selection live above transient content. With only two adjacent regions, both may be nearby and mounted together.
 - One existing, unchanged `FocusOrb` renderer: prominent in the Dashboard, compact in the reserved header space elsewhere. Cyan/gold/emerald, hover/drag/inertia, reduced motion and cleanup remain in the existing component.
-- Read-only task lanes for Backlog/In Progress/Today/Completed, active mission, next action, saved working notes inspector and a step-based project journey.
+- Task lanes for Backlog/In Progress/Today/Completed with saved drag/drop and Move-menu actions, active mission, next action, saved working notes inspector and a step-based project journey.
 - My Workspace uses the same task summary, journey and timer state through a small widget registry; it does not copy business records.
 - The V2 timer uses a deadline and account-scoped session storage. It survives region navigation and reload, without marking any task complete or recording a business-data write. It is not synchronized with V1's timer.
 - Startup/auth/loading/empty/error/cached-data states, retry, sign-out cleanup and account-keyed component lifetime.
 
-The writable `DashboardPage` is not mounted in the read-only prototype: its `useTodayPlan` seeds a daily plan and other effects write records. The V2 presentation reuses its authoritative task/step/progress model and existing Orb instead. Its read-only daily-plan resolver mirrors the existing active-item rule, without falling back to fabricated task-status focus after a plan is loaded. Full reuse of writable Dashboard controls awaits the stability work below.
+The writable `DashboardPage` is not mounted in V2: its `useTodayPlan` seeds a daily plan and other effects write records. The V2 presentation reuses its authoritative task/step/progress model and existing Orb instead. Its daily-plan resolver mirrors the existing active-item rule, without falling back to fabricated task-status focus after a plan is loaded. Only explicit Kanban moves write records through the separate `move-task.js` action; mounting V2 still performs no business writes.
 
 ## Data and safety boundary
 
@@ -68,8 +68,8 @@ The only business reads are:
 
 Reads begin only after the existing AuthProvider restores a user. Listeners unsubscribe and ignore late callbacks when disposed; changing UID replaces the whole signed-in subtree. Listener failures clear the affected records. Retry reconnects both sources. The local date is checked on focus and every 15 seconds for daily-plan rollover.
 
-There are no V2 Firestore writes, seed transactions, callable requests, migrated IDs or copied production records.
-No editable business form is exposed. Resume Work opens saved notes in an in-place read-only inspector.
+Explicit Kanban moves transactionally update `status` and `updatedAt` on the existing task. Moving into Today also merges the current local day's plan, preserving existing items and activating the next unfinished step (or the task when no step is available). A missing task is rejected rather than recreated. Other lane moves leave plan items and task steps intact, matching V1's lane semantics. There are no automatic seed writes, callable requests, migrated IDs or copied production records.
+Task notes and steps are still view-only in the in-place inspector. Task creation and content editing remain in V1.
 Layout editing and layout persistence are not implemented; no layout records are mixed with tasks.
 Orb theme reuses the existing local preference key. Timer state stores only duration/deadline, under a separate per-account V2 key.
 
@@ -84,7 +84,7 @@ Orb theme reuses the existing local preference key. Timer state stores only dura
 | Dashboard/AI focus mismatch | Dashboard follows dailyPlans; status-based AI tool focus remains documented in `docs/code-review.md` | One shared active-focus resolver across client and tools |
 | Legacy step-field truncation | `stepFields` preserves fields in steps but maps the legacy subtasks mirror down to text/done | Lossless compatibility and round-trip tests before any write/migration |
 
-V2's read-only boundary avoids these writes; it does **not** fix or close these existing findings.
+The initial V2 read-only boundary avoided these writes. The later explicit lane-move action updates status/timestamp and the Today queue only; it does not expose Creator/Workday editing, rewrite step fields, or close the broader findings above. Completed projects are excluded from V2's active focus even when their saved step reference is unfinished.
 
 ## Verification (2026-10-13)
 
@@ -194,3 +194,13 @@ The three grouped islands and the lines drawn from the Orb center have been repl
 V2 adds a denser particle field to the existing Orb renderer without changing V1's default density. Each page glow now contains a small semantic line icon, with no surrounding button ring. Pointer movement anywhere on the page gently influences the V2 Orb, while its shader motion continues without pointer input. A separate low-density 2D canvas adds slowly drifting background particles and faint lines only when they pass near each other. It stops animating when hidden or when reduced motion is preferred. The Orb remains a single WebGL canvas and keeps its fallback; no Firebase paths, permissions, account records or backend functions changed.
 
 Verification uses the V2 Chromium/Firefox browser suite to check all nine links, varied marker positions, the central task inspector, removal of route-line elements, one background canvas, responsive layout, page travel, account isolation, and zero writes. Fixture screenshots were inspected at laptop, desktop and phone widths. Physical-device performance, production sign-in and Safari remain to be checked.
+
+## Writable Kanban lanes (2026-10-15)
+
+My Workspace now supports native desktop card dragging, a pointer-based grip for touch/mouse, and a native Move menu for keyboard and touch alternatives. Lanes highlight while dragging. Card-body scrolling remains available on phones; the grip reserves its gesture for dragging. Move-menu focus follows the task after a lane change. Cards show pending feedback and return to the original lane with a visible error when a save fails. This is movement between status lanes; manual ordering within a lane is not persisted.
+
+The read subscription stays separate from the explicit transaction action. Only the signed-in account's existing `users/{uid}/tasks/{id}` and, for Today, `users/{uid}/dailyPlans/{local-date}` are written. Notes, steps, legacy subtasks and other fields are preserved. No rules or backend changes are required. Earlier zero-write checks in this document describe browsing without an explicit move.
+
+Browser fixtures verify desktop drag/drop, same-lane no-op, saved status after reload, Today activation and atomic failure, denied-write rollback/retry, preserved task notes, deleted-task rejection and touch-grip movement. Production Firebase permissions and physical-device behavior require a real signed-in check; fixtures do not establish them.
+
+Validation: `npm test`, `npm run build:v2`, `npm run stage:v2`, `npm run check` and `npm run test:v2:browser` passed locally. The browser suite covers Chromium and Firefox, with actual emulated touch input for the phone grip; desktop and phone screenshots were inspected.

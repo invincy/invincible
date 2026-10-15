@@ -44,7 +44,7 @@ function TaskInspector({task, onClose}) {
     {task ? <><p className="v2-muted">{task.status || 'Backlog'}</p>{task.description && <p className="v2-saved-notes">{task.description}</p>}
       <ol className="v2-saved-steps">{taskSteps(task).map((step,index) => <li key={step.id || index}><h3>{step.title || step.text || 'Untitled step'}</h3><small>{step.done || step.status === 'Done' ? 'Completed' : step.status || 'Not started'}</small><p className="v2-saved-notes">{step.notes || 'No working notes saved.'}</p></li>)}</ol>
       {task.scratchpad && <section><h3>Project notes</h3><p className="v2-saved-notes">{task.scratchpad}</p></section>}
-      <p className="v2-muted">This preview is read only. Open V1 to create or edit tasks.</p></> : <p>This record is no longer available to this account.</p>}
+      <p className="v2-muted">Move tasks between lanes in My Workspace. Open V1 to create tasks or edit their notes and steps.</p></> : <p>This record is no longer available to this account.</p>}
   </dialog>;
 }
 function SignedInWorkspace({user, logout}) {
@@ -136,13 +136,13 @@ function SignedInWorkspace({user, logout}) {
       <nav aria-label="Explore spaces"><span className="v2-nav-caption" aria-hidden="true">VIEWS</span>{regions.map(region => <a key={region.id} href={'#'+region.id} aria-current={active === region.id ? 'location' : undefined} onClick={event => {if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;event.preventDefault();navigate(region.id);}}><span>{region.number}</span>{region.label}</a>)}</nav>
       <div className="v2-account"><a href={v1}>Open V1 ↗</a><button aria-label="Sign out" onClick={async () => {try {await logout();} catch {setAuthError('Sign-out did not complete. Try again.');}}}>Sign out</button></div>
     </header>
-    <div className="v2-connection" role="status"><span className={error ? 'v2-dot error' : 'v2-dot'}/>{authError || error || (!ready ? 'Restoring your workspace…' : data.tasksCached || data.planCached ? 'Showing cached records · Waiting for connection' : 'Connected to your existing workspace')}<span className="v2-preview-label">READ-ONLY PREVIEW</span>{error && <button onClick={data.retry}>Retry sync</button>}</div>
+    <div className="v2-connection" role="status"><span className={error ? 'v2-dot error' : 'v2-dot'}/>{authError || error || (!ready ? 'Restoring your workspace…' : data.tasksCached || data.planCached ? 'Showing cached records · Waiting for connection' : 'Connected to your existing workspace')}<span className="v2-preview-label">V2 WORKSPACE</span>{error && <button onClick={data.retry}>Retry sync</button>}</div>
     <main ref={viewport} className="v2-canvas" aria-label="Continuous spatial workspace" tabIndex={0} onScroll={scroll}
       onKeyDown={event => {if (event.target !== event.currentTarget) return;let index = regions.findIndex(region => region.id === active);if (event.key === 'ArrowRight') index++;else if (event.key === 'ArrowLeft') index--;else if (event.key === 'Home') index=0;else if (event.key === 'End') index=regions.length-1;else return;event.preventDefault();navigate(regions[Math.max(0,Math.min(regions.length-1,index))].id);}}>
       {regions.map(region => <Region key={region.id} region={region} viewport={viewport} onScroll={moveOrb}>
         {!ready ? <div className="v2-panel v2-loading" role="status">Restoring tasks and your daily plan…</div> :
           region.id === 'dashboard' ? <Dashboard data={data} plan={plan} timer={timer} onInspect={setSelected} orbAnchor={mountOrbAnchor} theme={theme} onChangeTheme={changeTheme} onOpenWorkspace={() => navigate('workspace')} onTravel={setTravelPage}/> :
-          <Workspace data={data} plan={plan} timer={timer} onInspect={setSelected}/>}
+          <Workspace data={data} plan={plan} timer={timer} onInspect={setSelected} uid={user.uid}/>}
       </Region>)}
     </main>
     <div className={'v2-orb '+(orbBox.compact ? 'is-compact' : travelPage && active === 'dashboard' ? 'is-approaching' : '')} style={{left: orbBox.left, top: orbBox.top, width: orbBox.width, height: orbBox.height}}
@@ -157,7 +157,7 @@ function SignedInWorkspace({user, logout}) {
 export function SpatialApp() {
   const {user, ready, error, login, logout} = useAuth();
   if (!ready) return <div className="v2-auth"><p role="status">Restoring your Invincible session…</p></div>;
-  if (!user) return <main className="v2-auth"><div><p className="v2-eyebrow">INVINCIBLE / V2</p><h1>A little more space.<br/>For everything you do.</h1><p>Your existing account. Your existing work.<br/>One continuous environment.</p>{error && <p role="alert">{error}</p>}<button className="v2-primary" onClick={login}>Continue with Google</button><a href={v1}>Open existing Invincible ↗</a><small>Read-only prototype · Main Dashboard + My Workspace</small></div></main>;
+  if (!user) return <main className="v2-auth"><div><p className="v2-eyebrow">INVINCIBLE / V2</p><h1>A little more space.<br/>For everything you do.</h1><p>Your existing account. Your existing work.<br/>One continuous environment.</p>{error && <p role="alert">{error}</p>}<button className="v2-primary" onClick={login}>Continue with Google</button><a href={v1}>Open existing Invincible ↗</a><small>Main Dashboard + My Workspace</small></div></main>;
   // Keyed lifetime prevents any frame of the previous account's records or timer.
   return <SignedInWorkspace key={user.uid} user={user} logout={logout}/>;
 }
