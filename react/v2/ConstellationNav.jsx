@@ -22,7 +22,7 @@ export default function ConstellationNav({task, onInspect, onTravel}) {
     </nav>
     {task && <button className="v2-orb-task" type="button" onClick={() => onInspect(task.id)}
       aria-label={`Open current task: ${task.title || 'Untitled task'}`}>
-      <small>CURRENT TASK</small><strong>{task.title || 'Untitled task'}</strong><span aria-hidden="true">↗</span>
+      <strong>{task.title || 'Untitled task'}</strong><span aria-hidden="true">↗</span>
     </button>}
   </div>;
 }
