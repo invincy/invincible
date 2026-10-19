@@ -1,4 +1,4 @@
-import{createStoryboardEditor}from'./storyboard-editor.js?v=2';
+import{createStoryboardEditor}from'./storyboard-editor.js?v=3';
 import{db,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,serverTimestamp,setDoc,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
@@ -8,8 +8,12 @@ let subscriptions=[],authGeneration=0;
 let user=null,state={items:[]},ownedItems=new Map(),sharedItems=new Map(),editingId="",filter="All",queryText="",mobileStage="Ideas",metricFilter="";
 
 let dialogScenes=[],dialogId="",savingContent=false;
-const storyboard=createStoryboardEditor($("contentStoryboard"),{getScenes:()=>dialogScenes,onChange:scenes=>{dialogScenes=scenes;}});
+const storyboard=createStoryboardEditor($("contentStoryboard"),{getScenes:()=>dialogScenes,onChange:scenes=>{dialogScenes=scenes;updateShotSummary();},saveHint:"Select Save and open project below to keep them."});
 const refreshScriptNotice=storyboard.watchSource($("contentForm").elements.script);
+function updateShotSummary(){
+  const count=dialogScenes.length,duration=dialogScenes.reduce((total,scene)=>total+(Number(scene.duration)||0),0);
+  $("contentShotSummary").textContent=count?count+" shot"+(count===1?"":"s")+" · "+duration+" sec ready to save":"No shots added yet";
+}
 
 const newId=()=>crypto.randomUUID?.()||String(Date.now()+Math.random());
 const today=()=>new Date().toISOString().slice(0,10);
@@ -70,6 +74,7 @@ function subscribeProjects(){
 
 function openDialog(item=null){
   editingId=item?.id||"";dialogId=editingId||newId();dialogScenes=(item?.scenes||[]).map(scene=>({...scene}));storyboard.reset();$("contentSaveError").textContent="";const form=$("contentForm");form.reset();$("dialogHeading").textContent=item?"Edit content":"New content";$("deleteContent").hidden=!item||!isOwner(item);
+  $("saveContent").textContent=item?"Save changes":"Save and open project";updateShotSummary();
   if(item)Object.entries(item).forEach(([key,value])=>{if(form.elements[key])form.elements[key].value=value??"";});else form.elements.stage.value=mobileStage;
   refreshScriptNotice();
   $("contentDialog").showModal();setTimeout(()=>form.elements.title.focus(),0);
@@ -122,7 +127,7 @@ $("contentForm").onsubmit=async event=>{
     const index=state.items.findIndex(row=>row.id===item.id);if(index>=0)state.items[index]=item;else state.items.push(item);
     mobileStage=item.stage;render();$("contentDialog").close();if(!existing)window.location.href="project.html?id="+encodeURIComponent(item.id);
   }catch(error){if(generation===authGeneration)$("contentSaveError").textContent=storageError(error)+" Your input is still here. Try saving again.";}
-  finally{savingContent=false;controls.forEach((control,index)=>control.disabled=disabled[index]);$("saveContent").textContent="Save content";}
+  finally{savingContent=false;controls.forEach((control,index)=>control.disabled=disabled[index]);$("saveContent").textContent=existing?"Save changes":"Save and open project";}
 };
 $("contentForm").elements.title.addEventListener("input",event=>event.target.setCustomValidity(""));
 $("contentDialog").addEventListener("cancel",event=>{if(savingContent)event.preventDefault();});
