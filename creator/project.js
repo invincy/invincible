@@ -1,5 +1,5 @@
 import{looksLikeStoryboard,makeScene,parseStoryboard}from'./storyboard-model.js?v=2';
-import{createStoryboardEditor}from'./storyboard-editor.js?v=3';
+import{createStoryboardEditor}from'./storyboard-editor.js?v=4';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{doc,getDoc,onSnapshot,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{inspectScenes,parseSceneInput,splitVoiceoverScript}from"./scene-tools.js?v=2";
@@ -15,7 +15,13 @@ function attr(value){return esc(value).replace(/"/g,"&quot;").replace(/'/g,"&#39
 function status(message,type=""){$("status").textContent=message;$("status").className="sync-status "+type;}
 function focusMessage(message,type=""){$("focusToast").textContent=message;$("focusToast").className="focus-toast "+type;}
 
-const storyboard=createStoryboardEditor($("projectStoryboard"),{getScenes:()=>project?.scenes||[],onChange:scenes=>{project.scenes=scenes;queueSave();renderSceneWorkspace();}});
+const storyboard=createStoryboardEditor($("projectStoryboard"),{
+  getScenes:()=>project?.scenes||[],
+  onChange:scenes=>{project.scenes=scenes;queueSave();renderSceneWorkspace();},
+  onImport:()=>{if(!project.script?.trim()){project.script=project.scenes.map(scene=>scene.voiceover).filter(Boolean).join("\n\n");$("fullScript").value=project.script;$("useShotVoiceover").hidden=true;queueSave();}},
+  title:"Shot table",intro:"Start here: paste Voiceover, Visual / Animation, Assets Required, and Timeline. Edit and reorder shots below.",
+  initialImportOpen:()=>!project?.scenes?.length
+});
 const refreshScriptNotice=storyboard.watchSource($("fullScript"));
 
 function hasCharacterPrompt(scene){
@@ -66,6 +72,7 @@ function render(){
   document.title=(project.title||"Content Project")+" · Invincible";
   $("projectMeta").textContent=[project.format,project.series,project.stage].filter(Boolean).join(" · ");
   $("fullScript").value=project.script||"";
+  $("useShotVoiceover").hidden=!!project.script?.trim()||!project.scenes?.some(scene=>scene.voiceover);
   refreshScriptNotice();
   $("visualStyle").value=project.visualStyle||"";
   $("aspectRatio").value=project.aspectRatio||"9:16";
@@ -89,7 +96,7 @@ function renderSceneWorkspace(){
     const savedScene=scenes.find(scene=>scene.id===project.productionState?.sceneId),unfinished=scenes.some(scene=>!scene.completed&&!scene.skipped);
     $("startProduction").textContent=savedScene&&!savedScene.completed&&!savedScene.skipped?"Resume current scene →":unfinished?"Start next scene →":"Review production →";
   }
-  $("workspaceHint").textContent=scenes.length?complete+" of "+scenes.length+" scenes complete · open any scene to continue":"Move through every prompt without leaving the production view.";
+  $("workspaceHint").textContent=scenes.length?complete+" of "+scenes.length+" scenes complete · open any scene to continue":"Paste your shot table above to begin.";
   updateStats();
   bindDrag();
   document.querySelectorAll(".field textarea").forEach(autoGrow);
@@ -135,6 +142,36 @@ function starterPrompt(scene,type){
 
 function buildAiBrief(){
   const title=project.title||"Untitled content",style=project.visualStyle||"Not specified",ratio=project.aspectRatio||"9:16",language=project.language||"Use the script's original language",characters=project.characterBible||"Infer only when the narration requires a recurring person; otherwise use —",continuity=project.continuityNotes||"Maintain continuity whenever a subject or location repeats.";
+  if(project.scenes?.length){
+    const shots=project.scenes.map((scene,index)=>({scene:index+1,durationSeconds:scene.duration,voiceover:scene.voiceover,visualAnimation:scene.visual||"",assetsRequired:scene.assets||"",...(scene.timeline?{sourceTimeline:scene.timeline}:{})}));
+    return `You are the scene director for this video. Add production prompts to the existing shot plan below.
+
+RETURN FORMAT
+Return only one Markdown table with exactly these columns:
+| Scene | Duration | Voiceover | Character Prompt | Image Prompt | Video Prompt |
+
+RULES
+1. Return exactly ${shots.length} rows in the same order. Do not split, combine, reorder, or retime shots.
+2. Preserve each shot's voiceover exactly. Keep its duration in seconds, including shots longer than 10 seconds.
+3. Use each shot's Visual/Animation and Assets Required as direction for the image and video prompts.
+4. Character Prompt is a reusable identity reference when needed; use — otherwise.
+5. Image Prompt describes subject, setting, composition, lighting, style, and continuity. Video Prompt describes motion and camera movement from that image. Avoid text, identity drift, and new objects.
+6. Never place a raw | character inside a cell. Use commas instead.
+
+PROJECT
+Title: ${title}
+Language: ${language}
+Aspect ratio: ${ratio}
+Visual style: ${style}
+Character bible: ${characters}
+Continuity notes: ${continuity}
+
+SHOT PLAN JSON
+${JSON.stringify(shots,null,2)}
+
+FULL RECORDING VOICEOVER
+${project.script?.trim()||shots.map(shot=>shot.voiceover).join("\n\n")}`;
+  }
   return `You are the scene director for a short-form video. Break the exact voiceover below into production-ready scenes and write generation prompts.
 
 RETURN FORMAT
@@ -355,9 +392,16 @@ $("copyProjectLink").onclick=async()=>{
 
 $("copyAiBrief").onclick=async()=>{
   project.script=$("fullScript").value.trim();
+  if(!project.script&&project.scenes.length){project.script=project.scenes.map(scene=>scene.voiceover).filter(Boolean).join("\n\n");$("fullScript").value=project.script;$("useShotVoiceover").hidden=true;}
   if(!project.script)return status("Paste the complete voiceover before copying the ChatGPT brief.","error");
   try{await copyText(buildAiBrief());await save();status("ChatGPT brief copied. Paste it into ChatGPT, then return with the completed table.","ok");}
   catch(error){status(error.message,"error");}
+};
+
+$("useShotVoiceover").onclick=()=>{
+  if($("fullScript").value.trim())return;
+  project.script=project.scenes.map(scene=>scene.voiceover).filter(Boolean).join("\n\n");
+  $("fullScript").value=project.script;$("useShotVoiceover").hidden=true;queueSave();
 };
 
 $("splitScript").onclick=async()=>{

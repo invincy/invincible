@@ -53,20 +53,20 @@ label{display:grid;gap:8px;color:#c0b2bf;font-size:14px}
 .sync-status a{color:#ffd1c5}
 
 main{max-width:1540px;margin:auto;padding:10px clamp(18px,4vw,56px) 70px}
-.workflow-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin:9px 0 18px;padding:0;border:1px solid rgba(255,255,255,.07);border-radius:15px;background:rgba(255,255,255,.07);overflow:hidden;list-style:none}
-.workflow-strip li{display:flex;align-items:center;gap:11px;padding:13px 16px;background:rgba(13,11,17,.96)}
-.workflow-strip span{color:#ff8e71;font:700 11px Orbitron,sans-serif}
-.workflow-strip strong{font-size:14px}
+.project-intro{margin:6px 0 16px;color:var(--muted);font-size:14px;line-height:1.5}
+.project-storyboard-panel{margin-bottom:15px}
+.project-storyboard-panel .storyboard-heading h3{font-size:22px}
+.script-alternative{margin-top:3px;padding:9px 13px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.025)}
+.collapsible-panel .script-alternative summary{display:list-item;padding:4px 0;color:#ffad98;font-size:13px;list-style:revert;cursor:pointer}
+.script-alternative .hint{margin:10px 0}
 .panel{padding:22px;border:1px solid var(--line);border-radius:21px;background:linear-gradient(145deg,rgba(42,31,49,.8),var(--panel));box-shadow:0 18px 46px rgba(0,0,0,.22)}
 .setup-stack{display:grid;gap:12px}
 .collapsible-panel{padding:0;overflow:hidden}.collapsible-panel summary{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 20px;cursor:pointer;list-style:none;user-select:none}.collapsible-panel summary::-webkit-details-marker{display:none}.collapsible-panel summary h2{margin:6px 0 0}.collapsible-panel summary p{margin:7px 0 0;color:var(--muted);font-size:12px}.collapse-icon{display:grid;place-items:center;width:38px;height:38px;flex:none;border:1px solid rgba(255,255,255,.09);border-radius:11px;color:var(--muted);font-size:23px;transition:transform .18s}.collapsible-panel[open] .collapse-icon{transform:rotate(180deg);color:var(--hot)}.collapse-body{display:grid;gap:14px;padding:0 20px 20px;border-top:1px solid rgba(255,255,255,.06)}.collapse-body>textarea,.collapse-body>label:first-child,.collapse-body>.settings-panel{margin-top:18px}.generator-brief{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:4px;padding:15px;border:1px solid rgba(255,111,83,.24);border-radius:15px;background:linear-gradient(135deg,rgba(255,103,72,.09),rgba(255,79,136,.035))}.generator-brief strong{display:block;margin:6px 0 0}.generator-brief p{max-width:650px;margin:6px 0 0;color:var(--muted);font-size:12px;line-height:1.5}.generator-brief button{flex:none}.settings-panel{display:grid}
-.panel-title,.scene-heading,.import-footer,.scene-top,.scene-actions,.ready-checks,.script-footer,.workspace-actions{display:flex;align-items:center}
-.panel-title,.scene-heading,.import-footer,.scene-top,.script-footer{justify-content:space-between;gap:18px}
+.panel-title,.scene-heading,.import-footer,.scene-top,.scene-actions,.ready-checks,.workspace-actions{display:flex;align-items:center}
+.panel-title,.scene-heading,.import-footer,.scene-top{justify-content:space-between;gap:18px}
 .panel-title h2,.scene-heading h2{margin:7px 0 0;font-size:21px}
 .panel-title p,.scene-heading p{margin:8px 0 0;color:var(--muted);font-size:14px;line-height:1.45}
 .script-panel textarea{min-height:280px;margin-top:18px;font-size:16px}
-.script-footer{align-items:flex-start;margin-top:3px}
-.script-footer .hint{max-width:680px}
 .settings-panel{display:grid;align-content:start;gap:15px}
 .settings-panel .panel-title{margin-bottom:2px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:11px}
@@ -234,16 +234,12 @@ main{max-width:1540px;margin:auto;padding:10px clamp(18px,4vw,56px) 70px}
   .project-progress{margin:0 15px}
   .sync-status{margin-top:10px;padding:0 15px}
   main{padding:8px 15px 50px}
-  .workflow-strip{grid-template-columns:repeat(4,minmax(76px,1fr));overflow-x:auto}
-  .workflow-strip li{display:grid;gap:4px;padding:11px}
-  .workflow-strip strong{font-size:12px}
   .panel{padding:15px;border-radius:18px}
   .collapsible-panel{padding:0}.collapsible-panel summary{padding:15px}.collapse-body{padding:0 15px 15px}.generator-brief{align-items:stretch;flex-direction:column}.generator-brief button{width:100%;min-height:46px}
   .panel-title,.import-title{align-items:stretch;flex-direction:column}
   .panel-title>button{width:100%}
   .two{grid-template-columns:1fr}
   .script-panel textarea{min-height:250px}
-  .script-footer{align-items:flex-start;flex-direction:column}
   .import-actions{width:100%}
   .import-actions select,.import-actions button{flex:1;min-width:0}
   .import-footer{align-items:flex-start;flex-direction:column}

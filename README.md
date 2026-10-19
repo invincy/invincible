@@ -130,6 +130,8 @@ Tables headed **Visual / Animation**, **Assets Required**, and **Timeline** also
 
 In **New Content**, adding reviewed shots puts them in the unsaved form. The footer stays visible as you scroll, shows the shot count and total duration, and has **Save and open project**. Enter a working title and use that button to save the project. Once the project opens, later storyboard edits use the project's automatic save flow.
 
+On the project page, the **Shot table** is the first step. Paste the four-column table there; an empty project opens the paste panel automatically. If Full voiceover is blank, the imported shot narration also creates a continuous recording script. Full voiceover and visual settings stay editable below the table. The old plain-script quick split sits under **Have only a plain script?**; the advanced prompt importer is optional. **Copy generator brief** uses the current shot plan without changing shot order or timing.
+
 Every shot can be edited, added, removed or moved with the arrow buttons. Desktop shows four columns; phones stack the fields into shot cards. Saving opens the existing project workspace, where the same storyboard remains editable and autosaves. Full narration, production notes, workflow stages, advanced prompt import and the existing scene production/asset tools remain available. Pasting directly into the storyboard leaves an existing full narration unchanged.
 
 Run `node --test tests/creator-storyboard.mjs` for import/compatibility tests and `node tests/creator-storyboard-browser.cjs` for the controlled storage/browser workflow. The latter is also part of `npm run test:browser` and accepts `CHROMIUM_EXECUTABLE`, or uses Playwright's installed Chromium.

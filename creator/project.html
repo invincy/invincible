@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../site-nav.css?v=15">
-  <link rel="stylesheet" href="project.css?v=6">
-  <link rel="stylesheet" href="storyboard.css?v=3">
+  <link rel="stylesheet" href="project.css?v=7">
+  <link rel="stylesheet" href="storyboard.css?v=4">
 </head>
 <body class="project-page">
   <nav class="global-nav" aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
@@ -18,39 +18,33 @@
 
   <header class="project-header">
     <div class="project-identity"><a class="back" href="/invincible/creator/">← Content pipeline</a><span id="projectMeta" class="eyebrow">CONTENT PROJECT</span><h1 id="projectTitle">Loading…</h1><div class="project-access"><span id="accessLabel">Private project</span><button id="shareProject" class="text-button" hidden>Share access</button></div></div>
-    <div class="project-stats" aria-label="Project progress"><div><strong id="sceneCount">0</strong><span>Scenes</span></div><div><strong id="totalDuration">0s</strong><span>Runtime</span></div><div><strong id="sceneProgress">0%</strong><span>Complete</span></div></div>
+    <div class="project-stats" aria-label="Project progress"><div><strong id="sceneCount">0</strong><span>Shots</span></div><div><strong id="totalDuration">0s</strong><span>Runtime</span></div><div><strong id="sceneProgress">0%</strong><span>Complete</span></div></div>
   </header>
   <div class="project-progress" aria-hidden="true"><span id="projectProgressBar"></span></div>
   <div id="status" class="sync-status" role="status" aria-live="polite">Connecting to Firebase…</div>
 
   <main id="app" hidden>
-    <ol class="workflow-strip" aria-label="Production workflow">
-      <li><span>01</span><strong>Script</strong></li>
-      <li><span>02</span><strong>Visual Bible</strong></li>
-      <li><span>03</span><strong>Import</strong></li>
-      <li><span>04</span><strong>Produce</strong></li>
-    </ol>
+    <p class="project-intro">Start with the shot table. Your recording script and production settings are below; changes save automatically.</p>
+
+    <section class="panel project-storyboard-panel" aria-label="Shot table">
+      <section id="projectStoryboard" aria-label="Storyboard editor"></section>
+    </section>
 
     <section class="setup-stack" aria-label="Prepare the production brief">
       <details class="panel collapsible-panel">
-        <summary><div><span class="eyebrow">01 · SOURCE</span><h2>Full voiceover</h2><p>Tap to paste or edit the complete narration</p></div><span class="collapse-icon">⌄</span></summary>
-        <div class="collapse-body"><textarea id="fullScript" rows="10" placeholder="Paste the complete voiceover script here…"></textarea><div class="script-footer"><p class="hint">Every spoken word here is sent into the generator brief unchanged.</p><button id="splitScript" class="text-button">Quick draft split · no AI</button></div></div>
+        <summary><div><span class="eyebrow">RECORDING SCRIPT</span><h2>Full voiceover</h2><p>Created from the table when blank; edit the continuous narration here</p></div><span class="collapse-icon">⌄</span></summary>
+        <div class="collapse-body"><textarea id="fullScript" rows="10" placeholder="Your complete recording narration…"></textarea><button id="useShotVoiceover" type="button" class="text-button" hidden>Build narration from shot voiceovers</button><p class="hint">The generator brief uses this narration unchanged.</p><details class="script-alternative"><summary>Have only a plain script?</summary><p class="hint">This older quick split makes rough shots from word count. It replaces your current shot table after confirmation.</p><button id="splitScript" class="text-button">Create rough shots from script</button></details></div>
       </details>
 
       <details class="panel collapsible-panel">
-        <summary><div><span class="eyebrow">02 · VISUAL BIBLE</span><h2>Style and continuity</h2><p>Tap to control the look shared by every scene</p></div><span class="collapse-icon">⌄</span></summary>
-        <div class="collapse-body settings-panel"><label>Visual style<input id="visualStyle" placeholder="Cinematic realistic, warm documentary…"></label><div class="two"><label>Aspect ratio<select id="aspectRatio"><option>9:16</option><option>16:9</option><option>1:1</option></select></label><label>Language<input id="language" placeholder="Gujarati + English"></label></div><label>Character bible<textarea id="characterBible" rows="3" placeholder="Age, face, hair, clothing and defining features…"></textarea></label><label>Continuity and location notes<textarea id="continuityNotes" rows="3" placeholder="Keep the same people, locations, colours and props…"></textarea></label><div class="generator-brief"><div><span class="eyebrow">NEXT STEP</span><strong>Generate the scene brief</strong><p>Uses the complete voiceover and the latest Visual Bible settings above. Changes are included automatically.</p></div><button id="copyAiBrief" class="primary">Copy generator brief</button></div></div>
+        <summary><div><span class="eyebrow">LOOK & CONTINUITY</span><h2>Visual settings</h2><p>Optional shared style for every shot</p></div><span class="collapse-icon">⌄</span></summary>
+        <div class="collapse-body settings-panel"><label>Visual style<input id="visualStyle" placeholder="Cinematic realistic, warm documentary…"></label><div class="two"><label>Aspect ratio<select id="aspectRatio"><option>9:16</option><option>16:9</option><option>1:1</option></select></label><label>Language<input id="language" placeholder="Gujarati + English"></label></div><label>Character bible<textarea id="characterBible" rows="3" placeholder="Age, face, hair, clothing and defining features…"></textarea></label><label>Continuity and location notes<textarea id="continuityNotes" rows="3" placeholder="Keep the same people, locations, colours and props…"></textarea></label><div class="generator-brief"><div><span class="eyebrow">OPTIONAL</span><strong>Generate a production brief</strong><p>Uses the full voiceover and these visual settings when you want detailed generation prompts.</p></div><button id="copyAiBrief" class="primary">Copy generator brief</button></div></div>
       </details>
     </section>
 
-    <details class="panel collapsible-panel" open>
-      <summary><div><span class="eyebrow">SHOT PLAN</span><h2>Storyboard</h2><p>Edit your shot list or paste a four-column table</p></div><span class="collapse-icon">⌄</span></summary>
-      <div class="collapse-body"><section id="projectStoryboard" aria-label="Storyboard editor"></section></div>
-    </details>
-
     <details class="panel collapsible-panel importer" aria-labelledby="importHeading">
-      <summary><div><span class="eyebrow">03 · IMPORT</span><h2 id="importHeading">Import advanced generation prompts</h2><p>Paste the table returned by ChatGPT</p></div><span class="collapse-icon">⌄</span></summary>
-      <div class="collapse-body"><div class="import-title"><div><p>Paste a Markdown table, JSON scene array, or spreadsheet rows. The app checks everything before adding or replacing shots.</p></div><div class="import-actions"><select id="importMode" aria-label="Import mode"><option value="append">Append scenes</option><option value="replace">Replace scenes</option></select><button id="reviewImport" class="primary">Review breakdown</button></div></div><textarea id="tableInput" rows="7" spellcheck="false" placeholder="| Scene | Duration | Voiceover | Character Prompt | Image Prompt | Video Prompt |&#10;|---|---|---|---|---|---|&#10;| 1 | 7 sec | Your narration… | Character reference… | Visual prompt… | Motion prompt… |"></textarea>
+      <summary><div><span class="eyebrow">OPTIONAL IMPORT</span><h2 id="importHeading">Advanced prompt import</h2><p>Use this for a completed image and video prompt table</p></div><span class="collapse-icon">⌄</span></summary>
+      <div class="collapse-body"><div class="import-title"><div><p>Use the shot table at the top for your four columns. This optional importer adds completed character, image, and video prompts from a Markdown table, JSON array, or spreadsheet.</p></div><div class="import-actions"><select id="importMode" aria-label="Import mode"><option value="append">Append scenes</option><option value="replace">Replace scenes</option></select><button id="reviewImport" class="primary">Review breakdown</button></div></div><textarea id="tableInput" rows="7" spellcheck="false" placeholder="| Scene | Duration | Voiceover | Character Prompt | Image Prompt | Video Prompt |&#10;|---|---|---|---|---|---|&#10;| 1 | 7 sec | Your narration… | Character reference… | Visual prompt… | Motion prompt… |"></textarea>
       <div class="import-footer"><span id="importFeedback" class="hint">Compatible with ChatGPT, Gemini, Claude and copied spreadsheet tables.</span><button id="pasteClipboard" class="text-button">Paste from clipboard</button></div>
       <div id="importPreview" class="import-preview" hidden>
         <div><span class="eyebrow">IMPORT CHECK</span><strong id="previewSummary">0 scenes detected</strong><p id="previewIssues"></p></div>
@@ -61,8 +55,8 @@
     </details>
 
     <details class="panel collapsible-panel production-panel scene-section" aria-labelledby="workspaceHeading">
-      <summary><div><span class="eyebrow">04 · PRODUCTION</span><h2 id="workspaceHeading">Scene workspace</h2><p id="workspaceHint">Move through every prompt without leaving the production view.</p></div><span class="collapse-icon">⌄</span></summary>
-      <div class="collapse-body"><div class="workspace-actions"><button id="addScene" class="secondary">+ Add scene</button><button id="openAssets" class="secondary" hidden>Project assets</button><button id="startProduction" class="primary" hidden>Start production →</button></div><div id="sceneList" class="scene-list"></div><div id="emptyScenes" class="empty-state"><strong>No scenes yet</strong><span>Copy the generator brief above, then paste and review its completed scene table.</span></div></div>
+      <summary><div><span class="eyebrow">PRODUCTION</span><h2 id="workspaceHeading">Produce scenes</h2><p id="workspaceHint">Work through generation prompts and track finished assets.</p></div><span class="collapse-icon">⌄</span></summary>
+      <div class="collapse-body"><div class="workspace-actions"><button id="addScene" class="secondary">+ Add scene</button><button id="openAssets" class="secondary" hidden>Project assets</button><button id="startProduction" class="primary" hidden>Start production →</button></div><div id="sceneList" class="scene-list"></div><div id="emptyScenes" class="empty-state"><strong>No scenes yet</strong><span>Paste your shot table at the top to begin.</span></div></div>
     </details>
   </main>
 
@@ -112,6 +106,6 @@
       <div class="share-footer"><button id="copyProjectLink" type="button" class="secondary">Copy project link</button><button value="cancel" class="primary">Done</button></div>
     </form>
   </dialog>
-  <script type="module" src="project.js?v=9"></script>
+  <script type="module" src="project.js?v=10"></script>
 </body>
 </html>
