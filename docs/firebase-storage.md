@@ -42,3 +42,5 @@ The existing whole-document concurrent-edit limitation still applies. Controlled
 Timeline imports store the original range in an optional scene `timeline` string and derive `duration` from its end minus start. Editing a shot's numeric duration clears that source range. The extra field stays in the same scene array and requires no database migration.
 
 Direct storyboard imports now initialize an empty `script` field from the shot voiceovers, joined in shot order, in New Content and the project editor. Existing nonempty scripts are never overwritten. The derived script and shot edits continue to use the existing `creatorProjects/{projectId}` document and save queue; no migration or new collection is needed.
+
+The project page now edits `characterPrompt`, `imagePrompt`, and `videoPrompt` within each storyboard scene instead of a second scene list. Drafting prompts fills only blank values using scene `visual` and `assets` plus project visual settings. These remain fields of the existing ordered `scenes` array; focused production state, completion flags and asset links continue to use the same document and save queue.
