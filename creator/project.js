@@ -1,5 +1,5 @@
-import{makeScene}from'./storyboard-model.js';
-import{createStoryboardEditor}from'./storyboard-editor.js';
+import{looksLikeStoryboard,makeScene,parseStoryboard}from'./storyboard-model.js?v=2';
+import{createStoryboardEditor}from'./storyboard-editor.js?v=2';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{doc,getDoc,onSnapshot,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{inspectScenes,parseSceneInput,splitVoiceoverScript}from"./scene-tools.js?v=2";
@@ -8,7 +8,7 @@ const $=id=>document.getElementById(id),projectId=new URLSearchParams(location.s
 const focusFields=["voiceover","characterPrompt","imagePrompt","videoPrompt"];
 const focusLabels={voiceover:"Voiceover",characterPrompt:"Character reference",imagePrompt:"Image prompt",videoPrompt:"Video prompt"};
 let saveChain=Promise.resolve(),editVersion=0,cloudVersion=0;
-let user=null,project=null,projectRef=null,saveTimer=null,localDirty=false,pendingImport=[],focusState={sceneId:"",field:"voiceover"},touchStart=null,expandedSceneId="";
+let user=null,project=null,projectRef=null,saveTimer=null,localDirty=false,pendingImport=[],pendingImportKind="advanced",focusState={sceneId:"",field:"voiceover"},touchStart=null,expandedSceneId="";
 
 function esc(value){const node=document.createElement("div");node.textContent=value??"";return node.innerHTML;}
 function attr(value){return esc(value).replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
@@ -16,6 +16,7 @@ function status(message,type=""){$("status").textContent=message;$("status").cla
 function focusMessage(message,type=""){$("focusToast").textContent=message;$("focusToast").className="focus-toast "+type;}
 
 const storyboard=createStoryboardEditor($("projectStoryboard"),{getScenes:()=>project?.scenes||[],onChange:scenes=>{project.scenes=scenes;queueSave();renderSceneWorkspace();}});
+const refreshScriptNotice=storyboard.watchSource($("fullScript"));
 
 function hasCharacterPrompt(scene){
   const value=scene.characterPrompt.trim().toLowerCase();
@@ -65,6 +66,7 @@ function render(){
   document.title=(project.title||"Content Project")+" · Invincible";
   $("projectMeta").textContent=[project.format,project.series,project.stage].filter(Boolean).join(" · ");
   $("fullScript").value=project.script||"";
+  refreshScriptNotice();
   $("visualStyle").value=project.visualStyle||"";
   $("aspectRatio").value=project.aspectRatio||"9:16";
   $("language").value=project.language||"";
@@ -310,11 +312,11 @@ async function toggleSkip(){
 }
 
 function renderImportPreview(){
-  const issues=inspectScenes(pendingImport),duration=pendingImport.reduce((sum,scene)=>sum+scene.duration,0);
+  const issues=pendingImportKind==="storyboard"?[]:inspectScenes(pendingImport),duration=pendingImport.reduce((sum,scene)=>sum+scene.duration,0);
   $("importPreview").hidden=false;
   $("importPreview").classList.toggle("has-errors",!!issues.length);
   $("previewSummary").textContent=pendingImport.length+" scenes · "+duration+" seconds";
-  $("previewIssues").textContent=issues.length?issues.slice(0,3).join(" ")+(issues.length>3?" +"+(issues.length-3)+" more.":""):"Voiceover, image and video prompts are aligned and ready.";
+  $("previewIssues").textContent=issues.length?issues.slice(0,3).join(" ")+(issues.length>3?" +"+(issues.length-3)+" more.":""):pendingImportKind==="storyboard"?"Storyboard timing and columns are ready. Generation prompts can be added later.":"Voiceover, image and video prompts are aligned and ready.";
   $("previewRows").innerHTML=pendingImport.slice(0,10).map((scene,index)=>'<div class="preview-row"><strong>SCENE '+String(index+1).padStart(2,"0")+'</strong><span>'+scene.duration+' sec</span></div>').join("")+(pendingImport.length>10?'<div class="preview-row"><strong>+'+(pendingImport.length-10)+'</strong><span>more</span></div>':"");
   $("confirmImport").disabled=!!issues.length;
   $("confirmImport").textContent=issues.length?"Fix issues first":"Import "+pendingImport.length+" scenes";
@@ -369,7 +371,7 @@ $("splitScript").onclick=async()=>{
 };
 
 $("reviewImport").onclick=()=>{
-  try{pendingImport=parseSceneInput($("tableInput").value,makeScene);renderImportPreview();$("importFeedback").textContent="Review passed through the scene parser. Confirm below to import.";$("importFeedback").classList.add("toast");}
+  try{const pasted=$("tableInput").value;pendingImportKind=looksLikeStoryboard(pasted)?"storyboard":"advanced";pendingImport=pendingImportKind==="storyboard"?parseStoryboard(pasted):parseSceneInput(pasted,makeScene);renderImportPreview();$("importFeedback").textContent="Review the shots below, then confirm the import.";$("importFeedback").classList.add("toast");}
   catch(error){pendingImport=[];$("importPreview").hidden=true;$("importFeedback").textContent=error.message;$("importFeedback").classList.remove("toast");}
 };
 
@@ -379,18 +381,18 @@ $("confirmImport").onclick=async()=>{
   if(replace&&project.scenes.length&&!confirm("Replace all existing scenes with this reviewed breakdown?"))return;
   project.scenes=replace?pendingImport:[...project.scenes,...pendingImport];
   if(!project.script)project.script=project.scenes.map(scene=>scene.voiceover).filter(Boolean).join("\n\n");
-  const firstImported=replace?project.scenes[0]:project.scenes[project.scenes.length-pendingImport.length];
+  const firstImported=replace?project.scenes[0]:project.scenes[project.scenes.length-pendingImport.length],kind=pendingImportKind;
   $("tableInput").value="";pendingImport=[];$("importPreview").hidden=true;
   $("importFeedback").textContent="Scenes imported and aligned. Production mode is ready.";$("importFeedback").classList.add("toast");
-  render();await save();openFocus(firstImported.id,"voiceover");
+  render();await save();if(kind==="storyboard")$("projectStoryboard").scrollIntoView({block:"start"});else openFocus(firstImported.id,"voiceover");
 };
 
 $("pasteClipboard").onclick=async()=>{
-  try{$("tableInput").value=await navigator.clipboard.readText();$("importFeedback").textContent="Pasted. Press Review breakdown to validate it.";$("importPreview").hidden=true;}
+  try{$("tableInput").value=await navigator.clipboard.readText();$("importFeedback").textContent="Pasted. Press Review breakdown to validate it.";$("importPreview").hidden=true;if(looksLikeStoryboard($("tableInput").value))$("reviewImport").click();}
   catch{$("importFeedback").textContent="Clipboard access was blocked. Long-press and paste into the box.";}
 };
 
-$("tableInput").addEventListener("input",()=>{$("importPreview").hidden=true;pendingImport=[];});
+$("tableInput").addEventListener("input",()=>{$("importPreview").hidden=true;pendingImport=[];if(looksLikeStoryboard($("tableInput").value))$("reviewImport").click();});
 [$("fullScript"),$("visualStyle"),$("language"),$("characterBible"),$("continuityNotes"),$("aspectRatio")].forEach(input=>input.addEventListener("input",()=>{project[input.id==="fullScript"?"script":input.id]=input.value;queueSave();}));
 
 $("addScene").onclick=()=>{const scene=makeScene();project.scenes.push(scene);render();save();openFocus(scene.id,"voiceover");};

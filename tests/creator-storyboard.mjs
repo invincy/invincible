@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {parseSceneInput,inspectScenes} from '../creator/scene-tools.js';
-import {makeScene,parseStoryboard,storyboardDuration} from '../creator/storyboard-model.js';
+import {looksLikeStoryboard,makeScene,parseStoryboard,storyboardDuration} from '../creator/storyboard-model.js';
 const headers='Voiceover\tVisual/Animation\tAssets\tDuration\n';
 test('storyboard imports TSV, reordered headers, Unicode, blank cells and literal pipes',()=>{
  const scenes=parseStoryboard('\uFEFF'+headers+'ગુજરાતી voice | one\tPan\tphoto.png\t8 sec\r\nSecond\t\t\t0:09\r\n');
@@ -15,9 +15,23 @@ test('quoted TSV retains multiline narration, tabs and doubled quotes',()=>{
  assert.equal(scene.voiceover,'First\nSecond "quoted"');assert.equal(scene.visual,'Pan\tleft');
  const fenced='```tsv\n'+headers+'Line\tPan\t\t6\n```';assert.equal(parseStoryboard(fenced)[0].duration,6);
 });
+test('Gaganyaan-style timeline ranges import as exact shot durations',()=>{
+ const ranges=['0–4s','4–11s','11–23s','23–33s','33–42s','42–55s','55–63s','63–73s','73–81s','81–99s','99–110s','110–118s','118–130s','130–141s','141–154s'];
+ const header='Voiceover\tVisual / Animation\tAssets Required\tTimeline\n';
+ const rows=ranges.map((range,index)=>`${index?'पहली बार भारत अपने astronauts को space में भेज रहा है।':'भारत का Gaganyaan Mission!'}\tRocket visual ${index+1}\tLVM3 model\t${range}`).join('\n');
+ const scenes=parseStoryboard(header+rows);
+ assert.equal(looksLikeStoryboard(header+rows),true);
+ assert.equal(scenes.length,15);assert.equal(scenes.reduce((sum,scene)=>sum+scene.duration,0),154);
+ assert.equal(scenes[0].voiceover,'भारत का Gaganyaan Mission!');assert.equal(scenes[0].duration,4);
+ assert.equal(scenes[0].timeline,'0–4s');assert.equal(scenes[9].duration,18);
+ assert.equal(scenes[14].duration,13);assert.equal(scenes[14].timeline,'141–154s');
+ assert.equal(scenes[0].assets,'LVM3 model');
+ assert.equal(storyboardDuration('01:58–02:10'),12);
+ for(const invalid of ['4–4s','11–4s','0–61s'])assert.throws(()=>storyboardDuration(invalid));
+});
 test('malformed table or duration never imports partial or silently truncated rows',()=>{
  for(const value of ['',headers,headers+'one\ttwo',headers+'one\ttwo\tthree\t8\textra',headers+'one\ttwo\tthree\tbad',headers+'one\ttwo\tthree\t0',headers+'"incomplete', 'Voiceover\tAssets\nLine\tfile'])assert.throws(()=>parseStoryboard(value));
- for(const value of ['2-5','1:99','61','-2','Infinity'])assert.throws(()=>storyboardDuration(value));
+ for(const value of ['2-foo','1:99','61','-2','Infinity'])assert.throws(()=>storyboardDuration(value));
  assert.equal(storyboardDuration('1:00'),60);assert.equal(storyboardDuration('2.5 sec'),2.5);
 });
 test('scene normalization preserves legacy fields and additive storyboard data through round trip',()=>{

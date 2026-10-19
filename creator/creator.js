@@ -1,4 +1,4 @@
-import{createStoryboardEditor}from'./storyboard-editor.js';
+import{createStoryboardEditor}from'./storyboard-editor.js?v=2';
 import{db,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,serverTimestamp,setDoc,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
@@ -9,6 +9,7 @@ let user=null,state={items:[]},ownedItems=new Map(),sharedItems=new Map(),editin
 
 let dialogScenes=[],dialogId="",savingContent=false;
 const storyboard=createStoryboardEditor($("contentStoryboard"),{getScenes:()=>dialogScenes,onChange:scenes=>{dialogScenes=scenes;}});
+const refreshScriptNotice=storyboard.watchSource($("contentForm").elements.script);
 
 const newId=()=>crypto.randomUUID?.()||String(Date.now()+Math.random());
 const today=()=>new Date().toISOString().slice(0,10);
@@ -70,6 +71,7 @@ function subscribeProjects(){
 function openDialog(item=null){
   editingId=item?.id||"";dialogId=editingId||newId();dialogScenes=(item?.scenes||[]).map(scene=>({...scene}));storyboard.reset();$("contentSaveError").textContent="";const form=$("contentForm");form.reset();$("dialogHeading").textContent=item?"Edit content":"New content";$("deleteContent").hidden=!item||!isOwner(item);
   if(item)Object.entries(item).forEach(([key,value])=>{if(form.elements[key])form.elements[key].value=value??"";});else form.elements.stage.value=mobileStage;
+  refreshScriptNotice();
   $("contentDialog").showModal();setTimeout(()=>form.elements.title.focus(),0);
 }
 
