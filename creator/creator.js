@@ -1,3 +1,4 @@
+import{createStoryboardEditor}from'./storyboard-editor.js';
 import{db,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,serverTimestamp,setDoc,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
@@ -5,6 +6,9 @@ const $=id=>document.getElementById(id);
 const stages=["Ideas","Research","Script","Record","Edit","Scheduled","Published"];
 let subscriptions=[],authGeneration=0;
 let user=null,state={items:[]},ownedItems=new Map(),sharedItems=new Map(),editingId="",filter="All",queryText="",mobileStage="Ideas",metricFilter="";
+
+let dialogScenes=[],dialogId="",savingContent=false;
+const storyboard=createStoryboardEditor($("contentStoryboard"),{getScenes:()=>dialogScenes,onChange:scenes=>{dialogScenes=scenes;}});
 
 const newId=()=>crypto.randomUUID?.()||String(Date.now()+Math.random());
 const today=()=>new Date().toISOString().slice(0,10);
@@ -64,7 +68,7 @@ function subscribeProjects(){
 }
 
 function openDialog(item=null){
-  editingId=item?.id||"";const form=$("contentForm");form.reset();$("dialogHeading").textContent=item?"Edit content":"New content";$("deleteContent").hidden=!item||!isOwner(item);
+  editingId=item?.id||"";dialogId=editingId||newId();dialogScenes=(item?.scenes||[]).map(scene=>({...scene}));storyboard.reset();$("contentSaveError").textContent="";const form=$("contentForm");form.reset();$("dialogHeading").textContent=item?"Edit content":"New content";$("deleteContent").hidden=!item||!isOwner(item);
   if(item)Object.entries(item).forEach(([key,value])=>{if(form.elements[key])form.elements[key].value=value??"";});else form.elements.stage.value=mobileStage;
   $("contentDialog").showModal();setTimeout(()=>form.elements.title.focus(),0);
 }
@@ -104,9 +108,22 @@ $("board").onclick=async event=>{
 $("board").onkeydown=event=>{if((event.key==="Enter"||event.key===" ")&&!event.target.closest("button")){event.preventDefault();const card=event.target.closest(".content-card");if(card)window.location.href="project.html?id="+encodeURIComponent(card.dataset.id);}};
 
 $("contentForm").onsubmit=async event=>{
-  event.preventDefault();const data=new FormData(event.currentTarget),existing=state.items.find(row=>row.id===editingId),item={...(existing||{}),id:editingId||newId(),title:data.get("title").trim(),format:data.get("format"),stage:data.get("stage"),series:data.get("series"),publishDate:data.get("publishDate"),hook:data.get("hook").trim(),script:data.get("script").trim(),notes:data.get("notes").trim(),scenes:existing?.scenes||[],ownerUid:existing?.ownerUid||user.uid,ownerEmail:existing?.ownerEmail||(user.email||"").toLowerCase(),editorEmails:existing?.editorEmails||[]};
-  const index=state.items.findIndex(row=>row.id===item.id);if(index>=0)state.items[index]=item;else state.items.push(item);mobileStage=item.stage;render();await saveItem(item);$("contentDialog").close();if(!existing)window.location.href="project.html?id="+encodeURIComponent(item.id);
+  event.preventDefault();if(savingContent||!user)return;
+  const form=event.currentTarget,data=new FormData(form),existing=state.items.find(row=>row.id===editingId),generation=authGeneration;
+  const item={...(existing||{}),id:dialogId,title:data.get("title").trim(),format:data.get("format"),stage:data.get("stage"),series:data.get("series"),publishDate:data.get("publishDate"),hook:data.get("hook").trim(),script:data.get("script"),notes:data.get("notes"),scenes:dialogScenes.map(scene=>({...scene})),ownerUid:existing?.ownerUid||user.uid,ownerEmail:existing?.ownerEmail||(user.email||"").toLowerCase(),editorEmails:existing?.editorEmails||[]};
+  if(!item.title){form.elements.title.setCustomValidity("Enter a working title.");form.elements.title.reportValidity();return;}
+  savingContent=true;$("contentSaveError").textContent="";
+  const controls=[...form.querySelectorAll("button,input,select,textarea")],disabled=controls.map(control=>control.disabled);
+  controls.forEach(control=>control.disabled=true);$("saveContent").textContent="Saving…";
+  try{
+    await saveItem(item);if(generation!==authGeneration)return;
+    const index=state.items.findIndex(row=>row.id===item.id);if(index>=0)state.items[index]=item;else state.items.push(item);
+    mobileStage=item.stage;render();$("contentDialog").close();if(!existing)window.location.href="project.html?id="+encodeURIComponent(item.id);
+  }catch(error){if(generation===authGeneration)$("contentSaveError").textContent=storageError(error)+" Your input is still here. Try saving again.";}
+  finally{savingContent=false;controls.forEach((control,index)=>control.disabled=disabled[index]);$("saveContent").textContent="Save content";}
 };
+$("contentForm").elements.title.addEventListener("input",event=>event.target.setCustomValidity(""));
+$("contentDialog").addEventListener("cancel",event=>{if(savingContent)event.preventDefault();});
 
 $("deleteContent").onclick=async()=>{
   const item=state.items.find(row=>row.id===editingId);

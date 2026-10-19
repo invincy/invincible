@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../site-nav.css?v=15">
   <link rel="stylesheet" href="creator.css?v=4">
+  <link rel="stylesheet" href="storyboard.css">
 </head>
 <body class="creator-page">
   <nav class="global-nav" aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
@@ -49,11 +50,14 @@
       <div class="two"><label>Format<select name="format"><option>Short</option><option>Long</option></select></label><label>Workflow stage<select name="stage" id="stageSelect"></select></label></div>
       <div class="two"><label>Series<select name="series"><option>Concepts, Clearly</option><option>Plan Decoder</option><option>Real-Life Scenarios</option><option>General</option></select></label><label>Publish date<input name="publishDate" type="date"></label></div>
       <label>Core hook<textarea name="hook" rows="2" maxlength="280" placeholder="The first line that earns attention"></textarea></label>
-      <label>Script / outline<textarea name="script" rows="7" placeholder="Write the full script or structure here…"></textarea></label>
+      <label>Full voiceover<textarea name="script" rows="7" placeholder="Paste the complete narration for recording here…"></textarea></label>
+      <p class="form-help">Paste the complete narration here. Storyboard edits do not change it.</p>
+      <section id="contentStoryboard" aria-label="Storyboard editor"></section>
       <label>Production notes<textarea name="notes" rows="3" placeholder="Shots, B-roll, thumbnail or editing notes"></textarea></label>
-      <div class="dialog-actions"><button id="deleteContent" type="button" class="danger">Delete</button><span></span><button type="button" class="secondary close">Cancel</button><button class="primary">Save content</button></div>
+      <p id="contentSaveError" role="alert"></p>
+      <div class="dialog-actions"><button id="deleteContent" type="button" class="danger">Delete</button><span></span><button type="button" class="secondary close">Cancel</button><button id="saveContent" class="primary">Save content</button></div>
     </form>
   </dialog>
-  <script type="module" src="creator.js?v=6"></script>
+  <script type="module" src="creator.js?v=7"></script>
 </body>
 </html>

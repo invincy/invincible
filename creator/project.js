@@ -1,6 +1,8 @@
+import{makeScene}from'./storyboard-model.js';
+import{createStoryboardEditor}from'./storyboard-editor.js';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{doc,getDoc,onSnapshot,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import{estimateSeconds,inspectScenes,parseSceneInput,splitVoiceoverScript}from"./scene-tools.js?v=2";
+import{inspectScenes,parseSceneInput,splitVoiceoverScript}from"./scene-tools.js?v=2";
 
 const $=id=>document.getElementById(id),projectId=new URLSearchParams(location.search).get("id");
 const focusFields=["voiceover","characterPrompt","imagePrompt","videoPrompt"];
@@ -8,31 +10,12 @@ const focusLabels={voiceover:"Voiceover",characterPrompt:"Character reference",i
 let saveChain=Promise.resolve(),editVersion=0,cloudVersion=0;
 let user=null,project=null,projectRef=null,saveTimer=null,localDirty=false,pendingImport=[],focusState={sceneId:"",field:"voiceover"},touchStart=null,expandedSceneId="";
 
-const newId=()=>crypto.randomUUID?.()||String(Date.now()+Math.random());
 function esc(value){const node=document.createElement("div");node.textContent=value??"";return node.innerHTML;}
 function attr(value){return esc(value).replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
 function status(message,type=""){$("status").textContent=message;$("status").className="sync-status "+type;}
 function focusMessage(message,type=""){$("focusToast").textContent=message;$("focusToast").className="focus-toast "+type;}
 
-function makeScene(data={}){
-  const duration=Number(data.duration)||estimateSeconds(data.voiceover);
-  return{
-    id:data.id||newId(),
-    duration:Math.max(1,Math.min(60,duration)),
-    voiceover:data.voiceover||"",
-    characterPrompt:data.characterPrompt||"",
-    imagePrompt:data.imagePrompt||"",
-    videoPrompt:data.videoPrompt||"",
-    characterDone:!!data.characterDone,
-    imageDone:!!data.imageDone,
-    videoDone:!!data.videoDone,
-    characterAssetUrl:data.characterAssetUrl||"",
-    imageAssetUrl:data.imageAssetUrl||"",
-    videoAssetUrl:data.videoAssetUrl||"",
-    completed:!!data.completed,
-    skipped:!!data.skipped
-  };
-}
+const storyboard=createStoryboardEditor($("projectStoryboard"),{getScenes:()=>project?.scenes||[],onChange:scenes=>{project.scenes=scenes;queueSave();renderSceneWorkspace();}});
 
 function hasCharacterPrompt(scene){
   const value=scene.characterPrompt.trim().toLowerCase();
@@ -90,6 +73,11 @@ function render(){
   const owner=project.ownerUid===user.uid,editors=project.editorEmails||[];
   $("shareProject").hidden=!owner;
   $("accessLabel").textContent=owner?(editors.length?"Shared with "+editors.length+" editor"+(editors.length===1?"":"s"):"Private project"):("Shared with you"+(project.ownerEmail?" by "+project.ownerEmail:""));
+  storyboard.render();
+  renderSceneWorkspace();
+}
+
+function renderSceneWorkspace(){
   const scenes=project.scenes||[],complete=scenes.filter(scene=>scene.completed).length;
   $("sceneList").innerHTML=scenes.map(sceneTemplate).join("");
   $("emptyScenes").hidden=!!scenes.length;
