@@ -40,3 +40,5 @@ Scene normalization now retains unknown fields, existing IDs, prompt fields, com
 The existing whole-document concurrent-edit limitation still applies. Controlled storage tests do not establish production Firebase permissions; a signed-in production write was not performed.
 
 Timeline imports store the original range in an optional scene `timeline` string and derive `duration` from its end minus start. Editing a shot's numeric duration clears that source range. The extra field stays in the same scene array and requires no database migration.
+
+Direct storyboard imports now initialize an empty `script` field from the shot voiceovers, joined in shot order, in New Content and the project editor. Existing nonempty scripts are never overwritten. The derived script and shot edits continue to use the existing `creatorProjects/{projectId}` document and save queue; no migration or new collection is needed.

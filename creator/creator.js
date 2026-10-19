@@ -1,4 +1,4 @@
-import{createStoryboardEditor}from'./storyboard-editor.js?v=3';
+import{createStoryboardEditor}from'./storyboard-editor.js?v=4';
 import{db,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,serverTimestamp,setDoc,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
@@ -8,7 +8,7 @@ let subscriptions=[],authGeneration=0;
 let user=null,state={items:[]},ownedItems=new Map(),sharedItems=new Map(),editingId="",filter="All",queryText="",mobileStage="Ideas",metricFilter="";
 
 let dialogScenes=[],dialogId="",savingContent=false;
-const storyboard=createStoryboardEditor($("contentStoryboard"),{getScenes:()=>dialogScenes,onChange:scenes=>{dialogScenes=scenes;updateShotSummary();},saveHint:"Select Save and open project below to keep them."});
+const storyboard=createStoryboardEditor($("contentStoryboard"),{getScenes:()=>dialogScenes,onChange:scenes=>{dialogScenes=scenes;updateShotSummary();},onImport:()=>{const script=$("contentForm").elements.script;if(!script.value.trim())script.value=dialogScenes.map(scene=>scene.voiceover).filter(Boolean).join("\n\n");},saveHint:"Select Save and open project below to keep them."});
 const refreshScriptNotice=storyboard.watchSource($("contentForm").elements.script);
 function updateShotSummary(){
   const count=dialogScenes.length,duration=dialogScenes.reduce((total,scene)=>total+(Number(scene.duration)||0),0);
