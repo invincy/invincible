@@ -1,5 +1,5 @@
 import{looksLikeStoryboard,makeScene,parseStoryboard}from'./storyboard-model.js?v=2';
-import{createStoryboardEditor}from'./storyboard-editor.js?v=2';
+import{createStoryboardEditor}from'./storyboard-editor.js?v=3';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{doc,getDoc,onSnapshot,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{inspectScenes,parseSceneInput,splitVoiceoverScript}from"./scene-tools.js?v=2";

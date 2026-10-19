@@ -1,7 +1,7 @@
 import {looksLikeStoryboard,makeScene,parseStoryboard,storyboardDuration} from './storyboard-model.js?v=2';
 const columns=[['voiceover','Voiceover'],['visual','Visual/Animation'],['assets','Assets'],['duration','Duration (sec)']];
 const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-export function createStoryboardEditor(root,{getScenes,onChange}) {
+export function createStoryboardEditor(root,{getScenes,onChange,saveHint='Changes save automatically.'}) {
   root.classList.add('storyboard');
   root.innerHTML='<div class="storyboard-heading"><div><h3>Storyboard</h3><p>Plan each shot. Your full voiceover stays separate.</p></div><button type="button" data-add>+ Add shot</button></div><details class="storyboard-import"><summary>Paste a table from ChatGPT</summary><p>Paste tab-separated columns Voiceover, Visual/Animation, Assets or Assets Required, and Duration or Timeline (for example 0–4s). A preview appears automatically. Check it, then import the shots.</p><label>Paste storyboard<textarea data-paste rows="5" spellcheck="false" placeholder="Voiceover&#9;Visual / Animation&#9;Assets Required&#9;Timeline"></textarea></label><div class="storyboard-tools"><button type="button" data-review>Preview table</button><label>Import mode<select data-mode><option value="append">Append shots</option><option value="replace">Replace shots</option></select></label><button type="button" data-import hidden>Add reviewed shots</button></div><div data-preview hidden></div></details><p data-feedback role="status" aria-live="polite"></p><div class="storyboard-columns" aria-hidden="true"><span>Voiceover</span><span>Visual/Animation</span><span>Assets</span><span>Duration</span></div><div data-rows></div><p data-empty>No shots yet. Add one or paste your table above.</p>';
   const find=selector=>root.querySelector(selector); let pending=[],pendingSource=null;
@@ -30,10 +30,10 @@ export function createStoryboardEditor(root,{getScenes,onChange}) {
     if(!pending.length)return;
     const replace=find('[data-mode]').value==='replace';
     if(replace&&getScenes().length&&!confirm('Replace all existing shots, including their prompts and production progress?'))return;
-    const narration=pending.map(scene=>scene.voiceover).filter(Boolean).join('\n\n');
+    const added=pending.length,narration=pending.map(scene=>scene.voiceover).filter(Boolean).join('\n\n');
     onChange(replace?pending:[...getScenes(),...pending]);
     if(pendingSource){pendingSource.value=narration;pendingSource.dispatchEvent(new Event('input',{bubbles:true}));}
-    pendingSource=null;clearPreview();find('[data-paste]').value='';render();message('Storyboard updated.');
+    pendingSource=null;clearPreview();find('[data-paste]').value='';render();message(added+' shot'+(added===1?'':'s')+' added to the storyboard. '+saveHint);
   };
   find('[data-add]').onclick=()=>{onChange([...getScenes(),makeScene()]);render();find('[data-rows]').lastElementChild.querySelector('textarea').focus();};
   find('[data-rows]').addEventListener('input',event=>{

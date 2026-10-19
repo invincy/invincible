@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../site-nav.css?v=15">
   <link rel="stylesheet" href="creator.css?v=4">
-  <link rel="stylesheet" href="storyboard.css?v=2">
+  <link rel="stylesheet" href="storyboard.css?v=3">
 </head>
 <body class="creator-page">
   <nav class="global-nav" aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
@@ -55,9 +55,9 @@
       <section id="contentStoryboard" aria-label="Storyboard editor"></section>
       <label>Production notes<textarea name="notes" rows="3" placeholder="Shots, B-roll, thumbnail or editing notes"></textarea></label>
       <p id="contentSaveError" role="alert"></p>
-      <div class="dialog-actions"><button id="deleteContent" type="button" class="danger">Delete</button><span></span><button type="button" class="secondary close">Cancel</button><button id="saveContent" class="primary">Save content</button></div>
+      <div class="dialog-actions"><button id="deleteContent" type="button" class="danger">Delete</button><span id="contentShotSummary" role="status" aria-live="polite">No shots added yet</span><button type="button" class="secondary close">Cancel</button><button id="saveContent" class="primary">Save and open project</button></div>
     </form>
   </dialog>
-  <script type="module" src="creator.js?v=8"></script>
+  <script type="module" src="creator.js?v=9"></script>
 </body>
 </html>
