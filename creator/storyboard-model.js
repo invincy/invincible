@@ -14,10 +14,18 @@ export function makeScene(data={}) {
 export function storyboardDuration(value) {
   const text=String(value).trim();
   if(!text) return null;
+  const timeline=timelineSeconds(text);
   const clock=text.match(/^(\d+):([0-5]\d)$/);
-  const seconds=clock?Number(clock[1])*60+Number(clock[2]):/^(?:\d+(?:\.\d+)?)(?:\s*(?:s|sec|secs|second|seconds))?$/i.test(text)?parseFloat(text):NaN;
+  const seconds=timeline??(clock?Number(clock[1])*60+Number(clock[2]):/^(?:\d+(?:\.\d+)?)(?:\s*(?:s|sec|secs|second|seconds))?$/i.test(text)?parseFloat(text):NaN);
   if(!Number.isFinite(seconds)||seconds<1||seconds>60) throw Error('Use a duration from 1 to 60 seconds (for example 8, 8 sec or 0:08).');
   return seconds;
+}
+
+function timelineSeconds(value) {
+  const match=String(value).trim().match(/^(\d+(?::[0-5]?\d){0,2}(?:\.\d+)?)\s*(?:s|sec)?\s*[-–—−]\s*(\d+(?::[0-5]?\d){0,2}(?:\.\d+)?)\s*(?:s|sec)?$/i);
+  if(!match)return null;
+  const seconds=part=>part.split(':').reduce((total,unit)=>total*60+Number(unit),0);
+  return seconds(match[2])-seconds(match[1]);
 }
 
 // Spreadsheet-style quoted TSV, including embedded tabs/newlines and doubled quotes.
@@ -46,7 +54,11 @@ export function parseTsv(input) {
 
 const columns=['voiceover','visual','assets','duration'];
 const header=value=>String(value).toLowerCase().replace(/[^a-z]/g,'');
-const names={voiceover:['voiceover','narration','vo'],visual:['visualanimation','visual','animation'],assets:['assets','asset'],duration:['duration','durationseconds','seconds']};
+const names={voiceover:['voiceover','narration','vo'],visual:['visualanimation','visual','animation'],assets:['assets','asset','assetsrequired','requiredassets'],duration:['duration','durationseconds','seconds','timeline','timecode']};
+export function looksLikeStoryboard(input) {
+  const headers=String(input).trimStart().split(/\r?\n/,1)[0].split('\t').map(header);
+  return columns.every(key=>headers.some(cell=>names[key].includes(cell)));
+}
 export function parseStoryboard(input) {
   const text=String(input).replace(/^```(?:tsv|text)?\s*\n([\s\S]*?)\n```$/i,'$1');
   const rows=parseTsv(text);
@@ -60,8 +72,10 @@ export function parseStoryboard(input) {
   return data.map((row,index)=>{
     if(row.length!==4) throw Error('Shot '+(index+1)+': expected four tab-separated columns. Blank cells still need a tab.');
     const values=Object.fromEntries(columns.map((key,i)=>[key,row[hasHeader?indexes[i]:i]]));
-    try { values.duration=storyboardDuration(values.duration)||estimateSeconds(values.voiceover); }
+    const timing=values.duration;
+    try { values.duration=storyboardDuration(timing)||estimateSeconds(values.voiceover); }
     catch(error) {throw Error('Shot '+(index+1)+': '+error.message);}
+    if(timelineSeconds(timing)!==null)values.timeline=timing.trim();
     return makeScene(values);
   });
 }

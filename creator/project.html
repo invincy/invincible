@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../site-nav.css?v=15">
   <link rel="stylesheet" href="project.css?v=6">
-  <link rel="stylesheet" href="storyboard.css">
+  <link rel="stylesheet" href="storyboard.css?v=2">
 </head>
 <body class="project-page">
   <nav class="global-nav" aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
@@ -50,7 +50,7 @@
 
     <details class="panel collapsible-panel importer" aria-labelledby="importHeading">
       <summary><div><span class="eyebrow">03 · IMPORT</span><h2 id="importHeading">Import advanced generation prompts</h2><p>Paste the table returned by ChatGPT</p></div><span class="collapse-icon">⌄</span></summary>
-      <div class="collapse-body"><div class="import-title"><div><p>Paste a Markdown table, JSON scene array, or spreadsheet rows. The app checks everything before replacing your work.</p></div><div class="import-actions"><select id="importMode" aria-label="Import mode"><option value="replace">Replace scenes</option><option value="append">Append scenes</option></select><button id="reviewImport" class="primary">Review breakdown</button></div></div><textarea id="tableInput" rows="7" spellcheck="false" placeholder="| Scene | Duration | Voiceover | Character Prompt | Image Prompt | Video Prompt |&#10;|---|---|---|---|---|---|&#10;| 1 | 7 sec | Your narration… | Character reference… | Visual prompt… | Motion prompt… |"></textarea>
+      <div class="collapse-body"><div class="import-title"><div><p>Paste a Markdown table, JSON scene array, or spreadsheet rows. The app checks everything before adding or replacing shots.</p></div><div class="import-actions"><select id="importMode" aria-label="Import mode"><option value="append">Append scenes</option><option value="replace">Replace scenes</option></select><button id="reviewImport" class="primary">Review breakdown</button></div></div><textarea id="tableInput" rows="7" spellcheck="false" placeholder="| Scene | Duration | Voiceover | Character Prompt | Image Prompt | Video Prompt |&#10;|---|---|---|---|---|---|&#10;| 1 | 7 sec | Your narration… | Character reference… | Visual prompt… | Motion prompt… |"></textarea>
       <div class="import-footer"><span id="importFeedback" class="hint">Compatible with ChatGPT, Gemini, Claude and copied spreadsheet tables.</span><button id="pasteClipboard" class="text-button">Paste from clipboard</button></div>
       <div id="importPreview" class="import-preview" hidden>
         <div><span class="eyebrow">IMPORT CHECK</span><strong id="previewSummary">0 scenes detected</strong><p id="previewIssues"></p></div>
@@ -112,6 +112,6 @@
       <div class="share-footer"><button id="copyProjectLink" type="button" class="secondary">Copy project link</button><button value="cancel" class="primary">Done</button></div>
     </form>
   </dialog>
-  <script type="module" src="project.js?v=7"></script>
+  <script type="module" src="project.js?v=8"></script>
 </body>
 </html>
