@@ -1,5 +1,5 @@
 import{looksLikeStoryboard,makeScene,parseStoryboard}from'./storyboard-model.js?v=2';
-import{createStoryboardEditor}from'./storyboard-editor.js?v=4';
+import{createStoryboardEditor}from'./storyboard-editor.js?v=5';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{doc,getDoc,onSnapshot,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{inspectScenes,parseSceneInput,splitVoiceoverScript}from"./scene-tools.js?v=2";
@@ -8,7 +8,7 @@ const $=id=>document.getElementById(id),projectId=new URLSearchParams(location.s
 const focusFields=["voiceover","characterPrompt","imagePrompt","videoPrompt"];
 const focusLabels={voiceover:"Voiceover",characterPrompt:"Character reference",imagePrompt:"Image prompt",videoPrompt:"Video prompt"};
 let saveChain=Promise.resolve(),editVersion=0,cloudVersion=0;
-let user=null,project=null,projectRef=null,saveTimer=null,localDirty=false,pendingImport=[],pendingImportKind="advanced",focusState={sceneId:"",field:"voiceover"},touchStart=null,expandedSceneId="";
+let user=null,project=null,projectRef=null,saveTimer=null,localDirty=false,pendingImport=[],pendingImportKind="advanced",focusState={sceneId:"",field:"voiceover"},touchStart=null;
 
 function esc(value){const node=document.createElement("div");node.textContent=value??"";return node.innerHTML;}
 function attr(value){return esc(value).replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
@@ -18,8 +18,17 @@ function focusMessage(message,type=""){$("focusToast").textContent=message;$("fo
 const storyboard=createStoryboardEditor($("projectStoryboard"),{
   getScenes:()=>project?.scenes||[],
   onChange:scenes=>{project.scenes=scenes;queueSave();renderSceneWorkspace();},
+  onFocus:id=>openFocus(id,"characterPrompt"),
+  onDraft:id=>{
+    const scene=project.scenes.find(item=>item.id===id);if(!scene)return;
+    if(!scene.characterPrompt?.trim()&&project.characterBible?.trim())scene.characterPrompt=project.characterBible.trim();
+    if(!scene.imagePrompt?.trim())scene.imagePrompt=starterPrompt(scene,"image");
+    if(!scene.videoPrompt?.trim())scene.videoPrompt=starterPrompt(scene,"video");
+    queueSave();
+  },
+  showProduction:true,
   onImport:()=>{if(!project.script?.trim()){project.script=project.scenes.map(scene=>scene.voiceover).filter(Boolean).join("\n\n");$("fullScript").value=project.script;$("useShotVoiceover").hidden=true;queueSave();}},
-  title:"Shot table",intro:"Start here: paste Voiceover, Visual / Animation, Assets Required, and Timeline. Edit and reorder shots below.",
+  title:"Scenes",intro:"Paste the four-column table, then edit each scene and open Scene production for character, image, and video prompts. Changes save automatically.",
   initialImportOpen:()=>!project?.scenes?.length
 });
 const refreshScriptNotice=storyboard.watchSource($("fullScript"));
@@ -37,33 +46,9 @@ function assetsReady(scene){
   return requiredAssets(scene).every(field=>scene[field]);
 }
 
-function sceneState(scene){
-  if(scene.completed)return"complete";
-  if(scene.skipped)return"skipped";
-  if(assetsReady(scene))return"ready";
-  return"in progress";
-}
-
 function projectCompletion(){
   const scenes=project?.scenes||[];
   return scenes.length?Math.round(scenes.filter(scene=>scene.completed).length/scenes.length*100):0;
-}
-
-function field(label,name,value,placeholder){
-  return '<div class="field"><div class="field-head"><label>'+label+'</label><button data-copy="'+name+'">Copy</button></div><textarea data-field="'+name+'" placeholder="'+placeholder+'">'+esc(value||"")+'</textarea></div>';
-}
-
-function sceneTemplate(scene,index){
-  const stateLabel=sceneState(scene),summary=scene.voiceover||"Untitled scene",expanded=expandedSceneId===scene.id;
-  return '<article class="scene-card '+(expanded?'':'collapsed ')+(scene.completed?'complete ':scene.skipped?'skipped ':'')+'" data-id="'+scene.id+'">'
-    +'<div class="scene-top"><div class="scene-ident"><span class="drag-handle" draggable="true" title="Drag to reorder">⠿</span><span class="scene-number">'+String(index+1).padStart(2,"0")+'</span><div class="scene-summary"><strong>'+esc(summary)+'</strong><label class="duration-wrap">Duration <input data-field="duration" type="number" min="1" max="60" value="'+Number(scene.duration||5)+'"> sec</label><span class="status-pill">'+stateLabel+'</span></div></div>'
-    +'<div class="scene-actions"><button data-action="production" class="produce">Produce scene →</button><button data-action="copyPack">Copy full pack</button><button data-action="up" aria-label="Move up">↑</button><button data-action="down" aria-label="Move down">↓</button><button data-action="duplicate">Duplicate</button><button data-action="collapse">'+(expanded?'Hide details':'View details')+'</button><button data-action="delete" class="delete">Delete</button></div></div>'
-    +'<div class="scene-body">'
-    +field("Voiceover","voiceover",scene.voiceover,"Narration for this scene")
-    +field("Character prompt","characterPrompt",scene.characterPrompt,"Reusable character or subject reference; leave blank when not needed")
-    +field("Image prompt","imagePrompt",scene.imagePrompt,"Still-image generation prompt")
-    +field("Video prompt","videoPrompt",scene.videoPrompt,"Movement, camera and animation prompt")
-    +'</div><div class="scene-footer"><span class="completion-note">Asset tracking is available in Project assets.</span><button data-action="complete" class="complete-mini '+(scene.completed?'secondary':'primary')+'">'+(scene.completed?'Reopen scene':assetsReady(scene)?'Scene complete →':'Complete anyway →')+'</button></div></article>';
 }
 
 function render(){
@@ -87,19 +72,14 @@ function render(){
 }
 
 function renderSceneWorkspace(){
-  const scenes=project.scenes||[],complete=scenes.filter(scene=>scene.completed).length;
-  $("sceneList").innerHTML=scenes.map(sceneTemplate).join("");
-  $("emptyScenes").hidden=!!scenes.length;
+  const scenes=project.scenes||[];
   $("startProduction").hidden=!scenes.length;
   $("openAssets").hidden=!scenes.length;
   if(scenes.length){
     const savedScene=scenes.find(scene=>scene.id===project.productionState?.sceneId),unfinished=scenes.some(scene=>!scene.completed&&!scene.skipped);
     $("startProduction").textContent=savedScene&&!savedScene.completed&&!savedScene.skipped?"Resume current scene →":unfinished?"Start next scene →":"Review production →";
   }
-  $("workspaceHint").textContent=scenes.length?complete+" of "+scenes.length+" scenes complete · open any scene to continue":"Paste your shot table above to begin.";
   updateStats();
-  bindDrag();
-  document.querySelectorAll(".field textarea").forEach(autoGrow);
 }
 
 function updateStats(){
@@ -129,15 +109,12 @@ function queueSave(){
  clearTimeout(saveTimer);localDirty=true;editVersion++;keepDraft();status("Unsaved changes…");saveTimer=setTimeout(save,700);
 }
 
-function autoGrow(area){
-  area.style.height="auto";
-  area.style.height=Math.max(110,area.scrollHeight)+"px";
-}
-
 function starterPrompt(scene,type){
   const style=project.visualStyle||"clean cinematic realism",ratio=project.aspectRatio||"9:16",character=project.characterBible?" Character reference: "+project.characterBible:"",continuity=project.continuityNotes?" Continuity: "+project.continuityNotes:"";
-  if(type==="image")return 'Create a '+ratio+' '+style+' visual that communicates this narration: "'+scene.voiceover+'". Clear subject, intentional composition, expressive lighting, no captions, no watermark.'+character+continuity;
-  return 'Animate the supplied image for '+scene.duration+' seconds. Use natural subject and environmental motion with a controlled cinematic camera move. Preserve the exact composition, identity, clothing, colours and visual style. No morphing, no new objects, no text.'+continuity;
+  const visual=scene.visual?.trim()?" Scene direction: "+scene.visual.trim():"";
+  const assets=scene.assets?.trim()?" Planned assets: "+scene.assets.trim():"";
+  if(type==="image")return 'Create a '+ratio+' '+style+' visual for this narration: "'+scene.voiceover+'".'+visual+assets+' Clear subject, intentional composition, expressive lighting, no captions, no watermark.'+character+continuity;
+  return 'Animate the supplied image for '+scene.duration+' seconds.'+visual+assets+' Use natural subject and environmental motion with a controlled camera move. Preserve composition, identity, clothing, colours and visual style. No morphing, no new objects, no text.'+continuity;
 }
 
 function buildAiBrief(){
@@ -211,29 +188,6 @@ async function copyText(value){
     if(!document.execCommand("copy")){area.remove();throw new Error("Clipboard access was blocked.");}
     area.remove();
   }
-}
-
-function scenePack(scene,index){
-  return `SCENE ${String(index+1).padStart(2,"0")} · ${scene.duration} SECONDS
-
-VOICEOVER
-${scene.voiceover||"—"}
-
-CHARACTER REFERENCE
-${scene.characterPrompt||"—"}
-
-IMAGE PROMPT
-${scene.imagePrompt||"—"}
-
-VIDEO PROMPT
-${scene.videoPrompt||"—"}`;
-}
-
-function moveScene(id,direction){
-  const scenes=project.scenes,index=scenes.findIndex(scene=>scene.id===id),next=index+direction;
-  if(index<0||next<0||next>=scenes.length)return;
-  [scenes[index],scenes[next]]=[scenes[next],scenes[index]];
-  render();save();
 }
 
 function renderRail(){
@@ -439,61 +393,10 @@ $("pasteClipboard").onclick=async()=>{
 $("tableInput").addEventListener("input",()=>{$("importPreview").hidden=true;pendingImport=[];if(looksLikeStoryboard($("tableInput").value))$("reviewImport").click();});
 [$("fullScript"),$("visualStyle"),$("language"),$("characterBible"),$("continuityNotes"),$("aspectRatio")].forEach(input=>input.addEventListener("input",()=>{project[input.id==="fullScript"?"script":input.id]=input.value;queueSave();}));
 
-$("addScene").onclick=()=>{const scene=makeScene();project.scenes.push(scene);render();save();openFocus(scene.id,"voiceover");};
 $("startProduction").onclick=()=>{
   const saved=project.productionState,preferred=project.scenes.find(scene=>scene.id===saved?.sceneId&&!scene.completed&&!scene.skipped),next=preferred||project.scenes.find(scene=>!scene.completed&&!scene.skipped)||project.scenes[0];
   if(next)openFocus(next.id,preferred?saved?.field||"voiceover":"voiceover");
 };
-
-$("sceneList").addEventListener("input",event=>{
-  const card=event.target.closest(".scene-card"),scene=project.scenes.find(item=>item.id===card?.dataset.id),field=event.target.dataset.field;
-  if(!scene||!field)return;
-  scene[field]=event.target.type==="checkbox"?event.target.checked:field==="duration"?Number(event.target.value):event.target.value;
-  if(field!=="duration"&&event.target.tagName==="TEXTAREA")autoGrow(event.target);
-  updateStats();
-  queueSave();
-});
-
-$("sceneList").addEventListener("focusin",event=>{
-  if(event.target.tagName==="TEXTAREA"){
-    const card=event.target.closest(".scene-card");
-    openFocus(card.dataset.id,event.target.dataset.field);
-  }
-});
-
-$("sceneList").addEventListener("click",async event=>{
-  const card=event.target.closest(".scene-card"),scene=project.scenes.find(item=>item.id===card?.dataset.id);
-  if(!scene)return;
-  const copy=event.target.closest("[data-copy]");
-  if(copy){await copyText(scene[copy.dataset.copy]||"");status(focusLabels[copy.dataset.copy]+" copied.","ok");return;}
-  const action=event.target.closest("[data-action]")?.dataset.action;
-  if(!action)return;
-  if(action==="delete"){
-    if(confirm("Delete this scene?")){project.scenes=project.scenes.filter(item=>item.id!==scene.id);if(expandedSceneId===scene.id)expandedSceneId="";render();save();}
-  }else if(action==="duplicate"){
-    const index=project.scenes.indexOf(scene),copyScene=makeScene({...scene,id:"",completed:false,skipped:false});project.scenes.splice(index+1,0,copyScene);render();save();
-  }else if(action==="up")moveScene(scene.id,-1);
-  else if(action==="down")moveScene(scene.id,1);
-  else if(action==="collapse"){
-    expandedSceneId=expandedSceneId===scene.id?"":scene.id;render();
-  }else if(action==="production")openFocus(scene.id,project.productionState?.sceneId===scene.id?project.productionState.field:"voiceover");
-  else if(action==="copyPack"){
-    await copyText(scenePack(scene,project.scenes.indexOf(scene)));status("Full scene pack copied.","ok");
-  }else if(action==="complete"){
-    openFocus(scene.id,project.productionState?.sceneId===scene.id?project.productionState.field:"voiceover");await completeFocusedScene();
-  }
-});
-
-function bindDrag(){
-  document.querySelectorAll(".scene-card").forEach(card=>{
-    const handle=card.querySelector(".drag-handle");
-    handle.ondragstart=event=>{card.classList.add("dragging");event.dataTransfer.setData("text/plain",card.dataset.id);};
-    handle.ondragend=()=>card.classList.remove("dragging");
-    card.ondragover=event=>{event.preventDefault();card.classList.add("drag-over");};
-    card.ondragleave=()=>card.classList.remove("drag-over");
-    card.ondrop=event=>{event.preventDefault();card.classList.remove("drag-over");const from=project.scenes.findIndex(scene=>scene.id===event.dataTransfer.getData("text/plain")),to=project.scenes.findIndex(scene=>scene.id===card.dataset.id);if(from>=0&&to>=0&&from!==to){const[moved]=project.scenes.splice(from,1);project.scenes.splice(to,0,moved);render();save();}};
-  });
-}
 
 $("closeFocus").onclick=closeFocus;
 $("previousField").onclick=()=>changeFocusField(-1);

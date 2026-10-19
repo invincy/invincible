@@ -1,4 +1,4 @@
-import{createStoryboardEditor}from'./storyboard-editor.js?v=4';
+import{createStoryboardEditor}from'./storyboard-editor.js?v=5';
 import{db,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,serverTimestamp,setDoc,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 

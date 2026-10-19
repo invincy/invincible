@@ -43,7 +43,7 @@ test('Journal retains failed writes/deletes through snapshots and reload, then r
 });
 test('Creator save acknowledgements do not clear newer edits, and failed saves keep drafts',async()=>{
  const source=await fs.readFile(new URL('../creator/project.js',import.meta.url),'utf8');
- const functions=source.slice(source.indexOf('function copyProject('),source.indexOf('function autoGrow('));
+ const functions=source.slice(source.indexOf('function copyProject('),source.indexOf('function starterPrompt('));
  const storage=new Map(),writes=[],acks=[];
  const factory=new Function('localStorage','setDoc','serverTimestamp','storageError','status',`let user={uid:'owner'},projectId='project',project={title:'Original',scenes:[{voiceover:'First'}]},projectRef={},saveChain=Promise.resolve(),editVersion=0,cloudVersion=0,saveTimer=null,localDirty=false;${functions};return{save,queueSave,project,get dirty(){return localDirty},clear(){clearTimeout(saveTimer)}}`);
  const instance=factory({setItem:(key,value)=>storage.set(key,value),removeItem:key=>storage.delete(key)},(ref,data)=>{writes.push(data);return new Promise((resolve,reject)=>acks.push({resolve,reject}))},()=>0,error=>error.message,()=>{});
