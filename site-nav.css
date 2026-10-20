@@ -376,3 +376,14 @@ body{padding-top:var(--site-nav-height)!important}
   .desktop-nav{gap:2px}
   .desktop-nav .app-nav-link{padding-inline:9px}
 }
+
+/* Creator uses the shared page registry through a compact app switcher. */
+body:has(.global-nav[data-compact-nav]){--site-nav-height:48px;--site-nav-mobile:48px;--mobile-tabbar-height:0px;padding-bottom:0!important}
+.global-nav[data-compact-nav]{height:48px;padding:0 12px;gap:10px;justify-content:flex-start;background:rgba(13,17,27,.97);box-shadow:none}
+.global-nav[data-compact-nav] .nav-mark{width:30px;height:30px;border-radius:9px;font-size:15px}
+.global-nav[data-compact-nav] .nav-brand strong,.global-nav[data-compact-nav] .desktop-nav{display:none}
+.global-nav[data-compact-nav] .mobile-page-name{display:block;font:500 13px Roboto,system-ui,sans-serif;margin-left:10px;color:#afa8c4}
+.global-nav[data-compact-nav] .compact-apps-trigger{display:grid;place-items:center;margin-left:auto;width:36px;height:36px;min-height:36px;padding:7px;border:0;background:transparent;color:#bcb3cc;border-radius:10px}
+.compact-apps-trigger svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8}
+body:has(.global-nav[data-compact-nav]) .mobile-tabbar,body:has(.global-nav[data-compact-nav]) .customize-tabs-trigger,body:has(.global-nav[data-compact-nav]) .tab-customizer{display:none!important}
+body:has(.global-nav[data-compact-nav]) .app-more-sheet{inset:52px 8px auto auto;margin:0;max-height:calc(100dvh - 64px)}

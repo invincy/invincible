@@ -13,12 +13,12 @@ const fixture=[
 const server=http.createServer((req,res)=>{
  const url=new URL(req.url,'http://localhost').pathname;
  res.setHeader('Content-Type',/\.m?js$/.test(url)?'text/javascript':url.endsWith('.css')?'text/css':'text/html');
+ if(url==='/invincible/ai/'){res.end('<style>html,body{background:#0e111a;color-scheme:dark}</style><body></body>');return;}
  if(url==='/fixture.mjs'||url==='/invincible/shared/firebase-client.js'){res.end(fixture);return;}
  try{
   let file=path.join(root,url.replace(/^\/invincible\/?/,''));
   if(fs.statSync(file).isDirectory())file=path.join(file,'index.html');
   let content=fs.readFileSync(file,'utf8').replaceAll('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js','/fixture.mjs');
-  if(file.endsWith('.html'))content=content.replace(/<script[^>]*src="\.\.\/site-nav[^>]*><\/script>/,'');
   res.end(content);
  }catch{res.statusCode=404;res.end('Missing');}
 });
@@ -77,6 +77,7 @@ const server=http.createServer((req,res)=>{
   assert.equal(await dialog.locator('.wb-nav-entry').count(),1);
   assert.equal(await dialog.locator('[data-action=next-scene]').isDisabled(),true);
   await draftScene().locator('[data-field=visual]').fill('Rocket orbit');
+  await dialog.locator('[data-editor-pane=prompts]').click();
   await draftScene().locator('[data-field=blenderPrompt]').fill('Preserve the exact camera plan.');
   await dialog.locator('[data-tab=Production]').click();await dialog.locator('[data-filter-method]').selectOption('Blender');
   assert.equal(await dialog.locator('.wb-production-card').count(),1);
@@ -135,13 +136,39 @@ const server=http.createServer((req,res)=>{
   await page.evaluate(()=>window.failSave=false);await page.locator('#saveContent').click();await page.waitForURL(/project.html\?id=/);
   await page.locator('#projectTitle').filter({hasText:'Gaganyaan production'}).waitFor();
   const projectId=new URL(page.url()).searchParams.get('id');
-  const table='Voiceover\tVisual / Animation\tAssets Required\tTimeline\n'+Array.from({length:16},(_,i)=>'भारत का मिशन '+(i+1)+'!\tCamera '+(i+1)+'\tLVM3 model\t'+(i*4)+'–'+(i*4+4)+'s').join('\n');
+  const table='Voiceover\tVisual / Animation\tAssets Required\tTimeline\n'+Array.from({length:16},(_,i)=>'भारत का मिशन '+(i+1)+'!\t'+(i===0?'Gaganyaan upper assembly को orbit में दिखाएं. Start with a wide view of the complete spacecraft, then move the camera slowly around the Crew Module and Service Module. Preserve realistic proportions and show the protective structure clearly. Keep the background dark, use soft cyan rim lighting, and finish with a stable three-quarter view. Do not show liftoff or add new objects.':'Camera '+(i+1))+'\tLVM3 model\t'+(i*4)+'–'+(i*4+4)+'s').join('\n');
   const paste=page.locator('#projectStoryboard [data-paste]');
   await paste.fill(table);await page.locator('[data-action=preview]').click();
   assert.equal(await page.locator('.wb-preview article').count(),16);assert.equal(await page.locator('.wb-scene').count(),0);
   await page.locator('[data-action=import]').click();
   assert.equal(await page.locator('.wb-scene').count(),1);
   assert.equal(await page.locator('.wb-nav-entry').count(),16);
+  assert.equal(await page.locator('.wb-nav-entry [data-select-scene]').first().innerText(),'01');
+  assert.equal(await page.locator('.wb-nav-preview,.wb-nav-heading').count(),0);
+  assert.equal(await page.locator('.wb-nav-entry [data-select-scene]').first().getAttribute('data-scene-status'),'planned');
+  assert.equal(await page.locator('[data-pane=prompts]').isVisible(),false);
+  assert.equal(await page.locator('[data-pane=progress]').isVisible(),false);
+  // Default scene work stays inside the viewport; oversized content stays readable in the editor.
+  for(const [width,height] of [[1440,1000],[1366,768],[1280,720],[1024,768],[393,852],[320,700]]){
+   await page.setViewportSize({width,height});
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight+1),true,'No page scrolling at '+width+'x'+height);
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
+   assert.equal(await page.locator('[data-editor-pane=plan]').isVisible(),true);
+   if(width>=1280)assert.equal(await page.locator('.wb-scene-content').evaluate(el=>el.scrollHeight<=el.clientHeight+1),true,'Normal plan fits without editor scrolling at '+width+'x'+height);
+  }
+  await page.setViewportSize({width:1440,height:1000});
+  await page.locator('[data-editor-pane=prompts]').click();
+  await page.locator('[data-prompt-key]').selectOption('videoPrompt');
+  await page.locator('.wb-scene [data-field=videoPrompt]').fill('Preserve camera and scale.');
+  await page.locator('[data-action=copy-field]').click();
+  assert.equal(await page.evaluate(()=>window.copied),'Preserve camera and scale.');
+  await page.locator('.wb-scene [data-field=videoPrompt]').fill('');
+  await page.locator('[data-editor-pane=progress]').click();
+  assert.equal(await page.locator('[data-check=voiceoverReady]').isVisible(),true);
+  await page.locator('[data-editor-pane=plan]').click();
+  fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});
+  await page.screenshot({path:path.join(root,'.test-output/creator-focus-viewport.png')});
+
   assert.equal(await page.locator('.wb-column-head,.wb-row').count(),0);
   const firstIdBefore=await page.locator('.wb-scene').getAttribute('data-scene');
   await page.locator('[data-action=next-scene]').click();
@@ -246,6 +273,8 @@ const server=http.createServer((req,res)=>{
   await page.locator('[data-tab=Storyboard]').click();await scene(0).locator('[data-field=sceneState]').selectOption('Completed');
   await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes[0].completed,projectId);
   await page.reload();await page.locator('.wb-scene').first().waitFor();assert.equal(await scene(0).locator('[data-field=sceneState]').inputValue(),'Completed');
+  assert.equal(await page.locator('.wb-nav-entry [data-select-scene]').first().getAttribute('data-scene-status'),'completed');
+  await page.screenshot({path:path.join(root,'.test-output/creator-status-rail.png')});
   await page.locator('[data-action=view-mode]').click();
   await page.locator('[data-tab=Production]').click();assert.equal(await page.locator('#focusEditor').count(),0);await page.locator('[data-filter-method]').selectOption('Blender');assert.equal(await page.locator('.wb-production-card').count(),3);
   await page.locator('[data-filter-method]').selectOption('Editing');assert.equal(await page.locator('.wb-production-card').count(),16);

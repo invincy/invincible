@@ -26,7 +26,7 @@ import{APP_BASE as BASE,navigationPages as pages,mobilePages as selectableMobile
 
   const linkMarkup = (page, compact = false) => {
     const label = compact && page.short ? page.short : page.label;
-    return '<a ' + attrs(page) + ' data-page="' + page.id + '">' +
+    return '<a ' + attrs(page) + ' aria-label="'+page.label+'" title="'+page.label+'" data-page="' + page.id + '">' +
       '<span class="app-nav-icon">' + icons[page.id] + '</span>' +
       '<span class="app-nav-label">' + label + '</span>' +
       (page.external ? '<span class="app-nav-external">↗</span>' : '') +
@@ -36,6 +36,7 @@ import{APP_BASE as BASE,navigationPages as pages,mobilePages as selectableMobile
   const globalNav = document.querySelector('.global-nav');
   if (!globalNav) return;
 
+  const compactNav=globalNav.hasAttribute('data-compact-nav');
   globalNav.innerHTML =
     '<div class="nav-head">' +
       '<a class="nav-brand" href="' + BASE + '" aria-label="Invincible dashboard">' +
@@ -45,7 +46,7 @@ import{APP_BASE as BASE,navigationPages as pages,mobilePages as selectableMobile
     '</div>' +
     '<div class="desktop-nav" aria-label="Primary navigation">' +
       pages.map(page => linkMarkup(page)).join('') +
-    '</div>';
+    '</div>'+(compactNav?'<button type="button" class="compact-apps-trigger" aria-label="Open app menu" title="Apps" aria-expanded="false" aria-controls="appMoreSheet">'+icons.more+'</button>':'');
   globalNav.setAttribute('aria-label', 'App navigation');
 
   document.querySelector('.nav-backdrop')?.remove();
@@ -73,7 +74,8 @@ import{APP_BASE as BASE,navigationPages as pages,mobilePages as selectableMobile
   document.body.appendChild(moreSheet);
 
   const mobileViewport = window.matchMedia('(max-width: 1024px)');
-  const allTriggers = () => [mobileTabs.querySelector('.mobile-more-trigger')].filter(Boolean);
+  const allTriggers = () => [mobileTabs.querySelector('.mobile-more-trigger'),globalNav.querySelector('.compact-apps-trigger')].filter(Boolean);
+  globalNav.querySelector('.compact-apps-trigger')?.addEventListener('click',openMore);
 
   function renderMobileTabs() {
     const mobileOrder = ['dashboard', ...selectedMobileIds];
@@ -88,7 +90,7 @@ import{APP_BASE as BASE,navigationPages as pages,mobilePages as selectableMobile
   }
 
   function openMore() {
-    if (!mobileViewport.matches) return;
+    if (!mobileViewport.matches&&!compactNav) return;
     if (typeof moreSheet.showModal === 'function') moreSheet.showModal();
     else moreSheet.setAttribute('open', '');
     document.body.classList.add('app-more-open');

@@ -6,7 +6,26 @@ await esbuild.build({stdin:{contents:`import React from'react';import{createRoot
 const server=http.createServer((req,res)=>{const url=new URL(req.url,'http://localhost'),relative=url.pathname.replace(/^\/invincible\/?/,'');if(url.searchParams.has('nav-react')){res.setHeader('Content-Type','text/html');res.end('<body><div id="root"></div><link rel="stylesheet" href="/invincible/.test-output/navigation.css"><script src="/invincible/.test-output/navigation.js"></script></body>');return}try{let file=path.join(root,relative);if(fs.statSync(file).isDirectory())file=path.join(file,'index.html');let content=fs.readFileSync(file,'utf8');res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':'text/html');if(file.endsWith('.html'))content=content.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,tag=>tag.includes('site-nav.js')?tag:'');res.end(content)}catch{res.statusCode=404;res.end('Missing')}});
 await new Promise(resolve=>server.listen(8767,'127.0.0.1',resolve));const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE||'/root/.cache/ms-playwright/chromium_headless_shell-1161/chrome-linux/headless_shell',args:['--no-sandbox']});
 try{const page=await browser.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));await page.route('https://**/*',route=>route.abort());await page.route('**/ai/?widget=*',route=>route.fulfill({status:200,contentType:'text/html',body:'<body></body>'}));
-for(const route of ['garage/','creator/','creator/project.html','journal/','lic/','lic/bima-platinum/','portfolio.html']){await page.setViewportSize({width:1280,height:800});await page.goto('http://127.0.0.1:8767/invincible/'+route);await page.locator('.desktop-nav a').first().waitFor();assert.equal(await page.locator('.desktop-nav a').count(),10);assert.equal(await page.locator('.global-ai-widget').count(),1);assert.equal(await page.locator('.mobile-tabbar').count(),1);await page.setViewportSize({width:390,height:844});await page.locator('.mobile-more-trigger').click();assert.equal(await page.locator('#appMoreSheet').evaluate(element=>element.open),true);await page.keyboard.press('Escape');assert.equal(await page.locator('#appMoreSheet').evaluate(element=>element.open),false)}
+for(const route of ['garage/','creator/','creator/project.html','journal/','lic/','lic/bima-platinum/','portfolio.html']){
+ const compact=route.startsWith('creator/');
+ await page.setViewportSize({width:1280,height:800});await page.goto('http://127.0.0.1:8767/invincible/'+route);
+ await page.locator(compact?'.compact-apps-trigger':'.desktop-nav a').first().waitFor();
+ assert.equal(await page.locator('.desktop-nav a').count(),10);
+ assert.equal(await page.locator('.global-ai-widget').count(),1);assert.equal(await page.locator('.mobile-tabbar').count(),1);
+ if(compact){
+  assert.equal(await page.locator('.global-nav').evaluate(el=>el.getBoundingClientRect().height),48);
+  assert.equal(await page.locator('.desktop-nav').isVisible(),false);
+  await page.locator('.compact-apps-trigger').click();
+  assert.equal(await page.locator('#appMoreSheet').evaluate(el=>el.open),true);
+  assert.equal(await page.locator('#appMoreSheet .app-nav-link').count(),9);
+  await page.keyboard.press('Escape');
+ }
+ await page.setViewportSize({width:390,height:844});
+ await page.locator(compact?'.compact-apps-trigger':'.mobile-more-trigger').click();
+ assert.equal(await page.locator('#appMoreSheet').evaluate(element=>element.open),true);
+ await page.keyboard.press('Escape');assert.equal(await page.locator('#appMoreSheet').evaluate(element=>element.open),false);
+}
+
 await page.goto('http://127.0.0.1:8767/invincible/garage/');await page.locator('.mobile-more-trigger').click();await page.locator('.customize-tabs-trigger').click();await page.locator('[data-page-id=ai]').click();await page.locator('[data-page-id=garage]').click();await page.locator('.tab-customizer-save').click();assert.deepEqual(await page.locator('.mobile-tabbar a').evaluateAll(links=>links.map(link=>link.dataset.page)),['dashboard','workday','journal','garage']);
 await page.goto('http://127.0.0.1:8767/invincible/garage/?nav-react');await page.locator('.react-mobile-tabs a').first().waitFor();assert.deepEqual(await page.locator('.react-mobile-tabs a').evaluateAll(links=>links.map(link=>link.textContent.trim())),['Home','Workday','Journal','Garage']);await page.locator('.react-mobile-tabs button').click();await page.getByRole('button',{name:'Edit bottom tabs'}).click();await page.locator('.tab-picker button').filter({hasText:'Garage'}).click();await page.locator('.tab-picker button').filter({hasText:'Finance'}).click();await page.locator('.tab-picker-actions button').filter({hasText:'Save'}).click();
 await page.goto('http://127.0.0.1:8767/invincible/garage/');await page.locator('.mobile-tabbar a').first().waitFor();assert.deepEqual(await page.locator('.mobile-tabbar a').evaluateAll(links=>links.map(link=>link.dataset.page)),['dashboard','workday','journal','finance']);assert.deepEqual(errors,[]);console.log('All seven standalone navigation mounts and shared React/native tab preferences passed.');

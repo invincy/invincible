@@ -76,3 +76,6 @@ Compact-workflow follow-up: pagination, active row, collapsed asset rows and sec
 
 
 Scene-navigator follow-up: focused/all mode, active scene, sidebar visibility and expansion are in-memory presentation state over the existing scenes array. No scene copies or per-mode persistence systems were introduced. Previous/Next and the sidebar read the same method/readiness/completion/search filter result; reordering writes canonical scene IDs in their new array order. Legacy local row-count preferences are no longer read because the table/pagination UI has been removed. Sharing, saves, group tasks and imports retain existing document fields and permissions.
+
+
+Viewport editor follow-up: Plan/Prompts/Progress and prompt selection are local view state. Numbered-rail colors derive from existing production flags and scene completion; they add no persisted status or migration. Compact Creator app navigation reuses the existing shared page registry and mobile-tab preferences. Data writes, permission checks and Firebase document paths are unchanged.
