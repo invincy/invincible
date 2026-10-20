@@ -36,6 +36,7 @@ jobs:
           name: creator-workbench-evidence
           path: .test-output/creator*.png
           if-no-files-found: ignore
+          include-hidden-files: true
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -114,3 +115,4 @@ jobs:
           name: spatial-browser-evidence
           path: .test-output/**/*.png
           if-no-files-found: ignore
+          include-hidden-files: true

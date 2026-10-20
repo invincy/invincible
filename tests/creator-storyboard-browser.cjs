@@ -72,7 +72,7 @@ const server=http.createServer((req,res)=>{
   const groupId=await page.locator('[data-group]').getAttribute('data-group');
   for(const id of [firstId,thirdId]){
    const card=page.locator('.wb-production-card[data-scene="'+id+'"]');
-   await card.locator('[data-action=expand]').click();await card.locator('[data-field=animationGroupId]').selectOption(groupId);
+   if(await card.locator('[data-action=expand]').getAttribute('aria-expanded')!=='true')await card.locator('[data-action=expand]').click();await card.locator('[data-field=animationGroupId]').selectOption(groupId);
   }
   const card=page.locator('.wb-production-card[data-scene="'+firstId+'"]');
   // The selected third card is expanded; first card exposes quick Blender tasks.
@@ -142,5 +142,9 @@ const server=http.createServer((req,res)=>{
   await page.screenshot({path:path.join(root,'.test-output/creator-workbench-desktop.png'),fullPage:true});
   await page.setViewportSize({width:393,height:852});await page.screenshot({path:path.join(root,'.test-output/creator-workbench-mobile.png'),fullPage:true});
   assert.deepEqual(errors,[]);console.log('Creator creation, 16-scene import, queues, shared Blender tasks, independent completion, script review, assets, Markdown, reload/draft recovery, legacy compatibility and responsive layouts passed.');
+ }catch(error){
+  fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});
+  for(const page of browser.contexts().flatMap(context=>context.pages()))await page.screenshot({path:path.join(root,'.test-output/creator-failure.png'),fullPage:true}).catch(()=>{});
+  throw error;
  }finally{await browser.close();server.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;server.close();});
