@@ -89,7 +89,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    (!queue.length?'<p>No scenes in this workspace. Assign method tags in Storyboard.</p>':'');
  }
  function assetEditor(asset){
-  return '<article class="wb-asset" data-asset="'+esc(asset.id)+'"><div class="wb-detail-grid"><label>Name<input data-asset-field="name" value="'+esc(asset.name)+'"></label><label>Type<select data-asset-field="type">'+options(['Blender file','Video','Image','Audio','Reference','Model','Other'],asset.type)+'</select></label><label>Storage path / external URL<input data-asset-field="path" value="'+esc(asset.path||'')+'"></label><label>Status<select data-asset-field="status">'+options(['Not Started','In Progress','Ready'],asset.status)+'</select></label>'+field('Notes','notes',asset.notes||'','data-asset-field="notes"')+'</div><div class="wb-associations"><strong>Scenes</strong>'+scenes().map((scene,index)=>'<label><input type="checkbox" data-associate-scene="'+esc(scene.id)+'" '+((asset.sceneIds||[]).includes(scene.id)?'checked':'')+'>Scene '+(index+1)+'</label>').join('')+'<strong>Animation groups</strong>'+(project().animationGroups||[]).map(group=>'<label><input type="checkbox" data-associate-group="'+esc(group.id)+'" '+((asset.groupIds||[]).includes(group.id)?'checked':'')+'>'+esc(group.name)+'</label>').join('')+'</div><div class="wb-actions"><button data-copy-path>Copy reference</button>'+(/^https?:\/\//i.test(asset.path||'')?'<a href="'+esc(asset.path)+'" target="_blank" rel="noopener noreferrer">Open URL ↗</a>':'<span>Local paths are references only.</span>')+'<button data-delete-asset>Remove metadata</button></div></article>';
+  return '<article class="wb-asset" data-asset="'+esc(asset.id)+'"><div class="wb-detail-grid"><label>Name<input data-asset-field="name" value="'+esc(asset.name)+'"></label><label>Type<select data-asset-field="type">'+options(['Blender file','Video','Image','Audio','Reference','Model','Other'],asset.type)+'</select></label><label>Storage path / external URL<input data-asset-field="path" value="'+esc(asset.path||'')+'"></label><label>Status<select data-asset-field="status">'+options(['Not Started','In Progress','Ready'],asset.status)+'</select></label>'+field('Notes','notes',asset.notes||'','data-asset-field="notes"')+'</div><div class="wb-associations"><strong>Scenes</strong>'+scenes().map((scene,index)=>'<label><input type="checkbox" data-associate-scene="'+esc(scene.id)+'" '+((asset.sceneIds||[]).includes(scene.id)?'checked':'')+'>Scene '+(index+1)+'</label>').join('')+'<strong>Animation groups</strong>'+(project().animationGroups||[]).map(group=>'<label><input type="checkbox" data-associate-group="'+esc(group.id)+'" '+((asset.groupIds||[]).includes(group.id)?'checked':'')+'>'+esc(group.name)+'</label>').join('')+'</div><div class="wb-actions"><button data-copy-path>Copy reference</button>'+'<span data-asset-open-reference>'+(/^https?:\/\//i.test(asset.path||'')?'<a href="'+esc(asset.path)+'" target="_blank" rel="noopener noreferrer">Open URL ↗</a>':'Local paths are references only.')+'</span><button data-delete-asset>Remove metadata</button></div></article>';
  }
  function assets(){
   const legacy=scenes().flatMap((scene,index)=>['characterAssetUrl','imageAssetUrl','videoAssetUrl'].filter(key=>scene[key]).map(key=>'<li>Scene '+(index+1)+' · '+esc(key)+': '+esc(scene[key])+'</li>'));
@@ -133,7 +133,14 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   const group=(project().animationGroups||[]).find(item=>item.id===target.closest('[data-group]')?.dataset.group);
   if(group&&target.dataset.groupField){group[target.dataset.groupField]=target.value;changed(false);return;}
   const asset=(project().assets||[]).find(item=>item.id===target.closest('[data-asset]')?.dataset.asset);
-  if(asset&&target.dataset.assetField){asset[target.dataset.assetField]=target.value;changed(false);return;}
+  if(asset&&target.dataset.assetField){
+   asset[target.dataset.assetField]=target.value;
+   if(target.dataset.assetField==='path'){
+    const link=target.closest('[data-asset]').querySelector('[data-asset-open-reference]');
+    if(link)link.innerHTML=/^https?:\/\//i.test(asset.path||'')?'<a href="'+esc(asset.path)+'" target="_blank" rel="noopener noreferrer">Open URL ↗</a>':'Local paths are references only.';
+   }
+   changed(false);return;
+  }
   if(target.dataset.projectField){project()[target.dataset.projectField]=target.value;changed(false);return;}
   if(!scene||!target.dataset.field||target.tagName==='SELECT')return;
   const key=target.dataset.field;
@@ -148,7 +155,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   if(target.dataset.map!==undefined){mapping[Number(target.dataset.map)]=target.value;pending=[];mappedPreview();return;}
   if(target.matches('[data-group-by]')){groupBy=target.value;render();return;}
   const asset=(project().assets||[]).find(item=>item.id===target.closest('[data-asset]')?.dataset.asset);
-  if(asset&&target.dataset.assetField){changed();return;}
+  if(asset&&target.dataset.assetField){if(target.tagName==='SELECT')changed();return;}
   if(asset&&(target.dataset.associateScene||target.dataset.associateGroup)){
    const key=target.dataset.associateScene?'sceneIds':'groupIds',id=target.dataset.associateScene||target.dataset.associateGroup;
    asset[key]=target.checked?[...new Set([...(asset[key]||[]),id])]:(asset[key]||[]).filter(value=>value!==id);changed();return;
