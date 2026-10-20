@@ -34,6 +34,8 @@ test('duplicate prevention skips existing and repeated incoming rows while retai
  const scenes=parseProductionImport(storyboard),again=parseProductionImport(storyboard);
  assert.equal(uniqueScenes(scenes,again).duplicates,16);
  const result=uniqueScenes([], [scenes[0],scenes[0],{...scenes[0],visual:'different'}]);assert.equal(result.scenes.length,2);
+ assert.equal(uniqueScenes([scenes[0]],[{...scenes[0],assets:'Different required model'}]).scenes.length,1);
+ assert.equal(uniqueScenes([scenes[0]],[{...scenes[0],blenderPrompt:'Different animation prompt'}]).scenes.length,1);
 });
 test('workflow queues share scene identities and mixed scenes appear in all relevant workspaces',()=>{
  const a=makeScene({productionMethods:['Blender','AI Video']}),b=makeScene({productionMethods:['AI Video']});

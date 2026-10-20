@@ -62,7 +62,7 @@ export function parseProductionImport(input,mappingOverride){
  });
 }
 export function fingerprint(scene){
- return JSON.stringify([scene.voiceover||'',scene.visual||'',scene.timeline||scene.duration||'',scene.imagePrompt||'',scene.videoPrompt||'']);
+ return JSON.stringify([scene.voiceover||'',scene.visual||'',scene.assets||'',scene.timeline||scene.duration||'',scene.characterPrompt||'',scene.imagePrompt||'',scene.videoPrompt||'',scene.blenderPrompt||'',scene.camera||'',scene.technicalNotes||'']);
 }
 export function uniqueScenes(existing,incoming){
  const seen=new Set(existing.map(fingerprint));let duplicates=0;
