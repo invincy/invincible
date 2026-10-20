@@ -123,7 +123,9 @@ const server=http.createServer((req,res)=>{
   await page.locator('[data-project-field=visualStyle]').fill('Cinematic documentary');
   await page.locator('[data-project-field=aspectRatio]').selectOption('16:9');
   await page.locator('[data-action=copy-brief]').click();
-  await page.waitForFunction(()=>window.copied?.includes('FULL RECORDING VOICEOVER'));
+  assert.equal(errors.length,0,errors.join('\n'));
+   assert.match(await page.locator('.wb-status').innerText(),/Generator brief copied/);
+   await page.waitForFunction(()=>window.copied?.includes('FULL RECORDING VOICEOVER'));
   assert.match(await page.evaluate(()=>window.copied),/FULL RECORDING VOICEOVER\nभारत का मिशन 1!/);
   await page.locator('[data-tab=Storyboard]').click();
   // Duplicate paste is reviewed but cannot append identical rows.
