@@ -3,8 +3,8 @@
 @import './editor.css';
 @import './task-focus.css';
 /* dashboard.css owns dashboard/orb layout; this sheet owns only the spatial shell and workspace region. */
-:root{font-family:Inter,"Segoe UI",system-ui,sans-serif;color:#e4edf3;background:#080e16;font-synthesis:none;color-scheme:dark}
-*{box-sizing:border-box}body{margin:0}button,a{-webkit-tap-highlight-color:transparent}button,input{font:inherit}button,a{touch-action:manipulation}button{cursor:pointer}
+.spatial-page{font-family:Inter,"Segoe UI",system-ui,sans-serif;color:#e4edf3;background:#080e16;font-synthesis:none;color-scheme:dark}
+.spatial-page *{box-sizing:border-box}.spatial-page{margin:0}.spatial-page :is(button,a){-webkit-tap-highlight-color:transparent;touch-action:manipulation}.spatial-page :is(button,input){font:inherit}.spatial-page button{cursor:pointer}
 .v2-shell{height:100dvh;display:grid;grid-template-rows:auto auto minmax(0,1fr) 34px;isolation:isolate;background:radial-gradient(ellipse at 20% 0%,#10252e88,transparent 55%),#080e16}
 .v2-shell a,.v2-auth a{color:inherit;text-decoration:none}.v2-shell button,.v2-auth button{min-height:44px;border:1px solid #5d818947;background:#152530;color:#dce9ee;border-radius:9px;padding:10px 16px}
 .v2-shell button:hover,.v2-auth button:hover{background:#203a45;border-color:#81c5cc88}.v2-shell :focus-visible,.v2-auth :focus-visible{outline:2px solid #8ceddf;outline-offset:4px}
@@ -187,3 +187,7 @@
   .v2-topbar nav a::before{width:7px;height:7px}
 }
 
+
+.v2-daily-tools{position:relative}.v2-daily-tools summary{cursor:pointer;list-style:none;min-width:44px;min-height:44px;display:grid;place-items:center;font-size:22px}.v2-daily-menu{position:absolute;right:0;top:100%;z-index:100;width:min(300px,85vw);padding:12px;background:#10232e;border:1px solid #5d818947;border-radius:12px;box-shadow:0 16px 48px #0008;white-space:normal}.v2-daily-menu .streak-buttons{display:flex;gap:4px;margin-bottom:12px}.v2-daily-menu .streak-button{flex:1;padding:8px;font-size:12px}.v2-daily-menu p{line-height:1.5}.v2-account .dashboard-notification-button{position:relative;display:grid;place-items:center;min-width:44px;padding:10px}.dashboard-notification-button svg{width:20px;height:20px}.v2-account{gap:8px}
+
+.v2-account .finance-reminder-backdrop{white-space:normal}.v2-account .finance-reminder-dialog{font-size:14px}.v2-account .finance-reminder-dialog a{white-space:normal}

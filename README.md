@@ -8,7 +8,7 @@ This document is the starting point for understanding what runs today, where to 
 
 | Area | Entry point | Code to edit | Runtime |
 | --- | --- | --- | --- |
-| Dashboard | `index.html` | `react/src/DashboardPage.jsx` | Main React app |
+| Dashboard | `index.html` | `react/v2/SpatialApp.jsx` | Main React app |
 | Invincible AI | `ai/index.html` | `react/src/features/invincible-ai/` | Main React app + Firebase callable Function |
 | Task workspace | `task/index.html` | `react/src/TaskPage.jsx`, `task-model.js`, `useTasks.js` | Main React app |
 | Finance | `journal/finance.html` | `react/src/FinancePage.jsx`, `finance-storage.js` | Main React app |
@@ -40,7 +40,7 @@ Legacy task `subtasks` mirrors are still written alongside `steps` for compatibi
 
 ## Styles and generated assets
 
-Dashboard owns one mobile-first stylesheet, `react/src/dashboard.css`, imported by its React page. The previous base/mobile override files are removed. Phone widths below 700px use four compact lanes in a 2×2 board, tablets from 700–1100px use two, and desktop widths above 1100px use three. Focus controls and project progress use grid flow; the active project/action heading sits inside the orb, and smaller task titles share a row with their movement arrows. The shared shell owns navigation only. Lanes retain distinct grey/gold/blue/green glass with fading top and bottom, and side rails only; phone lanes scroll internally and expand on tap. Phones below 700px never mount the orb renderer; they retain the clock and wide gold timer strip, show real focus titles when available, and omit empty focus instructions. Dashboard preserves its dark visual theme across device colour preferences and supports reduced motion; the other pages still need a wider visual audit.
+The main Dashboard is the spatial workspace in `react/v2/SpatialApp.jsx`, mounted by the root React router without the older AppShell. Other React modules keep their existing shell; native modules retain their own entry points. Dashboard/orb styles remain in `dashboard.css`, with the spatial shell in `react/v2/spatial.css` and scene layout in `dashboard-guide.css`.
 
 `npm run build` clears generated assets, builds content-hashed entry/chunk/CSS filenames, and refreshes all six HTML loaders automatically. Do not add query versions to the JavaScript entry: lazy chunks must import the identical entry URL. JavaScript is split by page and the shared Firebase SDK; CSS intentionally remains one generated asset to preserve existing cross-page style order. Native navigation is an ES module; every native page must load it with `type="module"`.
 
@@ -50,15 +50,15 @@ Journal contains one active application bundle. Its original React source/build 
 
 ## Local development and checks
 
-Invincible V2 is a spatial workspace alongside V1. Its Kanban supports saved lane moves, project creation/editing and structured plan imports. Run `npm ci`, `npm ci --prefix react`, then `npm run dev:v2` and open the printed `/invincible/v2/` URL (normally `http://localhost:5173/invincible/v2/`). Do not open the HTML file directly. `npm run build:v2` writes only to `v2-dist/`; `npm run preview:v2` serves that build. See [V2 implementation and stability audit](docs/v2-spatial-workspace.md) for the two-region scope, shared authentication/data boundary, verification and remaining phases. V1's build commands and entry points remain unchanged.
+The spatial workspace (formerly V2) is now the main Dashboard at `/invincible/`. The former V1 Dashboard component and generated chunk are removed; its shared hooks and Firebase services remain for other modules. Its Kanban supports saved lane moves, project creation/editing and structured plan imports. Run `npm ci`, `npm ci --prefix react`, then `npm run dev:v2` and open the printed `/invincible/v2/` URL (normally `http://localhost:5173/invincible/v2/`). Do not open the HTML file directly. `npm run build:v2` writes only to `v2-dist/`; `npm run preview:v2` serves that build. See [V2 implementation and stability audit](docs/v2-spatial-workspace.md) for the two-region scope, shared authentication/data boundary, verification and remaining phases. `npm run build` builds the canonical home and existing React module entries. `/invincible/v2/` remains a compatible entry to the same spatial component.
 
-V2 uses an open focus scene: Main Dashboard places one compact project focus, timer and Workspace entry around a large interactive Orb. Nine icon glows on the Orb use the shared navigation registry; the current task opens its project editor from the center. The top navigation shows two connected spaces, and the full four-lane Kanban board lives in My Workspace. V2 scene rules are in `react/src/dashboard-guide.css`; the V1 Dashboard remains in `react/src/dashboard.css`.
+V2 uses an open focus scene: Main Dashboard places one compact project focus, timer and Workspace entry around a large interactive Orb. Nine icon glows on the Orb use the shared navigation registry; the current task opens its project editor from the center. The top navigation shows two connected spaces, and the full four-lane Kanban board lives in My Workspace. V2 scene rules are in `react/src/dashboard-guide.css`; shared dashboard/orb styles remain in `react/src/dashboard.css`.
 
 In My Workspace, drag a card between lanes or use its Move menu. The grip supports touch dragging while the rest of each card keeps normal scrolling. Moves update the existing owner's task status; entering Today atomically adds/activates the next unfinished step in the existing daily plan. Failed saves restore the original lane. Lane moves preserve notes, steps and unknown fields, and do not persist card order within a lane.
 
 Choose **Paste plan** to preview the [custom GPT plan format](docs/plan-format.md), then create a project or append to an existing one. Numbered steps contain checkbox substeps and optional notes. **New project** uses a compact editor; selecting a saved project opens its flowing task workbench, where steps appear as connected spatial nodes and the selected node reveals its title, notes, subtasks, status and completion controls. The workbench supports pan, zoom, node repositioning, fit-to-workflow and a touch-friendly mobile route. Drafts are stored per account on this device until an explicit successful save or discard. Existing-project saves check for concurrent content edits; append transactions read the latest record and retain existing content. Child records are stored in the task's `stepSubsteps` map, keyed by parent step ID, so legacy writers of the parent `steps`/`subtasks` arrays cannot erase them. Parent completion drives the existing project progress; lane status is still controlled by Kanban moves.
 
-`npm run stage:v2` prepares the separate `v2/` publishing directory for a same-origin GitHub Pages preview. It does not deploy. Publishing it from `master` requires approval; the existing V1 Google session can be reused only in the same browser profile on `invincy.github.io`.
+`npm run stage:v2` prepares the separate `v2/` publishing directory for a same-origin GitHub Pages preview. The canonical home is deployed by the existing Pages workflow from `master`; the same-origin Firebase session is reused in the same browser profile.
 
 Install dependencies using the checked-in locks:
 

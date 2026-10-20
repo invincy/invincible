@@ -2,7 +2,6 @@ import React, {lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, 
 import {useAuth} from '../src/AuthContext';
 import {FocusOrb} from '../src/FocusOrb';
 import {newId} from '../src/task-model';
-import {navigationPages} from '../../shared/navigation';
 import {regions, regionFromHash, resolvePlan} from './model';
 import {useWorkspaceData} from './useWorkspaceData';
 import {useFocusSession} from './useFocusSession';
@@ -11,7 +10,7 @@ const Workspace = lazy(() => import('./WorkspaceRegion'));
 const TaskEditor = lazy(() => import('./TaskEditor'));
 const PlanImporter = lazy(() => import('./PlanImporter'));
 const TaskFocusView = lazy(() => import('./TaskFocusView'));
-const v1 = new URL(navigationPages.find(page => page.id === 'dashboard').href, 'https://invincy.github.io').href;
+const DashboardTools = lazy(() => import('./DashboardTools'));
 
 function Region({region, viewport, children, onScroll}) {
   const element = useRef(null);
@@ -124,11 +123,11 @@ function SignedInWorkspace({user, logout}) {
     return next;
   });
   return <div className="v2-shell">
-    <header className="v2-topbar"><a className="v2-brand" href="#dashboard" onClick={event => {event.preventDefault();navigate('dashboard');}}><span className="v2-brand-mark">I</span><span>INVINCIBLE<small>SPATIAL WORKSPACE / V2</small></span></a>
+    <header className="v2-topbar"><a className="v2-brand" href="#dashboard" onClick={event => {event.preventDefault();navigate('dashboard');}}><span className="v2-brand-mark">I</span><span>INVINCIBLE<small>PERSONAL WORKSPACE</small></span></a>
       <nav aria-label="Explore spaces"><span className="v2-nav-caption" aria-hidden="true">VIEWS</span>{regions.map(region => <a key={region.id} href={'#'+region.id} aria-current={active === region.id ? 'location' : undefined} onClick={event => {if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;event.preventDefault();navigate(region.id);}}><span>{region.number}</span>{region.label}</a>)}</nav>
-      <div className="v2-account"><a href={v1}>Open V1 ↗</a><button aria-label="Sign out" onClick={async () => {try {await logout();} catch {setAuthError('Sign-out did not complete. Try again.');}}}>Sign out</button></div>
+      <div className="v2-account"><Suspense fallback={null}><DashboardTools/></Suspense><button aria-label="Sign out" onClick={async () => {try {await logout();} catch {setAuthError('Sign-out did not complete. Try again.');}}}>Sign out</button></div>
     </header>
-    <div className="v2-connection" role="status"><span className={error ? 'v2-dot error' : 'v2-dot'}/>{authError || error || (!ready ? 'Restoring your workspace…' : data.tasksCached || data.planCached ? 'Showing cached records · Waiting for connection' : 'Connected to your existing workspace')}<span className="v2-preview-label">V2 WORKSPACE</span>{error && <button onClick={data.retry}>Retry sync</button>}</div>
+    <div className="v2-connection" role="status"><span className={error ? 'v2-dot error' : 'v2-dot'}/>{authError || error || (!ready ? 'Restoring your workspace…' : data.tasksCached || data.planCached ? 'Showing cached records · Waiting for connection' : 'Connected to your existing workspace')}<span className="v2-preview-label">WORKSPACE</span>{error && <button onClick={data.retry}>Retry sync</button>}</div>
     <main ref={viewport} className="v2-canvas" aria-label="Continuous spatial workspace" tabIndex={0} onScroll={scroll}
       onKeyDown={event => {if (event.target !== event.currentTarget) return;let index = regions.findIndex(region => region.id === active);if (event.key === 'ArrowRight') index++;else if (event.key === 'ArrowLeft') index--;else if (event.key === 'Home') index=0;else if (event.key === 'End') index=regions.length-1;else return;event.preventDefault();navigate(regions[Math.max(0,Math.min(regions.length-1,index))].id);}}>
       {regions.map(region => <Region key={region.id} region={region} viewport={viewport} onScroll={moveOrb}>
@@ -152,8 +151,9 @@ function SignedInWorkspace({user, logout}) {
 }
 export function SpatialApp() {
   const {user, ready, error, login, logout} = useAuth();
+  useEffect(() => {document.body.classList.add('spatial-page'); return () => document.body.classList.remove('spatial-page');}, []);
   if (!ready) return <div className="v2-auth"><p role="status">Restoring your Invincible session…</p></div>;
-  if (!user) return <main className="v2-auth"><div><p className="v2-eyebrow">INVINCIBLE / V2</p><h1>A little more space.<br/>For everything you do.</h1><p>Your existing account. Your existing work.<br/>One continuous environment.</p>{error && <p role="alert">{error}</p>}<button className="v2-primary" onClick={login}>Continue with Google</button><a href={v1}>Open existing Invincible ↗</a><small>Main Dashboard + My Workspace</small></div></main>;
+  if (!user) return <main className="v2-auth"><div><p className="v2-eyebrow">INVINCIBLE</p><h1>A little more space.<br/>For everything you do.</h1><p>Your existing account. Your existing work.<br/>One continuous environment.</p>{error && <p role="alert">{error}</p>}<button className="v2-primary" onClick={login}>Continue with Google</button><small>Main Dashboard + My Workspace</small></div></main>;
   // Keyed lifetime prevents any frame of the previous account's records or timer.
   return <SignedInWorkspace key={user.uid} user={user} logout={logout}/>;
 }
