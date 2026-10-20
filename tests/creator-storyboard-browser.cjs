@@ -55,6 +55,10 @@ const server=http.createServer((req,res)=>{
   assert.match(await page.locator('[data-mapped-preview]').innerText(),/16 duplicates skipped/);
   assert.equal(await page.locator('[data-action=import]').isDisabled(),true);
   await page.locator('.wb-import summary').click();
+  await scene(0).locator('[data-drag]').dragTo(scene(1));
+  assert.equal(await scene(0).locator('[data-field=voiceover]').inputValue(),'भारत का मिशन 2!');
+  await scene(1).locator('[data-drag]').dragTo(scene(0));
+  assert.equal(await scene(0).locator('[data-field=voiceover]').inputValue(),'भारत का मिशन 1!');
   for(const i of [0,2,10])await scene(i).locator('[data-method=Blender]').check();
   await scene(0).locator('[data-method="AI Video"]').check();await scene(1).locator('[data-method="AI Video"]').check();
   const firstId=await scene(0).getAttribute('data-scene'),thirdId=await scene(2).getAttribute('data-scene');
@@ -110,6 +114,12 @@ const server=http.createServer((req,res)=>{
   await scene(17).locator('[data-action=insert]').click();assert.equal(await page.locator('.wb-scene').count(),19);
   await scene(18).locator('[data-action=remove]').click();assert.equal(await page.locator('.wb-scene').count(),18);
   await scene(17).locator('[data-action=up]').click();assert.equal(await scene(16).locator('[data-field=voiceover]').inputValue(),'Markdown voice');
+  fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});
+  await page.screenshot({path:path.join(root,'.test-output/creator-production-desktop.png'),fullPage:true});
+  await page.setViewportSize({width:393,height:852});
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
+  await page.screenshot({path:path.join(root,'.test-output/creator-production-mobile.png'),fullPage:true});
+  await page.setViewportSize({width:1440,height:1000});
   // Failed autosave retains a recoverable draft and retries after refresh.
   await page.evaluate(()=>window.failSave=true);await scene(1).locator('[data-field=visual]').fill('Recovered camera direction');
   await page.locator('#status').filter({hasText:'draft is kept'}).waitFor();await page.reload();

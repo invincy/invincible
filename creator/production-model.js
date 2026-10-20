@@ -99,7 +99,7 @@ export function requirements(project,scene){
    if(scene[prompt]&&!['—','-','none','n/a'].includes(scene[prompt].trim().toLowerCase()))tasks.push({key:'Legacy '+prompt,done:!!scene[flag]});
   }
  }
- for(const asset of sceneAssets(project,scene))tasks.push({key:'Asset: '+asset.name,done:asset.status==='Ready'});
+ for(const asset of sceneAssets(project,scene))tasks.push({key:'Asset: '+asset.name,sharedKey:'asset:'+asset.id,done:asset.status==='Ready'});
  tasks.push({key:'Voiceover',done:!!scene.voiceoverReady},{key:'Editing',done:!!scene.editingDone});
  for(const item of scene.checklist||[])tasks.push({key:item.text,done:!!item.done});
  return tasks;
@@ -107,7 +107,7 @@ export function requirements(project,scene){
 export function canComplete(project,scene){return requirements(project,scene).every(task=>task.done);}
 export function sceneComplete(project,scene){
  // Preserve untouched completed legacy scenes; new work must meet its declared requirements.
- return !!scene.completed&&(!scene.sceneState&&!scene.productionMethods||canComplete(project,scene));
+ return !!scene.completed&&(!scene.sceneState&&!scene.productionMethods&&!sceneAssets(project,scene).length&&!(scene.checklist||[]).length||canComplete(project,scene));
 }
 export function sceneState(project,scene){
  if(sceneComplete(project,scene))return 'Completed';
@@ -121,7 +121,7 @@ export function projectProgress(project){
   const complete=sceneComplete(project,scene);
   for(const task of requirements(project,scene)){
    const shared=task.key.startsWith('Blender:')&&groupFor(project,scene);
-   const key=(shared?'group:'+shared.id:'scene:'+scene.id)+':'+task.key;
+   const key=task.sharedKey||(shared?'group:'+shared.id:'scene:'+scene.id)+':'+task.key;
    seen.set(key,complete||task.done);
   }
   seen.set('complete:'+scene.id,complete);

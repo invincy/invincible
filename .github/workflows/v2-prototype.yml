@@ -17,6 +17,25 @@ permissions:
   contents: read
 
 jobs:
+  creator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: node --test tests/creator*.mjs
+      - run: node tests/creator-storyboard-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: creator-workbench-evidence
+          path: .test-output/creator*.png
+          if-no-files-found: ignore
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 15
