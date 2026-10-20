@@ -17,30 +17,30 @@ dialog{width:min(650px,calc(100% - 28px));max-height:calc(100vh - 28px);border:1
 /* Creation and editing use the same production workbench as saved projects. */
 #contentDialog{width:min(1560px,calc(100% - 28px));max-height:calc(100dvh - 28px);overflow:hidden}
 #contentDialog,#contentDialog *{box-sizing:border-box}
-#contentForm{max-height:calc(100dvh - 28px);min-width:0;overflow-y:auto;overscroll-behavior:contain;padding:24px;gap:16px}
+#contentForm{max-height:calc(100dvh - 28px);min-width:0;overflow-y:auto;overscroll-behavior:contain;padding:16px;gap:8px}
 #contentForm>*{min-width:0}
 #contentDialog .dialog-title{align-items:flex-start;gap:16px}
-#contentDialog .dialog-title h2{font-size:26px}
+#contentDialog .dialog-title h2{font-size:22px}
 #contentDialog .dialog-title p,.content-draft-hint{margin:8px 0 0;font-size:14px;line-height:1.5;color:#b9aab8}
-#contentDialog .content-title-field{font-size:15px}
-#contentDialog .content-title-field input{font-size:20px;padding:14px}
-#contentDialog .wb-tabs{top:-24px;padding:12px 0;background:#100d15}
-#contentDialog .wb-tabs button{min-height:44px}
-#contentDialog .content-project-details{padding:8px 16px;border-block:1px solid rgba(209,192,151,.14)}
-#contentDialog .content-project-details>summary{cursor:pointer;padding:10px 0;font-size:15px;color:#d4c2ce}
-#contentDialog .content-project-details[open]{display:grid;gap:14px}
-#contentDialog .dialog-actions{position:sticky;bottom:-24px;z-index:6;margin:0 -24px -24px;padding:12px 24px;border-top:1px solid #57404d;background:#17111e;box-shadow:0 -8px 24px rgba(4,2,7,.45)}
+#contentDialog .content-title-field{font-size:12px}
+#contentDialog .content-title-field input{font-size:17px;padding:8px}
+#contentDialog .wb-tabs{top:-16px;padding:6px 0;background:#100d15}
+#contentDialog .wb-tabs button{min-height:40px}
+#contentDialog .content-project-details{padding:0 8px;border-block:1px solid rgba(209,192,151,.14)}
+#contentDialog .content-project-details>summary{cursor:pointer;padding:8px 0;font-size:12px;color:#d4c2ce}
+#contentDialog .content-project-details[open]{display:grid;gap:8px}
+#contentDialog .dialog-actions{position:sticky;bottom:-16px;z-index:6;margin:0 -16px -16px;padding:8px 16px;border-top:1px solid #57404d;background:#17111e;box-shadow:0 -8px 24px rgba(4,2,7,.45)}
 #contentShotSummary{color:#e9d4cc;font-size:13px;line-height:1.4}
 #contentSaveError{color:#ff91a0;margin:0}#contentSaveError:empty{display:none}
 #saveContent{min-height:44px}
 @media(max-width:700px){
  #contentDialog{width:calc(100% - 16px);max-height:calc(100dvh - 16px)}
- #contentForm{max-height:calc(100dvh - 16px);padding:12px;gap:12px}
+ #contentForm{max-height:calc(100dvh - 16px);padding:12px;gap:8px}
  #contentDialog .dialog-title h2{font-size:22px}
  #contentDialog .content-title-field input{font-size:17px}
  #contentDialog .wb-tabs{top:-12px}
- #contentDialog .dialog-actions{bottom:-12px;margin:0 -12px -12px;padding:12px}
- #contentShotSummary{grid-column:1/-1;grid-row:1}
+ #contentDialog .dialog-actions{display:flex;align-items:center;justify-content:flex-end;bottom:-12px;margin:0 -12px -12px;padding:8px 12px}
+ #contentShotSummary{display:none}
  #contentDialog .dialog-actions .secondary,#contentDialog .dialog-actions .primary{grid-row:2}
  #contentDialog .content-project-details{padding-inline:4px}
 }
