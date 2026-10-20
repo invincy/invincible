@@ -41,6 +41,9 @@ function snapshot(ref) {
   return {metadata:{fromCache:false},exists:()=>owner==='alice',data:()=>plan};
 }
 export const serverTimestamp=()=>123;
+export const setDoc=(ref,patch)=>runTransaction({},tx=>tx.set(ref,patch));
+export const writeBatch=()=>{const entries=[];return {set:(ref,patch)=>entries.push([ref,patch]),commit:()=>runTransaction({},tx=>entries.forEach(([ref,patch])=>tx.set(ref,patch)))}};
+
 export async function runTransaction(_,callback) {
   const patches=[];
   const result=await callback({get:async ref=>{
