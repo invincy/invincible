@@ -6,10 +6,10 @@ const ICONS={"board":"<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/
 const icon=name=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(ICONS[name]||ICONS.assets)+'</svg>';
 const action=(name,label,glyph,extra='')=>'<button type="button" class="wb-icon" data-action="'+name+'" title="'+esc(label)+'" aria-label="'+esc(label)+'" '+extra+'>'+icon(glyph)+'</button>';
 export function createProductionWorkbench(root,{getProject,onChange,onFocus,copyText,onCopyBrief,onSplitScript}){
- let tab='Storyboard',workspace='All',groupBy='project',assetFilter='All',completionFilter='All',searchQuery='',active='',pending=[],mapping=[],importTable=null,scriptChanges=null,dragId='',activeAsset='',expandAll=false,viewMode='focused',expandedScene='',sidebarCollapsed=false,editorPane='plan',promptKey='blenderPrompt';
+ let tab='Storyboard',workspace='All',groupBy='project',assetFilter='All',completionFilter='All',searchQuery='',active='',pending=[],mapping=[],importTable=null,scriptChanges=null,dragId='',activeAsset='',expandAll=false,viewMode='focused',expandedScene='',sidebarCollapsed=false,editorPane='plan',promptKey='blenderPrompt',messageTimer;
  root.classList.add('production-workbench');
  root.innerHTML='<div class="wb-commandbar"><nav class="wb-tabs" aria-label="Project areas">'+['Storyboard','Production','Assets','Overview'].map((name,index)=>'<button type="button" data-tab="'+name+'" title="'+name+'" aria-label="'+name+'">'+icon(['board','production','assets','overview'][index])+'<span>'+name+'</span></button>').join('')+'</nav><div data-command-actions></div></div><div class="wb-status" role="status" aria-live="polite"></div><div data-workbench></div>';
- const panel=root.querySelector('[data-workbench]'),message=text=>root.querySelector('.wb-status').textContent=text;
+ const panel=root.querySelector('[data-workbench]'),message=text=>{clearTimeout(messageTimer);const node=root.querySelector('.wb-status');node.textContent=text;if(/copied|appended|applied|Filled blank|Preview only/.test(text))messageTimer=setTimeout(()=>node.textContent='',3000);};
  const project=()=>getProject();
  const scenes=()=>project()?.scenes||[];
  const changed=(rerender=true)=>{onChange();if(rerender)render();};
