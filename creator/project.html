@@ -3,106 +3,193 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#08070c">
-  <title>Content Project · Invincible</title>
+  <meta name="theme-color" content="#08090d">
+  <title>Creator Studio · Invincible</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../site-nav.css?v=15">
-  <link rel="stylesheet" href="project.css?v=8">
-  <link rel="stylesheet" href="storyboard.css?v=5">
+  <link rel="stylesheet" href="workbench.css?v=1">
 </head>
-<body class="project-page">
+<body class="creator-workbench-page">
   <nav class="global-nav" aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
   <script type="module" src="../site-nav.js?v=7"></script>
 
-  <header class="project-header">
-    <div class="project-identity"><a class="back" href="/invincible/creator/">← Content pipeline</a><span id="projectMeta" class="eyebrow">CONTENT PROJECT</span><h1 id="projectTitle">Loading…</h1><div class="project-access"><span id="accessLabel">Private project</span><button id="shareProject" class="text-button" hidden>Share access</button></div></div>
-    <div class="project-stats" aria-label="Project progress"><div><strong id="sceneCount">0</strong><span>Shots</span></div><div><strong id="totalDuration">0s</strong><span>Runtime</span></div><div><strong id="sceneProgress">0%</strong><span>Complete</span></div></div>
+  <header class="workbench-header">
+    <div class="project-title-block">
+      <a class="back-link" href="/invincible/creator/">← Creator Studio</a>
+      <span class="eyebrow">PRODUCTION WORKBENCH</span>
+      <h1 id="projectTitle">Loading project…</h1>
+      <div class="access-line"><span id="accessLabel">Private project</span><button id="shareProject" class="quiet-button" hidden>Share</button></div>
+    </div>
+    <div class="header-progress">
+      <div class="progress-ring" id="progressRing"><strong id="projectProgress">0%</strong><span>production</span></div>
+      <div class="project-facts"><span><strong id="sceneCount">0</strong> scenes</span><span><strong id="runtime">0s</strong> runtime</span><span id="saveState">Connecting…</span></div>
+    </div>
   </header>
-  <div class="project-progress" aria-hidden="true"><span id="projectProgressBar"></span></div>
+
+  <nav class="workspace-tabs" aria-label="Creator Studio sections">
+    <button data-view="overview">Overview</button>
+    <button data-view="storyboard" class="active">Storyboard</button>
+    <button data-view="production">Production</button>
+    <button data-view="assets">Assets</button>
+  </nav>
+
   <div id="status" class="sync-status" role="status" aria-live="polite">Connecting to Firebase…</div>
 
   <main id="app" hidden>
-    <p class="project-intro">Paste your table to create scenes. Open any scene to plan its character, image, and video. Your work saves automatically.</p>
-
-    <section class="panel project-storyboard-panel" aria-label="Scenes">
-      <section id="projectStoryboard" aria-label="Storyboard editor"></section>
-      <div class="scene-primary-actions"><button id="openAssets" class="secondary" hidden>Project assets</button><button id="startProduction" class="primary" hidden>Work through scenes →</button></div>
+    <section class="workspace-view" data-panel="overview" hidden>
+      <div class="overview-grid">
+        <article class="surface overview-summary">
+          <span class="eyebrow">PROJECT PULSE</span>
+          <h2>What needs attention</h2>
+          <div id="overviewMetrics" class="metric-grid"></div>
+          <div id="nextActions" class="next-actions"></div>
+        </article>
+        <article class="surface">
+          <div class="section-heading"><div><span class="eyebrow">CANONICAL VOICEOVER</span><h2>Complete script</h2></div><button id="buildScript" class="quiet-button">Build from scenes</button></div>
+          <textarea id="fullScript" rows="14" placeholder="The complete narration in chronological order…"></textarea>
+          <div id="scriptSyncNotice" class="review-strip" hidden>
+            <span>The complete script differs from scene narration.</span>
+            <button id="reviewScriptSync">Review sync</button>
+          </div>
+          <p class="hint">Editing this script does not silently overwrite scene voiceovers.</p>
+        </article>
+        <article class="surface">
+          <span class="eyebrow">PROJECT NOTES</span><h2>Look, continuity and notes</h2>
+          <div class="form-grid">
+            <label>Visual style<input id="visualStyle" placeholder="Cinematic technical realism…"></label>
+            <label>Aspect ratio<select id="aspectRatio"><option>9:16</option><option>16:9</option><option>1:1</option></select></label>
+            <label>Language<input id="language" placeholder="Hindi + English"></label>
+            <label class="wide">Character / subject bible<textarea id="characterBible" rows="3"></textarea></label>
+            <label class="wide">Continuity notes<textarea id="continuityNotes" rows="3"></textarea></label>
+            <label class="wide">Project notes<textarea id="projectNotes" rows="4"></textarea></label>
+          </div>
+        </article>
+      </div>
     </section>
 
-    <section class="setup-stack" aria-label="Prepare the production brief">
-      <details class="panel collapsible-panel">
-        <summary><div><span class="eyebrow">RECORDING SCRIPT</span><h2>Full voiceover</h2><p>Created from the table when blank; edit the continuous narration here</p></div><span class="collapse-icon">⌄</span></summary>
-        <div class="collapse-body"><textarea id="fullScript" rows="10" placeholder="Your complete recording narration…"></textarea><button id="useShotVoiceover" type="button" class="text-button" hidden>Build narration from shot voiceovers</button><p class="hint">The generator brief uses this narration unchanged.</p><details class="script-alternative"><summary>Have only a plain script?</summary><p class="hint">This older quick split makes rough shots from word count. It replaces your current shot table after confirmation.</p><button id="splitScript" class="text-button">Create rough shots from script</button></details></div>
-      </details>
+    <section class="workspace-view active" data-panel="storyboard">
+      <article class="surface import-panel">
+        <details id="importDetails">
+          <summary><div><span class="eyebrow">PASTE ONCE</span><h2>Import storyboard</h2><p>TSV, Markdown table or voiceover-only. Parsing happens locally.</p></div><span class="summary-action">Open importer</span></summary>
+          <div class="import-body">
+            <textarea id="importInput" rows="7" spellcheck="false" placeholder="Voiceover	Visual / Animation	Assets Required	Timeline"></textarea>
+            <div class="import-toolbar">
+              <button id="previewImport" class="primary">Detect and preview</button>
+              <select id="importMode" aria-label="Import mode"><option value="append">Append without replacing</option><option value="replace">Replace after confirmation</option></select>
+              <button id="pasteImport" class="quiet-button">Paste clipboard</button>
+            </div>
+            <div id="mappingPanel" class="mapping-panel" hidden>
+              <div class="section-heading"><div><strong>Column mapping</strong><p>Change only incorrect matches.</p></div><span id="detectedFormat" class="status-chip"></span></div>
+              <div id="mappingFields" class="mapping-grid"></div>
+            </div>
+            <div id="importPreview" class="import-preview" hidden>
+              <div class="section-heading"><div><strong id="previewSummary">0 scenes</strong><p id="previewMessage"></p></div><button id="confirmImport" class="primary">Import scenes</button></div>
+              <div id="previewScenes" class="preview-scenes"></div>
+            </div>
+          </div>
+        </details>
+      </article>
 
-      <details class="panel collapsible-panel">
-        <summary><div><span class="eyebrow">LOOK & CONTINUITY</span><h2>Visual settings</h2><p>Shared style and character reference for drafting scene prompts</p></div><span class="collapse-icon">⌄</span></summary>
-        <div class="collapse-body settings-panel"><label>Visual style<input id="visualStyle" placeholder="Cinematic realistic, warm documentary…"></label><div class="two"><label>Aspect ratio<select id="aspectRatio"><option>9:16</option><option>16:9</option><option>1:1</option></select></label><label>Language<input id="language" placeholder="Gujarati + English"></label></div><label>Character bible<textarea id="characterBible" rows="3" placeholder="Age, face, hair, clothing and defining features…"></textarea></label><label>Continuity and location notes<textarea id="continuityNotes" rows="3" placeholder="Keep the same people, locations, colours and props…"></textarea></label><div class="generator-brief"><div><span class="eyebrow">OPTIONAL</span><strong>Generate a production brief</strong><p>Uses the full voiceover and these visual settings when you want detailed generation prompts.</p></div><button id="copyAiBrief" class="primary">Copy generator brief</button></div></div>
-      </details>
+      <article class="surface storyboard-panel">
+        <div class="section-heading sticky-heading">
+          <div><span class="eyebrow">MASTER PLAN</span><h2>Storyboard</h2><p>Chronological plan. Expand a scene for production detail.</p></div>
+          <button id="addScene" class="primary">+ Add scene</button>
+        </div>
+        <div class="storyboard-header" aria-hidden="true">
+          <span>Scene</span><span>Timeline</span><span>Voiceover</span><span>Visual / Animation</span><span>Assets</span><span>Method</span><span>Status</span><span></span>
+        </div>
+        <div id="storyboardList" class="storyboard-list"></div>
+        <div id="storyboardEmpty" class="empty-state">Paste a storyboard or add your first scene.</div>
+      </article>
     </section>
 
-    <details class="panel collapsible-panel importer" aria-labelledby="importHeading">
-      <summary><div><span class="eyebrow">OPTIONAL</span><h2 id="importHeading">More tools</h2><p>Import a completed prompt table from another app</p></div><span class="collapse-icon">⌄</span></summary>
-      <div class="collapse-body"><div class="import-title"><div><p>Use the shot table at the top for your four columns. This optional importer adds completed character, image, and video prompts from a Markdown table, JSON array, or spreadsheet.</p></div><div class="import-actions"><select id="importMode" aria-label="Import mode"><option value="append">Append scenes</option><option value="replace">Replace scenes</option></select><button id="reviewImport" class="primary">Review breakdown</button></div></div><textarea id="tableInput" rows="7" spellcheck="false" placeholder="| Scene | Duration | Voiceover | Character Prompt | Image Prompt | Video Prompt |&#10;|---|---|---|---|---|---|&#10;| 1 | 7 sec | Your narration… | Character reference… | Visual prompt… | Motion prompt… |"></textarea>
-      <div class="import-footer"><span id="importFeedback" class="hint">Compatible with ChatGPT, Gemini, Claude and copied spreadsheet tables.</span><button id="pasteClipboard" class="text-button">Paste from clipboard</button></div>
-      <div id="importPreview" class="import-preview" hidden>
-        <div><span class="eyebrow">IMPORT CHECK</span><strong id="previewSummary">0 scenes detected</strong><p id="previewIssues"></p></div>
-        <div id="previewRows" class="preview-rows"></div>
-        <button id="confirmImport" class="primary">Import scenes</button>
-      </div>
-      </div>
-    </details>
+    <section class="workspace-view" data-panel="production" hidden>
+      <article class="surface production-shell">
+        <div class="production-top">
+          <div><span class="eyebrow">PRODUCE BY WORKFLOW</span><h2 id="productionTitle">All production</h2><p>Chronology stays intact; this queue groups related work.</p></div>
+          <button id="nextPending" class="primary">Open next pending</button>
+        </div>
+        <div class="production-controls">
+          <div id="methodFilters" class="segmented" aria-label="Production method">
+            <button data-method="All" class="active">All</button><button data-method="Blender">Blender</button><button data-method="AI Video">AI Video</button><button data-method="Editing">Editing</button><button data-method="Assets">Assets</button>
+          </div>
+          <label>Group by<select id="groupBy"><option value="animation">Animation project</option><option value="scene">Scene</option><option value="status">Status</option></select></label>
+        </div>
+        <div id="productionQueue" class="production-queue"></div>
+      </article>
+    </section>
 
+    <section class="workspace-view" data-panel="assets" hidden>
+      <div class="assets-layout">
+        <article class="surface">
+          <div class="section-heading"><div><span class="eyebrow">CENTRAL LIBRARY</span><h2>Project assets</h2><p>Metadata and references only. Large files stay outside Firestore.</p></div><button id="addAsset" class="primary">+ Add asset</button></div>
+          <div id="assetRegistry" class="asset-registry"></div>
+          <div id="assetEmpty" class="empty-state">No registered assets yet.</div>
+        </article>
+        <article class="surface group-manager">
+          <div class="section-heading"><div><span class="eyebrow">SHARED PRODUCTION</span><h2>Animation groups</h2><p>Reuse one Blender project, setup and assets across scenes.</p></div><button id="addGroup" class="quiet-button">+ New group</button></div>
+          <div id="groupList"></div>
+        </article>
+      </div>
+    </section>
   </main>
 
-  <div id="focusEditor" class="focus-editor" hidden>
-    <div class="focus-shell" role="dialog" aria-modal="true" aria-labelledby="focusTitle">
-      <aside class="scene-rail" aria-label="Scenes">
-        <div class="rail-head"><span class="eyebrow">PRODUCTION RUN</span><strong id="railProgress">0 of 0 complete</strong></div>
-        <div id="sceneRail" class="rail-list"></div>
-      </aside>
-      <section class="focus-work">
-        <div class="focus-top"><div><span id="focusScene" class="eyebrow">SCENE 01</span><h2 id="focusTitle">Voiceover</h2></div><button id="closeFocus" aria-label="Close production view">×</button></div>
-        <div id="focusTabs" class="focus-tabs" role="tablist" aria-label="Scene production stages">
-          <button data-focus-field="voiceover" role="tab">Voiceover</button>
-          <button data-focus-field="characterPrompt" role="tab">Character</button>
-          <button data-focus-field="imagePrompt" role="tab">Image</button>
-          <button data-focus-field="videoPrompt" role="tab">Video</button>
-        </div>
-        <div id="focusToast" class="focus-toast" role="status" aria-live="polite"></div>
-        <textarea id="focusTextarea" spellcheck="true" aria-label="Focused scene content"></textarea>
-        <div class="focus-controls">
-          <button id="previousScene" class="scene-nav">↑ Previous scene</button>
-          <button id="previousField">← Previous step</button>
-          <span id="focusPosition"></span>
-          <button id="copyFocus" class="copy-action">Copy to GPT</button>
-          <button id="nextField">Next step →</button>
-          <button id="nextScene" class="scene-nav">Next scene ↓</button>
-          <button id="skipScene" class="text-button">Skip for now</button>
-          <button id="completeScene" class="primary complete-action">Scene complete →</button>
-        </div>
-      </section>
-    </div>
-  </div>
+  <aside id="sceneInspector" class="scene-inspector" hidden aria-label="Scene details">
+    <div class="inspector-head"><div><span id="inspectorSceneNo" class="eyebrow">SCENE</span><h2>Production details</h2></div><button id="closeInspector" aria-label="Close">×</button></div>
+    <div id="inspectorBody"></div>
+  </aside>
 
-  <dialog id="assetsDialog" class="assets-dialog">
-    <div class="assets-shell">
-      <div class="assets-head"><div><span class="eyebrow">PROJECT ASSETS</span><h2>Asset workspace</h2><p id="assetsProgress">Track generated characters, images and videos for the whole project.</p></div><button id="closeAssets" aria-label="Close asset workspace">×</button></div>
-      <div id="assetList" class="project-asset-list"></div>
-    </div>
-  </dialog>
-
-  <dialog id="shareDialog" class="share-dialog">
-    <form method="dialog" class="share-shell">
-      <div class="share-head"><div><span class="eyebrow">COLLABORATION</span><h2>Share this project</h2><p>Editors sign in with their own Google account and work on the same scenes.</p></div><button value="cancel" aria-label="Close sharing">×</button></div>
-      <label>Editor’s Google email<div class="share-entry"><input id="shareEmail" type="email" autocomplete="email" placeholder="name@gmail.com"><button id="addEditor" type="button" class="primary">Add editor</button></div></label>
-      <p id="shareFeedback" class="hint" role="status" aria-live="polite"></p>
-      <div id="editorList" class="editor-list"></div>
-      <div class="share-footer"><button id="copyProjectLink" type="button" class="secondary">Copy project link</button><button value="cancel" class="primary">Done</button></div>
+  <dialog id="scriptDialog" class="workbench-dialog">
+    <form method="dialog">
+      <div class="dialog-head"><div><span class="eyebrow">SCRIPT SYNC REVIEW</span><h2>Choose the source of truth</h2></div><button value="cancel" aria-label="Close">×</button></div>
+      <p>The complete script and individual scene narration differ. Nothing changes until you choose.</p>
+      <div id="scriptComparison" class="script-comparison"></div>
+      <div class="dialog-actions"><button id="scenesToScript" type="button">Replace complete script from scenes</button><button id="scriptToScenes" type="button" class="primary">Distribute script across existing scenes</button><button value="cancel">Cancel</button></div>
     </form>
   </dialog>
-  <script type="module" src="project.js?v=11"></script>
+
+  <dialog id="assetDialog" class="workbench-dialog">
+    <form method="dialog" id="assetForm">
+      <div class="dialog-head"><div><span class="eyebrow">ASSET REFERENCE</span><h2 id="assetDialogTitle">Add asset</h2></div><button value="cancel" aria-label="Close">×</button></div>
+      <input id="assetId" type="hidden">
+      <div class="form-grid">
+        <label>Name<input id="assetName" required></label>
+        <label>Type<select id="assetType"><option>Blender file</option><option>3D model</option><option>Video</option><option>Image</option><option>Audio</option><option>Reference</option><option>Other</option></select></label>
+        <label class="wide">Storage path or external URL<input id="assetLocation" placeholder="E:\3D\MY\Gaganyaan\ or https://…"></label>
+        <label>Status<select id="assetStatus"><option>Planned</option><option>In Progress</option><option>Ready</option></select></label>
+        <label>Scene numbers<input id="assetScenes" placeholder="8, 9, 11"></label><label>Animation groups<input id="assetGroups" placeholder="Upper Assembly, Final Reveal"></label>
+        <label class="wide">Notes<textarea id="assetNotes" rows="3"></textarea></label>
+      </div>
+      <p class="hint">Local Windows paths are stored as references only and cannot be opened directly by the browser.</p>
+      <div class="dialog-actions"><button value="cancel">Cancel</button><button id="saveAsset" type="button" class="primary">Save asset</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="groupDialog" class="workbench-dialog">
+    <form method="dialog">
+      <div class="dialog-head"><div><span class="eyebrow">ANIMATION PROJECT</span><h2 id="groupDialogTitle">New group</h2></div><button value="cancel" aria-label="Close">×</button></div>
+      <input id="groupId" type="hidden">
+      <div class="form-grid">
+        <label>Name<input id="groupName" required placeholder="Gaganyaan Upper Assembly"></label>
+        <label>Blender/project file<input id="groupFile" placeholder="Gaganyaan_upper.blend"></label>
+        <label class="wide">Shared resources<textarea id="groupResources" rows="3" placeholder="Crew Module model, solar arrays…"></textarea></label>
+        <label class="wide">Notes<textarea id="groupNotes" rows="3"></textarea></label>
+      </div>
+      <div class="dialog-actions"><button value="cancel">Cancel</button><button id="saveGroup" type="button" class="primary">Save group</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="shareDialog" class="workbench-dialog">
+    <form method="dialog">
+      <div class="dialog-head"><div><span class="eyebrow">COLLABORATION</span><h2>Share project</h2></div><button value="cancel" aria-label="Close">×</button></div>
+      <label>Editor’s Google email<div class="inline-entry"><input id="shareEmail" type="email" placeholder="name@gmail.com"><button id="addEditor" type="button" class="primary">Add</button></div></label>
+      <p id="shareFeedback" class="hint"></p><div id="editorList"></div>
+      <div class="dialog-actions"><button id="copyProjectLink" type="button">Copy link</button><button value="cancel" class="primary">Done</button></div>
+    </form>
+  </dialog>
+
+  <script type="module" src="workbench.js?v=1"></script>
 </body>
 </html>

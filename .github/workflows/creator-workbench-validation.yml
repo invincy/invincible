@@ -1,0 +1,32 @@
+name: Creator Workbench Validation
+
+on:
+  pull_request:
+    paths:
+      - "creator/**"
+      - "tests/creator-*.mjs"
+      - "tests/creator-*.cjs"
+      - "package.json"
+      - "package-lock.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm --prefix functions ci
+      - run: npm test
+      - run: npm run build
+      - run: npm run check
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/creator-workbench-browser.cjs
