@@ -1,4 +1,4 @@
-import{r as b,n as w,j as t}from"./index-Dpq-zMmh.js";import{E as P,S}from"./StepTreeEditor-lUVkQrL9.js";import{r as k,w as D,a as C,d as L,i as E,b as I}from"./draft-store-CK37XRaZ.js";const y=`Project: Build LMV 3 model
+import{r as b,n as w,j as t}from"./index-DafShK3y.js";import{E as P,S}from"./StepTreeEditor-CEwWCcAc.js";import{r as k,w as D,a as C,d as L,i as E,b as I}from"./draft-store-D74emIVf.js";const y=`Project: Build LMV 3 model
 Description: Complete and validate the final model.
 
 1. Research

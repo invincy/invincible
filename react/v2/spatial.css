@@ -191,3 +191,5 @@
 .v2-daily-tools{position:relative}.v2-daily-tools summary{cursor:pointer;list-style:none;min-width:44px;min-height:44px;display:grid;place-items:center;font-size:22px}.v2-daily-menu{position:absolute;right:0;top:100%;z-index:100;width:min(300px,85vw);padding:12px;background:#10232e;border:1px solid #5d818947;border-radius:12px;box-shadow:0 16px 48px #0008;white-space:normal}.v2-daily-menu .streak-buttons{display:flex;gap:4px;margin-bottom:12px}.v2-daily-menu .streak-button{flex:1;padding:8px;font-size:12px}.v2-daily-menu p{line-height:1.5}.v2-account .dashboard-notification-button{position:relative;display:grid;place-items:center;min-width:44px;padding:10px}.dashboard-notification-button svg{width:20px;height:20px}.v2-account{gap:8px}
 
 .v2-account .finance-reminder-backdrop{white-space:normal}.v2-account .finance-reminder-dialog{font-size:14px}.v2-account .finance-reminder-dialog a{white-space:normal}
+/* Account menus must sit above the connection strip below the header. */
+.v2-topbar{z-index:6}
