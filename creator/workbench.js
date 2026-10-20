@@ -75,7 +75,7 @@ function renderStoryboard(){
 }
 function previewImport(){
  try{
-  const inspected=inspectImport($("importInput").value),mapping=mapHeaders(inspected.headers);pendingImport=parseProductionStoryboard($("importInput").value,{mapping});
+  const inspected=inspectImport($("importInput").value),mapping=mapHeaders(inspected.headers);pendingImport=null;
   $("mappingPanel").hidden=false;$("detectedFormat").textContent=inspected.format.toUpperCase();
   $("mappingFields").innerHTML=IMPORT_FIELDS.map(([field,label])=>'<label>'+esc(label)+'<select data-map-field="'+field+'"><option value="-1">Not mapped</option>'+inspected.headers.map((header,index)=>'<option value="'+index+'" '+(mapping[field]===index?"selected":"")+'>'+esc(header)+'</option>').join("")+'</select></label>').join("");
   renderImportPreview();
@@ -83,7 +83,7 @@ function previewImport(){
 }
 function readMapping(){return Object.fromEntries([...$("mappingFields").querySelectorAll("[data-map-field]")].map(select=>[select.dataset.mapField,Number(select.value)]))}
 function renderImportPreview(){
- try{pendingImport=parseProductionStoryboard($("importInput").value,{mapping:readMapping()})}catch(error){$("previewMessage").textContent=error.message;$("confirmImport").disabled=true;return}
+ try{pendingImport=parseProductionStoryboard($("importInput").value,{mapping:readMapping()})}catch(error){pendingImport=null;$("importPreview").hidden=false;$("previewSummary").textContent="Map the columns";$("previewMessage").textContent=error.message;$("previewScenes").innerHTML="";$("confirmImport").disabled=true;return}
  const duplicates=findDuplicates(pendingImport.scenes,project.scenes),seconds=pendingImport.scenes.reduce((sum,scene)=>sum+Number(scene.duration||0),0);
  pendingImport.duplicates=duplicates;$("importPreview").hidden=false;$("previewSummary").textContent=pendingImport.scenes.length+" scenes · "+seconds+" seconds";
  $("previewMessage").textContent=duplicates.length?duplicates.length+" duplicate row"+(duplicates.length===1?"":"s")+" detected. Append will skip them.":"No duplicates detected. Review before importing.";
