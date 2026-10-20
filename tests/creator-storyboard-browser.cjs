@@ -117,10 +117,19 @@ const server=http.createServer((req,res)=>{
   assert.match(await page.locator('[data-mapped-preview]').innerText(),/16 duplicates skipped/);
   assert.equal(await page.locator('[data-action=import]').isDisabled(),true);
   await page.locator('.wb-import summary').click();
+  await page.setViewportSize({width:1440,height:1600});
+  await page.locator('#projectStoryboard').scrollIntoViewIfNeeded();
+  await page.evaluate(()=>{
+   window.creatorDragEvents=[];
+   for(const type of ['dragstart','dragover','drop','dragend'])document.querySelector('#projectStoryboard').addEventListener(type,event=>{
+    if(type!=='dragover'||window.creatorDragEvents.length<12)window.creatorDragEvents.push({type,tag:event.target.tagName,scene:event.target.closest('[data-scene]')?.dataset.scene});
+   });
+  });
   await scene(0).locator('[data-drag]').dragTo(scene(1).locator('[data-drag]'));
-  assert.equal(await scene(0).locator('[data-field=voiceover]').inputValue(),'भारत का मिशन 2!');
+  assert.equal(await scene(0).locator('[data-field=voiceover]').inputValue(),'भारत का मिशन 2!',JSON.stringify(await page.evaluate(()=>window.creatorDragEvents)));
   await scene(1).locator('[data-drag]').dragTo(scene(0).locator('[data-drag]'));
   assert.equal(await scene(0).locator('[data-field=voiceover]').inputValue(),'भारत का मिशन 1!');
+  await page.setViewportSize({width:1440,height:1000});
   for(const i of [0,2,10])await scene(i).locator('[data-method=Blender]').check();
   await scene(0).locator('[data-method="AI Video"]').check();await scene(1).locator('[data-method="AI Video"]').check();
   const firstId=await scene(0).getAttribute('data-scene'),thirdId=await scene(2).getAttribute('data-scene');

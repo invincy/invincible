@@ -265,7 +265,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  });
  root.addEventListener('dragstart',event=>{const handle=event.target.closest('[data-drag]');if(!handle)return;dragId=handle.dataset.drag;event.dataTransfer.setData('text/plain',dragId);event.dataTransfer.effectAllowed='move';});
  root.addEventListener('dragover',event=>{if(dragId&&event.target.closest('[data-scene]'))event.preventDefault();});
- root.addEventListener('drop',event=>{event.preventDefault();const id=event.target.closest('[data-scene]')?.dataset.scene;if(!dragId||!id||id===dragId)return;const from=scenes().findIndex(scene=>scene.id===dragId),to=scenes().findIndex(scene=>scene.id===id);if(from<0||to<0)return;const [item]=project().scenes.splice(from,1);project().scenes.splice(to,0,item);dragId='';changed();});
+ root.addEventListener('drop',event=>{event.preventDefault();dragId=event.dataTransfer?.getData('text/plain')||dragId;const id=event.target.closest('[data-scene]')?.dataset.scene;if(!dragId||!id||id===dragId)return;const from=scenes().findIndex(scene=>scene.id===dragId),to=scenes().findIndex(scene=>scene.id===id);if(from<0||to<0)return;const [item]=project().scenes.splice(from,1);project().scenes.splice(to,0,item);dragId='';changed();});
  root.addEventListener('dragend',()=>dragId='');
  return {render,open({area='Production',method,sceneId}={}){tab=area;if(method)workspace=method;active=sceneId||'';render();if(active)panel.querySelector('[data-scene="'+CSS.escape(active)+'"]')?.scrollIntoView({block:'nearest'});},reset(){tab="Storyboard";workspace="All";assetFilter="All";completionFilter="All";searchQuery="";groupBy="project";active="";message("");render();}};
 }
