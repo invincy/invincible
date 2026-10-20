@@ -1,5 +1,5 @@
 import {attachImportedGroups} from './production-model.js?v=1';
-import{createProductionWorkbench}from'./production-workbench.js?v=2';
+import{createProductionWorkbench}from'./production-workbench.js?v=3';
 import{db,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,serverTimestamp,setDoc,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
@@ -144,7 +144,7 @@ $("board").onkeydown=event=>{if((event.key==="Enter"||event.key===" ")&&!event.t
 $("contentForm").onsubmit=async event=>{
   event.preventDefault();if(savingContent||!user)return;
   const form=event.currentTarget,data=new FormData(form),existing=state.items.find(row=>row.id===editingId),generation=authGeneration;
-  const item={...(existing||{}),id:dialogId,title:data.get("title").trim(),format:data.get("format"),stage:data.get("stage"),series:data.get("series"),publishDate:data.get("publishDate"),hook:data.get("hook").trim(),script:data.get("script"),notes:data.get("notes"),animationGroups:dialogProject.animationGroups||[],assets:dialogProject.assets||[],scenes:dialogScenes.map(scene=>({...scene})),ownerUid:existing?.ownerUid||user.uid,ownerEmail:existing?.ownerEmail||(user.email||"").toLowerCase(),editorEmails:existing?.editorEmails||[]};
+  const item={...(existing||{}),id:dialogId,title:data.get("title").trim(),format:data.get("format"),stage:data.get("stage"),series:data.get("series"),publishDate:data.get("publishDate"),hook:data.get("hook").trim(),script:data.get("script"),notes:data.get("notes"),visualStyle:dialogProject.visualStyle||"",aspectRatio:dialogProject.aspectRatio||"9:16",language:dialogProject.language||"",characterBible:dialogProject.characterBible||"",continuityNotes:dialogProject.continuityNotes||"",animationGroups:dialogProject.animationGroups||[],assets:dialogProject.assets||[],scenes:dialogScenes.map(scene=>({...scene})),ownerUid:existing?.ownerUid||user.uid,ownerEmail:existing?.ownerEmail||(user.email||"").toLowerCase(),editorEmails:existing?.editorEmails||[]};
   if(!item.title){form.elements.title.setCustomValidity("Enter a working title.");form.elements.title.reportValidity();return;}
   savingContent=true;$("contentSaveError").textContent="";
   const controls=[...form.querySelectorAll("button,input,select,textarea")],disabled=controls.map(control=>control.disabled);

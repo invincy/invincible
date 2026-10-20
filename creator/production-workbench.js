@@ -2,7 +2,7 @@ import {makeScene} from './storyboard-model.js?v=2';
 import {METHODS,IMPORT_FIELDS,uid,methodsOf,inspectImport,parseProductionImport,uniqueScenes,groupFor,taskFor,setTask,animationStage,requirements,canComplete,sceneState,projectProgress,queueScenes,canonicalScript,scriptReview} from './production-model.js?v=1';
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const options=(values,current)=>values.map(value=>'<option '+(value===current?'selected':'')+'>'+esc(value)+'</option>').join('');
-export function createProductionWorkbench(root,{getProject,onChange,onFocus,copyText}){
+export function createProductionWorkbench(root,{getProject,onChange,onFocus,copyText,onCopyBrief,onSplitScript}){
  let tab='Storyboard',workspace='Blender',groupBy='project',active='',pending=[],mapping=[],importTable=null,scriptChanges=null,dragId='';
  root.classList.add('production-workbench');
  root.innerHTML='<nav class="wb-tabs" aria-label="Project areas">'+['Storyboard','Production','Assets','Overview'].map(name=>'<button type="button" data-tab="'+name+'">'+name+'</button>').join('')+'</nav><div class="wb-status" role="status" aria-live="polite"></div><div data-workbench></div>';
@@ -100,8 +100,15 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   const progress=projectProgress(project()),script=canonicalScript(project());
   return '<div class="wb-heading"><div><h2>Overview</h2><p>'+progress+'% of required work complete</p></div></div><progress max="100" value="'+progress+'"></progress>'+
    '<div class="wb-overview">'+scenes().map((scene,index)=>'<article><strong>Scene '+(index+1)+' · '+sceneState(project(),scene)+'</strong><p>'+esc(requirements(project(),scene).filter(task=>!task.done).map(task=>task.key).join(' · ')||'All production tasks ready; review scene completion.')+'</p></article>').join('')+'</div>'+
+   '<details class="wb-visual-settings"><summary>Visual settings</summary><div class="wb-detail-grid">'+
+   field('Visual style','visualStyle',project().visualStyle||'','data-project-field="visualStyle"')+
+   '<label>Aspect ratio<select data-project-field="aspectRatio">'+options(['9:16','16:9','1:1'],project().aspectRatio||'9:16')+'</select></label>'+
+   field('Language','language',project().language||'','data-project-field="language"')+
+   field('Character bible','characterBible',project().characterBible||'','data-project-field="characterBible"')+
+   field('Continuity and location notes','continuityNotes',project().continuityNotes||'','data-project-field="continuityNotes"')+'</div>'+
+   (onCopyBrief?'<button type="button" data-action="copy-brief">Copy generator brief</button>':'')+'</details>'+
    '<details><summary>Project hook and notes</summary>'+field('Hook','hook',project().hook||'','data-project-field="hook"')+field('Project notes','notes',project().notes||'','data-project-field="notes"')+'</details>'+
-   '<details class="wb-script"><summary>Script and voiceover · review synchronization</summary><p>Scene narration is canonical. The existing full-script draft is retained separately. Applying a draft requires one paragraph per scene and a review.</p><label>Chronological scene script<textarea readonly rows="8" data-canonical-script>'+esc(script)+'</textarea></label><button type="button" data-action="copy-script">Copy chronological script</button><label>Full-script draft<textarea rows="8" data-script-draft>'+esc(project().script||script)+'</textarea></label><div class="wb-actions"><button type="button" data-action="script-from-scenes">Review scenes → full script</button><button type="button" data-action="review-script">Review full script → scenes</button></div><div data-script-review></div></details>';
+   '<details class="wb-script"><summary>Script and voiceover · review synchronization</summary><p>Scene narration is canonical. The existing full-script draft is retained separately. Applying a draft requires one paragraph per scene and a review.</p><label>Chronological scene script<textarea readonly rows="8" data-canonical-script>'+esc(script)+'</textarea></label><button type="button" data-action="copy-script">Copy chronological script</button><label>Full-script draft<textarea rows="8" data-script-draft>'+esc(project().script||script)+'</textarea></label><div class="wb-actions"><button type="button" data-action="script-from-scenes">Review scenes → full script</button><button type="button" data-action="review-script">Review full script → scenes</button></div><div data-script-review></div>'+(onSplitScript?'<button type="button" data-action="split-script">Create rough shots from draft</button>':'')+'</details>';
  }
  function render(){
   if(!project())return;
@@ -206,6 +213,8 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
     const next=queueScenes(project(),workspace).find(item=>workspace==='Editing'?!item.editingDone:workspace==='All'||workspace==='Assets'?sceneState(project(),item)!=='Completed':!taskFor(project(),item,workspace).ready);
     if(!next){message('No pending scenes in this workspace.');return;}active=next.id;render();panel.querySelector('[data-scene="'+CSS.escape(next.id)+'"]')?.scrollIntoView({block:'nearest'});return;
    }
+   if(action==='copy-brief'&&onCopyBrief){await onCopyBrief();message('Generator brief copied.');return;}
+   if(action==='split-script'&&onSplitScript){onSplitScript();return;}
    if(action==='copy-script'){await copyText(canonicalScript(project()));message('Chronological script copied.');return;}
    if(action==='script-from-scenes'){
     scriptChanges={direction:'from',before:project().script||'',after:canonicalScript(project())};

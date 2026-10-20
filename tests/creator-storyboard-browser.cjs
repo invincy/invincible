@@ -49,6 +49,8 @@ const server=http.createServer((req,res)=>{
   assert.equal(await dialog.locator('.wb-production-card').count(),1);
   await dialog.locator('[data-workspace="AI Video"]').click();
   assert.equal(await dialog.locator('.wb-production-card').count(),1);
+  await dialog.locator('[data-tab=Overview]').click();await dialog.locator('.wb-visual-settings summary').click();
+  await dialog.locator('[data-project-field=visualStyle]').fill('Space documentary');
   await dialog.locator('[data-tab=Assets]').click();await dialog.locator('[data-action=add-asset]').click();
   await dialog.locator('[data-asset-field=name]').fill('Rocket reference');
   await dialog.locator('[data-asset-field=path]').fill('E:\\3D\\draft.blend');
@@ -99,12 +101,17 @@ const server=http.createServer((req,res)=>{
   const scene=i=>page.locator('.wb-scene').nth(i);
   assert.equal(await scene(0).locator('[data-field=voiceover]').inputValue(),'भारत का मिशन 1!');
   assert.equal(await scene(15).locator('[data-field=timing]').inputValue(),'60–64s');
-  assert.equal(await page.locator('#fullScript').inputValue(),'Existing manual draft');
-  await page.locator('.setup-stack > details').nth(1).locator(':scope > summary').click();
-  await page.locator('#copyAiBrief').click();
+  assert.equal(await page.locator('.setup-stack,.importer,#fullScript').count(),0);
+  await page.locator('[data-tab=Overview]').click();
+  await page.locator('.wb-script summary').click();
+  assert.equal(await page.locator('[data-script-draft]').inputValue(),'Existing manual draft');
+  await page.locator('.wb-visual-settings summary').click();
+  await page.locator('[data-project-field=visualStyle]').fill('Cinematic documentary');
+  await page.locator('[data-project-field=aspectRatio]').selectOption('16:9');
+  await page.locator('[data-action=copy-brief]').click();
   await page.waitForFunction(()=>window.copied?.includes('FULL RECORDING VOICEOVER'));
   assert.match(await page.evaluate(()=>window.copied),/FULL RECORDING VOICEOVER\nभारत का मिशन 1!/);
-  await page.locator('.setup-stack > details').nth(1).locator(':scope > summary').click();
+  await page.locator('[data-tab=Storyboard]').click();
   // Duplicate paste is reviewed but cannot append identical rows.
   await page.locator('.wb-import summary').click();await paste.fill(table);await page.locator('[data-action=preview]').click();
   assert.match(await page.locator('[data-mapped-preview]').innerText(),/16 duplicates skipped/);
@@ -184,7 +191,9 @@ const server=http.createServer((req,res)=>{
   await page.evaluate(item=>{const data=JSON.parse(localStorage.getItem('test.creator'));data['creatorProjects/legacy']=item;localStorage.setItem('test.creator',JSON.stringify(data));},legacy);
   await page.goto(base+'project.html?id=legacy');await page.locator('.wb-scene').waitFor();assert.equal(await scene(0).locator('[data-field=sceneState]').inputValue(),'Completed');
   await scene(0).locator('[data-action=expand]').click();assert.equal(await scene(0).locator('[data-field=imagePrompt]').inputValue(),'Original prompt');
-  assert.equal(await page.locator('#fullScript').inputValue(),'Keep draft');
+  await page.locator('[data-tab=Overview]').click();await page.locator('.wb-script summary').click();
+  assert.equal(await page.locator('[data-script-draft]').inputValue(),'Keep draft');
+  await page.locator('[data-tab=Storyboard]').click();
   for(const width of [320,393,768,1280,1920]){
    await page.setViewportSize({width,height:900});
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'No horizontal overflow at '+width);

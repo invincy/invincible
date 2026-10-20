@@ -64,3 +64,6 @@ Verification is recorded in docs/code-review.md. No production data or Firebase 
 
 
 New Content and Edit content now use the same production workbench over an isolated in-memory project draft. Only the explicit Create and open project / Save changes action writes scenes, animationGroups and assets to the existing creatorProjects document. Nested arrays are cloned on open, so cancelling changes to shared groups/assets does not mutate the pipeline's live records. Metadata timestamps and unknown fields continue to come from the original document. No storage paths or rules changed.
+
+
+The standalone script/settings/import panels were removed from the saved-project page. Overview edits the same script, visualStyle, aspectRatio, language, characterBible and continuityNotes properties; no project data is removed. The generator brief and rough-script action use the canonical project state rather than duplicate DOM fields. New Content persists these optional visual properties alongside the isolated scenes/groups/assets draft.

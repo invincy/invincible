@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="../site-nav.css?v=15">
   <link rel="stylesheet" href="project.css?v=8">
   <link rel="stylesheet" href="storyboard.css?v=5">
-  <link rel="stylesheet" href="production-workbench.css?v=1">
+  <link rel="stylesheet" href="production-workbench.css?v=3">
 </head>
 <body class="project-page">
   <nav class="global-nav" aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
@@ -31,30 +31,6 @@
       <section id="projectStoryboard" aria-label="Storyboard editor"></section>
       <div class="scene-primary-actions"><button id="openAssets" class="secondary" hidden>Project assets</button><button id="startProduction" class="primary" hidden>Work through scenes →</button></div>
     </section>
-
-    <section class="setup-stack" aria-label="Prepare the production brief">
-      <details class="panel collapsible-panel">
-        <summary><div><span class="eyebrow">RECORDING SCRIPT</span><h2>Full-script draft</h2><p>Scene narration is canonical. Review synchronization in Overview.</p></div><span class="collapse-icon">⌄</span></summary>
-        <div class="collapse-body"><textarea id="fullScript" rows="10" placeholder="Your complete recording narration…"></textarea><button id="useShotVoiceover" type="button" class="text-button" hidden>Build narration from shot voiceovers</button><p class="hint">The generator brief uses this narration unchanged.</p><details class="script-alternative"><summary>Have only a plain script?</summary><p class="hint">This older quick split makes rough shots from word count. It replaces your current shot table after confirmation.</p><button id="splitScript" class="text-button">Create rough shots from script</button></details></div>
-      </details>
-
-      <details class="panel collapsible-panel">
-        <summary><div><span class="eyebrow">LOOK & CONTINUITY</span><h2>Visual settings</h2><p>Shared style and character reference for drafting scene prompts</p></div><span class="collapse-icon">⌄</span></summary>
-        <div class="collapse-body settings-panel"><label>Visual style<input id="visualStyle" placeholder="Cinematic realistic, warm documentary…"></label><div class="two"><label>Aspect ratio<select id="aspectRatio"><option>9:16</option><option>16:9</option><option>1:1</option></select></label><label>Language<input id="language" placeholder="Gujarati + English"></label></div><label>Character bible<textarea id="characterBible" rows="3" placeholder="Age, face, hair, clothing and defining features…"></textarea></label><label>Continuity and location notes<textarea id="continuityNotes" rows="3" placeholder="Keep the same people, locations, colours and props…"></textarea></label><div class="generator-brief"><div><span class="eyebrow">OPTIONAL</span><strong>Generate a production brief</strong><p>Uses the full voiceover and these visual settings when you want detailed generation prompts.</p></div><button id="copyAiBrief" class="primary">Copy generator brief</button></div></div>
-      </details>
-    </section>
-
-    <details class="panel collapsible-panel importer" aria-labelledby="importHeading">
-      <summary><div><span class="eyebrow">OPTIONAL</span><h2 id="importHeading">More tools</h2><p>Import a completed prompt table from another app</p></div><span class="collapse-icon">⌄</span></summary>
-      <div class="collapse-body"><div class="import-title"><div><p>Use the shot table at the top for your four columns. This optional importer adds completed character, image, and video prompts from a Markdown table, JSON array, or spreadsheet.</p></div><div class="import-actions"><select id="importMode" aria-label="Import mode"><option value="append">Append scenes</option><option value="replace">Replace scenes</option></select><button id="reviewImport" class="primary">Review breakdown</button></div></div><textarea id="tableInput" rows="7" spellcheck="false" placeholder="| Scene | Duration | Voiceover | Character Prompt | Image Prompt | Video Prompt |&#10;|---|---|---|---|---|---|&#10;| 1 | 7 sec | Your narration… | Character reference… | Visual prompt… | Motion prompt… |"></textarea>
-      <div class="import-footer"><span id="importFeedback" class="hint">Compatible with ChatGPT, Gemini, Claude and copied spreadsheet tables.</span><button id="pasteClipboard" class="text-button">Paste from clipboard</button></div>
-      <div id="importPreview" class="import-preview" hidden>
-        <div><span class="eyebrow">IMPORT CHECK</span><strong id="previewSummary">0 scenes detected</strong><p id="previewIssues"></p></div>
-        <div id="previewRows" class="preview-rows"></div>
-        <button id="confirmImport" class="primary">Import scenes</button>
-      </div>
-      </div>
-    </details>
 
   </main>
 
@@ -104,6 +80,6 @@
       <div class="share-footer"><button id="copyProjectLink" type="button" class="secondary">Copy project link</button><button value="cancel" class="primary">Done</button></div>
     </form>
   </dialog>
-  <script type="module" src="project.js?v=12"></script>
+  <script type="module" src="project.js?v=13"></script>
 </body>
 </html>

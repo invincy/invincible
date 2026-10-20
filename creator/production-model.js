@@ -26,6 +26,13 @@ function markdownRow(line){
 export function inspectImport(input){
  const text=String(input).replace(/^\uFEFF/,'').replace(/^\n+|\n+$/g,'').replace(/^\x60\x60\x60[^\n]*\n/,'').replace(/\n\x60\x60\x60$/,'');
  if(!text)throw Error('Paste a storyboard first.');
+ if(/^[\\[{]/.test(text.trimStart())){
+  let data;try{data=JSON.parse(text);}catch{throw Error("The JSON is incomplete or invalid.");}
+  const items=Array.isArray(data)?data:data.scenes;
+  if(!Array.isArray(items)||!items.length||items.some(item=>!item||typeof item!=="object"||Array.isArray(item)))throw Error("JSON must contain a non-empty array of scene objects.");
+  const headers=[...new Set(items.flatMap(item=>Object.keys(item)))];
+  return {format:"JSON",headers,rows:items.map(item=>headers.map(key=>Array.isArray(item[key])?item[key].join("; "):String(item[key]??""))),mapping:headers.map(key=>IMPORT_FIELDS.find(field=>aliases[field].includes(norm(key)))||"")};
+ }
  const lines=text.split(/\r?\n/);
  const separator=lines.findIndex(line=>line.includes('|')&&markdownRow(line).every(cell=>/^:?-{3,}:?$/.test(cell.replace(/\s/g,''))));
  let rows,format;
