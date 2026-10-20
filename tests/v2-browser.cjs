@@ -77,7 +77,7 @@ window.listenerCount=()=>listeners.size;
 (async () => {
   fs.mkdirSync(output,{recursive:true});
   await esbuild.build({
-    entryPoints:[path.join(root,'react/v2/main.jsx')],bundle:true,outfile:path.join(output,'fixture.js'),jsx:'automatic',
+    stdin:{contents:"import './react/src/app-shell.css';import './react/v2/main.jsx';",resolveDir:root,loader:'jsx'},bundle:true,outfile:path.join(output,'fixture.js'),jsx:'automatic',
     plugins:[{name:'read-only-fixture',setup(build){
       build.onResolve({filter:/firebase$/},args=>args.path==='../src/firebase'||args.path==='./firebase'?{path:'auth',namespace:'fixture'}:null);
       build.onResolve({filter:/^firebase\/firestore$/},()=>({path:'firestore',namespace:'fixture'}));
@@ -127,6 +127,8 @@ window.listenerCount=()=>listeners.size;
         await page.waitForFunction(()=>window.reads.some(path=>path.includes('/streaks')));
         assert.deepEqual(await page.evaluate(()=>[...new Set(window.reads)].map(value=>value.split('/').slice(0,3).join('/')).sort()),['users/alice/dailyPlans','users/alice/finance','users/alice/streaks','users/alice/tasks']);
         assert.equal(await page.evaluate(()=>window.writes),0);
+        assert.equal(await page.evaluate(()=>getComputedStyle(document.body).paddingTop),'0px','main dashboard has no legacy shell header gap');
+        assert.equal(await page.evaluate(()=>getComputedStyle(document.body).paddingBottom),'0px','main dashboard has no legacy shell bottom-nav gap');
 
         // All nine real page links sit on the Orb; the Dashboard and Workspace
         // remain separate, and the center-to-island route lines are gone.
