@@ -1,9 +1,10 @@
-import {looksLikeStoryboard,makeScene,parseStoryboard,storyboardDuration} from './storyboard-model.js?v=2';
+import {parseProductionImport as parseStoryboard,uniqueScenes} from './production-model.js?v=1';
+import {looksLikeStoryboard,makeScene,storyboardDuration} from './storyboard-model.js?v=2';
 const columns=[['voiceover','Voiceover'],['visual','Visual/Animation'],['assets','Assets'],['duration','Duration (sec)']];
 const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 export function createStoryboardEditor(root,{getScenes,onChange,onImport=()=>{},onFocus=()=>{},onDraft=()=>{},showProduction=false,saveHint='Changes save automatically.',title='Storyboard',intro='Plan each shot. Your full voiceover stays separate.',initialImportOpen=false}) {
   root.classList.add('storyboard');
-  root.innerHTML='<div class="storyboard-heading"><div><h3>'+escape(title)+'</h3><p>'+escape(intro)+'</p></div><button type="button" data-add>+ Add shot</button></div><details class="storyboard-import"><summary>Paste a table from ChatGPT</summary><p>Paste tab-separated columns Voiceover, Visual/Animation, Assets or Assets Required, and Duration or Timeline (for example 0–4s). A preview appears automatically. Check it, then import the shots.</p><label>Paste storyboard<textarea data-paste rows="5" spellcheck="false" placeholder="Voiceover&#9;Visual / Animation&#9;Assets Required&#9;Timeline"></textarea></label><div class="storyboard-tools"><button type="button" data-review>Preview table</button><label>Import mode<select data-mode><option value="append">Append shots</option><option value="replace">Replace shots</option></select></label><button type="button" data-import hidden>Add reviewed shots</button></div><div data-preview hidden></div></details><p data-feedback role="status" aria-live="polite"></p><div data-rows></div><p data-empty>No shots yet. Add one or paste your table above.</p>';
+  root.innerHTML='<div class="storyboard-heading"><div><h3>'+escape(title)+'</h3><p>'+escape(intro)+'</p></div><button type="button" data-add>+ Add shot</button></div><details class="storyboard-import"><summary>Paste a table from ChatGPT</summary><p>Paste TSV columns Voiceover, Visual/Animation, Assets Required, Timeline, or a Markdown scene/prompt table. Rich production columns are supported. A preview appears automatically. Check it, then import the shots.</p><label>Paste storyboard<textarea data-paste rows="5" spellcheck="false" placeholder="Voiceover&#9;Visual / Animation&#9;Assets Required&#9;Timeline"></textarea></label><div class="storyboard-tools"><button type="button" data-review>Preview table</button><label>Import mode<select data-mode><option value="append">Append shots</option><option value="replace">Replace shots</option></select></label><button type="button" data-import hidden>Add reviewed shots</button></div><div data-preview hidden></div></details><p data-feedback role="status" aria-live="polite"></p><div data-rows></div><p data-empty>No shots yet. Add one or paste your table above.</p>';
   const find=selector=>root.querySelector(selector); let pending=[],pendingSource=null,firstRender=true,newlyImportedId='';
   const message=text=>find('[data-feedback]').textContent=text;
   const clearPreview=()=>{message('');pending=[];find('[data-preview]').hidden=true;find('[data-import]').hidden=true;};
@@ -32,13 +33,15 @@ export function createStoryboardEditor(root,{getScenes,onChange,onImport=()=>{},
   find('[data-paste]').addEventListener('input',()=>{
     clearPreview();
     const text=find('[data-paste]').value;
-    if(text.includes('\t')&&text.includes('\n'))review();
+    if((text.includes('\t')||text.includes('|'))&&text.includes('\n'))review();
   });
   find('[data-review]').onclick=review;
   find('[data-import]').onclick=()=>{
     if(!pending.length)return;
     const replace=find('[data-mode]').value==='replace';
     if(replace&&getScenes().length&&!confirm('Replace all existing shots, including their prompts and production progress?'))return;
+    if(!replace)pending=uniqueScenes(getScenes(),pending).scenes;
+    if(!pending.length){message('All imported scenes already exist. No duplicates added.');return;}
     const added=pending.length,narration=pending.map(scene=>scene.voiceover).filter(Boolean).join('\n\n');
     if(showProduction)newlyImportedId=pending[0]?.id||'';
     onChange(replace?pending:[...getScenes(),...pending]);

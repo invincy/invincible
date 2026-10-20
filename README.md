@@ -135,3 +135,12 @@ On the project page, **Scenes** is the main workspace. Paste the four-column tab
 Every shot can be edited, added, removed or moved with the arrow buttons. Desktop shows four planning columns; phones stack the fields into shot cards. Saving opens the project workspace, where the same scenes remain editable and autosave. Full narration, production notes, workflow stages, advanced prompt import and asset tracking remain available. Pasting directly into the storyboard leaves an existing full narration unchanged.
 
 Run `node --test tests/creator-storyboard.mjs` for import/compatibility tests and `node tests/creator-storyboard-browser.cjs` for the controlled storage/browser workflow. The latter is also part of `npm run test:browser` and accepts `CHROMIUM_EXECUTABLE`, or uses Playwright's installed Chromium.
+
+
+## Creator production workbench
+
+Open a content project to use **Storyboard**, **Production**, **Assets** and **Overview**. Paste a four-column TSV or six-column Markdown table into Storyboard, review column mapping and every row, then append scenes. Exact duplicates are skipped. Assign multiple production methods, switch to Blender or AI Video queues, and group Blender scenes under one animation project with shared file/resources and modeling/animation/rendering flags. Editing includes scenes needing final assembly. Producing an asset never completes its scene automatically.
+
+Assets keeps file/URL metadata with scene and animation-group associations. Overview shows required work and a chronological script derived from narration; full-script edits are applied to scenes only after a review. Existing project scripts, hooks, notes, sharing, focused prompt editing and asset links remain available. Details and storage constraints are recorded in [Firebase storage notes](docs/firebase-storage.md).
+
+Run the repository checks and Creator browser suite: npm run test, npm run build, npm run check, npm run test:browser. CI runs these for Creator changes. Signed-in Firebase access needs separate verification.

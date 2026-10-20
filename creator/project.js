@@ -1,5 +1,6 @@
 import{looksLikeStoryboard,makeScene,parseStoryboard}from'./storyboard-model.js?v=2';
-import{createStoryboardEditor}from'./storyboard-editor.js?v=5';
+import{createProductionWorkbench}from'./production-workbench.js?v=1';
+import{projectProgress,canComplete,canonicalScript,parseProductionImport,uniqueScenes}from'./production-model.js?v=1';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{doc,getDoc,onSnapshot,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{inspectScenes,parseSceneInput,splitVoiceoverScript}from"./scene-tools.js?v=2";
@@ -15,21 +16,10 @@ function attr(value){return esc(value).replace(/"/g,"&quot;").replace(/'/g,"&#39
 function status(message,type=""){$("status").textContent=message;$("status").className="sync-status "+type;}
 function focusMessage(message,type=""){$("focusToast").textContent=message;$("focusToast").className="focus-toast "+type;}
 
-const storyboard=createStoryboardEditor($("projectStoryboard"),{
-  getScenes:()=>project?.scenes||[],
-  onChange:scenes=>{project.scenes=scenes;queueSave();renderSceneWorkspace();},
-  onFocus:id=>openFocus(id,"characterPrompt"),
-  onDraft:id=>{
-    const scene=project.scenes.find(item=>item.id===id);if(!scene)return;
-    if(!scene.characterPrompt?.trim()&&project.characterBible?.trim())scene.characterPrompt=project.characterBible.trim();
-    if(!scene.imagePrompt?.trim())scene.imagePrompt=starterPrompt(scene,"image");
-    if(!scene.videoPrompt?.trim())scene.videoPrompt=starterPrompt(scene,"video");
-    queueSave();
-  },
-  showProduction:true,
-  onImport:()=>{if(!project.script?.trim()){project.script=project.scenes.map(scene=>scene.voiceover).filter(Boolean).join("\n\n");$("fullScript").value=project.script;$("useShotVoiceover").hidden=true;queueSave();}},
-  title:"Scenes",intro:"Paste the four-column table, then edit each scene and open Scene production for character, image, and video prompts. Changes save automatically.",
-  initialImportOpen:()=>!project?.scenes?.length
+const storyboard=createProductionWorkbench($("projectStoryboard"),{
+ getProject:()=>project,
+ onChange:()=>{if(document.activeElement!==$("fullScript"))$("fullScript").value=project.script||"";queueSave();renderSceneWorkspace();},
+ onFocus:id=>openFocus(id,"characterPrompt"),copyText
 });
 const refreshScriptNotice=storyboard.watchSource($("fullScript"));
 
@@ -48,7 +38,7 @@ function assetsReady(scene){
 
 function projectCompletion(){
   const scenes=project?.scenes||[];
-  return scenes.length?Math.round(scenes.filter(scene=>scene.completed).length/scenes.length*100):0;
+  return projectProgress(project);
 }
 
 function render(){
@@ -147,7 +137,7 @@ SHOT PLAN JSON
 ${JSON.stringify(shots,null,2)}
 
 FULL RECORDING VOICEOVER
-${project.script?.trim()||shots.map(shot=>shot.voiceover).join("\n\n")}`;
+${canonicalScript(project)}`;
   }
   return `You are the scene director for a short-form video. Break the exact voiceover below into production-ready scenes and write generation prompts.
 
@@ -233,7 +223,7 @@ function renderFocus(){
   $("nextField").disabled=fieldIndex===focusFields.length-1;
   $("copyFocus").textContent="Copy "+focusLabels[focusState.field].toLowerCase();
   $("skipScene").textContent=scene.skipped?"Reopen scene":"Skip for now";
-  $("completeScene").textContent=scene.completed?"Reopen scene":assetsReady(scene)?"Scene complete →":"Complete anyway →";
+  $("completeScene").textContent=scene.completed?"Reopen scene":canComplete(project,scene)?"Scene complete →":"Production tasks pending";
   $("completeScene").classList.toggle("primary",!scene.completed);
   $("completeScene").classList.toggle("secondary",scene.completed);
   renderRail();
@@ -284,7 +274,8 @@ async function completeFocusedScene(){
   const scene=project.scenes.find(item=>item.id===focusState.sceneId),index=project.scenes.indexOf(scene);
   if(!scene)return;
   if(scene.completed){scene.completed=false;focusMessage("Scene reopened.","ok");render();renderFocus();await save();return;}
-  scene.completed=true;scene.skipped=false;
+  if(!canComplete(project,scene))return focusMessage("Finish required production work, voiceover and editing in the workbench first.","error");
+  scene.completed=true;scene.sceneState="Completed";scene.skipped=false;
   const next=nextOpenScene(index);
   render();await save();
   if(next){focusState.sceneId=next.id;focusState.field="voiceover";project.productionState={...focusState,open:true};renderFocus();focusMessage("Scene complete. Moved to the next unfinished scene.","ok");await save();}
@@ -369,7 +360,7 @@ $("splitScript").onclick=async()=>{
 };
 
 $("reviewImport").onclick=()=>{
-  try{const pasted=$("tableInput").value;pendingImportKind=looksLikeStoryboard(pasted)?"storyboard":"advanced";pendingImport=pendingImportKind==="storyboard"?parseStoryboard(pasted):parseSceneInput(pasted,makeScene);renderImportPreview();$("importFeedback").textContent="Review the shots below, then confirm the import.";$("importFeedback").classList.add("toast");}
+  try{const pasted=$("tableInput").value;pendingImportKind="storyboard";pendingImport=pasted.trim().startsWith("[")||pasted.trim().startsWith("{")?parseSceneInput(pasted,makeScene):parseProductionImport(pasted);pendingImport=uniqueScenes(project.scenes,pendingImport).scenes;renderImportPreview();$("importFeedback").textContent="Review the shots below, then confirm the import.";$("importFeedback").classList.add("toast");}
   catch(error){pendingImport=[];$("importPreview").hidden=true;$("importFeedback").textContent=error.message;$("importFeedback").classList.remove("toast");}
 };
 
@@ -418,7 +409,7 @@ $("sceneRail").onclick=event=>{
 
 $("focusTextarea").oninput=event=>{
   const scene=project.scenes.find(item=>item.id===focusState.sceneId);
-  if(scene){scene[focusState.field]=event.target.value;if(scene.completed)scene.completed=false;queueSave();}
+  if(scene){scene[focusState.field]=event.target.value;if(scene.completed)scene.completed=false;if(focusState.field==="voiceover")scene.voiceoverReady=false;queueSave();}
 };
 
 $("openAssets").onclick=()=>{renderProjectAssets();$("assetsDialog").showModal();};
@@ -426,7 +417,7 @@ $("closeAssets").onclick=()=>$("assetsDialog").close();
 $("assetList").addEventListener("input",event=>{
   const container=event.target.closest("[data-asset-scene]"),scene=project.scenes.find(item=>item.id===container?.dataset.assetScene);
   if(!scene)return;
-  if(event.target.dataset.assetCheck){scene[event.target.dataset.assetCheck]=event.target.checked;render();renderProjectAssets();}
+  if(event.target.dataset.assetCheck){scene[event.target.dataset.assetCheck]=event.target.checked;if(!event.target.checked)scene.completed=false;render();renderProjectAssets();}
   if(event.target.dataset.assetUrl)scene[event.target.dataset.assetUrl]=event.target.value;
   queueSave();
 });
