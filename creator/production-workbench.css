@@ -162,3 +162,60 @@
  .production-workbench .wb-actions button{font-size:12px}
 }
 @media(prefers-reduced-motion:reduce){.production-workbench *{scroll-behavior:auto;transition:none}}
+
+/* Number rail and separate scene sections keep routine work inside the viewport. */
+.production-workbench .wb-focus-layout{grid-template-columns:56px minmax(0,1fr);gap:12px}
+.production-workbench .wb-focus-layout.is-collapsed{grid-template-columns:minmax(0,1fr)}
+.production-workbench .wb-navigator{padding-right:4px;border:0}
+.production-workbench .wb-nav-heading{display:none}
+.production-workbench .wb-nav-entry{display:block;margin:0 0 5px}
+.production-workbench .wb-nav-entry>button[data-select-scene]{display:flex;align-items:center;justify-content:center;flex:none;width:42px;max-width:none;min-width:42px;min-height:40px;margin:auto;padding:7px;font-size:13px;font-weight:500;color:#8f899f;background:transparent;border:1px solid transparent;box-shadow:none;cursor:pointer}
+.production-workbench .wb-nav-entry>button[data-scene-status=completed]{color:#87dab0;background:rgba(77,180,128,.09)}
+.production-workbench .wb-nav-entry>button[data-scene-status=progress]{color:#c1a5ff;background:rgba(160,114,242,.09)}
+.production-workbench .wb-nav-entry>button[aria-current=true]{border-color:#a993e0;background:rgba(169,137,236,.18);box-shadow:none}
+.wb-nav-group{padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid var(--wb-line)}
+.wb-editor-tabs{display:flex;gap:4px;padding:5px 10px;border-bottom:1px solid var(--wb-line)}
+.production-workbench .wb-editor-tabs button{min-height:30px;padding:4px 12px;font-size:12px;background:transparent}
+.production-workbench .wb-editor-tabs button[aria-selected=true]{color:#d5c2ff;background:rgba(181,151,255,.12)}
+.wb-prompt-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:5px 0 12px}
+.wb-prompt-toolbar label{max-width:240px}
+.production-workbench .wb-details{border:0;padding:0}
+.production-workbench .wb-details:has(.wb-pane[hidden])>.wb-pane:not([hidden]){padding:0}
+.wb-prompt-fields{border:0;margin:0}
+.wb-prompt-fields>div{margin-bottom:10px}
+.wb-writing{gap:10px}
+.production-workbench .wb-writing textarea{min-height:56px;padding:8px 10px;line-height:1.6;font-size:15px}
+.production-workbench .wb-scene-navigation{margin-bottom:6px}
+.project-page .project-header{padding-top:7px;padding-bottom:6px}
+body.project-page.creator-focus-mode{height:100dvh;overflow:hidden;display:flex;flex-direction:column;padding-top:48px!important}
+.creator-focus-mode>.project-header,.creator-focus-mode>.project-progress,.creator-focus-mode>.sync-status{flex:none}
+.project-page.creator-focus-mode #app{flex:1;min-height:0;padding:6px 0 10px;width:calc(100% - 20px)}
+.project-page.creator-focus-mode .project-storyboard-panel{height:100%;min-height:0;padding:6px 10px;margin:0;display:flex;flex-direction:column;border-radius:12px}
+.creator-focus-mode #projectStoryboard{height:100%;min-height:0;display:flex;flex-direction:column}
+.creator-focus-mode .wb-commandbar{flex:none;position:static;top:auto;margin-bottom:4px}
+.creator-focus-mode [data-workbench]{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.creator-focus-mode .wb-filters{flex:none;margin-bottom:4px;padding-bottom:6px}
+.creator-focus-mode .wb-focus-layout{flex:1;min-height:0;overflow:hidden}
+.creator-focus-mode .wb-navigator{position:static;min-height:0;height:100%;display:flex;flex-direction:column}
+.creator-focus-mode .wb-nav-list{max-height:none;min-height:0;flex:1}
+.creator-focus-mode .wb-active-editor{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden}
+.creator-focus-mode .wb-scene-navigation,.creator-focus-mode .wb-scene-controls,.creator-focus-mode .wb-editor-tabs{flex:none}
+.creator-focus-mode .wb-active-editor>.wb-scene{display:flex;flex-direction:column;min-height:0;flex:1;margin-bottom:0}
+.creator-focus-mode .wb-scene-content{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:12px}
+.creator-focus-mode .wb-pane{min-height:0}
+.creator-focus-mode .wb-status:not(:empty){flex:none}
+.wb-commandbar:not(:has(details[open])){top:48px}
+@media(max-width:700px){
+ .production-workbench .wb-focus-layout{grid-template-columns:44px minmax(0,1fr);gap:6px}
+ .production-workbench .wb-focus-layout.is-collapsed{grid-template-columns:minmax(0,1fr)}
+ .production-workbench .wb-nav-entry>button[data-select-scene]{width:36px;min-width:36px;min-height:40px}
+ .wb-navigator{border:0;padding-bottom:0}
+ .production-workbench .wb-scene-jump{max-width:112px}
+ .production-workbench .wb-scene-navigation{gap:3px}
+ .production-workbench .wb-scene-navigation>span{display:none}
+ .creator-focus-mode .wb-scene-content{padding:8px}
+ .creator-focus-mode .wb-scene-controls{gap:3px;padding:5px}
+ .production-workbench .wb-editor-tabs button{padding:4px 9px}
+ .project-page.creator-focus-mode #app{width:calc(100% - 10px)}
+ .project-page.creator-focus-mode .project-storyboard-panel{padding:4px}
+}
