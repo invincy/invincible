@@ -44,3 +44,5 @@ dialog{width:min(650px,calc(100% - 28px));max-height:calc(100vh - 28px);border:1
  #contentDialog .dialog-actions .secondary,#contentDialog .dialog-actions .primary{grid-row:2}
  #contentDialog .content-project-details{padding-inline:4px}
 }
+
+.creator-page{--hot:#b6a5f7;--pink:#65cfdf;--text:#e8e6f0;--muted:#a49cb5;background:radial-gradient(ellipse at 18% 0,rgba(111,84,166,.09),transparent 45%),#0e111a;font-family:Roboto,"Noto Sans Devanagari",system-ui,sans-serif}.creator-page #contentDialog{background:#11141f;border-color:rgba(180,172,219,.18);box-shadow:0 24px 80px #0008}.creator-page #contentDialog .dialog-title h2{font-family:Roboto,system-ui,sans-serif}.creator-page #contentDialog .dialog-actions{background:#151925;border-color:rgba(180,172,219,.16)}.creator-page #contentDialog .primary{background:#c2b4ff;color:#231a3b;box-shadow:none}.creator-page #contentDialog .wb-tabs{background:transparent}.creator-page #contentDialog .content-title-field input{background:#0d111c;border-color:rgba(180,172,219,.14);color:#e8e6f0}

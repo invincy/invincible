@@ -73,3 +73,6 @@ The legacy focused scene overlay and standalone duplicate panels are no longer t
 
 
 Compact-workflow follow-up: pagination, active row, collapsed asset rows and section folds are presentation state. Only the 8/16/All row-count preference is saved under invincible.creator.pageSize in local browser storage; no cloud scene list is shortened or reordered by paging. The creation dialog's script/hook/notes controls are now hidden serialization fields synchronized with Overview, removing duplicate visible editors while preserving existing project properties. No migration, collection, security-rule or auth changes.
+
+
+Scene-navigator follow-up: focused/all mode, active scene, sidebar visibility and expansion are in-memory presentation state over the existing scenes array. No scene copies or per-mode persistence systems were introduced. Previous/Next and the sidebar read the same method/readiness/completion/search filter result; reordering writes canonical scene IDs in their new array order. Legacy local row-count preferences are no longer read because the table/pagination UI has been removed. Sharing, saves, group tasks and imports retain existing document fields and permissions.

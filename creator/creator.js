@@ -1,5 +1,5 @@
 import {attachImportedGroups} from './production-model.js?v=1';
-import{createProductionWorkbench}from'./production-workbench.js?v=7';
+import{createProductionWorkbench}from'./production-workbench.js?v=8';
 import{db,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,serverTimestamp,setDoc,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
