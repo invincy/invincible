@@ -8,25 +8,25 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../site-nav.css?v=15">
-  <link rel="stylesheet" href="creator.css?v=5">
-  <link rel="stylesheet" href="production-workbench.css?v=5">
+  <link rel="stylesheet" href="creator.css?v=6">
+  <link rel="stylesheet" href="production-workbench.css?v=6">
 </head>
 <body class="creator-page">
   <nav class="global-nav" aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
   <script type="module" src="../site-nav.js?v=7"></script>
 
   <header class="studio-header">
-    <div><span class="eyebrow">CONTENT COMMAND</span><h1>Creator Studio</h1><p>Move every idea from spark to published.</p></div>
-    <div class="header-actions"><button id="testProject" class="secondary">Run test project</button><button id="addContent" class="primary">+ New content</button></div>
+    <div><h1>Creator Studio</h1></div>
+    <div class="header-actions"><button id="testProject" class="secondary">Demo</button><button id="addContent" class="primary">+ New</button></div>
   </header>
   <div id="status" class="sync-status" role="status" aria-live="polite">Connecting to Firebase…</div>
 
   <main id="app" hidden>
     <section class="metrics" aria-label="Content overview">
-      <button class="metric-card" type="button" data-metric="pipeline"><span>In pipeline</span><strong id="inPipeline">0</strong><small>Tap to view active projects</small></button>
-      <button class="metric-card" type="button" data-metric="record"><span>Ready to record</span><strong id="readyCount">0</strong><small>Tap to view projects</small></button>
+      <button class="metric-card" type="button" data-metric="pipeline"><span>In pipeline</span><strong id="inPipeline">0</strong></button>
+      <button class="metric-card" type="button" data-metric="record"><span>Ready to record</span><strong id="readyCount">0</strong></button>
       <button class="metric-card" type="button" data-metric="next"><span>Next release</span><strong id="nextRelease">—</strong><small id="nextReleaseTitle">nothing scheduled</small></button>
-      <button class="metric-card momentum" type="button" data-metric="published"><span>Published</span><strong id="publishedCount">0</strong><small>Tap to view shipped projects</small></button>
+      <button class="metric-card momentum" type="button" data-metric="published"><span>Published</span><strong id="publishedCount">0</strong></button>
     </section>
     <div id="metricView" class="metric-view" hidden><span id="metricViewLabel"></span><button id="clearMetric" type="button">Show everything ×</button></div>
 
@@ -45,20 +45,20 @@
 
   <dialog id="contentDialog">
     <form id="contentForm">
-      <div class="dialog-title"><div><span class="eyebrow">CREATOR STUDIO</span><h2 id="dialogHeading">New project</h2><p>Plan chronologically. Produce by workflow.</p></div><button type="button" class="icon close" aria-label="Close">×</button></div>
-      <label class="content-title-field">Project title<input name="title" maxlength="120" required placeholder="Gaganyaan — India's human spaceflight mission"></label>
-      <p class="content-draft-hint">Paste your storyboard or add scenes. Changes stay in this form until you create the project.</p>
+      <div class="dialog-title"><div><h2 id="dialogHeading">New project</h2></div><button type="button" class="icon close" aria-label="Close">×</button></div>
+      <label class="content-title-field">Title<input name="title" maxlength="120" required placeholder="Gaganyaan — India's human spaceflight mission"></label>
+      
       <section id="contentStoryboard" aria-label="Project production workbench"></section>
       <details id="contentDetails" class="content-project-details">
-        <summary>Project details · optional</summary>
+        <summary>Details</summary>
         <div class="two"><label>Format<select name="format"><option>Short</option><option>Long</option></select></label><label>Workflow stage<select name="stage" id="stageSelect"></select></label></div>
         <div class="two"><label>Series<select name="series"><option>Concepts, Clearly</option><option>Plan Decoder</option><option>Real-Life Scenarios</option><option>General</option></select></label><label>Publish date<input name="publishDate" type="date"></label></div>
         <input type="hidden" name="hook"><input type="hidden" name="script"><input type="hidden" name="notes">
       </details>
       <p id="contentSaveError" role="alert"></p>
-      <div class="dialog-actions"><button id="deleteContent" type="button" class="danger">Delete</button><span id="contentShotSummary" role="status" aria-live="polite">No shots added yet</span><button type="button" class="secondary close">Cancel</button><button id="saveContent" class="primary">Create and open project</button></div>
+      <div class="dialog-actions"><button id="deleteContent" type="button" class="danger">Delete</button><span id="contentShotSummary" role="status" aria-live="polite">No scenes</span><button type="button" class="secondary close">Cancel</button><button id="saveContent" class="primary">Create</button></div>
     </form>
   </dialog>
-  <script type="module" src="creator.js?v=16"></script>
+  <script type="module" src="creator.js?v=17"></script>
 </body>
 </html>

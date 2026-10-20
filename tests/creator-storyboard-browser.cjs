@@ -107,6 +107,18 @@ const server=http.createServer((req,res)=>{
   assert.equal(await page.locator('.wb-scene').count(),8);
   assert.ok(await page.locator('.wb-row textarea').first().evaluate(el=>el.getBoundingClientRect().height<=48));
   assert.equal(await page.locator('[data-workspace]').count(),0);
+  assert.equal(await page.locator('.wb-scene').first().locator('[data-action=copy]').getAttribute('aria-label'),'Copy prompt');
+  assert.equal(await page.locator('.wb-scene').first().locator('[data-action=copy]').innerText(),'');
+  // Desktop controls and all method toggles stay in one row.
+  assert.equal(await page.locator('.wb-filters').evaluate(el=>{
+   const boxes=[...el.children].map(child=>child.getBoundingClientRect());
+   return Math.max(...boxes.map(r=>r.top))-Math.min(...boxes.map(r=>r.top))<15;
+  }),true);
+  assert.equal(await page.locator('.wb-methods').first().evaluate(el=>{
+   const boxes=[...el.children].map(child=>child.getBoundingClientRect());return boxes.every(r=>Math.abs(r.top-boxes[0].top)<2);
+  }),true);
+  assert.ok(await page.locator('.wb-row').first().evaluate(el=>el.getBoundingClientRect().height<=64));
+
   await page.locator('[data-action=page-next]').click();
   assert.equal(await page.locator('.wb-number strong').first().innerText(),'09');
   await page.locator('[data-action=page-prev]').click();
@@ -209,6 +221,7 @@ const server=http.createServer((req,res)=>{
   await scene(16).locator('[data-action=duplicate]').click();assert.equal(await page.locator('.wb-scene').count(),18);
   await scene(17).locator('[data-action=insert]').click();assert.equal(await page.locator('.wb-scene').count(),19);
   await scene(18).locator('[data-action=remove]').click();assert.equal(await page.locator('.wb-scene').count(),18);
+  if(await scene(17).locator('[data-action=expand]').getAttribute('aria-expanded')!=='true')await scene(17).locator('[data-action=expand]').click();
   await scene(17).locator('[data-action=up]').click();assert.equal(await scene(16).locator('[data-field=voiceover]').inputValue(),'Markdown voice');
   fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});
   await page.screenshot({path:path.join(root,'.test-output/creator-production-desktop.png'),fullPage:true});
