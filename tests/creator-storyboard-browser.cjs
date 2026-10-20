@@ -50,6 +50,11 @@ const server=http.createServer((req,res)=>{
   assert.equal(await scene(0).locator('[data-field=voiceover]').inputValue(),'भारत का मिशन 1!');
   assert.equal(await scene(15).locator('[data-field=timing]').inputValue(),'60–64s');
   assert.equal(await page.locator('#fullScript').inputValue(),'Existing manual draft');
+  await page.locator('.setup-stack > details').nth(1).locator(':scope > summary').click();
+  await page.locator('#copyAiBrief').click();
+  await page.waitForFunction(()=>window.copied?.includes('FULL RECORDING VOICEOVER'));
+  assert.match(await page.evaluate(()=>window.copied),/FULL RECORDING VOICEOVER\nभारत का मिशन 1!/);
+  await page.locator('.setup-stack > details').nth(1).locator(':scope > summary').click();
   // Duplicate paste is reviewed but cannot append identical rows.
   await page.locator('.wb-import summary').click();await paste.fill(table);await page.locator('[data-action=preview]').click();
   assert.match(await page.locator('[data-mapped-preview]').innerText(),/16 duplicates skipped/);

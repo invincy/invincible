@@ -1,6 +1,6 @@
 import{looksLikeStoryboard,makeScene,parseStoryboard}from'./storyboard-model.js?v=2';
 import{createProductionWorkbench}from'./production-workbench.js?v=1';
-import{projectProgress,canComplete,methodsOf,parseProductionImport,uniqueScenes}from'./production-model.js?v=1';
+import{projectProgress,canComplete,canonicalScript,parseProductionImport,uniqueScenes}from'./production-model.js?v=1';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{doc,getDoc,onSnapshot,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{inspectScenes,parseSceneInput,splitVoiceoverScript}from"./scene-tools.js?v=2";
@@ -137,7 +137,7 @@ SHOT PLAN JSON
 ${JSON.stringify(shots,null,2)}
 
 FULL RECORDING VOICEOVER
-${project.script?.trim()||shots.map(shot=>shot.voiceover).join("\n\n")}`;
+${canonicalScript(project)}`;
   }
   return `You are the scene director for a short-form video. Break the exact voiceover below into production-ready scenes and write generation prompts.
 
@@ -417,7 +417,7 @@ $("closeAssets").onclick=()=>$("assetsDialog").close();
 $("assetList").addEventListener("input",event=>{
   const container=event.target.closest("[data-asset-scene]"),scene=project.scenes.find(item=>item.id===container?.dataset.assetScene);
   if(!scene)return;
-  if(event.target.dataset.assetCheck){scene[event.target.dataset.assetCheck]=event.target.checked;render();renderProjectAssets();}
+  if(event.target.dataset.assetCheck){scene[event.target.dataset.assetCheck]=event.target.checked;if(!event.target.checked)scene.completed=false;render();renderProjectAssets();}
   if(event.target.dataset.assetUrl)scene[event.target.dataset.assetUrl]=event.target.value;
   queueSave();
 });
