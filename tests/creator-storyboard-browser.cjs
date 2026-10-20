@@ -13,12 +13,12 @@ const fixture=[
 const server=http.createServer((req,res)=>{
  const url=new URL(req.url,'http://localhost').pathname;
  res.setHeader('Content-Type',/\.m?js$/.test(url)?'text/javascript':url.endsWith('.css')?'text/css':'text/html');
+ if(url==='/invincible/ai/'){res.end('<body></body>');return;}
  if(url==='/fixture.mjs'||url==='/invincible/shared/firebase-client.js'){res.end(fixture);return;}
  try{
   let file=path.join(root,url.replace(/^\/invincible\/?/,''));
   if(fs.statSync(file).isDirectory())file=path.join(file,'index.html');
   let content=fs.readFileSync(file,'utf8').replaceAll('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js','/fixture.mjs');
-  if(file.endsWith('.html'))content=content.replace(/<script[^>]*src="\.\.\/site-nav[^>]*><\/script>/,'');
   res.end(content);
  }catch{res.statusCode=404;res.end('Missing');}
 });
@@ -136,7 +136,7 @@ const server=http.createServer((req,res)=>{
   await page.evaluate(()=>window.failSave=false);await page.locator('#saveContent').click();await page.waitForURL(/project.html\?id=/);
   await page.locator('#projectTitle').filter({hasText:'Gaganyaan production'}).waitFor();
   const projectId=new URL(page.url()).searchParams.get('id');
-  const table='Voiceover\tVisual / Animation\tAssets Required\tTimeline\n'+Array.from({length:16},(_,i)=>'भारत का मिशन '+(i+1)+'!\tCamera '+(i+1)+'\tLVM3 model\t'+(i*4)+'–'+(i*4+4)+'s').join('\n');
+  const table='Voiceover\tVisual / Animation\tAssets Required\tTimeline\n'+Array.from({length:16},(_,i)=>'भारत का मिशन '+(i+1)+'!\t'+(i===0?'Gaganyaan upper assembly को orbit में दिखाएं. Start with a wide view of the complete spacecraft, then move the camera slowly around the Crew Module and Service Module. Preserve realistic proportions and show the protective structure clearly. Keep the background dark, use soft cyan rim lighting, and finish with a stable three-quarter view. Do not show liftoff or add new objects.':'Camera '+(i+1))+'\tLVM3 model\t'+(i*4)+'–'+(i*4+4)+'s').join('\n');
   const paste=page.locator('#projectStoryboard [data-paste]');
   await paste.fill(table);await page.locator('[data-action=preview]').click();
   assert.equal(await page.locator('.wb-preview article').count(),16);assert.equal(await page.locator('.wb-scene').count(),0);
@@ -274,6 +274,7 @@ const server=http.createServer((req,res)=>{
   await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes[0].completed,projectId);
   await page.reload();await page.locator('.wb-scene').first().waitFor();assert.equal(await scene(0).locator('[data-field=sceneState]').inputValue(),'Completed');
   assert.equal(await page.locator('.wb-nav-entry [data-select-scene]').first().getAttribute('data-scene-status'),'completed');
+  await page.screenshot({path:path.join(root,'.test-output/creator-status-rail.png')});
   await page.locator('[data-action=view-mode]').click();
   await page.locator('[data-tab=Production]').click();assert.equal(await page.locator('#focusEditor').count(),0);await page.locator('[data-filter-method]').selectOption('Blender');assert.equal(await page.locator('.wb-production-card').count(),3);
   await page.locator('[data-filter-method]').selectOption('Editing');assert.equal(await page.locator('.wb-production-card').count(),16);
