@@ -1,69 +1,136 @@
-// Controlled Firestore fixture: never contacts production Firebase.
+// Controlled Firestore-shaped fixture; never contacts production Firebase.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
-const {chromium}=require('playwright');const root=path.resolve(__dirname,'..');
-const fixture=String.raw`export const db={},auth={currentUser:{uid:'owner',email:'owner@example.com'}},authReady=Promise.resolve();export async function observeAuth(callback){window.testAuth=callback;queueMicrotask(()=>callback(auth.currentUser));return()=>{}}export const storageError=()=> 'Save failed.';
-let listeners=[];const read=()=>JSON.parse(localStorage.getItem('test.creator')||'{}');
-export const doc=(db,...parts)=>parts.join('/');export const collection=(db,name)=>name;export const where=(...args)=>args;export const query=(collection,...filters)=>({collection,filters});export const serverTimestamp=()=>1;
-function snapshot(ref){const data=read();if(typeof ref==='string')return {exists:()=>!!data[ref],data:()=>data[ref],metadata:{hasPendingWrites:false,fromCache:false}};return {docs:Object.entries(data).filter(([key,value])=>key.startsWith('creatorProjects/')&&ref.filters.every(([field,op,wanted])=>op==='=='?value[field]===wanted:value[field]?.includes(wanted))).map(([key,value])=>({id:key.split('/')[1],data:()=>value}))}};
-export async function getDoc(ref){return snapshot(ref)}export async function getDocs(ref){return snapshot(ref)}
-export function onSnapshot(ref,...args){const callback=args.find(item=>typeof item==='function');const listener=()=>callback(snapshot(ref));listeners.push(listener);queueMicrotask(listener);return()=>listeners=listeners.filter(item=>item!==listener)}
-export async function setDoc(ref,value){window.writes=(window.writes||0)+1;await new Promise(resolve=>setTimeout(resolve,window.saveDelay||20));if(window.failSave)throw Error('denied');const all=read();all[ref]={...all[ref],...value};localStorage.setItem('test.creator',JSON.stringify(all));listeners.forEach(fn=>fn())}export async function deleteDoc(ref){const all=read();delete all[ref];localStorage.setItem('test.creator',JSON.stringify(all));listeners.forEach(fn=>fn())}
-`;
-const server=http.createServer((req,res)=>{const url=new URL(req.url,'http://localhost').pathname;res.setHeader('Content-Type',/\.m?js$/.test(url)?'text/javascript':url.endsWith('.css')?'text/css':'text/html');if(url==='/fixture.mjs'||url==='/invincible/shared/firebase-client.js'){res.end(fixture);return}try{let file=path.join(root,url.replace(/^\/invincible\/?/,''));if(fs.statSync(file).isDirectory())file=path.join(file,'index.html');let content=fs.readFileSync(file,'utf8');content=content.replaceAll('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js','/fixture.mjs');if(file.endsWith('.html'))content=content.replace(/<script[^>]*src="\.\.\/site-nav[^>]*><\/script>/,'');res.end(content)}catch{res.statusCode=404;res.end('Missing')}});
-(async()=>{await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const base='http://127.0.0.1:'+server.address().port+'/invincible/creator/';const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE||undefined});try{
- const page=await browser.newPage({viewport:{width:1280,height:900}}),errors=[];page.on('pageerror',error=>{errors.push(error.message);console.error('PAGE:',error.message)});await page.route('https://**/*',route=>route.abort());let accept=true;page.on('dialog',dialog=>accept?dialog.accept():dialog.dismiss());
- const old={id:'legacy',title:'Legacy project',format:'Short',stage:'Script',series:'General',script:'  Exact full voiceover\nwith outline  ',notes:'Keep notes',ownerUid:'owner',ownerEmail:'owner@example.com',editorEmails:['editor@example.com'],createdAt:123,custom:'keep',scenes:[{id:'original-scene',duration:8,voiceover:'Legacy scene',imagePrompt:'Image prompt',videoPrompt:'Motion prompt',imageAssetUrl:'https://example.com/image',imageDone:true,completed:true,custom:'keep-scene'}]};
- await page.goto(base);await page.evaluate(value=>localStorage.setItem('test.creator',JSON.stringify({'creatorProjects/legacy':value})),old);await page.reload();await page.locator('[data-edit="legacy"]').click();
- assert.equal(await page.locator('[name=script]').inputValue(),old.script);assert.equal(await page.locator('.storyboard-shot').count(),1);
- await page.locator('[data-shot-field=visual]').fill('Legacy visual');await page.locator('#saveContent').click();await page.locator('#contentDialog').waitFor({state:'hidden'});
- const legacy=await page.evaluate(()=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/legacy']);assert.equal(legacy.custom,'keep');assert.equal(legacy.script,old.script);assert.equal(legacy.scenes[0].imagePrompt,'Image prompt');assert.equal(legacy.scenes[0].custom,'keep-scene');assert.equal(legacy.createdAt,123);assert.deepEqual(legacy.editorEmails,old.editorEmails);
- await page.locator('#addContent').click();await page.locator('[name=title]').fill('Gaganyaan video');await page.locator('[name=stage]').selectOption('Record');await page.locator('[name=script]').fill('Full voiceover, kept separate.');await page.locator('.storyboard-import summary').click();
- const table='Voiceover\tVisual / Animation\tAssets Required\tTimeline\nभारत का Gaganyaan Mission!\tSlow camera rise\tRocket model\t0–4s\nपहली बार भारत अपने astronauts को space में भेज रहा है।\tOrbit animation\tEarth image\t4–11s';
- await page.locator('[data-paste]').fill(table);assert.equal(await page.locator('[data-preview] tbody tr').count(),2);assert.match(await page.locator('[data-preview]').innerText(),/0–4s \(4 sec\)/);assert.equal(await page.locator('.storyboard-shot').count(),0);await page.locator('[data-import]').click();assert.equal(await page.locator('.storyboard-shot').count(),2);assert.equal(await page.locator('[data-shot-field=duration]').first().inputValue(),'4');assert.equal(await page.locator('[name=script]').inputValue(),'Full voiceover, kept separate.');
- await page.getByRole('button',{name:'Move shot 2 up',exact:true}).click();assert.match(await page.locator('[data-shot-field=voiceover]').first().inputValue(),/पहली बार/);await page.locator('[data-shot-field=assets]').first().fill('Earth texture + map');
- await page.locator('[data-paste]').fill('bad\ttable');await page.locator('[data-review]').click();assert.match(await page.locator('[data-feedback]').innerText(),/four/);assert.equal(await page.locator('.storyboard-shot').count(),2);
- await page.locator('[data-paste]').fill(table);await page.locator('[data-mode]').selectOption('replace');accept=false;await page.locator('[data-import]').click();assert.match(await page.locator('[data-shot-field=voiceover]').first().inputValue(),/पहली बार/);accept=true;
- await page.locator('[data-paste]').fill('');assert.equal(await page.locator('[data-preview]').isHidden(),true);assert.equal(await page.locator('[data-feedback]').innerText(),''); // invalidate the preview, then save exactly the edited rows
- for(const width of [320,393,768,1280]){await page.setViewportSize({width,height:900});assert.equal(await page.locator('#contentDialog').evaluate(el=>el.scrollWidth<=el.clientWidth+1),true);assert.equal(await page.locator('.storyboard-shot').first().evaluate(el=>el.scrollWidth<=el.clientWidth+1),true);assert.ok(await page.getByRole('button',{name:'Move shot 2 up',exact:true}).evaluate(el=>el.getBoundingClientRect().height>=44));}
- fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});await page.setViewportSize({width:393,height:852});await page.locator('.storyboard-import summary').click();await page.locator('.storyboard-shot').first().scrollIntoViewIfNeeded();await page.screenshot({path:path.join(root,'.test-output/creator-mobile.png')});
- await page.evaluate(()=>window.failSave=true);await page.locator('#saveContent').click();await page.locator('#contentSaveError').filter({hasText:'Save failed'}).waitFor();assert.equal(await page.locator('#contentDialog').evaluate(el=>el.open),true);assert.equal(await page.locator('[data-shot-field=assets]').first().inputValue(),'Earth texture + map');
- await page.evaluate(()=>{window.failSave=false;window.saveDelay=100});await page.locator('#saveContent').click();await page.waitForURL(/project.html\?id=/);await page.locator('#projectTitle').filter({hasText:'Gaganyaan video'}).waitFor();
- assert.match(await page.locator('[data-shot-field=voiceover]').first().inputValue(),/पहली बार/);assert.equal(await page.locator('#fullScript').inputValue(),'Full voiceover, kept separate.');assert.match(await page.locator('#projectMeta').innerText(),/Record/);
- const id=new URL(page.url()).searchParams.get('id');assert.equal(await page.evaluate(()=>Object.keys(JSON.parse(localStorage.getItem('test.creator'))).length),2);
- await page.locator('[data-shot-field=visual]').first().fill('Updated orbit');await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes[0].visual==='Updated orbit',id);await page.reload();await page.locator('[data-shot-field=visual]').first().waitFor();assert.equal(await page.locator('[data-shot-field=visual]').first().inputValue(),'Updated orbit');
- // Project failure retains a local draft through reload and retries in the existing save flow.
- await page.evaluate(()=>window.failSave=true);await page.locator('[data-shot-field=assets]').first().fill('Recovered draft asset');await page.locator('#status').filter({hasText:'draft is kept'}).waitFor();await page.reload();await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes[0].assets==='Recovered draft asset',id);
- await page.getByRole('button',{name:'Move shot 2 up',exact:true}).click();await page.getByRole('button',{name:'Remove shot 2',exact:true}).click();assert.equal(await page.locator('.storyboard-shot').count(),1);await page.locator('[data-add]').click();assert.equal(await page.locator('.storyboard-shot').count(),2);await page.locator('[data-shot-field=voiceover]').last().fill('Manual shot');await page.locator('[data-shot-field=duration]').last().fill('6');await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes[1].voiceover==='Manual shot',id);
- await page.locator('.storyboard-import summary').click();await page.locator('[data-paste]').fill(table);await page.locator('[data-review]').click();await page.locator('[data-import]').click();assert.equal(await page.locator('.storyboard-shot').count(),4);
- await page.locator('[data-paste]').fill('Final shot\tFinal visual\tFinal asset\t6');await page.locator('[data-review]').click();await page.locator('[data-mode]').selectOption('replace');await page.locator('[data-import]').click();assert.equal(await page.locator('.storyboard-shot').count(),1);assert.equal(await page.locator('#fullScript').inputValue(),'Full voiceover, kept separate.');await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes.length===1,id);await page.locator('.storyboard-import summary').click();
- await page.setViewportSize({width:1280,height:900});await page.locator('#projectStoryboard').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(root,'.test-output/creator-desktop.png')});
- await page.goto(base+'project.html?id=legacy');await page.waitForFunction(()=>document.querySelector('[data-shot-field=visual]')?.value==='Legacy visual');assert.equal(await page.locator('[data-shot-field=visual]').inputValue(),'Legacy visual');await page.locator('[data-shot-field=assets]').fill('New asset notes');await page.waitForFunction(()=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/legacy'].scenes[0].assets==='New asset notes');const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/legacy']);assert.equal(saved.scenes[0].completed,true);assert.equal(saved.scenes[0].imageAssetUrl,old.scenes[0].imageAssetUrl);assert.equal(saved.scenes[0].custom,'keep-scene');
- await page.locator('.setup-stack > details').first().locator(':scope > summary').click();await page.locator('#fullScript').fill(table);await page.locator('.storyboard-source-notice button').click();assert.equal(await page.locator('#fullScript').inputValue(),table);assert.equal(await page.locator('#projectStoryboard [data-preview] tbody tr').count(),2);await page.locator('#projectStoryboard [data-import]').click();assert.match(await page.locator('#fullScript').inputValue(),/भारत का Gaganyaan Mission!/);assert.equal(await page.locator('.storyboard-shot').count(),3);await page.locator('#fullScript').fill(old.script);await page.waitForFunction(()=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/legacy'].scenes.length===3);
- await page.locator('.importer summary').click();await page.locator('#tableInput').fill(table);assert.match(await page.locator('#previewIssues').innerText(),/Storyboard timing/);await page.locator('#confirmImport').click();assert.equal(await page.locator('.storyboard-shot').count(),5);
- await page.goto(base);await page.locator('#addContent:enabled').click();await page.locator('[name=script]').fill(table);await page.locator('.storyboard-source-notice button').click();assert.equal(await page.locator('[name=script]').inputValue(),table);assert.equal(await page.locator('#contentStoryboard [data-preview] tbody tr').count(),2);await page.locator('#contentStoryboard [data-import]').click();assert.match(await page.locator('[name=script]').inputValue(),/भारत का Gaganyaan Mission!/);assert.equal(await page.locator('.storyboard-shot').count(),2);
- await page.locator('.dialog-actions .close').click();await page.locator('#addContent:enabled').click();await page.locator('[name=title]').fill('15-shot workflow');
- const ranges=['0–4s','4–11s','11–23s','23–33s','33–42s','42–55s','55–63s','63–73s','73–81s','81–99s','99–110s','110–118s','118–130s','130–141s','141–154s'];
- const fullTable='Voiceover\tVisual / Animation\tAssets Required\tTimeline\n'+ranges.map((range,index)=>`Narration ${index+1}\tVisual ${index+1}\tAsset ${index+1}\t${range}`).join('\n');
- await page.locator('#contentStoryboard .storyboard-import').evaluate(element=>element.open=true);await page.locator('#contentStoryboard [data-paste]').fill(fullTable);assert.match(await page.locator('#contentStoryboard [data-preview]').innerText(),/15 shots · 154 seconds/);await page.locator('#contentStoryboard [data-import]').click();assert.equal(await page.locator('.storyboard-shot').count(),15);assert.match(await page.locator('#contentShotSummary').innerText(),/15 shots · 154 sec ready to save/);assert.match(await page.locator('#contentStoryboard [data-feedback]').innerText(),/Save and open project/);
- for(const width of [320,393,768,1280]){await page.setViewportSize({width,height:700});for(const position of ['first','last']){await page.locator('.storyboard-shot')[position]().scrollIntoViewIfNeeded();assert.equal(await page.locator('#saveContent').evaluate(button=>{const rect=button.getBoundingClientRect(),dialog=document.querySelector('#contentDialog').getBoundingClientRect();return rect.top>=dialog.top&&rect.bottom<=dialog.bottom&&rect.bottom<=innerHeight}),true);}}
- await page.setViewportSize({width:393,height:700});await page.locator('.storyboard-shot').last().scrollIntoViewIfNeeded();await page.screenshot({path:path.join(root,'.test-output/creator-save-mobile.png')});
- await page.locator('#saveContent').click();await page.waitForURL(/project.html\?id=/);const savedId=new URL(page.url()).searchParams.get('id');await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes.length===15,savedId);
- assert.match(await page.locator('#fullScript').inputValue(),/^Narration 1\n\nNarration 2/);assert.match(await page.locator('#fullScript').inputValue(),/Narration 15$/);
- assert.equal(await page.locator('.workflow-strip').count(),0);assert.equal(await page.locator('.storyboard-columns').count(),0);assert.equal(await page.locator('#projectStoryboard h3').innerText(),'Scenes');assert.equal(await page.locator('#app h2').filter({hasText:'Storyboard'}).count(),0);
- await page.goto(base);await page.locator('#addContent:enabled').click();await page.locator('[name=title]').fill('Table-first project');await page.locator('#saveContent').click();await page.waitForURL(/project.html\?id=/);await page.locator('#projectStoryboard [data-paste]').waitFor({state:'visible'});
- assert.equal(await page.locator('#projectStoryboard .storyboard-import').evaluate(element=>element.open),true);
- assert.equal(await page.evaluate(()=>!!(document.querySelector('.project-storyboard-panel').compareDocumentPosition(document.querySelector('.setup-stack'))&Node.DOCUMENT_POSITION_FOLLOWING)),true);
- await page.locator('#projectStoryboard [data-paste]').fill(table);assert.equal(await page.locator('#projectStoryboard [data-preview] tbody tr').count(),2);await page.locator('#projectStoryboard [data-import]').click();assert.equal(await page.locator('#projectStoryboard .storyboard-shot').count(),2);assert.match(await page.locator('#fullScript').inputValue(),/भारत का Gaganyaan Mission!/);
- assert.equal(await page.locator('#sceneList').count(),0);assert.equal(await page.locator('#projectStoryboard .storyboard-production').count(),2);
- await page.locator('.setup-stack > details').nth(1).locator(':scope > summary').click();await page.locator('#visualStyle').fill('Cinematic documentary');await page.locator('#characterBible').fill('Same astronaut in blue suit');
- await page.locator('#projectStoryboard .storyboard-production').first().evaluate(element=>element.open=true);await page.locator('#projectStoryboard [data-shot-field=characterPrompt]').first().fill('Manual character reference');await page.locator('#projectStoryboard [data-action=draft]').first().click();
- assert.equal(await page.locator('#projectStoryboard [data-shot-field=characterPrompt]').first().inputValue(),'Manual character reference');assert.match(await page.locator('#projectStoryboard [data-shot-field=imagePrompt]').first().inputValue(),/Slow camera rise/);assert.match(await page.locator('#projectStoryboard [data-shot-field=imagePrompt]').first().inputValue(),/Rocket model/);assert.match(await page.locator('#projectStoryboard [data-shot-field=imagePrompt]').first().inputValue(),/Cinematic documentary/);assert.match(await page.locator('#projectStoryboard [data-shot-field=videoPrompt]').first().inputValue(),/Slow camera rise/);
- await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes?.[0]?.imagePrompt?.includes('Rocket model'),new URL(page.url()).searchParams.get('id'));await page.reload();assert.equal(await page.locator('#projectStoryboard [data-shot-field=characterPrompt]').first().inputValue(),'Manual character reference');
- await page.locator('#projectStoryboard .storyboard-production').first().evaluate(element=>element.open=true);await page.locator('#projectStoryboard [data-action=focus]').first().click();assert.equal(await page.locator('#focusEditor').isVisible(),true);await page.locator('#closeFocus').click();
- const tableFirstId=new URL(page.url()).searchParams.get('id');await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.script?.includes('Gaganyaan Mission'),tableFirstId);
- await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async value=>{window.copiedBrief=value}}}));await page.locator('.setup-stack > details').nth(1).locator(':scope > summary').click();await page.locator('#copyAiBrief').click();await page.waitForFunction(()=>window.copiedBrief);
- const brief=await page.evaluate(()=>window.copiedBrief);assert.match(brief,/SHOT PLAN JSON/);assert.match(brief,/"durationSeconds": 4/);assert.match(brief,/"durationSeconds": 7/);assert.match(brief,/Do not split, combine, reorder, or retime shots/);
- await page.locator('.setup-stack > details').first().locator(':scope > summary').click();assert.equal(await page.locator('#splitScript').isVisible(),false);await page.locator('.script-alternative > summary').click();assert.equal(await page.locator('#splitScript').isVisible(),true);
- for(const width of [320,393]){await page.setViewportSize({width,height:800});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);assert.equal(await page.locator('#projectStoryboard .storyboard-shot').first().evaluate(element=>element.scrollWidth<=element.clientWidth+1),true);}
- assert.deepEqual(errors,[]);console.log('Creator import preview, malformed input, safe replace, edit/reorder/add/remove, failure/retry, reload/draft recovery, legacy metadata and 320/393/768/1280px layouts passed.');
- }finally{await browser.close();server.close()}})().catch(error=>{console.error(error);process.exitCode=1;server.close()});
+const {chromium}=require('playwright'),root=path.resolve(__dirname,'..');
+const fixture=[
+"export const db={},auth={currentUser:{uid:'owner',email:'owner@example.com'}},authReady=Promise.resolve();export async function observeAuth(callback){queueMicrotask(()=>callback(auth.currentUser));return()=>{}}export const storageError=()=> 'Save failed.';",
+"let listeners=[];const read=()=>JSON.parse(localStorage.getItem('test.creator')||'{}');",
+"export const doc=(db,...parts)=>parts.join('/');export const collection=(db,name)=>name;export const where=(...args)=>args;export const query=(collection,...filters)=>({collection,filters});export const serverTimestamp=()=>1;",
+"function snapshot(ref){const data=read();if(typeof ref==='string')return {exists:()=>!!data[ref],data:()=>data[ref],metadata:{hasPendingWrites:false,fromCache:false}};return {docs:Object.entries(data).filter(([key,value])=>key.startsWith('creatorProjects/')&&ref.filters.every(([field,op,wanted])=>op==='=='?value[field]===wanted:value[field]?.includes(wanted))).map(([key,value])=>({id:key.split('/')[1],data:()=>value}))}}",
+"export async function getDoc(ref){return snapshot(ref)}export async function getDocs(ref){return snapshot(ref)}",
+"export function onSnapshot(ref,...args){const callback=args.find(item=>typeof item==='function');const listener=()=>callback(snapshot(ref));listeners.push(listener);queueMicrotask(listener);return()=>listeners=listeners.filter(item=>item!==listener)}",
+"export async function setDoc(ref,value){window.writes=(window.writes||0)+1;await new Promise(resolve=>setTimeout(resolve,window.saveDelay||20));if(window.failSave)throw Error('denied');const all=read();all[ref]={...all[ref],...value};localStorage.setItem('test.creator',JSON.stringify(all));listeners.forEach(fn=>fn())}export async function deleteDoc(ref){const all=read();delete all[ref];localStorage.setItem('test.creator',JSON.stringify(all));listeners.forEach(fn=>fn())}"
+].join('\n');
+const server=http.createServer((req,res)=>{
+ const url=new URL(req.url,'http://localhost').pathname;
+ res.setHeader('Content-Type',/\.m?js$/.test(url)?'text/javascript':url.endsWith('.css')?'text/css':'text/html');
+ if(url==='/fixture.mjs'||url==='/invincible/shared/firebase-client.js'){res.end(fixture);return;}
+ try{
+  let file=path.join(root,url.replace(/^\/invincible\/?/,''));
+  if(fs.statSync(file).isDirectory())file=path.join(file,'index.html');
+  let content=fs.readFileSync(file,'utf8').replaceAll('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js','/fixture.mjs');
+  if(file.endsWith('.html'))content=content.replace(/<script[^>]*src="\.\.\/site-nav[^>]*><\/script>/,'');
+  res.end(content);
+ }catch{res.statusCode=404;res.end('Missing');}
+});
+(async()=>{
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ const base='http://127.0.0.1:'+server.address().port+'/invincible/creator/';
+ const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE||undefined});
+ try{
+  const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];
+  page.on('pageerror',error=>errors.push(error.message));await page.route('https://**/*',route=>route.abort());
+  page.on('dialog',dialog=>dialog.accept());
+  await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.copied=text}}}));
+  const stored=()=>page.evaluate(()=>Object.values(JSON.parse(localStorage.getItem('test.creator')||'{}')).find(item=>item.title==='Gaganyaan production'));
+  // Creation still uses existing Creator pipeline, owner fields and acknowledgement.
+  await page.goto(base);await page.locator('#addContent:enabled').click();await page.locator('[name=title]').fill('Gaganyaan production');
+  await page.locator('[name=script]').fill('Existing manual draft');
+  await page.evaluate(()=>window.failSave=true);await page.locator('#saveContent').click();
+  await page.locator('#contentSaveError').filter({hasText:'Save failed'}).waitFor();
+  assert.equal(await page.locator('#contentDialog').evaluate(node=>node.open),true);
+  await page.evaluate(()=>window.failSave=false);await page.locator('#saveContent').click();await page.waitForURL(/project.html\?id=/);
+  await page.locator('#projectTitle').filter({hasText:'Gaganyaan production'}).waitFor();
+  const projectId=new URL(page.url()).searchParams.get('id');
+  const table='Voiceover\tVisual / Animation\tAssets Required\tTimeline\n'+Array.from({length:16},(_,i)=>'भारत का मिशन '+(i+1)+'!\tCamera '+(i+1)+'\tLVM3 model\t'+(i*4)+'–'+(i*4+4)+'s').join('\n');
+  const paste=page.locator('#projectStoryboard [data-paste]');
+  await paste.fill(table);await page.locator('[data-action=preview]').click();
+  assert.equal(await page.locator('.wb-preview article').count(),16);assert.equal(await page.locator('.wb-scene').count(),0);
+  await page.locator('[data-action=import]').click();assert.equal(await page.locator('.wb-scene').count(),16);
+  const scene=i=>page.locator('.wb-scene').nth(i);
+  assert.equal(await scene(0).locator('[data-field=voiceover]').inputValue(),'भारत का मिशन 1!');
+  assert.equal(await scene(15).locator('[data-field=timing]').inputValue(),'60–64s');
+  assert.equal(await page.locator('#fullScript').inputValue(),'Existing manual draft');
+  // Duplicate paste is reviewed but cannot append identical rows.
+  await page.locator('.wb-import summary').click();await paste.fill(table);await page.locator('[data-action=preview]').click();
+  assert.match(await page.locator('[data-mapped-preview]').innerText(),/16 duplicates skipped/);
+  assert.equal(await page.locator('[data-action=import]').isDisabled(),true);
+  await page.locator('.wb-import summary').click();
+  for(const i of [0,2,10])await scene(i).locator('[data-method=Blender]').check();
+  await scene(0).locator('[data-method="AI Video"]').check();await scene(1).locator('[data-method="AI Video"]').check();
+  const firstId=await scene(0).getAttribute('data-scene'),thirdId=await scene(2).getAttribute('data-scene');
+  await scene(0).locator('[data-action=expand]').click();
+  await scene(0).locator('[data-field=blenderPrompt]').fill('Animate the rocket for four seconds.');
+  await scene(0).locator('[data-action=copy]').click();assert.equal(await page.evaluate(()=>window.copied),'Animate the rocket for four seconds.');
+  await page.locator('[data-tab=Production]').click();assert.equal(await page.locator('.wb-production-card').count(),3);
+  await page.locator('.wb-group-create summary').click();await page.locator('[data-new-group]').fill('Gaganyaan upper assembly');
+  await page.locator('[data-action=add-group]').click();await page.locator('.wb-group-create summary').click();
+  await page.locator('[data-group-field=blenderFile]').fill('E:\\3D\\MY\\Gaganyaan\\upper.blend');
+  const groupId=await page.locator('[data-group]').getAttribute('data-group');
+  for(const id of [firstId,thirdId]){
+   const card=page.locator('.wb-production-card[data-scene="'+id+'"]');
+   await card.locator('[data-action=expand]').click();await card.locator('[data-field=animationGroupId]').selectOption(groupId);
+  }
+  const card=page.locator('.wb-production-card[data-scene="'+firstId+'"]');
+  // The selected third card is expanded; first card exposes quick Blender tasks.
+  for(const phase of ['started','modeling','animation','rendering','ready'])await card.locator('[data-task="'+phase+'"]').click();
+  await page.waitForFunction(id=>Object.values(JSON.parse(localStorage.getItem('test.creator')||'{}')).some(item=>item.id===id&&item.animationGroups?.[0]?.production?.ready),projectId);
+  let saved=await stored();assert.equal(saved.scenes[0].completed,false);assert.equal(saved.scenes[2].completed,false);
+  assert.equal(saved.animationGroups[0].blenderFile,'E:\\3D\\MY\\Gaganyaan\\upper.blend');
+  await page.locator('[data-workspace="AI Video"]').click();assert.equal(await page.locator('.wb-production-card').count(),2);
+  const mixed=page.locator('.wb-production-card[data-scene="'+firstId+'"]');await mixed.locator('[data-task=ready]').click();
+  await mixed.locator('[data-action=expand]').click();await mixed.locator('[data-check=voiceoverReady]').check();await mixed.locator('[data-check=editingDone]').check();
+  await mixed.locator('[data-field=sceneState]').count().then(count=>assert.equal(count,0)); // completion control is in storyboard
+  await page.locator('[data-tab=Storyboard]').click();await scene(0).locator('[data-field=sceneState]').selectOption('Completed');
+  await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes[0].completed,projectId);
+  await page.reload();await page.locator('.wb-scene').first().waitFor();assert.equal(await scene(0).locator('[data-field=sceneState]').inputValue(),'Completed');
+  await page.locator('[data-tab=Production]').click();assert.equal(await page.locator('.wb-production-card').count(),3);
+  await page.locator('[data-workspace=Editing]').click();assert.equal(await page.locator('.wb-production-card').count(),16);
+  await page.locator('[data-tab=Overview]').click();await page.locator('.wb-script summary').click();
+  const original=await page.locator('[data-canonical-script]').inputValue();
+  const updated=original.replace('भारत का मिशन 1!','Changed narration');
+  await page.locator('[data-script-draft]').fill(updated);await page.locator('[data-action=review-script]').click();
+  assert.equal((await stored()).scenes[0].voiceover,'भारत का मिशन 1!');
+  await page.locator('[data-action=apply-script]').click();await page.locator('.wb-script summary').click();
+  assert.match(await page.locator('[data-canonical-script]').inputValue(),/^Changed narration/);
+  // Asset metadata and associations survive reload; local references are never file URLs.
+  await page.locator('[data-tab=Assets]').click();await page.locator('[data-action=add-asset]').click();
+  await page.locator('[data-asset-field=name]').fill('Crew Module');await page.locator('[data-asset-field=path]').fill('E:\\3D\\MY\\Gaganyaan\\crew.blend');
+  await page.locator('[data-associate-group]').check();await page.locator('[data-asset-field=status]').selectOption('Ready');
+  assert.equal(await page.locator('.wb-asset a').count(),0);await page.locator('[data-copy-path]').click();
+  assert.equal(await page.evaluate(()=>window.copied),'E:\\3D\\MY\\Gaganyaan\\crew.blend');
+  await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.assets?.[0]?.status==='Ready',projectId);
+  await page.reload();await page.locator('[data-tab=Assets]').click();assert.equal(await page.locator('[data-asset-field=name]').inputValue(),'Crew Module');
+  // Markdown, mapping, voiceover only, inline edits, reorder, duplication and insertion.
+  await page.locator('[data-tab=Storyboard]').click();await page.locator('.wb-import summary').click();
+  await paste.fill('| Scene | Duration | Voiceover | Character Prompt | Image Prompt | Video Prompt |\n|---|---|---|---|---|---|\n| 17 | 7 | Markdown voice | Person | Still | Motion |');
+  await page.locator('[data-action=preview]').click();await page.locator('[data-action=import]').click();assert.equal(await page.locator('.wb-scene').count(),17);
+  assert.equal(await scene(16).locator('[data-field=voiceover]').inputValue(),'Markdown voice');
+  await scene(16).locator('[data-action=expand]').click();assert.equal(await scene(16).locator('[data-field=videoPrompt]').inputValue(),'Motion');
+  await scene(16).locator('[data-action=duplicate]').click();assert.equal(await page.locator('.wb-scene').count(),18);
+  await scene(17).locator('[data-action=insert]').click();assert.equal(await page.locator('.wb-scene').count(),19);
+  await scene(18).locator('[data-action=remove]').click();assert.equal(await page.locator('.wb-scene').count(),18);
+  await scene(17).locator('[data-action=up]').click();assert.equal(await scene(16).locator('[data-field=voiceover]').inputValue(),'Markdown voice');
+  // Failed autosave retains a recoverable draft and retries after refresh.
+  await page.evaluate(()=>window.failSave=true);await scene(1).locator('[data-field=visual]').fill('Recovered camera direction');
+  await page.locator('#status').filter({hasText:'draft is kept'}).waitFor();await page.reload();
+  await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes[1].visual==='Recovered camera direction',projectId);
+  // Untouched legacy records retain completed state, prompts, metadata and script.
+  const legacy={id:'legacy',title:'Legacy',ownerUid:'owner',ownerEmail:'owner@example.com',editorEmails:[],notes:'Keep notes',hook:'Keep hook',script:'Keep draft',custom:{keep:true},scenes:[{id:'old',duration:8,voiceover:'Legacy narration',completed:true,imageDone:true,imagePrompt:'Original prompt',imageAssetUrl:'https://example.com/image',custom:'keep'}]};
+  await page.evaluate(item=>{const data=JSON.parse(localStorage.getItem('test.creator'));data['creatorProjects/legacy']=item;localStorage.setItem('test.creator',JSON.stringify(data));},legacy);
+  await page.goto(base+'project.html?id=legacy');await page.locator('.wb-scene').waitFor();assert.equal(await scene(0).locator('[data-field=sceneState]').inputValue(),'Completed');
+  await scene(0).locator('[data-action=expand]').click();assert.equal(await scene(0).locator('[data-field=imagePrompt]').inputValue(),'Original prompt');
+  assert.equal(await page.locator('#fullScript').inputValue(),'Keep draft');
+  for(const width of [320,393,768,1280,1920]){
+   await page.setViewportSize({width,height:900});
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'No horizontal overflow at '+width);
+   assert.equal(await page.locator('.wb-scene').evaluate(el=>el.scrollWidth<=el.clientWidth+1),true);
+   await page.locator('[data-tab=Production]').click();await page.locator('[data-workspace=All]').click();
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
+   await page.locator('[data-tab=Storyboard]').click();
+  }
+  fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});
+  await page.screenshot({path:path.join(root,'.test-output/creator-workbench-desktop.png'),fullPage:true});
+  await page.setViewportSize({width:393,height:852});await page.screenshot({path:path.join(root,'.test-output/creator-workbench-mobile.png'),fullPage:true});
+  assert.deepEqual(errors,[]);console.log('Creator creation, 16-scene import, queues, shared Blender tasks, independent completion, script review, assets, Markdown, reload/draft recovery, legacy compatibility and responsive layouts passed.');
+ }finally{await browser.close();server.close();}
+})().catch(error=>{console.error(error);process.exitCode=1;server.close();});

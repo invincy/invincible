@@ -159,3 +159,16 @@ Verification: 34 frontend/domain tests, eight Functions tests, production build,
 The project page now has one scene list. Each shot's four planning fields are followed by its Character, Image and Video prompt section, with an action to draft only blank prompts from the scene plan and shared visual settings. The separate production-card list was removed; its focused editor and asset tracker are available from the scene list. The advanced prompt importer remains under More tools. This reuses the current `scenes` array and Firestore save queue without migrating project data.
 
 Verification: 34 frontend/domain tests, eight Functions tests, production build, site-reference check, and all six browser suites passed. Creator browser coverage checks prompt drafting without overwriting a manual character prompt, persistence after reload, focused production access, legacy metadata, failed-save recovery and 320/393px layouts. A local browser screenshot was visually reviewed. No signed-in production write was performed.
+
+
+## Creator production workbench — October 20, 2026
+
+Replaced the project storyboard composition with four shared-data views: Storyboard, Production, Assets and Overview. Added a desktop seven-column planning grid, mobile scene cards, editable prompts and task checklists, drag and keyboard-button reordering, duplication/insertion, method tags, Blender/AI/Editing queues, shared animation projects, local/external asset references, independent scene completion and reviewed script synchronization. The native page, authentication adapters, collection paths and rules remain unchanged. Legacy tools remain reachable below the new workspace.
+
+New files: creator/production-model.js, creator/production-workbench.js, creator/production-workbench.css and tests/creator-production.mjs. Integration changes: creator/project.js, project.html, creator.js, index.html and storyboard-editor.js. Updated the Creator browser suite for the new interactions, and extended existing CI to include creator changes and the production build.
+
+Verification before CI: all changed JavaScript modules and the browser test parse successfully in the available JavaScript runtime. Ten pure model scenarios pass, including 16 Hindi/English TSV scenes, Markdown, quoted multiline narration, mapping, duplicates, mixed workspace queues, shared Blender work without scene completion, linked assets/checklists, reviewed scripts and legacy JSON round trips. These checks ran with an isolated UUID stub; they are not browser, Firestore or Node production-build tests.
+
+The session has no shell execution environment. A pull request runs the existing full unit/Functions checks, production build, site-reference checks and Chromium/Firefox browser workflows. CI results must be checked before merge. Browser screenshots and real signed-in Firebase permissions have not been established by the pure-model checks.
+
+Remaining constraints: existing whole-document concurrent editing can overwrite another editor's work; project metadata shares Firestore's document limit; scene duration remains 1–60 seconds; no large-file upload/storage service was introduced; paragraph-based script synchronization needs one paragraph per scene. Local paths are references, and production account access is unverified.

@@ -1,4 +1,5 @@
-import{createStoryboardEditor}from'./storyboard-editor.js?v=5';
+import {attachImportedGroups} from './production-model.js?v=1';
+import{createStoryboardEditor}from'./storyboard-editor.js?v=6';
 import{db,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,serverTimestamp,setDoc,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
@@ -51,6 +52,7 @@ function mergeProjects(){
 }
 
 async function saveItem(item){
+  attachImportedGroups(item,item.scenes||[]);
   if(!user)throw Error("Restore your Google session on Dashboard before saving.");
   status("Saving…");
   const payload={...item,id:item.id,ownerUid:item.ownerUid||user.uid,ownerEmail:item.ownerEmail||(user.email||"").toLowerCase(),editorEmails:item.editorEmails||[],updatedAt:serverTimestamp()};

@@ -44,3 +44,20 @@ Timeline imports store the original range in an optional scene `timeline` string
 Direct storyboard imports now initialize an empty `script` field from the shot voiceovers, joined in shot order, in New Content and the project editor. Existing nonempty scripts are never overwritten. The derived script and shot edits continue to use the existing `creatorProjects/{projectId}` document and save queue; no migration or new collection is needed.
 
 The project page now edits `characterPrompt`, `imagePrompt`, and `videoPrompt` within each storyboard scene instead of a second scene list. Drafting prompts fills only blank values using scene `visual` and `assets` plus project visual settings. These remain fields of the existing ordered `scenes` array; focused production state, completion flags and asset links continue to use the same document and save queue.
+
+
+## Creator production workbench — October 20, 2026
+
+Creator remains a native page, not a new React app. The existing ordered scenes array is canonical for narration and chronological order. Additive scene fields: productionMethods[], animationGroupId, blenderFile, blenderPrompt, camera, technicalNotes, assetReferences, production[method], voiceoverReady, editingDone, sceneState and checklist[]. Existing IDs, unknown fields, scripts, hooks, notes, legacy prompt fields and URL/done flags are retained.
+
+The same creatorProjects document adds animationGroups[] (id, name, blenderFile, resources, shared Blender production flags) and assets[] (id, name, type, path, sceneIds[], groupIds[], status, notes). Only metadata and references are stored. Local Windows paths can be copied; only HTTP(S) references receive open links. No uploads, new collections, indexes, authentication changes or rule changes were added.
+
+Storyboard, Production, Assets and Overview read this single project. Blender and AI Video filter multi-select scene methods. Editing includes all scenes requiring final editing (needsEditing defaults true). Blender tasks use group-level production when a scene has a group; other method tasks stay on the scene. Ready Blender work does not complete scenes. Scene completion requires declared method work, referenced assets, voiceover, checklist and editing. Untouched completed legacy scenes remain completed. Project percentage counts actual task flags and explicit scene review; shared Blender tasks count once per group.
+
+TSV, Markdown and voiceover-only imports are deterministic, previewed and append-only in the project workbench. The retained New Content editor also accepts both table formats and retains its explicit, confirmed replacement action. Optional field mapping is available in the project workbench. Duplicate detection compares narration, visual instructions, source timing and generation prompts. Status text is retained for review; an imported Completed label never claims production is finished.
+
+Overview derives the chronological script from scene narration. The existing script property remains an editable full-script draft. Review scenes-to-draft and draft-to-scenes before applying changes; draft-to-scenes requires one blank-line-separated paragraph per scene. Changed narration clears voiceover readiness and scene completion. The older full-script editor, splitter, generator brief, focused prompt editor, sharing and generated-asset tracker remain available.
+
+Persistence reuses the existing authenticated save queue, live snapshot and per-account recovery draft. This still writes the whole project and does not resolve simultaneous edits by multiple editors. Firestore document size limits still apply to metadata-heavy projects. Existing scene durations remain limited to 1–60 seconds. Production permissions and cross-device writes require a real signed-in check.
+
+Verification is recorded in docs/code-review.md. No production data or Firebase configuration was changed.
