@@ -149,7 +149,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   root.querySelectorAll('.wb-scene.is-open textarea').forEach(input=>{
    if(!input.getClientRects().length)return;
    input.style.height='auto';
-   input.style.height=Math.max(input.closest('.wb-writing')?64:44,input.scrollHeight+2)+'px';
+   input.style.height=Math.max(input.closest('.wb-writing')?56:44,input.scrollHeight+2)+'px';
   });
  }
  let lastWidth=0;

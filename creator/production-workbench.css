@@ -219,3 +219,6 @@ body.project-page.creator-focus-mode{height:100dvh;overflow:hidden;display:flex;
  .project-page.creator-focus-mode #app{width:calc(100% - 10px)}
  .project-page.creator-focus-mode .project-storyboard-panel{padding:4px}
 }
+
+.creator-focus-mode .wb-status:not(:empty){position:fixed;left:84px;bottom:12px;z-index:20;max-width:calc(100vw - 110px);margin:0;padding:6px 10px;border:1px solid rgba(169,147,224,.2);border-radius:8px;background:rgba(18,21,34,.96);font-size:12px;pointer-events:none;animation:wb-toast-away .2s 3s forwards}
+@keyframes wb-toast-away{to{opacity:0;visibility:hidden}}

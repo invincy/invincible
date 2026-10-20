@@ -13,7 +13,7 @@ const fixture=[
 const server=http.createServer((req,res)=>{
  const url=new URL(req.url,'http://localhost').pathname;
  res.setHeader('Content-Type',/\.m?js$/.test(url)?'text/javascript':url.endsWith('.css')?'text/css':'text/html');
- if(url==='/invincible/ai/'){res.end('<body></body>');return;}
+ if(url==='/invincible/ai/'){res.end('<style>html,body{background:#0e111a;color-scheme:dark}</style><body></body>');return;}
  if(url==='/fixture.mjs'||url==='/invincible/shared/firebase-client.js'){res.end(fixture);return;}
  try{
   let file=path.join(root,url.replace(/^\/invincible\/?/,''));
@@ -154,7 +154,7 @@ const server=http.createServer((req,res)=>{
    assert.equal(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight+1),true,'No page scrolling at '+width+'x'+height);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
    assert.equal(await page.locator('[data-editor-pane=plan]').isVisible(),true);
-   if(width>=1280)assert.equal(await page.locator('.wb-scene-content').evaluate(el=>el.scrollHeight<=el.clientHeight+1),true,'Normal plan fits without editor scrolling');
+   if(width>=1280)assert.equal(await page.locator('.wb-scene-content').evaluate(el=>el.scrollHeight<=el.clientHeight+1),true,'Normal plan fits without editor scrolling at '+width+'x'+height);
   }
   await page.setViewportSize({width:1440,height:1000});
   await page.locator('[data-editor-pane=prompts]').click();
