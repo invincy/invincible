@@ -23,7 +23,7 @@ export function AppShell({children,pageTitle}){
  if(!ready)return <div className="app-loading"><span>I</span><p>Opening Invincible…</p><div className="auth-skeleton" aria-hidden="true"><i/><i/><i/></div></div>;
  if(!user)return <div className="app-login"><div className="login-card"><span className="login-mark">I</span><h1>Invincible</h1><p>One account for your complete personal operating system.</p><button onClick={login}>Continue with Google</button>{error&&<small>{error}</small>}</div></div>;
  return <div className="react-app-shell">
-  <header className="react-topbar"><a className="react-brand" href={base}><span>I</span><strong>INVINCIBLE</strong></a><nav className="react-desktop-nav" aria-label="Primary navigation">{pages.map(page=><NavLink key={page.id} page={page}/>)}</nav><span className="react-mobile-title">{pageTitle}</span>{pageTitle==='Dashboard'&&<div id="dashboard-notification-slot"/>}</header>
+  <header className="react-topbar"><a className="react-brand" href={base}><span>I</span><strong>INVINCIBLE</strong></a><nav className="react-desktop-nav" aria-label="Primary navigation">{pages.map(page=><NavLink key={page.id} page={page}/>)}</nav><span className="react-mobile-title">{pageTitle}</span></header>
   <main>{children}</main>
   <InvincibleAiDock pageTitle={pageTitle}/>
   <nav className="react-mobile-tabs" aria-label="Primary navigation"><NavLink page={pages[0]} mobile/>{selected.map(page=><NavLink key={page.id} page={page} mobile/>)}<button className={!['dashboard',...tabs].some(id=>active(pages.find(page=>page.id===id)))?'active':''} onClick={()=>setMoreOpen(true)}><span className="react-nav-icon"><NavIcon id="more"/></span><span>More</span></button></nav>

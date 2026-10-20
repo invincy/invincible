@@ -23,7 +23,7 @@ window.switchAccount=uid=>{current=uid?{uid}:null;observer?.(current);};
 const firestoreMock = `
 export const collection=(_,...parts)=>({path:parts.join('/')});
 export const doc=collection;
-const listeners=new Set();
+const listeners=new Set();const streaks={};
 window.reads=[];window.writes=0;
 const tasks=Array.from({length:24},(_,i)=>({id:'t'+i,title:i===0?'Build the living workspace':'Project '+i+' — Research, review and prepare the next meaningful action',status:['In Progress','Backlog','Today','Done'][i%4],steps:[{id:'s1',title:'Review the spatial canvas',notes:'Keep the original data.\\nVerify all user journeys.',done:false},{id:'s2',title:'Inspect existing records',done:true}]}));
 const saved=JSON.parse(sessionStorage.getItem('v2-fixture-saved')||'{}');
@@ -35,9 +35,15 @@ window.writeLog=[];
 function snapshot(ref) {
   const owner=ref.path.split('/')[1];
   if(ref.path.endsWith('/tasks')) return {metadata:{fromCache:false},docs:owner==='alice'?tasks.map(task=>({id:task.id,data:()=>({...task})})):[]};
+  if(ref.path.endsWith('/streaks'))return {metadata:{fromCache:false},docs:owner==='alice'?Object.entries(streaks).map(([id,value])=>({id,ref:{path:ref.path+'/'+id},data:()=>value})):[]};
+  if(ref.path.includes('/streaks/'))return {exists:()=>Boolean(streaks[ref.path.split('/').pop()]),data:()=>streaks[ref.path.split('/').pop()]};
+  if(ref.path.includes('/finance/'))return {metadata:{fromCache:false},exists:()=>true,data:()=>({transactions:[{type:'income',description:'Salary'}],checklist:[{done:true}],bills:[]})};
   return {metadata:{fromCache:false},exists:()=>owner==='alice',data:()=>plan};
 }
 export const serverTimestamp=()=>123;
+export const setDoc=(ref,patch)=>runTransaction({},tx=>tx.set(ref,patch));
+export const writeBatch=()=>{const entries=[];return {set:(ref,patch)=>entries.push([ref,patch]),commit:()=>runTransaction({},tx=>entries.forEach(([ref,patch])=>tx.set(ref,patch)))}};
+
 export async function runTransaction(_,callback) {
   const patches=[];
   const result=await callback({get:async ref=>{
@@ -48,6 +54,7 @@ export async function runTransaction(_,callback) {
   if(window.failNextWrite){window.failNextWrite=false;throw Error('permission-denied');}
   for(const entry of patches){
     if(entry.path.includes('/tasks/')){const id=entry.path.split('/').pop(),task=tasks.find(task=>task.id===id);if(task)Object.assign(task,entry.patch);else tasks.push({id,...entry.patch});}
+    else if(entry.path.includes('/streaks/'))streaks[entry.path.split('/').pop()]=entry.patch;
     else plan={...plan,...entry.patch};
   }
   window.writes+=patches.length;window.writeLog.push(...patches);
@@ -70,7 +77,7 @@ window.listenerCount=()=>listeners.size;
 (async () => {
   fs.mkdirSync(output,{recursive:true});
   await esbuild.build({
-    entryPoints:[path.join(root,'react/v2/main.jsx')],bundle:true,outfile:path.join(output,'fixture.js'),jsx:'automatic',
+    stdin:{contents:"import './react/src/app-shell.css';import './react/v2/main.jsx';",resolveDir:root,loader:'jsx'},bundle:true,outfile:path.join(output,'fixture.js'),jsx:'automatic',
     plugins:[{name:'read-only-fixture',setup(build){
       build.onResolve({filter:/firebase$/},args=>args.path==='../src/firebase'||args.path==='./firebase'?{path:'auth',namespace:'fixture'}:null);
       build.onResolve({filter:/^firebase\/firestore$/},()=>({path:'firestore',namespace:'fixture'}));
@@ -79,9 +86,10 @@ window.listenerCount=()=>listeners.size;
   });
   const server=http.createServer((req,res)=>{
     const url=new URL(req.url,'http://localhost');
+    if(url.pathname.endsWith('/'))url.pathname+='index.html';
     if(url.pathname==='/fixture'){res.setHeader('Content-Type','text/html');res.end('<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"></head><body><div id="root"></div><script src="/fixture.js"></script></body></html>');return;}
     const file=url.pathname==='/fixture.js'||url.pathname==='/fixture.css'?path.join(output,url.pathname.slice(1)):
-      url.pathname.startsWith('/invincible/v2/')?path.join(root,buildDirectory,url.pathname.slice('/invincible/v2/'.length)||'index.html'):null;
+      url.pathname.startsWith('/invincible/v2/')?path.join(root,buildDirectory,url.pathname.slice('/invincible/v2/'.length)||'index.html'):url.pathname.startsWith('/invincible/')?path.join(root,url.pathname.slice('/invincible/'.length)||'index.html'):null;
     if(!file||!fs.existsSync(file)){res.statusCode=404;res.end('Not found');return;}
     res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':'text/html');
     res.end(fs.readFileSync(file));
@@ -116,8 +124,11 @@ window.listenerCount=()=>listeners.size;
         } else {
           assert.equal(await page.locator('.orb-3d-fallback').count(),1);
         }
-        assert.deepEqual(await page.evaluate(()=>[...new Set(window.reads)].map(value=>value.split('/').slice(0,3).join('/')).sort()),['users/alice/dailyPlans','users/alice/tasks']);
+        await page.waitForFunction(()=>window.reads.some(path=>path.includes('/streaks')));
+        assert.deepEqual(await page.evaluate(()=>[...new Set(window.reads)].map(value=>value.split('/').slice(0,3).join('/')).sort()),['users/alice/dailyPlans','users/alice/finance','users/alice/streaks','users/alice/tasks']);
         assert.equal(await page.evaluate(()=>window.writes),0);
+        assert.equal(await page.evaluate(()=>getComputedStyle(document.body).paddingTop),'0px','main dashboard has no legacy shell header gap');
+        assert.equal(await page.evaluate(()=>getComputedStyle(document.body).paddingBottom),'0px','main dashboard has no legacy shell bottom-nav gap');
 
         // All nine real page links sit on the Orb; the Dashboard and Workspace
         // remain separate, and the center-to-island route lines are gone.
@@ -406,13 +417,28 @@ window.listenerCount=()=>listeners.size;
         await movePage.getByRole('alert').waitFor();
         assert.equal(await movePage.evaluate(()=>window.writes),writes,'a deleted task is never recreated by a move');
         await movePage.close();
+        const toolsPage=await context.newPage();await toolsPage.goto(base+'/fixture');
+        await toolsPage.getByRole('button',{name:'Notifications: no pending reminders',exact:true}).click();
+        await toolsPage.getByRole('dialog',{name:'You’re all caught up.'}).waitFor();
+        await toolsPage.getByRole('button',{name:'Close',exact:true}).click();
+        await toolsPage.getByLabel('Daily tools',{exact:true}).click();
+        await toolsPage.getByRole('button',{name:'body streak: 0 days',exact:true}).click();
+        await toolsPage.getByRole('button',{name:'body streak: 1 days',exact:true}).waitFor();
+        assert.equal(await toolsPage.getByRole('button',{name:'body streak: 1 days',exact:true}).getAttribute('aria-pressed'),'true');
+        assert.ok(await toolsPage.evaluate(()=>window.writeLog.some(entry=>entry.path==='users/alice/streaks/body')));
+        await toolsPage.getByRole('button',{name:'body streak: 1 days',exact:true}).click();
+        await toolsPage.getByRole('button',{name:'body streak: 0 days',exact:true}).waitFor();
+        await toolsPage.close();
         await require('./v2-plan-scenarios.cjs')({browser,base,output,name});
 
         // Actual production bundle: anonymous startup, no test adapter or auto sign-in.
-        await page.goto(base+'/invincible/v2/');
+        await page.goto(base+'/invincible/v2/#workspace');
+        await page.getByRole('button',{name:'Continue with Google'}).waitFor();
+        await page.goto(base+'/invincible/');
         await page.getByRole('button',{name:'Continue with Google'}).waitFor();
         assert.equal(await page.evaluate(()=>typeof window.switchAccount),'undefined');
         assert.deepEqual(errors,[]);
+        await page.goto(base+'/invincible/v2/');
         await page.route('**/invincible/v2/assets/*.js',route=>route.abort());
         await page.reload();
         await page.getByText('The workspace could not start.',{exact:true}).waitFor();

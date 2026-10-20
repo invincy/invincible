@@ -234,3 +234,12 @@ Desktop supports wheel zoom, empty-space panning, node dragging and fit-to-workf
 Existing step and substep records, compatibility mirrors, project progress and manual lane status remain unchanged. Markdown-style checklist lines in a step's notes can be copied into structured subtasks through an explicit de-duplicating action; the original freeform notes are retained. The implementation uses CSS and SVG rather than adding a canvas library because the existing route is linear and does not need graph layout, ports or graph-level state.
 
 Verification covers legacy projects without layout data, layout normalization and content versioning, node rendering, wheel zoom, node dragging, fit-to-workflow, desktop and mobile compositions, project edits, nested completion, draft recovery, content conflicts, lane changes and existing plan import. Production Firebase authorization and physical touch behavior still require a signed-in real-device check.
+
+
+## Main dashboard cutover — October 20, 2026
+
+The root router now mounts SpatialApp for Dashboard instead of DashboardPage, outside the legacy AppShell. Home links in shared/navigation.js and the manifest's existing root start_url already point here. AI widgets and every other React/native route keep their entry, shell, auth and storage. `/v2/` continues to render the same component for saved links and isolated development; there is no Open V1 escape or second dashboard implementation.
+
+DashboardPage.jsx and its generated chunk are removed. Shared FocusOrb, task models, dashboard/orb CSS, useTasks and useTodayPlan remain because other routes use them. Streak transactions, month-end finance notifications and the explicitly confirmed legacy importer are retained in DashboardTools, behind compact account controls. These use the same per-user collections. No records, rules, authentication configuration, worker scopes, backend services or Creator Studio files change. The production server is static GitHub Pages; it never depended on the old dashboard component running.
+
+V2's existing per-account/session focus timer continues unchanged; an in-memory V1 countdown cannot be migrated. No data migration is needed. Controlled browser checks cover the canonical root auth gate, both dashboard entries, streak complete/undo, finance dialog, account teardown, project writes/imports, timer/history and desktop/mobile layouts. Real signed-in production Firebase permissions remain unverified.

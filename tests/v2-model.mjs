@@ -66,3 +66,15 @@ test('V2 data adapter is a read-only boundary and reuses the canonical Firebase 
   const config=fs.readFileSync(new URL('../react/vite.v2.config.js',import.meta.url),'utf8');
   assert.match(config,/outDir: '..\/..\/v2-dist'/);
 });
+
+ test('home and installed-app startup use the spatial dashboard with existing module routes', () => {
+  const app=fs.readFileSync(new URL('../react/src/App.jsx',import.meta.url),'utf8');
+  assert.ok(app.includes("import('../v2/SpatialApp')"));
+  assert.ok(!app.includes("import('./DashboardPage')"));
+  assert.ok(app.includes("page.id==='dashboard'?<Page/>:<AppShell"));
+  const spatial=fs.readFileSync(new URL('../react/v2/SpatialApp.jsx',import.meta.url),'utf8');
+  assert.doesNotMatch(spatial,/Open V1|Open existing Invincible/);
+  const manifest=JSON.parse(fs.readFileSync(new URL('../manifest.webmanifest',import.meta.url),'utf8'));
+  assert.equal(manifest.start_url,'/invincible/?source=pwa');
+  assert.equal(fs.existsSync(new URL('../react/src/DashboardPage.jsx',import.meta.url)),false);
+ });
