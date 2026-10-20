@@ -1,5 +1,5 @@
 import {attachImportedGroups} from './production-model.js?v=1';
-import{createProductionWorkbench}from'./production-workbench.js?v=5';
+import{createProductionWorkbench}from'./production-workbench.js?v=6';
 import{db,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,serverTimestamp,setDoc,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
@@ -30,7 +30,7 @@ $("contentForm").addEventListener("input",event=>{
 });
 function updateShotSummary(){
   const count=dialogScenes.length,duration=dialogScenes.reduce((total,scene)=>total+(Number(scene.duration)||0),0);
-  $("contentShotSummary").textContent=count?count+" shot"+(count===1?"":"s")+" · "+duration+" sec ready to save":"No shots added yet";
+  $("contentShotSummary").textContent=count?count+" scenes · "+duration+"s":"No scenes";
 }
 
 const newId=()=>crypto.randomUUID?.()||String(Date.now()+Math.random());
@@ -100,7 +100,7 @@ function openDialog(item=null){
   const form=$("contentForm");form.reset();
   $("dialogHeading").textContent=item?"Edit project":"New project";
   $("deleteContent").hidden=!item||!isOwner(item);
-  $("saveContent").textContent=item?"Save changes":"Create and open project";
+  $("saveContent").textContent=item?"Save":"Create";
   $("contentDetails").open=false;
   if(item)Object.entries(item).forEach(([key,value])=>{if(form.elements[key])form.elements[key].value=value??"";});else form.elements.stage.value=mobileStage;
   storyboard.reset();updateShotSummary();
@@ -154,7 +154,7 @@ $("contentForm").onsubmit=async event=>{
     const index=state.items.findIndex(row=>row.id===item.id);if(index>=0)state.items[index]=item;else state.items.push(item);
     mobileStage=item.stage;render();$("contentDialog").close();if(!existing)window.location.href="project.html?id="+encodeURIComponent(item.id);
   }catch(error){if(generation===authGeneration)$("contentSaveError").textContent=storageError(error)+" Your input is still here. Try saving again.";}
-  finally{savingContent=false;controls.forEach((control,index)=>control.disabled=disabled[index]);$("saveContent").textContent=existing?"Save changes":"Create and open project";}
+  finally{savingContent=false;controls.forEach((control,index)=>control.disabled=disabled[index]);$("saveContent").textContent=existing?"Save":"Create";}
 };
 $("contentForm").elements.title.addEventListener("input",event=>event.target.setCustomValidity(""));
 $("contentDialog").addEventListener("cancel",event=>{if(savingContent)event.preventDefault();});
