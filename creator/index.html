@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../site-nav.css?v=15">
   <link rel="stylesheet" href="creator.css?v=5">
-  <link rel="stylesheet" href="production-workbench.css?v=4">
+  <link rel="stylesheet" href="production-workbench.css?v=5">
 </head>
 <body class="creator-page">
   <nav class="global-nav" aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
@@ -53,14 +53,12 @@
         <summary>Project details · optional</summary>
         <div class="two"><label>Format<select name="format"><option>Short</option><option>Long</option></select></label><label>Workflow stage<select name="stage" id="stageSelect"></select></label></div>
         <div class="two"><label>Series<select name="series"><option>Concepts, Clearly</option><option>Plan Decoder</option><option>Real-Life Scenarios</option><option>General</option></select></label><label>Publish date<input name="publishDate" type="date"></label></div>
-        <label>Core hook<textarea name="hook" rows="2" maxlength="280" placeholder="The first line that earns attention"></textarea></label>
-        <label>Full-script draft<textarea name="script" rows="5" placeholder="Optional draft narration; scene voiceover remains canonical"></textarea></label>
-        <label>Production notes<textarea name="notes" rows="3" placeholder="Project-wide notes"></textarea></label>
+        <input type="hidden" name="hook"><input type="hidden" name="script"><input type="hidden" name="notes">
       </details>
       <p id="contentSaveError" role="alert"></p>
       <div class="dialog-actions"><button id="deleteContent" type="button" class="danger">Delete</button><span id="contentShotSummary" role="status" aria-live="polite">No shots added yet</span><button type="button" class="secondary close">Cancel</button><button id="saveContent" class="primary">Create and open project</button></div>
     </form>
   </dialog>
-  <script type="module" src="creator.js?v=15"></script>
+  <script type="module" src="creator.js?v=16"></script>
 </body>
 </html>

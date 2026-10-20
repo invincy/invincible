@@ -70,3 +70,6 @@ The standalone script/settings/import panels were removed from the saved-project
 
 
 The legacy focused scene overlay and standalone duplicate panels are no longer the project entry flow. All scene work stays in the shared structured table. Method/readiness/completion/search filters are view state only; they do not copy or reorder stored scenes. Shared Blender readiness can be Ready while a scene remains incomplete because voiceover, AI clips or editing are pending. Visual settings, script review and the generator brief use the same existing project fields in Overview. Legacy asset booleans and links remain in scene details. No collection, rule or auth changes.
+
+
+Compact-workflow follow-up: pagination, active row, collapsed asset rows and section folds are presentation state. Only the 8/16/All row-count preference is saved under invincible.creator.pageSize in local browser storage; no cloud scene list is shortened or reordered by paging. The creation dialog's script/hook/notes controls are now hidden serialization fields synchronized with Overview, removing duplicate visible editors while preserving existing project properties. No migration, collection, security-rule or auth changes.

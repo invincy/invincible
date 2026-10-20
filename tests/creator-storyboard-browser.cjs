@@ -48,10 +48,11 @@ const server=http.createServer((req,res)=>{
   await dialog.locator('[data-action=import]').click();
   assert.equal(await dialog.locator('.wb-scene').count(),2);
   await dialog.locator('.wb-scene').first().locator('[data-action=expand]').click();
+  await dialog.locator('.wb-prompt-fields summary').click();
   await dialog.locator('[data-field=blenderPrompt]').fill('Preserve the exact camera plan.');
-  await dialog.locator('[data-tab=Production]').click();await dialog.locator('[data-workspace=Blender]').click();
+  await dialog.locator('[data-tab=Production]').click();await dialog.locator('[data-filter-method]').selectOption('Blender');
   assert.equal(await dialog.locator('.wb-production-card').count(),1);
-  await dialog.locator('[data-workspace="AI Video"]').click();
+  await dialog.locator('[data-filter-method]').selectOption('AI Video');
   assert.equal(await dialog.locator('.wb-production-card').count(),1);
   await dialog.locator('[data-tab=Overview]').click();await dialog.locator('.wb-visual-settings summary').click();
   await dialog.locator('[data-project-field=visualStyle]').fill('Space documentary');
@@ -71,7 +72,7 @@ const server=http.createServer((req,res)=>{
   await dialog.locator('#saveContent').click();await page.waitForURL(/project.html\?id=/);
   await page.locator('#projectTitle').filter({hasText:'Draft production'}).waitFor();
   assert.equal(await page.locator('.wb-scene').count(),2);
-  await page.locator('[data-tab=Production]').click();await page.locator('[data-workspace=Blender]').click();assert.equal(await page.locator('.wb-production-card').count(),1);
+  await page.locator('[data-tab=Production]').click();await page.locator('[data-filter-method]').selectOption('Blender');assert.equal(await page.locator('.wb-production-card').count(),1);
   await page.locator('[data-tab=Assets]').click();assert.equal(await page.locator('[data-asset-field=path]').inputValue(),'E:\\3D\\draft.blend');
   await page.goto(base);await page.locator('.content-card').filter({hasText:'Draft production'}).locator('[data-edit]').click();
   assert.equal(await dialog.locator('[data-tab=Storyboard]').getAttribute('aria-current'),'page');
@@ -88,9 +89,10 @@ const server=http.createServer((req,res)=>{
   assert.equal(await page.locator('#contentDetails').evaluate(node=>node.open),false);
   assert.equal(await page.locator('#contentStoryboard .wb-tabs button').count(),4);
   assert.equal(await page.locator('#contentStoryboard [data-paste]').isVisible(),true);
-  await page.locator('#contentDetails > summary').click();
-  await page.locator('[name=script]').fill('Existing manual draft');
-  await page.locator('#contentDetails > summary').click();
+  await page.locator('#contentStoryboard [data-tab=Overview]').click();
+  await page.locator('#contentStoryboard .wb-script summary').click();
+  await page.locator('#contentStoryboard [data-script-draft]').fill('Existing manual draft');
+  await page.locator('#contentStoryboard [data-tab=Storyboard]').click();
   await page.evaluate(()=>window.failSave=true);await page.locator('#saveContent').click();
   await page.locator('#contentSaveError').filter({hasText:'Save failed'}).waitFor();
   assert.equal(await page.locator('#contentDialog').evaluate(node=>node.open),true);
@@ -101,7 +103,15 @@ const server=http.createServer((req,res)=>{
   const paste=page.locator('#projectStoryboard [data-paste]');
   await paste.fill(table);await page.locator('[data-action=preview]').click();
   assert.equal(await page.locator('.wb-preview article').count(),16);assert.equal(await page.locator('.wb-scene').count(),0);
-  await page.locator('[data-action=import]').click();assert.equal(await page.locator('.wb-scene').count(),16);
+  await page.locator('[data-action=import]').click();
+  assert.equal(await page.locator('.wb-scene').count(),8);
+  assert.ok(await page.locator('.wb-row textarea').first().evaluate(el=>el.getBoundingClientRect().height<=48));
+  assert.equal(await page.locator('[data-workspace]').count(),0);
+  await page.locator('[data-action=page-next]').click();
+  assert.equal(await page.locator('.wb-number strong').first().innerText(),'09');
+  await page.locator('[data-action=page-prev]').click();
+  await page.locator('[data-page-size]').selectOption('0');
+  assert.equal(await page.locator('.wb-scene').count(),16);
   const scene=i=>page.locator('.wb-scene').nth(i);
   assert.equal(await scene(0).locator('[data-field=voiceover]').inputValue(),'भारत का मिशन 1!');
   assert.equal(await scene(15).locator('[data-field=timing]').inputValue(),'60–64s');
@@ -138,9 +148,10 @@ const server=http.createServer((req,res)=>{
   await scene(0).locator('[data-method="AI Video"]').check();await scene(1).locator('[data-method="AI Video"]').check();
   const firstId=await scene(0).getAttribute('data-scene'),thirdId=await scene(2).getAttribute('data-scene');
   await scene(0).locator('[data-action=expand]').click();
+  await scene(0).locator('.wb-prompt-fields summary').click();
   await scene(0).locator('[data-field=blenderPrompt]').fill('Animate the rocket for four seconds.');
   await scene(0).locator('[data-action=copy]').click();assert.equal(await page.evaluate(()=>window.copied),'Animate the rocket for four seconds.');
-  await page.locator('#startProduction').click();assert.equal(await page.locator('#focusEditor').count(),0);await page.locator('[data-workspace=Blender]').click();assert.equal(await page.locator('.wb-production-card').count(),3);
+  await page.locator('[data-tab=Production]').click();assert.equal(await page.locator('#focusEditor').count(),0);await page.locator('[data-filter-method]').selectOption('Blender');assert.equal(await page.locator('.wb-production-card').count(),3);
   await page.locator('.wb-group-create summary').click();await page.locator('[data-new-group]').fill('Gaganyaan upper assembly');
   await page.locator('[data-action=add-group]').click();await page.locator('.wb-group-create summary').click();
   await page.locator('[data-group-field=blenderFile]').fill('E:\\3D\\MY\\Gaganyaan\\upper.blend');
@@ -150,7 +161,8 @@ const server=http.createServer((req,res)=>{
    if(await card.locator('[data-action=expand]').getAttribute('aria-expanded')!=='true')await card.locator('[data-action=expand]').click();await card.locator('[data-field=animationGroupId]').selectOption(groupId);
   }
   const card=page.locator('.wb-production-card[data-scene="'+firstId+'"]');
-  // The selected third card is expanded; first card exposes quick Blender tasks.
+  if(await card.locator('[data-action=expand]').getAttribute('aria-expanded')!=='true')await card.locator('[data-action=expand]').click();
+  // Only the active scene displays Blender progress controls.
   for(const phase of ['started','modeling','animation','rendering','ready'])await card.locator('[data-task="'+phase+'"]').click();
   await page.waitForFunction(id=>Object.values(JSON.parse(localStorage.getItem('test.creator')||'{}')).some(item=>item.id===id&&item.animationGroups?.[0]?.production?.ready),projectId);
   let saved=await stored();assert.equal(saved.scenes[0].completed,false);assert.equal(saved.scenes[2].completed,false);
@@ -162,22 +174,22 @@ const server=http.createServer((req,res)=>{
   assert.equal(await page.locator('.wb-production-card').count(),2);
   await page.locator('[data-filter-search]').fill('');
   await page.locator('[data-filter-assets]').selectOption('All');
-  await page.locator('[data-workspace="AI Video"]').click();assert.equal(await page.locator('.wb-production-card').count(),2);
-  const mixed=page.locator('.wb-production-card[data-scene="'+firstId+'"]');await mixed.locator('[data-task=ready]').click();
-  await mixed.locator('[data-action=expand]').click();await mixed.locator('[data-check=voiceoverReady]').check();await mixed.locator('[data-check=editingDone]').check();
+  await page.locator('[data-filter-method]').selectOption('AI Video');assert.equal(await page.locator('.wb-production-card').count(),2);
+  const mixed=page.locator('.wb-production-card[data-scene="'+firstId+'"]');if(await mixed.locator('[data-action=expand]').getAttribute('aria-expanded')!=='true')await mixed.locator('[data-action=expand]').click();await mixed.locator('[data-task=ready]').click();
+  if(await mixed.locator('[data-action=expand]').getAttribute('aria-expanded')!=='true')await mixed.locator('[data-action=expand]').click();await mixed.locator('[data-check=voiceoverReady]').check();await mixed.locator('[data-check=editingDone]').check();
   await mixed.locator('[data-field=sceneState]').count().then(count=>assert.equal(count,1)); // completion is now editable directly in the production table
   await page.locator('[data-tab=Storyboard]').click();await scene(0).locator('[data-field=sceneState]').selectOption('Completed');
   await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes[0].completed,projectId);
   await page.reload();await page.locator('.wb-scene').first().waitFor();assert.equal(await scene(0).locator('[data-field=sceneState]').inputValue(),'Completed');
-  await page.locator('#startProduction').click();assert.equal(await page.locator('#focusEditor').count(),0);await page.locator('[data-workspace=Blender]').click();assert.equal(await page.locator('.wb-production-card').count(),3);
-  await page.locator('[data-workspace=Editing]').click();assert.equal(await page.locator('.wb-production-card').count(),16);
+  await page.locator('[data-tab=Production]').click();assert.equal(await page.locator('#focusEditor').count(),0);await page.locator('[data-filter-method]').selectOption('Blender');assert.equal(await page.locator('.wb-production-card').count(),3);
+  await page.locator('[data-filter-method]').selectOption('Editing');assert.equal(await page.locator('.wb-production-card').count(),16);
   await page.locator('[data-tab=Overview]').click();await page.locator('.wb-script summary').click();
-  const original=await page.locator('[data-canonical-script]').inputValue();
+  const original=await page.locator('[data-canonical-script]').textContent();
   const updated=original.replace('भारत का मिशन 1!','Changed narration');
   await page.locator('[data-script-draft]').fill(updated);await page.locator('[data-action=review-script]').click();
   assert.equal((await stored()).scenes[0].voiceover,'भारत का मिशन 1!');
   await page.locator('[data-action=apply-script]').click();await page.locator('.wb-script summary').click();
-  assert.match(await page.locator('[data-canonical-script]').inputValue(),/^Changed narration/);
+  assert.match(await page.locator('[data-canonical-script]').textContent(),/^Changed narration/);
   // Asset metadata and associations survive reload; local references are never file URLs.
   await page.locator('[data-tab=Assets]').click();await page.locator('[data-action=add-asset]').click();
   await page.locator('[data-asset-field=name]').fill('Crew Module');await page.locator('[data-asset-field=path]').fill('E:\\3D\\MY\\Gaganyaan\\crew.blend');
@@ -218,7 +230,7 @@ const server=http.createServer((req,res)=>{
    await page.setViewportSize({width,height:900});
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'No horizontal overflow at '+width);
    assert.equal(await page.locator('.wb-scene').evaluate(el=>el.scrollWidth<=el.clientWidth+1),true);
-   await page.locator('[data-tab=Production]').click();await page.locator('[data-workspace=All]').click();
+   await page.locator('[data-tab=Production]').click();await page.locator('[data-filter-method]').selectOption('All');
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
    await page.locator('[data-tab=Storyboard]').click();
   }
