@@ -5,7 +5,7 @@ const options=(values,current)=>values.map(value=>'<option '+(value===current?'s
 export function createProductionWorkbench(root,{getProject,onChange,onFocus,copyText}){
  let tab='Storyboard',workspace='Blender',groupBy='project',active='',pending=[],mapping=[],importTable=null,scriptChanges=null,dragId='';
  root.classList.add('production-workbench');
- root.innerHTML='<nav class="wb-tabs" aria-label="Project areas">'+['Storyboard','Production','Assets','Overview'].map(name=>'<button data-tab="'+name+'">'+name+'</button>').join('')+'</nav><div class="wb-status" role="status" aria-live="polite"></div><div data-workbench></div>';
+ root.innerHTML='<nav class="wb-tabs" aria-label="Project areas">'+['Storyboard','Production','Assets','Overview'].map(name=>'<button type="button" data-tab="'+name+'">'+name+'</button>').join('')+'</nav><div class="wb-status" role="status" aria-live="polite"></div><div data-workbench></div>';
  const panel=root.querySelector('[data-workbench]'),message=text=>root.querySelector('.wb-status').textContent=text;
  const project=()=>getProject();
  const scenes=()=>project()?.scenes||[];
@@ -28,7 +28,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   const task=taskFor(project(),scene,method);
   if(method==='Editing')return '<section class="wb-stage"><strong>Editing</strong><label><input type="checkbox" data-check="editingDone" '+(scene.editingDone?'checked':'')+'>Editing complete</label></section>';
   return '<section class="wb-stage"><strong>'+esc(method)+' · '+animationStage(task)+'</strong><div class="wb-actions">'+
-   (method==='Blender'?[['started','Start working'],['modeling','Modeling complete'],['animation','Animation complete'],['rendering','Rendering complete'],['ready','Asset ready']]:[['started','Start working'],['ready','Asset ready']]).map(([key,label])=>'<button data-task="'+key+'" data-task-method="'+method+'" aria-pressed="'+!!task[key]+'">'+(task[key]?'✓ ':'')+label+'</button>').join('')+'</div></section>';
+   (method==='Blender'?[['started','Start working'],['modeling','Modeling complete'],['animation','Animation complete'],['rendering','Rendering complete'],['ready','Asset ready']]:[['started','Start working'],['ready','Asset ready']]).map(([key,label])=>'<button type="button" data-task="'+key+'" data-task-method="'+method+'" aria-pressed="'+!!task[key]+'">'+(task[key]?'✓ ':'')+label+'</button>').join('')+'</div></section>';
  }
  function details(scene){
   const group=groupFor(project(),scene);
@@ -41,16 +41,16 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    (group?'<p>Shared project: '+esc(group.name)+' · '+esc(group.blenderFile||'No file reference yet')+'</p>':'')+
    methodsOf(scene).map(method=>stageControls(scene,method)).join('')+
    '<div class="wb-actions"><label><input type="checkbox" data-check="voiceoverReady" '+(scene.voiceoverReady?'checked':'')+'>Voiceover ready</label><label><input type="checkbox" data-check="editingDone" '+(scene.editingDone?'checked':'')+'>Editing complete</label></div>'+
-   '<div class="wb-checklist">'+(scene.checklist||[]).map((item,index)=>'<label><input type="checkbox" data-checklist="'+index+'" '+(item.done?'checked':'')+'>'+esc(item.text)+'<button data-remove-check="'+index+'" aria-label="Remove checklist item">×</button></label>').join('')+'<div class="wb-actions"><input data-new-check placeholder="Add production task"><button data-action="add-check">Add task</button></div></div>'+
-   '<div class="wb-actions"><button data-action="copy">Copy Prompt</button><button data-action="draft">Draft prompts from plan</button><button data-action="focus">Focused prompt editor</button><button data-action="duplicate">Duplicate</button><button data-action="insert">Insert scene below</button><button data-action="remove">Delete scene</button></div></div>';
+   '<div class="wb-checklist">'+(scene.checklist||[]).map((item,index)=>'<label><input type="checkbox" data-checklist="'+index+'" '+(item.done?'checked':'')+'>'+esc(item.text)+'<button type="button" data-remove-check="'+index+'" aria-label="Remove checklist item">×</button></label>').join('')+'<div class="wb-actions"><input data-new-check placeholder="Add production task"><button type="button" data-action="add-check">Add task</button></div></div>'+
+   '<div class="wb-actions"><button type="button" data-action="copy">Copy Prompt</button><button type="button" data-action="draft">Draft prompts from plan</button>'+(onFocus?'<button type="button" data-action="focus">Focused prompt editor</button>':'')+'<button type="button" data-action="duplicate">Duplicate</button><button type="button" data-action="insert">Insert scene below</button><button type="button" data-action="remove">Delete scene</button></div></div>';
  }
  function sceneRow(scene,index){
   const open=active===scene.id;
   return '<article class="wb-scene" data-scene="'+esc(scene.id)+'"><div class="wb-row">'+
-   '<div class="wb-number"><button draggable="true" data-drag="'+esc(scene.id)+'" aria-label="Drag scene '+(index+1)+'">⠿</button><strong>'+String(index+1).padStart(2,'0')+'</strong><button data-action="up" aria-label="Move scene up">↑</button><button data-action="down" aria-label="Move scene down">↓</button></div>'+
+   '<div class="wb-number"><button type="button" draggable="true" data-drag="'+esc(scene.id)+'" aria-label="Drag scene '+(index+1)+'">⠿</button><strong>'+String(index+1).padStart(2,'0')+'</strong><button type="button" data-action="up" aria-label="Move scene up">↑</button><button type="button" data-action="down" aria-label="Move scene down">↓</button></div>'+
    '<label><span class="wb-mobile-label">Timeline / duration</span><input data-field="timing" value="'+esc(scene.timeline||scene.duration+' sec')+'"></label>'+
    field('Voiceover','voiceover',scene.voiceover)+field('Visual / Animation','visual',scene.visual)+field('Assets Required','assets',scene.assets)+
-   '<div><span class="wb-mobile-label">Production method</span>'+methodTags(scene)+'</div><div>'+sceneStatus(scene)+'<span class="wb-production-status">'+productionStatus(scene)+'</span><button data-action="expand" aria-expanded="'+open+'">'+(open?'Close details':'Scene details')+'</button></div></div>'+
+   '<div><span class="wb-mobile-label">Production method</span>'+methodTags(scene)+'</div><div>'+sceneStatus(scene)+'<span class="wb-production-status">'+productionStatus(scene)+'</span><button type="button" data-action="expand" aria-expanded="'+open+'">'+(open?'Close details':'Scene details')+'</button></div></div>'+
    (open?details(scene):'')+'</article>';
  }
  function productionStatus(scene){
@@ -60,8 +60,8 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   return tasks.some(task=>Object.values(task).some(Boolean))?'In Progress':'Not Started';
  }
  function storyboard(){
-  return '<div class="wb-heading"><div><h2>Storyboard</h2><p>Plan chronologically. Produce by workflow.</p></div><button data-action="add">+ Add scene</button></div>'+
-   '<details class="wb-import" '+(!scenes().length?'open':'')+'><summary>Paste storyboard · TSV, Markdown or voiceover</summary><p>Four-column TSV and six-column Markdown both work. Quoted TSV preserves multiline narration; use &lt;br&gt; in Markdown cells. Imports append and skip exact duplicates.</p><textarea data-paste rows="6" placeholder="Paste the complete table here"></textarea><button data-action="preview">Preview and map columns</button><div data-import-preview></div></details>'+
+  return '<div class="wb-heading"><div><h2>Storyboard</h2><p>Plan chronologically. Produce by workflow.</p></div><button type="button" data-action="add">+ Add scene</button></div>'+
+   '<details class="wb-import" '+(!scenes().length?'open':'')+'><summary>Paste storyboard · TSV, Markdown or voiceover</summary><p>Four-column TSV and six-column Markdown both work. Quoted TSV preserves multiline narration; use &lt;br&gt; in Markdown cells. Imports append and skip exact duplicates.</p><textarea data-paste rows="6" placeholder="Paste the complete table here"></textarea><button type="button" data-action="preview">Preview and map columns</button><div data-import-preview></div></details>'+
    '<div class="wb-column-head" aria-hidden="true"><span>Scene</span><span>Timeline</span><span>Voiceover</span><span>Visual / Animation</span><span>Assets Required</span><span>Method</span><span>Status</span></div>'+
    (scenes().map(sceneRow).join('')||'<p>No scenes yet. Paste your storyboard above.</p>');
  }
@@ -78,22 +78,22 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    if(!buckets.has(key))buckets.set(key,{group,label:groupBy==='status'?key:groupBy==='scene'?'Scene '+(scenes().indexOf(scene)+1):group?.name||'Independent scenes',scenes:[]});
    buckets.get(key).scenes.push(scene);
   }
-  return '<div class="wb-heading"><div><h2>'+esc(project().title)+' — '+workspace+' Production</h2><p>'+queue.length+' scenes in this workflow</p></div><button data-action="next">Next pending '+workspace+' scene →</button></div>'+
-   '<div class="wb-actions">'+['Blender','AI Video','Editing','Assets','All'].map(method=>'<button data-workspace="'+method+'" aria-pressed="'+(method===workspace)+'">'+method+'</button>').join('')+
+  return '<div class="wb-heading"><div><h2>'+esc(project().title)+' — '+workspace+' Production</h2><p>'+queue.length+' scenes in this workflow</p></div><button type="button" data-action="next">Next pending '+workspace+' scene →</button></div>'+
+   '<div class="wb-actions">'+['Blender','AI Video','Editing','Assets','All'].map(method=>'<button type="button" data-workspace="'+method+'" aria-pressed="'+(method===workspace)+'">'+method+'</button>').join('')+
    '<label>Group by<select data-group-by>'+[['project','Animation Project'],['scene','Scene'],['status','Status']].map(([value,label])=>'<option value="'+value+'" '+(value===groupBy?'selected':'')+'>'+label+'</option>').join('')+'</select></label></div>'+
-   '<details class="wb-group-create"><summary>Animation projects · create / edit shared resources</summary><div class="wb-actions"><input data-new-group placeholder="Animation project name"><button data-action="add-group">Create group</button></div>'+(project().animationGroups||[]).map(groupEditor).join('')+'</details>'+
+   '<details class="wb-group-create"><summary>Animation projects · create / edit shared resources</summary><div class="wb-actions"><input data-new-group placeholder="Animation project name"><button type="button" data-action="add-group">Create group</button></div>'+(project().animationGroups||[]).map(groupEditor).join('')+'</details>'+
    [...buckets.values()].map(bucket=>'<section class="wb-queue-group"><h3>'+esc(bucket.label)+'</h3>'+bucket.scenes.map(scene=>'<article class="wb-production-card" data-scene="'+esc(scene.id)+'"><header><strong>Scene '+(scenes().indexOf(scene)+1)+' · '+esc(scene.timeline||scene.duration+' sec')+'</strong><span>'+sceneState(project(),scene)+'</span></header><p class="wb-narration">'+esc(scene.voiceover)+'</p><p>'+esc(scene.visual)+'</p><p>Required assets: '+esc(scene.assets||'None listed')+'</p>'+
-   '<div class="wb-actions"><button data-action="expand" aria-expanded="'+(active===scene.id)+'">'+(active===scene.id?'Close details':'Edit scene and prompts')+'</button><button data-action="copy">Copy Prompt</button></div>'+
+   '<div class="wb-actions"><button type="button" data-action="expand" aria-expanded="'+(active===scene.id)+'">'+(active===scene.id?'Close details':'Edit scene and prompts')+'</button><button type="button" data-action="copy">Copy Prompt</button></div>'+
    (active===scene.id?details(scene):'<p class="wb-file">'+esc(groupFor(project(),scene)?.blenderFile||scene.blenderFile||'')+'</p>'+
     (workspace==='All'?methodsOf(scene):[workspace]).map(method=>stageControls(scene,method)).join(''))+'</article>').join('')+'</section>').join('')+
    (!queue.length?'<p>No scenes in this workspace. Assign method tags in Storyboard.</p>':'');
  }
  function assetEditor(asset){
-  return '<article class="wb-asset" data-asset="'+esc(asset.id)+'"><div class="wb-detail-grid"><label>Name<input data-asset-field="name" value="'+esc(asset.name)+'"></label><label>Type<select data-asset-field="type">'+options(['Blender file','Video','Image','Audio','Reference','Model','Other'],asset.type)+'</select></label><label>Storage path / external URL<input data-asset-field="path" value="'+esc(asset.path||'')+'"></label><label>Status<select data-asset-field="status">'+options(['Not Started','In Progress','Ready'],asset.status)+'</select></label>'+field('Notes','notes',asset.notes||'','data-asset-field="notes"')+'</div><div class="wb-associations"><strong>Scenes</strong>'+scenes().map((scene,index)=>'<label><input type="checkbox" data-associate-scene="'+esc(scene.id)+'" '+((asset.sceneIds||[]).includes(scene.id)?'checked':'')+'>Scene '+(index+1)+'</label>').join('')+'<strong>Animation groups</strong>'+(project().animationGroups||[]).map(group=>'<label><input type="checkbox" data-associate-group="'+esc(group.id)+'" '+((asset.groupIds||[]).includes(group.id)?'checked':'')+'>'+esc(group.name)+'</label>').join('')+'</div><div class="wb-actions"><button data-copy-path>Copy reference</button>'+'<span data-asset-open-reference>'+(/^https?:\/\//i.test(asset.path||'')?'<a href="'+esc(asset.path)+'" target="_blank" rel="noopener noreferrer">Open URL ↗</a>':'Local paths are references only.')+'</span><button data-delete-asset>Remove metadata</button></div></article>';
+  return '<article class="wb-asset" data-asset="'+esc(asset.id)+'"><div class="wb-detail-grid"><label>Name<input data-asset-field="name" value="'+esc(asset.name)+'"></label><label>Type<select data-asset-field="type">'+options(['Blender file','Video','Image','Audio','Reference','Model','Other'],asset.type)+'</select></label><label>Storage path / external URL<input data-asset-field="path" value="'+esc(asset.path||'')+'"></label><label>Status<select data-asset-field="status">'+options(['Not Started','In Progress','Ready'],asset.status)+'</select></label>'+field('Notes','notes',asset.notes||'','data-asset-field="notes"')+'</div><div class="wb-associations"><strong>Scenes</strong>'+scenes().map((scene,index)=>'<label><input type="checkbox" data-associate-scene="'+esc(scene.id)+'" '+((asset.sceneIds||[]).includes(scene.id)?'checked':'')+'>Scene '+(index+1)+'</label>').join('')+'<strong>Animation groups</strong>'+(project().animationGroups||[]).map(group=>'<label><input type="checkbox" data-associate-group="'+esc(group.id)+'" '+((asset.groupIds||[]).includes(group.id)?'checked':'')+'>'+esc(group.name)+'</label>').join('')+'</div><div class="wb-actions"><button type="button" data-copy-path>Copy reference</button>'+'<span data-asset-open-reference>'+(/^https?:\/\//i.test(asset.path||'')?'<a href="'+esc(asset.path)+'" target="_blank" rel="noopener noreferrer">Open URL ↗</a>':'Local paths are references only.')+'</span><button type="button" data-delete-asset>Remove metadata</button></div></article>';
  }
  function assets(){
   const legacy=scenes().flatMap((scene,index)=>['characterAssetUrl','imageAssetUrl','videoAssetUrl'].filter(key=>scene[key]).map(key=>'<li>Scene '+(index+1)+' · '+esc(key)+': '+esc(scene[key])+'</li>'));
-  return '<div class="wb-heading"><div><h2>Assets</h2><p>One registry for shared models, renders, audio and references.</p></div><button data-action="add-asset">+ Add asset reference</button></div>'+
+  return '<div class="wb-heading"><div><h2>Assets</h2><p>One registry for shared models, renders, audio and references.</p></div><button type="button" data-action="add-asset">+ Add asset reference</button></div>'+
    (project().assets||[]).map(assetEditor).join('')+(legacy.length?'<details><summary>Existing scene asset links</summary><ul>'+legacy.join('')+'</ul></details>':'');
  }
  function overview(){
@@ -101,7 +101,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   return '<div class="wb-heading"><div><h2>Overview</h2><p>'+progress+'% of required work complete</p></div></div><progress max="100" value="'+progress+'"></progress>'+
    '<div class="wb-overview">'+scenes().map((scene,index)=>'<article><strong>Scene '+(index+1)+' · '+sceneState(project(),scene)+'</strong><p>'+esc(requirements(project(),scene).filter(task=>!task.done).map(task=>task.key).join(' · ')||'All production tasks ready; review scene completion.')+'</p></article>').join('')+'</div>'+
    '<details><summary>Project hook and notes</summary>'+field('Hook','hook',project().hook||'','data-project-field="hook"')+field('Project notes','notes',project().notes||'','data-project-field="notes"')+'</details>'+
-   '<details class="wb-script"><summary>Script and voiceover · review synchronization</summary><p>Scene narration is canonical. The existing full-script draft is retained separately. Applying a draft requires one paragraph per scene and a review.</p><label>Chronological scene script<textarea readonly rows="8" data-canonical-script>'+esc(script)+'</textarea></label><button data-action="copy-script">Copy chronological script</button><label>Full-script draft<textarea rows="8" data-script-draft>'+esc(project().script||script)+'</textarea></label><div class="wb-actions"><button data-action="script-from-scenes">Review scenes → full script</button><button data-action="review-script">Review full script → scenes</button></div><div data-script-review></div></details>';
+   '<details class="wb-script"><summary>Script and voiceover · review synchronization</summary><p>Scene narration is canonical. The existing full-script draft is retained separately. Applying a draft requires one paragraph per scene and a review.</p><label>Chronological scene script<textarea readonly rows="8" data-canonical-script>'+esc(script)+'</textarea></label><button type="button" data-action="copy-script">Copy chronological script</button><label>Full-script draft<textarea rows="8" data-script-draft>'+esc(project().script||script)+'</textarea></label><div class="wb-actions"><button type="button" data-action="script-from-scenes">Review scenes → full script</button><button type="button" data-action="review-script">Review full script → scenes</button></div><div data-script-review></div></details>';
  }
  function render(){
   if(!project())return;
@@ -113,7 +113,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   try{
    importTable=inspectImport(panel.querySelector('[data-paste]').value);mapping=[...importTable.mapping];
    const box=panel.querySelector('[data-import-preview]');
-   box.innerHTML='<p>'+importTable.format+' · '+importTable.rows.length+' rows. Map columns, then review every scene.</p><div class="wb-mapping">'+importTable.headers.map((header,index)=>'<label>'+esc(header)+'<select data-map="'+index+'"><option value="">Ignore column</option>'+IMPORT_FIELDS.map(key=>'<option value="'+key+'" '+(mapping[index]===key?'selected':'')+'>'+key+'</option>').join('')+'</select></label>').join('')+'</div><button data-action="map-preview">Review scenes</button><div data-mapped-preview></div>';
+   box.innerHTML='<p>'+importTable.format+' · '+importTable.rows.length+' rows. Map columns, then review every scene.</p><div class="wb-mapping">'+importTable.headers.map((header,index)=>'<label>'+esc(header)+'<select data-map="'+index+'"><option value="">Ignore column</option>'+IMPORT_FIELDS.map(key=>'<option value="'+key+'" '+(mapping[index]===key?'selected':'')+'>'+key+'</option>').join('')+'</select></label>').join('')+'</div><button type="button" data-action="map-preview">Review scenes</button><div data-mapped-preview></div>';
    mappedPreview();
   }catch(error){message(error.message);}
  }
@@ -122,7 +122,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   try{
    const parsed=parseProductionImport(panel.querySelector('[data-paste]').value,mapping);
    const unique=uniqueScenes(scenes(),parsed);pending=unique.scenes;
-   panel.querySelector('[data-mapped-preview]').innerHTML='<p>'+pending.length+' new scenes · '+unique.duplicates+' duplicates skipped. Existing scenes stay in place.</p><div class="wb-preview">'+parsed.map((scene,index)=>'<article><strong>Scene '+(index+1)+' · '+esc(scene.timeline||scene.duration+' sec')+'</strong><p>'+esc(scene.voiceover)+'</p><p>'+esc(scene.visual)+'</p><p>'+esc(scene.assets)+'</p><p>'+esc(methodsOf(scene).join(', '))+'</p><p>'+esc(scene.blenderPrompt||scene.videoPrompt||'')+'</p>'+(scene.importedStatus?'<p>Imported status: '+esc(scene.importedStatus)+' (completion requires review)</p>':'')+'</article>').join('')+'</div><button data-action="import" '+(!pending.length?'disabled':'')+'>Append reviewed scenes</button>';
+   panel.querySelector('[data-mapped-preview]').innerHTML='<p>'+pending.length+' new scenes · '+unique.duplicates+' duplicates skipped. Existing scenes stay in place.</p><div class="wb-preview">'+parsed.map((scene,index)=>'<article><strong>Scene '+(index+1)+' · '+esc(scene.timeline||scene.duration+' sec')+'</strong><p>'+esc(scene.voiceover)+'</p><p>'+esc(scene.visual)+'</p><p>'+esc(scene.assets)+'</p><p>'+esc(methodsOf(scene).join(', '))+'</p><p>'+esc(scene.blenderPrompt||scene.videoPrompt||'')+'</p>'+(scene.importedStatus?'<p>Imported status: '+esc(scene.importedStatus)+' (completion requires review)</p>':'')+'</article>').join('')+'</div><button type="button" data-action="import" '+(!pending.length?'disabled':'')+'>Append reviewed scenes</button>';
    message('Preview only. No scenes changed.');
   }catch(error){message(error.message);}
  }
@@ -209,11 +209,11 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    if(action==='copy-script'){await copyText(canonicalScript(project()));message('Chronological script copied.');return;}
    if(action==='script-from-scenes'){
     scriptChanges={direction:'from',before:project().script||'',after:canonicalScript(project())};
-    panel.querySelector('[data-script-review]').innerHTML='<h3>Review full-script replacement</h3><p>Current draft</p><pre>'+esc(scriptChanges.before)+'</pre><p>Scene narration</p><pre>'+esc(scriptChanges.after)+'</pre><button data-action="apply-script">Replace full-script draft</button>';return;
+    panel.querySelector('[data-script-review]').innerHTML='<h3>Review full-script replacement</h3><p>Current draft</p><pre>'+esc(scriptChanges.before)+'</pre><p>Scene narration</p><pre>'+esc(scriptChanges.after)+'</pre><button type="button" data-action="apply-script">Replace full-script draft</button>';return;
    }
    if(action==='review-script'){
     scriptChanges={direction:'to',rows:scriptReview(project(),panel.querySelector('[data-script-draft]').value)};
-    panel.querySelector('[data-script-review]').innerHTML=scriptChanges.rows.map((row,i)=>'<article><strong>Scene '+(i+1)+(row.changed?' · Changed':' · Unchanged')+'</strong><del>'+esc(row.before)+'</del><ins>'+esc(row.after)+'</ins></article>').join('')+'<button data-action="apply-script">Apply reviewed narration changes</button>';return;
+    panel.querySelector('[data-script-review]').innerHTML=scriptChanges.rows.map((row,i)=>'<article><strong>Scene '+(i+1)+(row.changed?' · Changed':' · Unchanged')+'</strong><del>'+esc(row.before)+'</del><ins>'+esc(row.after)+'</ins></article>').join('')+'<button type="button" data-action="apply-script">Apply reviewed narration changes</button>';return;
    }
    if(action==='apply-script'&&scriptChanges){
     if(scriptChanges.direction==='from')project().script=scriptChanges.after;
@@ -244,5 +244,5 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  root.addEventListener('dragover',event=>{if(dragId&&event.target.closest('[data-scene]'))event.preventDefault();});
  root.addEventListener('drop',event=>{event.preventDefault();const id=event.target.closest('[data-scene]')?.dataset.scene;if(!dragId||!id||id===dragId)return;const from=scenes().findIndex(scene=>scene.id===dragId),to=scenes().findIndex(scene=>scene.id===id);if(from<0||to<0)return;const [item]=project().scenes.splice(from,1);project().scenes.splice(to,0,item);dragId='';changed();});
  root.addEventListener('dragend',()=>dragId='');
- return {render,watchSource(){return ()=>{};},reset:render};
+ return {render,watchSource(){return ()=>{};},reset(){tab="Storyboard";workspace="Blender";groupBy="project";active="";message("");render();}};
 }

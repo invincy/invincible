@@ -32,9 +32,59 @@ const server=http.createServer((req,res)=>{
   page.on('dialog',dialog=>dialog.accept());
   await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.copied=text}}}));
   const stored=()=>page.evaluate(()=>Object.values(JSON.parse(localStorage.getItem('test.creator')||'{}')).find(item=>item.title==='Gaganyaan production'));
+  // New Content opens the shared workbench; draft interactions never submit the form.
+  await page.goto(base);await page.locator('#addContent:enabled').click();
+  const dialog=page.locator('#contentDialog');
+  await page.locator('[name=title]').fill('Draft production');
+  const draftTable='Voiceover\tVisual / Animation\tAssets Required\tTimeline\tProduction Method\tAnimation Group\nभारत — exact narration!\tRocket orbit\tLVM3\t0–4s\tBlender\tUpper assembly\nSecond voice\tEarth\tTexture\t4–8s\tAI Video\t';
+  await dialog.locator('[data-paste]').fill(draftTable);
+  await dialog.locator('[data-action=preview]').click();
+  assert.equal(await dialog.locator('.wb-preview article').count(),2);
+  assert.equal(await dialog.evaluate(node=>node.open),true);
+  await dialog.locator('[data-action=import]').click();
+  assert.equal(await dialog.locator('.wb-scene').count(),2);
+  await dialog.locator('.wb-scene').first().locator('[data-action=expand]').click();
+  await dialog.locator('[data-field=blenderPrompt]').fill('Preserve the exact camera plan.');
+  await dialog.locator('[data-tab=Production]').click();
+  assert.equal(await dialog.locator('.wb-production-card').count(),1);
+  await dialog.locator('[data-workspace="AI Video"]').click();
+  assert.equal(await dialog.locator('.wb-production-card').count(),1);
+  await dialog.locator('[data-tab=Assets]').click();await dialog.locator('[data-action=add-asset]').click();
+  await dialog.locator('[data-asset-field=name]').fill('Rocket reference');
+  await dialog.locator('[data-asset-field=path]').fill('E:\\3D\\draft.blend');
+  assert.equal(await page.evaluate(()=>window.writes||0),0);
+  for(const width of [320,393,768,1280]){
+   await page.setViewportSize({width,height:800});
+   assert.equal(await dialog.evaluate(node=>node.scrollWidth<=node.clientWidth+1),true);
+   await dialog.locator('[data-tab=Storyboard]').click();
+   assert.equal(await dialog.locator('#contentStoryboard').evaluate(node=>node.scrollWidth<=node.clientWidth+1),true);
+   await dialog.locator('.wb-scene').last().scrollIntoViewIfNeeded();
+   assert.equal(await dialog.locator('#saveContent').evaluate(button=>{const rect=button.getBoundingClientRect();return rect.bottom<=innerHeight&&rect.top>=0}),true);
+  }
+  await page.setViewportSize({width:1440,height:1000});
+  await dialog.locator('#saveContent').click();await page.waitForURL(/project.html\?id=/);
+  await page.locator('#projectTitle').filter({hasText:'Draft production'}).waitFor();
+  assert.equal(await page.locator('.wb-scene').count(),2);
+  await page.locator('[data-tab=Production]').click();assert.equal(await page.locator('.wb-production-card').count(),1);
+  await page.locator('[data-tab=Assets]').click();assert.equal(await page.locator('[data-asset-field=path]').inputValue(),'E:\\3D\\draft.blend');
+  await page.goto(base);await page.locator('.content-card').filter({hasText:'Draft production'}).locator('[data-edit]').click();
+  assert.equal(await dialog.locator('[data-tab=Storyboard]').getAttribute('aria-current'),'page');
+  await dialog.locator('[data-tab=Production]').click();await dialog.locator('.wb-group-create summary').click();
+  await dialog.locator('[data-group-field=name]').fill('Unsaved group edit');
+  await dialog.locator('.close').last().click();
+  await page.locator('.content-card').filter({hasText:'Draft production'}).locator('[data-edit]').click();
+  await dialog.locator('[data-tab=Production]').click();await dialog.locator('.wb-group-create summary').click();
+  assert.equal(await dialog.locator('[data-group-field=name]').inputValue(),'Upper assembly');
+  await dialog.locator('.close').last().click();
+
   // Creation still uses existing Creator pipeline, owner fields and acknowledgement.
   await page.goto(base);await page.locator('#addContent:enabled').click();await page.locator('[name=title]').fill('Gaganyaan production');
+  assert.equal(await page.locator('#contentDetails').evaluate(node=>node.open),false);
+  assert.equal(await page.locator('#contentStoryboard .wb-tabs button').count(),4);
+  assert.equal(await page.locator('#contentStoryboard [data-paste]').isVisible(),true);
+  await page.locator('#contentDetails > summary').click();
   await page.locator('[name=script]').fill('Existing manual draft');
+  await page.locator('#contentDetails > summary').click();
   await page.evaluate(()=>window.failSave=true);await page.locator('#saveContent').click();
   await page.locator('#contentSaveError').filter({hasText:'Save failed'}).waitFor();
   assert.equal(await page.locator('#contentDialog').evaluate(node=>node.open),true);

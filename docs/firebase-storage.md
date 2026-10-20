@@ -61,3 +61,6 @@ Overview derives the chronological script from scene narration. The existing scr
 Persistence reuses the existing authenticated save queue, live snapshot and per-account recovery draft. This still writes the whole project and does not resolve simultaneous edits by multiple editors. Firestore document size limits still apply to metadata-heavy projects. Existing scene durations remain limited to 1–60 seconds. Production permissions and cross-device writes require a real signed-in check.
 
 Verification is recorded in docs/code-review.md. No production data or Firebase configuration was changed.
+
+
+New Content and Edit content now use the same production workbench over an isolated in-memory project draft. Only the explicit Create and open project / Save changes action writes scenes, animationGroups and assets to the existing creatorProjects document. Nested arrays are cloned on open, so cancelling changes to shared groups/assets does not mutate the pipeline's live records. Metadata timestamps and unknown fields continue to come from the original document. No storage paths or rules changed.
