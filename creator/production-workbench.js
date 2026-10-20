@@ -6,15 +6,13 @@ const ICONS={"board":"<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/
 const icon=name=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(ICONS[name]||ICONS.assets)+'</svg>';
 const action=(name,label,glyph,extra='')=>'<button type="button" class="wb-icon" data-action="'+name+'" title="'+esc(label)+'" aria-label="'+esc(label)+'" '+extra+'>'+icon(glyph)+'</button>';
 export function createProductionWorkbench(root,{getProject,onChange,onFocus,copyText,onCopyBrief,onSplitScript}){
- let tab='Storyboard',workspace='All',groupBy='project',assetFilter='All',completionFilter='All',searchQuery='',active='',pending=[],mapping=[],importTable=null,scriptChanges=null,dragId='',pageIndex=0,pageSize=8,activeAsset='',expandAll=false;
- try{const saved=localStorage.getItem('invincible.creator.pageSize');if(saved!==null&&[0,8,16].includes(Number(saved)))pageSize=Number(saved);}catch{}
+ let tab='Storyboard',workspace='All',groupBy='project',assetFilter='All',completionFilter='All',searchQuery='',active='',pending=[],mapping=[],importTable=null,scriptChanges=null,dragId='',activeAsset='',expandAll=false,viewMode='focused',expandedScene='',sidebarCollapsed=false;
  root.classList.add('production-workbench');
  root.innerHTML='<div class="wb-commandbar"><nav class="wb-tabs" aria-label="Project areas">'+['Storyboard','Production','Assets','Overview'].map((name,index)=>'<button type="button" data-tab="'+name+'" title="'+name+'" aria-label="'+name+'">'+icon(['board','production','assets','overview'][index])+'<span>'+name+'</span></button>').join('')+'</nav><div data-command-actions></div></div><div class="wb-status" role="status" aria-live="polite"></div><div data-workbench></div>';
  const panel=root.querySelector('[data-workbench]'),message=text=>root.querySelector('.wb-status').textContent=text;
  const project=()=>getProject();
  const scenes=()=>project()?.scenes||[];
  const changed=(rerender=true)=>{onChange();if(rerender)render();};
- const revealActive=()=>{const index=visibleScenes().findIndex(scene=>scene.id===active);if(index>=0)pageIndex=pageSize?Math.floor(index/pageSize):0;};
  const findScene=id=>scenes().find(scene=>scene.id===id);
  function field(label,key,value,extra=''){
   return '<label>'+esc(label)+'<textarea rows="1" data-field="'+key+'" '+extra+'>'+esc(value)+'</textarea></label>';
@@ -37,7 +35,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  function details(scene){
   const group=groupFor(project(),scene),inView=METHODS.includes(workspace)?methodsOf(scene).filter(method=>method===workspace):methodsOf(scene);
   return '<div class="wb-details">'+
-   (methodsOf(scene).includes('Blender')||group||scene.blenderFile?'<div class="wb-detail-grid">'+groupsSelect(scene)+field('Blender file','blenderFile',scene.blenderFile)+'</div>':'')+'<details class="wb-prompt-fields"><summary>Prompts</summary><div class="wb-detail-grid">'+
+   (methodsOf(scene).includes('Blender')||group||scene.blenderFile?'<div class="wb-detail-grid">'+groupsSelect(scene)+field('Blender file','blenderFile',scene.blenderFile)+'</div>':'')+'<details class="wb-prompt-fields" open><summary>Prompts</summary><div class="wb-detail-grid">'+
    field('Camera','camera',scene.camera)+field('Character','characterPrompt',scene.characterPrompt)+
    field('Image prompt','imagePrompt',scene.imagePrompt)+field('Video prompt','videoPrompt',scene.videoPrompt)+
    field('Blender prompt','blenderPrompt',scene.blenderPrompt)+field('Notes','technicalNotes',scene.technicalNotes)+
@@ -47,18 +45,9 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    '<div class="wb-actions"><label><input type="checkbox" data-check="voiceoverReady" '+(scene.voiceoverReady?'checked':'')+'>Voiceover</label><label><input type="checkbox" data-check="editingDone" '+(scene.editingDone?'checked':'')+'>Edited</label></div></section>'+
    (!scene.productionMethods?'<section class="wb-stage"><strong>Existing generated assets</strong><div class="wb-actions">'+[['characterDone','Character ready'],['imageDone','Image ready'],['videoDone','Video ready']].map(([key,label])=>'<label><input type="checkbox" data-check="'+key+'" '+(scene[key]?'checked':'')+'>'+label+'</label>').join('')+'</div><div class="wb-detail-grid">'+[['characterAssetUrl','Character link'],['imageAssetUrl','Image link'],['videoAssetUrl','Video link']].map(([key,label])=>field(label,key,scene[key]||'')).join('')+'</div></section>':'')+
    '<div class="wb-checklist">'+(scene.checklist||[]).map((item,index)=>'<label><input type="checkbox" data-checklist="'+index+'" '+(item.done?'checked':'')+'>'+esc(item.text)+'<button type="button" data-remove-check="'+index+'" aria-label="Remove checklist item">×</button></label>').join('')+'<div class="wb-actions"><input data-new-check placeholder="New task"><button type="button" data-action="add-check">Add</button></div></div>'+
-   '<div class="wb-actions wb-scene-actions">'+action('up','Move scene up','up')+action('down','Move scene down','down')+action('draft','Draft blank prompts','spark') + (onFocus?'<button type="button" data-action="focus">Focused prompt editor</button>':'') + action('duplicate','Duplicate scene','copy') + action('insert','Insert scene below','insert') + action('remove','Delete scene','trash')+'</div></div>';
+   '<div class="wb-actions wb-scene-actions">'+action('up','Move scene up','up')+action('down','Move scene down','down')+action('draft','Draft blank prompts','spark') + (onFocus?'<button type="button" data-action="focus">Focused prompt editor</button>':'') + action('insert','Insert scene below','insert')+'</div></div>';
  }
  function visibleScenes(){return filterScenes(project(),{method:workspace,assetStatus:assetFilter,completion:completionFilter,query:searchQuery});}
- function pageScenes(){
-  const all=visibleScenes(),size=pageSize||all.length||1;
-  pageIndex=Math.max(0,Math.min(pageIndex,Math.ceil(all.length/size)-1));
-  return all.slice(pageIndex*size,(pageIndex+1)*size);
- }
- function pagination(){
-  const count=visibleScenes().length,size=pageSize||count||1,pages=Math.max(1,Math.ceil(count/size));
-  return '<div class="wb-pagination"><label>Rows<select data-page-size>'+[['8','8'],['16','16'],['0','All']].map(([value,label])=>'<option value="'+value+'" '+(Number(value)===pageSize?'selected':'')+'>'+label+'</option>').join('')+'</select></label><span>'+(pageIndex+1)+' / '+pages+'</span><button type="button" data-action="page-prev" aria-label="Previous page" title="Previous page" '+(!pageIndex?'disabled':'')+'>←</button><button type="button" data-action="page-next" aria-label="Next page" title="Next page" '+(pageIndex>=pages-1?'disabled':'')+'>→</button></div>';
- }
  function filterBar(){
   const select=(label,attr,values,current)=>'<label title="'+label+'"><span class="wb-sr">'+label+'</span><select aria-label="'+label+'" '+attr+'>'+values.map(value=>'<option value="'+esc(value)+'" '+(value===current?'selected':'')+'>'+esc(value==='All'?'All '+label.toLowerCase():value)+'</option>').join('')+'</select></label>';
   return '<div class="wb-filters">'+select('Methods','data-filter-method',['All',...METHODS,'Assets'],workspace)+
@@ -68,15 +57,45 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    '<label class="wb-search">'+icon('search')+'<input type="search" aria-label="Search scenes" data-filter-search value="'+esc(searchQuery)+'" placeholder="Search"></label>'+
    action('clear-filters','Reset filters','reset')+'<span data-filter-count>'+visibleScenes().length+'/'+scenes().length+'</span></div>';
  }
- function columnHead(){return '<div class="wb-column-head" aria-hidden="true"><span>Scene</span><span>Timeline</span><span>Voiceover</span><span>Visual</span><span>Assets</span><span>Method</span><span>Status</span></div>';}
- function sceneRow(scene,index){
-  const open=expandAll||active===scene.id;
-  return '<article class="wb-scene '+(tab==='Production'?'wb-production-card':'')+(open?' is-open':'')+'" data-scene="'+esc(scene.id)+'"><div class="wb-row">'+
-   '<div class="wb-number"><button type="button" draggable="true" data-drag="'+esc(scene.id)+'" aria-label="Drag scene '+(index+1)+'">⠿</button><strong>'+String(index+1).padStart(2,'0')+'</strong></div>'+
-   '<label><span class="wb-mobile-label">Timeline / duration</span><input data-field="timing" value="'+esc(scene.timeline||scene.duration+' sec')+'"></label>'+
-   field('Voiceover','voiceover',scene.voiceover)+field('Visual / Animation','visual',scene.visual)+field('Assets Required','assets',scene.assets)+
-   '<div class="wb-method-cell"><span class="wb-mobile-label">Method</span>'+methodTags(scene)+'</div><div class="wb-row-status">'+sceneStatus(scene)+'<span class="wb-readiness" data-ready="'+(productionReadiness(project(),scene,workspace)==='Ready')+'" title="Assets: '+productionReadiness(project(),scene,workspace)+'" role="img" aria-label="Assets: '+productionReadiness(project(),scene,workspace)+'"></span>'+action('expand',expandAll?'Focus scene':open?'Close details':'Scene details',open?'close':'expand','aria-expanded="'+open+'"')+action('copy','Copy prompt','copy')+'</div></div>'+
-   (open?details(scene):'')+'</article>';
+ function currentScene(){const visible=visibleScenes();return visible.find(scene=>scene.id===active)||visible[0];}
+ function sceneRow(scene,index,focused=false){
+  const open=focused||expandAll||expandedScene===scene.id;
+  return '<article class="wb-scene '+(tab==='Production'?'wb-production-card':'')+(open?' is-open':'')+'" data-scene="'+esc(scene.id)+'">'+
+   '<header class="wb-scene-controls"><div class="wb-number">'+(!focused?'<button type="button" draggable="true" data-drag="'+esc(scene.id)+'" aria-label="Drag scene '+(index+1)+'">⠿</button>':'')+'<strong>'+String(index+1).padStart(2,'0')+'</strong></div>'+
+   '<label class="wb-timing"><span class="wb-sr">Timeline</span><input aria-label="Timeline" data-field="timing" value="'+esc(scene.timeline||scene.duration+' sec')+'"></label>'+
+   methodTags(scene)+sceneStatus(scene)+
+   action('duplicate','Duplicate scene','copy')+action('remove','Delete scene','trash')+
+   (!focused?action('expand',open?'Collapse scene':'Expand scene',open?'close':'expand','aria-expanded="'+open+'"'):'')+'</header>'+
+   (!open?'<button type="button" class="wb-scene-preview" data-select-scene="'+esc(scene.id)+'" title="Open scene">'+esc(scene.voiceover||'Untitled scene')+'</button>':'')+
+   '<div class="wb-scene-content" '+(!open?'hidden':'')+'><div class="wb-writing">'+field('Voiceover','voiceover',scene.voiceover)+field('Visual / Animation','visual',scene.visual)+field('Assets Required','assets',scene.assets)+'</div>'+
+   '<div class="wb-copy-line">'+action('copy','Copy prompt','copy')+'</div>'+details(scene)+'</div></article>';
+ }
+ function queueBuckets(queue){
+  const buckets=new Map();
+  for(const scene of queue){
+   const group=groupFor(project(),scene),key=groupBy==='status'?productionStatus(scene):groupBy==='scene'?scene.id:group?.id||'ungrouped';
+   if(!buckets.has(key))buckets.set(key,{label:groupBy==='status'?key:groupBy==='scene'?'Scene '+(scenes().indexOf(scene)+1):group?.name||'Independent',scenes:[]});
+   buckets.get(key).scenes.push(scene);
+  }
+  return [...buckets.values()];
+ }
+ function navigatorEntry(scene){
+  const index=scenes().indexOf(scene),selected=currentScene()?.id===scene.id;
+  return '<div class="wb-nav-entry" data-nav-scene="'+esc(scene.id)+'"><button type="button" draggable="true" data-drag="'+esc(scene.id)+'" aria-label="Drag scene '+(index+1)+'">⠿</button><button type="button" data-select-scene="'+esc(scene.id)+'" aria-current="'+(selected?'true':'false')+'"><span><strong>'+String(index+1).padStart(2,'0')+'</strong><small>'+esc(scene.timeline||scene.duration+'s')+'</small></span><span class="wb-nav-preview">'+esc(scene.voiceover||'Untitled scene')+'</span></button></div>';
+ }
+ function sceneWorkspace(){
+  const queue=visibleScenes(),scene=currentScene();
+  if(!queue.length)return '<div class="wb-empty">No scenes match.</div>';
+  if(viewMode==='all')return '<div class="wb-all-scenes">'+(tab==='Production'?queueBuckets(queue).map(bucket=>'<section class="wb-queue-group"><h3>'+esc(bucket.label)+'</h3>'+bucket.scenes.map(item=>sceneRow(item,scenes().indexOf(item))).join('')+'</section>').join(''):queue.map(item=>sceneRow(item,scenes().indexOf(item))).join(''))+'</div>';
+  const index=queue.indexOf(scene);
+  return '<div class="wb-focus-layout '+(sidebarCollapsed?'is-collapsed':'')+'"><aside class="wb-navigator" aria-label="Scene navigator">'+
+   '<div class="wb-nav-heading"><span>Scenes</span><small>'+queue.length+'</small></div><div class="wb-nav-list">'+
+   (tab==='Production'?queueBuckets(queue).map(bucket=>'<div class="wb-nav-group"><h3>'+esc(bucket.label)+'</h3>'+bucket.scenes.map(navigatorEntry).join('')+'</div>').join(''):queue.map(navigatorEntry).join(''))+'</div></aside>'+
+   '<section class="wb-active-editor" aria-label="Active scene editor"><div class="wb-scene-navigation">'+
+   action('toggle-sidebar',sidebarCollapsed?'Show scene navigator':'Hide scene navigator','board','aria-expanded="'+!sidebarCollapsed+'"')+
+   '<label class="wb-scene-jump"><span class="wb-sr">Select scene</span><select data-scene-jump aria-label="Select scene">'+queue.map(item=>'<option value="'+esc(item.id)+'" '+(item.id===scene.id?'selected':'')+'>Scene '+(scenes().indexOf(item)+1)+'</option>').join('')+'</select></label><span>'+(index+1)+' / '+queue.length+'</span>'+
+   action('previous-scene','Previous scene','up',index===0?'disabled':'')+action('next-scene','Next scene','down',index===queue.length-1?'disabled':'')+'</div>'+
+   sceneRow(scene,scenes().indexOf(scene),true)+'</section></div>';
  }
  function productionStatus(scene){
   if(sceneState(project(),scene)==='Completed')return 'Completed';
@@ -84,28 +103,21 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   if(tasks.length&&tasks.every(task=>task.ready||task.rendering))return 'Rendered';
   return tasks.some(task=>Object.values(task).some(Boolean))?'In Progress':'Not Started';
  }
- function expansionControl(){return action('expand-all',expandAll?'Collapse all scenes':'Expand all filtered scenes','board','aria-pressed="'+expandAll+'"');}
+ function modeControls(){
+  return '<button type="button" data-action="view-mode" title="'+(viewMode==='focused'?'View all scenes':'Focus selected scene')+'">'+icon(viewMode==='focused'?'board':'production')+'<span>'+(viewMode==='focused'?'All scenes':'Focus')+'</span></button>'+
+   (viewMode==='all'?action('expand-all',expandAll?'Collapse all scenes':'Expand all filtered scenes','expand','aria-pressed="'+expandAll+'"'):'');
+ }
  function storyboard(){
-  return '<div class="wb-toolbar"><details class="wb-import" '+(!scenes().length?'open':'')+'><summary>'+icon('import')+'<span>Import</span></summary><div class="wb-import-body"><textarea aria-label="Paste storyboard" data-paste rows="3" placeholder="Paste TSV, Markdown or narration"></textarea><button type="button" data-action="preview">Preview</button><div data-import-preview></div></div></details>'+expansionControl()+action('add','Add scene','add')+'</div>'+
-   filterBar()+columnHead()+
-   (pageScenes().map(scene=>sceneRow(scene,scenes().indexOf(scene))).join('')||'<p>No scenes match.</p>')+pagination();
+  return '<div class="wb-toolbar"><details class="wb-import" '+(!scenes().length?'open':'')+'><summary>'+icon('import')+'<span>Import</span></summary><div class="wb-import-body"><textarea aria-label="Paste storyboard" data-paste rows="3" placeholder="Paste TSV, Markdown or narration"></textarea><button type="button" data-action="preview">Preview</button><div data-import-preview></div></div></details>'+modeControls()+action('add','Add scene','add')+'</div>'+
+   filterBar()+sceneWorkspace();
  }
  function groupEditor(group){
   return '<section class="wb-group" data-group="'+esc(group.id)+'"><div class="wb-detail-grid"><label>Project name<input data-group-field="name" value="'+esc(group.name)+'"></label><label>Blender file<input data-group-field="blenderFile" value="'+esc(group.blenderFile||'')+'"></label>'+
    field('Resources','resources',group.resources||'','data-group-field="resources"')+'</div></section>';
  }
  function production(){
-  const queue=pageScenes();
-  const buckets=new Map();
-  for(const scene of queue){
-   const group=groupFor(project(),scene);
-   const key=groupBy==='status'?productionStatus(scene):groupBy==='scene'?scene.id:group?.id||'ungrouped';
-   if(!buckets.has(key))buckets.set(key,{group,label:groupBy==='status'?key:groupBy==='scene'?'Scene '+(scenes().indexOf(scene)+1):group?.name||'Independents',scenes:[]});
-   buckets.get(key).scenes.push(scene);
-  }
-  return '<div class="wb-toolbar"><details class="wb-group-create"><summary>'+icon('assets')+'<span>Projects</span></summary><div class="wb-group-body"><div class="wb-actions"><input data-new-group placeholder="Project name"><button type="button" data-action="add-group">Create</button></div>'+(project().animationGroups||[]).map(groupEditor).join('')+'</div></details>'+expansionControl()+action('next','Next pending scene','next')+'</div>'+
-   filterBar()+[...buckets.values()].map(bucket=>'<section class="wb-queue-group"><h3>'+esc(bucket.label)+'</h3>'+columnHead()+bucket.scenes.map(scene=>sceneRow(scene,scenes().indexOf(scene))).join('')+'</section>').join('')+
-   (!queue.length?'<p>No scenes match. Use Show all to reset.</p>':'')+pagination();
+  return '<div class="wb-toolbar"><details class="wb-group-create"><summary>'+icon('assets')+'<span>Projects</span></summary><div class="wb-group-body"><div class="wb-actions"><input data-new-group placeholder="Project name"><button type="button" data-action="add-group">Create</button></div>'+(project().animationGroups||[]).map(groupEditor).join('')+'</div></details>'+modeControls()+action('next','Next pending scene','next')+'</div>'+
+   filterBar()+sceneWorkspace();
  }
  function assetEditor(asset){
   return '<details class="wb-asset" data-asset="'+esc(asset.id)+'" '+(activeAsset===asset.id?'open':'')+'><summary><strong>'+esc(asset.name)+'</strong><span>'+esc(asset.type)+' · '+esc(asset.status)+'</span></summary><div class="wb-detail-grid"><label>Name<input data-asset-field="name" value="'+esc(asset.name)+'"></label><label>Type<select data-asset-field="type">'+options(['Blender file','Video','Image','Audio','Reference','Model','Other'],asset.type)+'</select></label><label>Path / URL<input data-asset-field="path" value="'+esc(asset.path||'')+'"></label><label>Status<select data-asset-field="status">'+options(['Not Started','In Progress','Ready'],asset.status)+'</select></label>'+field('Notes','notes',asset.notes||'','data-asset-field="notes"')+'</div><div class="wb-associations"><strong>Scenes</strong>'+scenes().map((scene,index)=>'<label><input type="checkbox" data-associate-scene="'+esc(scene.id)+'" '+((asset.sceneIds||[]).includes(scene.id)?'checked':'')+'>Scene '+(index+1)+'</label>').join('')+'<strong>Animation groups</strong>'+(project().animationGroups||[]).map(group=>'<label><input type="checkbox" data-associate-group="'+esc(group.id)+'" '+((asset.groupIds||[]).includes(group.id)?'checked':'')+'>'+esc(group.name)+'</label>').join('')+'</div><div class="wb-actions"><button type="button" data-copy-path>Copy path</button>'+'<span data-asset-open-reference>'+(/^https?:\/\//i.test(asset.path||'')?'<a href="'+esc(asset.path)+'" target="_blank" rel="noopener noreferrer">Open URL ↗</a>':'Local reference')+'</span><button type="button" data-delete-asset>Remove</button></div></details>';
@@ -134,7 +146,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   root.querySelectorAll('.wb-scene.is-open textarea').forEach(input=>{
    if(!input.getClientRects().length)return;
    input.style.height='auto';
-   input.style.height=Math.max(input.closest('.wb-row')?100:80,input.scrollHeight+2)+'px';
+   input.style.height=Math.max(input.closest('.wb-writing')?64:44,input.scrollHeight+2)+'px';
   });
  }
  let lastWidth=0;
@@ -142,11 +154,15 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  editorObserver.observe(root);
  function render(){
   if(!project())return;
+  const navScroll=root.querySelector('.wb-nav-list')?.scrollTop||0;
+  if(!active&&scenes().length)active=scenes()[0].id;
   root.querySelectorAll('[data-tab]').forEach(button=>button.setAttribute('aria-current',button.dataset.tab===tab?'page':'false'));
   panel.innerHTML=tab==='Storyboard'?storyboard():tab==='Production'?production():tab==='Assets'?assets():overview();
   const tools=root.querySelector('[data-command-actions]');tools.replaceChildren();
   const toolbar=panel.querySelector('.wb-toolbar');if(toolbar)tools.append(toolbar);
   pending=[];scriptChanges=null;sizeEditors();
+  const list=root.querySelector('.wb-nav-list'),selected=list?.querySelector('[aria-current=true]');
+  if(list&&selected){list.scrollTop=navScroll;const bounds=list.getBoundingClientRect(),item=selected.getBoundingClientRect();if(item.top<bounds.top)list.scrollTop-=bounds.top-item.top;else if(item.bottom>bounds.bottom)list.scrollTop+=item.bottom-bounds.bottom;}
  }
  function preview(){
   try{
@@ -169,7 +185,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   if(event.target.matches('.wb-scene.is-open textarea'))sizeEditors();
   const target=event.target,scene=findScene(target.closest('[data-scene]')?.dataset.scene);
   if(target.matches('[data-filter-search]')){
-   searchQuery=target.value;pageIndex=0;const cursor=target.selectionStart;render();const input=root.querySelector('[data-filter-search]');input.focus();input.setSelectionRange(cursor,cursor);return;
+   searchQuery=target.value;const cursor=target.selectionStart;render();const input=root.querySelector('[data-filter-search]');input.focus();input.setSelectionRange(cursor,cursor);return;
   }
   if(target.matches('[data-paste]')){pending=[];const box=root.querySelector('[data-import-preview]');if(box)box.innerHTML='';return;}
   if(target.matches('[data-script-draft]')){project().script=target.value;scriptChanges=null;root.querySelector('[data-script-review]').innerHTML='';changed(false);return;}
@@ -196,11 +212,11 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  });
  root.addEventListener('change',event=>{
   const target=event.target,scene=findScene(target.closest('[data-scene]')?.dataset.scene);
-  if(target.matches('[data-page-size]')){pageSize=Number(target.value);try{localStorage.setItem('invincible.creator.pageSize',String(pageSize));}catch{}pageIndex=0;render();return;}
-  if(target.matches('[data-filter-method]')){workspace=target.value;pageIndex=0;render();return;}
-  if(target.matches('[data-filter-assets]')){assetFilter=target.value;pageIndex=0;render();return;}
-  if(target.matches('[data-filter-completion]')){completionFilter=target.value;pageIndex=0;render();return;}
+  if(target.matches('[data-filter-method]')){workspace=target.value;render();return;}
+  if(target.matches('[data-filter-assets]')){assetFilter=target.value;render();return;}
+  if(target.matches('[data-filter-completion]')){completionFilter=target.value;render();return;}
   if(target.dataset.map!==undefined){mapping[Number(target.dataset.map)]=target.value;pending=[];mappedPreview();return;}
+  if(target.matches('[data-scene-jump]')){active=target.value;render();return;}
   if(target.matches('[data-group-by]')){groupBy=target.value;render();return;}
   const asset=(project().assets||[]).find(item=>item.id===target.closest('[data-asset]')?.dataset.asset);
   if(asset&&target.dataset.assetField){if(target.tagName==='SELECT')changed();return;}
@@ -223,9 +239,10 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   const button=event.target.closest('button');if(!button)return;
   try{
    if(button.dataset.overviewFilter){
-    tab='Production';workspace='All';pageIndex=0;assetFilter=button.dataset.overviewFilter==='Ready'?'Ready':'All';completionFilter=['Editing','Completed'].includes(button.dataset.overviewFilter)?button.dataset.overviewFilter:'All';searchQuery='';render();return;
+    tab='Production';workspace='All';assetFilter=button.dataset.overviewFilter==='Ready'?'Ready':'All';completionFilter=['Editing','Completed'].includes(button.dataset.overviewFilter)?button.dataset.overviewFilter:'All';searchQuery='';render();return;
    }
-   if(button.dataset.openScene){expandAll=false;tab='Production';workspace='All';assetFilter='All';completionFilter='All';searchQuery='';active=button.dataset.openScene;revealActive();render();return;}
+   if(button.dataset.openScene){viewMode='focused';expandAll=false;tab='Production';workspace='All';assetFilter='All';completionFilter='All';searchQuery='';active=button.dataset.openScene;render();return;}
+   if(button.dataset.selectScene){active=button.dataset.selectScene;viewMode='focused';expandAll=false;render();return;}
    if(button.dataset.tab){tab=button.dataset.tab;message('');render();return;}
    if(button.dataset.workspace){workspace=button.dataset.workspace;active='';render();return;}
    const scene=findScene(button.closest('[data-scene]')?.dataset.scene),index=scenes().indexOf(scene),action=button.dataset.action;
@@ -239,9 +256,14 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
     setTask(project(),scene,method,patch);changed();return;
    }
    if(button.dataset.removeCheck!==undefined){scene.checklist.splice(Number(button.dataset.removeCheck),1);scene.completed=false;changed();return;}
-   if(action==='expand-all'){expandAll=!expandAll;if(!expandAll)active='';render();return;}
-   if(action==='page-prev'||action==='page-next'){pageIndex+=action==='page-prev'?-1:1;render();return;}
-   if(action==='clear-filters'){pageIndex=0;workspace='All';assetFilter='All';completionFilter='All';searchQuery='';render();return;}
+   if(action==='view-mode'){viewMode=viewMode==='focused'?'all':'focused';expandAll=false;expandedScene='';render();return;}
+   if(action==='toggle-sidebar'){sidebarCollapsed=!sidebarCollapsed;render();return;}
+   if(action==='previous-scene'||action==='next-scene'){
+    const queue=visibleScenes(),index=queue.indexOf(currentScene()),next=queue[index+(action==='next-scene'?1:-1)];
+    if(next){active=next.id;render();}return;
+   }
+   if(action==='expand-all'){expandAll=!expandAll;expandedScene='';render();return;}
+   if(action==='clear-filters'){workspace='All';assetFilter='All';completionFilter='All';searchQuery='';render();return;}
    if(action==='preview'){preview();return;}if(action==='map-preview'){mappedPreview();return;}
    if(action==='import'){
     if(!pending.length)return;
@@ -254,12 +276,12 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
     }
     project().scenes.push(...fresh);pending=[];changed();message(fresh.length+' scenes appended.');return;
    }
-   if(action==='add'){expandAll=false;const item=makeScene({productionMethods:[],sceneState:'Planned'});project().scenes.push(item);active=item.id;revealActive();changed();return;}
+   if(action==='add'){viewMode='focused';expandAll=false;const item=makeScene({productionMethods:[],sceneState:'Planned'});project().scenes.push(item);active=item.id;changed();return;}
    if(action==='add-group'){const name=root.querySelector('[data-new-group]').value.trim();if(!name)return;project().animationGroups||=[];project().animationGroups.push({id:uid(),name,blenderFile:'',resources:'',production:{}});changed();return;}
    if(action==='add-asset'){project().assets||=[];activeAsset=uid();project().assets.push({id:activeAsset,name:'Untitled asset',type:'Reference',path:'',status:'Not Started',sceneIds:[],groupIds:[],notes:''});changed();return;}
    if(action==='next'){
-    expandAll=false;    const next=visibleScenes().find(item=>workspace==='Editing'?!item.editingDone:workspace==='All'||workspace==='Assets'?sceneState(project(),item)!=='Completed':!taskFor(project(),item,workspace).ready);
-    if(!next){message('No pending scenes in this workspace.');return;}active=next.id;pageIndex=pageSize?Math.floor(visibleScenes().indexOf(next)/pageSize):0;render();root.querySelector('[data-scene="'+CSS.escape(next.id)+'"]')?.scrollIntoView({block:'nearest'});return;
+    viewMode='focused';expandAll=false;const next=visibleScenes().find(item=>workspace==='Editing'?!item.editingDone:workspace==='All'||workspace==='Assets'?sceneState(project(),item)!=='Completed':!taskFor(project(),item,workspace).ready);
+    if(!next){message('No pending scenes in this workspace.');return;}active=next.id;render();root.querySelector('[data-scene="'+CSS.escape(next.id)+'"]')?.scrollIntoView({block:'nearest'});return;
    }
    if(action==='copy-brief'&&onCopyBrief){await onCopyBrief();message('Generator brief copied.');return;}
    if(action==='split-script'&&onSplitScript){onSplitScript();return;}
@@ -279,7 +301,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
     changed();message('Reviewed script changes applied.');return;
    }
    if(!scene)return;
-   if(action==='expand'){active=expandAll||active!==scene.id?scene.id:'';expandAll=false;render();return;}
+   if(action==='expand'){expandedScene=expandAll||expandedScene!==scene.id?scene.id:'';if(expandedScene)active=scene.id;expandAll=false;render();return;}
    if(action==='copy'){await copyText(workspace==='AI Video'?(scene.videoPrompt||scene.imagePrompt||scene.visual||''):scene.blenderPrompt||scene.videoPrompt||scene.imagePrompt||scene.visual||'');message('Prompt copied.');return;}
    if(action==='draft'){
     const settings=project(),style=settings.visualStyle||'cinematic documentary',ratio=settings.aspectRatio||'9:16';
@@ -290,19 +312,18 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    }
    if(action==='focus'){onFocus(scene.id);return;}
    if(action==='add-check'){const text=button.closest('[data-scene]').querySelector('[data-new-check]').value.trim();if(!text)return;scene.checklist||=[];scene.checklist.push({id:uid(),text,done:false});scene.completed=false;}
-   if(action==='duplicate'){expandAll=false;const copy=makeScene({...JSON.parse(JSON.stringify(scene)),id:uid(),completed:false,sceneState:'Planned',voiceoverReady:false,editingDone:false,checklist:(scene.checklist||[]).map(item=>({...item,id:uid(),done:false})),production:{}});project().scenes.splice(index+1,0,copy);active=copy.id;}
-   if(action==='insert'){expandAll=false;const item=makeScene({productionMethods:[],sceneState:'Planned'});project().scenes.splice(index+1,0,item);active=item.id;}
-   if(action==='remove'){if(!confirm('Delete this scene and its production notes?'))return;project().scenes.splice(index,1);for(const asset of project().assets||[])asset.sceneIds=(asset.sceneIds||[]).filter(id=>id!==scene.id);}
+   if(action==='duplicate'){expandAll=false;const copy=makeScene({...JSON.parse(JSON.stringify(scene)),id:uid(),completed:false,sceneState:'Planned',voiceoverReady:false,editingDone:false,checklist:(scene.checklist||[]).map(item=>({...item,id:uid(),done:false})),production:{}});project().scenes.splice(index+1,0,copy);active=copy.id;expandedScene=copy.id;}
+   if(action==='insert'){expandAll=false;const item=makeScene({productionMethods:[],sceneState:'Planned'});project().scenes.splice(index+1,0,item);active=item.id;expandedScene=item.id;}
+   if(action==='remove'){if(!confirm('Delete this scene and its production notes?'))return;const next=visibleScenes()[visibleScenes().indexOf(scene)+1]||visibleScenes()[visibleScenes().indexOf(scene)-1];project().scenes.splice(index,1);if(active===scene.id)active=next?.id||'';for(const asset of project().assets||[])asset.sceneIds=(asset.sceneIds||[]).filter(id=>id!==scene.id);}
    if(action==='up'||action==='down'){const next=index+(action==='up'?-1:1);if(next<0||next>=scenes().length)return;[project().scenes[index],project().scenes[next]]=[project().scenes[next],project().scenes[index]];}
-   if(action==='duplicate'||action==='insert')revealActive();
    changed();
   }catch(error){message(error.message);}
  });
  root.addEventListener('toggle',event=>{if(event.target.open)sizeEditors();if(event.target.matches('.wb-asset')){if(event.target.open)activeAsset=event.target.dataset.asset;else if(activeAsset===event.target.dataset.asset)activeAsset='';}},true);
  root.addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.matches('input,select'))event.preventDefault();});
  root.addEventListener('dragstart',event=>{const handle=event.target.closest('[data-drag]');if(!handle)return;dragId=handle.dataset.drag;event.dataTransfer.setData('text/plain',dragId);event.dataTransfer.effectAllowed='move';});
- root.addEventListener('dragover',event=>{if(dragId&&event.target.closest('[data-scene]'))event.preventDefault();});
- root.addEventListener('drop',event=>{event.preventDefault();dragId=event.dataTransfer?.getData('text/plain')||dragId;const id=event.target.closest('[data-scene]')?.dataset.scene;if(!dragId||!id||id===dragId)return;const from=scenes().findIndex(scene=>scene.id===dragId),to=scenes().findIndex(scene=>scene.id===id);if(from<0||to<0)return;const [item]=project().scenes.splice(from,1);project().scenes.splice(to,0,item);dragId='';changed();});
+ root.addEventListener('dragover',event=>{if(dragId&&event.target.closest('[data-scene],[data-nav-scene]'))event.preventDefault();});
+ root.addEventListener('drop',event=>{event.preventDefault();dragId=event.dataTransfer?.getData('text/plain')||dragId;const target=event.target.closest('[data-scene],[data-nav-scene]'),id=target?.dataset.scene||target?.dataset.navScene;if(!dragId||!id||id===dragId)return;const from=scenes().findIndex(scene=>scene.id===dragId),to=scenes().findIndex(scene=>scene.id===id);if(from<0||to<0)return;const [item]=project().scenes.splice(from,1);project().scenes.splice(to,0,item);dragId='';changed();});
  root.addEventListener('dragend',()=>dragId='');
- return {render,open({area='Production',method,sceneId}={}){tab=area;expandAll=false;if(method)workspace=method;active=sceneId||'';render();if(active)root.querySelector('[data-scene="'+CSS.escape(active)+'"]')?.scrollIntoView({block:'nearest'});},reset(){tab="Storyboard";workspace="All";assetFilter="All";completionFilter="All";searchQuery="";groupBy="project";active="";pageIndex=0;activeAsset="";expandAll=false;message("");render();}};
+ return {render,open({area='Production',method,sceneId}={}){tab=area;viewMode='focused';expandAll=false;if(method)workspace=method;active=sceneId||'';render();if(active)root.querySelector('[data-scene="'+CSS.escape(active)+'"]')?.scrollIntoView({block:'nearest'});},reset(){tab="Storyboard";workspace="All";assetFilter="All";completionFilter="All";searchQuery="";groupBy="project";active="";activeAsset="";expandAll=false;viewMode="focused";expandedScene="";message("");render();}};
 }
