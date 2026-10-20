@@ -86,6 +86,7 @@ window.listenerCount=()=>listeners.size;
   });
   const server=http.createServer((req,res)=>{
     const url=new URL(req.url,'http://localhost');
+    if(url.pathname.endsWith('/'))url.pathname+='index.html';
     if(url.pathname==='/fixture'){res.setHeader('Content-Type','text/html');res.end('<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"></head><body><div id="root"></div><script src="/fixture.js"></script></body></html>');return;}
     const file=url.pathname==='/fixture.js'||url.pathname==='/fixture.css'?path.join(output,url.pathname.slice(1)):
       url.pathname.startsWith('/invincible/v2/')?path.join(root,buildDirectory,url.pathname.slice('/invincible/v2/'.length)||'index.html'):url.pathname.startsWith('/invincible/')?path.join(root,url.pathname.slice('/invincible/'.length)||'index.html'):null;
