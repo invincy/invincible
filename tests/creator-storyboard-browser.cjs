@@ -117,9 +117,9 @@ const server=http.createServer((req,res)=>{
   assert.match(await page.locator('[data-mapped-preview]').innerText(),/16 duplicates skipped/);
   assert.equal(await page.locator('[data-action=import]').isDisabled(),true);
   await page.locator('.wb-import summary').click();
-  await scene(0).locator('[data-drag]').dragTo(scene(1));
+  await scene(0).locator('[data-drag]').dragTo(scene(1).locator('[data-drag]'));
   assert.equal(await scene(0).locator('[data-field=voiceover]').inputValue(),'भारत का मिशन 2!');
-  await scene(1).locator('[data-drag]').dragTo(scene(0));
+  await scene(1).locator('[data-drag]').dragTo(scene(0).locator('[data-drag]'));
   assert.equal(await scene(0).locator('[data-field=voiceover]').inputValue(),'भारत का मिशन 1!');
   for(const i of [0,2,10])await scene(i).locator('[data-method=Blender]').check();
   await scene(0).locator('[data-method="AI Video"]').check();await scene(1).locator('[data-method="AI Video"]').check();
