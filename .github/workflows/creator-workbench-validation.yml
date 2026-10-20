@@ -26,6 +26,7 @@ jobs:
       - run: npm ci
       - run: npm --prefix functions ci
       - run: npm test
+      - run: npm run build
       - run: npm run check
       - run: npx playwright install --with-deps chromium
       - run: node tests/creator-workbench-browser.cjs
