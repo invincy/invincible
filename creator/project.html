@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="../site-nav.css?v=15">
   <link rel="stylesheet" href="project.css?v=8">
   <link rel="stylesheet" href="storyboard.css?v=5">
-  <link rel="stylesheet" href="production-workbench.css?v=3">
+  <link rel="stylesheet" href="production-workbench.css?v=4">
 </head>
 <body class="project-page">
   <nav class="global-nav" aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
@@ -34,43 +34,6 @@
 
   </main>
 
-  <div id="focusEditor" class="focus-editor" hidden>
-    <div class="focus-shell" role="dialog" aria-modal="true" aria-labelledby="focusTitle">
-      <aside class="scene-rail" aria-label="Scenes">
-        <div class="rail-head"><span class="eyebrow">PRODUCTION RUN</span><strong id="railProgress">0 of 0 complete</strong></div>
-        <div id="sceneRail" class="rail-list"></div>
-      </aside>
-      <section class="focus-work">
-        <div class="focus-top"><div><span id="focusScene" class="eyebrow">SCENE 01</span><h2 id="focusTitle">Voiceover</h2></div><button id="closeFocus" aria-label="Close production view">×</button></div>
-        <div id="focusTabs" class="focus-tabs" role="tablist" aria-label="Scene production stages">
-          <button data-focus-field="voiceover" role="tab">Voiceover</button>
-          <button data-focus-field="characterPrompt" role="tab">Character</button>
-          <button data-focus-field="imagePrompt" role="tab">Image</button>
-          <button data-focus-field="videoPrompt" role="tab">Video</button>
-        </div>
-        <div id="focusToast" class="focus-toast" role="status" aria-live="polite"></div>
-        <textarea id="focusTextarea" spellcheck="true" aria-label="Focused scene content"></textarea>
-        <div class="focus-controls">
-          <button id="previousScene" class="scene-nav">↑ Previous scene</button>
-          <button id="previousField">← Previous step</button>
-          <span id="focusPosition"></span>
-          <button id="copyFocus" class="copy-action">Copy to GPT</button>
-          <button id="nextField">Next step →</button>
-          <button id="nextScene" class="scene-nav">Next scene ↓</button>
-          <button id="skipScene" class="text-button">Skip for now</button>
-          <button id="completeScene" class="primary complete-action">Scene complete →</button>
-        </div>
-      </section>
-    </div>
-  </div>
-
-  <dialog id="assetsDialog" class="assets-dialog">
-    <div class="assets-shell">
-      <div class="assets-head"><div><span class="eyebrow">PROJECT ASSETS</span><h2>Asset workspace</h2><p id="assetsProgress">Track generated characters, images and videos for the whole project.</p></div><button id="closeAssets" aria-label="Close asset workspace">×</button></div>
-      <div id="assetList" class="project-asset-list"></div>
-    </div>
-  </dialog>
-
   <dialog id="shareDialog" class="share-dialog">
     <form method="dialog" class="share-shell">
       <div class="share-head"><div><span class="eyebrow">COLLABORATION</span><h2>Share this project</h2><p>Editors sign in with their own Google account and work on the same scenes.</p></div><button value="cancel" aria-label="Close sharing">×</button></div>
@@ -80,6 +43,6 @@
       <div class="share-footer"><button id="copyProjectLink" type="button" class="secondary">Copy project link</button><button value="cancel" class="primary">Done</button></div>
     </form>
   </dialog>
-  <script type="module" src="project.js?v=13"></script>
+  <script type="module" src="project.js?v=14"></script>
 </body>
 </html>

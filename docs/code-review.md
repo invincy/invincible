@@ -190,3 +190,10 @@ Extended Creator browser coverage checks TSV import with method/group columns be
 
 
 Removed the three redundant standalone panels below the saved-project workbench: Full-script draft, Visual settings and More tools. Canonical narration and reviewed draft synchronization remain in Overview; visual style, aspect ratio, language, character bible and continuity settings now live there too. The generator brief and explicit rough-script splitter remain available inside Overview. The single storyboard importer now accepts JSON scene arrays as well as TSV, Markdown and voiceover-only text. Removed the obsolete page-panel event wiring rather than leaving hidden duplicate controls.
+
+
+### Interactive scene production table and combined filters
+
+Replaced the old focused scene overlay with the same structured scene table used for planning. Open production table, scene details and restored legacy production state all stay in the modern workbench. Both Storyboard and Production now filter by method, asset/animation readiness, scene completion and narration/asset/group/file text. Blender + Ready shows only ready Blender work while retaining original scene numbering; readiness remains independent of final scene completion. Production keeps animation-project/scene/status grouping and inline phase controls around the table. The redundant full-script, settings and import panels are removed; their useful controls live in Overview or the single importer. Legacy generated-asset flags/links remain editable in expanded scene details.
+
+New and edit dialogs share this complete workbench. Nested draft groups/assets are isolated until save, metadata fields remain optional, all non-submit workbench controls have explicit button types, and new/edit always open on Storyboard. Unit coverage adds mixed Blender/AI readiness and file search plus JSON import; browser coverage checks creation, cancellation, filtering, original scene state, modern production entry and responsive save controls. CI results remain pending for this revision.

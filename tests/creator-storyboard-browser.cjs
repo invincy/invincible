@@ -45,7 +45,7 @@ const server=http.createServer((req,res)=>{
   assert.equal(await dialog.locator('.wb-scene').count(),2);
   await dialog.locator('.wb-scene').first().locator('[data-action=expand]').click();
   await dialog.locator('[data-field=blenderPrompt]').fill('Preserve the exact camera plan.');
-  await dialog.locator('[data-tab=Production]').click();
+  await dialog.locator('[data-tab=Production]').click();await dialog.locator('[data-workspace=Blender]').click();
   assert.equal(await dialog.locator('.wb-production-card').count(),1);
   await dialog.locator('[data-workspace="AI Video"]').click();
   assert.equal(await dialog.locator('.wb-production-card').count(),1);
@@ -67,7 +67,7 @@ const server=http.createServer((req,res)=>{
   await dialog.locator('#saveContent').click();await page.waitForURL(/project.html\?id=/);
   await page.locator('#projectTitle').filter({hasText:'Draft production'}).waitFor();
   assert.equal(await page.locator('.wb-scene').count(),2);
-  await page.locator('[data-tab=Production]').click();assert.equal(await page.locator('.wb-production-card').count(),1);
+  await page.locator('[data-tab=Production]').click();await page.locator('[data-workspace=Blender]').click();assert.equal(await page.locator('.wb-production-card').count(),1);
   await page.locator('[data-tab=Assets]').click();assert.equal(await page.locator('[data-asset-field=path]').inputValue(),'E:\\3D\\draft.blend');
   await page.goto(base);await page.locator('.content-card').filter({hasText:'Draft production'}).locator('[data-edit]').click();
   assert.equal(await dialog.locator('[data-tab=Storyboard]').getAttribute('aria-current'),'page');
@@ -127,7 +127,7 @@ const server=http.createServer((req,res)=>{
   await scene(0).locator('[data-action=expand]').click();
   await scene(0).locator('[data-field=blenderPrompt]').fill('Animate the rocket for four seconds.');
   await scene(0).locator('[data-action=copy]').click();assert.equal(await page.evaluate(()=>window.copied),'Animate the rocket for four seconds.');
-  await page.locator('[data-tab=Production]').click();assert.equal(await page.locator('.wb-production-card').count(),3);
+  await page.locator('#startProduction').click();assert.equal(await page.locator('#focusEditor').count(),0);await page.locator('[data-workspace=Blender]').click();assert.equal(await page.locator('.wb-production-card').count(),3);
   await page.locator('.wb-group-create summary').click();await page.locator('[data-new-group]').fill('Gaganyaan upper assembly');
   await page.locator('[data-action=add-group]').click();await page.locator('.wb-group-create summary').click();
   await page.locator('[data-group-field=blenderFile]').fill('E:\\3D\\MY\\Gaganyaan\\upper.blend');
@@ -142,14 +142,21 @@ const server=http.createServer((req,res)=>{
   await page.waitForFunction(id=>Object.values(JSON.parse(localStorage.getItem('test.creator')||'{}')).some(item=>item.id===id&&item.animationGroups?.[0]?.production?.ready),projectId);
   let saved=await stored();assert.equal(saved.scenes[0].completed,false);assert.equal(saved.scenes[2].completed,false);
   assert.equal(saved.animationGroups[0].blenderFile,'E:\\3D\\MY\\Gaganyaan\\upper.blend');
+  await page.locator('[data-filter-assets]').selectOption('Ready');
+  assert.equal(await page.locator('.wb-production-card').count(),2);
+  assert.equal(await page.locator('[data-filter-method]').inputValue(),'Blender');
+  await page.locator('[data-filter-search]').fill('upper.blend');
+  assert.equal(await page.locator('.wb-production-card').count(),2);
+  await page.locator('[data-filter-search]').fill('');
+  await page.locator('[data-filter-assets]').selectOption('All');
   await page.locator('[data-workspace="AI Video"]').click();assert.equal(await page.locator('.wb-production-card').count(),2);
   const mixed=page.locator('.wb-production-card[data-scene="'+firstId+'"]');await mixed.locator('[data-task=ready]').click();
   await mixed.locator('[data-action=expand]').click();await mixed.locator('[data-check=voiceoverReady]').check();await mixed.locator('[data-check=editingDone]').check();
-  await mixed.locator('[data-field=sceneState]').count().then(count=>assert.equal(count,0)); // completion control is in storyboard
+  await mixed.locator('[data-field=sceneState]').count().then(count=>assert.equal(count,1)); // completion is now editable directly in the production table
   await page.locator('[data-tab=Storyboard]').click();await scene(0).locator('[data-field=sceneState]').selectOption('Completed');
   await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes[0].completed,projectId);
   await page.reload();await page.locator('.wb-scene').first().waitFor();assert.equal(await scene(0).locator('[data-field=sceneState]').inputValue(),'Completed');
-  await page.locator('[data-tab=Production]').click();assert.equal(await page.locator('.wb-production-card').count(),3);
+  await page.locator('#startProduction').click();assert.equal(await page.locator('#focusEditor').count(),0);await page.locator('[data-workspace=Blender]').click();assert.equal(await page.locator('.wb-production-card').count(),3);
   await page.locator('[data-workspace=Editing]').click();assert.equal(await page.locator('.wb-production-card').count(),16);
   await page.locator('[data-tab=Overview]').click();await page.locator('.wb-script summary').click();
   const original=await page.locator('[data-canonical-script]').inputValue();

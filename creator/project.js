@@ -1,25 +1,22 @@
 import{makeScene}from'./storyboard-model.js?v=2';
-import{createProductionWorkbench}from'./production-workbench.js?v=3';
+import{createProductionWorkbench}from'./production-workbench.js?v=4';
 import{projectProgress,canComplete,canonicalScript}from'./production-model.js?v=1';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{doc,getDoc,onSnapshot,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{splitVoiceoverScript}from"./scene-tools.js?v=2";
 
 const $=id=>document.getElementById(id),projectId=new URLSearchParams(location.search).get("id");
-const focusFields=["voiceover","characterPrompt","imagePrompt","videoPrompt"];
-const focusLabels={voiceover:"Voiceover",characterPrompt:"Character reference",imagePrompt:"Image prompt",videoPrompt:"Video prompt"};
 let saveChain=Promise.resolve(),editVersion=0,cloudVersion=0;
-let user=null,project=null,projectRef=null,saveTimer=null,localDirty=false,focusState={sceneId:"",field:"voiceover"},touchStart=null;
+let user=null,project=null,projectRef=null,saveTimer=null,localDirty=false;
 
 function esc(value){const node=document.createElement("div");node.textContent=value??"";return node.innerHTML;}
 function attr(value){return esc(value).replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
 function status(message,type=""){$("status").textContent=message;$("status").className="sync-status "+type;}
-function focusMessage(message,type=""){$("focusToast").textContent=message;$("focusToast").className="focus-toast "+type;}
 
 const storyboard=createProductionWorkbench($("projectStoryboard"),{
  getProject:()=>project,
  onChange:()=>{queueSave();renderSceneWorkspace();},
- onFocus:id=>openFocus(id,"characterPrompt"),copyText,
+ copyText,
  onCopyBrief:async()=>{
   if(!canonicalScript(project).trim()&&!project.script?.trim())throw Error("Add scene narration or a script draft first.");
   await copyText(buildAiBrief());
@@ -32,19 +29,6 @@ const storyboard=createProductionWorkbench($("projectStoryboard"),{
   queueSave();render();
  }
 });
-
-function hasCharacterPrompt(scene){
-  const value=scene.characterPrompt.trim().toLowerCase();
-  return !!value&&!["—","-","none","n/a","na","not applicable"].includes(value);
-}
-
-function requiredAssets(scene){
-  return[...(hasCharacterPrompt(scene)?["characterDone"]:[]),"imageDone","videoDone"];
-}
-
-function assetsReady(scene){
-  return requiredAssets(scene).every(field=>scene[field]);
-}
 
 function projectCompletion(){
   const scenes=project?.scenes||[];
@@ -67,10 +51,7 @@ function renderSceneWorkspace(){
   const scenes=project.scenes||[];
   $("startProduction").hidden=!scenes.length;
   $("openAssets").hidden=!scenes.length;
-  if(scenes.length){
-    const savedScene=scenes.find(scene=>scene.id===project.productionState?.sceneId),unfinished=scenes.some(scene=>!scene.completed&&!scene.skipped);
-    $("startProduction").textContent=savedScene&&!savedScene.completed&&!savedScene.skipped?"Resume current scene →":unfinished?"Start next scene →":"Review production →";
-  }
+  $("startProduction").textContent="Open production table →";
   updateStats();
 }
 
@@ -182,119 +163,6 @@ async function copyText(value){
   }
 }
 
-function renderRail(){
-  const complete=project.scenes.filter(scene=>scene.completed).length;
-  $("railProgress").textContent=complete+" of "+project.scenes.length+" complete";
-  $("sceneRail").innerHTML=project.scenes.map((scene,index)=>'<button class="rail-scene '+(scene.id===focusState.sceneId?'active ':'')+(scene.completed?'complete ':scene.skipped?'skipped ':'')+'" data-focus-scene="'+scene.id+'"><span>'+String(index+1).padStart(2,"0")+'</span><strong>'+esc(scene.voiceover||"Untitled scene")+'</strong><i aria-hidden="true"></i></button>').join("");
-  requestAnimationFrame(()=>$("sceneRail").querySelector(".active")?.scrollIntoView({block:"nearest",inline:"center"}));
-}
-
-function assetCard(scene,field,urlField,label,description){
-  return '<article class="asset-card '+(scene[field]?'ready':'')+'"><label><input type="checkbox" data-asset-check="'+field+'" '+(scene[field]?'checked':'')+'> '+label+'</label><p>'+description+'</p><label>Optional output link<input type="url" data-asset-url="'+urlField+'" value="'+attr(scene[urlField]||"")+'" placeholder="Paste the generated asset link"></label></article>';
-}
-
-function renderProjectAssets(){
-  const scenes=project.scenes||[],ready=scenes.filter(assetsReady).length;
-  $("assetsProgress").textContent=ready+" of "+scenes.length+" scenes have all expected assets. This tracker never blocks scene completion.";
-  $("assetList").innerHTML=scenes.map((scene,index)=>{
-    const characterRequired=hasCharacterPrompt(scene);
-    return '<section class="project-asset-scene" data-asset-scene="'+attr(scene.id)+'"><div class="project-asset-head"><div><span class="eyebrow">SCENE '+String(index+1).padStart(2,"0")+'</span><strong>'+esc(scene.voiceover||"Untitled scene")+'</strong></div><span class="status-pill">'+(assetsReady(scene)?"assets ready":"assets pending")+'</span></div><div class="asset-board">'
-      +assetCard(scene,"characterDone","characterAssetUrl","Character/reference ready",characterRequired?"Useful for the recurring person or subject in this scene.":"Optional because this scene has no character prompt.")
-      +assetCard(scene,"imageDone","imageAssetUrl","Image generated","Track the still image created from the scene image prompt.")
-      +assetCard(scene,"videoDone","videoAssetUrl","Video generated","Track the final clip created from the scene video prompt.")
-      +'</div></section>';
-  }).join("");
-}
-
-function renderFocus(){
-  const scene=project.scenes.find(item=>item.id===focusState.sceneId),sceneIndex=project.scenes.indexOf(scene),fieldIndex=focusFields.indexOf(focusState.field);
-  if(!scene)return closeFocus();
-  $("focusScene").textContent="SCENE "+String(sceneIndex+1).padStart(2,"0")+" · "+scene.duration+" SEC";
-  $("focusTitle").textContent=focusLabels[focusState.field];
-  $("focusPosition").textContent="Scene "+(sceneIndex+1)+" of "+project.scenes.length+" · Step "+(fieldIndex+1)+" of "+focusFields.length;
-  $("focusTabs").querySelectorAll("button").forEach(button=>{
-    const field=button.dataset.focusField,done=!!scene[field]?.trim();
-    button.classList.toggle("active",field===focusState.field);
-    button.classList.toggle("done",done);
-    button.setAttribute("aria-selected",String(field===focusState.field));
-  });
-  $("focusTextarea").value=scene[focusState.field]||"";
-  $("previousScene").disabled=sceneIndex===0;
-  $("nextScene").disabled=sceneIndex===project.scenes.length-1;
-  $("previousField").disabled=fieldIndex===0;
-  $("nextField").disabled=fieldIndex===focusFields.length-1;
-  $("copyFocus").textContent="Copy "+focusLabels[focusState.field].toLowerCase();
-  $("skipScene").textContent=scene.skipped?"Reopen scene":"Skip for now";
-  $("completeScene").textContent=scene.completed?"Reopen scene":canComplete(project,scene)?"Scene complete →":"Production tasks pending";
-  $("completeScene").classList.toggle("primary",!scene.completed);
-  $("completeScene").classList.toggle("secondary",scene.completed);
-  renderRail();
-}
-
-function rememberFocus(open=true){
-  project.productionState={sceneId:focusState.sceneId,field:focusState.field,open};
-  queueSave();
-}
-
-function openFocus(sceneId,field="voiceover",persist=true){
-  if(!project.scenes.some(scene=>scene.id===sceneId))return;
-  focusState={sceneId,field:focusFields.includes(field)?field:"voiceover"};
-  $("focusEditor").hidden=false;
-  document.body.style.overflow="hidden";
-  focusMessage("");
-  renderFocus();
-  if(persist)rememberFocus(true);
-  setTimeout(()=>$("focusTextarea").focus(),0);
-}
-
-function closeFocus(){
-  $("focusEditor").hidden=true;
-  document.body.style.overflow="";
-  if(project){project.productionState={sceneId:focusState.sceneId,field:focusState.field,open:false};queueSave();render();}
-}
-
-function changeFocusField(direction){
-  const next=focusFields.indexOf(focusState.field)+direction;
-  if(focusFields[next]){
-    focusState.field=focusFields[next];
-    focusMessage("");renderFocus();rememberFocus(true);
-    $("focusTextarea").focus();
-  }
-}
-
-function changeFocusScene(direction){
-  const index=project.scenes.findIndex(scene=>scene.id===focusState.sceneId),next=project.scenes[index+direction];
-  if(next){focusState.sceneId=next.id;focusMessage("");renderFocus();rememberFocus(true);$("focusTextarea").focus();}
-}
-
-function nextOpenScene(currentIndex){
-  const scenes=project.scenes;
-  return[...scenes.slice(currentIndex+1),...scenes.slice(0,currentIndex)].find(scene=>!scene.completed&&!scene.skipped);
-}
-
-async function completeFocusedScene(){
-  const scene=project.scenes.find(item=>item.id===focusState.sceneId),index=project.scenes.indexOf(scene);
-  if(!scene)return;
-  if(scene.completed){scene.completed=false;focusMessage("Scene reopened.","ok");render();renderFocus();await save();return;}
-  if(!canComplete(project,scene))return focusMessage("Finish required production work, voiceover and editing in the workbench first.","error");
-  scene.completed=true;scene.sceneState="Completed";scene.skipped=false;
-  const next=nextOpenScene(index);
-  render();await save();
-  if(next){focusState.sceneId=next.id;focusState.field="voiceover";project.productionState={...focusState,open:true};renderFocus();focusMessage("Scene complete. Moved to the next unfinished scene.","ok");await save();}
-  else{renderFocus();focusMessage("All available scenes are complete. Production run finished!","ok");}
-}
-
-async function toggleSkip(){
-  const scene=project.scenes.find(item=>item.id===focusState.sceneId),index=project.scenes.indexOf(scene);
-  if(!scene)return;
-  if(scene.skipped){scene.skipped=false;focusMessage("Scene returned to the production queue.","ok");render();renderFocus();await save();return;}
-  scene.skipped=true;scene.completed=false;
-  const next=nextOpenScene(index);
-  render();await save();
-  if(next){focusState.sceneId=next.id;focusState.field="voiceover";project.productionState={...focusState,open:true};renderFocus();focusMessage("Scene skipped. Moved to the next unfinished scene.","ok");await save();}
-  else{renderFocus();focusMessage("No unfinished scenes remain. Reopen a skipped scene when ready.","ok");}
-}
-
 function renderEditors(){
   const editors=project.editorEmails||[];
   $("editorList").innerHTML=editors.length?editors.map(email=>'<div class="editor-row"><div><strong>'+esc(email)+'</strong><span>Can edit</span></div><button type="button" data-remove-editor="'+attr(email)+'">Remove</button></div>').join(""):'<div class="editor-empty">Only you can access this project.</div>';
@@ -326,72 +194,8 @@ $("copyProjectLink").onclick=async()=>{
   catch(error){$("shareFeedback").textContent=error.message;}
 };
 
-$("startProduction").onclick=()=>{
-  const saved=project.productionState,preferred=project.scenes.find(scene=>scene.id===saved?.sceneId&&!scene.completed&&!scene.skipped),next=preferred||project.scenes.find(scene=>!scene.completed&&!scene.skipped)||project.scenes[0];
-  if(next)openFocus(next.id,preferred?saved?.field||"voiceover":"voiceover");
-};
-
-$("closeFocus").onclick=closeFocus;
-$("previousField").onclick=()=>changeFocusField(-1);
-$("nextField").onclick=()=>changeFocusField(1);
-$("previousScene").onclick=()=>changeFocusScene(-1);
-$("nextScene").onclick=()=>changeFocusScene(1);
-$("skipScene").onclick=toggleSkip;
-$("completeScene").onclick=completeFocusedScene;
-
-$("focusTabs").onclick=event=>{
-  const button=event.target.closest("[data-focus-field]");
-  if(button){focusState.field=button.dataset.focusField;focusMessage("");renderFocus();rememberFocus(true);$("focusTextarea").focus();}
-};
-
-$("sceneRail").onclick=event=>{
-  const button=event.target.closest("[data-focus-scene]");
-  if(button){focusState.sceneId=button.dataset.focusScene;focusMessage("");renderFocus();rememberFocus(true);}
-};
-
-$("focusTextarea").oninput=event=>{
-  const scene=project.scenes.find(item=>item.id===focusState.sceneId);
-  if(scene){scene[focusState.field]=event.target.value;if(scene.completed)scene.completed=false;if(focusState.field==="voiceover")scene.voiceoverReady=false;queueSave();}
-};
-
-$("openAssets").onclick=()=>{renderProjectAssets();$("assetsDialog").showModal();};
-$("closeAssets").onclick=()=>$("assetsDialog").close();
-$("assetList").addEventListener("input",event=>{
-  const container=event.target.closest("[data-asset-scene]"),scene=project.scenes.find(item=>item.id===container?.dataset.assetScene);
-  if(!scene)return;
-  if(event.target.dataset.assetCheck){scene[event.target.dataset.assetCheck]=event.target.checked;if(!event.target.checked)scene.completed=false;render();renderProjectAssets();}
-  if(event.target.dataset.assetUrl)scene[event.target.dataset.assetUrl]=event.target.value;
-  queueSave();
-});
-
-$("copyFocus").onclick=async()=>{
-  const scene=project.scenes.find(item=>item.id===focusState.sceneId);
-  if(!scene)return;
-  const value=scene[focusState.field]||"";
-  if(!value.trim())return focusMessage("This field is empty.","error");
-  try{await copyText(value);focusMessage(focusLabels[focusState.field]+" copied. Paste it into your GPT.","ok");}
-  catch(error){focusMessage(error.message,"error");}
-};
-
-document.querySelector(".focus-work").addEventListener("touchstart",event=>{
-  if(event.target.closest("textarea,input,button,.rail-list,.focus-tabs"))return;
-  const touch=event.changedTouches[0];touchStart={x:touch.clientX,y:touch.clientY};
-},{passive:true});
-document.querySelector(".focus-work").addEventListener("touchend",event=>{
-  if(!touchStart)return;
-  const touch=event.changedTouches[0],dx=touch.clientX-touchStart.x,dy=touch.clientY-touchStart.y;touchStart=null;
-  if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)*1.25)changeFocusField(dx<0?1:-1);
-  else if(Math.abs(dy)>80&&Math.abs(dy)>Math.abs(dx)*1.25)changeFocusScene(dy<0?1:-1);
-},{passive:true});
-
-document.addEventListener("keydown",event=>{
-  if($("focusEditor").hidden)return;
-  if(event.key==="Escape")closeFocus();
-  else if(event.ctrlKey&&event.key==="ArrowLeft"){event.preventDefault();changeFocusField(-1);}
-  else if(event.ctrlKey&&event.key==="ArrowRight"){event.preventDefault();changeFocusField(1);}
-  else if(event.ctrlKey&&event.key==="ArrowUp"){event.preventDefault();changeFocusScene(-1);}
-  else if(event.ctrlKey&&event.key==="ArrowDown"){event.preventDefault();changeFocusScene(1);}
-});
+$("startProduction").onclick=()=>{storyboard.open({area:"Production",method:"All"});$("projectStoryboard").scrollIntoView({block:"start"});};
+$("openAssets").onclick=()=>storyboard.open({area:"Assets"});
 
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&saveTimer)save();});
 
@@ -417,11 +221,7 @@ async function load(){
     project.editorEmails=(project.editorEmails||[]).map(email=>email.toLowerCase());
     project.scenes=(project.scenes||[]).map(makeScene);
     render();$("app").hidden=false;status("Synced · "+(user.email||"signed in"),"ok");
-    const saved=project.productionState;
-    if(saved?.open){
-      const preferred=project.scenes.find(scene=>scene.id===saved.sceneId&&!scene.completed&&!scene.skipped),next=preferred||project.scenes.find(scene=>!scene.completed&&!scene.skipped)||project.scenes.find(scene=>scene.id===saved.sceneId)||project.scenes[0];
-      if(next)setTimeout(()=>openFocus(next.id,preferred?saved.field:"voiceover",false),0);
-    }
+    if(project.productionState?.open)storyboard.open({area:"Production",sceneId:project.productionState.sceneId});
     onSnapshot(projectRef,{includeMetadataChanges:true},live=>{
       if(live.metadata.hasPendingWrites)return;
       cloudVersion=live.data()?.updatedAt?.toMillis?.()||cloudVersion;
@@ -431,10 +231,6 @@ async function load(){
       incoming.editorEmails=(incoming.editorEmails||[]).map(email=>email.toLowerCase());
       incoming.scenes=(incoming.scenes||[]).map(makeScene);
       project=incoming;render();
-      if(!$("focusEditor").hidden){
-        const active=project.scenes.some(scene=>scene.id===focusState.sceneId);
-        if(active)renderFocus();else closeFocus();
-      }
       status("Live collaboration · "+(user.email||"signed in"),"ok");
     },error=>status("Collaboration access changed: "+error.message,"error"));
   }catch(error){status("Could not load project: "+error.message,"error");}

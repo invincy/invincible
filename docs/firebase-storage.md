@@ -67,3 +67,6 @@ New Content and Edit content now use the same production workbench over an isola
 
 
 The standalone script/settings/import panels were removed from the saved-project page. Overview edits the same script, visualStyle, aspectRatio, language, characterBible and continuityNotes properties; no project data is removed. The generator brief and rough-script action use the canonical project state rather than duplicate DOM fields. New Content persists these optional visual properties alongside the isolated scenes/groups/assets draft.
+
+
+The legacy focused scene overlay and standalone duplicate panels are no longer the project entry flow. All scene work stays in the shared structured table. Method/readiness/completion/search filters are view state only; they do not copy or reorder stored scenes. Shared Blender readiness can be Ready while a scene remains incomplete because voiceover, AI clips or editing are pending. Visual settings, script review and the generator brief use the same existing project fields in Overview. Legacy asset booleans and links remain in scene details. No collection, rule or auth changes.
