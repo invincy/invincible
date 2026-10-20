@@ -1,5 +1,5 @@
 import {attachImportedGroups} from './production-model.js?v=1';
-import{createStoryboardEditor}from'./storyboard-editor.js?v=6';
+import{createProductionWorkbench}from'./production-workbench.js?v=4';
 import{db,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,serverTimestamp,setDoc,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
@@ -8,9 +8,26 @@ const stages=["Ideas","Research","Script","Record","Edit","Scheduled","Published
 let subscriptions=[],authGeneration=0;
 let user=null,state={items:[]},ownedItems=new Map(),sharedItems=new Map(),editingId="",filter="All",queryText="",mobileStage="Ideas",metricFilter="";
 
-let dialogScenes=[],dialogId="",savingContent=false;
-const storyboard=createStoryboardEditor($("contentStoryboard"),{getScenes:()=>dialogScenes,onChange:scenes=>{dialogScenes=scenes;updateShotSummary();},onImport:()=>{const script=$("contentForm").elements.script;if(!script.value.trim())script.value=dialogScenes.map(scene=>scene.voiceover).filter(Boolean).join("\n\n");},saveHint:"Select Save and open project below to keep them."});
-const refreshScriptNotice=storyboard.watchSource($("contentForm").elements.script);
+let dialogScenes=[],dialogProject=null,dialogId="",savingContent=false;
+const storyboard=createProductionWorkbench($("contentStoryboard"),{
+ getProject:()=>dialogProject,
+ onChange:()=>{
+  dialogScenes=dialogProject.scenes;
+  for(const key of ["script","hook","notes"])$("contentForm").elements[key].value=dialogProject[key]||"";
+  updateShotSummary();
+ },
+ copyText:async value=>{
+  try{await navigator.clipboard.writeText(value);}
+  catch{
+   const input=document.createElement("textarea");input.value=value;input.style.position="fixed";input.style.opacity="0";$("contentDialog").append(input);input.select();
+   const copied=document.execCommand("copy");input.remove();if(!copied)throw Error("Clipboard access was blocked.");
+  }
+ }
+});
+$("contentForm").addEventListener("input",event=>{
+ const name=event.target.name;
+ if(dialogProject&&["title","script","hook","notes","format","stage","series","publishDate"].includes(name))dialogProject[name]=event.target.value;
+});
 function updateShotSummary(){
   const count=dialogScenes.length,duration=dialogScenes.reduce((total,scene)=>total+(Number(scene.duration)||0),0);
   $("contentShotSummary").textContent=count?count+" shot"+(count===1?"":"s")+" · "+duration+" sec ready to save":"No shots added yet";
@@ -75,11 +92,19 @@ function subscribeProjects(){
 }
 
 function openDialog(item=null){
-  editingId=item?.id||"";dialogId=editingId||newId();dialogScenes=(item?.scenes||[]).map(scene=>({...scene}));storyboard.reset();$("contentSaveError").textContent="";const form=$("contentForm");form.reset();$("dialogHeading").textContent=item?"Edit content":"New content";$("deleteContent").hidden=!item||!isOwner(item);
-  $("saveContent").textContent=item?"Save changes":"Save and open project";updateShotSummary();
+  editingId=item?.id||"";dialogId=editingId||newId();
+  const clone=value=>JSON.parse(JSON.stringify(value));
+  dialogProject={...(item||{}),title:item?.title||"",script:item?.script||"",hook:item?.hook||"",notes:item?.notes||"",scenes:clone(item?.scenes||[]),animationGroups:clone(item?.animationGroups||[]),assets:clone(item?.assets||[])};
+  dialogScenes=dialogProject.scenes;
+  $("contentSaveError").textContent="";
+  const form=$("contentForm");form.reset();
+  $("dialogHeading").textContent=item?"Edit project":"New project";
+  $("deleteContent").hidden=!item||!isOwner(item);
+  $("saveContent").textContent=item?"Save changes":"Create and open project";
+  $("contentDetails").open=false;
   if(item)Object.entries(item).forEach(([key,value])=>{if(form.elements[key])form.elements[key].value=value??"";});else form.elements.stage.value=mobileStage;
-  refreshScriptNotice();
-  $("contentDialog").showModal();setTimeout(()=>form.elements.title.focus(),0);
+  storyboard.reset();updateShotSummary();
+  $("contentDialog").showModal();form.scrollTop=0;setTimeout(()=>form.elements.title.focus(),0);
 }
 
 function bindDrag(){
@@ -119,7 +144,7 @@ $("board").onkeydown=event=>{if((event.key==="Enter"||event.key===" ")&&!event.t
 $("contentForm").onsubmit=async event=>{
   event.preventDefault();if(savingContent||!user)return;
   const form=event.currentTarget,data=new FormData(form),existing=state.items.find(row=>row.id===editingId),generation=authGeneration;
-  const item={...(existing||{}),id:dialogId,title:data.get("title").trim(),format:data.get("format"),stage:data.get("stage"),series:data.get("series"),publishDate:data.get("publishDate"),hook:data.get("hook").trim(),script:data.get("script"),notes:data.get("notes"),scenes:dialogScenes.map(scene=>({...scene})),ownerUid:existing?.ownerUid||user.uid,ownerEmail:existing?.ownerEmail||(user.email||"").toLowerCase(),editorEmails:existing?.editorEmails||[]};
+  const item={...(existing||{}),id:dialogId,title:data.get("title").trim(),format:data.get("format"),stage:data.get("stage"),series:data.get("series"),publishDate:data.get("publishDate"),hook:data.get("hook").trim(),script:data.get("script"),notes:data.get("notes"),visualStyle:dialogProject.visualStyle||"",aspectRatio:dialogProject.aspectRatio||"9:16",language:dialogProject.language||"",characterBible:dialogProject.characterBible||"",continuityNotes:dialogProject.continuityNotes||"",animationGroups:dialogProject.animationGroups||[],assets:dialogProject.assets||[],scenes:dialogScenes.map(scene=>({...scene})),ownerUid:existing?.ownerUid||user.uid,ownerEmail:existing?.ownerEmail||(user.email||"").toLowerCase(),editorEmails:existing?.editorEmails||[]};
   if(!item.title){form.elements.title.setCustomValidity("Enter a working title.");form.elements.title.reportValidity();return;}
   savingContent=true;$("contentSaveError").textContent="";
   const controls=[...form.querySelectorAll("button,input,select,textarea")],disabled=controls.map(control=>control.disabled);
@@ -129,7 +154,7 @@ $("contentForm").onsubmit=async event=>{
     const index=state.items.findIndex(row=>row.id===item.id);if(index>=0)state.items[index]=item;else state.items.push(item);
     mobileStage=item.stage;render();$("contentDialog").close();if(!existing)window.location.href="project.html?id="+encodeURIComponent(item.id);
   }catch(error){if(generation===authGeneration)$("contentSaveError").textContent=storageError(error)+" Your input is still here. Try saving again.";}
-  finally{savingContent=false;controls.forEach((control,index)=>control.disabled=disabled[index]);$("saveContent").textContent=existing?"Save changes":"Save and open project";}
+  finally{savingContent=false;controls.forEach((control,index)=>control.disabled=disabled[index]);$("saveContent").textContent=existing?"Save changes":"Create and open project";}
 };
 $("contentForm").elements.title.addEventListener("input",event=>event.target.setCustomValidity(""));
 $("contentDialog").addEventListener("cancel",event=>{if(savingContent)event.preventDefault();});

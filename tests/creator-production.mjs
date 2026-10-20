@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {makeScene} from '../creator/storyboard-model.js';
-import {parseProductionImport,inspectImport,uniqueScenes,methodsOf,queueScenes,setTask,taskFor,canComplete,sceneComplete,sceneState,projectProgress,canonicalScript,scriptReview} from '../creator/production-model.js';
+import {parseProductionImport,inspectImport,uniqueScenes,methodsOf,queueScenes,setTask,taskFor,canComplete,sceneComplete,sceneState,projectProgress,canonicalScript,scriptReview,filterScenes,productionReadiness} from '../creator/production-model.js';
 const header='Voiceover\tVisual / Animation\tAssets Required\tTimeline';
 const storyboard=header+'\n'+Array.from({length:16},(_,i)=>'भारत का मिशन '+(i+1)+'!\tRocket visual '+i+'\tLVM3 model\t'+(i*4)+'–'+(i*4+4)+'s').join('\n');
 test('16-scene Gaganyaan TSV preserves exact order, Hindi, punctuation and timeline',()=>{
@@ -70,4 +70,20 @@ test('legacy scenes, unknown metadata, local Windows references and progress sur
  assert.equal(sceneComplete({scenes:[scene]},scene),true);
  const project={notes:'Keep',hook:'Hook',assets:[{path:'E:\\3D\\MY\\Gaganyaan\\upper.blend'}],scenes:[scene]};
  const restored=JSON.parse(JSON.stringify(project));assert.equal(restored.scenes[0].custom.keep,1);assert.equal(restored.assets[0].path,project.assets[0].path);
+});
+
+test('combined Blender/Ready filters retain original scene identities and independent completion',()=>{
+ const a=makeScene({id:'s8',voiceover:'Shared rocket',productionMethods:['Blender','AI Video'],animationGroupId:'g'});
+ const b=makeScene({id:'s9',voiceover:'AI shot',productionMethods:['AI Video']});
+ const c=makeScene({id:'s11',voiceover:'Shared cutaway',productionMethods:['Blender'],animationGroupId:'g'});
+ const project={scenes:[a,b,c],animationGroups:[{id:'g',blenderFile:'E:\\3D\\upper.blend',production:{modeling:true,animation:true,rendering:true,ready:true}}]};
+ assert.deepEqual(filterScenes(project,{method:'Blender',assetStatus:'Ready'}).map(scene=>scene.id),['s8','s11']);
+ assert.equal(a.completed,false);assert.equal(productionReadiness(project,a,'All'),'In Progress');
+ assert.equal(filterScenes(project,{method:'AI Video',assetStatus:'Ready'}).length,0);
+ assert.equal(filterScenes(project,{method:'Blender',assetStatus:'Ready',query:'upper.blend'}).length,2);
+ assert.equal(filterScenes(project,{method:'Blender',assetStatus:'Ready',completion:'Completed'}).length,0);
+});
+test('the unified importer preserves JSON scene-array support',()=>{
+ const [scene]=parseProductionImport(JSON.stringify({scenes:[{voiceover:'Exact Hindi भारत।',duration:8,imagePrompt:'Still',videoPrompt:'Motion',productionMethods:['Blender','AI Video']}]}));
+ assert.equal(scene.voiceover,'Exact Hindi भारत।');assert.equal(scene.videoPrompt,'Motion');assert.deepEqual(scene.productionMethods,['Blender','AI Video']);
 });

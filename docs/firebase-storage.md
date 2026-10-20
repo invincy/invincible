@@ -61,3 +61,12 @@ Overview derives the chronological script from scene narration. The existing scr
 Persistence reuses the existing authenticated save queue, live snapshot and per-account recovery draft. This still writes the whole project and does not resolve simultaneous edits by multiple editors. Firestore document size limits still apply to metadata-heavy projects. Existing scene durations remain limited to 1–60 seconds. Production permissions and cross-device writes require a real signed-in check.
 
 Verification is recorded in docs/code-review.md. No production data or Firebase configuration was changed.
+
+
+New Content and Edit content now use the same production workbench over an isolated in-memory project draft. Only the explicit Create and open project / Save changes action writes scenes, animationGroups and assets to the existing creatorProjects document. Nested arrays are cloned on open, so cancelling changes to shared groups/assets does not mutate the pipeline's live records. Metadata timestamps and unknown fields continue to come from the original document. No storage paths or rules changed.
+
+
+The standalone script/settings/import panels were removed from the saved-project page. Overview edits the same script, visualStyle, aspectRatio, language, characterBible and continuityNotes properties; no project data is removed. The generator brief and rough-script action use the canonical project state rather than duplicate DOM fields. New Content persists these optional visual properties alongside the isolated scenes/groups/assets draft.
+
+
+The legacy focused scene overlay and standalone duplicate panels are no longer the project entry flow. All scene work stays in the shared structured table. Method/readiness/completion/search filters are view state only; they do not copy or reorder stored scenes. Shared Blender readiness can be Ready while a scene remains incomplete because voiceover, AI clips or editing are pending. Visual settings, script review and the generator brief use the same existing project fields in Overview. Legacy asset booleans and links remain in scene details. No collection, rule or auth changes.

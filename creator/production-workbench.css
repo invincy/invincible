@@ -51,3 +51,10 @@
 @media(prefers-reduced-motion:reduce){.production-workbench *{scroll-behavior:auto;transition:none}}
 
 .project-page #app{box-sizing:border-box;padding-inline:0}.project-page .project-storyboard-panel{box-sizing:border-box}
+
+.wb-filters{display:grid;grid-template-columns:repeat(3,minmax(130px,1fr)) minmax(170px,1.4fr) auto;gap:12px;align-items:end;padding:16px 0;border-block:1px solid var(--wb-line);margin:16px 0}
+.wb-filters>span{grid-column:1/-1;color:#c6b58e;font-size:13px}
+.wb-quick-progress{padding:0 16px 12px}
+.wb-production-card.wb-scene{padding:0}
+@media(max-width:900px){.wb-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:450px){.wb-filters{gap:8px}.wb-filters label{font-size:12px}.wb-filters>button{grid-column:1/-1}}

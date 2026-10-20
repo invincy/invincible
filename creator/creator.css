@@ -12,3 +12,35 @@ input,select,textarea{width:100%;border:1px solid rgba(255,143,112,.18);border-r
 dialog{width:min(650px,calc(100% - 28px));max-height:calc(100vh - 28px);border:1px solid rgba(255,120,89,.35);border-radius:20px;padding:0;background:#100d15;color:var(--text);box-shadow:0 0 70px rgba(255,79,136,.16)}dialog::backdrop{background:rgba(4,2,7,.8);backdrop-filter:blur(8px)}dialog form{display:grid;gap:14px;padding:23px;overflow:auto}dialog label{display:grid;gap:7px;color:#b9aab8;font-size:12px}.dialog-title,.dialog-actions{display:flex;align-items:center}.dialog-title{justify-content:space-between}.dialog-title h2{margin:6px 0 0;font:700 20px Orbitron,sans-serif}.icon{width:36px;height:36px;padding:0;font-size:20px}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.dialog-actions{display:grid;grid-template-columns:auto 1fr auto auto;gap:9px;margin-top:3px}
 @media(max-width:1100px){.metrics{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){.studio-header{align-items:flex-start;padding:22px 15px 15px}.studio-header p{font-size:12px}.header-actions{flex-direction:column-reverse}.studio-header button{white-space:nowrap;padding:9px 10px;font-size:11px}.sync-status{margin:0 15px}main{padding:8px 15px 28px}.metrics{gap:8px}.metrics .metric-card{min-height:99px;padding:14px;touch-action:manipulation}.metrics strong{font-size:22px}.metric-view{position:sticky;top:66px;z-index:10;background:rgba(22,14,24,.96)}.toolbar{align-items:stretch;flex-direction:column}.search input{width:100%}.stage-tabs{display:flex;gap:7px;overflow-x:auto;padding:1px 1px 12px;scrollbar-width:none}.stage-tabs button{white-space:nowrap;padding:8px 11px;color:#a99aaa}.stage-tabs button.active{color:#fff;border-color:var(--hot);background:rgba(255,103,72,.12)}.board{display:block;overflow:visible}.column{display:none;min-height:280px}.column.mobile-active{display:block}.two{grid-template-columns:1fr}.dialog-actions{grid-template-columns:auto 1fr}.dialog-actions .secondary,.dialog-actions .primary{grid-row:2}.dialog-actions .secondary{grid-column:1}.dialog-actions .primary{grid-column:2}.content-card{cursor:pointer}}
+
+
+/* Creation and editing use the same production workbench as saved projects. */
+#contentDialog{width:min(1560px,calc(100% - 28px));max-height:calc(100dvh - 28px);overflow:hidden}
+#contentDialog,#contentDialog *{box-sizing:border-box}
+#contentForm{max-height:calc(100dvh - 28px);min-width:0;overflow-y:auto;overscroll-behavior:contain;padding:24px;gap:16px}
+#contentForm>*{min-width:0}
+#contentDialog .dialog-title{align-items:flex-start;gap:16px}
+#contentDialog .dialog-title h2{font-size:26px}
+#contentDialog .dialog-title p,.content-draft-hint{margin:8px 0 0;font-size:14px;line-height:1.5;color:#b9aab8}
+#contentDialog .content-title-field{font-size:15px}
+#contentDialog .content-title-field input{font-size:20px;padding:14px}
+#contentDialog .wb-tabs{top:-24px;padding:12px 0;background:#100d15}
+#contentDialog .wb-tabs button{min-height:44px}
+#contentDialog .content-project-details{padding:8px 16px;border-block:1px solid rgba(209,192,151,.14)}
+#contentDialog .content-project-details>summary{cursor:pointer;padding:10px 0;font-size:15px;color:#d4c2ce}
+#contentDialog .content-project-details[open]{display:grid;gap:14px}
+#contentDialog .dialog-actions{position:sticky;bottom:-24px;z-index:6;margin:0 -24px -24px;padding:12px 24px;border-top:1px solid #57404d;background:#17111e;box-shadow:0 -8px 24px rgba(4,2,7,.45)}
+#contentShotSummary{color:#e9d4cc;font-size:13px;line-height:1.4}
+#contentSaveError{color:#ff91a0;margin:0}#contentSaveError:empty{display:none}
+#saveContent{min-height:44px}
+@media(max-width:700px){
+ #contentDialog{width:calc(100% - 16px);max-height:calc(100dvh - 16px)}
+ #contentForm{max-height:calc(100dvh - 16px);padding:12px;gap:12px}
+ #contentDialog .dialog-title h2{font-size:22px}
+ #contentDialog .content-title-field input{font-size:17px}
+ #contentDialog .wb-tabs{top:-12px}
+ #contentDialog .dialog-actions{bottom:-12px;margin:0 -12px -12px;padding:12px}
+ #contentShotSummary{grid-column:1/-1;grid-row:1}
+ #contentDialog .dialog-actions .secondary,#contentDialog .dialog-actions .primary{grid-row:2}
+ #contentDialog .content-project-details{padding-inline:4px}
+}

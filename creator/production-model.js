@@ -26,6 +26,13 @@ function markdownRow(line){
 export function inspectImport(input){
  const text=String(input).replace(/^\uFEFF/,'').replace(/^\n+|\n+$/g,'').replace(/^\x60\x60\x60[^\n]*\n/,'').replace(/\n\x60\x60\x60$/,'');
  if(!text)throw Error('Paste a storyboard first.');
+ if(/^[\\[{]/.test(text.trimStart())){
+  let data;try{data=JSON.parse(text);}catch{throw Error("The JSON is incomplete or invalid.");}
+  const items=Array.isArray(data)?data:data.scenes;
+  if(!Array.isArray(items)||!items.length||items.some(item=>!item||typeof item!=="object"||Array.isArray(item)))throw Error("JSON must contain a non-empty array of scene objects.");
+  const headers=[...new Set(items.flatMap(item=>Object.keys(item)))];
+  return {format:"JSON",headers,rows:items.map(item=>headers.map(key=>Array.isArray(item[key])?item[key].join("; "):String(item[key]??""))),mapping:headers.map(key=>IMPORT_FIELDS.find(field=>aliases[field].includes(norm(key)))||"")};
+ }
  const lines=text.split(/\r?\n/);
  const separator=lines.findIndex(line=>line.includes('|')&&markdownRow(line).every(cell=>/^:?-{3,}:?$/.test(cell.replace(/\s/g,''))));
  let rows,format;
@@ -146,4 +153,30 @@ export function attachImportedGroups(project,scenes){
   if(!group){group={id:uid(),name:scene.animationGroup,blenderFile:'',resources:'',production:{}};project.animationGroups.push(group);}
   scene.animationGroupId=group.id;
  }
+}
+
+export function productionReadiness(project,scene,method='All'){
+ if(method==='Editing')return scene.editingDone?'Ready':scene.sceneState==='Editing'?'In Progress':'Not Started';
+ const methods=method==='All'||method==='Assets'?methodsOf(scene).filter(value=>value!=='Editing'):[method];
+ const stages=methods.map(value=>animationStage(taskFor(project,scene,value)));
+ const linked=sceneAssets(project,scene);
+ if(linked.length)stages.push(...linked.map(asset=>asset.status==='Ready'?'Ready':asset.status==='In Progress'?'In Progress':'Not Started'));
+ if(!stages.length){
+  const legacy=requirements(project,scene).filter(task=>task.key.startsWith('Legacy '));
+  return legacy.length&&legacy.every(task=>task.done)?'Ready':legacy.some(task=>task.done)?'In Progress':'Not Started';
+ }
+ if(stages.every(stage=>stage==='Ready'))return 'Ready';
+ if(stages.every(stage=>stage==='Not Started'))return 'Not Started';
+ for(const stage of ['Rendering','Animating','Modeling'])if(stages.includes(stage))return stage;
+ return 'In Progress';
+}
+export function filterScenes(project,{method='All',assetStatus='All',completion='All',query=''}={}){
+ const text=query.trim().toLocaleLowerCase();
+ return queueScenes(project,method).filter(scene=>{
+  const readiness=productionReadiness(project,scene,method);
+  if(assetStatus!=='All'&&(assetStatus==='In Progress'?!['Modeling','Animating','Rendering','In Progress'].includes(readiness):readiness!==assetStatus))return false;
+  if(completion!=='All'&&sceneState(project,scene)!==completion)return false;
+  const group=groupFor(project,scene);
+  return !text||[scene.voiceover,scene.visual,scene.assets,scene.blenderFile,scene.blenderPrompt,group?.name,group?.blenderFile].join(' ').toLocaleLowerCase().includes(text);
+ });
 }
