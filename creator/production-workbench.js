@@ -263,6 +263,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    changed();
   }catch(error){message(error.message);}
  });
+ root.addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.matches('input,select'))event.preventDefault();});
  root.addEventListener('dragstart',event=>{const handle=event.target.closest('[data-drag]');if(!handle)return;dragId=handle.dataset.drag;event.dataTransfer.setData('text/plain',dragId);event.dataTransfer.effectAllowed='move';});
  root.addEventListener('dragover',event=>{if(dragId&&event.target.closest('[data-scene]'))event.preventDefault();});
  root.addEventListener('drop',event=>{event.preventDefault();dragId=event.dataTransfer?.getData('text/plain')||dragId;const id=event.target.closest('[data-scene]')?.dataset.scene;if(!dragId||!id||id===dragId)return;const from=scenes().findIndex(scene=>scene.id===dragId),to=scenes().findIndex(scene=>scene.id===id);if(from<0||to<0)return;const [item]=project().scenes.splice(from,1);project().scenes.splice(to,0,item);dragId='';changed();});

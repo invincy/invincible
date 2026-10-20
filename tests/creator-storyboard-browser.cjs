@@ -36,6 +36,10 @@ const server=http.createServer((req,res)=>{
   await page.goto(base);await page.locator('#addContent:enabled').click();
   const dialog=page.locator('#contentDialog');
   await page.locator('[name=title]').fill('Draft production');
+  await dialog.locator('[data-filter-search]').fill('rocket');await dialog.locator('[data-filter-search]').press('Enter');
+  assert.equal(await dialog.evaluate(node=>node.open),true);
+  assert.equal(await page.evaluate(()=>window.writes||0),0);
+  await dialog.locator('[data-filter-search]').fill('');
   const draftTable='Voiceover\tVisual / Animation\tAssets Required\tTimeline\tProduction Method\tAnimation Group\nभारत — exact narration!\tRocket orbit\tLVM3\t0–4s\tBlender\tUpper assembly\nSecond voice\tEarth\tTexture\t4–8s\tAI Video\t';
   await dialog.locator('[data-paste]').fill(draftTable);
   await dialog.locator('[data-action=preview]').click();
