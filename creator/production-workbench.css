@@ -58,3 +58,77 @@
 .wb-production-card.wb-scene{padding:0}
 @media(max-width:900px){.wb-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:450px){.wb-filters{gap:8px}.wb-filters label{font-size:12px}.wb-filters>button{grid-column:1/-1}}
+
+
+/* Compact editors keep their height on focus so adjacent controls stay in place. */
+.production-workbench .wb-heading{margin:10px 0;gap:12px}
+.production-workbench .wb-heading h2{font-size:22px;margin:0}
+.production-workbench .wb-tabs{padding:7px 0}
+.production-workbench .wb-import{margin:10px 0;padding-bottom:8px}
+.production-workbench .wb-import summary{padding:8px 0}
+.production-workbench .wb-import p{font-size:12px;margin:5px 0}
+.production-workbench textarea{min-height:38px;height:42px;max-height:140px;resize:none;padding:7px 9px}
+.production-workbench textarea:focus{overflow:auto;resize:vertical}
+.production-workbench [data-paste]{height:84px;max-height:160px}
+.production-workbench .wb-row{padding:7px 10px;gap:9px;grid-template-columns:68px minmax(80px,.65fr) minmax(145px,1.6fr) minmax(145px,1.6fr) minmax(95px,.85fr) minmax(105px,.9fr) minmax(125px,.95fr)}
+.production-workbench .wb-column-head{grid-template-columns:68px minmax(80px,.65fr) minmax(145px,1.6fr) minmax(145px,1.6fr) minmax(95px,.85fr) minmax(105px,.9fr) minmax(125px,.95fr);gap:9px;padding:8px 10px}
+.production-workbench .wb-row>label>textarea{height:42px;min-height:42px;font-size:15px;overflow:hidden}
+.production-workbench .wb-row>label>textarea:focus{overflow:auto;resize:vertical}
+.production-workbench .wb-row button{min-height:30px;padding:5px 7px;font-size:12px;border-radius:7px}
+.production-workbench .wb-row select,.production-workbench .wb-row input:not([type=checkbox]){padding:5px 7px;font-size:13px}
+.production-workbench .wb-number{gap:3px}.production-workbench .wb-number strong{font-size:16px}
+.production-workbench .wb-number button{padding:3px;min-width:23px}
+.production-workbench .wb-methods{gap:4px}.production-workbench .wb-methods label{padding:3px 4px;font-size:11px}
+.production-workbench .wb-scene{margin-bottom:6px;border-radius:8px}
+.production-workbench .wb-production-status{margin:4px 0;font-size:12px}
+.production-workbench .wb-details{padding:12px;border-top:1px solid var(--wb-line)}
+.production-workbench .wb-detail-grid{gap:10px;margin:10px 0}
+.production-workbench .wb-prompt-fields>summary{padding:8px 0;font-size:14px}
+.production-workbench .wb-stage{padding:8px 0}
+.production-workbench .wb-actions{margin:8px 0;gap:7px}
+.production-workbench .wb-progress-controls h4{margin:8px 0;font-size:14px}
+.production-workbench .wb-filters{padding:10px 0;margin:10px 0;gap:9px}
+.production-workbench .wb-filters label{font-size:12px;gap:4px}
+.production-workbench .wb-filters select,.production-workbench .wb-filters input{padding:7px 9px;font-size:14px}
+.production-workbench .wb-filters>span{font-size:12px}
+.production-workbench .wb-pagination{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:10px 0}
+.production-workbench .wb-pagination label{display:flex;flex-direction:row;align-items:center;gap:6px;font-size:12px}
+.production-workbench .wb-pagination select{width:70px;padding:5px 7px}
+.production-workbench .wb-pagination span{font-size:13px;color:#b9b2c5}
+.production-workbench .wb-pagination button{min-height:34px;padding:5px 10px}
+.production-workbench .wb-group-create{margin:8px 0;padding-bottom:6px}
+.production-workbench .wb-group-create>summary{padding:7px 0;font-size:13px}
+.production-workbench .wb-queue-group{margin-top:14px}
+.production-workbench .wb-queue-group h3{font-size:15px;margin:8px 0}
+.production-workbench .wb-asset{padding:0 12px;margin-bottom:8px}
+.production-workbench .wb-asset>summary{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 0;font-size:14px}
+.production-workbench .wb-asset>summary span{font-size:12px;color:#b9b2c5}
+.production-workbench .wb-associations{max-height:160px;overflow:auto}
+.production-workbench .wb-overview{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}
+.production-workbench .wb-overview button{display:grid;gap:5px;text-align:left;padding:12px;min-height:70px}
+.production-workbench .wb-overview strong{font-size:24px}.production-workbench .wb-overview span{font-size:12px;color:#b9b2c5}
+.production-workbench .wb-pending-list{display:grid;gap:5px;margin-bottom:12px}
+.production-workbench .wb-pending-list button{display:flex;align-items:center;gap:10px;text-align:left;min-height:40px;padding:7px 10px;font-size:13px}
+.production-workbench .wb-pending-list button>span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.production-workbench [data-canonical-script]{max-height:90px;margin:0;overflow:auto;font:inherit;font-size:14px;padding:9px;background:rgba(5,6,12,.4);border-radius:8px}
+.production-workbench [data-script-draft]{height:64px}
+.production-workbench .wb-preview{max-height:280px}
+.project-page .project-header{padding-top:16px;padding-bottom:12px;align-items:center}
+.project-page .project-header h1{font-size:clamp(24px,3vw,36px)}
+.project-page .back{margin-bottom:10px}
+.project-page .project-stats div{min-width:90px;padding:9px 12px}
+@media(max-width:1100px){
+ .production-workbench .wb-row{grid-template-columns:68px 1fr 1fr}
+ .production-workbench .wb-column-head{display:none}
+}
+@media(max-width:700px){
+ .production-workbench .wb-row{grid-template-columns:1fr 1fr;gap:8px;padding:10px}
+ .production-workbench .wb-row>.wb-number{grid-column:1/-1}
+ .production-workbench .wb-row>label:nth-child(3),.production-workbench .wb-row>label:nth-child(4){grid-column:1/-1}
+ .production-workbench .wb-row>label>textarea{min-height:38px;height:38px;font-size:14px}
+ 
+ .production-workbench .wb-row button{min-height:36px}
+ .production-workbench .wb-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .production-workbench .wb-pagination{justify-content:space-between;gap:6px}
+ .production-workbench .wb-asset>summary{align-items:flex-start;flex-direction:column;gap:4px}
+}

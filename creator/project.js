@@ -1,5 +1,5 @@
 import{makeScene}from'./storyboard-model.js?v=2';
-import{createProductionWorkbench}from'./production-workbench.js?v=4';
+import{createProductionWorkbench}from'./production-workbench.js?v=5';
 import{projectProgress,canComplete,canonicalScript}from'./production-model.js?v=1';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{doc,getDoc,onSnapshot,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -49,9 +49,6 @@ function render(){
 
 function renderSceneWorkspace(){
   const scenes=project.scenes||[];
-  $("startProduction").hidden=!scenes.length;
-  $("openAssets").hidden=!scenes.length;
-  $("startProduction").textContent="Open production table →";
   updateStats();
 }
 
@@ -193,9 +190,6 @@ $("copyProjectLink").onclick=async()=>{
   try{await copyText(location.href);$("shareFeedback").textContent="Project link copied. Access still requires an email listed above.";}
   catch(error){$("shareFeedback").textContent=error.message;}
 };
-
-$("startProduction").onclick=()=>{storyboard.open({area:"Production",method:"All"});$("projectStoryboard").scrollIntoView({block:"start"});};
-$("openAssets").onclick=()=>storyboard.open({area:"Assets"});
 
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&saveTimer)save();});
 
