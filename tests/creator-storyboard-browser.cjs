@@ -48,6 +48,25 @@ const server=http.createServer((req,res)=>{
   await dialog.locator('[data-action=import]').click();
   assert.equal(await dialog.locator('.wb-scene').count(),2);
   await dialog.locator('.wb-scene').first().locator('[data-action=expand]').click();
+  const draftScene=i=>dialog.locator('.wb-scene').nth(i);
+  const longVisual=('Camera follows the upper assembly; preserve the module details and solar arrays.\n').repeat(12);
+  await draftScene(0).locator('[data-field=visual]').fill(longVisual);
+  assert.equal(await draftScene(0).locator('[data-field=visual]').evaluate(el=>el.clientHeight>=el.scrollHeight-1),true);
+  assert.ok(await draftScene(0).locator('[data-field=visual]').evaluate(el=>el.getBoundingClientRect().height>=100));
+  await draftScene(1).locator('[data-action=expand]').click();
+  assert.equal(await dialog.locator('.wb-scene.is-open').count(),1);
+  assert.equal(await draftScene(0).locator('[data-field=visual]').evaluate(el=>el.getBoundingClientRect().height<=48),true);
+  await dialog.locator('[data-action=expand-all]').click();
+  assert.equal(await dialog.locator('.wb-scene.is-open').count(),2);
+  await dialog.locator('[data-filter-method]').selectOption('Blender');
+  assert.equal(await dialog.locator('.wb-scene.is-open').count(),1);
+  assert.equal(await dialog.locator('.wb-scene').count(),1);
+  await dialog.locator('[data-filter-method]').selectOption('All');
+  await draftScene(0).locator('[data-action=expand]').click();
+  assert.equal(await dialog.locator('.wb-scene.is-open').count(),1);
+  assert.equal(await dialog.locator('[data-action=expand-all]').getAttribute('aria-pressed'),'false');
+  await draftScene(0).locator('[data-field=visual]').fill('Rocket orbit');
+
   await dialog.locator('.wb-prompt-fields summary').click();
   await dialog.locator('[data-field=blenderPrompt]').fill('Preserve the exact camera plan.');
   await dialog.locator('[data-tab=Production]').click();await dialog.locator('[data-filter-method]').selectOption('Blender');
@@ -72,6 +91,14 @@ const server=http.createServer((req,res)=>{
   await dialog.locator('#saveContent').click();await page.waitForURL(/project.html\?id=/);
   await page.locator('#projectTitle').filter({hasText:'Draft production'}).waitFor();
   assert.equal(await page.locator('.wb-scene').count(),2);
+  assert.equal(await page.locator('#projectMeta,#accessLabel').count(),0);
+  assert.equal(await page.locator('#status').isVisible(),false);
+  assert.equal(await page.locator('.project-header').innerText().then(text=>text.includes('@')),false);
+  assert.equal(await page.locator('#shareProject').innerText(),'');
+  assert.equal(await page.locator('#syncIndicator').getAttribute('aria-label'),'Synced');
+  await page.locator('#shareProject').click();
+  assert.equal(await page.locator('#shareDialog').evaluate(el=>el.open),true);
+  await page.locator('#shareDialog [aria-label="Close sharing"]').click();
   await page.locator('[data-tab=Production]').click();await page.locator('[data-filter-method]').selectOption('Blender');assert.equal(await page.locator('.wb-production-card').count(),1);
   await page.locator('[data-tab=Assets]').click();assert.equal(await page.locator('[data-asset-field=path]').inputValue(),'E:\\3D\\draft.blend');
   await page.goto(base);await page.locator('.content-card').filter({hasText:'Draft production'}).locator('[data-edit]').click();
@@ -231,7 +258,8 @@ const server=http.createServer((req,res)=>{
   await page.setViewportSize({width:1440,height:1000});
   // Failed autosave retains a recoverable draft and retries after refresh.
   await page.evaluate(()=>window.failSave=true);await scene(1).locator('[data-field=visual]').fill('Recovered camera direction');
-  await page.locator('#status').filter({hasText:'draft is kept'}).waitFor();await page.reload();
+  await page.locator('#status').filter({hasText:'draft is kept'}).waitFor();
+  assert.equal(await page.locator('#syncIndicator').getAttribute('data-state'),'error');await page.reload();
   await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes[1].visual==='Recovered camera direction',projectId);
   // Untouched legacy records retain completed state, prompts, metadata and script.
   const legacy={id:'legacy',title:'Legacy',ownerUid:'owner',ownerEmail:'owner@example.com',editorEmails:[],notes:'Keep notes',hook:'Keep hook',script:'Keep draft',custom:{keep:true},scenes:[{id:'old',duration:8,voiceover:'Legacy narration',completed:true,imageDone:true,imagePrompt:'Original prompt',imageAssetUrl:'https://example.com/image',custom:'keep'}]};

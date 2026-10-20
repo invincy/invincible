@@ -6,10 +6,10 @@ const ICONS={"board":"<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/
 const icon=name=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(ICONS[name]||ICONS.assets)+'</svg>';
 const action=(name,label,glyph,extra='')=>'<button type="button" class="wb-icon" data-action="'+name+'" title="'+esc(label)+'" aria-label="'+esc(label)+'" '+extra+'>'+icon(glyph)+'</button>';
 export function createProductionWorkbench(root,{getProject,onChange,onFocus,copyText,onCopyBrief,onSplitScript}){
- let tab='Storyboard',workspace='All',groupBy='project',assetFilter='All',completionFilter='All',searchQuery='',active='',pending=[],mapping=[],importTable=null,scriptChanges=null,dragId='',pageIndex=0,pageSize=8,activeAsset='';
+ let tab='Storyboard',workspace='All',groupBy='project',assetFilter='All',completionFilter='All',searchQuery='',active='',pending=[],mapping=[],importTable=null,scriptChanges=null,dragId='',pageIndex=0,pageSize=8,activeAsset='',expandAll=false;
  try{const saved=localStorage.getItem('invincible.creator.pageSize');if(saved!==null&&[0,8,16].includes(Number(saved)))pageSize=Number(saved);}catch{}
  root.classList.add('production-workbench');
- root.innerHTML='<nav class="wb-tabs" aria-label="Project areas">'+['Storyboard','Production','Assets','Overview'].map((name,index)=>'<button type="button" data-tab="'+name+'" title="'+name+'" aria-label="'+name+'">'+icon(['board','production','assets','overview'][index])+'<span>'+name+'</span></button>').join('')+'</nav><div class="wb-status" role="status" aria-live="polite"></div><div data-workbench></div>';
+ root.innerHTML='<div class="wb-commandbar"><nav class="wb-tabs" aria-label="Project areas">'+['Storyboard','Production','Assets','Overview'].map((name,index)=>'<button type="button" data-tab="'+name+'" title="'+name+'" aria-label="'+name+'">'+icon(['board','production','assets','overview'][index])+'<span>'+name+'</span></button>').join('')+'</nav><div data-command-actions></div></div><div class="wb-status" role="status" aria-live="polite"></div><div data-workbench></div>';
  const panel=root.querySelector('[data-workbench]'),message=text=>root.querySelector('.wb-status').textContent=text;
  const project=()=>getProject();
  const scenes=()=>project()?.scenes||[];
@@ -70,12 +70,12 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  }
  function columnHead(){return '<div class="wb-column-head" aria-hidden="true"><span>Scene</span><span>Timeline</span><span>Voiceover</span><span>Visual</span><span>Assets</span><span>Method</span><span>Status</span></div>';}
  function sceneRow(scene,index){
-  const open=active===scene.id;
-  return '<article class="wb-scene '+(tab==='Production'?'wb-production-card':'')+'" data-scene="'+esc(scene.id)+'"><div class="wb-row">'+
+  const open=expandAll||active===scene.id;
+  return '<article class="wb-scene '+(tab==='Production'?'wb-production-card':'')+(open?' is-open':'')+'" data-scene="'+esc(scene.id)+'"><div class="wb-row">'+
    '<div class="wb-number"><button type="button" draggable="true" data-drag="'+esc(scene.id)+'" aria-label="Drag scene '+(index+1)+'">⠿</button><strong>'+String(index+1).padStart(2,'0')+'</strong></div>'+
    '<label><span class="wb-mobile-label">Timeline / duration</span><input data-field="timing" value="'+esc(scene.timeline||scene.duration+' sec')+'"></label>'+
    field('Voiceover','voiceover',scene.voiceover)+field('Visual / Animation','visual',scene.visual)+field('Assets Required','assets',scene.assets)+
-   '<div class="wb-method-cell"><span class="wb-mobile-label">Method</span>'+methodTags(scene)+'</div><div class="wb-row-status">'+sceneStatus(scene)+'<span class="wb-readiness" data-ready="'+(productionReadiness(project(),scene,workspace)==='Ready')+'" title="Assets: '+productionReadiness(project(),scene,workspace)+'" role="img" aria-label="Assets: '+productionReadiness(project(),scene,workspace)+'"></span>'+action('expand',open?'Close details':'Scene details',open?'close':'expand','aria-expanded="'+open+'"')+action('copy','Copy prompt','copy')+'</div></div>'+
+   '<div class="wb-method-cell"><span class="wb-mobile-label">Method</span>'+methodTags(scene)+'</div><div class="wb-row-status">'+sceneStatus(scene)+'<span class="wb-readiness" data-ready="'+(productionReadiness(project(),scene,workspace)==='Ready')+'" title="Assets: '+productionReadiness(project(),scene,workspace)+'" role="img" aria-label="Assets: '+productionReadiness(project(),scene,workspace)+'"></span>'+action('expand',expandAll?'Focus scene':open?'Close details':'Scene details',open?'close':'expand','aria-expanded="'+open+'"')+action('copy','Copy prompt','copy')+'</div></div>'+
    (open?details(scene):'')+'</article>';
  }
  function productionStatus(scene){
@@ -84,8 +84,9 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   if(tasks.length&&tasks.every(task=>task.ready||task.rendering))return 'Rendered';
   return tasks.some(task=>Object.values(task).some(Boolean))?'In Progress':'Not Started';
  }
+ function expansionControl(){return action('expand-all',expandAll?'Collapse all scenes':'Expand all filtered scenes','board','aria-pressed="'+expandAll+'"');}
  function storyboard(){
-  return '<div class="wb-toolbar"><details class="wb-import" '+(!scenes().length?'open':'')+'><summary>'+icon('import')+'<span>Import</span></summary><div class="wb-import-body"><textarea aria-label="Paste storyboard" data-paste rows="3" placeholder="Paste TSV, Markdown or narration"></textarea><button type="button" data-action="preview">Preview</button><div data-import-preview></div></div></details>'+action('add','Add scene','add')+'</div>'+
+  return '<div class="wb-toolbar"><details class="wb-import" '+(!scenes().length?'open':'')+'><summary>'+icon('import')+'<span>Import</span></summary><div class="wb-import-body"><textarea aria-label="Paste storyboard" data-paste rows="3" placeholder="Paste TSV, Markdown or narration"></textarea><button type="button" data-action="preview">Preview</button><div data-import-preview></div></div></details>'+expansionControl()+action('add','Add scene','add')+'</div>'+
    filterBar()+columnHead()+
    (pageScenes().map(scene=>sceneRow(scene,scenes().indexOf(scene))).join('')||'<p>No scenes match.</p>')+pagination();
  }
@@ -102,7 +103,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    if(!buckets.has(key))buckets.set(key,{group,label:groupBy==='status'?key:groupBy==='scene'?'Scene '+(scenes().indexOf(scene)+1):group?.name||'Independents',scenes:[]});
    buckets.get(key).scenes.push(scene);
   }
-  return '<div class="wb-toolbar"><details class="wb-group-create"><summary>'+icon('assets')+'<span>Projects</span></summary><div class="wb-group-body"><div class="wb-actions"><input data-new-group placeholder="Project name"><button type="button" data-action="add-group">Create</button></div>'+(project().animationGroups||[]).map(groupEditor).join('')+'</div></details>'+action('next','Next pending scene','next')+'</div>'+
+  return '<div class="wb-toolbar"><details class="wb-group-create"><summary>'+icon('assets')+'<span>Projects</span></summary><div class="wb-group-body"><div class="wb-actions"><input data-new-group placeholder="Project name"><button type="button" data-action="add-group">Create</button></div>'+(project().animationGroups||[]).map(groupEditor).join('')+'</div></details>'+expansionControl()+action('next','Next pending scene','next')+'</div>'+
    filterBar()+[...buckets.values()].map(bucket=>'<section class="wb-queue-group"><h3>'+esc(bucket.label)+'</h3>'+columnHead()+bucket.scenes.map(scene=>sceneRow(scene,scenes().indexOf(scene))).join('')+'</section>').join('')+
    (!queue.length?'<p>No scenes match. Use Show all to reset.</p>':'')+pagination();
  }
@@ -129,16 +130,28 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    '<details><summary>Notes</summary>'+field('Hook','hook',project().hook||'','data-project-field="hook"')+field('Project notes','notes',project().notes||'','data-project-field="notes"')+'</details>'+
    '<details class="wb-script"><summary>Script</summary><p>Review changes before syncing. One paragraph per scene.</p><label>Scene script<pre data-canonical-script>'+esc(script)+'</pre></label><button type="button" data-action="copy-script">Copy chronological script</button><label>Script draft<textarea rows="2" data-script-draft>'+esc(project().script||script)+'</textarea></label><div class="wb-actions"><button type="button" data-action="script-from-scenes">Scenes → draft</button><button type="button" data-action="review-script">Draft → scenes</button></div><div data-script-review></div>'+(onSplitScript?'<button type="button" data-action="split-script">Split draft</button>':'')+'</details>';
  }
+ function sizeEditors(){
+  root.querySelectorAll('.wb-scene.is-open textarea').forEach(input=>{
+   if(!input.getClientRects().length)return;
+   input.style.height='auto';
+   input.style.height=Math.max(input.closest('.wb-row')?100:80,input.scrollHeight+2)+'px';
+  });
+ }
+ let lastWidth=0;
+ const editorObserver=new ResizeObserver(()=>{if(root.clientWidth!==lastWidth){lastWidth=root.clientWidth;sizeEditors();}});
+ editorObserver.observe(root);
  function render(){
   if(!project())return;
   root.querySelectorAll('[data-tab]').forEach(button=>button.setAttribute('aria-current',button.dataset.tab===tab?'page':'false'));
   panel.innerHTML=tab==='Storyboard'?storyboard():tab==='Production'?production():tab==='Assets'?assets():overview();
-  pending=[];scriptChanges=null;
+  const tools=root.querySelector('[data-command-actions]');tools.replaceChildren();
+  const toolbar=panel.querySelector('.wb-toolbar');if(toolbar)tools.append(toolbar);
+  pending=[];scriptChanges=null;sizeEditors();
  }
  function preview(){
   try{
-   importTable=inspectImport(panel.querySelector('[data-paste]').value);mapping=[...importTable.mapping];
-   const box=panel.querySelector('[data-import-preview]');
+   importTable=inspectImport(root.querySelector('[data-paste]').value);mapping=[...importTable.mapping];
+   const box=root.querySelector('[data-import-preview]');
    box.innerHTML='<p>'+importTable.format+' · '+importTable.rows.length+' rows. Map columns, then review every scene.</p><div class="wb-mapping">'+importTable.headers.map((header,index)=>'<label>'+esc(header)+'<select data-map="'+index+'"><option value="">Ignore column</option>'+IMPORT_FIELDS.map(key=>'<option value="'+key+'" '+(mapping[index]===key?'selected':'')+'>'+key+'</option>').join('')+'</select></label>').join('')+'</div><button type="button" data-action="map-preview">Review scenes</button><div data-mapped-preview></div>';
    mappedPreview();
   }catch(error){message(error.message);}
@@ -146,19 +159,20 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  function mappedPreview(){
   pending=[];
   try{
-   const parsed=parseProductionImport(panel.querySelector('[data-paste]').value,mapping);
+   const parsed=parseProductionImport(root.querySelector('[data-paste]').value,mapping);
    const unique=uniqueScenes(scenes(),parsed);pending=unique.scenes;
-   panel.querySelector('[data-mapped-preview]').innerHTML='<p>'+pending.length+' new scenes · '+unique.duplicates+' duplicates skipped. Existing scenes stay in place.</p><div class="wb-preview">'+parsed.map((scene,index)=>'<article><strong>Scene '+(index+1)+' · '+esc(scene.timeline||scene.duration+' sec')+'</strong><p>'+esc(scene.voiceover)+'</p><p>'+esc(scene.visual)+'</p><p>'+esc(scene.assets)+'</p><p>'+esc(methodsOf(scene).join(', '))+'</p><p>'+esc(scene.blenderPrompt||scene.videoPrompt||'')+'</p>'+(scene.importedStatus?'<p>Imported status: '+esc(scene.importedStatus)+' (completion requires review)</p>':'')+'</article>').join('')+'</div><button type="button" data-action="import" '+(!pending.length?'disabled':'')+'>Append reviewed scenes</button>';
+   root.querySelector('[data-mapped-preview]').innerHTML='<p>'+pending.length+' new scenes · '+unique.duplicates+' duplicates skipped. Existing scenes stay in place.</p><div class="wb-preview">'+parsed.map((scene,index)=>'<article><strong>Scene '+(index+1)+' · '+esc(scene.timeline||scene.duration+' sec')+'</strong><p>'+esc(scene.voiceover)+'</p><p>'+esc(scene.visual)+'</p><p>'+esc(scene.assets)+'</p><p>'+esc(methodsOf(scene).join(', '))+'</p><p>'+esc(scene.blenderPrompt||scene.videoPrompt||'')+'</p>'+(scene.importedStatus?'<p>Imported status: '+esc(scene.importedStatus)+' (completion requires review)</p>':'')+'</article>').join('')+'</div><button type="button" data-action="import" '+(!pending.length?'disabled':'')+'>Append reviewed scenes</button>';
    message('Preview only. No scenes changed.');
   }catch(error){message(error.message);}
  }
  root.addEventListener('input',event=>{
+  if(event.target.matches('.wb-scene.is-open textarea'))sizeEditors();
   const target=event.target,scene=findScene(target.closest('[data-scene]')?.dataset.scene);
   if(target.matches('[data-filter-search]')){
-   searchQuery=target.value;pageIndex=0;const cursor=target.selectionStart;render();const input=panel.querySelector('[data-filter-search]');input.focus();input.setSelectionRange(cursor,cursor);return;
+   searchQuery=target.value;pageIndex=0;const cursor=target.selectionStart;render();const input=root.querySelector('[data-filter-search]');input.focus();input.setSelectionRange(cursor,cursor);return;
   }
-  if(target.matches('[data-paste]')){pending=[];const box=panel.querySelector('[data-import-preview]');if(box)box.innerHTML='';return;}
-  if(target.matches('[data-script-draft]')){project().script=target.value;scriptChanges=null;panel.querySelector('[data-script-review]').innerHTML='';changed(false);return;}
+  if(target.matches('[data-paste]')){pending=[];const box=root.querySelector('[data-import-preview]');if(box)box.innerHTML='';return;}
+  if(target.matches('[data-script-draft]')){project().script=target.value;scriptChanges=null;root.querySelector('[data-script-review]').innerHTML='';changed(false);return;}
   const group=(project().animationGroups||[]).find(item=>item.id===target.closest('[data-group]')?.dataset.group);
   if(group&&target.dataset.groupField){group[target.dataset.groupField]=target.value;changed(false);return;}
   const asset=(project().assets||[]).find(item=>item.id===target.closest('[data-asset]')?.dataset.asset);
@@ -211,7 +225,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    if(button.dataset.overviewFilter){
     tab='Production';workspace='All';pageIndex=0;assetFilter=button.dataset.overviewFilter==='Ready'?'Ready':'All';completionFilter=['Editing','Completed'].includes(button.dataset.overviewFilter)?button.dataset.overviewFilter:'All';searchQuery='';render();return;
    }
-   if(button.dataset.openScene){tab='Production';workspace='All';assetFilter='All';completionFilter='All';searchQuery='';active=button.dataset.openScene;revealActive();render();return;}
+   if(button.dataset.openScene){expandAll=false;tab='Production';workspace='All';assetFilter='All';completionFilter='All';searchQuery='';active=button.dataset.openScene;revealActive();render();return;}
    if(button.dataset.tab){tab=button.dataset.tab;message('');render();return;}
    if(button.dataset.workspace){workspace=button.dataset.workspace;active='';render();return;}
    const scene=findScene(button.closest('[data-scene]')?.dataset.scene),index=scenes().indexOf(scene),action=button.dataset.action;
@@ -225,6 +239,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
     setTask(project(),scene,method,patch);changed();return;
    }
    if(button.dataset.removeCheck!==undefined){scene.checklist.splice(Number(button.dataset.removeCheck),1);scene.completed=false;changed();return;}
+   if(action==='expand-all'){expandAll=!expandAll;if(!expandAll)active='';render();return;}
    if(action==='page-prev'||action==='page-next'){pageIndex+=action==='page-prev'?-1:1;render();return;}
    if(action==='clear-filters'){pageIndex=0;workspace='All';assetFilter='All';completionFilter='All';searchQuery='';render();return;}
    if(action==='preview'){preview();return;}if(action==='map-preview'){mappedPreview();return;}
@@ -239,23 +254,23 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
     }
     project().scenes.push(...fresh);pending=[];changed();message(fresh.length+' scenes appended.');return;
    }
-   if(action==='add'){const item=makeScene({productionMethods:[],sceneState:'Planned'});project().scenes.push(item);active=item.id;revealActive();changed();return;}
-   if(action==='add-group'){const name=panel.querySelector('[data-new-group]').value.trim();if(!name)return;project().animationGroups||=[];project().animationGroups.push({id:uid(),name,blenderFile:'',resources:'',production:{}});changed();return;}
+   if(action==='add'){expandAll=false;const item=makeScene({productionMethods:[],sceneState:'Planned'});project().scenes.push(item);active=item.id;revealActive();changed();return;}
+   if(action==='add-group'){const name=root.querySelector('[data-new-group]').value.trim();if(!name)return;project().animationGroups||=[];project().animationGroups.push({id:uid(),name,blenderFile:'',resources:'',production:{}});changed();return;}
    if(action==='add-asset'){project().assets||=[];activeAsset=uid();project().assets.push({id:activeAsset,name:'Untitled asset',type:'Reference',path:'',status:'Not Started',sceneIds:[],groupIds:[],notes:''});changed();return;}
    if(action==='next'){
-    const next=visibleScenes().find(item=>workspace==='Editing'?!item.editingDone:workspace==='All'||workspace==='Assets'?sceneState(project(),item)!=='Completed':!taskFor(project(),item,workspace).ready);
-    if(!next){message('No pending scenes in this workspace.');return;}active=next.id;pageIndex=pageSize?Math.floor(visibleScenes().indexOf(next)/pageSize):0;render();panel.querySelector('[data-scene="'+CSS.escape(next.id)+'"]')?.scrollIntoView({block:'nearest'});return;
+    expandAll=false;    const next=visibleScenes().find(item=>workspace==='Editing'?!item.editingDone:workspace==='All'||workspace==='Assets'?sceneState(project(),item)!=='Completed':!taskFor(project(),item,workspace).ready);
+    if(!next){message('No pending scenes in this workspace.');return;}active=next.id;pageIndex=pageSize?Math.floor(visibleScenes().indexOf(next)/pageSize):0;render();root.querySelector('[data-scene="'+CSS.escape(next.id)+'"]')?.scrollIntoView({block:'nearest'});return;
    }
    if(action==='copy-brief'&&onCopyBrief){await onCopyBrief();message('Generator brief copied.');return;}
    if(action==='split-script'&&onSplitScript){onSplitScript();return;}
    if(action==='copy-script'){await copyText(canonicalScript(project()));message('Chronological script copied.');return;}
    if(action==='script-from-scenes'){
     scriptChanges={direction:'from',before:project().script||'',after:canonicalScript(project())};
-    panel.querySelector('[data-script-review]').innerHTML='<h3>Review full-script replacement</h3><p>Current draft</p><pre>'+esc(scriptChanges.before)+'</pre><p>Scene narration</p><pre>'+esc(scriptChanges.after)+'</pre><button type="button" data-action="apply-script">Replace full-script draft</button>';return;
+    root.querySelector('[data-script-review]').innerHTML='<h3>Review full-script replacement</h3><p>Current draft</p><pre>'+esc(scriptChanges.before)+'</pre><p>Scene narration</p><pre>'+esc(scriptChanges.after)+'</pre><button type="button" data-action="apply-script">Replace full-script draft</button>';return;
    }
    if(action==='review-script'){
-    scriptChanges={direction:'to',rows:scriptReview(project(),panel.querySelector('[data-script-draft]').value)};
-    panel.querySelector('[data-script-review]').innerHTML=scriptChanges.rows.map((row,i)=>'<article><strong>Scene '+(i+1)+(row.changed?' · Changed':' · Unchanged')+'</strong><del>'+esc(row.before)+'</del><ins>'+esc(row.after)+'</ins></article>').join('')+'<button type="button" data-action="apply-script">Apply reviewed narration changes</button>';return;
+    scriptChanges={direction:'to',rows:scriptReview(project(),root.querySelector('[data-script-draft]').value)};
+    root.querySelector('[data-script-review]').innerHTML=scriptChanges.rows.map((row,i)=>'<article><strong>Scene '+(i+1)+(row.changed?' · Changed':' · Unchanged')+'</strong><del>'+esc(row.before)+'</del><ins>'+esc(row.after)+'</ins></article>').join('')+'<button type="button" data-action="apply-script">Apply reviewed narration changes</button>';return;
    }
    if(action==='apply-script'&&scriptChanges){
     if(scriptChanges.direction==='from')project().script=scriptChanges.after;
@@ -264,7 +279,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
     changed();message('Reviewed script changes applied.');return;
    }
    if(!scene)return;
-   if(action==='expand'){active=active===scene.id?'':scene.id;render();return;}
+   if(action==='expand'){active=expandAll||active!==scene.id?scene.id:'';expandAll=false;render();return;}
    if(action==='copy'){await copyText(workspace==='AI Video'?(scene.videoPrompt||scene.imagePrompt||scene.visual||''):scene.blenderPrompt||scene.videoPrompt||scene.imagePrompt||scene.visual||'');message('Prompt copied.');return;}
    if(action==='draft'){
     const settings=project(),style=settings.visualStyle||'cinematic documentary',ratio=settings.aspectRatio||'9:16';
@@ -275,19 +290,19 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    }
    if(action==='focus'){onFocus(scene.id);return;}
    if(action==='add-check'){const text=button.closest('[data-scene]').querySelector('[data-new-check]').value.trim();if(!text)return;scene.checklist||=[];scene.checklist.push({id:uid(),text,done:false});scene.completed=false;}
-   if(action==='duplicate'){const copy=makeScene({...JSON.parse(JSON.stringify(scene)),id:uid(),completed:false,sceneState:'Planned',voiceoverReady:false,editingDone:false,checklist:(scene.checklist||[]).map(item=>({...item,id:uid(),done:false})),production:{}});project().scenes.splice(index+1,0,copy);active=copy.id;}
-   if(action==='insert'){const item=makeScene({productionMethods:[],sceneState:'Planned'});project().scenes.splice(index+1,0,item);active=item.id;}
+   if(action==='duplicate'){expandAll=false;const copy=makeScene({...JSON.parse(JSON.stringify(scene)),id:uid(),completed:false,sceneState:'Planned',voiceoverReady:false,editingDone:false,checklist:(scene.checklist||[]).map(item=>({...item,id:uid(),done:false})),production:{}});project().scenes.splice(index+1,0,copy);active=copy.id;}
+   if(action==='insert'){expandAll=false;const item=makeScene({productionMethods:[],sceneState:'Planned'});project().scenes.splice(index+1,0,item);active=item.id;}
    if(action==='remove'){if(!confirm('Delete this scene and its production notes?'))return;project().scenes.splice(index,1);for(const asset of project().assets||[])asset.sceneIds=(asset.sceneIds||[]).filter(id=>id!==scene.id);}
    if(action==='up'||action==='down'){const next=index+(action==='up'?-1:1);if(next<0||next>=scenes().length)return;[project().scenes[index],project().scenes[next]]=[project().scenes[next],project().scenes[index]];}
    if(action==='duplicate'||action==='insert')revealActive();
    changed();
   }catch(error){message(error.message);}
  });
- root.addEventListener('toggle',event=>{if(event.target.matches('.wb-asset')){if(event.target.open)activeAsset=event.target.dataset.asset;else if(activeAsset===event.target.dataset.asset)activeAsset='';}},true);
+ root.addEventListener('toggle',event=>{if(event.target.open)sizeEditors();if(event.target.matches('.wb-asset')){if(event.target.open)activeAsset=event.target.dataset.asset;else if(activeAsset===event.target.dataset.asset)activeAsset='';}},true);
  root.addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.matches('input,select'))event.preventDefault();});
  root.addEventListener('dragstart',event=>{const handle=event.target.closest('[data-drag]');if(!handle)return;dragId=handle.dataset.drag;event.dataTransfer.setData('text/plain',dragId);event.dataTransfer.effectAllowed='move';});
  root.addEventListener('dragover',event=>{if(dragId&&event.target.closest('[data-scene]'))event.preventDefault();});
  root.addEventListener('drop',event=>{event.preventDefault();dragId=event.dataTransfer?.getData('text/plain')||dragId;const id=event.target.closest('[data-scene]')?.dataset.scene;if(!dragId||!id||id===dragId)return;const from=scenes().findIndex(scene=>scene.id===dragId),to=scenes().findIndex(scene=>scene.id===id);if(from<0||to<0)return;const [item]=project().scenes.splice(from,1);project().scenes.splice(to,0,item);dragId='';changed();});
  root.addEventListener('dragend',()=>dragId='');
- return {render,open({area='Production',method,sceneId}={}){tab=area;if(method)workspace=method;active=sceneId||'';render();if(active)panel.querySelector('[data-scene="'+CSS.escape(active)+'"]')?.scrollIntoView({block:'nearest'});},reset(){tab="Storyboard";workspace="All";assetFilter="All";completionFilter="All";searchQuery="";groupBy="project";active="";pageIndex=0;activeAsset="";message("");render();}};
+ return {render,open({area='Production',method,sceneId}={}){tab=area;expandAll=false;if(method)workspace=method;active=sceneId||'';render();if(active)root.querySelector('[data-scene="'+CSS.escape(active)+'"]')?.scrollIntoView({block:'nearest'});},reset(){tab="Storyboard";workspace="All";assetFilter="All";completionFilter="All";searchQuery="";groupBy="project";active="";pageIndex=0;activeAsset="";expandAll=false;message("");render();}};
 }

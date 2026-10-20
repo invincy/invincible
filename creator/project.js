@@ -1,5 +1,5 @@
 import{makeScene}from'./storyboard-model.js?v=2';
-import{createProductionWorkbench}from'./production-workbench.js?v=6';
+import{createProductionWorkbench}from'./production-workbench.js?v=7';
 import{projectProgress,canComplete,canonicalScript}from'./production-model.js?v=1';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{doc,getDoc,onSnapshot,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -11,7 +11,13 @@ let user=null,project=null,projectRef=null,saveTimer=null,localDirty=false;
 
 function esc(value){const node=document.createElement("div");node.textContent=value??"";return node.innerHTML;}
 function attr(value){return esc(value).replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
-function status(message,type=""){$("status").textContent=message;$("status").className="sync-status "+type;}
+function status(message,type=""){
+ const node=$("status"),icon=$("syncIndicator");
+ node.textContent=type==="error"?message:"";
+ node.className="sync-status "+type;node.hidden=type!=="error";
+ icon.title=message;icon.setAttribute("aria-label",message);
+ icon.dataset.state=type==="error"?"error":type==="ok"?"ok":"pending";
+}
 
 const storyboard=createProductionWorkbench($("projectStoryboard"),{
  getProject:()=>project,
@@ -39,10 +45,11 @@ function render(){
   if(!project)return;
   $("projectTitle").textContent=project.title||"Untitled project";
   document.title=(project.title||"Content Project")+" · Invincible";
-  $("projectMeta").textContent=[project.format,project.series,project.stage].filter(Boolean).join(" · ");
   const owner=project.ownerUid===user.uid,editors=project.editorEmails||[];
   $("shareProject").hidden=!owner;
-  $("accessLabel").textContent=owner?(editors.length?"Shared with "+editors.length+" editor"+(editors.length===1?"":"s"):"Private project"):("Shared with you"+(project.ownerEmail?" by "+project.ownerEmail:""));
+  const access=owner?(editors.length?"Shared project":"Private project"):"Shared with you";
+  $("shareProject").title="Share project";
+  $("accessIndicator").title=access;$("accessIndicator").setAttribute("aria-label",access);
   storyboard.render();
   renderSceneWorkspace();
 }
@@ -214,7 +221,7 @@ async function load(){
     project.id=projectId;
     project.editorEmails=(project.editorEmails||[]).map(email=>email.toLowerCase());
     project.scenes=(project.scenes||[]).map(makeScene);
-    render();$("app").hidden=false;status("Synced · "+(user.email||"signed in"),"ok");
+    render();$("app").hidden=false;status("Synced","ok");
     if(project.productionState?.open)storyboard.open({area:"Production",sceneId:project.productionState.sceneId});
     onSnapshot(projectRef,{includeMetadataChanges:true},live=>{
       if(live.metadata.hasPendingWrites)return;
@@ -225,7 +232,7 @@ async function load(){
       incoming.editorEmails=(incoming.editorEmails||[]).map(email=>email.toLowerCase());
       incoming.scenes=(incoming.scenes||[]).map(makeScene);
       project=incoming;render();
-      status("Live collaboration · "+(user.email||"signed in"),"ok");
+      status("Synced","ok");
     },error=>status("Collaboration access changed: "+error.message,"error"));
   }catch(error){status("Could not load project: "+error.message,"error");}
 }

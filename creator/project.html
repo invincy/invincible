@@ -9,20 +9,28 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../site-nav.css?v=15">
-  <link rel="stylesheet" href="project.css?v=8">
+  <link rel="stylesheet" href="project.css?v=9">
   <link rel="stylesheet" href="storyboard.css?v=5">
-  <link rel="stylesheet" href="production-workbench.css?v=6">
+  <link rel="stylesheet" href="production-workbench.css?v=7">
 </head>
 <body class="project-page">
   <nav class="global-nav" aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
   <script type="module" src="../site-nav.js?v=7"></script>
 
   <header class="project-header">
-    <div class="project-identity"><a class="back" href="/invincible/creator/">← Content pipeline</a><span id="projectMeta" class="eyebrow">CONTENT PROJECT</span><h1 id="projectTitle">Loading…</h1><div class="project-access"><span id="accessLabel">Private project</span><button id="shareProject" class="text-button" hidden>Share access</button></div></div>
-    <div class="project-stats" aria-label="Project progress"><div><strong id="sceneCount">0</strong><span>Shots</span></div><div><strong id="totalDuration">0s</strong><span>Runtime</span></div><div><strong id="sceneProgress">0%</strong><span>Complete</span></div></div>
+    <a class="project-icon back" href="/invincible/creator/" title="Back to projects" aria-label="Back to projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12H4m6-6-6 6 6 6"/></svg></a>
+    <h1 id="projectTitle">Loading…</h1>
+    <div class="project-stats" aria-label="Project progress">
+      <span title="Scenes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg><strong id="sceneCount" aria-label="Scene count">0</strong></span>
+      <span title="Runtime"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><strong id="totalDuration" aria-label="Runtime">0s</strong></span>
+      <span title="Project completion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 12 5 5L20 6"/></svg><strong id="sceneProgress" aria-label="Project completion">0%</strong></span>
+    </div>
+    <span id="accessIndicator" class="project-icon" role="img" title="Private project" aria-label="Private project"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span>
+    <button id="shareProject" class="project-icon" type="button" title="Share project" aria-label="Share project" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m9 10 6-4M9 14l6 4"/></svg></button>
+    <span id="syncIndicator" class="project-icon" role="img" data-state="pending" title="Connecting" aria-label="Connecting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10a9 9 0 0 1 15-5l3 3M21 3v5h-5M21 14A9 9 0 0 1 6 19l-3-3m0 5v-5h5"/></svg></span>
   </header>
   <div class="project-progress" aria-hidden="true"><span id="projectProgressBar"></span></div>
-  <div id="status" class="sync-status" role="status" aria-live="polite">Connecting to Firebase…</div>
+  <div id="status" class="sync-status" role="status" aria-live="polite" hidden></div>
 
   <main id="app" hidden>
 
@@ -41,6 +49,6 @@
       <div class="share-footer"><button id="copyProjectLink" type="button" class="secondary">Copy project link</button><button value="cancel" class="primary">Done</button></div>
     </form>
   </dialog>
-  <script type="module" src="project.js?v=16"></script>
+  <script type="module" src="project.js?v=17"></script>
 </body>
 </html>
