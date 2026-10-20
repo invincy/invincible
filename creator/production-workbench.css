@@ -156,3 +156,27 @@
  .production-workbench .wb-actions button{font-size:12px}
 }
 @media(prefers-reduced-motion:reduce){.production-workbench *{scroll-behavior:auto;transition:none}}
+
+/* Selected scenes grow to their content; the rest remain compact. */
+.production-workbench .wb-scene.is-open .wb-row{align-items:start}
+.production-workbench .wb-scene.is-open textarea{min-height:80px;max-height:none;resize:none;overflow:hidden}
+.production-workbench .wb-scene.is-open .wb-row textarea{min-height:100px;background:rgba(5,6,12,.48);border-color:var(--wb-line)}
+.wb-commandbar{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;border-bottom:1px solid var(--wb-line)}
+.wb-commandbar:not(:has(details[open])){position:sticky;top:76px;z-index:5;background:rgba(12,12,19,.97)}
+.production-workbench .wb-commandbar .wb-tabs{position:static;border:0;background:transparent;flex:none}
+.wb-commandbar [data-command-actions]{min-width:0}
+.production-workbench .wb-commandbar .wb-toolbar{align-items:center;margin:0;gap:6px}
+.production-workbench .wb-commandbar .wb-toolbar>details:not([open]){flex:none}
+.wb-commandbar:has(details[open]){flex-wrap:wrap}
+.wb-commandbar:has(details[open]) [data-command-actions]{width:100%}
+.wb-commandbar:has(details[open]) .wb-toolbar{align-items:flex-start}
+@media(max-width:700px){
+ .wb-commandbar{gap:4px}
+ .wb-commandbar:not(:has(details[open])){top:64px}
+ .production-workbench .wb-commandbar .wb-tabs{gap:2px;padding:6px 0}
+ .production-workbench .wb-commandbar .wb-tabs button{width:34px;flex:none;padding:6px}
+ .production-workbench .wb-commandbar .wb-icon{width:34px;min-width:34px;min-height:40px;padding:5px}
+ .production-workbench .wb-commandbar .wb-toolbar{gap:4px}
+ .wb-commandbar .wb-toolbar>details>summary{width:30px;min-height:40px;justify-content:center}
+ .wb-commandbar .wb-toolbar>details>summary>span{display:none}
+}
