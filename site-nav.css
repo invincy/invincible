@@ -387,3 +387,17 @@ body:has(.global-nav[data-compact-nav]){--site-nav-height:48px;--site-nav-mobile
 .compact-apps-trigger svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8}
 body:has(.global-nav[data-compact-nav]) .mobile-tabbar,body:has(.global-nav[data-compact-nav]) .customize-tabs-trigger,body:has(.global-nav[data-compact-nav]) .tab-customizer{display:none!important}
 body:has(.global-nav[data-compact-nav]) .app-more-sheet{inset:52px 8px auto auto;margin:0;max-height:calc(100dvh - 64px)}
+
+/* Creator's direct app rail: every page stays one icon away. */
+.global-nav[data-icon-nav]{gap:14px;background:#0b141c}
+.global-nav[data-icon-nav] .desktop-nav{display:flex;flex:0 1 auto;margin-left:auto;gap:3px;scrollbar-color:#28566a #0b141c;scrollbar-width:thin}
+.global-nav[data-icon-nav] .desktop-nav .app-nav-link{width:35px;min-width:35px;min-height:36px;justify-content:center;padding:5px;border-radius:7px}
+.global-nav[data-icon-nav] .app-nav-label,.global-nav[data-icon-nav] .app-nav-external,.global-nav[data-icon-nav] .compact-apps-trigger{display:none}
+.global-nav[data-icon-nav] .app-nav-icon svg{width:21px;height:21px}
+.global-nav[data-icon-nav] .nav-brand strong{display:block;font:600 16px Roboto,system-ui,sans-serif;letter-spacing:.025em}
+.global-nav[data-icon-nav] .mobile-page-name{font-size:13px;color:#c0d0da}
+.global-nav[data-icon-nav] .nav-mark{font-size:0;border:0;border-radius:3px;width:25px;height:25px;background:linear-gradient(90deg,#39c4ed 0 24%,transparent 24% 35%,#3478e2 35% 61%,transparent 61% 72%,#6378ff 72% 100%);box-shadow:none}
+.global-nav[data-icon-nav] .desktop-nav::-webkit-scrollbar{height:3px}.global-nav[data-icon-nav] .desktop-nav::-webkit-scrollbar-thumb{background:#28566a;border-radius:8px}.global-nav[data-icon-nav] .desktop-nav::-webkit-scrollbar-track{background:#0b141c}
+@media(max-width:1099px){.global-nav[data-icon-nav] .nav-brand strong{display:none}.global-nav[data-icon-nav] .mobile-page-name{margin-left:6px}}
+@media(max-width:700px){.global-nav[data-icon-nav]{padding:0 8px;gap:8px}.global-nav[data-icon-nav] .nav-head{flex:none}.global-nav[data-icon-nav] .mobile-page-name{display:none}.global-nav[data-icon-nav] .desktop-nav{flex:1}.global-nav[data-icon-nav] .desktop-nav .app-nav-link{width:31px;min-width:31px}.global-nav[data-icon-nav] .app-nav-icon svg{width:20px;height:20px}}
+.global-nav[data-icon-nav] .nav-head{width:auto;justify-content:flex-start;flex:none}

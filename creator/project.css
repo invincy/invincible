@@ -330,3 +330,10 @@ main{max-width:1540px;margin:auto;padding:10px clamp(18px,4vw,56px) 70px}
 }
 
 .project-page{background:radial-gradient(ellipse at 18% 0,rgba(111,84,166,.09),transparent 45%),#0e111a}.project-page:after{display:none}.project-page .project-header>h1{font-family:Roboto,system-ui,sans-serif;letter-spacing:0;font-weight:500}.project-page .project-stats strong{font-family:Roboto,system-ui,sans-serif}.project-page .project-progress span{background:linear-gradient(90deg,#a997ec,#65cfdf);box-shadow:none}.project-page .project-icon{color:#afa6c3}
+
+/* Approved graphite and cyan production palette. */
+body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;--line-strong:#2b8ca0;--text:#eef5f9;--muted:#9bb0be;--dim:#738d9d;--hot:#4fdcf2;--pink:#4fdcf2;background:#0b141c;color:#edf4f8}
+.project-page .project-progress{height:1px;background:#263640}.project-page .project-progress span{background:#33d7ef}
+.project-page .project-icon{color:#b2c6d2}.project-page .project-stats>span{color:#a6bac7}
+.project-page,.project-page *{scrollbar-width:thin;scrollbar-color:#28566a #0b151d}
+.project-page ::-webkit-scrollbar{width:6px;height:5px}.project-page ::-webkit-scrollbar-track{background:#0b151d;border-radius:8px}.project-page ::-webkit-scrollbar-thumb{background:#28566a;border-radius:8px}.project-page ::-webkit-scrollbar-thumb:hover{background:#3a93ad}

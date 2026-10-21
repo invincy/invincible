@@ -3,10 +3,15 @@ import {METHODS,IMPORT_FIELDS,uid,methodsOf,inspectImport,parseProductionImport,
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const options=(values,current)=>values.map(value=>'<option '+(value===current?'selected':'')+'>'+esc(value)+'</option>').join('');
 const ICONS={"board":"<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M3 10h18M9 4v16\"/>","production":"<path d=\"m8 4 12 8-12 8z\"/>","assets":"<path d=\"M3 7h7l2-3h9v16H3z\"/>","overview":"<path d=\"M4 20V10m8 10V4m8 16v-7\"/>","Blender":"<path d=\"m3 4 8 5M2 9h10M5 18l6-6\"/><ellipse cx=\"15\" cy=\"13\" rx=\"6\" ry=\"5\"/><circle cx=\"15\" cy=\"13\" r=\"2\"/>","AI Video":"<rect x=\"3\" y=\"7\" width=\"13\" height=\"13\" rx=\"2\"/><path d=\"m16 11 5-3v11l-5-3M8 2v6M5 5h6\"/>","Editing":"<circle cx=\"6\" cy=\"6\" r=\"3\"/><circle cx=\"6\" cy=\"18\" r=\"3\"/><path d=\"m8 8 13 13M8 16 21 3\"/>","Existing Footage":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"M7 3v18M17 3v18M3 8h4m-4 8h4m10-8h4m-4 8h4\"/>","Mixed":"<path d=\"m4 4 16 16M4 20l6-6m4-4 6-6M15 4h5v5m-5 11h5v-5\"/>","copy":"<rect x=\"8\" y=\"8\" width=\"13\" height=\"13\" rx=\"2\"/><path d=\"M16 8V3H3v13h5\"/>","expand":"<path d=\"m6 9 6 6 6-6\"/>","close":"<path d=\"m6 6 12 12M6 18 18 6\"/>","add":"<path d=\"M12 4v16M4 12h16\"/>","reset":"<path d=\"M3 10a9 9 0 1 1 2 8M3 4v6h6\"/>","search":"<circle cx=\"10\" cy=\"10\" r=\"6\"/><path d=\"m15 15 6 6\"/>","next":"<path d=\"M4 12h16m-6-6 6 6-6 6\"/>","import":"<path d=\"M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5\"/>","trash":"<path d=\"M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7\"/>","insert":"<path d=\"M4 4h16v6H4zM12 13v8m-4-4h8\"/>","up":"<path d=\"m6 14 6-6 6 6\"/>","down":"<path d=\"m6 10 6 6 6-6\"/>","spark":"<path d=\"m12 3 3 6 6 3-6 3-3 6-3-6-6-3 6-3z\"/>","started":"<path d=\"m8 4 12 8-12 8z\"/>","modeling":"<path d=\"m12 2 9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10\"/>","animation":"<path d=\"m9 4 11 8-11 8zM4 5v14\"/>","rendering":"<rect x=\"3\" y=\"4\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"M8 22h8m-4-4v4m-5-11 3 3 7-7\"/>","ready":"<path d=\"m4 12 5 5L20 6\"/>"};
+Object.assign(ICONS,{
+ voiceover:'<rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ reference:'<path d="M5 3h9l5 5v13H5zM14 3v6h5"/>'
+});
 const icon=name=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(ICONS[name]||ICONS.assets)+'</svg>';
 const action=(name,label,glyph,extra='')=>'<button type="button" class="wb-icon" data-action="'+name+'" title="'+esc(label)+'" aria-label="'+esc(label)+'" '+extra+'>'+icon(glyph)+'</button>';
 export function createProductionWorkbench(root,{getProject,onChange,onFocus,copyText,onCopyBrief,onSplitScript}){
- let tab='Storyboard',workspace='All',groupBy='project',assetFilter='All',completionFilter='All',searchQuery='',active='',pending=[],mapping=[],importTable=null,scriptChanges=null,dragId='',activeAsset='',expandAll=false,viewMode='focused',expandedScene='',sidebarCollapsed=false,editorPane='plan',promptKey='blenderPrompt',messageTimer;
+ let tab='Storyboard',workspace='All',groupBy='project',assetFilter='All',completionFilter='All',searchQuery='',active='',pending=[],mapping=[],importTable=null,scriptChanges=null,dragId='',activeAsset='',expandAll=false,viewMode='focused',expandedScene='',sidebarCollapsed=false,editorPane='plan',filtersVisible=false,promptKey='blenderPrompt',messageTimer;
  root.classList.add('production-workbench');
  root.innerHTML='<div class="wb-commandbar"><nav class="wb-tabs" aria-label="Project areas">'+['Storyboard','Production','Assets','Overview'].map((name,index)=>'<button type="button" data-tab="'+name+'" title="'+name+'" aria-label="'+name+'">'+icon(['board','production','assets','overview'][index])+'<span>'+name+'</span></button>').join('')+'</nav><div data-command-actions></div></div><div class="wb-status" role="status" aria-live="polite"></div><div data-workbench></div>';
  const panel=root.querySelector('[data-workbench]'),message=text=>{clearTimeout(messageTimer);const node=root.querySelector('.wb-status');node.textContent=text;if(/copied|appended|applied|Filled blank|Preview only/.test(text))messageTimer=setTimeout(()=>node.textContent='',3000);};
@@ -33,7 +38,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    (method==='Blender'?[['started','Start'],['modeling','Model'],['animation','Animate'],['rendering','Render'],['ready','Ready']]:[['started','Start'],['ready','Ready']]).map(([key,label])=>'<button type="button" data-task="'+key+'" data-task-method="'+method+'" title="'+esc(method+' · '+label)+'" aria-pressed="'+!!task[key]+'">'+icon(key)+'<span>'+label+'</span></button>').join('')+'</div></section>';
  }
  function promptFields(scene,focused){
-  const fields=[['blenderPrompt','Blender prompt'],['imagePrompt','Image prompt'],['videoPrompt','Video prompt'],['camera','Camera'],['characterPrompt','Character'],['technicalNotes','Notes'],['assetReferences','References']];
+  const fields=[['blenderPrompt','Blender prompt'],['imagePrompt','Image prompt'],['videoPrompt','Video prompt'],['camera','Camera'],['characterPrompt','Character'],['technicalNotes','Notes'],['assetReferences','References']].filter(([key])=>!focused||key!=='assetReferences');
   return (focused?'<div class="wb-prompt-toolbar"><label><span class="wb-sr">Prompt type</span><select data-prompt-key aria-label="Prompt type">'+fields.map(([key,label])=>'<option value="'+key+'" '+(key===promptKey?'selected':'')+'>'+label+'</option>').join('')+'</select></label>'+action('copy-field','Copy this prompt','copy')+'</div>':action('copy','Copy prompt','copy'))+
    '<div class="wb-prompt-fields">'+fields.map(([key,label])=>'<div '+(focused&&key!==promptKey?'hidden':'')+'>'+field(label,key,scene[key]||'')+'</div>').join('')+'</div>';
  }
@@ -59,18 +64,23 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    action('clear-filters','Reset filters','reset')+'<span data-filter-count>'+visibleScenes().length+'/'+scenes().length+'</span></div>';
  }
  function currentScene(){const visible=visibleScenes();return visible.find(scene=>scene.id===active)||visible[0];}
+ function textCard(scene,key,label,glyph){
+  const id='wb-'+scene.id+'-'+key;
+  return '<section class="wb-text-card wb-card-'+key+'"><header><h3 id="'+esc(id)+'">'+icon(glyph)+esc(label)+'</h3><button type="button" class="wb-icon" data-copy-text="'+key+'" title="Copy '+esc(label)+'" aria-label="Copy '+esc(label)+'">'+icon('copy')+'</button></header><textarea rows="1" aria-labelledby="'+esc(id)+'" data-field="'+key+'">'+esc(scene[key]||'')+'</textarea></section>';
+ }
  function sceneRow(scene,index,focused=false){
-  const open=focused||expandAll||expandedScene===scene.id;
+  const open=focused||expandAll||expandedScene===scene.id,queue=visibleScenes(),position=queue.indexOf(scene);
+  const navigation=focused?'<div class="wb-scene-navigation">'+(sidebarCollapsed?action('toggle-sidebar','Show scene navigator','board','aria-expanded="false"'):'')+action('previous-scene','Previous scene','up',position===0?'disabled':'')+action('next-scene','Next scene','down',position===queue.length-1?'disabled':'')+'<label class="wb-scene-jump"><span class="wb-sr">Select scene</span><select data-scene-jump aria-label="Select scene" title="Select scene">'+queue.map((item,number)=>'<option value="'+esc(item.id)+'" '+(item.id===scene.id?'selected':'')+'>'+(number+1)+' / '+queue.length+'</option>').join('')+'</select></label></div>':'';
   return '<article class="wb-scene '+(tab==='Production'?'wb-production-card':'')+(open?' is-open':'')+'" data-scene="'+esc(scene.id)+'">'+
-   '<header class="wb-scene-controls"><div class="wb-number">'+(!focused?'<button type="button" draggable="true" data-drag="'+esc(scene.id)+'" aria-label="Drag scene '+(index+1)+'">⠿</button>':'')+'<strong>'+String(index+1).padStart(2,'0')+'</strong></div>'+
-   '<label class="wb-timing"><span class="wb-sr">Timeline</span><input aria-label="Timeline" data-field="timing" value="'+esc(scene.timeline||scene.duration+' sec')+'"></label>'+
-   methodTags(scene)+sceneStatus(scene)+
+   '<header class="wb-scene-controls"><div class="wb-number">'+(!focused?'<button type="button" draggable="true" data-drag="'+esc(scene.id)+'" aria-label="Drag scene '+(index+1)+'">⠿</button>':'<span>Scene</span>')+'<strong>'+String(index+1).padStart(2,'0')+'</strong></div>'+navigation+
+   (!focused?'<label class="wb-timing"><span class="wb-sr">Timeline</span><input aria-label="Timeline" data-field="timing" value="'+esc(scene.timeline||scene.duration+' sec')+'"></label>'+methodTags(scene):'')+sceneStatus(scene)+
    action('duplicate','Duplicate scene','copy')+action('remove','Delete scene','trash')+
    (!focused?action('expand',open?'Collapse scene':'Expand scene',open?'close':'expand','aria-expanded="'+open+'"'):'')+'</header>'+
    (!open?'<button type="button" class="wb-scene-preview" data-select-scene="'+esc(scene.id)+'" title="Open scene">'+esc(scene.voiceover||'Untitled scene')+'</button>':'')+
-   (focused?'<div class="wb-editor-tabs" role="tablist" aria-label="Scene sections">'+[['plan','Plan'],['prompts','Prompts'],['progress','Progress']].map(([key,label])=>'<button type="button" role="tab" data-editor-pane="'+key+'" aria-selected="'+(editorPane===key)+'">'+label+'</button>').join('')+'</div>':'')+
-   '<div class="wb-scene-content" '+(!open?'hidden':'')+'><section class="wb-pane" data-pane="plan" '+(focused&&editorPane!=='plan'?'hidden':'')+'><div class="wb-writing">'+field('Voiceover','voiceover',scene.voiceover)+field('Visual / Animation','visual',scene.visual)+field('Assets Required','assets',scene.assets)+'</div>'+
-   '</section>'+details(scene,focused)+'</div></article>';
+   (focused?'<div class="wb-scene-meta"><label class="wb-timing"><span>'+icon('clock')+'Timeline</span><input aria-label="Timeline" data-field="timing" value="'+esc(scene.timeline||scene.duration+' sec')+'"></label><div class="wb-method-control"><span>'+icon('board')+'Method</span>'+methodTags(scene)+'</div><div class="wb-editor-tabs" role="tablist" aria-label="Scene sections">'+[['plan','Plan','board'],['prompts','Prompts','spark'],['progress','Progress','ready']].map(([key,label,glyph])=>'<button type="button" role="tab" data-editor-pane="'+key+'" aria-label="'+label+'" title="'+label+'" aria-selected="'+(editorPane===key)+'">'+icon(glyph)+'<span class="wb-sr">'+label+'</span></button>').join('')+'</div></div>':'')+
+   '<div class="wb-scene-content" '+(!open?'hidden':'')+'><section class="wb-pane" data-pane="plan" '+(focused&&editorPane!=='plan'?'hidden':'')+'><div class="wb-writing">'+
+   textCard(scene,'voiceover','Voiceover','voiceover')+textCard(scene,'visual','Visual / Animation','production')+textCard(scene,'assets','Assets Required','modeling')+textCard(scene,'assetReferences','References','reference')+
+   '</div></section>'+details(scene,focused)+'</div></article>';
  }
  function queueBuckets(queue){
   const buckets=new Map();
@@ -84,21 +94,15 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  function navigatorEntry(scene){
   const index=scenes().indexOf(scene),selected=currentScene()?.id===scene.id,state=sceneState(project(),scene)==='Completed'?'completed':productionStatus(scene)!=='Not Started'||sceneState(project(),scene)!=='Planned'||scene.voiceoverReady?'progress':'planned';
   const label='Scene '+(index+1)+' · '+(state==='completed'?'Completed':state==='progress'?'In progress':'Planned');
-  return '<div class="wb-nav-entry" data-nav-scene="'+esc(scene.id)+'"><button type="button" draggable="true" data-drag="'+esc(scene.id)+'" data-select-scene="'+esc(scene.id)+'" data-scene-status="'+state+'" title="'+label+'" aria-label="'+label+'" aria-current="'+(selected?'true':'false')+'">'+String(index+1).padStart(2,'0')+'</button></div>';
+  return '<div class="wb-nav-entry" data-nav-scene="'+esc(scene.id)+'"><button type="button" draggable="true" data-drag="'+esc(scene.id)+'" data-select-scene="'+esc(scene.id)+'" data-scene-status="'+state+'" title="'+label+'" aria-label="'+label+'" aria-current="'+(selected?'true':'false')+'">'+'<strong>'+String(index+1).padStart(2,'0')+'</strong><span class="wb-nav-copy"><span class="wb-nav-meta"><small>'+esc(scene.timeline||scene.duration+' sec')+'</small><span class="wb-nav-status">'+(state==='completed'?'Completed':state==='progress'?'In progress':'Planned')+'</span></span><span class="wb-nav-preview">'+esc(scene.voiceover||'Untitled scene')+'</span></span></button></div>';
  }
  function sceneWorkspace(){
   const queue=visibleScenes(),scene=currentScene();
   if(!queue.length)return '<div class="wb-empty">No scenes match.</div>';
   if(viewMode==='all')return '<div class="wb-all-scenes">'+(tab==='Production'?queueBuckets(queue).map(bucket=>'<section class="wb-queue-group"><h3>'+esc(bucket.label)+'</h3>'+bucket.scenes.map(item=>sceneRow(item,scenes().indexOf(item))).join('')+'</section>').join(''):queue.map(item=>sceneRow(item,scenes().indexOf(item))).join(''))+'</div>';
-  const index=queue.indexOf(scene);
-  return '<div class="wb-focus-layout '+(sidebarCollapsed?'is-collapsed':'')+'"><aside class="wb-navigator" aria-label="Scene navigator">'+
-   '<div class="wb-nav-list">'+
-   (tab==='Production'?queueBuckets(queue).map(bucket=>'<div class="wb-nav-group" title="'+esc(bucket.label)+'">'+bucket.scenes.map(navigatorEntry).join('')+'</div>').join(''):queue.map(navigatorEntry).join(''))+'</div></aside>'+
-   '<section class="wb-active-editor" aria-label="Active scene editor"><div class="wb-scene-navigation">'+
-   action('toggle-sidebar',sidebarCollapsed?'Show scene navigator':'Hide scene navigator','board','aria-expanded="'+!sidebarCollapsed+'"')+
-   '<label class="wb-scene-jump"><span class="wb-sr">Select scene</span><select data-scene-jump aria-label="Select scene">'+queue.map(item=>'<option value="'+esc(item.id)+'" '+(item.id===scene.id?'selected':'')+'>Scene '+(scenes().indexOf(item)+1)+'</option>').join('')+'</select></label><span>'+(index+1)+' / '+queue.length+'</span>'+
-   action('previous-scene','Previous scene','up',index===0?'disabled':'')+action('next-scene','Next scene','down',index===queue.length-1?'disabled':'')+'</div>'+
-   sceneRow(scene,scenes().indexOf(scene),true)+'</section></div>';
+  return '<div class="wb-focus-layout '+(sidebarCollapsed?'is-collapsed':'')+(filtersVisible?' filters-open':'')+'"><aside class="wb-navigator" aria-label="Scene navigator"><div class="wb-nav-heading"><strong>Scenes</strong>'+(sidebarCollapsed?'':action('toggle-sidebar','Hide scene navigator','close','aria-expanded="true"'))+'</div>'+filterBar()+
+   '<div class="wb-nav-list">'+(tab==='Production'?queueBuckets(queue).map(bucket=>'<div class="wb-nav-group" title="'+esc(bucket.label)+'"><h3>'+esc(bucket.label)+'</h3>'+bucket.scenes.map(navigatorEntry).join('')+'</div>').join(''):queue.map(navigatorEntry).join(''))+'</div></aside>'+
+   '<section class="wb-active-editor" aria-label="Active scene editor">'+sceneRow(scene,scenes().indexOf(scene),true)+'</section></div>';
  }
  function productionStatus(scene){
   if(sceneState(project(),scene)==='Completed')return 'Completed';
@@ -108,11 +112,11 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  }
  function modeControls(){
   return '<button type="button" data-action="view-mode" title="'+(viewMode==='focused'?'View all scenes':'Focus selected scene')+'">'+icon(viewMode==='focused'?'board':'production')+'<span>'+(viewMode==='focused'?'All scenes':'Focus')+'</span></button>'+
-   (viewMode==='all'?action('expand-all',expandAll?'Collapse all scenes':'Expand all filtered scenes','expand','aria-pressed="'+expandAll+'"'):'');
+   (viewMode==='all'?action('expand-all',expandAll?'Collapse all scenes':'Expand all filtered scenes','expand','aria-pressed="'+expandAll+'"'):action('toggle-filters','Scene filters','search','aria-expanded="'+filtersVisible+'"'));
  }
  function storyboard(){
   return '<div class="wb-toolbar"><details class="wb-import" '+(!scenes().length?'open':'')+'><summary>'+icon('import')+'<span>Import</span></summary><div class="wb-import-body"><textarea aria-label="Paste storyboard" data-paste rows="3" placeholder="Paste TSV, Markdown or narration"></textarea><button type="button" data-action="preview">Preview</button><div data-import-preview></div></div></details>'+modeControls()+action('add','Add scene','add')+'</div>'+
-   filterBar()+sceneWorkspace();
+   (viewMode==='all'||!visibleScenes().length?filterBar():'')+sceneWorkspace();
  }
  function groupEditor(group){
   return '<section class="wb-group" data-group="'+esc(group.id)+'"><div class="wb-detail-grid"><label>Project name<input data-group-field="name" value="'+esc(group.name)+'"></label><label>Blender file<input data-group-field="blenderFile" value="'+esc(group.blenderFile||'')+'"></label>'+
@@ -120,7 +124,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  }
  function production(){
   return '<div class="wb-toolbar"><details class="wb-group-create"><summary>'+icon('assets')+'<span>Projects</span></summary><div class="wb-group-body"><div class="wb-actions"><input data-new-group placeholder="Project name"><button type="button" data-action="add-group">Create</button></div>'+(project().animationGroups||[]).map(groupEditor).join('')+'</div></details>'+modeControls()+action('next','Next pending scene','next')+'</div>'+
-   filterBar()+sceneWorkspace();
+   (viewMode==='all'||!visibleScenes().length?filterBar():'')+sceneWorkspace();
  }
  function assetEditor(asset){
   return '<details class="wb-asset" data-asset="'+esc(asset.id)+'" '+(activeAsset===asset.id?'open':'')+'><summary><strong>'+esc(asset.name)+'</strong><span>'+esc(asset.type)+' · '+esc(asset.status)+'</span></summary><div class="wb-detail-grid"><label>Name<input data-asset-field="name" value="'+esc(asset.name)+'"></label><label>Type<select data-asset-field="type">'+options(['Blender file','Video','Image','Audio','Reference','Model','Other'],asset.type)+'</select></label><label>Path / URL<input data-asset-field="path" value="'+esc(asset.path||'')+'"></label><label>Status<select data-asset-field="status">'+options(['Not Started','In Progress','Ready'],asset.status)+'</select></label>'+field('Notes','notes',asset.notes||'','data-asset-field="notes"')+'</div><div class="wb-associations"><strong>Scenes</strong>'+scenes().map((scene,index)=>'<label><input type="checkbox" data-associate-scene="'+esc(scene.id)+'" '+((asset.sceneIds||[]).includes(scene.id)?'checked':'')+'>Scene '+(index+1)+'</label>').join('')+'<strong>Animation groups</strong>'+(project().animationGroups||[]).map(group=>'<label><input type="checkbox" data-associate-group="'+esc(group.id)+'" '+((asset.groupIds||[]).includes(group.id)?'checked':'')+'>'+esc(group.name)+'</label>').join('')+'</div><div class="wb-actions"><button type="button" data-copy-path>Copy path</button>'+'<span data-asset-open-reference>'+(/^https?:\/\//i.test(asset.path||'')?'<a href="'+esc(asset.path)+'" target="_blank" rel="noopener noreferrer">Open URL ↗</a>':'Local reference')+'</span><button type="button" data-delete-asset>Remove</button></div></details>';
@@ -212,6 +216,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    try{const parsed=parseProductionImport('Voiceover\tVisual\tAssets\tTimeline\nx\t\t\t'+target.value)[0];scene.duration=parsed.duration;scene.timeline=parsed.timeline||'';target.setCustomValidity('');}
    catch(error){target.setCustomValidity(error.message);message(error.message);return;}
   }else{scene[key]=target.value;if(['voiceover','visual','assets'].includes(key)){scene.completed=false;if(key==='voiceover')scene.voiceoverReady=false;}}
+  const entry=root.querySelector('[data-nav-scene="'+CSS.escape(scene.id)+'"]');if(entry)entry.outerHTML=navigatorEntry(scene);
   changed(false);
  });
  root.addEventListener('change',event=>{
@@ -253,6 +258,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    if(button.dataset.workspace){workspace=button.dataset.workspace;active='';render();return;}
    const scene=findScene(button.closest('[data-scene]')?.dataset.scene),index=scenes().indexOf(scene),action=button.dataset.action;
    const asset=(project().assets||[]).find(item=>item.id===button.closest('[data-asset]')?.dataset.asset);
+   if(button.dataset.copyText){await copyText(scene?.[button.dataset.copyText]||'');message('Text copied.');return;}
    if(button.hasAttribute('data-copy-path')){await copyText(asset.path||'');message('Reference copied.');return;}
    if(button.hasAttribute('data-delete-asset')){if(!confirm('Remove this asset metadata? Files are unaffected.'))return;project().assets=project().assets.filter(item=>item.id!==asset.id);changed();return;}
    if(button.dataset.task){
@@ -262,6 +268,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
     setTask(project(),scene,method,patch);changed();return;
    }
    if(button.dataset.removeCheck!==undefined){scene.checklist.splice(Number(button.dataset.removeCheck),1);scene.completed=false;changed();return;}
+   if(action==='toggle-filters'){filtersVisible=!filtersVisible;sidebarCollapsed=false;render();return;}
    if(action==='view-mode'){viewMode=viewMode==='focused'?'all':'focused';expandAll=false;expandedScene='';render();return;}
    if(action==='toggle-sidebar'){sidebarCollapsed=!sidebarCollapsed;render();return;}
    if(action==='previous-scene'||action==='next-scene'){

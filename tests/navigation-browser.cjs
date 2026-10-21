@@ -9,19 +9,18 @@ try{const page=await browser.newPage(),errors=[];page.on('pageerror',error=>erro
 for(const route of ['garage/','creator/','creator/project.html','journal/','lic/','lic/bima-platinum/','portfolio.html']){
  const compact=route.startsWith('creator/');
  await page.setViewportSize({width:1280,height:800});await page.goto('http://127.0.0.1:8767/invincible/'+route);
- await page.locator(compact?'.compact-apps-trigger':'.desktop-nav a').first().waitFor();
+ await page.locator('.desktop-nav a').first().waitFor();
  assert.equal(await page.locator('.desktop-nav a').count(),10);
  assert.equal(await page.locator('.global-ai-widget').count(),1);assert.equal(await page.locator('.mobile-tabbar').count(),1);
  if(compact){
   assert.equal(await page.locator('.global-nav').evaluate(el=>el.getBoundingClientRect().height),48);
-  assert.equal(await page.locator('.desktop-nav').isVisible(),false);
-  await page.locator('.compact-apps-trigger').click();
-  assert.equal(await page.locator('#appMoreSheet').evaluate(el=>el.open),true);
-  assert.equal(await page.locator('#appMoreSheet .app-nav-link').count(),9);
-  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('.desktop-nav').isVisible(),true);
+  assert.equal(await page.locator('.compact-apps-trigger').isVisible(),false);
+  assert.equal(await page.locator('.desktop-nav .app-nav-label').first().isVisible(),false);
  }
  await page.setViewportSize({width:390,height:844});
- await page.locator(compact?'.compact-apps-trigger':'.mobile-more-trigger').click();
+ if(compact){assert.equal(await page.locator('.desktop-nav').isVisible(),true);assert.equal(await page.locator('.desktop-nav a').count(),10);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);continue;}
+ await page.locator('.mobile-more-trigger').click();
  assert.equal(await page.locator('#appMoreSheet').evaluate(element=>element.open),true);
  await page.keyboard.press('Escape');assert.equal(await page.locator('#appMoreSheet').evaluate(element=>element.open),false);
 }
