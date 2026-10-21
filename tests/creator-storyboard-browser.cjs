@@ -68,6 +68,7 @@ const server=http.createServer((req,res)=>{
   assert.equal(await dialog.locator('.wb-scene.is-open').count(),0);
   await dialog.locator('[data-action=expand-all]').click();
   assert.equal(await dialog.locator('.wb-scene.is-open').count(),2);
+  assert.equal(await dialog.locator('[data-field=assetReferences]').count(),2,'Each expanded scene has a single reference editor');
   await dialog.locator('[data-filter-method]').selectOption('Blender');
   assert.equal(await dialog.locator('.wb-scene').count(),1);
   await dialog.locator('[data-action=expand-all]').click();

@@ -38,7 +38,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    (method==='Blender'?[['started','Start'],['modeling','Model'],['animation','Animate'],['rendering','Render'],['ready','Ready']]:[['started','Start'],['ready','Ready']]).map(([key,label])=>'<button type="button" data-task="'+key+'" data-task-method="'+method+'" title="'+esc(method+' · '+label)+'" aria-pressed="'+!!task[key]+'">'+icon(key)+'<span>'+label+'</span></button>').join('')+'</div></section>';
  }
  function promptFields(scene,focused){
-  const fields=[['blenderPrompt','Blender prompt'],['imagePrompt','Image prompt'],['videoPrompt','Video prompt'],['camera','Camera'],['characterPrompt','Character'],['technicalNotes','Notes'],['assetReferences','References']].filter(([key])=>!focused||key!=='assetReferences');
+  const fields=[['blenderPrompt','Blender prompt'],['imagePrompt','Image prompt'],['videoPrompt','Video prompt'],['camera','Camera'],['characterPrompt','Character'],['technicalNotes','Notes'],['assetReferences','References']].filter(([key])=>key!=='assetReferences');
   return (focused?'<div class="wb-prompt-toolbar"><label><span class="wb-sr">Prompt type</span><select data-prompt-key aria-label="Prompt type">'+fields.map(([key,label])=>'<option value="'+key+'" '+(key===promptKey?'selected':'')+'>'+label+'</option>').join('')+'</select></label>'+action('copy-field','Copy this prompt','copy')+'</div>':action('copy','Copy prompt','copy'))+
    '<div class="wb-prompt-fields">'+fields.map(([key,label])=>'<div '+(focused&&key!==promptKey?'hidden':'')+'>'+field(label,key,scene[key]||'')+'</div>').join('')+'</div>';
  }
