@@ -17,6 +17,7 @@ for(const route of ['garage/','creator/','creator/project.html','journal/','lic/
   assert.equal(await page.locator('.desktop-nav').isVisible(),true);
   assert.equal(await page.locator('.compact-apps-trigger').isVisible(),false);
   assert.equal(await page.locator('.desktop-nav .app-nav-label').first().isVisible(),false);
+  assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).scrollbarColor),'rgb(40, 86, 106) rgb(11, 21, 29)');
  }
  await page.setViewportSize({width:390,height:844});
  if(compact){assert.equal(await page.locator('.desktop-nav').isVisible(),true);assert.equal(await page.locator('.desktop-nav a').count(),10);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);continue;}

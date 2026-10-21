@@ -401,3 +401,7 @@ body:has(.global-nav[data-compact-nav]) .app-more-sheet{inset:52px 8px auto auto
 @media(max-width:1099px){.global-nav[data-icon-nav] .nav-brand strong{display:none}.global-nav[data-icon-nav] .mobile-page-name{margin-left:6px}}
 @media(max-width:700px){.global-nav[data-icon-nav]{padding:0 8px;gap:8px}.global-nav[data-icon-nav] .nav-head{flex:none}.global-nav[data-icon-nav] .mobile-page-name{display:none}.global-nav[data-icon-nav] .desktop-nav{flex:1}.global-nav[data-icon-nav] .desktop-nav .app-nav-link{width:31px;min-width:31px}.global-nav[data-icon-nav] .app-nav-icon svg{width:20px;height:20px}}
 .global-nav[data-icon-nav] .nav-head{width:auto;justify-content:flex-start;flex:none}
+html:has(.global-nav[data-icon-nav]){scrollbar-width:thin;scrollbar-color:#28566a #0b151d}
+html:has(.global-nav[data-icon-nav])::-webkit-scrollbar{width:6px;height:5px}
+html:has(.global-nav[data-icon-nav])::-webkit-scrollbar-track{background:#0b151d}
+html:has(.global-nav[data-icon-nav])::-webkit-scrollbar-thumb{background:#28566a;border-radius:8px}
