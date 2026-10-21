@@ -68,6 +68,7 @@ const server=http.createServer((req,res)=>{
   assert.equal(await dialog.locator('.wb-scene.is-open').count(),0);
   await dialog.locator('[data-action=expand-all]').click();
   assert.equal(await dialog.locator('.wb-scene.is-open').count(),2);
+  assert.equal(await dialog.locator('[data-field=assetReferences]').count(),2,'Each expanded scene has a single reference editor');
   await dialog.locator('[data-filter-method]').selectOption('Blender');
   assert.equal(await dialog.locator('.wb-scene').count(),1);
   await dialog.locator('[data-action=expand-all]').click();
@@ -109,6 +110,7 @@ const server=http.createServer((req,res)=>{
   await page.locator('#shareProject').click();
   assert.equal(await page.locator('#shareDialog').evaluate(el=>el.open),true);
   await page.locator('#shareDialog [aria-label="Close sharing"]').click();
+  fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});await page.screenshot({path:path.join(root,'.test-output/creator-project-current.png')});
   await page.locator('[data-tab=Production]').click();await page.locator('[data-filter-method]').selectOption('Blender');assert.equal(await page.locator('.wb-production-card').count(),1);
   await page.locator('[data-tab=Assets]').click();assert.equal(await page.locator('[data-asset-field=path]').inputValue(),'E:\\3D\\draft.blend');
   await page.goto(base);await page.locator('.content-card').filter({hasText:'Draft production'}).locator('[data-edit]').click();
@@ -143,17 +145,26 @@ const server=http.createServer((req,res)=>{
   await page.locator('[data-action=import]').click();
   assert.equal(await page.locator('.wb-scene').count(),1);
   assert.equal(await page.locator('.wb-nav-entry').count(),16);
-  assert.equal(await page.locator('.wb-nav-entry [data-select-scene]').first().innerText(),'01');
-  assert.equal(await page.locator('.wb-nav-preview,.wb-nav-heading').count(),0);
+  assert.equal(await page.locator('.wb-nav-entry [data-select-scene] strong').first().innerText(),'01');
+  assert.equal(await page.locator('.wb-nav-preview').count(),16);
+  assert.equal(await page.locator('.wb-nav-heading').count(),1);
+  assert.equal(await page.locator('.desktop-nav').isVisible(),true);
+  assert.equal(await page.locator('.desktop-nav a').count(),10);
+  assert.equal(await page.locator('.compact-apps-trigger').isVisible(),false);
+  await page.locator('[data-copy-text=voiceover]').click();
+  assert.equal(await page.evaluate(()=>window.copied),await page.locator('[data-field=voiceover]').inputValue());
   assert.equal(await page.locator('.wb-nav-entry [data-select-scene]').first().getAttribute('data-scene-status'),'planned');
   assert.equal(await page.locator('[data-pane=prompts]').isVisible(),false);
   assert.equal(await page.locator('[data-pane=progress]').isVisible(),false);
   // Default scene work stays inside the viewport; oversized content stays readable in the editor.
   for(const [width,height] of [[1440,1000],[1366,768],[1280,720],[1024,768],[393,852],[320,700]]){
    await page.setViewportSize({width,height});
+   fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});await page.screenshot({path:path.join(root,'.test-output','creator-approved-'+width+'.png')});
    assert.equal(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight+1),true,'No page scrolling at '+width+'x'+height);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
    assert.equal(await page.locator('[data-editor-pane=plan]').isVisible(),true);
+   if(width<701){await page.locator('[data-action=toggle-filters]').click();assert.equal(await page.locator('[data-filter-method]').isVisible(),true);await page.locator('[data-action=toggle-filters]').click();}
+   assert.equal(await page.locator('.wb-nav-list').evaluate(el=>getComputedStyle(el).scrollbarColor),'rgb(40, 86, 106) rgb(11, 21, 29)');
    if(width>=1280)assert.equal(await page.locator('.wb-scene-content').evaluate(el=>el.scrollHeight<=el.clientHeight+1),true,'Normal plan fits without editor scrolling at '+width+'x'+height);
   }
   await page.setViewportSize({width:1440,height:1000});
@@ -331,7 +342,10 @@ const server=http.createServer((req,res)=>{
    await page.setViewportSize({width,height:900});
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'No horizontal overflow at '+width);
    assert.equal(await page.locator('.wb-scene').evaluate(el=>el.scrollWidth<=el.clientWidth+1),true);
-   await page.locator('[data-tab=Production]').click();await page.locator('[data-filter-method]').selectOption('All');
+   await page.locator('[data-tab=Production]').click();
+   if(width<701&&!await page.locator('[data-filter-method]').isVisible())await page.locator('[data-action=toggle-filters]').click();
+   await page.locator('[data-filter-method]').selectOption('All');
+   if(width<701){await page.locator('[data-action=toggle-filters]').click();assert.equal(await page.locator('[data-field=sceneState]').isVisible(),true);}
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
    await page.locator('[data-tab=Storyboard]').click();
   }
