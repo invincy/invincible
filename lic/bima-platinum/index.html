@@ -1,25 +1,25 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="gu">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>LIC Bima Platinum · Phase 1: Business Wealth vs Personal Stability</title>
+  <title>Business Builds Wealth · Conversation Tool</title>
   <meta name="theme-color" content="#020b1c">
-  <meta name="description" content="Phase 1 presentation for LIC Bima Platinum Plan 770 — separating commercial growth from contractual family baseline certainty.">
+  <meta name="description" content="Phase 1: Make the prospect agree that his business is his growth engine.">
 
   <!-- Google Fonts: Gujarati + Luxury Serif + Clean Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="presentation.css?v=2">
+  <link rel="stylesheet" href="presentation.css?v=3">
 </head>
 <body>
 
 <div class="app-viewport-wrapper">
 
-  <!-- Floating Layer Inspector Launcher -->
-  <button id="inspectorFab" class="inspector-fab" aria-label="Open Layer Inspector">
+  <!-- Developer Tooling: Floating Layer Inspector Launcher (Hidden by default in production) -->
+  <button id="inspectorFab" class="inspector-fab" aria-label="Open Layer Inspector (Developer Tool)">
     <span>👁️</span>
     <span>Layers Inspector</span>
   </button>
@@ -28,7 +28,7 @@
   <div id="inspectorPanel" class="inspector-panel" role="region" aria-label="Layer Inspector Controls">
     <div class="inspector-title">
       <span>Architectural Layers</span>
-      <span style="font-size: 10px; color: #94a3b8;">PHASE 1 MODULAR</span>
+      <span style="font-size: 10px; color: #94a3b8;">DEV TOOL</span>
     </div>
     <div class="inspector-toggles">
       <label class="inspector-toggle-item">
@@ -40,7 +40,7 @@
         <input type="checkbox" class="layer-toggle-input" data-target="layerAtmosphere" checked>
       </label>
       <label class="inspector-toggle-item">
-        <span>3. Characters & Dialog</span>
+        <span>3. Characters Layer</span>
         <input type="checkbox" class="layer-toggle-input" data-target="layerCharacters" checked>
       </label>
       <label class="inspector-toggle-item">
@@ -83,12 +83,13 @@
 
         <!-- ==========================================
              LAYER 1: Environment Plate
-             Clean boutique shop background with restaurant doorway
+             Connected boutique shop environment with shop counter
+             and restaurant doorway background
              ========================================== -->
         <div id="layerEnv" class="scene-layer layer-env">
           <img 
             src="assets/scene_clean.png" 
-            alt="Connected Boutique Shop and Restaurant Environment with Businessman and LIC Presenter" 
+            alt="Boutique Shop Environment with Businessman and Advisor" 
             class="env-background-img"
           >
         </div>
@@ -103,10 +104,11 @@
 
         <!-- ==========================================
              LAYER 3: Interactive Characters & Dialogue Hotspots
+             (Businessman interactive; Advisor visually present but silent)
              ========================================== -->
         <div id="layerCharacters" class="scene-layer layer-characters interactive">
           
-          <!-- Character A: Businessman Hotspot -->
+          <!-- Character: Businessman Hotspot -->
           <div id="hotspotBusinessman" class="character-hotspot hotspot-businessman" title="Tap to hear Businessman">
             <div class="character-pulse-badge">
               <span class="pulse-dot"></span>
@@ -122,33 +124,10 @@
               <button id="audioBtnBusinessman" class="speech-audio-btn" title="Speak Gujarati Narration">🔊</button>
             </div>
             <p class="speech-gujarati">
-              "મારો આખો cash flow બિઝનેસમાં reinvest થાય છે. Every year returns high છે, પણ uncertainty પણ એટલી જ છે. જો એક વર્ષ ખરાબ ગયું તો?"
+              "મારો Business જ મારું main growth engine છે. અહીં હું invest કરું છું, value create કરું છું અને business grow કરું છું."
             </p>
-            <p class="speech-english">
-              "All my cash flow goes back into the business. Returns are high, but so is the uncertainty. What if one year goes bad?"
-            </p>
-          </div>
-
-          <!-- Character B: Presenter Hotspot -->
-          <div id="hotspotPresenter" class="character-hotspot hotspot-presenter" title="Tap to hear LIC Advisor">
-            <div class="character-pulse-badge">
-              <span class="pulse-dot" style="background:#FFE5A3; box-shadow:0 0 8px #FFE5A3;"></span>
-              <span>💬 LIC Advisor</span>
-            </div>
-          </div>
-
-          <!-- Presenter Speech Dialogue Bubble -->
-          <div id="bubblePresenter" class="speech-bubble speech-bubble-presenter" role="dialog" aria-label="LIC Advisor Quote">
-            <button id="closeBubblePresenter" class="speech-close-btn" aria-label="Close dialog">✕</button>
-            <div class="speech-header">
-              <span class="speech-speaker-tag">🛡️ Sovereign Advisor</span>
-              <button id="audioBtnPresenter" class="speech-audio-btn" title="Speak Gujarati Narration">🔊</button>
-            </div>
-            <p class="speech-gujarati">
-              "બિઝનેસ સંપત્તિ બનાવે છે, પણ શું તમારી ફેમિલીની financial security માર્કેટ કે બિઝનેસ સાઇકલ પર નિર્ભર રહેવી જોઈએ? તમારો એક હિસ્સો ૧૦૦% ગેરેન્ટેડ હોવો જોઈએ."
-            </p>
-            <p class="speech-english">
-              "Business creates wealth, but should your family's security depend on market or business cycles? One core part must be 100% guaranteed."
+            <p class="speech-gujarati" style="font-size: 12.5px; opacity: 0.88; margin-top: 5px;">
+              Customers, products અને expansion — growth મારા decisions પર depend કરે છે.
             </p>
           </div>
 
@@ -164,7 +143,7 @@
              ========================================== -->
         <div id="layerNav" class="scene-layer layer-nav interactive">
           <a href="../" class="nav-btn" title="Back to LIC Plans" aria-label="Back">←</a>
-          <div class="nav-stage-badge">
+          <div class="nav-stage-badge" title="Stage 1 of 10">
             <span class="stage-counter-text">1 / 10</span>
             <div class="stage-progress-bar">
               <div class="stage-progress-fill"></div>
@@ -172,17 +151,14 @@
           </div>
           <div class="nav-actions">
             <a href="/invincible/" class="nav-btn" title="Invincible Home" aria-label="Home">⌂</a>
-            <a href="calculator.html" class="nav-btn" title="Open Plan 770 Calculator" aria-label="Calculator">🧮</a>
           </div>
         </div>
 
         <!-- ==========================================
              LAYER 6: Headline & Gujarati Typography
+             (Pure business-growth statement; no product branding)
              ========================================== -->
         <div id="layerHeadline" class="scene-layer layer-headline">
-          <div class="plan-eyebrow-tag">
-            <span>LIC BIMA PLATINUM · PLAN 770</span>
-          </div>
           <h1 class="headline-main">
             <span class="headline-guj-prefix">તમારો</span><span class="gold-gradient-text">Business</span><br>
             <span class="gold-gradient-text">Builds Wealth</span>
@@ -193,19 +169,19 @@
         </div>
 
         <!-- ==========================================
-             LAYER 7: Interactive Controls (Pills)
+             LAYER 7: Interactive Controls (Growth / Opportunity / Control)
              ========================================== -->
         <div id="layerControls" class="scene-layer layer-controls interactive">
           <div class="pills-container">
-            <button id="pillGrowth" class="btn-pill" aria-label="Explore Growth Insights">
+            <button id="pillGrowth" class="btn-pill" aria-label="Explore Growth">
               <span class="pill-icon">🌱</span>
               <span class="pill-text">Growth</span>
             </button>
-            <button id="pillOpportunity" class="btn-pill" aria-label="Explore Opportunity Insights">
+            <button id="pillOpportunity" class="btn-pill" aria-label="Explore Opportunity">
               <span class="pill-icon">💡</span>
               <span class="pill-text">Opportunity</span>
             </button>
-            <button id="pillControl" class="btn-pill" aria-label="Explore Control Insights">
+            <button id="pillControl" class="btn-pill" aria-label="Explore Control">
               <span class="pill-icon">🎛️</span>
               <span class="pill-text">Control</span>
             </button>
@@ -214,9 +190,10 @@
 
         <!-- ==========================================
              LAYER 8: Value Callout & CTA Forward Action
+             (Thought transition into personal stability)
              ========================================== -->
         <div id="layerCallout" class="scene-layer layer-callout interactive">
-          <div id="calloutCard" class="callout-card" role="button" tabindex="0" aria-label="View Control Summary">
+          <div id="calloutCard" class="callout-card" role="button" tabindex="0" aria-label="View Transition Prompt">
             <div class="callout-text-group">
               <span class="callout-line-1">તમે કંઈક valuable build કર્યું છે.</span>
               <span class="callout-line-2">પણ તમારી personal stability ક્યાં છે?</span>
@@ -229,14 +206,18 @@
 
       <!-- ==========================================
            LAYER 9: Interactive Bottom Sheet Modal
+           (Focused purely on business strength & autonomy)
            ========================================== -->
       <div id="bottomSheetBackdrop" class="bottom-sheet-backdrop"></div>
       <div id="bottomSheetPanel" class="bottom-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
         <div class="sheet-drag-handle"></div>
         <div class="sheet-header-row">
           <div>
-            <span id="sheetBadge" class="sheet-title-badge">🌱 PILLAR 01 · GROWTH</span>
-            <h2 id="sheetTitle" class="sheet-title">Business Reinvestment vs Guaranteed Stability</h2>
+            <span id="sheetBadge" class="sheet-title-badge">🌱 BUSINESS PILLAR · GROWTH</span>
+            <div style="display:flex; align-items:baseline; gap:8px;">
+              <h2 id="sheetTitle" class="sheet-title">Growth</h2>
+              <span id="sheetShortLine" style="font-family: var(--font-gujarati); font-size: 13px; color: var(--text-gold);">વધુ earning potential</span>
+            </div>
           </div>
           <button id="sheetCloseBtn" class="sheet-close-btn" aria-label="Close Bottom Sheet">✕</button>
         </div>
@@ -251,21 +232,9 @@
         <!-- Scrollable content -->
         <div class="sheet-scroll-body">
           <div class="insight-card insight-card-highlight">
-            <div class="insight-label">મુખ્ય તારણ · Core Principle</div>
-            <p id="sheetGujTitle" class="insight-gujarati" style="font-size: 15px; font-weight: 700; color: #FFE5A3; margin-bottom: 6px;"></p>
-            <p id="sheetGujLead" class="insight-gujarati"></p>
-            <p id="sheetEngLead" class="insight-english"></p>
-          </div>
-
-          <div class="sheet-comparison-grid">
-            <div class="sheet-engine-box engine-business">
-              <div id="sheetEngineATitle" class="engine-title">Business Engine</div>
-              <div id="sheetEngineADesc" class="engine-desc"></div>
-            </div>
-            <div class="sheet-engine-box engine-guarantee">
-              <div id="sheetEngineBTitle" class="engine-title">Guaranteed Reserve</div>
-              <div id="sheetEngineBDesc" class="engine-desc"></div>
-            </div>
+            <div class="insight-label">મુખ્ય વિચાર · Core Principle</div>
+            <p id="sheetExpanded" class="insight-gujarati" style="font-size: 15px; font-weight: 700; color: #FFFFFF; margin-bottom: 8px;"></p>
+            <p id="sheetSecondary" class="insight-gujarati" style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.55;"></p>
           </div>
 
           <div class="sheet-character-quote">
@@ -276,23 +245,25 @@
       </div><!-- /.bottom-sheet-panel -->
 
       <!-- ==========================================
-           Stage 2 Preview Transition Modal
+           Stage 2 Preview Transition Modal (Placeholder)
            ========================================== -->
       <div id="stagePreviewModal" class="stage-preview-modal" role="dialog" aria-modal="true">
         <div class="preview-card">
-          <span class="preview-badge">PHASE 2 READY</span>
-          <h3 class="preview-title">The Two Buckets Architecture</h3>
-          <p class="preview-desc">
-            આગળના સ્ટેપમાં આપણે બિઝનેસ ગ્રોથ કેપિટલ (High Risk) અને સોવરિન ગેરન્ટેડ કેશફ્લો (Zero Commercial Risk) વચ્ચેની ચોક્કસ ફાળવણી જોશું.
+          <span class="preview-badge">STAGE 2</span>
+          <h3 class="preview-title">
+            તમારો Business grow કરે છે — પણ personal wealth માટે stability પણ જરૂરી છે.
+          </h3>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 22px;">
+            Stage 2 preview · Coming next
           </p>
-          <button id="previewDismissBtn" class="preview-btn">Continue Exploring Phase 1</button>
+          <button id="previewDismissBtn" class="preview-btn">← Back to Phase 1</button>
         </div>
       </div>
 
     </div><!-- /.stage-container -->
   </div><!-- /.device-frame -->
 
-  <!-- Desktop Bottom Helper Bar -->
+  <!-- Desktop Bottom Helper Bar (Visible outside mobile frame for navigation/testing) -->
   <div class="desktop-tools-bar">
     <a href="../" class="desktop-tool-link">
       <span>🏛️</span>
@@ -300,7 +271,7 @@
     </a>
     <span style="color: rgba(255,255,255,0.2);">|</span>
     <a href="/invincible/" class="desktop-tool-link">
-      <span>🏛️</span>
+      <span>⚡</span>
       <span>Invincible Home</span>
     </a>
     <span style="color: rgba(255,255,255,0.2);">|</span>
@@ -309,11 +280,11 @@
       <span>Plan 770 Calculator</span>
     </a>
     <span style="color: rgba(255,255,255,0.2);">|</span>
-    <span style="color: #FFE5A3; font-size: 11px;">Phase 1: Boutique Setting · Modular Layers</span>
+    <span style="color: #FFE5A3; font-size: 11px;">Phase 1: Business Wealth Engine</span>
   </div>
 
 </div><!-- /.app-viewport-wrapper -->
 
-<script src="presentation.js?v=2"></script>
+<script src="presentation.js?v=3"></script>
 </body>
 </html>

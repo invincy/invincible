@@ -1,6 +1,7 @@
 /**
  * LIC Bima Platinum · Phase 1 Mobile Presentation App
  * Client State & Interactive Layer Management
+ * Focus: Make the prospect agree that his business is his growth engine.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -19,15 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const pillControl = document.getElementById('pillControl');
   const pills = [pillGrowth, pillOpportunity, pillControl];
 
-  // Character Hotspots & Speech Bubbles
+  // Character Hotspot & Dialogue (Businessman only for Phase 1; Advisor is silent)
   const hotspotBusinessman = document.getElementById('hotspotBusinessman');
-  const hotspotPresenter = document.getElementById('hotspotPresenter');
   const bubbleBusinessman = document.getElementById('bubbleBusinessman');
-  const bubblePresenter = document.getElementById('bubblePresenter');
   const closeBubbleBusinessman = document.getElementById('closeBubbleBusinessman');
-  const closeBubblePresenter = document.getElementById('closeBubblePresenter');
+  const audioBtnBusinessman = document.getElementById('audioBtnBusinessman');
 
-  // Inspector Elements
+  // Inspector Elements (Developer Tooling)
   const inspectorFab = document.getElementById('inspectorFab');
   const inspectorPanel = document.getElementById('inspectorPanel');
   const toggle3DExploded = document.getElementById('toggle3DExploded');
@@ -38,55 +37,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const ctaForwardBtn = document.getElementById('ctaForwardBtn');
   const calloutCard = document.getElementById('calloutCard');
 
-  // Content Data for Bottom Sheet (Bilingual Gujarati - English)
+  // Content Data for Bottom Sheet (Focus purely on Business Strength & Ownership)
   const topicData = {
     growth: {
-      badge: '🌱 PILLAR 01 · GROWTH',
-      title: 'Business Reinvestment vs Guaranteed Stability',
-      gujaratiTitle: 'વૃદ્ધિ: બિઝનેસમાં મૂડીનું પુનઃરોકાણ અને ગેરેન્ટેડ બેઝલાઇન',
-      gujaratiLead: 'તમારો બિઝનેસ તમારો મુખ્ય સંપત્તિ સર્જક છે. દરેક રૂપિયો બિઝનેસમાં વધુ રિટર્ન આપે છે, પણ શું બધો નફો અસુરક્ષિત રાખવો યોગ્ય છે?',
-      englishLead: 'Your business is your primary wealth creation engine. But reinvesting 100% of profits leaves your household wealth exposed to business volatility.',
-      engineA: {
-        title: 'Business Growth Engine',
-        desc: 'ઉચ્ચ વળતર, પણ બજાર પરિબળો, સપ્લાય ચેઇન અને તમારી દૈનિક હાજરી પર સંપૂર્ણ નિર્ભર.'
-      },
-      engineB: {
-        title: 'Guaranteed Reserve',
-        desc: 'સોવરિન ગેરેંટી સાથે કરમુક્ત કેશફ્લો, જે બિઝનેસના ઉતાર-ચઢાવથી ૧૦૦% અલગ રહે છે.'
-      },
-      quote: '“મારો બિઝનેસ મને ગ્રોથ આપે છે, પણ Bima Platinum મારા પરિવારને નિર્ભય બનાવે છે.”'
+      badge: '🌱 BUSINESS PILLAR · GROWTH',
+      title: 'Growth',
+      shortLine: 'વધુ earning potential',
+      expanded: 'તમારા business માં earning potential ઘણું મોટું હોઈ શકે છે.',
+      secondary: 'Scale કરો, expand કરો અને profits grow કરો.',
+      quote: '“મારો Business જ મારું main growth engine છે. અહીં મહેનતનું સીધું પરિણામ મળે છે.”'
     },
     opportunity: {
-      badge: '💡 PILLAR 02 · OPPORTUNITY',
-      title: 'Seizing Market Opportunities Without Liquidating Core Assets',
-      gujaratiTitle: 'તક: બિઝનેસ તકો ઝડપવા માટે સક્ષમ લિક્વિડિટી',
-      gujaratiLead: 'જ્યારે બજારમાં નવી વિસ્તરણ તકો આવે છે, ત્યારે સ્માર્ટ બિઝનેસમેન પોતાના મૂળ રોકાણો નુકસાનમાં વેચતા નથી.',
-      englishLead: 'When lucrative expansion opportunities or supply discounts appear, liquid capital is king. A guaranteed asset preserves borrowing power.',
-      engineA: {
-        title: 'Traditional Distress Sale',
-        desc: 'કટોકટીમાં માર્કેટ કરેક્શન સમયે મ્યુચ્યુઅલ ફંડ કે પ્રોપર્ટી ડિસ્કાઉન્ટ પર વેચવી પડે છે.'
-      },
-      engineB: {
-        title: 'Sovereign Liquidity',
-        desc: 'પોલિસી વેલ્યુ સામે તાત્કાલિક લોન અથવા પ્રી-ડિટરમાઇન્ડ પે-આઉટ્સ દ્વારા સહેલી તરલતા.'
-      },
-      quote: '“તક એને જ મળે છે જેની પાસે સમયસર લિક્વિડિટી ઉપલબ્ધ હોય.”'
+      badge: '💡 BUSINESS PILLAR · OPPORTUNITY',
+      title: 'Opportunity',
+      shortLine: 'Value create કરવાની freedom',
+      expanded: 'Business તમને value create કરવાની freedom આપે છે.',
+      secondary: 'New products, new customers અને new markets નવી opportunities create કરી શકે છે.',
+      quote: '“બિઝનેસ નવી તકોને ઝડપીને વાસ્તવિક મૂલ્ય બનાવવાની સ્વતંત્રતા આપે છે.”'
     },
     control: {
-      badge: '🎛️ PILLAR 03 · CONTROL',
-      title: 'Ring-Fencing Personal Net Worth from Commercial Risk',
-      gujaratiTitle: 'નિયંત્રણ: બિઝનેસ રિસ્ક અને પરિવારની સ્થિરતા વચ્ચે લક્ષ્મણરેખા',
-      gujaratiLead: 'સાચું નિયંત્રણ એટલે બિઝનેસનું ટર્નઓવર ઘટવા છતાં તમારા પરિવારનું જીવનધોરણ અને બાળકોનું ભવિષ્ય અકબંધ રહે.',
-      englishLead: 'True financial autonomy means personal family milestones remain unconditional and insulated from commercial trade cycles.',
-      engineA: {
-        title: 'Co-mingled Risk',
-        desc: 'બિઝનેસની લોન, લેણદારો અને ટેક્સના જોખમો અંગત પારિવારિક સંપત્તિને અસર કરે છે.'
-      },
-      engineB: {
-        title: 'Protected Allocation',
-        desc: 'સેક્શન 6 MWP Act હેઠળ કાનૂની સંરક્ષણ અને બજારના જોખમથી મુક્ત નિશ્ચિત રકમ.'
-      },
-      quote: '“જ્યાં સુધી અંગત સુરક્ષા લોક ન હોય, ત્યાં સુધી બિઝનેસમાં મોટો રિસ્ક ના લઈ શકાય.”'
+      badge: '🎛️ BUSINESS PILLAR · CONTROL',
+      title: 'Control',
+      shortLine: 'Decision તમારા હાથમાં',
+      expanded: 'Decision તમારા હાથમાં છે.',
+      secondary: 'Pricing, stock, expansion અને business direction તમે decide કરો છો.',
+      quote: '“બિઝનેસની દિશા, ગતિ અને નિર્ણયો મારા પોતાના હાથમાં છે.”'
     }
   };
 
@@ -123,13 +98,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const data = topicData[topicKey] || topicData.growth;
     document.getElementById('sheetBadge').textContent = data.badge;
     document.getElementById('sheetTitle').textContent = data.title;
-    document.getElementById('sheetGujTitle').textContent = data.gujaratiTitle;
-    document.getElementById('sheetGujLead').textContent = data.gujaratiLead;
-    document.getElementById('sheetEngLead').textContent = data.englishLead;
-    document.getElementById('sheetEngineATitle').textContent = data.engineA.title;
-    document.getElementById('sheetEngineADesc').textContent = data.engineA.desc;
-    document.getElementById('sheetEngineBTitle').textContent = data.engineB.title;
-    document.getElementById('sheetEngineBDesc').textContent = data.engineB.desc;
+    document.getElementById('sheetShortLine').textContent = data.shortLine;
+    document.getElementById('sheetExpanded').textContent = data.expanded;
+    document.getElementById('sheetSecondary').textContent = data.secondary;
     document.getElementById('sheetQuoteText').textContent = data.quote;
   }
 
@@ -150,39 +121,27 @@ document.addEventListener('DOMContentLoaded', () => {
   sheetCloseBtn.addEventListener('click', closeBottomSheet);
   bottomSheetBackdrop.addEventListener('click', closeBottomSheet);
 
-  // Callout Card tap opens control topic
-  calloutCard.addEventListener('click', (e) => {
-    if (e.target.closest('#ctaForwardBtn')) return;
-    openBottomSheet('control');
+  // Callout Card tap opens Stage 2 transition modal
+  calloutCard.addEventListener('click', () => {
+    stagePreviewModal.classList.add('active');
   });
 
-  // --- Character Interaction & Speech Bubbles ---
-  hotspotBusinessman.addEventListener('click', () => {
-    bubblePresenter.classList.remove('active');
-    bubbleBusinessman.classList.toggle('active');
-  });
+  // --- Businessman Hotspot & Dialogue ---
+  if (hotspotBusinessman && bubbleBusinessman) {
+    hotspotBusinessman.addEventListener('click', (e) => {
+      e.stopPropagation();
+      bubbleBusinessman.classList.toggle('active');
+    });
 
-  hotspotPresenter.addEventListener('click', () => {
-    bubbleBusinessman.classList.remove('active');
-    bubblePresenter.classList.toggle('active');
-  });
+    closeBubbleBusinessman.addEventListener('click', (e) => {
+      e.stopPropagation();
+      bubbleBusinessman.classList.remove('active');
+    });
+  }
 
-  closeBubbleBusinessman.addEventListener('click', (e) => {
-    e.stopPropagation();
-    bubbleBusinessman.classList.remove('active');
-  });
-
-  closeBubblePresenter.addEventListener('click', (e) => {
-    e.stopPropagation();
-    bubblePresenter.classList.remove('active');
-  });
-
-  // Web Speech API Audio Narration
+  // Web Speech API Audio Narration (Businessman speech)
   function speakText(text, lang = 'gu-IN') {
-    if (!('speechSynthesis' in window)) {
-      alert('Speech synthesis is not supported on this device.');
-      return;
-    }
+    if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = lang;
@@ -191,19 +150,15 @@ document.addEventListener('DOMContentLoaded', () => {
     window.speechSynthesis.speak(utterance);
   }
 
-  document.getElementById('audioBtnBusinessman').addEventListener('click', (e) => {
-    e.stopPropagation();
-    const gujText = "મારો આખો કેશ ફ્લો બિઝનેસમાં રિઇન્વેસ્ટ થાય છે. એવરી યર રિટર્ન હાઈ છે, પણ અનસર્ટિન્ટી પણ એટલી જ છે.";
-    speakText(gujText, 'gu-IN');
-  });
+  if (audioBtnBusinessman) {
+    audioBtnBusinessman.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const narrationText = "મારો બિઝનેસ જ મારું મેઇન ગ્રોથ એન્જિન છે. અહીં હું ઇન્વેસ્ટ કરું છું, વેલ્યુ ક્રિએટ કરું છું અને બિઝનેસ ગ્રો કરું છું. કસ્ટમર્સ, પ્રોડક્ટ્સ અને એક્સપાન્શન, ગ્રોથ મારા નિર્ણયો પર ડિપેન્ડ કરે છે.";
+      speakText(narrationText, 'gu-IN');
+    });
+  }
 
-  document.getElementById('audioBtnPresenter').addEventListener('click', (e) => {
-    e.stopPropagation();
-    const gujText = "બિઝનેસ સંપત્તિ બનાવે છે, પણ શું તમારી ફેમિલીની ફાઇનાન્શિયલ સિક્યોરિટી માર્કેટ કે બિઝનેસ સાઇકલ પર નિર્ભર રહેવી જોઈએ?";
-    speakText(gujText, 'gu-IN');
-  });
-
-  // --- Forward CTA & Next Stage Preview ---
+  // --- Forward CTA & Stage 2 Conceptual Transition ---
   ctaForwardBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     stagePreviewModal.classList.add('active');
@@ -219,17 +174,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // --- Layer Inspector Controls ---
-  inspectorFab.addEventListener('click', () => {
-    inspectorPanel.classList.toggle('active');
-  });
+  // --- Developer Tooling: Layer Inspector (Hidden by default for customer) ---
+  const urlParams = new URLSearchParams(window.location.search);
+  const isDevMode = urlParams.has('dev') || window.location.hash === '#dev';
+  if (isDevMode) {
+    document.body.classList.add('dev-mode');
+  }
 
-  // Close inspector when clicking outside
-  document.addEventListener('click', (e) => {
-    if (!inspectorPanel.contains(e.target) && !inspectorFab.contains(e.target)) {
-      inspectorPanel.classList.remove('active');
-    }
-  });
+  if (inspectorFab && inspectorPanel) {
+    inspectorFab.addEventListener('click', () => {
+      inspectorPanel.classList.toggle('active');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!inspectorPanel.contains(e.target) && !inspectorFab.contains(e.target)) {
+        inspectorPanel.classList.remove('active');
+      }
+    });
+  }
 
   // Toggle individual layers live
   layerCheckboxes.forEach(cb => {
@@ -243,26 +205,44 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Toggle 3D Exploded Layer Mode
-  toggle3DExploded.addEventListener('click', () => {
-    stageContainer.classList.toggle('exploded-view');
-    const isExploded = stageContainer.classList.contains('exploded-view');
-    toggle3DExploded.textContent = isExploded ? '📐 Normal View' : '✨ 3D Exploded Layers';
-  });
+  if (toggle3DExploded) {
+    toggle3DExploded.addEventListener('click', () => {
+      stageContainer.classList.toggle('exploded-view');
+      const isExploded = stageContainer.classList.contains('exploded-view');
+      toggle3DExploded.textContent = isExploded ? '📐 Normal View' : '✨ 3D Exploded Layers';
+    });
+  }
 
   // Toggle Mobile Frame vs Fullscreen
-  toggleDeviceFrame.addEventListener('click', () => {
-    deviceFrame.classList.toggle('mode-fullscreen');
-    const isFull = deviceFrame.classList.contains('mode-fullscreen');
-    toggleDeviceFrame.textContent = isFull ? '📱 Mobile Frame Mode' : '🖥️ Fullscreen Edge-to-Edge';
-  });
+  if (toggleDeviceFrame) {
+    toggleDeviceFrame.addEventListener('click', () => {
+      deviceFrame.classList.toggle('mode-fullscreen');
+      const isFull = deviceFrame.classList.contains('mode-fullscreen');
+      toggleDeviceFrame.textContent = isFull ? '📱 Mobile Frame Mode' : '🖥️ Fullscreen Edge-to-Edge';
+    });
+  }
+
+  // Secret triple-click on stage indicator (1 / 10) to toggle dev mode
+  let clickCount = 0;
+  const stageBadge = document.querySelector('.nav-stage-badge');
+  if (stageBadge) {
+    stageBadge.addEventListener('click', () => {
+      clickCount++;
+      if (clickCount >= 3) {
+        document.body.classList.toggle('dev-mode');
+        if (inspectorPanel) inspectorPanel.classList.toggle('active');
+        clickCount = 0;
+      }
+      setTimeout(() => { clickCount = 0; }, 1000);
+    });
+  }
 
   // Keyboard navigation & accessibility
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       closeBottomSheet();
-      bubbleBusinessman.classList.remove('active');
-      bubblePresenter.classList.remove('active');
-      inspectorPanel.classList.remove('active');
+      if (bubbleBusinessman) bubbleBusinessman.classList.remove('active');
+      if (inspectorPanel) inspectorPanel.classList.remove('active');
       stagePreviewModal.classList.remove('active');
     } else if (e.key === '1') {
       openBottomSheet('growth');
@@ -270,6 +250,12 @@ document.addEventListener('DOMContentLoaded', () => {
       openBottomSheet('opportunity');
     } else if (e.key === '3') {
       openBottomSheet('control');
+    } else if (e.key === 'd' || e.key === 'D') {
+      // Toggle developer mode
+      if (!['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+        document.body.classList.toggle('dev-mode');
+        if (inspectorPanel) inspectorPanel.classList.toggle('active');
+      }
     }
   });
 });
