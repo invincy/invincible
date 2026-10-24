@@ -1,6 +1,6 @@
-import{makeScene}from'./storyboard-model.js?v=2';
-import{createProductionWorkbench}from'./production-workbench.js?v=10';
-import{projectProgress,canComplete,canonicalScript}from'./production-model.js?v=1';
+import{makeScene}from'./storyboard-model.js?v=3';
+import{createProductionWorkbench}from'./production-workbench.js?v=11';
+import{projectProgress,canComplete,canonicalScript}from'./production-model.js?v=3';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{doc,getDoc,onSnapshot,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{splitVoiceoverScript}from"./scene-tools.js?v=2";
@@ -97,12 +97,12 @@ function starterPrompt(scene,type){
 function buildAiBrief(){
   const title=project.title||"Untitled content",style=project.visualStyle||"Not specified",ratio=project.aspectRatio||"9:16",language=project.language||"Use the script's original language",characters=project.characterBible||"Infer only when the narration requires a recurring person; otherwise use —",continuity=project.continuityNotes||"Maintain continuity whenever a subject or location repeats.";
   if(project.scenes?.length){
-    const shots=project.scenes.map((scene,index)=>({scene:index+1,durationSeconds:scene.duration,voiceover:scene.voiceover,visualAnimation:scene.visual||"",assetsRequired:scene.assets||"",...(scene.timeline?{sourceTimeline:scene.timeline}:{})}));
+    const shots=project.scenes.map((scene,index)=>({scene:index+1,durationSeconds:scene.duration,voiceover:scene.voiceover,visualAnimation:scene.visual||"",assetsRequired:scene.assets||"",voiceoverTimestamp:scene.voiceoverTimestamp||"",...(scene.timeline?{sourceTimeline:scene.timeline}:{})}));
     return `You are the scene director for this video. Add production prompts to the existing shot plan below.
 
 RETURN FORMAT
 Return only one Markdown table with exactly these columns:
-| Scene | Duration | Voiceover | Character Prompt | Image Prompt | Video Prompt |
+| Scene | Duration | Voiceover | Character Prompt | Image Prompt | Video Prompt | Timestamp |
 
 RULES
 1. Return exactly ${shots.length} rows in the same order. Do not split, combine, reorder, or retime shots.
@@ -110,7 +110,8 @@ RULES
 3. Use each shot's Visual/Animation and Assets Required as direction for the image and video prompts.
 4. Character Prompt is a reusable identity reference when needed; use — otherwise.
 5. Image Prompt describes subject, setting, composition, lighting, style, and continuity. Video Prompt describes motion and camera movement from that image. Avoid text, identity drift, and new objects.
-6. Never place a raw | character inside a cell. Use commas instead.
+6. Preserve supplied voiceover timestamps exactly in the last Timestamp column. Leave it blank if no aligned audio timestamp was supplied; never estimate it from text.
+7. Never place a raw | character inside a cell. Use commas instead.
 
 PROJECT
 Title: ${title}
@@ -131,7 +132,7 @@ ${canonicalScript(project)}`;
 RETURN FORMAT
 Return only one Markdown table. Do not add an introduction, explanation, code fence or notes.
 Use exactly these columns:
-| Scene | Duration | Voiceover | Character Prompt | Image Prompt | Video Prompt |
+| Scene | Duration | Voiceover | Character Prompt | Image Prompt | Video Prompt | Timestamp |
 
 NON-NEGOTIABLE RULES
 1. Preserve every spoken word exactly and in the original order. Do not rewrite, shorten, add or omit voiceover.
@@ -143,6 +144,7 @@ NON-NEGOTIABLE RULES
 7. Video Prompt must assume the supplied scene image is the first frame. Describe subject motion, environmental motion, camera movement and ending hold. Prevent morphing, identity drift, new objects and unwanted text.
 8. Never place a raw | character inside a cell. Use commas instead. Use <br> only when a line break is essential.
 9. Apply the visual bible consistently to every relevant prompt.
+10. Timestamp is the final column. Leave it blank without aligned audio timing; do not invent exact timestamps from text.
 
 PROJECT
 Title: ${title}

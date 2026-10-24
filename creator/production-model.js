@@ -1,4 +1,4 @@
-import {makeScene,parseTsv,storyboardDuration} from './storyboard-model.js?v=2';
+import {makeScene,parseTsv,storyboardDuration} from './storyboard-model.js?v=3';
 export const METHODS=['Blender','AI Video','Existing Footage','Editing'];
 export const SCENE_STATES=['Planned','Assets Ready','Editing','Completed'];
 export const uid=()=>globalThis.crypto?.randomUUID?.()||String(Date.now()+Math.random());
@@ -9,6 +9,7 @@ const aliases={
  scene:['scene','sceneno','scenenumber'],characterPrompt:['characterprompt'],imagePrompt:['imageprompt','imagegenerationprompt'],
  videoPrompt:['videoprompt','videogenerationprompt'],blenderPrompt:['blenderprompt','codexprompt','animationprompt'],
  productionMethods:['productionmethod','productionmethods','method'],productionStatus:['productionstatus','status'],
+ voiceoverTimestamp:['timestamp','timestamps','voiceovertimestamp','voiceovertimestamps','audiotimestamp','audiotimestamps','votimestamp','timecode','audiotimecode','exacttimestamp'],
  animationGroup:['animationgroup','group'],camera:['camera','cameramovement'],technicalNotes:['technicalnotes','notes']
 };
 export const IMPORT_FIELDS=Object.keys(aliases);
@@ -41,8 +42,8 @@ export function inspectImport(input){
  if(!rows.length)throw Error('No rows found.');
  const mapping=rows[0].map(cell=>IMPORT_FIELDS.find(key=>aliases[key].includes(norm(cell)))||'');
  const header=mapping.some(Boolean);
- let positional=false;if(!header&&rows[0].length===4){try{storyboardDuration(rows[0][3]);positional=true;}catch{}}
- if(positional)return {format,headers:['Voiceover','Visual / Animation','Assets Required','Timeline'],rows,mapping:['voiceover','visual','assets','duration']};
+ let positional=false;if([4,5].includes(rows[0].length)){try{storyboardDuration(rows[0][3]);positional=true;}catch{}}
+ if(positional){const timed=rows[0].length===5;return {format,headers:['Voiceover','Visual / Animation','Assets Required','Timeline',...(timed?['Timestamp']:[])],rows,mapping:['voiceover','visual','assets','duration',...(timed?['voiceoverTimestamp']:[])]};}
  if(!header&&rows[0].length===1)return {format:'Voiceover',headers:['Voiceover'],rows,mapping:['voiceover']};
  return {format,headers:rows[0],rows:rows.slice(1),mapping};
 }
@@ -69,7 +70,7 @@ export function parseProductionImport(input,mappingOverride){
  });
 }
 export function fingerprint(scene){
- return JSON.stringify([scene.voiceover||'',scene.visual||'',scene.assets||'',scene.timeline||scene.duration||'',scene.characterPrompt||'',scene.imagePrompt||'',scene.videoPrompt||'',scene.blenderPrompt||'',scene.camera||'',scene.technicalNotes||'']);
+ return JSON.stringify([scene.voiceover||'',scene.visual||'',scene.assets||'',scene.timeline||scene.duration||'',scene.characterPrompt||'',scene.imagePrompt||'',scene.videoPrompt||'',scene.blenderPrompt||'',scene.camera||'',scene.technicalNotes||'',scene.voiceoverTimestamp||'']);
 }
 export function uniqueScenes(existing,incoming){
  const seen=new Set(existing.map(fingerprint));let duplicates=0;
@@ -177,6 +178,6 @@ export function filterScenes(project,{method='All',assetStatus='All',completion=
   if(assetStatus!=='All'&&(assetStatus==='In Progress'?!['Modeling','Animating','Rendering','In Progress'].includes(readiness):readiness!==assetStatus))return false;
   if(completion!=='All'&&sceneState(project,scene)!==completion)return false;
   const group=groupFor(project,scene);
-  return !text||[scene.voiceover,scene.visual,scene.assets,scene.blenderFile,scene.blenderPrompt,group?.name,group?.blenderFile].join(' ').toLocaleLowerCase().includes(text);
+  return !text||[scene.voiceover,scene.voiceoverTimestamp,scene.timeline,scene.visual,scene.assets,scene.blenderFile,scene.blenderPrompt,group?.name,group?.blenderFile].join(' ').toLocaleLowerCase().includes(text);
  });
 }

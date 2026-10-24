@@ -1,5 +1,5 @@
-import {parseProductionImport as parseStoryboard,uniqueScenes} from './production-model.js?v=1';
-import {looksLikeStoryboard,makeScene,storyboardDuration} from './storyboard-model.js?v=2';
+import {parseProductionImport as parseStoryboard,uniqueScenes} from './production-model.js?v=3';
+import {looksLikeStoryboard,makeScene,storyboardDuration} from './storyboard-model.js?v=3';
 const columns=[['voiceover','Voiceover'],['visual','Visual/Animation'],['assets','Assets'],['duration','Duration (sec)']];
 const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 export function createStoryboardEditor(root,{getScenes,onChange,onImport=()=>{},onFocus=()=>{},onDraft=()=>{},showProduction=false,saveHint='Changes save automatically.',title='Storyboard',intro='Plan each shot. Your full voiceover stays separate.',initialImportOpen=false}) {
