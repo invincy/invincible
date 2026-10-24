@@ -87,3 +87,38 @@ test('the unified importer preserves JSON scene-array support',()=>{
  const [scene]=parseProductionImport(JSON.stringify({scenes:[{voiceover:'Exact Hindi भारत।',duration:8,imagePrompt:'Still',videoPrompt:'Motion',productionMethods:['Blender','AI Video']}]}));
  assert.equal(scene.voiceover,'Exact Hindi भारत।');assert.equal(scene.videoPrompt,'Motion');assert.deepEqual(scene.productionMethods,['Blender','AI Video']);
 });
+
+test('a final Timestamp column preserves recorded voiceover time separately from the planned timeline',()=>{
+ const exact='00:31.250–00:40.800';
+ const input=header+'\tTimestamp\n"भारत — exact narration!\nHuman-Rated LVM3।"\tRocket reveal\tLVM3\t31–40s\t'+exact;
+ const table=inspectImport(input);assert.equal(table.mapping.at(-1),'voiceoverTimestamp');
+ const [scene]=parseProductionImport(input);
+ assert.equal(scene.voiceoverTimestamp,exact);assert.equal(scene.timeline,'31–40s');assert.equal(scene.duration,9);
+ assert.equal(scene.voiceover,'भारत — exact narration!\nHuman-Rated LVM3।');
+ assert.equal(canonicalScript({scenes:[scene]}),scene.voiceover);
+ assert.equal(makeScene(JSON.parse(JSON.stringify(scene))).voiceoverTimestamp,exact);
+ const other={...scene,voiceoverTimestamp:'00:40.800–00:50.350'};
+ assert.equal(uniqueScenes([scene],[{...scene},other]).duplicates,1);
+ assert.equal(uniqueScenes([scene],[other]).scenes.length,1);
+ assert.equal(filterScenes({scenes:[scene]},{query:'00:31.250'}).length,1);
+});
+test('Markdown prompt tables and headerless five-column TSV accept a final timestamp',()=>{
+ const markdown='| Scene | Duration | Voiceover | Character Prompt | Image Prompt | Video Prompt | Timestamp |\n| --- | --- | --- | --- | --- | --- | --- |\n| 1 | 8 | भारत!<br>Space | Person | Moon | Motion | 01:01.345 – 01:09.123 |';
+ const [scene]=parseProductionImport(markdown);
+ assert.equal(scene.voiceoverTimestamp,'01:01.345 – 01:09.123');assert.equal(scene.duration,8);
+ assert.equal(scene.voiceover,'भारत!\nSpace');assert.equal(scene.videoPrompt,'Motion');
+ const [positional]=parseProductionImport('Narration\tVisual\tModel\t0–4s\t00:00.120–00:04.480');
+ assert.equal(positional.voiceoverTimestamp,'00:00.120–00:04.480');assert.equal(positional.timeline,'0–4s');
+});
+test('timestamp aliases, manual mapping, old tables and legacy scenes remain compatible',()=>{
+ for(const label of ['Timestamp','Timestamps','Voiceover timestamp','Audio timecode','VO timestamp']){
+  const [scene]=parseProductionImport('Voiceover\t'+label+'\nExact\t00:03.725');
+  assert.equal(scene.voiceoverTimestamp,'00:03.725');
+ }
+ const custom='Narration\tVisual\tAssets\tLength\tAudio alignment\nExact\tCamera\tModel\t4\t00:00.200–00:04.600';
+ const [mapped]=parseProductionImport(custom,['voiceover','visual','assets','duration','voiceoverTimestamp']);
+ assert.equal(mapped.voiceoverTimestamp,'00:00.200–00:04.600');
+ assert.equal(parseProductionImport(storyboard)[0].voiceoverTimestamp,'');
+ const legacy=makeScene({id:'old',voiceover:'Keep',timeline:'0–4s',completed:true,custom:{keep:true}});
+ assert.equal(legacy.voiceoverTimestamp,'');assert.equal(legacy.completed,true);assert.equal(legacy.id,'old');assert.equal(legacy.custom.keep,true);
+});

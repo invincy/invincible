@@ -308,3 +308,17 @@ body.project-page.creator-focus-mode{height:100dvh;overflow:hidden;display:flex;
  .production-workbench .wb-active-editor .wb-scene-state select{height:34px}
  .wb-active-editor [data-action=duplicate]{grid-column:2;grid-row:2}.wb-active-editor [data-action=remove]{grid-column:3;grid-row:2}
 }
+
+/* Recorded audio time is separate from the planned scene timeline. */
+.production-workbench .wb-voiceover-timestamp{flex:1;min-width:110px;max-width:220px;margin-left:auto;gap:0}
+.production-workbench .wb-voiceover-timestamp input{height:26px;min-height:26px;padding:3px 7px;font:12px/1.4 ui-monospace,monospace;color:#80deeb;border-color:#2d515f;background:#0b1922}
+.production-workbench .wb-nav-timestamp{display:block;font:11px/1.4 ui-monospace,monospace;color:#80deeb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.production-workbench .wb-timestamp-preview{color:#80deeb;font-family:ui-monospace,monospace}
+@media(max-width:700px){
+ .production-workbench .wb-card-voiceover>header{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}
+ .wb-card-voiceover>header h3{grid-column:1;grid-row:1}
+ .wb-card-voiceover>header [data-copy-text]{grid-column:2;grid-row:1}
+ .production-workbench .wb-voiceover-timestamp{grid-column:1/-1;grid-row:2;width:100%;max-width:none;margin:0}
+ .production-workbench .wb-voiceover-timestamp input{font-size:12px;height:30px}
+}
+.production-workbench .wb-row-timestamp{max-width:210px;font:11px/1.4 ui-monospace,monospace;color:#80deeb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

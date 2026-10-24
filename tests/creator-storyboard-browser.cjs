@@ -40,7 +40,7 @@ const server=http.createServer((req,res)=>{
   assert.equal(await dialog.evaluate(node=>node.open),true);
   assert.equal(await page.evaluate(()=>window.writes||0),0);
   await dialog.locator('[data-filter-search]').fill('');
-  const draftTable='Voiceover\tVisual / Animation\tAssets Required\tTimeline\tProduction Method\tAnimation Group\nभारत — exact narration!\tRocket orbit\tLVM3\t0–4s\tBlender\tUpper assembly\nSecond voice\tEarth\tTexture\t4–8s\tAI Video\t';
+  const draftTable='Voiceover\tVisual / Animation\tAssets Required\tTimeline\tProduction Method\tAnimation Group\tTimestamp\nभारत — exact narration!\tRocket orbit\tLVM3\t0–4s\tBlender\tUpper assembly\t00:00.125–00:04.875\nSecond voice\tEarth\tTexture\t4–8s\tAI Video\t\t00:04.875–00:08.250';
   await dialog.locator('[data-paste]').fill(draftTable);
   await dialog.locator('[data-action=preview]').click();
   assert.equal(await dialog.locator('.wb-preview article').count(),2);
@@ -50,6 +50,8 @@ const server=http.createServer((req,res)=>{
   assert.equal(await dialog.locator('.wb-nav-entry').count(),2);
   const draftScene=()=>dialog.locator('.wb-scene');
   const firstSceneId=await draftScene().getAttribute('data-scene');
+  assert.equal(await draftScene().getByLabel('Voiceover timestamp',{exact:true}).inputValue(),'00:00.125–00:04.875');
+  assert.equal(await draftScene().locator('[data-field=timing]').inputValue(),'0–4s');
   const longVisual=('Camera follows the upper assembly; preserve module details and solar arrays.\n').repeat(12);
   await draftScene().locator('[data-field=visual]').fill(longVisual);
   assert.equal(await draftScene().locator('[data-field=visual]').evaluate(el=>el.clientHeight>=el.scrollHeight-1),true);
@@ -102,6 +104,10 @@ const server=http.createServer((req,res)=>{
   await dialog.locator('#saveContent').click();await page.waitForURL(/project.html\?id=/);
   await page.locator('#projectTitle').filter({hasText:'Draft production'}).waitFor();
   assert.equal(await page.locator('.wb-scene').count(),1);
+  assert.equal(await page.locator('[data-field=voiceoverTimestamp]').inputValue(),'00:00.125–00:04.875');
+  await page.reload();await page.locator('.wb-scene').waitFor();
+  assert.equal(await page.locator('[data-field=voiceoverTimestamp]').inputValue(),'00:00.125–00:04.875');
+  assert.equal(await page.locator('.wb-nav-timestamp').first().textContent(),'VO · 00:00.125–00:04.875');
   assert.equal(await page.locator('#projectMeta,#accessLabel').count(),0);
   assert.equal(await page.locator('#status').isVisible(),false);
   assert.equal(await page.locator('.project-header').innerText().then(text=>text.includes('@')),false);
@@ -138,9 +144,11 @@ const server=http.createServer((req,res)=>{
   await page.evaluate(()=>window.failSave=false);await page.locator('#saveContent').click();await page.waitForURL(/project.html\?id=/);
   await page.locator('#projectTitle').filter({hasText:'Gaganyaan production'}).waitFor();
   const projectId=new URL(page.url()).searchParams.get('id');
-  const table='Voiceover\tVisual / Animation\tAssets Required\tTimeline\n'+Array.from({length:16},(_,i)=>'भारत का मिशन '+(i+1)+'!\t'+(i===0?'Gaganyaan upper assembly को orbit में दिखाएं. Start with a wide view of the complete spacecraft, then move the camera slowly around the Crew Module and Service Module. Preserve realistic proportions and show the protective structure clearly. Keep the background dark, use soft cyan rim lighting, and finish with a stable three-quarter view. Do not show liftoff or add new objects.':'Camera '+(i+1))+'\tLVM3 model\t'+(i*4)+'–'+(i*4+4)+'s').join('\n');
+  const stamp=seconds=>String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');
+  const table='Voiceover\tVisual / Animation\tAssets Required\tTimeline\tTimestamp\n'+Array.from({length:16},(_,i)=>'भारत का मिशन '+(i+1)+'!\t'+(i===0?'Gaganyaan upper assembly को orbit में दिखाएं. Start with a wide view of the complete spacecraft, then move the camera slowly around the Crew Module and Service Module. Preserve realistic proportions and show the protective structure clearly. Keep the background dark, use soft cyan rim lighting, and finish with a stable three-quarter view. Do not show liftoff or add new objects.':'Camera '+(i+1))+'\tLVM3 model\t'+(i*4)+'–'+(i*4+4)+'s\t'+stamp(i*4)+'.125–'+stamp(i*4+4)+'.875').join('\n');
   const paste=page.locator('#projectStoryboard [data-paste]');
   await paste.fill(table);await page.locator('[data-action=preview]').click();
+  assert.match(await page.locator('.wb-preview article').first().textContent(),/00:00.125–00:04.875/);
   assert.equal(await page.locator('.wb-preview article').count(),16);assert.equal(await page.locator('.wb-scene').count(),0);
   await page.locator('[data-action=import]').click();
   assert.equal(await page.locator('.wb-scene').count(),1);
@@ -181,6 +189,11 @@ const server=http.createServer((req,res)=>{
   await page.screenshot({path:path.join(root,'.test-output/creator-focus-viewport.png')});
 
   assert.equal(await page.locator('.wb-column-head,.wb-row').count(),0);
+  await page.locator('[data-field=voiceoverTimestamp]').fill('00:00.250–00:04.900');
+  await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes[0].voiceoverTimestamp==='00:00.250–00:04.900',projectId);
+  await page.reload();await page.locator('.wb-scene').waitFor();
+  assert.equal(await page.locator('[data-field=voiceoverTimestamp]').inputValue(),'00:00.250–00:04.900');
+  assert.equal(await page.locator('[data-field=timing]').inputValue(),'0–4s');
   const firstIdBefore=await page.locator('.wb-scene').getAttribute('data-scene');
   await page.locator('[data-action=next-scene]').click();
   assert.equal(await page.locator('.wb-number strong').innerText(),'02');
@@ -213,8 +226,10 @@ const server=http.createServer((req,res)=>{
    await page.waitForFunction(()=>window.copied?.includes('FULL RECORDING VOICEOVER'));
   assert.match(await page.evaluate(()=>window.copied),/FULL RECORDING VOICEOVER\nभारत का मिशन 1!/);
   await page.locator('[data-tab=Storyboard]').click();
+  assert.match(await page.evaluate(()=>window.copied),/Video Prompt \| Timestamp \|/);
+  assert.match(await page.evaluate(()=>window.copied),/00:00.250–00:04.900/);
   // Duplicate paste is reviewed but cannot append identical rows.
-  await page.locator('.wb-import summary').click();await paste.fill(table);await page.locator('[data-action=preview]').click();
+  await page.locator('.wb-import summary').click();await paste.fill(table.replace('00:00.125–00:04.875','00:00.250–00:04.900'));await page.locator('[data-action=preview]').click();
   assert.match(await page.locator('[data-mapped-preview]').innerText(),/16 duplicates skipped/);
   assert.equal(await page.locator('[data-action=import]').isDisabled(),true);
   await page.locator('.wb-import summary').click();
@@ -308,9 +323,10 @@ const server=http.createServer((req,res)=>{
   await page.locator('[data-tab=Storyboard]').click();
   if(await page.locator('.wb-focus-layout').count())await page.locator('[data-action=view-mode]').click();
   await page.locator('.wb-import summary').click();
-  await paste.fill('| Scene | Duration | Voiceover | Character Prompt | Image Prompt | Video Prompt |\n|---|---|---|---|---|---|\n| 17 | 7 | Markdown voice | Person | Still | Motion |');
+  await paste.fill('| Scene | Duration | Voiceover | Character Prompt | Image Prompt | Video Prompt | Timestamp |\n|---|---|---|---|---|---|---|\n| 17 | 7 | Markdown voice | Person | Still | Motion | 01:04.875–01:11.875 |');
   await page.locator('[data-action=preview]').click();await page.locator('[data-action=import]').click();assert.equal(await page.locator('.wb-scene').count(),17);
   assert.equal(await scene(16).locator('[data-field=voiceover]').inputValue(),'Markdown voice');
+  assert.equal(await scene(16).locator('[data-field=voiceoverTimestamp]').inputValue(),'01:04.875–01:11.875');
   await scene(16).locator('[data-action=expand]').click();assert.equal(await scene(16).locator('[data-field=videoPrompt]').inputValue(),'Motion');
   await scene(16).locator('[data-action=duplicate]').click();assert.equal(await page.locator('.wb-scene').count(),18);
   await scene(17).locator('[data-action=insert]').click();assert.equal(await page.locator('.wb-scene').count(),19);

@@ -4,7 +4,7 @@ import {estimateSeconds} from './scene-tools.js?v=2';
 export function makeScene(data={}) {
   return {...data, id:data.id||(crypto.randomUUID?.()||String(Date.now()+Math.random())),
     duration:Math.max(1,Math.min(60,Number(data.duration)||estimateSeconds(data.voiceover))),
-    voiceover:data.voiceover||'', visual:data.visual||'', assets:data.assets||'',
+    voiceover:data.voiceover||'', voiceoverTimestamp:String(data.voiceoverTimestamp??''), visual:data.visual||'', assets:data.assets||'',
     characterPrompt:data.characterPrompt||'', imagePrompt:data.imagePrompt||'', videoPrompt:data.videoPrompt||'',
     characterDone:!!data.characterDone, imageDone:!!data.imageDone, videoDone:!!data.videoDone,
     characterAssetUrl:data.characterAssetUrl||'', imageAssetUrl:data.imageAssetUrl||'', videoAssetUrl:data.videoAssetUrl||'',

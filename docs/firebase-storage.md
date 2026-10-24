@@ -79,3 +79,11 @@ Scene-navigator follow-up: focused/all mode, active scene, sidebar visibility an
 
 
 Viewport editor follow-up: Plan/Prompts/Progress and prompt selection are local view state. Numbered-rail colors derive from existing production flags and scene completion; they add no persisted status or migration. Compact Creator app navigation reuses the existing shared page registry and mobile-tab preferences. Data writes, permission checks and Firebase document paths are unchanged.
+
+## Recorded voiceover timestamps — October 25, 2026
+
+Creator scenes now support optional `voiceoverTimestamp` text within the existing `creatorProjects/{projectId}.scenes[]` array. This stores exact externally aligned audio timing, including decimal seconds, without changing `timeline` or planned `duration`. Old scenes default to a blank audio timestamp; no bulk migration runs. The usual create/save/autosave/draft flow persists the value, and normalization retains it with unknown metadata.
+
+The unified importer maps a final Timestamp / Timestamps / Voiceover timestamp / Audio timecode column for TSV or Markdown. Headerless TSV may append a fifth timestamp cell to the existing four-column format. Preview, manual column mapping, narration-only importing and old prompt tables remain available. Duplicate identity includes audio timing so repeated narration at a different audio position is not silently discarded. Scene narration and the canonical script never include timing annotations.
+
+The recorded time is editable next to Voiceover, visible in the desktop navigator and all-scene summary, and searchable through the existing filter. The copied production brief includes existing audio timing, requests Timestamp as the last Markdown column, and explicitly forbids invented alignment when audio timing is absent. No audio upload, transcription service, API integration, Firebase rule or collection change is involved. Controlled tests cover create/import/edit/reload and precision; real production Firebase permissions are not established by these fixtures.
