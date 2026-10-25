@@ -3,7 +3,6 @@ import {taskProgress, taskSteps} from '../src/task-model';
 import {formatTimer} from './model';
 import ConstellationNav from './ConstellationNav';
 import AmbientParticles from './AmbientParticles';
-import FreeDashboardCanvas from './FreeDashboardCanvas';
 
 const stages = [
   ['Backlog', 'Backlog'],
@@ -12,15 +11,15 @@ const stages = [
   ['Done', 'Completed'],
 ];
 
-export default function DashboardRegion({data, plan, timer, onInspect, orbAnchor, theme = 'gold', onChangeTheme, onOpenWorkspace, onTravel, uid, onPan, onCapture, onIdeas, restoreView, onPlan}) {
+export default function DashboardRegion({data, plan, timer, onInspect, orbAnchor, theme = 'gold', onChangeTheme, onOpenWorkspace, onTravel, onPlan}) {
   const focus = plan.active?.task;
   const next = plan.active?.step || taskSteps(focus).find(step => !step.done && step.status !== 'Done');
   const progress = taskProgress(focus);
 
-  return <FreeDashboardCanvas uid={uid} onMove={onPan} onCapture={onCapture} onIdeas={onIdeas} restoreView={restoreView}>
+  return <div className="v2-dashboard-body">
     <section className="v2-guide-scene" aria-label="Your focus and connected work">
       <div className="v2-guide-atmosphere" aria-hidden="true"/>
-      <AmbientParticles/>
+      <AmbientParticles theme={theme}/>
       <div className="v2-guide-orb-anchor" ref={orbAnchor}><button className="v2-orb-plan" type="button" aria-label="Open today's plan" onClick={onPlan}><span>Today’s plan</span><strong>{plan.items.filter(item=>!item.done&&!item.missing).length} remaining</strong><span className="v2-orb-plan-preview">{next?.title||next?.text||focus?.title||'Choose your next task'}</span></button></div>
       <ConstellationNav task={focus} onInspect={onInspect} onTravel={onTravel}/>
 
@@ -56,5 +55,5 @@ export default function DashboardRegion({data, plan, timer, onInspect, orbAnchor
         <button className="v2-guide-work-link" onClick={onOpenWorkspace}>Open My Workspace <span aria-hidden="true">→</span></button>
       </div>
     </section>
-  </FreeDashboardCanvas>;
+  </div>;
 }

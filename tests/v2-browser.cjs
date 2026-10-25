@@ -215,11 +215,8 @@ window.listenerCount=()=>listeners.size;
         assert.equal(await travelPage.locator('.v2-travel').count(),0);
         await travelPage.close();
 
-        // Horizontal wheel input pans the dashboard camera without hitting a page edge.
-        await page.mouse.move(500,600);
-        await page.mouse.wheel(270,0);
-        await page.waitForFunction(()=>Number(document.querySelector('.v2-free-canvas').dataset.cameraX)<-100);
-        await page.getByRole('button',{name:'Home canvas',exact:true}).click();
+        // Dashboard content stays fixed; the two finite workspace regions retain navigation.
+        assert.equal(await page.locator('.v2-free-canvas,.v2-canvas-tools').count(),0);
 
         // A real seam, with both regions on-screen, remains at an arbitrary offset.
         await page.locator('.v2-canvas').evaluate(element=>element.scrollTo({left:element.clientWidth*.43,behavior:'instant'}));
@@ -462,7 +459,8 @@ window.listenerCount=()=>listeners.size;
           await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:350,y:540}]});
           for(let x=330;x>=110;x-=20){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:540}]});await touchPage.waitForTimeout(20);}
           await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
-          await touchPage.waitForFunction(()=>Number(document.querySelector('.v2-free-canvas').dataset.cameraX)<-100);
+          await touchPage.waitForFunction(()=>document.querySelector('.v2-canvas').scrollLeft>100);
+          assert.equal(await touchPage.locator('.v2-free-canvas').count(),0,'Touch navigation remains bounded to the two workspace regions');
           await touchPage.getByRole('link',{name:'02 My Workspace'}).click();
           await touchPage.waitForFunction(()=>document.querySelector('.v2-canvas').scrollLeft>100);
           await touchPage.getByRole('link',{name:'02 My Workspace'}).click();
