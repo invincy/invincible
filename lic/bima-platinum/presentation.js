@@ -13,11 +13,12 @@
 // Audio Configuration (Easily replaceable for local professional MP3 with Web Speech fallback)
 const AUDIO_CONFIG = {
   // Local audio path (when placed)
-  src: 'assets/audio/advisor-scene-1-gujarati.mp3',
-  // Spoken Gujarati dialogue script
-  script: 'તમારો business already growth potential આપે છે. Customers વધે, sales વધે, expansion થાય — તો returns પણ મોટા થઈ શકે. પણ જ્યાં growth હોય ત્યાં risk પણ હોય. એટલે તમારી personal savings નો દરેક રૂપિયા ફરી risk માં જવાની જરૂર નથી.',
+  src: 'assets/audio/advisor-scene-1-hindi.mp3',
+  // Spoken Hindi dialogue script
+  script: 'आपके business में पहले से ही काफी growth potential है। Customers बढ़ें, sales बढ़ें और expansion हो — तो returns भी बड़े हो सकते हैं। लेकिन business में growth के साथ risk भी रहता है। इसलिए आपकी personal savings का हर रुपया दोबारा risk में डालना ज़रूरी नहीं है।',
   // Fallback Web Speech settings
-  fallbackLang: 'gu-IN',
+  enableBrowserSpeech: false, // Enable only after verifying the device's Hindi voice.
+  fallbackLang: 'hi-IN',
   fallbackRate: 0.95
 };
 
@@ -28,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const stagePreviewModal = document.getElementById('stagePreviewModal');
   const previewDismissBtn = document.getElementById('previewDismissBtn');
   const ctaForwardBtn = document.getElementById('ctaForwardBtn');
-  const calloutCard = document.getElementById('calloutCard');
 
   // Advisor Audio Interaction Control
   const advisorAudioBtn = document.getElementById('advisorAudioBtn');
@@ -45,6 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Audio Playback Engine State
   let audioElement = null;
   let useSpeechFallback = false;
+  let audioAttempt = 0;
+  const audioStatus = document.getElementById('audioStatus');
   let playbackState = 'idle'; // 'idle' | 'playing' | 'paused'
 
   function updateAudioUI(state) {
@@ -53,7 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     advisorAudioBtn.classList.remove('is-playing', 'is-paused');
 
-    if (state === 'playing') {
+    advisorAudioBtn.setAttribute('aria-busy', String(state === 'loading'));
+    if (state === 'loading') {
+      advisorAudioLabel.textContent = 'Loading audio…';
+    } else if (state === 'playing') {
       advisorAudioBtn.classList.add('is-playing');
       if (advisorAudioIcon) advisorAudioIcon.textContent = '⏸️';
       if (advisorAudioLabel) advisorAudioLabel.textContent = 'Pause Audio';
@@ -72,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function stopAllAudio() {
+    audioAttempt++;
     if (audioElement) {
       audioElement.pause();
       audioElement.currentTime = 0;
@@ -83,7 +89,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function playSpeechFallback() {
-    if (!('speechSynthesis' in window)) {
+    if (!AUDIO_CONFIG.enableBrowserSpeech || !('speechSynthesis' in window)) {
+      if (audioStatus) audioStatus.textContent = 'Hindi advisor recording coming soon.';
       updateAudioUI('idle');
       return;
     }
@@ -103,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (audioElement) return audioElement;
 
     audioElement = new Audio(AUDIO_CONFIG.src);
-    audioElement.preload = 'auto';
+    audioElement.preload = 'none';
 
     audioElement.addEventListener('playing', () => {
       useSpeechFallback = false;
@@ -121,51 +128,53 @@ document.addEventListener('DOMContentLoaded', () => {
       audioElement.currentTime = 0;
     });
 
-    audioElement.addEventListener('error', () => {
-      // Local MP3 not placed yet or load error -> transparently use Web Speech API
-      useSpeechFallback = true;
-      audioElement = null;
-      playSpeechFallback();
-    });
-
     return audioElement;
   }
 
-  function toggleAudioPlayback() {
+  async function toggleAudioPlayback() {
+    if (playbackState === 'loading') return;
     if (playbackState === 'playing') {
-      // Currently playing -> Pause
-      if (audioElement && !useSpeechFallback) {
-        audioElement.pause();
-      } else if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        updateAudioUI('paused');
-      }
-    } else if (playbackState === 'paused') {
-      // Currently paused -> Resume
-      if (audioElement && !useSpeechFallback) {
-        audioElement.play().catch(() => {
-          useSpeechFallback = true;
-          playSpeechFallback();
-        });
-      } else if ('speechSynthesis' in window) {
-        playSpeechFallback();
-      }
-    } else {
-      // Currently idle -> Start from beginning
       if (useSpeechFallback) {
-        playSpeechFallback();
+        window.speechSynthesis.pause();
+        updateAudioUI('paused');
       } else {
-        const audio = initAudioElement();
-        const promise = audio.play();
-        if (promise !== undefined) {
-          promise.catch(() => {
-            useSpeechFallback = true;
-            playSpeechFallback();
-          });
-        }
+        audioElement.pause();
+      }
+      return;
+    }
+    if (useSpeechFallback) {
+      if (playbackState === 'paused') {
+        window.speechSynthesis.resume();
+        updateAudioUI('playing');
+      } else {
+        playSpeechFallback();
+      }
+      return;
+    }
+    const attempt = ++audioAttempt;
+    if (audioStatus) audioStatus.textContent = '';
+    updateAudioUI('loading');
+    try {
+      await initAudioElement().play();
+      if (attempt !== audioAttempt) audioElement.pause();
+    } catch (error) {
+      if (attempt !== audioAttempt) return;
+      updateAudioUI('idle');
+      if (error.name === 'NotAllowedError') {
+        if (audioStatus) audioStatus.textContent = 'Tap again to allow audio playback.';
+      } else if (AUDIO_CONFIG.enableBrowserSpeech) {
+        useSpeechFallback = true;
+        playSpeechFallback();
+      } else if (audioStatus) {
+        audioStatus.textContent = 'Hindi advisor recording coming soon.';
       }
     }
   }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopAllAudio();
+  });
+  window.addEventListener('pagehide', stopAllAudio);
 
   if (advisorAudioBtn) {
     advisorAudioBtn.addEventListener('click', (e) => {
@@ -179,27 +188,28 @@ document.addEventListener('DOMContentLoaded', () => {
     ctaForwardBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       stopAllAudio();
+      stagePreviewModal.inert = false;
       stagePreviewModal.classList.add('active');
+      previewDismissBtn.focus();
     });
   }
 
-  if (calloutCard) {
-    calloutCard.addEventListener('click', () => {
-      stopAllAudio();
-      stagePreviewModal.classList.add('active');
-    });
+  function dismissPreview() {
+    stagePreviewModal.classList.remove('active');
+    stagePreviewModal.inert = true;
+    ctaForwardBtn.focus();
   }
 
   if (previewDismissBtn) {
     previewDismissBtn.addEventListener('click', () => {
-      stagePreviewModal.classList.remove('active');
+      dismissPreview();
     });
   }
 
   if (stagePreviewModal) {
     stagePreviewModal.addEventListener('click', (e) => {
       if (e.target === stagePreviewModal) {
-        stagePreviewModal.classList.remove('active');
+        dismissPreview();
       }
     });
   }
@@ -269,11 +279,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Keyboard navigation & accessibility
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
+    if (e.key === 'Tab' && stagePreviewModal.classList.contains('active')) {
+      e.preventDefault();
+      previewDismissBtn.focus();
+    } else if (e.key === 'Escape') {
       stopAllAudio();
       if (inspectorPanel) inspectorPanel.classList.remove('active');
-      stagePreviewModal.classList.remove('active');
-    } else if (e.key === ' ' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+      dismissPreview();
+    } else if (e.key === ' ' && document.activeElement === document.body && !stagePreviewModal.classList.contains('active')) {
       // Spacebar toggles audio
       e.preventDefault();
       toggleAudioPlayback();

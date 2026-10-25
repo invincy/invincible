@@ -1,18 +1,20 @@
 <!doctype html>
-<html lang="gu">
+<html lang="hi">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Business Builds Wealth · Conversation Tool</title>
   <meta name="theme-color" content="#020b1c">
-  <meta name="description" content="Phase 1: Make the prospect agree that his business is his growth engine.">
+  <meta name="description" content="Business growth, business risk, and a conversation about personal stability.">
 
-  <!-- Google Fonts: Gujarati + Luxury Serif + Clean Sans -->
+  <!-- Google Fonts: Hindi + Luxury Serif + Clean Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="presentation.css?v=6">
+  <link rel="preload" as="image" href="assets/scene-1-853.webp" imagesrcset="assets/scene-1-480.webp 480w, assets/scene-1-853.webp 853w" imagesizes="(max-width: 480px) 100vw, 420px" fetchpriority="high">
+
+  <link rel="stylesheet" href="presentation.css?v=7">
 </head>
 <body>
 
@@ -87,9 +89,14 @@
              and restaurant doorway background
              ========================================== -->
         <div id="layerEnv" class="scene-layer layer-env">
-          <img 
-            src="assets/scene_clean.png" 
-            alt="Boutique Shop Environment with Businessman and Advisor" 
+          <img
+            id="sceneImage"
+            src="assets/scene-1-853.webp"
+            srcset="assets/scene-1-480.webp 480w, assets/scene-1-853.webp 853w"
+            sizes="(max-width: 480px) 100vw, 420px"
+            width="853" height="1844"
+            fetchpriority="high" loading="eager" decoding="async"
+            alt="Boutique Shop Environment with Businessman and Advisor"
             class="env-background-img"
           >
         </div>
@@ -130,16 +137,16 @@
         </div>
 
         <!-- ==========================================
-             LAYER 6: Headline & Gujarati Typography
+             LAYER 6: Headline & Hindi Typography
              (Pure business-growth statement; no product branding)
              ========================================== -->
         <div id="layerHeadline" class="scene-layer layer-headline">
           <h1 class="headline-main">
-            <span class="headline-guj-prefix">તમારો</span><span class="gold-gradient-text">Business</span><br>
+            <span class="headline-hindi-prefix">आपका</span><span class="gold-gradient-text">Business</span><br>
             <span class="gold-gradient-text">Builds Wealth</span>
           </h1>
           <p class="headline-sub">
-            અહીં તમે risk લો છો, capital grow કરો છો, and opportunity create કરો છો.
+            यहाँ growth की potential है — और business का risk भी।
           </p>
         </div>
 
@@ -147,14 +154,15 @@
              LAYER 7: Advisor Audio Control (Only Interactive Voice)
              (Positioned cleanly between character scene & bottom CTA)
              ========================================== -->
+        <div class="stage-footer">
         <div id="layerAdvisorAudio" class="scene-layer layer-advisor-audio interactive">
           <div class="advisor-audio-container">
-            <button 
-              id="advisorAudioBtn" 
-              class="advisor-audio-btn" 
+            <button
+              id="advisorAudioBtn"
+              class="advisor-audio-btn"
               type="button"
               aria-label="Hear Advisor Perspective"
-              title="તમારો business already growth potential આપે છે. Customers વધે, sales વધે, expansion થાય — તો returns પણ મોટા થઈ શકે. પણ જ્યાં growth હોય ત્યાં risk પણ હોય. એટલે તમારી personal savings નો દરેક રૂપિયા ફરી risk માં જવાની જરૂર નથી."
+              title="आपके business में पहले से ही काफी growth potential है। Customers बढ़ें, sales बढ़ें और expansion हो — तो returns भी बड़े हो सकते हैं। लेकिन business में growth के साथ risk भी रहता है। इसलिए आपकी personal savings का हर रुपया दोबारा risk में डालना ज़रूरी नहीं है।"
             >
               <span class="audio-wave-bars" aria-hidden="true">
                 <span class="bar bar-1"></span>
@@ -165,6 +173,7 @@
               <span id="advisorAudioIcon" class="advisor-audio-icon">🔊</span>
               <span id="advisorAudioLabel" class="advisor-audio-label">Hear Advisor</span>
             </button>
+            <span id="audioStatus" class="audio-status" role="status" aria-live="polite"></span>
           </div>
         </div>
 
@@ -173,10 +182,10 @@
              (Thought transition into personal stability)
              ========================================== -->
         <div id="layerCallout" class="scene-layer layer-callout interactive">
-          <div id="calloutCard" class="callout-card" role="button" tabindex="0" aria-label="View Transition Prompt">
+          <div id="calloutCard" class="callout-card">
             <div class="callout-text-group">
-              <span class="callout-line-1">તમે કંઈક valuable build કર્યું છે.</span>
-              <span class="callout-line-2">પણ તમારી personal stability ક્યાં છે?</span>
+              <span class="callout-line-1">आपने कुछ valuable बनाया है।</span>
+              <span class="callout-line-2">पर आपकी personal stability कहाँ है?</span>
             </div>
             <button id="ctaForwardBtn" class="callout-cta-btn" aria-label="Advance to Next Stage">
               <span>Stability</span>
@@ -184,17 +193,18 @@
             </button>
           </div>
         </div>
+        </div><!-- /.stage-footer -->
 
       </div><!-- /.layer-stage-3d -->
 
       <!-- ==========================================
            Stage 2 Preview Transition Modal (Placeholder)
            ========================================== -->
-      <div id="stagePreviewModal" class="stage-preview-modal" role="dialog" aria-modal="true">
+      <div id="stagePreviewModal" class="stage-preview-modal" role="dialog" aria-modal="true" aria-labelledby="stagePreviewTitle" inert>
         <div class="preview-card">
           <span class="preview-badge">STAGE 2</span>
-          <h3 class="preview-title">
-            તમારો Business grow કરે છે — પણ personal wealth માટે stability પણ જરૂરી છે.
+          <h3 id="stagePreviewTitle" class="preview-title">
+            आपका Business grow करता है — लेकिन personal wealth के लिए stability भी ज़रूरी है।
           </h3>
           <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 22px;">
             Stage 2 preview · Coming next
@@ -228,6 +238,6 @@
 
 </div><!-- /.app-viewport-wrapper -->
 
-<script src="presentation.js?v=6"></script>
+<script src="presentation.js?v=7"></script>
 </body>
 </html>
