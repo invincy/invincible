@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { parseCSV, autoMapping, previewImport, mobile, dateValue, policyId, mergeImport, applyResponse, matches, statusLabel, daysFromToday } from '../lic/follow-up/model.mjs';
+import { parseCSV, autoMapping, previewImport, mobile, dateValue, policyId, mergeImport, applyResponse, archiveCase, matches, statusLabel, daysFromToday } from '../lic/follow-up/model.mjs';
 const header = 'Policyno,PH Name,Plan,Net Amount,Due Date,PH Mobile,OP_Neft1,OP_Neft2,OP_Neft3';
 const csv = header + '\r\n"00123","Patel, Asha",28,"68,230",2026-10-12,+91 9876543210,00999,00888,00777\r\n00456,"Name ""Quoted""\nSecond line",14,0,23/03/2026,NA,00666,,\r\n';
 const parsed = parseCSV('\uFEFF' + csv), mapping = autoMapping(parsed.headers);
@@ -76,4 +76,23 @@ test('the provided 858.csv can be validated locally without committing customer 
   const sample = parseCSV(fs.readFileSync(process.env.LIC_SAMPLE_CSV, 'utf8')), preview = previewImport(sample, autoMapping(sample.headers));
   assert.deepEqual(preview.errors, []); assert.equal(preview.records.length, 104); assert.equal(preview.records.filter(r => r.opPolicies.length).length, 1);
   console.log('858.csv: 104 unique policies validated; one row has three OP-NAPped links.');
+});
+test('archive and restore preserve remarks and schedules; completion leaves the active list', () => {
+  const original = { ...imported()[0], remarks: 'Retain old remarks', followUpDate: '2026-11-01', attemptedAt: 'before' };
+  const archived = archiveCase(original, true, 'manual', 'now');
+  assert.equal(matches(archived), false); assert.equal(matches(archived, { view: 'archived' }), true);
+  assert.equal(matches(archived, { view: 'everything' }), true); assert.equal(archived.remarks, original.remarks);
+  const restored = archiveCase(archived, false, '', 'later'); assert.equal(matches(restored), true); assert.equal(restored.followUpDate, original.followUpDate);
+  const completed = applyResponse(original, { outcome: 'completed', at: 'now', note: '', followUpDate: '', phoneCorrection: null });
+  assert.equal(completed.archived, true); assert.equal(completed.archiveReason, 'completed'); assert.equal(matches(completed), false);
+  assert.equal(matches(completed, { view: 'completed' }), true);
+  assert.equal(archiveCase(completed, false, '', 'later').outcome, 'reopened');
+});
+test('returning CSV rows restore missing cases while keeping explicitly removed and completed cases archived', () => {
+  const original = { ...imported()[0], remarks: 'Preserve this', attemptedAt: 'before' };
+  for (const reason of ['manual', 'completed', 'missing_csv']) {
+    const archived = archiveCase(original, true, reason, 'now');
+    const reimport = mergeImport(archived, imported()[0], 'later');
+    assert.equal(reimport.archived, reason !== 'missing_csv'); assert.equal(reimport.remarks, 'Preserve this'); assert.equal(reimport.attemptedAt, 'before');
+  }
 });

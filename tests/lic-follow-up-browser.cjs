@@ -14,6 +14,7 @@ const snap = (ref) => {
 };
 export const doc = (db, ...parts) => ({ kind: 'doc', path: parts.join('/') });
 export const collection = (db, ...parts) => ({ kind: 'collection', path: parts.join('/') });
+export const getDocsFromServer = async ref => snap(ref);
 export const query = (ref, order) => ({ ...ref, order });
 export const orderBy = (...args) => args;
 export const serverTimestamp = () => new Date().toISOString();
@@ -104,6 +105,30 @@ const csv = header + '\n00123,Asha Example,28,68230,2026-10-12,9876543210,00999,
     await openPolicy('Bhavna Example'); await page.locator('summary').click(); await page.locator('#phoneCorrection').fill('9234567890'); await page.locator('#saveResponse').click(); await waitSaved();
     assert.equal(await page.locator('#detailInfo a[href="tel:+919234567890"]').count(), 1); await page.locator('[aria-label="Close policy"]').click();
     await pastePreview(csv); await confirm(); await page.locator('#view').selectOption('missing_op'); assert.equal(await page.locator('.policy-card').count(), 1); await page.locator('#view').selectOption('all');
+    // Replacement removes absent cases from active work without deleting their remarks/history.
+    const onlyBhavna = header + '\n00456,Bhavna Example,14,1627,2026-03-23,NA,00666,,';
+    await pastePreview(onlyBhavna); assert.match(await page.locator('#replacementSummary').innerText(), /3 active cases/); await confirm();
+    assert.equal(await page.locator('.policy-card').count(), 1);
+    await page.locator('#view').selectOption('archived'); await openPolicy('Asha Example');
+    await page.locator('#history li').first().waitFor(); assert.match(await page.locator('#history').innerText(), /Keep both lines/);
+    assert.match(await page.locator('#detailInfo').innerText(), /not in the latest replacement CSV/);
+    await page.locator('[aria-label="Close policy"]').click(); await page.locator('#view').selectOption('all');
+    await pastePreview(csv); await confirm(); assert.equal(await page.locator('.policy-card').count(), 4);
+    // Completed and manually removed cases stay archived across reimports, and can be restored.
+    await openPolicy('Asha Example'); await page.getByRole('button', { name: 'Completed', exact: true }).click(); await page.locator('#saveResponse').click(); await waitSaved();
+    await page.locator('[aria-label="Close policy"]').click(); assert.equal(await page.locator('.policy-card').count(), 3);
+    await pastePreview(csv); await confirm(); assert.equal(await page.locator('.policy-card').count(), 3);
+    await page.locator('#view').selectOption('archived'); await openPolicy('Asha Example'); await page.locator('#restoreCase').click();
+    await page.waitForFunction(() => document.querySelector('#status').textContent.includes('Case restored'));
+    assert.match(await page.locator('#history').innerText(), /Keep both lines/); await page.locator('[aria-label="Close policy"]').click(); await page.locator('#view').selectOption('all');
+    await openPolicy('Bhavna Example'); await page.evaluate(() => window.failAfterCommit = true); await page.locator('#archiveCase').click();
+    await page.waitForFunction(() => document.querySelector('#detailError').textContent.includes('unavailable'));
+    await page.locator('#archiveCase').click(); await page.waitForFunction(() => document.querySelector('#status').textContent.includes('Case removed'));
+    assert.equal(await page.locator('#history li').count(), 2); await page.locator('[aria-label="Close policy"]').click();
+    await pastePreview(csv); await confirm(); assert.equal(await page.locator('.policy-card').count(), 3);
+    await page.locator('#view').selectOption('archived'); await openPolicy('Bhavna Example'); await page.locator('#restoreCase').click();
+    await page.waitForFunction(() => document.querySelector('#status').textContent.includes('Case restored')); await page.locator('[aria-label="Close policy"]').click(); await page.locator('#view').selectOption('all');
+    await pastePreview(onlyBhavna); await page.locator('#importMode').selectOption('merge'); await confirm(); assert.equal(await page.locator('.policy-card').count(), 4);
     // Desktop and narrow phone layouts, including open dialogs, have no horizontal overflow.
     fs.mkdirSync(path.join(root, '.test-output/lic'), { recursive: true });
     for (const width of [1440, 768, 393, 320]) {
@@ -119,11 +144,18 @@ const csv = header + '\n00123,Asha Example,28,68230,2026-10-12,9876543210,00999,
     const many = header + '\n' + Array.from({ length: 105 }, (_, i) => `T${i},Test Person ${i},1,100,2026-10-26,9876543210,,,`).join('\n');
     await pastePreview(many); await page.evaluate(() => { window.txCount = 0; window.failAt = 2; }); await page.locator('#confirmImport').click();
     await page.waitForFunction(() => document.querySelector('#importError').textContent.includes('100 policies confirmed'));
+    data = await saved(); assert.equal(data['users/account-a/licFollowups/p-00123'].archived, false, 'failed row import must not archive missing cases');
     await page.evaluate(() => window.failAt = 0); await confirm();
     data = await saved(); assert.equal(Object.keys(data).filter(k => !k.includes('/history/')).length, 109);
     await page.locator('#next').click(); assert.match(await page.locator('#pageLabel').innerText(), /Page 2/);
+    // Retry even after only part of the missing-case archive phase committed.
+    await pastePreview(csv); await page.evaluate(() => { window.txCount = 0; window.failAt = 3; }); await page.locator('#confirmImport').click();
+    await page.waitForFunction(() => document.querySelector('#importError').textContent.includes('4 policies confirmed'));
+    await page.evaluate(() => window.failAt = 0); await confirm();
+    data = await saved(); assert.equal(Object.values(data).filter(r => r.policyNo && !r.archived).length, 4);
+    assert.equal(Object.values(data).filter(r => r.policyNo).length, 109, 'replacement never deletes old cases');
     // Account changes close dialogs, clear customer data, and stop stale callbacks.
-    await page.locator('#search').fill('Asha'); await openPolicy('Asha Example');
+    await page.locator('#view').selectOption('everything'); await page.locator('#search').fill('Asha'); await openPolicy('Asha Example');
     await page.locator('#note').fill('Old-account in-flight note');
     await page.evaluate(() => window.saveDelay = 250); await page.locator('#saveResponse').click();
     await page.evaluate(() => { const stale = window.staleSnapshot; window.testAuth({ uid: 'account-b' }); stale?.(); });
@@ -133,7 +165,7 @@ const csv = header + '\n00123,Asha Example,28,68230,2026-10-12,9876543210,00999,
     await page.waitForTimeout(350); assert.equal(await page.locator('.policy-card').count(), 0); assert.equal(await page.locator('#detailTitle').innerText(), '');
     await page.evaluate(() => window.testAuth(null)); assert.equal(await page.locator('#openImport').isDisabled(), true);
     assert.deepEqual(errors, []);
-    console.log('LIC browser checks passed: upload/paste/mapping, tel links, OP views, search/plan, log/reload/reimport, failed and uncertain save retries, correction, chunk recovery, pagination, account isolation, and 320–1440px layouts.');
+    console.log('LIC browser checks passed: imports, OP views, logging/history, completion/removal/restoration, replacement and merge imports, archive-preserving reimports, failure recovery, account isolation and 320–1440px layouts.');
   } catch (error) { console.error('Browser errors:', errors); throw error; }
   finally { await browser.close(); server.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; server.close(); });

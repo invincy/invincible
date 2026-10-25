@@ -111,7 +111,15 @@ export function mergeImport(existing = {}, incoming, timestamp) {
     else if (value !== null && !empty(value)) next[key] = value;
     else if (!(key in next)) next[key] = value;
   }
+  // A case absent from an older CSV becomes active when it returns. Explicit removals and completions stay archived.
+  if (existing.archived && existing.archiveReason === 'missing_csv') Object.assign(next, { archived: false, archiveReason: '', archivedAt: null });
   return { ...next, createdAt: existing.createdAt || timestamp, importedAt: timestamp };
+}
+export function archiveCase(existing, archived, reason, timestamp) {
+  if (!existing) throw new Error('Policy no longer exists. Reimport it before saving.');
+  const next = { ...existing, archived, archiveReason: archived ? reason : '', archivedAt: archived ? timestamp : null, updatedAt: timestamp };
+  if (!archived && next.outcome === 'completed') next.outcome = 'reopened';
+  return next;
 }
 export function applyResponse(existing, event) {
   if (!existing) throw new Error('Policy no longer exists. Reimport it before saving.');
@@ -122,7 +130,7 @@ export function applyResponse(existing, event) {
   if (event.outcome !== 'note') Object.assign(next, { outcome: event.outcome, attemptedAt: event.at });
   if (event.outcome === 'wrong_number') next.wrongNumber = true;
   if (['replied', 'whatsapp', 'submitting', 'completed'].includes(event.outcome)) next.contactedAt = event.at;
-  if (event.outcome === 'completed') next.followUpDate = '';
+  if (event.outcome === 'completed') Object.assign(next, { followUpDate: '', archived: true, archiveReason: 'completed', archivedAt: event.at });
   if (event.phoneCorrection !== null) {
     if (mobile(event.phoneCorrection).kind !== 'valid') throw new Error('Enter a valid Indian mobile number for the correction.');
     if (event.outcome === 'wrong_number') throw new Error('Save a corrected mobile with Note / schedule only, then record the next call.');
@@ -132,14 +140,16 @@ export function applyResponse(existing, event) {
 }
 export function statusLabel(record) {
   if (record.outcome === 'completed') return 'Completed';
+  if (record.archived) return 'Archived';
   if (contactability(record).kind !== 'valid') return 'Uncontactable';
+  if (record.outcome === 'reopened') return 'Reopened · follow-up needed';
   if (!record.attemptedAt) return 'Not yet contacted';
   return record.outcome === 'no_answer' ? 'Attempted · no answer' : outcomes[record.outcome] || 'Contact attempted';
 }
 export function matches(record, { query = '', view = 'all', today = '', plan = '' } = {}) {
   const availability = contactability(record);
   const filters = {
-    all: true, new: availability.kind === 'valid' && !record.attemptedAt,
+    all: true, everything: true, archived: !!record.archived, new: availability.kind === 'valid' && !record.attemptedAt,
     uncontactable: availability.kind !== 'valid', op: !!record.opPolicies?.length,
     missing_op: ['missing', 'invalid'].includes(mobile(currentPhone(record)).kind) && !!record.opPolicies?.length,
     due: !!record.followUpDate && record.followUpDate <= today && record.outcome !== 'completed',
@@ -147,7 +157,8 @@ export function matches(record, { query = '', view = 'all', today = '', plan = '
   };
   const haystack = [record.name, record.policyNo, record.plan, record.phone, record.phoneOverride, record.sourceStatus, record.branch, ...(record.opPolicies || [])].join(' ').toLowerCase();
   const inView = Object.hasOwn(filters, view) ? filters[view] : Object.hasOwn(outcomes, view) && record.outcome === view;
-  return !!inView && (!plan || record.plan === plan) && query.trim().toLowerCase().split(/\s+/).every(word => haystack.includes(word));
+  const includeArchived = ['archived', 'everything', 'completed'].includes(view);
+  return (includeArchived || !record.archived) && !!inView && (!plan || record.plan === plan) && query.trim().toLowerCase().split(/\s+/).every(word => haystack.includes(word));
 }
 export function localDate(date = new Date()) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; }
 export function daysFromToday(days, date = new Date()) { date = new Date(date); date.setDate(date.getDate() + days); return localDate(date); }
