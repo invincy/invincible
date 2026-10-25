@@ -958,9 +958,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 .scenario-label small { font:400 11px/1.5 var(--font-sans); color:#f29a83; display:block; }
 .platinum-label small { color:#e8ce98; }
 .chart-caption { color:#9aabbe; font:400 9px/1.5 var(--font-sans); text-align:center; margin-top:3px; }
-.scene-two.active .scenario-line { animation:scenario-reveal 1.25s ease-out both; }
-.scene-two.active .scenario-platinum { animation-delay:.12s; }
-@keyframes scenario-reveal { from { stroke-dasharray:1; stroke-dashoffset:1; opacity:.1; } to { stroke-dashoffset:0; opacity:1; } }
+.scene-two.active .scenario-line { animation:none; }
 .scene-two-footer { flex-shrink:0; position:relative; z-index:4; padding:14px 20px max(20px,env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:12px; background:linear-gradient(transparent,#061226 40%); }
 .scene-two-dialogue-btn { align-self:center; background:#061226bb; color:#f0d38b; border:1px solid #e8bd65b3; border-radius:999px; min-height:44px; padding:8px 22px; font:500 13px var(--font-hindi); cursor:pointer; }
 .scene-two-dialogue-btn span { margin-left:9px; }
@@ -1077,3 +1075,21 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 .scene-two-heading h2 { font-size:clamp(30px,8.3vw,38px); line-height:1.35; letter-spacing:-.025em; }
 .scene-two-heading h2 span { white-space:nowrap; }
 .scene-two-subtitle { width:100%; max-width:none; font-size:clamp(12px,3.6vw,14.5px); line-height:1.6; }
+
+/* Narration directs attention without moving the illustrative chart paths. */
+.scenario-line, .scenario-label { transition:opacity .25s ease, filter .25s ease; }
+.scene-two[data-narration-focus="business"] .scenario-line,
+.scene-two[data-narration-focus="platinum"] .scenario-line { animation:none; opacity:.22; filter:none; }
+.scene-two[data-narration-focus="business"] .scenario-label,
+.scene-two[data-narration-focus="platinum"] .scenario-label { opacity:.4; }
+.scene-two[data-narration-focus="business"] .scenario-business {
+  opacity:1; stroke-width:4.5; filter:drop-shadow(0 0 5px #55a9ef) drop-shadow(0 0 10px #55a9ef88);
+}
+.scene-two[data-narration-focus="platinum"] .scenario-platinum {
+  opacity:1; stroke-width:4.5; filter:drop-shadow(0 0 5px #8bd477) drop-shadow(0 0 10px #8bd47788);
+}
+.scene-two[data-narration-focus="business"] .business-label,
+.scene-two[data-narration-focus="platinum"] .platinum-label { opacity:1; }
+@media(prefers-reduced-motion:reduce) {
+  .scenario-line, .scenario-label { transition:none; }
+}

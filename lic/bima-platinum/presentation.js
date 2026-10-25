@@ -49,8 +49,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const sceneTwoAudioLabel = document.getElementById('sceneTwoAudioLabel');
   const sceneTwoAudioStatus = document.getElementById('sceneTwoAudioStatus');
   const sceneTwoDialogueBtn = document.getElementById('sceneTwoDialogueBtn');
+  // Cue boundary for the supplied 9.30s recording: business/growth first,
+  // then the personal-savings/stability phrase. Follow media time, never a timer.
+  const sceneTwoNarrationCues = [
+    { start: 0, focus: 'business' },
+    { start: 3.2, focus: 'platinum' }
+  ];
+  function syncSceneTwoChart() {
+    let focus = '';
+    if (sceneTwoAudio && (sceneTwoState === 'playing' || sceneTwoState === 'paused')) {
+      for (const cue of sceneTwoNarrationCues) {
+        if (sceneTwoAudio.currentTime >= cue.start) focus = cue.focus;
+      }
+    }
+    if (stagePreviewModal) stagePreviewModal.setAttribute('data-narration-focus', focus);
+  }
   function updateSceneTwoAudio(state) {
     sceneTwoState = state;
+    syncSceneTwoChart();
     if (sceneTwoAudioLabel) sceneTwoAudioLabel.textContent = state === 'playing' ? 'Pause audio' : state === 'paused' ? 'Resume audio' : state === 'loading' ? 'Loading audio…' : 'Advisor की बात सुनें';
     if (sceneTwoDialogueBtn) {
       sceneTwoDialogueBtn.setAttribute('aria-busy', String(state === 'loading'));
@@ -250,6 +266,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!sceneTwoAudio) {
         sceneTwoAudio = new Audio('assets/audio/advisor-scene-2-hindi.mp3');
         sceneTwoAudio.preload = 'none';
+        sceneTwoAudio.addEventListener('timeupdate', syncSceneTwoChart);
+        sceneTwoAudio.addEventListener('seeked', syncSceneTwoChart);
         sceneTwoAudio.addEventListener('playing', () => updateSceneTwoAudio('playing'));
         sceneTwoAudio.addEventListener('pause', () => {
           if (sceneTwoAudio.currentTime > 0 && !sceneTwoAudio.ended) updateSceneTwoAudio('paused');

@@ -117,3 +117,30 @@ test('Scene 2 audio resets at the end and stops when the tab is hidden', async (
   assert.equal(s.audios[0].currentTime,0);
   assert.equal(s.el('sceneTwoAudioLabel').textContent,'Advisor की बात सुनें');
 });
+
+
+test('Scene 2 chart follows media time, holds on pause and resets after end/exit', async () => {
+  const s = setup(); s.click('ctaForwardBtn');
+  const focus = () => s.el('stagePreviewModal').attrs['data-narration-focus'];
+  s.click('sceneTwoDialogueBtn'); await flush();
+  const audio = s.audios[0];
+  assert.equal(focus(), 'business');
+  audio.currentTime = 3.19; audio.events.timeupdate();
+  assert.equal(focus(), 'business');
+  audio.currentTime = 3.2; audio.events.timeupdate();
+  assert.equal(focus(), 'platinum');
+  s.click('sceneTwoDialogueBtn');
+  assert.equal(focus(), 'platinum');
+  s.click('sceneTwoDialogueBtn'); await flush();
+  assert.equal(focus(), 'platinum');
+  audio.currentTime = 1; audio.events.seeked();
+  assert.equal(focus(), 'business');
+  audio.ended = true; audio.events.ended();
+  assert.equal(focus(), '');
+  audio.ended = false; s.click('sceneTwoDialogueBtn'); await flush();
+  assert.equal(focus(), 'business');
+  s.click('previewDismissBtn');
+  assert.equal(focus(), '');
+  audio.events.timeupdate();
+  assert.equal(focus(), '');
+});
