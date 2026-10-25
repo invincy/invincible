@@ -1093,3 +1093,80 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 @media(prefers-reduced-motion:reduce) {
   .scenario-line, .scenario-label { transition:none; }
 }
+
+/* One continuous story: same original chart, a light surround and scene states. */
+.story-chart-host, .presenter-chart-host { position:absolute; inset:0; pointer-events:none; }
+.scene-one-chart-host { position:absolute; z-index:60; left:3%; width:66%; bottom:145px; pointer-events:none; }
+#storyChart {
+  width:100%; margin:0; padding:0; border:0; border-radius:0; box-shadow:none;
+  background:radial-gradient(ellipse at 45% 45%,#061226b3 0%,#06122655 58%,transparent 78%);
+}
+#storyChart .scenario-chart-heading { font-size:11px !important; padding:0 0 1px 23px !important; color:#e6c687; }
+#storyChart .balance-plot { height:clamp(145px,22vh,190px); width:100%; }
+#storyChart .scenario-legend { padding:0 0 0 23px; gap:4px; }
+#storyChart .scenario-label strong { font-size:10px; font-weight:500; }
+#storyChart .scenario-label small { display:none; }
+#storyChart .chart-caption { font-size:7px; text-align:left; padding:0 0 0 23px; margin-top:5px; }
+#storyChart .scenario-line { animation:none; opacity:1; stroke-dashoffset:0; }
+#storyChart[data-step="1"] .scenario-market,
+#storyChart[data-step="1"] .scenario-platinum,
+#storyChart[data-step="2"] .scenario-platinum,
+#storyChart[data-step="3"] .scenario-market { opacity:0; }
+#storyChart[data-step="1"] .market-label,
+#storyChart[data-step="1"] .platinum-label,
+#storyChart[data-step="2"] .platinum-label,
+#storyChart[data-step="3"] .market-label { display:none; }
+#storyChart[data-step="2"] .scenario-market { opacity:.8; }
+#storyChart[data-step="3"] .scenario-platinum { opacity:.9; }
+#storyChart .scenario-label { opacity:1; }
+#storyChart[data-focus="business"] .scenario-business,
+#storyChart[data-focus="market"] .scenario-market,
+#storyChart[data-focus="platinum"] .scenario-platinum {
+  opacity:1; stroke-width:4; stroke-dasharray:1; stroke-dashoffset:var(--narration-reveal,0);
+}
+#storyChart[data-focus="business"] .scenario-business { filter:drop-shadow(0 0 4px #55a9ef) drop-shadow(0 0 8px #55a9ef88); }
+#storyChart[data-focus="market"] .scenario-market { filter:drop-shadow(0 0 4px #fb5c5c) drop-shadow(0 0 8px #fb5c5c88); }
+#storyChart[data-focus="platinum"] .scenario-platinum { filter:drop-shadow(0 0 4px #8bd477) drop-shadow(0 0 8px #8bd47788); }
+#storyChart[data-focus="market"] .scenario-business,
+#storyChart[data-focus="platinum"] .scenario-business { opacity:.85; }
+#storyChart[data-focus="business"] .business-label strong { color:#7bc3ff; }
+#storyChart[data-focus="market"] .market-label strong { color:#ff8c8c; }
+#storyChart[data-focus="platinum"] .platinum-label strong { color:#a1e291; }
+/* Characters retain the scene; controls flow underneath rather than over faces. */
+.layer-headline { top:92px; padding-inline:22px; }
+.headline-main { font-family:var(--font-hindi); font-size:clamp(23px,6.7vw,29px); line-height:1.45; letter-spacing:-.025em; max-width:none; }
+.stage-footer { gap:9px; }
+.callout-card { background:none; border:0; box-shadow:none; padding:0; display:block; }
+.callout-cta-btn { width:100%; justify-content:space-between; min-height:48px; font:600 15px var(--font-hindi); }
+.callout-cta-btn::after,.ambient-light-glow,.ambient-left-glow { animation:none; }
+.scene-two-heading h2 { font-size:clamp(25px,7.2vw,31px); line-height:1.4; }
+.scene-two-heading h2 span { white-space:normal; }
+.scene-two-visual { flex:1 1 auto; min-height:260px; margin-top:14px; }
+.presenter-chart-host { left:3%; right:auto; top:24px; width:64%; z-index:auto; }
+.scene-two-presenter { width:76%; right:-8%; height:100%; bottom:0; }
+.scene-two-next > #storyNextLabel { font-size:inherit; }
+.scene-two-next[hidden] { display:none; }
+.scene-two-footer { gap:10px; }
+@media(max-width:480px) { .layer-headline { top:76px; } }
+@media(max-height:700px) {
+  .scene-one-chart-host { bottom:135px; }
+  #storyChart .balance-plot { height:145px; }
+  .scene-two-visual { min-height:220px; margin-top:10px; }
+  .presenter-chart-host { top:16px; }
+  .scene-two-heading h2 { font-size:25px; }
+}
+@media(max-height:600px) {
+  .layer-headline { top:69px; }
+  .headline-main { font-size:22px; line-height:1.4; }
+  .scene-one-chart-host { bottom:124px; width:64%; }
+  #storyChart .balance-plot { height:125px; }
+  #storyChart .scenario-label strong { font-size:9px; }
+  #storyChart .scenario-chart-heading { font-size:10px !important; }
+  .scene-two-visual { min-height:200px; margin-top:8px; }
+  .scene-two-heading h2 { font-size:24px; }
+  .scene-two-footer { padding-block:8px 12px; }
+  .stage-footer { padding-block:8px 12px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  #storyChart .scenario-line { stroke-dashoffset:0 !important; }
+}

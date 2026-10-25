@@ -1,295 +1,185 @@
-/**
- * LIC Bima Platinum · Phase 1 Mobile Presentation App
- * Client State & Interactive Layer Management
- * 
- * Phase 1 Purpose:
- * "The customer's business already gives him growth potential, but business also carries risk.
- * Therefore his personal money does not need to chase risk everywhere."
- * 
- * The female LIC advisor is the only speaker in Phase 1.
- * Businessman is visually present in the boutique background, but does NOT speak.
- */
-
-// Audio Configuration (Easily replaceable for local professional MP3 with Web Speech fallback)
-const AUDIO_CONFIG = {
-  // Local audio path (when placed)
-  src: 'assets/audio/advisor-scene-1-hindi.mp3',
-  // Spoken Hindi dialogue script
-  script: 'आपके business में पहले से ही काफी growth potential है। Customers बढ़ें, sales बढ़ें और expansion हो — तो returns भी बड़े हो सकते हैं। लेकिन business में growth के साथ risk भी रहता है। इसलिए आपकी personal savings का हर रुपया दोबारा risk में डालना ज़रूरी नहीं है।',
-  // Fallback Web Speech settings
-  enableBrowserSpeech: false, // Enable only after verifying the device's Hindi voice.
-  fallbackLang: 'hi-IN',
-  fallbackRate: 0.95
+/** LIC Bima Platinum: one existing chart, three progressive story states. */
+// New recordings use new paths so the older scripts are never played by mistake.
+// Add the supplied recordings here, then tune cue times to their spoken phrases.
+const STORY_SCENES = {
+  1: {
+    src: 'assets/audio/advisor-story-1-hindi.mp3',
+    script: 'आपका business ही आपका main growth engine है। यहीं से आपकी income और wealth grow होती है।',
+    cues: [{ start: 0, focus: 'business' }]
+  },
+  2: {
+    src: 'assets/audio/advisor-story-2-hindi.mp3',
+    script: 'Business में पैसा लगाइए growth के लिए। लेकिन अगर आपकी बाकी savings भी Share Market में जाएँ, तो overall volatility और बढ़ जाती है।',
+    // Provisional boundary: replace 3.2 with the start of “लेकिन” in the new MP3.
+    cues: [{ start: 0, focus: 'business' }, { start: 3.2, focus: 'market' }]
+  },
+  3: {
+    src: 'assets/audio/advisor-story-3-hindi.mp3',
+    script: 'इसलिए अपनी personal savings का एक हिस्सा stability के लिए अलग रखिए। एक stable या guaranteed structure आपके overall finances में predictability जोड़ता है।',
+    cues: [{ start: 0, focus: 'platinum' }]
+  }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Core DOM Elements
   const stageContainer = document.getElementById('stageContainer');
   const deviceFrame = document.getElementById('deviceFrame');
   const stagePreviewModal = document.getElementById('stagePreviewModal');
   const previewDismissBtn = document.getElementById('previewDismissBtn');
   const ctaForwardBtn = document.getElementById('ctaForwardBtn');
-
-  // Advisor Audio Interaction Control
   const advisorAudioBtn = document.getElementById('advisorAudioBtn');
   const advisorAudioIcon = document.getElementById('advisorAudioIcon');
   const advisorAudioLabel = document.getElementById('advisorAudioLabel');
-
-  // Developer Tooling: Layer Inspector
+  const sceneTwoDialogueBtn = document.getElementById('sceneTwoDialogueBtn');
+  const sceneTwoAudioLabel = document.getElementById('sceneTwoAudioLabel');
+  const audioStatus = document.getElementById('audioStatus');
+  const sceneTwoAudioStatus = document.getElementById('sceneTwoAudioStatus');
+  const storyChart = document.getElementById('storyChart');
+  const firstScene = document.querySelector('.layer-stage-3d');
+  const sceneThreeStatus = document.getElementById('sceneThreeStatus');
   const inspectorFab = document.getElementById('inspectorFab');
   const inspectorPanel = document.getElementById('inspectorPanel');
   const toggle3DExploded = document.getElementById('toggle3DExploded');
   const toggleDeviceFrame = document.getElementById('toggleDeviceFrame');
   const layerCheckboxes = document.querySelectorAll('.layer-toggle-input');
+  let currentPage = 1;
+  let audioElement = null;
+  let audioAttempt = 0;
+  let playbackWanted = false;
+  let playbackState = 'idle';
 
-  // Audio Playback Engine State
-  let sceneTwoAudio = null;
-  let sceneTwoAttempt = 0;
-  let sceneTwoState = 'idle';
-  const sceneTwoAudioLabel = document.getElementById('sceneTwoAudioLabel');
-  const sceneTwoAudioStatus = document.getElementById('sceneTwoAudioStatus');
-  const sceneTwoDialogueBtn = document.getElementById('sceneTwoDialogueBtn');
-  // Cue boundary for the supplied 9.30s recording: business/growth first,
-  // then the personal-savings/stability phrase. Follow media time, never a timer.
-  const sceneTwoNarrationCues = [
-    { start: 0, focus: 'business' },
-    { start: 3.2, focus: 'platinum' }
-  ];
-  function syncSceneTwoChart() {
-    let focus = '';
-    if (sceneTwoAudio && (sceneTwoState === 'playing' || sceneTwoState === 'paused')) {
-      for (const cue of sceneTwoNarrationCues) {
-        if (sceneTwoAudio.currentTime >= cue.start) focus = cue.focus;
+  function syncChart() {
+    let cue = null;
+    if (audioElement && ['playing', 'paused'].includes(playbackState)) {
+      for (const candidate of STORY_SCENES[currentPage].cues) {
+        if (audioElement.currentTime >= candidate.start) cue = candidate;
       }
     }
-    if (stagePreviewModal) stagePreviewModal.setAttribute('data-narration-focus', focus);
+    storyChart.setAttribute('data-focus', cue ? cue.focus : '');
+    storyChart.setAttribute('data-playback', playbackState);
+    // pathLength=1 already exists on all three original paths. Draw once per
+    // spoken cue; pausing/seek/resume follows media time rather than a timer.
+    const remaining = cue ? 1 - Math.min(Math.max(audioElement.currentTime - cue.start, 0) / 1.4, 1) : 0;
+    storyChart.style.setProperty('--narration-reveal', String(remaining));
   }
-  function updateSceneTwoAudio(state) {
-    sceneTwoState = state;
-    syncSceneTwoChart();
-    if (sceneTwoAudioLabel) sceneTwoAudioLabel.textContent = state === 'playing' ? 'Pause audio' : state === 'paused' ? 'Resume audio' : state === 'loading' ? 'Loading audio…' : 'Advisor की बात सुनें';
-    if (sceneTwoDialogueBtn) {
-      sceneTwoDialogueBtn.setAttribute('aria-busy', String(state === 'loading'));
-      sceneTwoDialogueBtn.setAttribute('aria-label', state === 'playing' ? 'Pause Scene 2 advisor recording' : state === 'paused' ? 'Resume Scene 2 advisor recording' : 'Hear Scene 2 advisor recording');
-    }
-  }
-  function stopSceneTwoAudio() {
-    sceneTwoAttempt++;
-    if (sceneTwoAudio) { sceneTwoAudio.pause(); sceneTwoAudio.currentTime = 0; }
-    updateSceneTwoAudio('idle');
-  }
-  let audioElement = null;
-  let useSpeechFallback = false;
-  let audioAttempt = 0;
-  const audioStatus = document.getElementById('audioStatus');
-  let playbackState = 'idle'; // 'idle' | 'playing' | 'paused'
 
   function updateAudioUI(state) {
     playbackState = state;
-    if (!advisorAudioBtn) return;
-
-    advisorAudioBtn.classList.remove('is-playing', 'is-paused');
-
-    advisorAudioBtn.setAttribute('aria-busy', String(state === 'loading'));
-    if (state === 'loading') {
-      advisorAudioLabel.textContent = 'Loading audio…';
-    } else if (state === 'playing') {
-      advisorAudioBtn.classList.add('is-playing');
-      if (advisorAudioIcon) advisorAudioIcon.textContent = '⏸️';
-      if (advisorAudioLabel) advisorAudioLabel.textContent = 'Pause Audio';
-      advisorAudioBtn.setAttribute('aria-label', 'Pause Advisor Audio');
-    } else if (state === 'paused') {
-      advisorAudioBtn.classList.add('is-paused');
-      if (advisorAudioIcon) advisorAudioIcon.textContent = '▶️';
-      if (advisorAudioLabel) advisorAudioLabel.textContent = 'Resume Audio';
-      advisorAudioBtn.setAttribute('aria-label', 'Resume Advisor Audio');
-    } else {
-      // idle state
-      if (advisorAudioIcon) advisorAudioIcon.textContent = '🔊';
-      if (advisorAudioLabel) advisorAudioLabel.textContent = 'Hear Advisor';
-      advisorAudioBtn.setAttribute('aria-label', 'Hear Advisor Perspective');
+    const label = state === 'playing' ? 'Pause audio' : state === 'paused' ? 'Resume audio' : state === 'loading' ? 'Loading audio…' : 'Advisor की बात सुनें';
+    for (const [button, text] of [[advisorAudioBtn, advisorAudioLabel], [sceneTwoDialogueBtn, sceneTwoAudioLabel]]) {
+      text.textContent = label;
+      button.setAttribute('aria-busy', String(state === 'loading'));
+      button.setAttribute('aria-label', `${state === 'playing' ? 'Pause' : state === 'paused' ? 'Resume' : 'Hear'} Scene ${currentPage} advisor recording`);
+      button.classList.remove('is-playing', 'is-paused');
+      if (state === 'playing') button.classList.add('is-playing');
+      if (state === 'paused') button.classList.add('is-paused');
     }
+    advisorAudioIcon.textContent = state === 'playing' ? '⏸' : '▶';
+    syncChart();
   }
 
   function stopAllAudio() {
-    stopSceneTwoAudio();
     audioAttempt++;
-    if (audioElement) {
-      audioElement.pause();
-      audioElement.currentTime = 0;
-    }
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
+    playbackWanted = false;
+    const previous = audioElement;
+    audioElement = null; // Ignore late media events from the departing page.
+    if (previous) { previous.pause(); previous.currentTime = 0; }
     updateAudioUI('idle');
-  }
-
-  function playSpeechFallback() {
-    if (!AUDIO_CONFIG.enableBrowserSpeech || !('speechSynthesis' in window)) {
-      if (audioStatus) audioStatus.textContent = 'Hindi advisor recording coming soon.';
-      updateAudioUI('idle');
-      return;
-    }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(AUDIO_CONFIG.script);
-    utterance.lang = AUDIO_CONFIG.fallbackLang;
-    utterance.rate = AUDIO_CONFIG.fallbackRate;
-
-    utterance.onstart = () => updateAudioUI('playing');
-    utterance.onend = () => updateAudioUI('idle');
-    utterance.onerror = () => updateAudioUI('idle');
-
-    window.speechSynthesis.speak(utterance);
-  }
-
-  function initAudioElement() {
-    if (audioElement) return audioElement;
-
-    audioElement = new Audio(AUDIO_CONFIG.src);
-    audioElement.preload = 'none';
-
-    audioElement.addEventListener('playing', () => {
-      useSpeechFallback = false;
-      updateAudioUI('playing');
-    });
-
-    audioElement.addEventListener('pause', () => {
-      if (audioElement.currentTime > 0 && !audioElement.ended) {
-        updateAudioUI('paused');
-      }
-    });
-
-    audioElement.addEventListener('ended', () => {
-      updateAudioUI('idle');
-      audioElement.currentTime = 0;
-    });
-
-    return audioElement;
+    audioStatus.textContent = '';
+    sceneTwoAudioStatus.textContent = '';
   }
 
   async function toggleAudioPlayback() {
     if (playbackState === 'loading') return;
-    if (playbackState === 'playing') {
-      if (useSpeechFallback) {
-        window.speechSynthesis.pause();
-        updateAudioUI('paused');
-      } else {
-        audioElement.pause();
-      }
-      return;
-    }
-    if (useSpeechFallback) {
-      if (playbackState === 'paused') {
-        window.speechSynthesis.resume();
-        updateAudioUI('playing');
-      } else {
-        playSpeechFallback();
-      }
-      return;
-    }
+    if (playbackState === 'playing') { audioElement.pause(); return; }
     const attempt = ++audioAttempt;
-    if (audioStatus) audioStatus.textContent = '';
+    const page = currentPage;
+    const status = page === 1 ? audioStatus : sceneTwoAudioStatus;
+    status.textContent = '';
+    playbackWanted = true;
+    if (!audioElement) {
+      const audio = new Audio(STORY_SCENES[page].src);
+      audioElement = audio;
+      audio.preload = 'none';
+      const isCurrent = () => audioElement === audio && currentPage === page && playbackWanted;
+      audio.addEventListener('playing', () => { if (isCurrent()) updateAudioUI('playing'); });
+      audio.addEventListener('pause', () => { if (isCurrent() && !audio.ended) updateAudioUI('paused'); });
+      audio.addEventListener('ended', () => {
+        if (!isCurrent()) return;
+        playbackWanted = false;
+        audio.currentTime = 0;
+        updateAudioUI('idle');
+      });
+      for (const event of ['timeupdate', 'seeked']) audio.addEventListener(event, () => { if (isCurrent()) syncChart(); });
+      audio.addEventListener('error', () => {
+        if (!isCurrent()) return;
+        playbackWanted = false;
+        updateAudioUI('idle');
+        status.textContent = 'इस scene की नई recording अभी जोड़नी है।';
+      });
+    }
+    const audio = audioElement;
     updateAudioUI('loading');
     try {
-      await initAudioElement().play();
-      if (attempt !== audioAttempt) audioElement.pause();
+      await audio.play();
+      if (attempt !== audioAttempt) { audio.pause(); audio.currentTime = 0; }
     } catch (error) {
       if (attempt !== audioAttempt) return;
+      playbackWanted = false;
       updateAudioUI('idle');
-      if (error.name === 'NotAllowedError') {
-        if (audioStatus) audioStatus.textContent = 'Tap again to allow audio playback.';
-      } else if (AUDIO_CONFIG.enableBrowserSpeech) {
-        useSpeechFallback = true;
-        playSpeechFallback();
-      } else if (audioStatus) {
-        audioStatus.textContent = 'Hindi advisor recording coming soon.';
-      }
+      status.textContent = error.name === 'NotAllowedError' ? 'Audio के लिए दोबारा tap करें।' : 'इस scene की नई recording अभी जोड़नी है।';
     }
   }
 
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) stopAllAudio();
-  });
-  window.addEventListener('pagehide', stopAllAudio);
-
-  if (advisorAudioBtn) {
-    advisorAudioBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleAudioPlayback();
-    });
-  }
-
-  // Forward CTA & Stage 2 Transition Action
-  if (ctaForwardBtn) {
-    ctaForwardBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      stopAllAudio();
-      const firstScene = document.querySelector('.layer-stage-3d');
-      if (firstScene) firstScene.inert = true;
-      stagePreviewModal.inert = false;
+  function showPage(page, focus = true) {
+    if (!STORY_SCENES[page]) return;
+    stopAllAudio();
+    currentPage = page;
+    stageContainer.setAttribute('data-story-step', String(page));
+    storyChart.setAttribute('data-step', String(page));
+    const host = document.getElementById(page === 1 ? 'sceneOneChartHost' : 'presenterChartHost');
+    host.appendChild(storyChart); // Move the actual original figure; never clone paths.
+    document.getElementById('balanceChartTitle').textContent = page === 1 ? 'Business · Growth engine' : page === 2 ? 'Business + Share Market' : 'Business + Stability';
+    document.getElementById('balancePlotTitle').textContent = page === 1 ? 'Business growth engine' : page === 2 ? 'Business with added Share Market volatility' : 'Business growth with a stability bucket';
+    document.getElementById('balancePlotDesc').textContent = page === 1
+      ? 'The blue Business line is the growth engine. Other paths are not introduced yet. Illustrative concept, not projected returns.'
+      : page === 2
+        ? 'The blue Business line stays visible. The red Business plus Share Market path has sharp peaks and dips below the business baseline. Illustrative concept, not projected returns.'
+        : 'The blue Business line stays visible alongside a smoother green Business plus Stability path. Illustrative concept, not projected returns.';
+    firstScene.inert = page !== 1;
+    stagePreviewModal.inert = page === 1;
+    if (page === 1) {
+      stagePreviewModal.classList.remove('active');
+      stageContainer.classList.remove('scene-two-open');
+      if (focus) ctaForwardBtn.focus();
+    } else {
       stagePreviewModal.classList.add('active');
       stageContainer.classList.add('scene-two-open');
-      previewDismissBtn.focus();
-    });
+      document.getElementById('storyStageBadge').setAttribute('aria-label', `Scene ${page} of 10`);
+      document.getElementById('storyStageCounter').textContent = `${page} / 10`;
+      document.querySelector('.scene-two-nav').setAttribute('aria-label', `Scene ${page} navigation`);
+      document.getElementById('storyProgress').style.width = `${page * 10}%`;
+      document.getElementById('storyEyebrow').textContent = page === 2 ? 'GROWTH + VOLATILITY' : 'GROWTH + STABILITY';
+      const title = document.getElementById('stagePreviewTitle');
+      title.textContent = page === 2 ? 'Savings भी risk में?' : 'Business से growth, savings से stability';
+      previewDismissBtn.setAttribute('aria-label', `Back to Scene ${page - 1}`);
+      document.getElementById('sceneTwoNextBtn').hidden = page === 3;
+      sceneThreeStatus.hidden = true;
+      stagePreviewModal.scrollTop = 0;
+      if (focus) previewDismissBtn.focus();
+    }
+    advisorAudioBtn.title = STORY_SCENES[1].script;
+    sceneTwoDialogueBtn.title = STORY_SCENES[page].script;
+    updateAudioUI('idle');
   }
 
-  function dismissPreview() {
-    stopSceneTwoAudio();
-    stageContainer.classList.remove('scene-two-open');
-    stagePreviewModal.classList.remove('active');
-    stagePreviewModal.inert = true;
-    const firstScene = document.querySelector('.layer-stage-3d');
-    if (firstScene) firstScene.inert = false;
-    ctaForwardBtn.focus();
-  }
-
-  if (previewDismissBtn) {
-    previewDismissBtn.addEventListener('click', () => {
-      dismissPreview();
-    });
-  }
-
-  if (stagePreviewModal) {
-    stagePreviewModal.addEventListener('click', (e) => {
-      if (e.target === stagePreviewModal) {
-        dismissPreview();
-      }
-    });
-  }
-
-  if (sceneTwoDialogueBtn) {
-    sceneTwoDialogueBtn.addEventListener('click', async () => {
-      if (sceneTwoState === 'loading') return;
-      if (sceneTwoState === 'playing') { sceneTwoAudio.pause(); return; }
-      const attempt = ++sceneTwoAttempt;
-      if (sceneTwoAudioStatus) sceneTwoAudioStatus.textContent = '';
-      if (!sceneTwoAudio) {
-        sceneTwoAudio = new Audio('assets/audio/advisor-scene-2-hindi.mp3');
-        sceneTwoAudio.preload = 'none';
-        sceneTwoAudio.addEventListener('timeupdate', syncSceneTwoChart);
-        sceneTwoAudio.addEventListener('seeked', syncSceneTwoChart);
-        sceneTwoAudio.addEventListener('playing', () => updateSceneTwoAudio('playing'));
-        sceneTwoAudio.addEventListener('pause', () => {
-          if (sceneTwoAudio.currentTime > 0 && !sceneTwoAudio.ended) updateSceneTwoAudio('paused');
-        });
-        sceneTwoAudio.addEventListener('ended', () => { sceneTwoAudio.currentTime = 0; updateSceneTwoAudio('idle'); });
-      }
-      updateSceneTwoAudio('loading');
-      try {
-        await sceneTwoAudio.play();
-        if (attempt !== sceneTwoAttempt) { sceneTwoAudio.pause(); sceneTwoAudio.currentTime = 0; updateSceneTwoAudio('idle'); }
-      } catch (error) {
-        if (attempt !== sceneTwoAttempt) return;
-        updateSceneTwoAudio('idle');
-        if (sceneTwoAudioStatus) sceneTwoAudioStatus.textContent = error.name === 'NotAllowedError' ? 'Tap again to allow audio playback.' : 'Audio load नहीं हुआ। फिर tap करें।';
-      }
-    });
-  }
-  const sceneTwoNextBtn = document.getElementById('sceneTwoNextBtn');
-  const sceneThreeStatus = document.getElementById('sceneThreeStatus');
-  if (sceneTwoNextBtn && sceneThreeStatus) {
-    sceneTwoNextBtn.addEventListener('click', () => { stopSceneTwoAudio(); sceneThreeStatus.hidden = false; });
-  }
+  advisorAudioBtn.addEventListener('click', toggleAudioPlayback);
+  sceneTwoDialogueBtn.addEventListener('click', toggleAudioPlayback);
+  ctaForwardBtn.addEventListener('click', () => showPage(2));
+  previewDismissBtn.addEventListener('click', () => showPage(currentPage - 1));
+  document.getElementById('sceneTwoNextBtn').addEventListener('click', () => { if (currentPage === 2) showPage(3); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stopAllAudio(); });
+  window.addEventListener('pagehide', stopAllAudio);
+  showPage(1, false);
 
   // Developer Tooling: Layer Inspector
   const urlParams = new URLSearchParams(window.location.search);
@@ -357,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Keyboard navigation & accessibility
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Tab' && stagePreviewModal.classList.contains('active')) {
-      const focusable = Array.from(stagePreviewModal.querySelectorAll('button, a[href]'));
+      const focusable = Array.from(stagePreviewModal.querySelectorAll('button, a[href]')).filter(el => !el.hidden);
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
       if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
@@ -365,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (e.key === 'Escape') {
       stopAllAudio();
       if (inspectorPanel) inspectorPanel.classList.remove('active');
-      dismissPreview();
+      if (currentPage > 1) showPage(currentPage - 1);
     } else if (e.key === ' ' && document.activeElement === document.body && !stagePreviewModal.classList.contains('active')) {
       // Spacebar toggles audio
       e.preventDefault();

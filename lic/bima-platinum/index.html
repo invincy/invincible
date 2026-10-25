@@ -14,7 +14,7 @@
 
   <link rel="preload" as="image" href="assets/scene-1-853.webp" imagesrcset="assets/scene-1-480.webp 480w, assets/scene-1-853.webp 853w" imagesizes="(max-width: 480px) 100vw, 420px" fetchpriority="high">
 
-  <link rel="stylesheet" href="presentation.css?v=13">
+  <link rel="stylesheet" href="presentation.css?v=14">
 </head>
 <body>
 
@@ -80,7 +80,7 @@
     </div>
 
     <!-- The Presentation Stage (Strict Layer Architecture) -->
-    <div id="stageContainer" class="stage-container">
+    <div id="stageContainer" class="stage-container" data-story-step="1">
       <div class="layer-stage-3d">
 
         <!-- ==========================================
@@ -141,19 +141,14 @@
              (Pure business-growth statement; no product branding)
              ========================================== -->
         <div id="layerHeadline" class="scene-layer layer-headline">
-          <h1 class="headline-main">
-            <span class="headline-hindi-prefix">आपका</span><span class="gold-gradient-text">Business</span><br>
-            <span class="gold-gradient-text">Builds Wealth</span>
-          </h1>
-          <p class="headline-sub">
-            यहाँ growth potential है — और business का risk भी।
-          </p>
+          <h1 class="headline-main">आपका business ही आपका <span class="gold-gradient-text">main growth engine है</span></h1>
         </div>
 
         <!-- ==========================================
              LAYER 7: Advisor Audio Control (Only Interactive Voice)
              (Positioned cleanly between character scene & bottom CTA)
              ========================================== -->
+        <div id="sceneOneChartHost" class="scene-one-chart-host"></div>
         <div class="stage-footer">
         <div id="layerAdvisorAudio" class="scene-layer layer-advisor-audio interactive">
           <div class="advisor-audio-container">
@@ -162,7 +157,7 @@
               class="advisor-audio-btn"
               type="button"
               aria-label="Hear Advisor Perspective"
-              title="आपके business में पहले से ही काफी growth potential है। Customers बढ़ें, sales बढ़ें और expansion हो — तो returns भी बड़े हो सकते हैं। लेकिन business में growth के साथ risk भी रहता है। इसलिए आपकी personal savings का हर रुपया दोबारा risk में डालना ज़रूरी नहीं है।"
+              title="आपका business ही आपका main growth engine है। यहीं से आपकी income और wealth grow होती है।"
             >
               <span class="audio-wave-bars" aria-hidden="true">
                 <span class="bar bar-1"></span>
@@ -171,7 +166,7 @@
                 <span class="bar bar-4"></span>
               </span>
               <span id="advisorAudioIcon" class="advisor-audio-icon">🔊</span>
-              <span id="advisorAudioLabel" class="advisor-audio-label">Hear Advisor</span>
+              <span id="advisorAudioLabel" class="advisor-audio-label">Advisor की बात सुनें</span>
             </button>
             <span id="audioStatus" class="audio-status" role="status" aria-live="polite"></span>
           </div>
@@ -183,12 +178,8 @@
              ========================================== -->
         <div id="layerCallout" class="scene-layer layer-callout interactive">
           <div id="calloutCard" class="callout-card">
-            <div class="callout-text-group">
-              <span class="callout-line-1">आपने कुछ valuable बनाया है।</span>
-              <span class="callout-line-2">पर आपकी personal stability कहाँ है?</span>
-            </div>
             <button id="ctaForwardBtn" class="callout-cta-btn" aria-label="Advance to Next Stage">
-              <span>Stability</span>
+              <span>अगर savings भी risk में हों?</span>
               <span class="cta-arrow">→</span>
             </button>
           </div>
@@ -197,30 +188,30 @@
 
       </div><!-- /.layer-stage-3d -->
 
-      <!-- Scene 2: separate roles for growth and stability. -->
+      <!-- Pages 2 and 3 share this presenting scene and the original chart. -->
       <section id="stagePreviewModal" class="stage-preview-modal scene-two" role="dialog" aria-modal="true" aria-labelledby="stagePreviewTitle" inert>
         <img class="scene-two-shop" src="assets/shop-detail.webp" alt="" width="853" height="238" loading="lazy">
         <div class="scene-two-wash" aria-hidden="true"></div>
         <nav class="scene-two-nav" aria-label="Scene 2 navigation">
           <button id="previewDismissBtn" type="button" class="nav-btn" aria-label="Back to Scene 1">←</button>
-          <div class="nav-stage-badge" aria-label="Scene 2 of 10">
-            <span class="stage-counter-text">2 / 10</span>
-            <div class="stage-progress-bar"><div class="stage-progress-fill" style="width:20%"></div></div>
+          <div id="storyStageBadge" class="nav-stage-badge" aria-label="Scene 2 of 10">
+            <span id="storyStageCounter" class="stage-counter-text">2 / 10</span>
+            <div class="stage-progress-bar"><div id="storyProgress" class="stage-progress-fill" style="width:20%"></div></div>
           </div>
           <a href="/invincible/" class="nav-btn" aria-label="Invincible Home">⌂</a>
         </nav>
         <header class="scene-two-heading">
-          <p class="scene-two-eyebrow">GROWTH &amp; STABILITY</p>
-          <h2 id="stagePreviewTitle">आपके पैसे के <span>दो रास्ते</span></h2>
-          <p class="scene-two-subtitle">एक growth के लिए, दूसरा stability के लिए।</p>
+          <p id="storyEyebrow" class="scene-two-eyebrow">GROWTH + VOLATILITY</p>
+          <h2 id="stagePreviewTitle">Savings भी <span>risk में?</span></h2>
         </header>
         <div class="scene-two-visual">
           <img class="scene-two-presenter" src="assets/advisor-presenter.webp" alt="LIC advisor presenting the two financial structures" width="760" height="950" loading="lazy" decoding="async">
-          <figure class="balance-chart scenario-chart" aria-labelledby="balanceChartTitle" aria-describedby="balanceChartCaption">
-            <figcaption id="balanceChartTitle" class="scenario-chart-heading">Growth के साथ stability</figcaption>
+          <div id="presenterChartHost" class="presenter-chart-host"></div>
+          <figure id="storyChart" class="balance-chart scenario-chart" data-step="1" aria-labelledby="balanceChartTitle" aria-describedby="balanceChartCaption">
+            <figcaption id="balanceChartTitle" class="scenario-chart-heading">Business · Growth engine</figcaption>
             <svg class="balance-plot" viewBox="0 0 350 285" role="img" aria-labelledby="balancePlotTitle balancePlotDesc">
               <title id="balancePlotTitle">Business baseline and two combined financial structures</title>
-              <desc id="balancePlotDesc">Three illustrative paths share a starting point: the blue business baseline, red Business plus Share Market with sharper fluctuations that repeatedly fall below both the baseline and the green path, and green Business plus Bima Platinum with a steadier path. These are concepts, not measured or projected performance.</desc>
+              <desc id="balancePlotDesc">Three illustrative paths share a starting point: the blue business baseline, red Business plus Share Market with sharper fluctuations that repeatedly fall below both the baseline and the green path, and green Business plus Stability with a steadier path. These are concepts, not measured or projected performance.</desc>
               <defs>
                 <linearGradient id="scenarioGold" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#ba8b3c"/><stop offset="1" stop-color="#ffe4a0"/></linearGradient>
                 <linearGradient id="scenarioWash" x2="0" y2="1"><stop stop-color="#16324a" stop-opacity=".4"/><stop offset="1" stop-color="#071525" stop-opacity="0"/></linearGradient>
@@ -236,7 +227,7 @@
             </svg>
             <div class="scenario-legend">
               <div class="scenario-label market-label"><span class="scenario-key" aria-hidden="true"></span><div><strong>Business + Share Market</strong><small>Higher volatility</small></div></div>
-              <div class="scenario-label platinum-label"><span class="scenario-key" aria-hidden="true"></span><div><strong>Business + Bima Platinum</strong><small>More predictable</small></div></div>
+              <div class="scenario-label platinum-label"><span class="scenario-key" aria-hidden="true"></span><div><strong>Business + Stability</strong><small>More predictable</small></div></div>
               <div class="scenario-label business-label"><span class="scenario-key" aria-hidden="true"></span><div><strong>Your Business</strong><small>Growth engine</small></div></div>
             </div>
             <p id="balanceChartCaption" class="chart-caption">Illustrative concept — not projected returns</p>
@@ -245,8 +236,8 @@
         <footer class="scene-two-footer">
           <button id="sceneTwoDialogueBtn" class="scene-two-dialogue-btn" type="button" aria-label="Hear Scene 2 advisor recording"><span aria-hidden="true">▶</span> <span id="sceneTwoAudioLabel">Advisor की बात सुनें</span></button>
           <p id="sceneTwoAudioStatus" class="audio-status" role="status" aria-live="polite"></p>
-          <button id="sceneTwoNextBtn" class="scene-two-next" type="button" aria-controls="sceneThreeStatus">अब Stability कैसे मिलेगी? <span aria-hidden="true">→</span></button>
-          <p id="sceneThreeStatus" class="scene-three-status" role="status" hidden>अगला scene अभी तैयार हो रहा है।</p>
+          <button id="sceneTwoNextBtn" class="scene-two-next" type="button" aria-controls="stagePreviewModal"><span id="storyNextLabel">अब Stability कैसे मिलेगी?</span> <span aria-hidden="true">→</span></button>
+          <p id="sceneThreeStatus" class="scene-three-status" role="status" hidden>आगे Bima Platinum को समझेंगे।</p>
         </footer>
       </section>
 
@@ -275,6 +266,6 @@
 
 </div><!-- /.app-viewport-wrapper -->
 
-<script src="presentation.js?v=13"></script>
+<script src="presentation.js?v=14"></script>
 </body>
 </html>
