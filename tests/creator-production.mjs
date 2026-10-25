@@ -52,12 +52,36 @@ test('animation projects share Blender tasks, while scene completion stays indep
  assert.equal(canComplete(project,b),false);a.completed=true;assert.equal(sceneState(project,a),'Completed');
  assert.equal(sceneState(project,b),'Assets Ready');assert.ok(projectProgress(project)>0&&projectProgress(project)<100);
 });
-test('registered shared assets and production checklists are required for completion',()=>{
+test('asset and checklist readiness stays advisory and task changes can reopen a scene',()=>{
  const scene=makeScene({productionMethods:['AI Video'],voiceoverReady:true,editingDone:true,checklist:[{text:'Check audio',done:false}]});
  const project={scenes:[scene],assets:[{id:'asset',name:'Clip',sceneIds:[scene.id],status:'In Progress'}]};
  setTask(project,scene,'AI Video',{ready:true});assert.equal(canComplete(project,scene),false);
  scene.checklist[0].done=true;project.assets[0].status='Ready';assert.equal(canComplete(project,scene),true);
  scene.completed=true;assert.equal(projectProgress(project),100);setTask(project,scene,'AI Video',{ready:false});assert.equal(sceneComplete(project,scene),false);
+});
+test('manual completion persists with pending assets, production, voiceover, editing and checklist',()=>{
+ const scene=makeScene({id:'manual',productionMethods:['Blender','AI Video'],sceneState:'Completed',completed:true,animationGroupId:'g',checklist:[{text:'Optional bookkeeping',done:false}]});
+ const other=makeScene({id:'pending',productionMethods:['Blender'],animationGroupId:'g'});
+ const project={scenes:[scene,other],animationGroups:[{id:'g',production:{}}],assets:[{id:'a',name:'Local render',path:'',sceneIds:['manual'],groupIds:['g'],status:'Not Started'}]};
+ assert.equal(canComplete(project,scene),false);
+ assert.equal(sceneState(project,scene),'Completed');
+ assert.equal(sceneState(project,other),'Planned');
+ assert.deepEqual(filterScenes(project,{completion:'Completed'}),[scene]);
+ assert.deepEqual(taskFor(project,other,'Blender'),{});
+ assert.equal(scene.voiceoverReady,undefined);assert.equal(scene.editingDone,undefined);
+ assert.equal(scene.checklist[0].done,false);assert.equal(project.assets[0].status,'Not Started');
+ const restored=JSON.parse(JSON.stringify(project));assert.equal(sceneComplete(restored,restored.scenes[0]),true);
+ const progress=projectProgress(project);assert.ok(progress>0&&progress<100);
+ assert.equal(projectProgress({...project,scenes:[other,scene]}),progress,'Shared-task progress is independent of scene order');
+ other.completed=true;assert.equal(projectProgress(project),100);
+ scene.completed=false;scene.sceneState='Planned';assert.equal(sceneState(project,scene),'Planned');
+ assert.ok(projectProgress(project)<100);
+});
+test('finishing all tracked work never automatically completes a scene',()=>{
+ const scene=makeScene({productionMethods:['AI Video'],production:{'AI Video':{ready:true}},voiceoverReady:true,editingDone:true});
+ const project={scenes:[scene]};
+ assert.equal(canComplete(project,scene),true);assert.equal(sceneComplete(project,scene),false);
+ scene.completed=true;assert.equal(projectProgress(project),100);
 });
 test('canonical script is chronological and synchronization creates a review without mutating scenes',()=>{
  const scenes=parseProductionImport(storyboard).slice(0,2),project={scenes,script:'Manual draft'};

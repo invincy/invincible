@@ -146,3 +146,8 @@ Assets keeps file/URL metadata with scene and animation-group associations. Over
 Run the repository checks and Creator browser suite: npm run test, npm run build, npm run check, npm run test:browser. CI runs these for Creator changes. Signed-in Firebase access needs separate verification.
 
 Recorded voiceover timing can be pasted in an optional final **Timestamp** column. For the planning TSV use `Voiceover`, `Visual / Animation`, `Assets Required`, `Timeline`, `Timestamp`; prompt Markdown tables may append Timestamp after Video Prompt. Example audio timing: `00:31.250–00:40.800`. This stays separate from the planned Timeline and is editable beside scene narration. Creator stores the supplied timing exactly; it does not analyze or align the audio itself. Existing tables without Timestamp still work.
+
+
+### Direct Creator scene completion
+
+Use **Complete** at the bottom right of the active scene, or select **Completed**, to finish a scene immediately. Asset links/uploads, task flags, narration readiness and checklists are optional bookkeeping, not completion gates. Completed changes to a **Completed** button that can reopen the scene. Task and shared-asset states remain independent; finishing Blender work never finishes a scene automatically. The existing project autosave and recovery draft persist the decision. Project progress counts completed scenes and remaining tracked work without requiring already completed scenes to be backfilled.

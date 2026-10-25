@@ -190,7 +190,7 @@ const server=http.createServer((req,res)=>{
 
   assert.equal(await page.locator('.wb-column-head,.wb-row').count(),0);
   await page.locator('[data-field=voiceoverTimestamp]').fill('00:00.250–00:04.900');
-  await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes[0].voiceoverTimestamp==='00:00.250–00:04.900',projectId);
+  await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes?.[0]?.voiceoverTimestamp==='00:00.250–00:04.900',projectId);
   await page.reload();await page.locator('.wb-scene').waitFor();
   assert.equal(await page.locator('[data-field=voiceoverTimestamp]').inputValue(),'00:00.250–00:04.900');
   assert.equal(await page.locator('[data-field=timing]').inputValue(),'0–4s');
@@ -346,6 +346,47 @@ const server=http.createServer((req,res)=>{
   await page.locator('#status').filter({hasText:'draft is kept'}).waitFor();
   assert.equal(await page.locator('#syncIndicator').getAttribute('data-state'),'error');await page.reload();
   await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes[1].visual==='Recovered camera direction',projectId);
+  // Explicit scene completion bypasses optional bookkeeping and persists through the normal save flow.
+  const direct={id:'direct-completion',title:'Direct completion',ownerUid:'owner',ownerEmail:'owner@example.com',editorEmails:[],animationGroups:[{id:'shared',name:'Shared animation',production:{}}],assets:[{id:'pending-asset',name:'Unregistered render',status:'Not Started',sceneIds:['direct-1'],groupIds:['shared']}],scenes:[1,2].map(n=>({id:'direct-'+n,duration:5,voiceover:'Scene '+n,visual:'Finished outside the app',assets:'Local files',productionMethods:['Blender','AI Video'],animationGroupId:'shared',sceneState:'Planned',completed:false,voiceoverReady:false,editingDone:false,production:{},checklist:[{id:'task-'+n,text:'Optional task',done:false}]}))};
+  await page.evaluate(item=>{const data=JSON.parse(localStorage.getItem('test.creator'));data['creatorProjects/'+item.id]=item;localStorage.setItem('test.creator',JSON.stringify(data));},direct);
+  await page.goto(base+'project.html?id=direct-completion');await page.locator('.wb-scene').waitFor();
+  const directSaved=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/direct-completion']);
+  await page.locator('[data-field=sceneState]').selectOption('Completed');
+  await page.waitForFunction(()=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/direct-completion'].scenes[0].completed);
+  assert.equal(await page.locator('[data-action=complete-scene]').textContent(),'Completed');
+  assert.equal(await page.locator('.wb-nav-entry [data-select-scene]').first().getAttribute('data-scene-status'),'completed');
+  await page.reload();await page.getByRole('button',{name:'Reopen scene',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Reopen scene',exact:true}).click();
+  assert.equal(await page.locator('[data-field=sceneState]').inputValue(),'Planned');
+  await page.getByRole('button',{name:'Complete scene',exact:true}).click();
+  await page.locator('[data-action=next-scene]').click();
+  for(const size of [{width:1366,height:768},{width:393,height:852},{width:320,height:700}]){
+   await page.setViewportSize(size);
+   const button=page.getByRole('button',{name:'Complete scene',exact:true});
+   assert.equal(await button.evaluate(el=>{const r=el.getBoundingClientRect(),editor=el.closest('.wb-scene').getBoundingClientRect();return r.height>=44&&r.width>=120&&r.bottom<=innerHeight&&r.top>=0&&Math.abs(editor.right-r.right)<100&&el.contains(document.elementFromPoint(r.right-10,r.top+r.height/2));}),true,'Bottom-right completion stays reachable at '+size.width);
+   const scroll=page.locator('.wb-scene-content');await scroll.evaluate(el=>el.scrollTop=el.scrollHeight);
+   assert.equal(await button.evaluate(el=>{const r=el.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}),true);
+  }
+  await page.setViewportSize({width:1440,height:1000});
+  await page.evaluate(()=>window.failSave=true);
+  await page.getByRole('button',{name:'Complete scene',exact:true}).click();
+  assert.equal(await page.locator('[data-field=sceneState]').inputValue(),'Completed');
+  await page.locator('#status').filter({hasText:'draft is kept'}).waitFor();
+  await page.reload();await page.locator('.wb-scene').waitFor();
+  await page.waitForFunction(()=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/direct-completion'].scenes.every(s=>s.completed));
+  assert.equal(await page.locator('#sceneProgress').textContent(),'100%');
+  const finished=await directSaved();
+  assert.deepEqual(finished.animationGroups,direct.animationGroups);assert.deepEqual(finished.assets,direct.assets);
+  for(const item of finished.scenes){assert.equal(item.voiceoverReady,false);assert.equal(item.editingDone,false);assert.deepEqual(item.production,{});assert.equal(item.checklist[0].done,false);}
+  await page.locator('[data-field=sceneState]').selectOption('Planned');
+  assert.equal(await page.locator('[data-action=complete-scene]').textContent(),'Complete');
+  await page.locator('[data-field=sceneState]').selectOption('Completed');
+  await page.locator('[data-action=view-mode]').click();
+  assert.equal(await page.locator('[data-action=complete-scene]').count(),0,'Collapsed scenes do not add repeated footers');
+  await scene(0).locator('[data-action=expand]').click();
+  await scene(0).getByRole('button',{name:'Reopen scene',exact:true}).click();
+  await scene(0).getByRole('button',{name:'Complete scene',exact:true}).click();
+  await page.screenshot({path:path.join(root,'.test-output/creator-direct-completion.png'),fullPage:true});
   // Untouched legacy records retain completed state, prompts, metadata and script.
   const legacy={id:'legacy',title:'Legacy',ownerUid:'owner',ownerEmail:'owner@example.com',editorEmails:[],notes:'Keep notes',hook:'Keep hook',script:'Keep draft',custom:{keep:true},scenes:[{id:'old',duration:8,voiceover:'Legacy narration',completed:true,imageDone:true,imagePrompt:'Original prompt',imageAssetUrl:'https://example.com/image',custom:'keep'}]};
   await page.evaluate(item=>{const data=JSON.parse(localStorage.getItem('test.creator'));data['creatorProjects/legacy']=item;localStorage.setItem('test.creator',JSON.stringify(data));},legacy);
