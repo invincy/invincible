@@ -12,8 +12,21 @@ All internal pages use the Firebase project `life-by-adichimp`, the default Fire
 | Garage | Native JavaScript | `users/{uid}/garage/main` |
 | Creator Studio | Native JavaScript | Owned/invited `creatorProjects`; legacy `users/{uid}/creator/main` import |
 | Journal | Separate React bundle | `users/{uid}/journals/{date}/strokes/{id}` |
+| LIC Follow-up Manager | Native JavaScript | `users/{uid}/licFollowups/{policyId}` and `history/{eventId}` beneath each policy |
 
-This is a partial React migration. Garage and Creator have not been moved into the main React app. LIC landing/product pages are static content, without editable user records. The separately hosted Portfolio is outside this repository and has not been migrated to Firebase here.
+This is a partial React migration. Garage and Creator have not been moved into the main React app. LIC landing/product pages are static content; its Follow-up Manager adds private, editable policy records through the shared Firebase adapter. The separately hosted Portfolio is outside this repository and has not been migrated to Firebase here.
+
+## LIC follow-ups — October 26, 2026
+
+The Follow-up Manager restores shared auth before listening, disposes policy/history subscriptions on account changes, rejects stale callbacks and checks the active account before each transaction. Policies use deterministic `p-` + URL-encoded normalized policy-number IDs; normalization trims whitespace and uppercases letters without numeric conversion. One policy is one record; customers are not merged by name or shared phone. `opPolicies` contains linked OP-NAPped policy numbers derived from `OP_Neft1/2/3`, with no bank-status field.
+
+Import transactions read at most 100 current documents before writing, merge nonblank source fields and union linked policies, preserving unknown fields, phone overrides and all follow-up state. Repeating any completed or partially completed import does not create another policy. Imported source status is separate from follow-up outcome. Empty source values never erase saved values. No automatic import runs on page load.
+
+Response transactions read the latest policy and a stable event ID, then atomically update the current outcome/schedule and append `history/{eventId}` with a server timestamp, note, response, follow-up date and optional phone correction. A response ID is held across failed/uncertain acknowledgements; retries cannot append the event twice. Forms retain and freeze that response until retry or close. History is stored as separate documents so it does not grow the policy toward Firestore's document-size limit. Simultaneous response transactions preserve all history; the latest committed response controls the current schedule/outcome. Reimport never touches history.
+
+Missing/invalid mobiles and a reported wrong number define contactability independently of attempted/contacted timestamps. Opening a `tel:` link does not assume a call happened. No answer counts as attempted, not contacted; note/schedule-only logs do not count as calls. Completing a policy clears its pending follow-up. Correcting a phone clears its wrong-number marker without erasing past attempts.
+
+Existing owner-only `users/{uid}/**` rules cover these paths. No Firebase project, authentication configuration, rules, Functions deployment, existing records or migration changed. The sample CSV stays outside the repository. Controlled tests cover import retries, history preservation, stale accounts and denied/uncertain saves; a real signed-in production permission check remains outstanding.
 
 Garage applies each operation transactionally to the latest stored document, waits for confirmation before changing the displayed data, keeps forms open on failure, and cascades vehicle deletion to that vehicle's records. Finance transactions merge this tab's record changes into the latest month; errors retain form input. Journal keeps per-account pending writes/deletes across reload and retries them on reconnect. Creator project drafts remain on this device after failure; an unchanged cloud version can restore a draft on reload. Newer Creator edits remain dirty when an older save completes.
 

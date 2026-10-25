@@ -17,7 +17,7 @@ This document is the starting point for understanding what runs today, where to 
 | Garage | `garage/index.html` | `garage/garage.js`, `garage-model.js` | Native JavaScript modules |
 | Creator Studio | `creator/index.html`, `project.html` | `creator/creator.js`, `project.js`, `scene-tools.js` | Native JavaScript modules |
 | Journal | `journal/index.html` | `journal/journal-strokes-hook.js`, `advanced-tools.js`; existing `assets/journal-v11.js` | Separate bundled React app |
-| LIC | `lic/index.html`, `lic/bima-platinum/index.html` | `lic/` | Static/native pages |
+| LIC | `lic/index.html`, `lic/bima-platinum/index.html`, `lic/follow-up/index.html` | `lic/` | Native pages; follow-ups use Firebase |
 | Portfolio | External Apps Script link; separate legacy `portfolio.html` URL | Apps Script deployment; local viewer remains supported | Separate origin/backend |
 
 The main React app chooses and lazily loads its page in `react/src/App.jsx`. Its HTML entry points load the same generated JS/CSS assets. Garage, Creator, Journal, and LIC have their own entry points; they are not silently redirected through React.
@@ -31,6 +31,12 @@ The main React app chooses and lazily loads its page in `react/src/App.jsx`. Its
 - `react-dist/` is generated deployment output. Rebuild it from `react/src/`; do not fix the compiled main-app bundle by hand.
 
 ## Firebase and sign-in
+
+LIC → **Follow-up Manager** opens the native customer workspace at `lic/follow-up/`. Upload or paste CSV, map columns, preview every row, then import. Policy number and name are required; the standard `858.csv` headers map automatically. `OP_Neft1`, `OP_Neft2`, and `OP_Neft3` are **OP-NAPped linked policy numbers**, never banking/NEFT status. Search includes all three linked numbers. The dedicated missing/invalid-mobile + OP-NAPped view finds policyholders who need contact details; reported wrong numbers are also included in the broader Uncontactable view. Not yet contacted means a valid mobile with no logged attempt, while No answer records an attempt without claiming contact.
+
+Click a valid mobile to open the device's calling app. Select a quick response, optionally edit notes and the next follow-up date, then save. History and schedules persist in the existing Firebase account. Corrected mobiles survive CSV reimports. Reimports match the complete policy-number string, preserving leading zeroes, workflow fields and history; blank cells do not clear existing details, and linked policy lists are combined. Conflicting duplicate rows and malformed dates/amounts block import; identical duplicate rows collapse. Imports are limited to 5 MB / 5,000 rows and save in 100-policy transactions, with safe retry after partial failure. No customer CSV or customer details are checked into this public repository.
+
+Run `node --test tests/lic-follow-up.mjs` and `node tests/lic-follow-up-browser.cjs` for focused coverage. Optionally set `LIC_SAMPLE_CSV` to a local sample file to validate the original 104-policy sample without adding it to Git. Browser fixtures exercise the actual page/storage adapter with synthetic data; they do not establish production Firebase access.
 
 Internal pages use Firebase project `life-by-adichimp` and the same persisted Google account on the site origin. Authentication must finish restoring before protected data loads. Native and React SDK adapters prefer browser local persistence and fall back to IndexedDB. The external Apps Script Portfolio runs on a different origin and cannot inherit this browser Firebase session.
 
