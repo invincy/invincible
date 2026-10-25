@@ -112,10 +112,11 @@ export function requirements(project,scene){
  for(const item of scene.checklist||[])tasks.push({key:item.text,done:!!item.done});
  return tasks;
 }
+// Advisory readiness only; never a prerequisite for manual scene completion.
 export function canComplete(project,scene){return requirements(project,scene).every(task=>task.done);}
 export function sceneComplete(project,scene){
- // Preserve untouched completed legacy scenes; new work must meet its declared requirements.
- return !!scene.completed&&(!scene.sceneState&&!scene.productionMethods&&!sceneAssets(project,scene).length&&!(scene.checklist||[]).length||canComplete(project,scene));
+ // Explicit completion is the creator’s decision; task and asset tracking is optional.
+ return !!scene.completed;
 }
 export function sceneState(project,scene){
  if(sceneComplete(project,scene))return 'Completed';
@@ -127,10 +128,11 @@ export function projectProgress(project){
  const seen=new Map();
  for(const scene of project.scenes||[]){
   const complete=sceneComplete(project,scene);
-  for(const task of requirements(project,scene)){
+  // Completed scenes need no task bookkeeping; pending scenes still count real work.
+  for(const task of complete?[]:requirements(project,scene)){
    const shared=task.key.startsWith('Blender:')&&groupFor(project,scene);
    const key=task.sharedKey||(shared?'group:'+shared.id:'scene:'+scene.id)+':'+task.key;
-   seen.set(key,complete||task.done);
+   seen.set(key,task.done);
   }
   seen.set('complete:'+scene.id,complete);
  }

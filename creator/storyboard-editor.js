@@ -1,4 +1,4 @@
-import {parseProductionImport as parseStoryboard,uniqueScenes} from './production-model.js?v=3';
+import {parseProductionImport as parseStoryboard,uniqueScenes} from './production-model.js?v=4';
 import {looksLikeStoryboard,makeScene,storyboardDuration} from './storyboard-model.js?v=3';
 const columns=[['voiceover','Voiceover'],['visual','Visual/Animation'],['assets','Assets'],['duration','Duration (sec)']];
 const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));

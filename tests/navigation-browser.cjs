@@ -9,6 +9,13 @@ try{const page=await browser.newPage(),errors=[];page.on('pageerror',error=>erro
 for(const route of ['garage/','creator/','creator/project.html','journal/','lic/','lic/bima-platinum/','portfolio.html']){
  const compact=route.startsWith('creator/');
  await page.setViewportSize({width:1280,height:800});await page.goto('http://127.0.0.1:8767/invincible/'+route);
+ // Bima Platinum is an intentional full-screen presentation with its own exit links.
+ if(route==='lic/bima-platinum/'){
+  assert.equal(await page.locator('.global-nav,.global-ai-widget,.mobile-tabbar').count(),0);
+  assert.equal(await page.getByRole('link',{name:'Back',exact:true}).getAttribute('href'),'../');
+  assert.equal(await page.getByRole('link',{name:'Home',exact:true}).getAttribute('href'),'/invincible/');
+  continue;
+ }
  await page.locator('.desktop-nav a').first().waitFor();
  assert.equal(await page.locator('.desktop-nav a').count(),10);
  assert.equal(await page.locator('.global-ai-widget').count(),1);assert.equal(await page.locator('.mobile-tabbar').count(),1);
@@ -28,6 +35,6 @@ for(const route of ['garage/','creator/','creator/project.html','journal/','lic/
 
 await page.goto('http://127.0.0.1:8767/invincible/garage/');await page.locator('.mobile-more-trigger').click();await page.locator('.customize-tabs-trigger').click();await page.locator('[data-page-id=ai]').click();await page.locator('[data-page-id=garage]').click();await page.locator('.tab-customizer-save').click();assert.deepEqual(await page.locator('.mobile-tabbar a').evaluateAll(links=>links.map(link=>link.dataset.page)),['dashboard','workday','journal','garage']);
 await page.goto('http://127.0.0.1:8767/invincible/garage/?nav-react');await page.locator('.react-mobile-tabs a').first().waitFor();assert.deepEqual(await page.locator('.react-mobile-tabs a').evaluateAll(links=>links.map(link=>link.textContent.trim())),['Home','Workday','Journal','Garage']);await page.locator('.react-mobile-tabs button').click();await page.getByRole('button',{name:'Edit bottom tabs'}).click();await page.locator('.tab-picker button').filter({hasText:'Garage'}).click();await page.locator('.tab-picker button').filter({hasText:'Finance'}).click();await page.locator('.tab-picker-actions button').filter({hasText:'Save'}).click();
-await page.goto('http://127.0.0.1:8767/invincible/garage/');await page.locator('.mobile-tabbar a').first().waitFor();assert.deepEqual(await page.locator('.mobile-tabbar a').evaluateAll(links=>links.map(link=>link.dataset.page)),['dashboard','workday','journal','finance']);assert.deepEqual(errors,[]);console.log('All seven standalone navigation mounts and shared React/native tab preferences passed.');
+await page.goto('http://127.0.0.1:8767/invincible/garage/');await page.locator('.mobile-tabbar a').first().waitFor();assert.deepEqual(await page.locator('.mobile-tabbar a').evaluateAll(links=>links.map(link=>link.dataset.page)),['dashboard','workday','journal','finance']);assert.deepEqual(errors,[]);console.log('Six standalone navigation mounts, presentation exit links and shared React/native tab preferences passed.');
 }finally{await browser.close();server.close()}
 })().catch(error=>{console.error(error);process.exitCode=1});

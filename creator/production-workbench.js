@@ -1,5 +1,5 @@
 import {makeScene} from './storyboard-model.js?v=3';
-import {METHODS,IMPORT_FIELDS,uid,methodsOf,inspectImport,parseProductionImport,uniqueScenes,groupFor,taskFor,setTask,animationStage,requirements,canComplete,sceneState,projectProgress,queueScenes,canonicalScript,scriptReview,filterScenes,productionReadiness} from './production-model.js?v=3';
+import {METHODS,IMPORT_FIELDS,uid,methodsOf,inspectImport,parseProductionImport,uniqueScenes,groupFor,taskFor,setTask,animationStage,requirements,sceneState,projectProgress,queueScenes,canonicalScript,scriptReview,filterScenes,productionReadiness} from './production-model.js?v=4';
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const options=(values,current)=>values.map(value=>'<option '+(value===current?'selected':'')+'>'+esc(value)+'</option>').join('');
 const ICONS={"board":"<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M3 10h18M9 4v16\"/>","production":"<path d=\"m8 4 12 8-12 8z\"/>","assets":"<path d=\"M3 7h7l2-3h9v16H3z\"/>","overview":"<path d=\"M4 20V10m8 10V4m8 16v-7\"/>","Blender":"<path d=\"m3 4 8 5M2 9h10M5 18l6-6\"/><ellipse cx=\"15\" cy=\"13\" rx=\"6\" ry=\"5\"/><circle cx=\"15\" cy=\"13\" r=\"2\"/>","AI Video":"<rect x=\"3\" y=\"7\" width=\"13\" height=\"13\" rx=\"2\"/><path d=\"m16 11 5-3v11l-5-3M8 2v6M5 5h6\"/>","Editing":"<circle cx=\"6\" cy=\"6\" r=\"3\"/><circle cx=\"6\" cy=\"18\" r=\"3\"/><path d=\"m8 8 13 13M8 16 21 3\"/>","Existing Footage":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"M7 3v18M17 3v18M3 8h4m-4 8h4m10-8h4m-4 8h4\"/>","Mixed":"<path d=\"m4 4 16 16M4 20l6-6m4-4 6-6M15 4h5v5m-5 11h5v-5\"/>","copy":"<rect x=\"8\" y=\"8\" width=\"13\" height=\"13\" rx=\"2\"/><path d=\"M16 8V3H3v13h5\"/>","expand":"<path d=\"m6 9 6 6 6-6\"/>","close":"<path d=\"m6 6 12 12M6 18 18 6\"/>","add":"<path d=\"M12 4v16M4 12h16\"/>","reset":"<path d=\"M3 10a9 9 0 1 1 2 8M3 4v6h6\"/>","search":"<circle cx=\"10\" cy=\"10\" r=\"6\"/><path d=\"m15 15 6 6\"/>","next":"<path d=\"M4 12h16m-6-6 6 6-6 6\"/>","import":"<path d=\"M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5\"/>","trash":"<path d=\"M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7\"/>","insert":"<path d=\"M4 4h16v6H4zM12 13v8m-4-4h8\"/>","up":"<path d=\"m6 14 6-6 6 6\"/>","down":"<path d=\"m6 10 6 6 6-6\"/>","spark":"<path d=\"m12 3 3 6 6 3-6 3-3 6-3-6-6-3 6-3z\"/>","started":"<path d=\"m8 4 12 8-12 8z\"/>","modeling":"<path d=\"m12 2 9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10\"/>","animation":"<path d=\"m9 4 11 8-11 8zM4 5v14\"/>","rendering":"<rect x=\"3\" y=\"4\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"M8 22h8m-4-4v4m-5-11 3 3 7-7\"/>","ready":"<path d=\"m4 12 5 5L20 6\"/>"};
@@ -80,7 +80,8 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    (focused?'<div class="wb-scene-meta"><label class="wb-timing"><span>'+icon('clock')+'Timeline</span><input aria-label="Timeline" data-field="timing" value="'+esc(scene.timeline||scene.duration+' sec')+'"></label><div class="wb-method-control"><span>'+icon('board')+'Method</span>'+methodTags(scene)+'</div><div class="wb-editor-tabs" role="tablist" aria-label="Scene sections">'+[['plan','Plan','board'],['prompts','Prompts','spark'],['progress','Progress','ready']].map(([key,label,glyph])=>'<button type="button" role="tab" data-editor-pane="'+key+'" aria-label="'+label+'" title="'+label+'" aria-selected="'+(editorPane===key)+'">'+icon(glyph)+'<span class="wb-sr">'+label+'</span></button>').join('')+'</div></div>':'')+
    '<div class="wb-scene-content" '+(!open?'hidden':'')+'><section class="wb-pane" data-pane="plan" '+(focused&&editorPane!=='plan'?'hidden':'')+'><div class="wb-writing">'+
    textCard(scene,'voiceover','Voiceover','voiceover')+textCard(scene,'visual','Visual / Animation','production')+textCard(scene,'assets','Assets Required','modeling')+textCard(scene,'assetReferences','References','reference')+
-   '</div></section>'+details(scene,focused)+'</div></article>';
+   '</div></section>'+details(scene,focused)+'</div>'+
+   (open?'<footer class="wb-scene-footer"><button type="button" class="wb-complete-scene" data-action="complete-scene" aria-label="'+(scene.completed?'Reopen scene':'Complete scene')+'" title="'+(scene.completed?'Reopen scene':'Mark this scene completed')+'" aria-pressed="'+!!scene.completed+'">'+icon(scene.completed?'reset':'ready')+'<span>'+(scene.completed?'Completed':'Complete')+'</span></button></footer>':'')+'</article>';
  }
  function queueBuckets(queue){
   const buckets=new Map();
@@ -240,7 +241,6 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   if(target.dataset.checklist!==undefined){scene.checklist[Number(target.dataset.checklist)].done=target.checked;if(!target.checked)scene.completed=false;changed();return;}
   if(target.tagName==='SELECT'&&target.dataset.field){
    const key=target.dataset.field;
-   if(key==='sceneState'&&target.value==='Completed'&&!canComplete(project(),scene)){message('Finish required assets, voiceover, checklist and editing before completing this scene.');target.value=sceneState(project(),scene);return;}
    scene[key]=target.value;if(key==='sceneState')scene.completed=target.value==='Completed';else scene.completed=false;
    changed();
   }
@@ -325,6 +325,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
     changed();message('Filled blank prompts from the scene plan.');return;
    }
    if(action==='focus'){onFocus(scene.id);return;}
+   if(action==='complete-scene'){scene.completed=!scene.completed;scene.sceneState=scene.completed?'Completed':'Planned';changed();return;}
    if(action==='add-check'){const text=button.closest('[data-scene]').querySelector('[data-new-check]').value.trim();if(!text)return;scene.checklist||=[];scene.checklist.push({id:uid(),text,done:false});scene.completed=false;}
    if(action==='duplicate'){expandAll=false;const copy=makeScene({...JSON.parse(JSON.stringify(scene)),id:uid(),completed:false,sceneState:'Planned',voiceoverReady:false,editingDone:false,checklist:(scene.checklist||[]).map(item=>({...item,id:uid(),done:false})),production:{}});project().scenes.splice(index+1,0,copy);active=copy.id;expandedScene=copy.id;}
    if(action==='insert'){expandAll=false;const item=makeScene({productionMethods:[],sceneState:'Planned'});project().scenes.splice(index+1,0,item);active=item.id;expandedScene=item.id;}
