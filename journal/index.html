@@ -6,9 +6,11 @@
     <title>Invincible Home</title>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="assets/journal-v11.js?v=2"></script>
-    <script defer src="advanced-tools.js?v=20261026-1"></script>
-    <script defer src="drawing-tools.js?v=1"></script>
+    <script type="module" crossorigin src="assets/journal-v11.js?v=3"></script>
+    <script defer src="advanced-tools.js?v=20261026-2"></script>
+    <script defer src="drawing-tools.js?v=2"></script>
+    <script defer src="canvas-workspace.js?v=1"></script>
+    <link rel="stylesheet" href="canvas-workspace.css?v=1">
     <link rel="stylesheet" href="drawing-tools.css?v=1">
     <link rel="stylesheet" crossorigin href="assets/index-DSgeQfSP.css?v=20260913-2">
     <link rel="stylesheet" href="../site-nav.css?v=15">
@@ -36,6 +38,7 @@
           if (!isPalmPointer(event)) return;
           const palmBlocked = pencilActive || performance.now() < pencilGraceUntil;
           event.preventDefault();
+          if(!palmBlocked&&window.__journalViewport){window.__journalViewport.touch(event);event.stopImmediatePropagation();return;}
           if (!palmBlocked && type === "pointerdown" && !fingerScroll) {
             const scroller = document.querySelector(".journal-page .app-container");
             if (scroller) fingerScroll = { id: event.pointerId, y: event.clientY, top: scroller.scrollTop, scroller: scroller };
@@ -48,17 +51,17 @@
       });
 
       document.addEventListener("contextmenu", function (event) {
-        if (event.target.closest(".canvas-container, .toolbar")) event.preventDefault();
+        if (event.target.closest?.(".canvas-container, .toolbar")) event.preventDefault();
       }, { capture: true });
 
       document.addEventListener("selectstart", function (event) {
-        if (event.target.closest(".journal-page") && !event.target.closest("input, textarea")) {
+        if (event.target.closest?.(".journal-page") && !event.target.closest?.("input, textarea")) {
           event.preventDefault();
         }
       }, { capture: true });
 
       document.addEventListener("dragstart", function (event) {
-        if (event.target.closest(".journal-page") && !event.target.closest("input, textarea")) {
+        if (event.target.closest?.(".journal-page") && !event.target.closest?.("input, textarea")) {
           event.preventDefault();
         }
       }, { capture: true });
@@ -68,7 +71,7 @@
         const canvas = document.getElementById("live-canvas");
         if (!toolbar || !canvas) return false;
 
-        canvas.setAttribute("aria-label", "Journal drawing canvas. Apple Pencil, stylus, or mouse input only.");
+        canvas.setAttribute("aria-label", "Journal canvas. Draw with Pencil, stylus or mouse. Pan with fingers or the Hand tool.");
         canvas.setAttribute("draggable", "false");
         toolbar.setAttribute("aria-label", "Drawing tools");
 
@@ -103,7 +106,7 @@
     })();
 
     document.addEventListener("click", function (event) {
-      const button = event.target.closest("button");
+      const button = event.target.closest?.("button");
       if (button && button.textContent.trim() === "Monthly Finance") {
         event.preventDefault();
         event.stopImmediatePropagation();

@@ -13,6 +13,7 @@
 
   function api() { return window.__journalApi; }
   function point(event) {
+    if(window.__journalViewport)return window.__journalViewport.point(event);
     const rect = api().container().getBoundingClientRect();
     return { x: event.clientX - rect.left, y: event.clientY - rect.top };
   }
@@ -52,6 +53,7 @@
     if (state.mode !== mode) clearSelection();
     state.mode = mode;
     api().setTool(mode);
+    requestAnimationFrame(()=>window.dispatchEvent(new Event("journal-tool-change")));
     updateButtons();
     if (mode === "handwriting") showHandwritingPanel();
     else closePanel();
@@ -121,7 +123,7 @@
     $("[data-action=delete]", box).addEventListener("click", deleteSelected);
     $("[data-action=duplicate]", box).addEventListener("click", duplicateSelected);
     $("input[type=color]", box).addEventListener("change", (event) => recolourSelected(event.target.value));
-    api().container().append(box);
+    (api().overlay?.()||api().container()).append(box);
     state.box = box;
   }
 
@@ -139,7 +141,7 @@
     const start = point(event);
     const marquee = document.createElement("div");
     marquee.className = "journal-marquee";
-    api().container().append(marquee);
+    (api().overlay?.()||api().container()).append(marquee);
     const move = (moveEvent) => {
       const now = point(moveEvent);
       const rect = { x: Math.min(start.x, now.x), y: Math.min(start.y, now.y), width: Math.abs(now.x - start.x), height: Math.abs(now.y - start.y) };
@@ -167,8 +169,8 @@
     event.preventDefault(); event.stopPropagation();
     const start = { x: event.clientX, y: event.clientY };
     const original = { left: parseFloat(state.box.style.left), top: parseFloat(state.box.style.top) };
-    const move = (e) => { state.box.style.left = `${original.left + e.clientX - start.x}px`; state.box.style.top = `${original.top + e.clientY - start.y}px`; };
-    const up = (e) => { window.removeEventListener("pointermove", move, true); window.removeEventListener("pointerup", up, true); transformSelected({ dx: e.clientX - start.x, dy: e.clientY - start.y, sx: 1, sy: 1 }); };
+    const move = (e) => { state.box.style.left = `${original.left + (e.clientX - start.x)/(window.__journalViewport?.view.zoom||1)}px`; state.box.style.top = `${original.top + (e.clientY - start.y)/(window.__journalViewport?.view.zoom||1)}px`; };
+    const up = (e) => { window.removeEventListener("pointermove", move, true); window.removeEventListener("pointerup", up, true); transformSelected({ dx: (e.clientX - start.x)/(window.__journalViewport?.view.zoom||1), dy: (e.clientY - start.y)/(window.__journalViewport?.view.zoom||1), sx: 1, sy: 1 }); };
     window.addEventListener("pointermove", move, true); window.addEventListener("pointerup", up, true);
   }
   function resizeStart(event) {
@@ -176,7 +178,7 @@
     const bounds = strokeBounds(selectedStrokes());
     const start = { x: event.clientX, y: event.clientY };
     const move = (e) => {
-      const scale = Math.max(.2, Math.max((bounds.width + e.clientX - start.x) / bounds.width, (bounds.height + e.clientY - start.y) / bounds.height));
+      const scale = Math.max(.2, Math.max((bounds.width + (e.clientX - start.x)/(window.__journalViewport?.view.zoom||1)) / bounds.width, (bounds.height + (e.clientY - start.y)/(window.__journalViewport?.view.zoom||1)) / bounds.height));
       state.box.style.width = `${bounds.width * scale}px`; state.box.style.height = `${bounds.height * scale}px`; state.gesture = { scale, bounds };
     };
     const up = () => { window.removeEventListener("pointermove", move, true); window.removeEventListener("pointerup", up, true); const g = state.gesture; state.gesture = null; if (g) transformSelected({ dx: 0, dy: 0, sx: g.scale, sy: g.scale, origin: g.bounds }); };
@@ -203,13 +205,15 @@
   function redrawSoon() { requestAnimationFrame(() => requestAnimationFrame(() => api()?.redraw())); }
 
   function placeText(at, existing = null) {
+    const origin=api().context?.();
     const editor = document.createElement("textarea");
     editor.className = "journal-text-editor";
     editor.value = existing?.text || "";
     editor.placeholder = "Type here…";
     Object.assign(editor.style, { left: `${at.x}px`, top: `${at.y}px`, color: existing?.color || api().settings?.().color || "#111827", fontSize: `${existing?.fontSize || 26}px` });
-    api().container().append(editor); editor.focus();
+    (api().overlay?.()||api().container()).append(editor); editor.focus();
     const commit = () => {
+      const current=api().context?.();if(origin&&current&&(origin.uid!==current.uid||origin.dateKey!==current.dateKey)){editor.remove();return;}
       const text = editor.value.trim(); editor.remove(); if (!text) return;
       const stroke = existing ? { ...existing, text } : { id: crypto.randomUUID(), tool: "text", text, color: api().settings?.().color || "#111827", opacity: 1, fontSize: 26, width: 26, createdAtMs: Date.now(), points: [{ x: at.x, y: at.y, pressure: .5, timestamp: Date.now() }] };
       api().save(stroke);

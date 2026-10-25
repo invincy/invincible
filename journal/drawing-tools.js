@@ -53,7 +53,7 @@
  document.addEventListener('pointermove',event=>{
   if(event.target.id!=='live-canvas'||api()?.tool?.()!=='eraser'){if(cursor)cursor.hidden=true;return;}
   if(!cursor){cursor=document.createElement('div');cursor.className='journal-eraser-cursor';cursor.setAttribute('aria-hidden','true');document.body.append(cursor);}
-  const size=config.eraser.mode==='pixel'?config.eraser.width:18;cursor.hidden=false;cursor.style.cssText='left:'+event.clientX+'px;top:'+event.clientY+'px;width:'+size+'px;height:'+size+'px;'+(config.eraser.mode==='stroke'?'border-style:dashed;':'');
+  const size=(config.eraser.mode==='pixel'?config.eraser.width:18)*(window.__journalViewport?.view.zoom||1);cursor.hidden=false;cursor.style.cssText='left:'+event.clientX+'px;top:'+event.clientY+'px;width:'+size+'px;height:'+size+'px;'+(config.eraser.mode==='stroke'?'border-style:dashed;':'');
  },{passive:true});
  document.addEventListener('pointerout',event=>{if(event.target.id==='live-canvas'&&cursor)cursor.hidden=true;},{passive:true});
  window.addEventListener('resize',close);
