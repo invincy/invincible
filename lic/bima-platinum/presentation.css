@@ -243,48 +243,44 @@ html, body {
   transform: translateZ(90px);
 }
 
-/* Character Interactive Hotspot Regions */
-.character-hotspot {
+/* Advisor Interactive Tap-to-hear Pill Button */
+.advisor-audio-badge {
   position: absolute;
-  cursor: pointer;
-  z-index: 35;
-  transition: transform 0.25s var(--ease-spring);
-}
-
-.hotspot-businessman {
-  left: 6%;
-  top: 28%;
-  width: 44%;
-  height: 48%;
-}
-
-/* Floating interactive pulse badge on character */
-.character-pulse-badge {
-  position: absolute;
-  top: 44%;
-  left: 12%;
-  padding: 5px 11px;
-  background: rgba(3, 15, 38, 0.88);
-  border: 1px solid var(--border-gold-bright);
-  border-radius: 20px;
-  display: flex;
+  top: 38%;
+  right: 10%;
+  padding: 6px 14px;
+  background: rgba(3, 15, 38, 0.90);
+  border: 1.5px solid var(--border-gold-bright);
+  border-radius: 999px;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 600;
+  gap: 7px;
+  font-size: 11.5px;
+  font-weight: 700;
   color: #FFE5A3;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), 0 0 12px rgba(212, 175, 55, 0.35);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 14px rgba(212, 175, 55, 0.35);
   cursor: pointer;
-  animation: float-badge 3s ease-in-out infinite;
-  transition: all 0.2s ease;
+  animation: float-badge 3.5s ease-in-out infinite;
+  transition: all 0.25s var(--ease-spring);
   user-select: none;
+  z-index: 38;
 }
 
-.character-pulse-badge:hover {
-  transform: scale(1.06);
+.advisor-audio-badge:hover,
+.advisor-audio-badge:focus-visible {
+  transform: scale(1.08);
+  background: rgba(6, 23, 56, 0.95);
   border-color: #FFF;
-  background: rgba(7, 26, 64, 0.95);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7), 0 0 18px rgba(230, 198, 135, 0.5);
+}
+
+.advisor-audio-icon {
+  font-size: 12px;
+}
+
+.advisor-audio-label {
+  letter-spacing: 0.02em;
 }
 
 .pulse-dot {
@@ -310,8 +306,8 @@ html, body {
 .speech-bubble {
   position: absolute;
   z-index: 40;
-  max-width: 320px;
-  background: rgba(4, 16, 39, 0.94);
+  max-width: 340px;
+  background: rgba(4, 16, 39, 0.95);
   border: 1.5px solid var(--border-gold-subtle);
   border-radius: 18px;
   padding: 14px 16px;
@@ -330,10 +326,11 @@ html, body {
   transform: scale(1) translateY(0);
 }
 
-.speech-bubble-businessman {
-  top: 36%;
-  left: 5%;
-  right: 5%;
+.speech-bubble-advisor {
+  top: 34%;
+  left: 6%;
+  right: 6%;
+  margin: 0 auto;
 }
 
 .speech-header {
@@ -378,6 +375,23 @@ html, body {
   line-height: 1.55;
   color: #FFFFFF;
   font-weight: 500;
+}
+
+.speech-caption-tag {
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: rgba(212, 175, 55, 0.12);
+  border-left: 2.5px solid var(--text-gold);
+  border-radius: 0 8px 8px 0;
+  font-family: var(--font-gujarati);
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #FFE5A3;
+  font-weight: 500;
+}
+
+.caption-bullet {
+  margin-right: 4px;
 }
 
 .speech-close-btn {
@@ -690,16 +704,18 @@ html, body {
 }
 
 .callout-cta-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 16px;
+  height: 42px;
+  border-radius: 999px;
   background: var(--gold-gradient);
   border: none;
   color: #061224;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(212, 175, 55, 0.5);
   transition: all 0.25s var(--ease-spring);
@@ -707,24 +723,29 @@ html, body {
   flex-shrink: 0;
 }
 
+.callout-cta-btn .cta-arrow {
+  font-size: 16px;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.callout-card:hover .cta-arrow {
+  transform: translateX(3px);
+}
+
 .callout-cta-btn::after {
   content: '';
   position: absolute;
   inset: -4px;
-  border-radius: 50%;
+  border-radius: 999px;
   border: 1.5px solid #FFE5A3;
   opacity: 0.4;
   animation: pulse-ring 2s ease-out infinite;
 }
 
 @keyframes pulse-ring {
-  0% { transform: scale(0.9); opacity: 0.8; }
-  100% { transform: scale(1.4); opacity: 0; }
-}
-
-.callout-cta-btn:hover {
-  transform: scale(1.1) rotate(5deg);
-  box-shadow: 0 6px 20px rgba(255, 229, 163, 0.7);
+  0% { transform: scale(0.95); opacity: 0.8; }
+  100% { transform: scale(1.18); opacity: 0; }
 }
 
 /* ==========================================================================

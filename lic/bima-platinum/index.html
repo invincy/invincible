@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="presentation.css?v=4">
+  <link rel="stylesheet" href="presentation.css?v=5">
 </head>
 <body>
 
@@ -103,32 +103,35 @@
         </div>
 
         <!-- ==========================================
-             LAYER 3: Interactive Characters & Dialogue Hotspots
-             (Businessman interactive; Advisor visually present but silent)
+             LAYER 3: Interactive Characters & Advisor Voice
+             (Female LIC advisor speaks; Businessman visually present but silent)
              ========================================== -->
         <div id="layerCharacters" class="scene-layer layer-characters interactive">
           
-          <!-- Character: Businessman Hotspot -->
-          <div id="hotspotBusinessman" class="character-hotspot hotspot-businessman" title="Tap to hear Businessman">
-            <div class="character-pulse-badge">
-              <span class="pulse-dot"></span>
-              <span>💬 Businessman</span>
-            </div>
-          </div>
+          <!-- Advisor Audio Trigger / Tap-to-hear Pill -->
+          <button id="advisorAudioTrigger" class="advisor-audio-badge" aria-label="Tap to hear Advisor">
+            <span class="pulse-dot"></span>
+            <span class="advisor-audio-icon">🔊</span>
+            <span class="advisor-audio-label">Tap to hear</span>
+          </button>
 
-          <!-- Businessman Speech Dialogue Bubble -->
-          <div id="bubbleBusinessman" class="speech-bubble speech-bubble-businessman" role="dialog" aria-label="Businessman Quote">
-            <button id="closeBubbleBusinessman" class="speech-close-btn" aria-label="Close dialog">✕</button>
+          <!-- Advisor Speech Dialogue Bubble -->
+          <div id="bubbleAdvisor" class="speech-bubble speech-bubble-advisor" role="dialog" aria-label="LIC Advisor Perspective">
+            <button id="closeBubbleAdvisor" class="speech-close-btn" aria-label="Close dialog">✕</button>
             <div class="speech-header">
-              <span class="speech-speaker-tag">💼 Business Owner</span>
-              <button id="audioBtnBusinessman" class="speech-audio-btn" title="Speak Gujarati Narration">🔊</button>
+              <span class="speech-speaker-tag">
+                <span class="advisor-audio-icon">🛡️</span>
+                <span>LIC Financial Advisor</span>
+              </span>
+              <button id="audioBtnAdvisor" class="speech-audio-btn" title="Replay Gujarati Audio" aria-label="Replay Audio">🔊</button>
             </div>
             <p class="speech-gujarati">
-              "મારો Business જ મારું main growth engine છે. અહીં હું invest કરું છું, value create કરું છું અને business grow કરું છું."
+              "તમારો business already growth potential આપે છે. Customers વધે, sales વધે, expansion થાય — તો returns પણ મોટા થઈ શકે. પણ જ્યાં growth હોય ત્યાં risk પણ હોય. એટલે તમારી personal savings નો દરેક રૂપિયા ફરી risk માં જવાની જરૂર નથી."
             </p>
-            <p class="speech-gujarati" style="font-size: 12.5px; opacity: 0.88; margin-top: 5px;">
-              Customers, products અને expansion — growth મારા decisions પર depend કરે છે.
-            </p>
+            <div class="speech-caption-tag">
+              <span class="caption-bullet">💡</span>
+              <span>Business growth આપે છે — but personal money ને stability પણ જોઈએ.</span>
+            </div>
           </div>
 
         </div>
@@ -198,7 +201,10 @@
               <span class="callout-line-1">તમે કંઈક valuable build કર્યું છે.</span>
               <span class="callout-line-2">પણ તમારી personal stability ક્યાં છે?</span>
             </div>
-            <button id="ctaForwardBtn" class="callout-cta-btn" aria-label="Advance to Next Stage">➔</button>
+            <button id="ctaForwardBtn" class="callout-cta-btn" aria-label="Advance to Next Stage">
+              <span>Stability</span>
+              <span class="cta-arrow">→</span>
+            </button>
           </div>
         </div>
 
@@ -285,6 +291,6 @@
 
 </div><!-- /.app-viewport-wrapper -->
 
-<script src="presentation.js?v=4"></script>
+<script src="presentation.js?v=5"></script>
 </body>
 </html>

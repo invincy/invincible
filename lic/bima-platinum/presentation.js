@@ -20,11 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const pillControl = document.getElementById('pillControl');
   const pills = [pillGrowth, pillOpportunity, pillControl];
 
-  // Character Hotspot & Dialogue (Businessman only for Phase 1; Advisor is silent)
-  const hotspotBusinessman = document.getElementById('hotspotBusinessman');
-  const bubbleBusinessman = document.getElementById('bubbleBusinessman');
-  const closeBubbleBusinessman = document.getElementById('closeBubbleBusinessman');
-  const audioBtnBusinessman = document.getElementById('audioBtnBusinessman');
+  // Advisor Interaction & Audio (Advisor speaks; Businessman visually present but silent)
+  const advisorAudioTrigger = document.getElementById('advisorAudioTrigger');
+  const bubbleAdvisor = document.getElementById('bubbleAdvisor');
+  const closeBubbleAdvisor = document.getElementById('closeBubbleAdvisor');
+  const audioBtnAdvisor = document.getElementById('audioBtnAdvisor');
 
   // Inspector Elements (Developer Tooling)
   const inspectorFab = document.getElementById('inspectorFab');
@@ -43,25 +43,25 @@ document.addEventListener('DOMContentLoaded', () => {
       badge: '🌱 BUSINESS PILLAR · GROWTH',
       title: 'Growth',
       shortLine: 'વધુ earning potential',
-      expanded: 'તમારા business માં earning potential ઘણું મોટું હોઈ શકે છે.',
-      secondary: 'Scale કરો, expand કરો અને profits grow કરો.',
-      quote: '“મારો Business જ મારું main growth engine છે. અહીં મહેનતનું સીધું પરિણામ મળે છે.”'
+      expanded: 'Scale કરો, expand કરો અને profits grow કરો.',
+      secondary: 'તમારા business માં earning potential ઘણું મોટું હોઈ શકે છે.',
+      quote: '“Business scale કરો, expand કરો અને profits grow કરો — earning potential તમારા હાથમાં છે.”'
     },
     opportunity: {
       badge: '💡 BUSINESS PILLAR · OPPORTUNITY',
       title: 'Opportunity',
       shortLine: 'Value create કરવાની freedom',
-      expanded: 'Business તમને value create કરવાની freedom આપે છે.',
-      secondary: 'New products, new customers અને new markets નવી opportunities create કરી શકે છે.',
-      quote: '“બિઝનેસ નવી તકોને ઝડપીને વાસ્તવિક મૂલ્ય બનાવવાની સ્વતંત્રતા આપે છે.”'
+      expanded: 'New customers, products અને markets.',
+      secondary: 'Business તમને નવી value અને opportunities create કરવાની પૂરી freedom આપે છે.',
+      quote: '“નવા ગ્રાહકો, પ્રોડક્ટ્સ અને બજારો નવી તકોનું નિર્માણ કરે છે.”'
     },
     control: {
       badge: '🎛️ BUSINESS PILLAR · CONTROL',
       title: 'Control',
       shortLine: 'Decision તમારા હાથમાં',
-      expanded: 'Decision તમારા હાથમાં છે.',
-      secondary: 'Pricing, stock, expansion અને business direction તમે decide કરો છો.',
-      quote: '“બિઝનેસની દિશા, ગતિ અને નિર્ણયો મારા પોતાના હાથમાં છે.”'
+      expanded: 'Pricing, stock, expansion અને direction તમે decide કરો છો.',
+      secondary: 'તમારા બિઝનેસના દરેક મહત્વપૂર્ણ નિર્ણય પર તમારો પૂર્ણ કંટ્રોલ છે.',
+      quote: '“કિંમત, સ્ટોક અને બિઝનેસની દિશા — દરેક મહત્વનો નિર્ણય તમારો પોતાનો છે.”'
     }
   };
 
@@ -126,20 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
     stagePreviewModal.classList.add('active');
   });
 
-  // --- Businessman Hotspot & Dialogue ---
-  if (hotspotBusinessman && bubbleBusinessman) {
-    hotspotBusinessman.addEventListener('click', (e) => {
-      e.stopPropagation();
-      bubbleBusinessman.classList.toggle('active');
-    });
-
-    closeBubbleBusinessman.addEventListener('click', (e) => {
-      e.stopPropagation();
-      bubbleBusinessman.classList.remove('active');
-    });
-  }
-
-  // Web Speech API Audio Narration (Businessman speech)
+  // Web Speech API Audio Narration
   function speakText(text, lang = 'gu-IN') {
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
@@ -150,11 +137,47 @@ document.addEventListener('DOMContentLoaded', () => {
     window.speechSynthesis.speak(utterance);
   }
 
-  if (audioBtnBusinessman) {
-    audioBtnBusinessman.addEventListener('click', (e) => {
+  // --- Advisor Audio & Dialogue (Female LIC agent speaks) ---
+  const advisorSpeechText = "તમારો business already growth potential આપે છે. Customers વધે, sales વધે, expansion થાય — તો returns પણ મોટા થઈ શકે. પણ જ્યાં growth હોય ત્યાં risk પણ હોય. એટલે તમારી personal savings નો દરેક રૂપિયા ફરી risk માં જવાની જરૂર નથી.";
+
+  function speakAdvisor() {
+    speakText(advisorSpeechText, 'gu-IN');
+  }
+
+  if (advisorAudioTrigger && bubbleAdvisor) {
+    advisorAudioTrigger.addEventListener('click', (e) => {
       e.stopPropagation();
-      const narrationText = "મારો બિઝનેસ જ મારું મેઇન ગ્રોથ એન્જિન છે. અહીં હું ઇન્વેસ્ટ કરું છું, વેલ્યુ ક્રિએટ કરું છું અને બિઝનેસ ગ્રો કરું છું. કસ્ટમર્સ, પ્રોડક્ટ્સ અને એક્સપાન્શન, ગ્રોથ મારા નિર્ણયો પર ડિપેન્ડ કરે છે.";
-      speakText(narrationText, 'gu-IN');
+      bubbleAdvisor.classList.toggle('active');
+      if (bubbleAdvisor.classList.contains('active')) {
+        speakAdvisor();
+      } else {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      }
+    });
+
+    if (closeBubbleAdvisor) {
+      closeBubbleAdvisor.addEventListener('click', (e) => {
+        e.stopPropagation();
+        bubbleAdvisor.classList.remove('active');
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      });
+    }
+
+    if (audioBtnAdvisor) {
+      audioBtnAdvisor.addEventListener('click', (e) => {
+        e.stopPropagation();
+        speakAdvisor();
+      });
+    }
+
+    // Dismiss bubble when clicking anywhere outside
+    document.addEventListener('click', (e) => {
+      if (!bubbleAdvisor.contains(e.target) && !advisorAudioTrigger.contains(e.target)) {
+        if (bubbleAdvisor.classList.contains('active')) {
+          bubbleAdvisor.classList.remove('active');
+          if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        }
+      }
     });
   }
 
@@ -241,7 +264,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       closeBottomSheet();
-      if (bubbleBusinessman) bubbleBusinessman.classList.remove('active');
+      if (bubbleAdvisor) {
+        bubbleAdvisor.classList.remove('active');
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      }
       if (inspectorPanel) inspectorPanel.classList.remove('active');
       stagePreviewModal.classList.remove('active');
     } else if (e.key === '1') {
