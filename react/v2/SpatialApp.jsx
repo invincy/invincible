@@ -40,7 +40,7 @@ function SignedInWorkspace({user, logout}) {
   const viewport = useRef(null), orbAnchor = useRef(null), lastFraction = useRef(0), idle = useRef(null);
   const [active, setActive] = useState(regionFromHash(location.hash)), [selected, setSelected] = useState(null), [focusedTaskId, setFocusedTaskId] = useState(null);
   const [travelPage, setTravelPage] = useState(null);
-  const [ideaPanel,setIdeaPanel]=useState(null),[todayOpen,setTodayOpen]=useState(false),[restoreCanvas,setRestoreCanvas]=useState(null);
+  const [ideaPanel,setIdeaPanel]=useState(null),[todayOpen,setTodayOpen]=useState(false);
   const [importPlan, setImportPlan] = useState(null);
   const inspect = id => setFocusedTaskId(id);
   const [authError, setAuthError] = useState('');
@@ -128,14 +128,14 @@ function SignedInWorkspace({user, logout}) {
   return <div className="v2-shell">
     <header className="v2-topbar"><a className="v2-brand" href="#dashboard" onClick={event => {event.preventDefault();navigate('dashboard');}}><span className="v2-brand-mark">I</span><span>INVINCIBLE<small>PERSONAL WORKSPACE</small></span></a>
       <nav aria-label="Explore spaces"><span className="v2-nav-caption" aria-hidden="true">VIEWS</span>{regions.map(region => <a key={region.id} href={'#'+region.id} aria-current={active === region.id ? 'location' : undefined} onClick={event => {if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;event.preventDefault();navigate(region.id);}}><span>{region.number}</span>{region.label}</a>)}</nav>
-      <div className="v2-account"><Suspense fallback={null}><DashboardTools/></Suspense><button aria-label="Sign out" onClick={async () => {try {await logout();} catch {setAuthError('Sign-out did not complete. Try again.');}}}>Sign out</button></div>
+      <div className="v2-account"><Suspense fallback={null}><DashboardTools/></Suspense><button type="button" className="v2-saved-ideas" aria-label="Saved ideas" title="Saved ideas" onClick={()=>setIdeaPanel({})}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg></button><button aria-label="Sign out" onClick={async () => {try {await logout();} catch {setAuthError('Sign-out did not complete. Try again.');}}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M10 4H4v16h6M14 8l4 4-4 4M8 12h10"/></svg></button></div>
     </header>
     <div className="v2-connection" role="status"><span className={error ? 'v2-dot error' : 'v2-dot'}/>{authError || error || (!ready ? 'Restoring your workspace…' : data.tasksCached || data.planCached ? 'Showing cached records · Waiting for connection' : 'Connected to your existing workspace')}<span className="v2-preview-label">WORKSPACE</span>{error && <button onClick={data.retry}>Retry sync</button>}</div>
     <main ref={viewport} className="v2-canvas" aria-label="Continuous spatial workspace" tabIndex={0} onScroll={scroll}
       onKeyDown={event => {if (event.target !== event.currentTarget) return;let index = regions.findIndex(region => region.id === active);if (event.key === 'ArrowRight') index++;else if (event.key === 'ArrowLeft') index--;else if (event.key === 'Home') index=0;else if (event.key === 'End') index=regions.length-1;else return;event.preventDefault();navigate(regions[Math.max(0,Math.min(regions.length-1,index))].id);}}>
       {regions.map(region => <Region key={region.id} region={region} viewport={viewport} onScroll={moveOrb}>
         {!ready ? <div className="v2-panel v2-loading" role="status">Restoring tasks and your daily plan…</div> :
-          region.id === 'dashboard' ? <Dashboard data={data} plan={plan} timer={timer} onInspect={inspect} orbAnchor={mountOrbAnchor} theme={theme} onChangeTheme={changeTheme} onOpenWorkspace={() => navigate('workspace')} onTravel={setTravelPage} uid={user.uid} onPan={moveOrb} onCapture={capture=>setIdeaPanel({capture})} onIdeas={()=>setIdeaPanel({})} restoreView={restoreCanvas} onPlan={()=>setTodayOpen(true)}/> :
+          region.id === 'dashboard' ? <Dashboard data={data} plan={plan} timer={timer} onInspect={inspect} orbAnchor={mountOrbAnchor} theme={theme} onChangeTheme={changeTheme} onOpenWorkspace={() => navigate('workspace')} onTravel={setTravelPage} onPlan={()=>setTodayOpen(true)}/> :
           <Workspace data={data} plan={plan} timer={timer} onInspect={inspect} uid={user.uid} onCreate={() => setSelected({id: newId('t'), create: true})} onPaste={() => setImportPlan({targetId: ''})}/>}
       </Region>)}
     </main>
@@ -143,10 +143,10 @@ function SignedInWorkspace({user, logout}) {
       onWheel={event => {const distance = event.deltaX + (event.shiftKey ? event.deltaY : 0); if (distance && viewport.current) {event.preventDefault(); viewport.current.scrollLeft += distance;}}}><FocusOrb theme={theme} spin={false} allowDrag={false} richParticles followPagePointer/>
       {orbBox.compact && <button className="v2-orb-theme" aria-label={'Orb theme: '+theme+'. Change theme'} onClick={changeTheme}>◐</button>}
     </div>
-    <footer className="v2-footer"><span>DASHBOARD MAP · PERSONAL WORKSPACE</span><span className="v2-footer-desktop">{active==='dashboard'?'Drag to explore · Select an area to save':'Drag cards to organise your work'}</span><span className="v2-footer-mobile">{active==='dashboard'?'Pan or pinch · Tap the centre for today':'Move cards or open a project'}</span><span>{active === 'dashboard' ? '01' : '02'} / 02</span></footer>
+    <footer className="v2-footer"><span>DASHBOARD MAP · PERSONAL WORKSPACE</span><span className="v2-footer-desktop">{active==='dashboard'?'Choose a page · Open today’s plan':'Drag cards to organise your work'}</span><span className="v2-footer-mobile">{active==='dashboard'?'Tap the centre for today’s plan':'Move cards or open a project'}</span><span>{active === 'dashboard' ? '01' : '02'} / 02</span></footer>
     {travelPage && <div className="v2-travel" role="status" aria-live="polite"><span>ENTERING</span><strong>{travelPage.label}</strong><i aria-hidden="true"/></div>}
     <Suspense fallback={<p className="v2-editor-loading" role="status">Opening editor…</p>}>
-      {ideaPanel && <CanvasIdeas uid={user.uid} capture={ideaPanel.capture} onClose={()=>setIdeaPanel(null)} onRestore={idea=>{if(idea.source==='journal'){window.location.assign('/invincible/journal/?date='+encodeURIComponent(idea.journalDate)+'&view='+encodeURIComponent(JSON.stringify(idea.view)));return;}setRestoreCanvas({...idea.view});setIdeaPanel(null);navigate('dashboard');}}/>}
+      {ideaPanel && <CanvasIdeas uid={user.uid} capture={ideaPanel.capture} onClose={()=>setIdeaPanel(null)} onRestore={idea=>{if(idea.source==='journal'){window.location.assign('/invincible/journal/?date='+encodeURIComponent(idea.journalDate)+'&view='+encodeURIComponent(JSON.stringify(idea.view)));return;}setIdeaPanel(null);navigate('dashboard');}}/>}
       {todayOpen && <TodayPlanPanel uid={user.uid} plan={plan} tasks={data.tasks} onClose={()=>setTodayOpen(false)} onInspect={inspect}/>}
       {selected && <TaskEditor key={selected.id} uid={user.uid} taskId={selected.id} isNew={selected.create} task={data.tasks.find(task => task.id === selected.id)} onClose={() => setSelected(null)} onPaste={id => {setSelected(null); setImportPlan({targetId: id});}}/>}
       {importPlan && <PlanImporter uid={user.uid} tasks={data.tasks} targetId={importPlan.targetId} onClose={() => setImportPlan(null)}/>}

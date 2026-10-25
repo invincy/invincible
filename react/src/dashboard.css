@@ -224,24 +224,11 @@ body.home-page{margin:0;min-height:100dvh;background:radial-gradient(circle at 2
 
 /* The map has an unbounded camera; surrounding navigation keeps its existing URLs. */
 #v2-region-dashboard{overflow:clip!important;padding-bottom:0!important}
-.v2-free-canvas{position:relative;min-height:0;overflow:clip;touch-action:none;cursor:grab;background-image:radial-gradient(#86c2ca20 .8px,transparent .8px);background-size:28px 28px}
-.v2-free-canvas:active{cursor:grabbing}.v2-free-canvas.is-selecting{cursor:crosshair}
-.v2-free-world{position:absolute;inset:0;transform-origin:0 0;z-index:4;will-change:transform}
-.v2-free-world .v2-guide-scene{overflow:visible}
-.v2-shell:has(.v2-free-canvas) .v2-orb:not(.is-compact){pointer-events:none;transition:none}
-.v2-canvas-tools{position:absolute;left:12px;top:9px;z-index:12;display:flex;align-items:center;gap:3px;padding:3px;border:1px solid #3a647250;border-radius:11px;background:#0c1b25ed;cursor:default;max-width:calc(100% - 24px)}
-.v2-shell .v2-canvas-tools button{min-height:36px;min-width:36px;padding:5px 8px;border:0;background:transparent;color:#bddddf;font-size:20px}
-.v2-shell .v2-canvas-tools button[aria-pressed=true]{background:#224f58;color:#d6fff3}
-.v2-canvas-tools output{font-size:10px;min-width:32px;text-align:center;color:#8db2bc}
-.v2-canvas-selection-layer{position:absolute;inset:0;z-index:10;pointer-events:none;background:#030d1630}
-.v2-canvas-selection{position:absolute;border:1px solid #8cffe0;background:#8cffe014;box-shadow:0 0 0 9999px #020a1230}
-.v2-canvas-capture-actions{position:absolute;z-index:12;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;padding:7px 10px;border:1px solid #406e78;border-radius:12px;background:#0a1b25;white-space:nowrap;font-size:11px}
-.v2-shell .v2-canvas-capture-actions button{min-height:38px;font-size:12px;padding:6px 10px}
-.v2-canvas-error{position:absolute;bottom:68px;left:12px;right:12px;z-index:13;color:#ffcd94;font-size:12px;background:#182129;padding:10px;border-radius:8px;cursor:default}
+.v2-shell .v2-orb:not(.is-compact){pointer-events:none}
 .v2-guide-orb-anchor{z-index:4}
-.v2-shell .v2-orb-plan{position:absolute;left:50%;top:34%;translate:-50% -50%;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:44px;width:160px;padding:6px;border:0;border-radius:0;background:transparent;color:#a7e5dc;pointer-events:auto;text-shadow:0 2px 10px #000;font-size:12px}
-.v2-orb-plan span{font-weight:650}.v2-orb-plan strong{font-size:10px;color:#abc0c9;font-weight:400}
-.v2-shell .v2-orb-plan:hover{background:#152d3680}
+.v2-shell .v2-orb-plan{position:absolute;left:50%;top:50%;translate:-50% -50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:92px;width:52%;max-width:280px;padding:12px 4px;border:0;border-radius:50%;background:radial-gradient(ellipse,#bd8b2724,transparent 72%);color:#ffe09b;pointer-events:auto;text-shadow:0 0 22px #edbd5255,0 2px 10px #000;font-size:clamp(21px,2.1vw,30px);line-height:1.2}
+.v2-orb-plan>span:first-child{font-weight:750;white-space:nowrap;letter-spacing:-.025em}.v2-orb-plan strong{font-size:14px;color:#e4c887;font-weight:500}
+.v2-shell .v2-orb-plan:hover{background:radial-gradient(ellipse,#d8a53538,transparent 72%);color:#ffedbd}
 .v2-idea-dialog{width:min(720px,calc(100% - 24px));max-height:calc(100dvh - 32px);padding:20px;background:#0e1c26;color:#e4f1f4;border:1px solid #3a6572;border-radius:16px;overflow:auto;scrollbar-width:thin;scrollbar-color:#356574 #0b1720;box-shadow:0 25px 90px #0008}
 .v2-idea-dialog::backdrop{background:#020910b8;backdrop-filter:blur(5px)}
 .v2-idea-dialog>header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
@@ -267,14 +254,9 @@ body.home-page{margin:0;min-height:100dvh;background:radial-gradient(circle at 2
 .v2-shell .v2-today-list button{min-height:40px;font-size:12px;padding:6px 10px}
 .v2-today-add{display:flex!important;align-items:end;margin-top:20px}.v2-today-add label{flex:1;min-width:0}.v2-today-add label>span{display:block}
 @media(max-width:900px){
- .v2-dashboard-body.v2-free-canvas{flex:1;min-height:0}
- .v2-free-world .v2-guide-scene{padding-top:58px}
- .v2-shell .v2-orb-plan{top:50%;width:180px;font-size:15px}.v2-orb-plan strong{font-size:12px}
+ .v2-shell .v2-orb-plan{font-size:clamp(21px,4vw,27px)}
 }
 @media(max-width:600px){
- .v2-canvas-tools{top:7px;left:6px;max-width:calc(100% - 12px)}
- .v2-shell .v2-canvas-tools button{min-width:38px;min-height:40px}
- .v2-canvas-capture-actions{width:max-content;max-width:calc(100% - 16px);gap:6px}
  .v2-idea-dialog{padding:14px}.v2-today-list{gap:6px}.v2-today-list li{flex-wrap:wrap}
  .v2-idea-grid{gap:8px}.v2-idea-grid img{height:100px}
 }
@@ -282,4 +264,26 @@ body.home-page{margin:0;min-height:100dvh;background:radial-gradient(circle at 2
 .v2-orb-plan-preview{display:none}
 @media(max-width:900px){.v2-orb-plan-preview{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;max-width:190px;font-size:12px;line-height:1.4;color:#d2e5e9;text-wrap:balance}}
 
-.v2-shell .v2-canvas-tools button{display:grid;place-items:center}
+
+/* Larger Orb destinations with each title directly under its icon. */
+.v2-shell .v2-constellation .v2-page-point{flex-direction:column;justify-content:center;gap:6px;width:112px;min-height:76px;padding:5px 3px;text-align:center;font-size:12px;line-height:1.2;white-space:normal}
+.v2-shell .v2-constellation .v2-page-glow{width:44px;height:44px}
+.v2-shell .v2-constellation .v2-page-glow svg{width:34px;height:34px}
+.v2-shell .v2-constellation .v2-page-name{max-width:112px;overflow:visible;text-overflow:clip;text-wrap:balance}
+.v2-shell .v2-constellation [data-page="ai"]{--x:50%;--y:17%}
+.v2-shell .v2-constellation [data-page="journal"]{--x:27%;--y:22%}
+.v2-shell .v2-constellation [data-page="finance"]{--x:74%;--y:25%}
+.v2-shell .v2-constellation [data-page="garage"]{--x:16%;--y:44%}
+.v2-shell .v2-constellation [data-page="creator"]{--x:84%;--y:46%}
+.v2-shell .v2-constellation [data-page="workday"]{--x:25%;--y:67%}
+.v2-shell .v2-constellation [data-page="lic"]{--x:77%;--y:68%}
+.v2-shell .v2-constellation [data-page="reminders"]{--x:37%;--y:84%}
+.v2-shell .v2-constellation [data-page="portfolio"]{--x:63%;--y:84%}
+.v2-shell .v2-constellation .v2-orb-task{top:64%;width:32%;min-height:44px;padding:4px}
+.v2-shell .v2-constellation .v2-orb-task strong{font-size:clamp(12px,1vw,15px)}
+@media(max-width:900px){.v2-shell .v2-constellation .v2-page-point{width:auto;min-height:78px;font-size:12px}.v2-shell .v2-constellation .v2-page-glow{width:40px;height:40px}.v2-shell .v2-constellation .v2-page-glow svg{width:31px;height:31px}}
+@media(max-width:620px){.v2-shell .v2-constellation .v2-page-point{font-size:11px;min-height:74px;gap:4px}.v2-shell .v2-constellation .v2-page-glow{width:38px;height:38px}.v2-shell .v2-constellation .v2-page-glow svg{width:30px;height:30px}.v2-shell .v2-orb-plan{max-width:230px}}
+
+.v2-shell .v2-account .v2-saved-ideas{display:grid;place-items:center;min-width:44px;padding:10px}
+
+@media(max-width:600px){.v2-shell .v2-topbar .v2-account{gap:4px}.v2-shell .v2-account>button[aria-label="Sign out"]{display:grid;place-items:center;width:44px;padding:10px}.v2-shell:has(.v2-orb:not(.is-compact)) .v2-topbar{padding-right:16px}.v2-shell .v2-brand{font-size:11px;letter-spacing:.12em}}

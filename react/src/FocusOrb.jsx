@@ -10,7 +10,7 @@ function program(gl,vertex,fragment){
  finally{if(vs)gl.deleteShader(vs);if(fs)gl.deleteShader(fs)}
 }
 // Every visible mark belongs to the particle field; there is no solid mesh or orbit ring.
-const particleVertex=`attribute vec3 position;attribute vec2 appearance;uniform mat4 projection;uniform float pixelRatio;uniform float pointScale;uniform float time;uniform float style;uniform float spin;uniform vec2 rotation;uniform vec3 influence;varying float opacity;void main(){
+const particleVertex=`attribute vec3 position;attribute vec2 appearance;uniform mat4 projection;uniform float pixelRatio;uniform float pointScale;uniform float time;uniform float style;uniform float expressive;uniform float spin;uniform vec2 rotation;uniform vec3 influence;varying float opacity;void main(){
 float travel=fract(position.x+time*position.z);float rawLane=position.y;float cell=step(3.5,rawLane);float ring=step(1.5,rawLane)*(1.0-cell);float lane=fract(rawLane);float tau=6.2831853;
 float hash=fract(sin(lane*913.73)*43758.5453);float angle=travel*tau+hash*tau;
 float latitude=asin(clamp(lane*2.0-1.0,-.98,.98));
@@ -25,6 +25,11 @@ float radius=1.03+.055*sin(angle*3.0+lane*31.0)+.035*sin(angle*7.0-time*.7+hash*
 radius=mix(radius,1.09+.026*sin(angle*3.0+hash*13.0),ring);
 radius=mix(radius,1.075+.035*sin(angle*4.0+hash*27.0-time*.3),cell);
 radius+=step(.5,style)*(1.0-step(1.5,style))*.045*sin(angle*11.0+time*1.8+hash*43.0);
+// Cyan flows as broad aurora bands; emerald grows twisting, organic filaments.
+float cyan=1.0-step(.5,style),emerald=step(.5,style)*(1.0-step(1.5,style));
+latitude+=expressive*(cyan*.20*sin(longitude*2.0+time*.4)+emerald*.16*sin(longitude*4.0-time*.65+hash*tau));
+radius+=expressive*(cyan*.065*sin(longitude*3.0+time*.5)+emerald*.10*sin(longitude*5.0-time*.8+lane*17.0));
+longitude+=expressive*(cyan*.12*sin(latitude*4.0+time*.3)+emerald*.20*sin(latitude*3.0-time*.5));
 vec3 p=vec3(radius*cos(latitude)*cos(longitude),radius*sin(latitude),radius*cos(latitude)*sin(longitude));
 float tilt=(hash-.5)*mix(1.45,2.1,max(ring,cell)),ct=cos(tilt),st=sin(tilt);p=vec3(p.x,p.y*ct-p.z*st,p.y*st+p.z*ct);
 float edge=smoothstep(0.0,.075,travel)*(1.0-smoothstep(.925,1.0,travel));
@@ -46,7 +51,7 @@ p=p*globeCos+cross(globeAxis,p)*globeSin+globeAxis*dot(globeAxis,p)*(1.0-globeCo
 float cx=cos(rotation.y),sx=sin(rotation.y),cy=cos(rotation.x),sy=sin(rotation.x);
 p=vec3(p.x,p.y*cx-p.z*sx,p.y*sx+p.z*cx);p=vec3(p.x*cy+p.z*sy,p.y,-p.x*sy+p.z*cy);
 vec2 delta=p.xy-influence.xy;float pull=exp(-dot(delta,delta)*2.7)*influence.z;
-p.xy+=delta*pull*0.13;p.z+=pull*0.16;
+p.xy+=delta*pull*mix(.13,.30,expressive);p.z+=pull*mix(.16,.28,expressive);
 // A slow planet-like pulse: six seconds inward, six seconds back; never expand.
 float planetPulse=.5-.5*cos(time*.5235988);
 p*=1.0-.015*planetPulse;
@@ -69,11 +74,11 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=fa
   const interactive=()=>drag||targetStrength>0||hoverStrength>.015||Math.hypot(velocityX,velocityY)>.0005;
   const initialize=()=>{
    dots=program(gl,particleVertex,particleFragment);particleBuffer=gl.createBuffer();particleTier=null;
-   uniforms=Object.fromEntries(['projection','pixelRatio','pointScale','time','spin','rotation','influence','style','colorA','colorB'].map(name=>[name,gl.getUniformLocation(dots,name)]));
+   uniforms=Object.fromEntries(['projection','pixelRatio','pointScale','time','spin','rotation','influence','style','expressive','colorA','colorB'].map(name=>[name,gl.getUniformLocation(dots,name)]));
    gl.useProgram(dots);gl.bindBuffer(gl.ARRAY_BUFFER,particleBuffer);
    for(const [name,size,offset]of[['position',3,0],['appearance',2,12]]){const location=gl.getAttribLocation(dots,name);gl.enableVertexAttribArray(location);gl.vertexAttribPointer(location,size,gl.FLOAT,false,20,offset)}
    gl.clearColor(0,0,0,0);gl.disable(gl.DEPTH_TEST);gl.depthMask(false);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
-   gl.uniform1f(uniforms.style,palette.style);gl.uniform1f(uniforms.spin,spin ? 1 : 0);gl.uniform3fv(uniforms.colorA,palette.a);gl.uniform3fv(uniforms.colorB,palette.b);
+   gl.uniform1f(uniforms.style,palette.style);gl.uniform1f(uniforms.expressive,richParticles ? 1 : 0);gl.uniform1f(uniforms.spin,spin ? 1 : 0);gl.uniform3fv(uniforms.colorA,palette.a);gl.uniform3fv(uniforms.colorB,palette.b);
   };
   // A timer waits for the next due frame; rAF only aligns that frame with presentation.
   const schedule=renderedAt=>{
@@ -88,8 +93,8 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=fa
    const smoothing=reduced.matches?1:1-Math.exp(-dt*9);
    hoverX+=(targetX-hoverX)*smoothing;hoverY+=(targetY-hoverY)*smoothing;hoverStrength+=(targetStrength-hoverStrength)*smoothing;
    if(!drag&&!reduced.matches){const decay=Math.exp(-dt*5);yaw+=velocityX*dt*30;pitch+=velocityY*dt*30;velocityX*=decay;velocityY*=decay}
-   const autoInfluenceX=Math.cos(time*.43)*.78+Math.sin(time*.19+1.2)*.18,autoInfluenceY=Math.sin(time*.37)*.65+Math.cos(time*.23+.4)*.16,manualMix=Math.min(1,hoverStrength),influenceX=autoInfluenceX*(1-manualMix)+hoverX*manualMix,influenceY=autoInfluenceY*(1-manualMix)+hoverY*manualMix,influenceStrength=1+.4*manualMix;
-   gl.clear(gl.COLOR_BUFFER_BIT);gl.uniform1f(uniforms.time,time);gl.uniform2f(uniforms.rotation,yaw+influenceX*influenceStrength*.16,pitch-influenceY*influenceStrength*.16);gl.uniform3f(uniforms.influence,influenceX,influenceY,influenceStrength);gl.drawArrays(gl.POINTS,0,particleCount);
+   const autoInfluenceX=Math.cos(time*.43)*.78+Math.sin(time*.19+1.2)*.18,autoInfluenceY=Math.sin(time*.37)*.65+Math.cos(time*.23+.4)*.16,manualMix=Math.min(1,hoverStrength),influenceX=autoInfluenceX*(1-manualMix)+hoverX*manualMix,influenceY=autoInfluenceY*(1-manualMix)+hoverY*manualMix,influenceStrength=1+(richParticles?.9:.4)*manualMix;
+   gl.clear(gl.COLOR_BUFFER_BIT);gl.uniform1f(uniforms.time,time);gl.uniform2f(uniforms.rotation,yaw+influenceX*influenceStrength*(richParticles?.24:.16),pitch-influenceY*influenceStrength*(richParticles?.24:.16));gl.uniform3f(uniforms.influence,influenceX,influenceY,influenceStrength);gl.drawArrays(gl.POINTS,0,particleCount);
    container.dataset.ready='true';schedule(renderedAt);
   };
   const resume=()=>{stop();if(canDraw())render(performance.now())};
@@ -101,14 +106,14 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=fa
    gl.viewport(0,0,c.width,c.height);gl.uniformMatrix4fv(uniforms.projection,false,perspective(rect.width/rect.height));gl.uniform1f(uniforms.pixelRatio,ratio);gl.uniform1f(uniforms.pointScale,Math.max(.85,Math.min(1.5,rect.width/480)));
    const compact=rect.width<100;
    const tier=orbParticleTier(mobile.matches||compact,lightweight||compact);
-   if(richParticles&&!compact){tier.streams=Math.round(tier.streams*1.3);tier.flecks=Math.round(tier.flecks*1.55)}
+   if(richParticles&&!compact){tier.streams=Math.round(tier.streams*1.6);tier.flecks=Math.round(tier.flecks*2.4)}
    const key=JSON.stringify(tier);
    if(particleTier!==key){const particles=createOrbParticles(tier);particleCount=particles.length/5;gl.bufferData(gl.ARRAY_BUFFER,particles,gl.STATIC_DRAW);particleTier=key}
    // Resizing clears a canvas, so replace its contents immediately rather than waiting for a paced frame.
    resume();
   };
   const pointerLocation=event=>{
-   if(followPagePointer){targetX=(event.clientX/innerWidth-.5)*2;targetY=(.5-event.clientY/innerHeight)*2;targetStrength=.55;return}
+   if(followPagePointer){const rect=surface.getBoundingClientRect();targetX=Math.max(-1.7,Math.min(1.7,((event.clientX-rect.left)/rect.width-.5)*2.5));targetY=Math.max(-1.7,Math.min(1.7,(.5-(event.clientY-rect.top)/rect.height)*2.5));targetStrength=1;return}
    const rect=surface.getBoundingClientRect();targetX=((event.clientX-rect.left)/rect.width-.5)*2.5;targetY=(.5-(event.clientY-rect.top)/rect.height)*2.5;targetStrength=1
   };
   const pointerDown=event=>{if(!allowDrag||!event.isPrimary||event.button!==0||drag||event.target.closest('button,a'))return;drag={id:event.pointerId,x:event.clientX,y:event.clientY};velocityX=velocityY=0;surface.setPointerCapture(event.pointerId);surface.dataset.dragging='true';pointerLocation(event);resume()};
