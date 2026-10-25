@@ -36,3 +36,16 @@ The user will provide these **new recordings**. The older `advisor-scene-*.mp3` 
 Configuration is at the top of presentation.js in STORY_SCENES. Page 1 draws blue business from 0s. Page 2 begins with blue and switches to red at 3.2s, a provisional cue that **must be aligned with the second sentence in the supplied recording**. Page 3 draws green from 0s. Drawing lasts 1.4 seconds per cue; pause/resume/seek follow media currentTime, never wall-clock timers. Reduced motion uses a static glow. Audio loads only on tap; Back, Next, Escape, tab hiding and pagehide stop it. Missing new recordings show an honest pending-recording status.
 
 Verification: nine focused tests cover shared chart identity, forward/back navigation, all three audio sources and cue states, draw progress, seeking, pause/resume/replay, late-event cancellation, failures and page lifecycle. Mobile visual QA covers 320×568 and 390×844. Actual phrase alignment remains pending the user's three recordings. No product features, measured outcomes or guaranteed combined returns were added.
+
+
+## Page 4 product reveal
+
+Page 3 now advances to a dedicated navy/gold Bima Platinum reveal inside the existing presentation shell. A small green-to-gold path settles before the product title, anniversary label and Limited-Period Plan label; reduced motion skips entrance animation. The presenting advisor remains at the right. No chart, calculations or benefit tables appear on Page 4. Pages 1–3 keep their existing copy, path geometry and audio scripts; only Page 3's forward CTA is added.
+
+New audio source: `assets/audio/page4-advisor.mp3`. Exact script: “यहीं Bima Platinum आपकी financial journey में stability जोड़ता है। यह आपके portfolio के एक हिस्से को guaranteed और predictable structure देने के लिए बनाया गया है।” The MP3 is not supplied yet. Existing missing-recording handling is retained, with no substituted voice. The same controls support play/pause/resume and stop on navigation/tab hiding. Anniversary and availability labels are visual only, outside the script.
+
+Page 4's Plan समझें CTA opens Page 5, which embeds the existing calculator.html at #optionDetail to reuse the existing benefit-structure explanation rather than inventing another policy model. Back returns to Page 4; Page 5 is loaded only when requested. No existing calculator files are modified.
+
+Source check: LIC's official 01.09.2026 press release confirms the 70th-anniversary context and non-linked, non-participating savings/protection plan with guaranteed additions: https://web.licindia.in/documents/d/guest/press-release-new-plans-bima-platinum-and-jeevan-raksha_02092026 . The existing calculator already carries the limited-window positioning; secondary published plan guides corroborate it. No closing date or new numerical benefit is added to the reveal. No separate anniversary image asset was found, so the supporting credential uses plain styled text, not an invented official seal.
+
+Verification: eleven focused LIC tests cover prior scenes plus Page 3→4→5 navigation/back, shared audio lifecycle, exact source/script, missing recording handling, and restoration of the unchanged chart. Mobile preview checked at 320×568 and 390×844. Phrase-level narration timing remains pending the user's MP3.

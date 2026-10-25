@@ -14,7 +14,7 @@
 
   <link rel="preload" as="image" href="assets/scene-1-853.webp" imagesrcset="assets/scene-1-480.webp 480w, assets/scene-1-853.webp 853w" imagesizes="(max-width: 480px) 100vw, 420px" fetchpriority="high">
 
-  <link rel="stylesheet" href="presentation.css?v=14">
+  <link rel="stylesheet" href="presentation.css?v=15">
 </head>
 <body>
 
@@ -207,6 +207,23 @@
         <div class="scene-two-visual">
           <img class="scene-two-presenter" src="assets/advisor-presenter.webp" alt="LIC advisor presenting the two financial structures" width="760" height="950" loading="lazy" decoding="async">
           <div id="presenterChartHost" class="presenter-chart-host"></div>
+          <section id="productReveal" class="product-reveal" aria-labelledby="revealProductName" hidden>
+            <svg class="reveal-stability-path" viewBox="0 0 350 285" aria-hidden="true">
+              <path pathLength="1" d="M43 242 C61 234 74 229 88 224 S109 213 123 207 S146 193 159 187 S178 177 193 170 S215 155 228 151 S247 141 261 134 S281 125 295 117 S315 106 326 100"/>
+            </svg>
+            <div class="reveal-product-copy">
+              <p class="reveal-brand">LIC</p>
+              <h3 id="revealProductName"><span class="reveal-accessible-brand">LIC </span>Bima<br>Platinum</h3>
+              <p class="reveal-support">आपके financial portfolio के लिए एक guaranteed और predictable layer</p>
+            </div>
+            <div class="reveal-credentials">
+              <div class="reveal-anniversary" aria-label="Celebrating 70 Years of LIC"><span class="reveal-years" aria-hidden="true">70</span><span>Celebrating<br><strong>70 Years of LIC</strong></span></div>
+              <span class="reveal-limited">Limited-Period Plan</span>
+            </div>
+          </section>
+          <section id="planDetailsPage" class="plan-details-page" aria-label="Bima Platinum plan structure" hidden>
+            <iframe id="planDetailsFrame" title="Bima Platinum benefit structure" loading="lazy"></iframe>
+          </section>
           <figure id="storyChart" class="balance-chart scenario-chart" data-step="1" aria-labelledby="balanceChartTitle" aria-describedby="balanceChartCaption">
             <figcaption id="balanceChartTitle" class="scenario-chart-heading">Business · Growth engine</figcaption>
             <svg class="balance-plot" viewBox="0 0 350 285" role="img" aria-labelledby="balancePlotTitle balancePlotDesc">
@@ -236,6 +253,7 @@
         <footer class="scene-two-footer">
           <button id="sceneTwoDialogueBtn" class="scene-two-dialogue-btn" type="button" aria-label="Hear Scene 2 advisor recording"><span aria-hidden="true">▶</span> <span id="sceneTwoAudioLabel">Advisor की बात सुनें</span></button>
           <p id="sceneTwoAudioStatus" class="audio-status" role="status" aria-live="polite"></p>
+          <p id="revealCtaIntro" class="reveal-cta-intro" hidden>अब देखें Bima Platinum कैसे काम करता है</p>
           <button id="sceneTwoNextBtn" class="scene-two-next" type="button" aria-controls="stagePreviewModal"><span id="storyNextLabel">अब Stability कैसे मिलेगी?</span> <span aria-hidden="true">→</span></button>
           <p id="sceneThreeStatus" class="scene-three-status" role="status" hidden>आगे Bima Platinum को समझेंगे।</p>
         </footer>
@@ -266,6 +284,6 @@
 
 </div><!-- /.app-viewport-wrapper -->
 
-<script src="presentation.js?v=14"></script>
+<script src="presentation.js?v=15"></script>
 </body>
 </html>

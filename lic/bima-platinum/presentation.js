@@ -1,4 +1,4 @@
-/** LIC Bima Platinum: one existing chart, three progressive story states. */
+/** LIC Bima Platinum: existing chart story and a focused product reveal. */
 // New recordings use new paths so the older scripts are never played by mistake.
 // Add the supplied recordings here, then tune cue times to their spoken phrases.
 const STORY_SCENES = {
@@ -17,7 +17,14 @@ const STORY_SCENES = {
     src: 'assets/audio/advisor-story-3-hindi.mp3',
     script: 'इसलिए अपनी personal savings का एक हिस्सा stability के लिए अलग रखिए। एक stable या guaranteed structure आपके overall finances में predictability जोड़ता है।',
     cues: [{ start: 0, focus: 'platinum' }]
-  }
+  },
+  4: {
+    src: 'assets/audio/page4-advisor.mp3',
+    script: 'यहीं Bima Platinum आपकी financial journey में stability जोड़ता है। यह आपके portfolio के एक हिस्से को guaranteed और predictable structure देने के लिए बनाया गया है।',
+    cues: []
+  },
+  // Reuse the existing benefit-structure page; no duplicated policy calculations.
+  5: { src: null, script: '', cues: [] }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -89,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function toggleAudioPlayback() {
-    if (playbackState === 'loading') return;
+    if (!STORY_SCENES[currentPage].src || playbackState === 'loading') return;
     if (playbackState === 'playing') { audioElement.pause(); return; }
     const attempt = ++audioAttempt;
     const page = currentPage;
@@ -135,6 +142,19 @@ document.addEventListener('DOMContentLoaded', () => {
     stopAllAudio();
     currentPage = page;
     stageContainer.setAttribute('data-story-step', String(page));
+    const isReveal = page === 4;
+    const isDetails = page === 5;
+    document.getElementById('productReveal').hidden = !isReveal;
+    document.getElementById('planDetailsPage').hidden = !isDetails;
+    document.getElementById('presenterChartHost').hidden = page >= 4;
+    storyChart.hidden = page >= 4;
+    document.getElementById('revealCtaIntro').hidden = !isReveal;
+    document.querySelector('.scene-two-footer').hidden = isDetails;
+    if (isDetails) {
+      const frame = document.getElementById('planDetailsFrame');
+      if (!frame.getAttribute('src')) frame.setAttribute('src', 'calculator.html#optionDetail');
+    }
+
     storyChart.setAttribute('data-step', String(page));
     const host = document.getElementById(page === 1 ? 'sceneOneChartHost' : 'presenterChartHost');
     host.appendChild(storyChart); // Move the actual original figure; never clone paths.
@@ -158,11 +178,12 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('storyStageCounter').textContent = `${page} / 10`;
       document.querySelector('.scene-two-nav').setAttribute('aria-label', `Scene ${page} navigation`);
       document.getElementById('storyProgress').style.width = `${page * 10}%`;
-      document.getElementById('storyEyebrow').textContent = page === 2 ? 'GROWTH + VOLATILITY' : 'GROWTH + STABILITY';
+      document.getElementById('storyEyebrow').textContent = page === 2 ? 'GROWTH + VOLATILITY' : page === 3 ? 'GROWTH + STABILITY' : page === 4 ? 'THE STABILITY LAYER' : 'PLAN STRUCTURE';
       const title = document.getElementById('stagePreviewTitle');
-      title.textContent = page === 2 ? 'Savings भी risk में?' : 'Business से growth, savings से stability';
+      title.textContent = page === 2 ? 'Savings भी risk में?' : page === 3 ? 'Business से growth, savings से stability' : page === 4 ? 'अब Growth के साथ Stability' : 'Bima Platinum कैसे काम करता है?';
       previewDismissBtn.setAttribute('aria-label', `Back to Scene ${page - 1}`);
-      document.getElementById('sceneTwoNextBtn').hidden = page === 3;
+      document.getElementById('sceneTwoNextBtn').hidden = isDetails;
+      document.getElementById('storyNextLabel').textContent = page === 2 ? 'अब Stability कैसे मिलेगी?' : page === 3 ? 'Stability का अगला कदम' : 'Plan समझें';
       sceneThreeStatus.hidden = true;
       stagePreviewModal.scrollTop = 0;
       if (focus) previewDismissBtn.focus();
@@ -176,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
   sceneTwoDialogueBtn.addEventListener('click', toggleAudioPlayback);
   ctaForwardBtn.addEventListener('click', () => showPage(2));
   previewDismissBtn.addEventListener('click', () => showPage(currentPage - 1));
-  document.getElementById('sceneTwoNextBtn').addEventListener('click', () => { if (currentPage === 2) showPage(3); });
+  document.getElementById('sceneTwoNextBtn').addEventListener('click', () => { if (currentPage >= 2 && currentPage < 5) showPage(currentPage + 1); });
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopAllAudio(); });
   window.addEventListener('pagehide', stopAllAudio);
   showPage(1, false);
@@ -247,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Keyboard navigation & accessibility
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Tab' && stagePreviewModal.classList.contains('active')) {
-      const focusable = Array.from(stagePreviewModal.querySelectorAll('button, a[href]')).filter(el => !el.hidden);
+      const focusable = Array.from(stagePreviewModal.querySelectorAll('button, a[href], iframe')).filter(el => !el.hidden && !el.closest('[hidden]'));
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
       if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }

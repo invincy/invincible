@@ -12,13 +12,13 @@ function setup(play) {
       style: { values:{}, setProperty(k,v) { this.values[k]=v; } },
       classList: { values:new Set(), add(...v) { v.forEach(x=>this.values.add(x)); }, remove(...v) { v.forEach(x=>this.values.delete(x)); }, contains(v) { return this.values.has(v); } },
       appendChild(child) { if(child.parentElement) child.parentElement.children=child.parentElement.children.filter(x=>x!==child); this.children.push(child); child.parentElement=this; },
-      addEventListener(k,fn) { this.events[k]=fn; }, setAttribute(k,v) { this.attrs[k]=v; },
+      addEventListener(k,fn) { this.events[k]=fn; }, setAttribute(k,v) { this.attrs[k]=v; }, getAttribute(k) { return this.attrs[k] ?? null; },
       focus() {}, querySelectorAll() { return []; }
     });
     return elements.get(id);
   }
   const audios=[]; const windowEvents={};
-  const doc={events:{}, hidden:false, getElementById:el, querySelectorAll:()=>[], querySelector:s=>s==='.layer-stage-3d'?el('firstScene'):s==='.scene-two-nav'?el('sceneNav'):null,
+  const doc={events:{}, hidden:false, getElementById:el, querySelectorAll:()=>[], querySelector:s=>s==='.layer-stage-3d'?el('firstScene'):s==='.scene-two-nav'?el('sceneNav'):s==='.scene-two-footer'?el('sceneFooter'):null,
     body:el('body'), addEventListener(k,fn) { this.events[k]=fn; }};
   class Audio {
     constructor(src) { this.src=src; this.events={}; this.currentTime=0; this.ended=false; this.paused=true; audios.push(this); }
@@ -48,7 +48,7 @@ test('one original chart moves through pages 1 → 2 → 3 and back without clon
   s.click('sceneTwoNextBtn');
   assert.equal(chart.attrs['data-step'],'3');
   assert.equal(s.el('storyStageCounter').textContent,'3 / 10');
-  assert.equal(s.el('sceneTwoNextBtn').hidden,true);
+  assert.equal(s.el('sceneTwoNextBtn').hidden,false);
   assert.equal(s.el('presenterChartHost').children.length,1);
   s.click('previewDismissBtn');
   assert.equal(chart.attrs['data-step'],'2');
@@ -151,4 +151,50 @@ test('page has one chart, original three paths and Hindi-English scripts without
   assert.equal((html.match(/class="scenario-line /g)||[]).length,3);
   assert.match(html,/आपका business ही आपका/);
   assert.doesNotMatch(html+source,/[\u0A80-\u0AFF]/);
+});
+
+
+test('Page 3 opens the reveal, Page 4 opens existing plan details as Page 5, and Back restores the chart',()=>{
+  const s=setup(); s.click('ctaForwardBtn'); s.click('sceneTwoNextBtn');
+  assert.equal(s.el('storyNextLabel').textContent,'Stability का अगला कदम');
+  s.click('sceneTwoNextBtn');
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'4');
+  assert.equal(s.el('productReveal').hidden,false);
+  assert.equal(s.el('storyChart').hidden,true);
+  assert.equal(s.el('revealCtaIntro').hidden,false);
+  assert.equal(s.el('storyNextLabel').textContent,'Plan समझें');
+  assert.equal(s.el('storyStageCounter').textContent,'4 / 10');
+  s.click('sceneTwoNextBtn');
+  assert.equal(s.el('storyStageCounter').textContent,'5 / 10');
+  assert.equal(s.el('planDetailsPage').hidden,false);
+  assert.equal(s.el('sceneFooter').hidden,true);
+  assert.equal(s.el('planDetailsFrame').attrs.src,'calculator.html#optionDetail');
+  s.click('previewDismissBtn');
+  assert.equal(s.el('productReveal').hidden,false);
+  assert.equal(s.el('sceneFooter').hidden,false);
+  s.click('previewDismissBtn');
+  assert.equal(s.el('storyChart').hidden,false);
+  assert.equal(s.el('productReveal').hidden,true);
+  assert.equal(s.el('storyChart').attrs['data-step'],'3');
+});
+
+test('Page 4 shares recording controls, exact script and missing-file handling',async()=>{
+  const s=setup(); s.click('ctaForwardBtn'); s.click('sceneTwoNextBtn'); s.click('sceneTwoNextBtn');
+  s.click('sceneTwoDialogueBtn'); await flush();
+  const audio=s.audios[0];
+  assert.equal(audio.src,'assets/audio/page4-advisor.mp3');
+  assert.equal(s.el('sceneTwoAudioLabel').textContent,'Pause audio');
+  assert.equal(focus(s),'');
+  audio.currentTime=2; s.click('sceneTwoDialogueBtn');
+  assert.equal(s.el('sceneTwoAudioLabel').textContent,'Resume audio');
+  s.click('sceneTwoDialogueBtn'); await flush();
+  s.click('sceneTwoNextBtn');
+  assert.equal(audio.paused,true); assert.equal(audio.currentTime,0);
+  audio.events.playing();
+  assert.equal(s.el('sceneTwoAudioLabel').textContent,'Advisor की बात सुनें');
+  assert.match(source,/यहीं Bima Platinum आपकी financial journey में stability जोड़ता है। यह आपके portfolio के एक हिस्से को guaranteed और predictable structure देने के लिए बनाया गया है।/);
+  const missing=setup(()=>Promise.reject(new Error('missing')));
+  missing.click('ctaForwardBtn'); missing.click('sceneTwoNextBtn'); missing.click('sceneTwoNextBtn');
+  missing.click('sceneTwoDialogueBtn'); await flush();
+  assert.match(missing.el('sceneTwoAudioStatus').textContent,/नई recording/);
 });
