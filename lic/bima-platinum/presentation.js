@@ -188,6 +188,8 @@ document.addEventListener('DOMContentLoaded', () => {
     ctaForwardBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       stopAllAudio();
+      const firstScene = document.querySelector('.layer-stage-3d');
+      if (firstScene) firstScene.inert = true;
       stagePreviewModal.inert = false;
       stagePreviewModal.classList.add('active');
       previewDismissBtn.focus();
@@ -197,6 +199,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function dismissPreview() {
     stagePreviewModal.classList.remove('active');
     stagePreviewModal.inert = true;
+    const firstScene = document.querySelector('.layer-stage-3d');
+    if (firstScene) firstScene.inert = false;
     ctaForwardBtn.focus();
   }
 
@@ -212,6 +216,20 @@ document.addEventListener('DOMContentLoaded', () => {
         dismissPreview();
       }
     });
+  }
+
+  const sceneTwoDialogueBtn = document.getElementById('sceneTwoDialogueBtn');
+  const sceneTwoDialogue = document.getElementById('sceneTwoDialogue');
+  if (sceneTwoDialogueBtn && sceneTwoDialogue) {
+    sceneTwoDialogueBtn.addEventListener('click', () => {
+      sceneTwoDialogue.hidden = !sceneTwoDialogue.hidden;
+      sceneTwoDialogueBtn.setAttribute('aria-expanded', String(!sceneTwoDialogue.hidden));
+    });
+  }
+  const sceneTwoNextBtn = document.getElementById('sceneTwoNextBtn');
+  const sceneThreeStatus = document.getElementById('sceneThreeStatus');
+  if (sceneTwoNextBtn && sceneThreeStatus) {
+    sceneTwoNextBtn.addEventListener('click', () => { sceneThreeStatus.hidden = false; });
   }
 
   // Developer Tooling: Layer Inspector
@@ -280,8 +298,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Keyboard navigation & accessibility
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Tab' && stagePreviewModal.classList.contains('active')) {
-      e.preventDefault();
-      previewDismissBtn.focus();
+      const focusable = Array.from(stagePreviewModal.querySelectorAll('button, a[href]'));
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     } else if (e.key === 'Escape') {
       stopAllAudio();
       if (inspectorPanel) inspectorPanel.classList.remove('active');

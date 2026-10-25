@@ -925,3 +925,50 @@ body.dev-mode .desktop-tools-bar { display: flex; }
   -webkit-mask-image: linear-gradient(to bottom, transparent 4%, #000 9%);
   mask-image: linear-gradient(to bottom, transparent 4%, #000 9%);
 }
+
+/* Scene 2: reference-led growth and stability composition. */
+.scene-two { padding:0; display:flex; flex-direction:column; align-items:stretch; justify-content:flex-start; overflow-y:auto; overflow-x:hidden; background:#061226; isolation:isolate; scrollbar-width:thin; scrollbar-color:#b99c5544 transparent; }
+.scene-two-shop,.scene-two-wash { position:absolute; inset:0; width:100%; height:100%; z-index:-2; }
+.scene-two-shop { object-fit:cover; object-position:left; filter:blur(5px); opacity:.6; }
+.scene-two-wash { z-index:-1; background:linear-gradient(180deg,#061226 1%,#061226db 22%,#06122644 53%,#061226ed 96%); }
+.scene-two-nav { display:flex; align-items:center; justify-content:space-between; flex-shrink:0; padding:44px 18px 0; }
+.scene-two-heading { padding:20px 22px 0; position:relative; z-index:4; flex-shrink:0; }
+.scene-two-eyebrow { display:flex; align-items:center; gap:12px; font-size:10px; letter-spacing:.19em; color:#f1ce7c; margin-bottom:12px; }
+.scene-two-eyebrow::after { content:''; height:1px; width:60px; background:linear-gradient(90deg,#e6c687,transparent); }
+.scene-two-heading h2 { font:700 clamp(26px,7.3vw,34px)/1.4 var(--font-hindi); letter-spacing:-.035em; }
+.scene-two-heading h2 span { color:#f2cd7e; }
+.scene-two-subtitle { margin-top:10px; font:400 15px/1.6 var(--font-hindi); color:#e4e6ed; }
+.scene-two-visual { flex:1; min-height:402px; position:relative; margin-top:16px; isolation:isolate; }
+.scene-two-presenter { position:absolute; width:100%; height:calc(100% + 80px); right:-23%; bottom:-24px; object-fit:contain; object-position:bottom right; z-index:3; pointer-events:none; mask-image:linear-gradient(#000 88%,transparent); }
+.money-roles { position:relative; z-index:4; width:62%; margin-left:4%; padding-top:5px; }
+.money-role { position:relative; width:100%; padding:17px 15px 13px; border:1px solid #58d9d6b3; border-radius:18px;
+ background:linear-gradient(125deg,#10333ae8,#071728eb 70%); box-shadow:-5px 0 19px #41ded521,inset 1px 1px 0 #b7fff933; }
+.role-summary { display:flex; align-items:center; gap:10px; }
+.role-hero-icon { width:56px; height:61px; flex-shrink:0; color:#efcf7c; filter:drop-shadow(0 0 7px #f5d06077); }
+.money-role p { font:500 11px/1.65 var(--font-hindi); color:#edf0f3; }
+.money-role h3 { font:500 29px/1.25 var(--font-serif); color:#f0d38b; margin-top:2px; }
+.role-points { list-style:none; border-top:1px solid #b8e9e533; margin-top:13px; padding-top:10px; display:flex; flex-direction:column; gap:6px; }
+.role-points li { display:flex; align-items:center; gap:9px; font:400 11px/1.4 var(--font-sans); color:#edf0f3; white-space:nowrap; }
+.role-points li span { display:grid; place-items:center; flex-shrink:0; width:26px; height:26px; border:1px solid #b8e9e566; color:#b8e9d3; border-radius:50%; font-size:17px; }
+.role-stability { border-color:#e8bd65db; background:linear-gradient(125deg,#5a421dd9,#101a27ed 80%); box-shadow:-5px 0 19px #e8bd6524,inset 1px 1px 0 #ffe5a344; }
+.role-stability .role-points { border-color:#e8bd6544; }
+.role-stability .role-points li span { color:#f0d38b; border-color:#e8bd6577; }
+.role-connector { height:28px; width:1px; border-left:2px dashed #e8bd6588; margin-left:50%; position:relative; }
+.role-connector i { position:absolute; width:9px; height:9px; border:2px solid #e8bd65; border-radius:50%; background:#846529; left:-5px; top:10px; box-shadow:0 0 12px #e8bd65; }
+.scene-two.active .role-growth { animation:role-arrive .6s both; }
+.scene-two.active .role-stability { animation:role-arrive .6s .22s both; }
+@keyframes role-arrive { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.scene-two-footer { flex-shrink:0; position:relative; z-index:4; padding:14px 20px max(20px,env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:12px; background:linear-gradient(transparent,#061226 40%); }
+.scene-two-dialogue-btn { align-self:center; background:#061226bb; color:#f0d38b; border:1px solid #e8bd65b3; border-radius:999px; min-height:44px; padding:8px 22px; font:500 13px var(--font-hindi); cursor:pointer; }
+.scene-two-dialogue-btn span { margin-left:9px; }
+.scene-two-dialogue { font:400 13px/1.7 var(--font-hindi); color:#e2e6ef; padding:12px 14px; background:#0c1a30; border-radius:12px; }
+.scene-two-next { width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; border:1px solid #ffe4a2; border-radius:17px; background:linear-gradient(115deg,#ffe5a3,#ecc66d 65%,#ba8e31); color:#061226; padding:12px 20px; font:700 17px var(--font-hindi); cursor:pointer; box-shadow:0 5px 20px #0003; }
+.scene-two-next span { font-size:27px; }
+.scene-three-status { font:12px/1.5 var(--font-hindi); text-align:center; color:var(--text-secondary); }
+.scene-two button:focus-visible,.scene-two a:focus-visible { outline:2px solid white; outline-offset:4px; }
+@media(max-width:480px) { .scene-two-nav { padding-top:max(16px,env(safe-area-inset-top)); } }
+@media(max-width:360px) { .scene-two-heading { padding-inline:18px; } .scene-two-subtitle { font-size:13px; } .money-roles { width:65%; } .money-role { padding:14px 11px 11px; } .role-summary { gap:6px; } .role-hero-icon { width:43px; height:53px; } .money-role h3 { font-size:25px; } .money-role p { font-size:10px; } .role-points li { font-size:10px; gap:6px; } .role-points li span { width:24px; height:24px; } .scene-two-next { font-size:15px; } }
+@media(max-height:700px) { .scene-two-heading { padding-top:14px; } .scene-two-heading h2 { font-size:27px; } .scene-two-eyebrow { margin-bottom:8px; } }
+@media(prefers-reduced-motion:reduce) { .scene-two.active .money-role { animation:none; } }
+
+.role-points li span svg { width:17px; height:17px; }

@@ -8,7 +8,7 @@ function setup(play) {
   const elements = new Map();
   function el(id) {
     if (!elements.has(id)) elements.set(id, {
-      textContent: '', inert: true, events: {}, attrs: {},
+      textContent: '', inert: true, hidden: true, events: {}, attrs: {},
       classList: { values: new Set(), add(...v) { v.forEach(x => this.values.add(x)); }, remove(...v) { v.forEach(x => this.values.delete(x)); }, contains(v) { return this.values.has(v); } },
       addEventListener(k, fn) { this.events[k] = fn; },
       setAttribute(k, v) { this.attrs[k] = v; }, focus() {},
@@ -17,7 +17,7 @@ function setup(play) {
   }
   const audios = [];
   let speechCalls = 0;
-  const doc = { events: {}, hidden: false, getElementById: el, querySelectorAll: () => [], querySelector: () => null,
+  const doc = { events: {}, hidden: false, getElementById: el, querySelectorAll: () => [], querySelector: selector => selector === '.layer-stage-3d' ? el('firstScene') : null,
     body: el('body'), addEventListener(k, fn) { this.events[k] = fn; } };
   class Audio {
     constructor() { this.events = {}; this.currentTime = 0; this.ended = false; audios.push(this); }
@@ -80,4 +80,20 @@ test('page and narration use Hindi-English with no Gujarati remnants', () => {
   assert.match(html, /आपका/);
   assert.doesNotMatch(html + source, /[\u0A80-\u0AFF]/);
   assert.match(source, /advisor-scene-1-hindi\.mp3/);
+});
+
+test('Scene 2 shows the advisor script on demand and keeps Scene 1 inert until returning', () => {
+  const s = setup();
+  s.click('ctaForwardBtn');
+  assert.equal(s.el('firstScene').inert, true);
+  s.click('sceneTwoDialogueBtn');
+  assert.equal(s.el('sceneTwoDialogue').hidden, false);
+  assert.equal(s.el('sceneTwoDialogueBtn').attrs['aria-expanded'], 'true');
+  s.click('sceneTwoDialogueBtn');
+  assert.equal(s.el('sceneTwoDialogue').hidden, true);
+  s.click('sceneTwoNextBtn');
+  assert.equal(s.el('sceneThreeStatus').hidden, false);
+  s.click('previewDismissBtn');
+  assert.equal(s.el('firstScene').inert, false);
+  assert.equal(s.el('stagePreviewModal').inert, true);
 });
