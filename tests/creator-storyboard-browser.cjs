@@ -190,7 +190,7 @@ const server=http.createServer((req,res)=>{
 
   assert.equal(await page.locator('.wb-column-head,.wb-row').count(),0);
   await page.locator('[data-field=voiceoverTimestamp]').fill('00:00.250–00:04.900');
-  await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes[0].voiceoverTimestamp==='00:00.250–00:04.900',projectId);
+  await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes?.[0]?.voiceoverTimestamp==='00:00.250–00:04.900',projectId);
   await page.reload();await page.locator('.wb-scene').waitFor();
   assert.equal(await page.locator('[data-field=voiceoverTimestamp]').inputValue(),'00:00.250–00:04.900');
   assert.equal(await page.locator('[data-field=timing]').inputValue(),'0–4s');
