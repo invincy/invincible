@@ -11,3 +11,9 @@
 @media(max-width:600px){.journal-canvas-tools{left:6px;right:auto;max-width:calc(100% - 12px);gap:0}.journal-canvas-tools button{width:34px;min-height:40px}.journal-canvas-tools output{min-width:32px}}
 
 .journal-canvas-tools [hidden]{display:none!important}
+
+/* Replace the legacy 1,800/2,200px page with a screen-sized drawing viewport. */
+.journal-page .app-container.journal-free-workspace{height:calc(100dvh - var(--site-nav-height,76px))!important;overflow:hidden!important}
+.journal-page .journal-free-workspace>.topbar,.journal-page .journal-free-workspace>.toolbar{position:relative!important;top:auto!important;flex-shrink:0}
+.journal-page .journal-free-workspace>.canvas-container.journal-free-surface{flex:1 1 0!important;height:auto!important;min-height:120px!important;margin-bottom:8px}
+@media(max-width:760px){.journal-page .app-container.journal-free-workspace{height:calc(100dvh - var(--site-nav-mobile,62px) - var(--mobile-tabbar-height,76px) - env(safe-area-inset-bottom))!important}}
