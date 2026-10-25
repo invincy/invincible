@@ -151,3 +151,9 @@ Recorded voiceover timing can be pasted in an optional final **Timestamp** colum
 ### Direct Creator scene completion
 
 Use **Complete** at the bottom right of the active scene, or select **Completed**, to finish a scene immediately. Asset links/uploads, task flags, narration readiness and checklists are optional bookkeeping, not completion gates. Completed changes to a **Completed** button that can reopen the scene. Task and shared-asset states remain independent; finishing Blender work never finishes a scene automatically. The existing project autosave and recovery draft persist the decision. Project progress counts completed scenes and remaining tracked work without requiring already completed scenes to be backfilled.
+
+### Free dashboard and saved ideas
+
+Drag the main dashboard background or swipe to pan in any direction. Wheel moves the camera; Ctrl-wheel, pinch or the compact +/− controls zoom it. Home returns to the starting view. Select an area, choose **Save area**, then add a title and Future idea, YouTube idea or custom category. **Ideas** reopens saved images and notes, downloads a capture, or returns to its camera view. Only an explicit save writes a new idea. Today’s Plan is accessible in the orb centre on desktop and mobile and uses the existing queue.
+
+Journal’s drawing toolbar now has consistent icons, a 24-colour palette plus custom colour/hex entry, width and opacity previews, separate pen/highlighter preferences, and adjustable whole-stroke/area erasers. Existing handwriting, selection, undo/redo, Pencil guard and stroke syncing remain. Run `node tests/journal-tools-browser.cjs` for the controlled settings/renderer checks.

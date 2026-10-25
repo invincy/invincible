@@ -93,6 +93,7 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=fa
    container.dataset.ready='true';schedule(renderedAt);
   };
   const resume=()=>{stop();if(canDraw())render(performance.now())};
+  const capture=event=>{if(!canDraw())return;resume();event.detail.url=c.toDataURL('image/png')};
   const resize=()=>{
    const rect=container.getBoundingClientRect();if(!rect.width||!rect.height||disposed||contextLost)return;
    stop();const ratio=Math.min(devicePixelRatio||1,mobile.matches?1:1.25);
@@ -132,7 +133,7 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=fa
   const cleanup=()=>{
    disposed=true;stop();for(const[name,handler]of Object.entries(events))surface.removeEventListener(name,handler);
    if(drag&&surface.hasPointerCapture(drag.id))surface.releasePointerCapture(drag.id);delete surface.dataset.dragging;
-   resizeObserver?.disconnect();intersectionObserver?.disconnect();document.removeEventListener('visibilitychange',visibility);document.removeEventListener('pointermove',pagePointerMove);window.removeEventListener('blur',pageBlur);reduced.removeEventListener('change',preferences);mobile.removeEventListener('change',preferences);c.removeEventListener('webglcontextlost',lost);c.removeEventListener('webglcontextrestored',restored);
+   resizeObserver?.disconnect();intersectionObserver?.disconnect();document.removeEventListener('visibilitychange',visibility);document.removeEventListener('pointermove',pagePointerMove);window.removeEventListener('blur',pageBlur);reduced.removeEventListener('change',preferences);mobile.removeEventListener('change',preferences);c.removeEventListener('invincible-capture',capture);c.removeEventListener('webglcontextlost',lost);c.removeEventListener('webglcontextrestored',restored);
    if(gl){if(particleBuffer)gl.deleteBuffer(particleBuffer);if(dots)gl.deleteProgram(dots)}
   };
   try{
@@ -141,7 +142,7 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=fa
    // V2's Orb is fixed and moves between the Dashboard and header. Observing it
    // during that transition can mark it offscreen while resize clears the canvas.
    if(!followPagePointer&&typeof IntersectionObserver!=='undefined'){intersectionObserver=new IntersectionObserver(entries=>{inView=entries[0].isIntersecting;resume()});intersectionObserver.observe(container)}
-   document.addEventListener('visibilitychange',visibility);if(followPagePointer){document.addEventListener('pointermove',pagePointerMove,{passive:true});window.addEventListener('blur',pageBlur)}reduced.addEventListener('change',preferences);mobile.addEventListener('change',preferences);c.addEventListener('webglcontextlost',lost);c.addEventListener('webglcontextrestored',restored);for(const[name,handler]of Object.entries(events))surface.addEventListener(name,handler);resize();
+   document.addEventListener('visibilitychange',visibility);if(followPagePointer){document.addEventListener('pointermove',pagePointerMove,{passive:true});window.addEventListener('blur',pageBlur)}reduced.addEventListener('change',preferences);mobile.addEventListener('change',preferences);c.addEventListener('invincible-capture',capture);c.addEventListener('webglcontextlost',lost);c.addEventListener('webglcontextrestored',restored);for(const[name,handler]of Object.entries(events))surface.addEventListener(name,handler);resize();
    return cleanup;
   }catch(error){console.warn('3D orb unavailable; keeping the particle fallback.',error);cleanup()}
  },[theme,spin,allowDrag,richParticles,followPagePointer]);
