@@ -23,6 +23,7 @@ window.switchAccount=uid=>{current=uid?{uid}:null;observer?.(current);};
 const firestoreMock = `
 export const collection=(_,...parts)=>({path:parts.join('/')});
 export const doc=collection;
+export const query=ref=>ref,orderBy=()=>null,limit=()=>null;
 const listeners=new Set();const streaks={};
 window.reads=[];window.writes=0;
 const tasks=Array.from({length:24},(_,i)=>({id:'t'+i,title:i===0?'Build the living workspace':'Project '+i+' — Research, review and prepare the next meaningful action',status:['In Progress','Backlog','Today','Done'][i%4],steps:[{id:'s1',title:'Review the spatial canvas',notes:'Keep the original data.\\nVerify all user journeys.',done:false},{id:'s2',title:'Inspect existing records',done:true}]}));
@@ -30,10 +31,13 @@ const saved=JSON.parse(sessionStorage.getItem('v2-fixture-saved')||'{}');
 tasks[0].steps[0].extension={keep:'nested'};
 tasks[0].subtasks=[{text:'Review the spatial canvas',done:false,legacyNotes:'Keep legacy extension'},{text:'Inspect existing records',done:true}];
 if(saved.tasks)tasks.splice(0,tasks.length,...Object.values(saved.tasks));
+const ideas=saved.ideas||{};
 let plan=saved.plan||{activeItemId:'q',items:[{id:'q',taskId:'t0',stepId:'s1'}]};
 window.writeLog=[];
 function snapshot(ref) {
   const owner=ref.path.split('/')[1];
+  if(ref.path.endsWith('/dashboardIdeas'))return {metadata:{fromCache:false},docs:owner==='alice'?Object.entries(ideas).map(([id,value])=>({id,data:()=>value})):[]};
+  if(ref.path.includes('/dashboardIdeas/')){const item=ideas[ref.path.split('/').pop()];return {exists:()=>Boolean(item),data:()=>item};}
   if(ref.path.endsWith('/tasks')) return {metadata:{fromCache:false},docs:owner==='alice'?tasks.map(task=>({id:task.id,data:()=>({...task})})):[]};
   if(ref.path.endsWith('/streaks'))return {metadata:{fromCache:false},docs:owner==='alice'?Object.entries(streaks).map(([id,value])=>({id,ref:{path:ref.path+'/'+id},data:()=>value})):[]};
   if(ref.path.includes('/streaks/'))return {exists:()=>Boolean(streaks[ref.path.split('/').pop()]),data:()=>streaks[ref.path.split('/').pop()]};
@@ -54,11 +58,12 @@ export async function runTransaction(_,callback) {
   if(window.failNextWrite){window.failNextWrite=false;throw Error('permission-denied');}
   for(const entry of patches){
     if(entry.path.includes('/tasks/')){const id=entry.path.split('/').pop(),task=tasks.find(task=>task.id===id);if(task)Object.assign(task,entry.patch);else tasks.push({id,...entry.patch});}
+    else if(entry.path.includes('/dashboardIdeas/'))ideas[entry.path.split('/').pop()]=entry.patch;
     else if(entry.path.includes('/streaks/'))streaks[entry.path.split('/').pop()]=entry.patch;
     else plan={...plan,...entry.patch};
   }
   window.writes+=patches.length;window.writeLog.push(...patches);
-  sessionStorage.setItem('v2-fixture-saved',JSON.stringify({tasks:Object.fromEntries(tasks.map(task=>[task.id,task])),plan}));
+  sessionStorage.setItem('v2-fixture-saved',JSON.stringify({tasks:Object.fromEntries(tasks.map(task=>[task.id,task])),plan,ideas}));
   for(const listener of listeners)listener.next(snapshot(listener.ref));
   if(window.loseNextAck){window.loseNextAck=false;throw Error('unavailable');}
   return result;
@@ -66,6 +71,7 @@ export async function runTransaction(_,callback) {
 window.taskRecords=()=>structuredClone(tasks);
 window.remoteEditTask=(id,patch)=>{Object.assign(tasks.find(task=>task.id===id),patch);for(const listener of listeners)listener.next(snapshot(listener.ref));};
 export function onSnapshot(ref, options, next, error) {
+  if(typeof options==='function'){error=next;next=options;}
   const listener={ref,next,error};listeners.add(listener);window.reads.push(ref.path);
   const clock=setTimeout(()=>next(snapshot(ref)),35);
   return ()=>{clearTimeout(clock);listeners.delete(listener);};
@@ -97,10 +103,12 @@ window.listenerCount=()=>listeners.size;
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const base='http://127.0.0.1:'+server.address().port;
   try {
-    const engines = smokeOnly ? [['chromium',chromium]] : [['chromium',chromium],['firefox',firefox]];
+    const engines = (smokeOnly ? [['chromium',chromium]] : [['chromium',chromium],['firefox',firefox]]).filter(([name])=>!process.env.V2_TEST_BROWSER||name===process.env.V2_TEST_BROWSER);
     for(const [name,engine] of engines) {
       const browser=await engine.launch({headless:true});
       try {
+        if (!smokeOnly) await require('./v2-canvas-scenarios.cjs')({browser,base,output,name});
+        if (process.env.V2_CANVAS_ONLY === '1') continue;
         if (process.env.V2_PLAN_ONLY === '1') {await require('./v2-plan-scenarios.cjs')({browser,base,output,name}); continue;}
         const context=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
         const page=await context.newPage(), errors=[];
@@ -186,7 +194,7 @@ window.listenerCount=()=>listeners.size;
         await page.getByRole('button',{name:/Close saved work/}).click();
         await page.screenshot({path:path.join(output,name+'-map.png')});
         if(smokeOnly) {
-          assert.equal(await page.locator('.v2-orb-task small').count(),0,'the Orb center does not repeat a current-task label');
+          assert.equal(await page.getByRole('button',{name:"Open today's plan"}).count(),1,'the Orb center does not repeat a current-task label');
           const centered=await page.evaluate(()=>{
             const orb=document.querySelector('.v2-orb').getBoundingClientRect();
             const task=document.querySelector('.v2-orb-task').getBoundingClientRect();
@@ -207,10 +215,11 @@ window.listenerCount=()=>listeners.size;
         assert.equal(await travelPage.locator('.v2-travel').count(),0);
         await travelPage.close();
 
-        // Native horizontal wheel input reaches the canvas through a vertical region.
+        // Horizontal wheel input pans the dashboard camera without hitting a page edge.
         await page.mouse.move(500,600);
         await page.mouse.wheel(270,0);
-        await page.waitForFunction(()=>document.querySelector('.v2-canvas').scrollLeft>100);
+        await page.waitForFunction(()=>Number(document.querySelector('.v2-free-canvas').dataset.cameraX)<-100);
+        await page.getByRole('button',{name:'Home canvas',exact:true}).click();
 
         // A real seam, with both regions on-screen, remains at an arbitrary offset.
         await page.locator('.v2-canvas').evaluate(element=>element.scrollTo({left:element.clientWidth*.43,behavior:'instant'}));
@@ -305,7 +314,7 @@ window.listenerCount=()=>listeners.size;
             assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
             await page.screenshot({path:path.join(output,name+'-phone-map.png')});
           }
-          await page.getByRole('button',{name:/Open My Workspace/}).click();
+          await page.getByRole('link',{name:'02 My Workspace'}).click();
           await page.locator('.v2-workspace-intro h2').waitFor();
           // The detailed board is in My Workspace and is usable before scrolling.
           const board=await page.evaluate(()=>{
@@ -350,7 +359,7 @@ window.listenerCount=()=>listeners.size;
         await page.waitForFunction(()=>window.reads.includes('users/bob/tasks'));
         await page.waitForTimeout(100);
         assert.equal(await page.locator('.v2-guide-mission h2').getByText('Updated from another region').count(),0);
-        assert.equal(await page.locator('#v2-region-dashboard output').textContent(),'25:00');
+        assert.equal(await page.locator('#v2-region-dashboard output[aria-label="Time remaining"]').textContent(),'25:00');
         await page.getByRole('button',{name:'Sign out',exact:true}).click();
         await page.getByRole('button',{name:'Continue with Google'}).waitFor();
         assert.equal(await page.evaluate(()=>window.listenerCount()),0);
@@ -453,6 +462,8 @@ window.listenerCount=()=>listeners.size;
           await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:350,y:540}]});
           for(let x=330;x>=110;x-=20){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:540}]});await touchPage.waitForTimeout(20);}
           await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+          await touchPage.waitForFunction(()=>Number(document.querySelector('.v2-free-canvas').dataset.cameraX)<-100);
+          await touchPage.getByRole('link',{name:'02 My Workspace'}).click();
           await touchPage.waitForFunction(()=>document.querySelector('.v2-canvas').scrollLeft>100);
           await touchPage.getByRole('link',{name:'02 My Workspace'}).click();
           const handle=await touchPage.locator('[data-task-id="t1"] .v2-drag-handle').boundingBox();

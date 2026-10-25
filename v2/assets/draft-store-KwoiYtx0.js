@@ -1,0 +1,1 @@
+const a=(t,r,e="")=>`invincible.v2.draft.${t}.${r}.${e}`;function c(t){try{return JSON.parse(localStorage.getItem(t)||"null")}catch{return null}}function n(t,r){try{return localStorage.setItem(t,JSON.stringify(r)),!0}catch{return!1}}function l(t){try{localStorage.removeItem(t)}catch{}}export{l as c,a as d,c as r,n as w};

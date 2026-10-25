@@ -221,3 +221,65 @@ body.home-page{margin:0;min-height:100dvh;background:radial-gradient(circle at 2
 @media(prefers-reduced-motion:reduce){
   .finance-reminder-dialog,.finance-reminder-dialog::before{animation:none}
 }
+
+/* The map has an unbounded camera; surrounding navigation keeps its existing URLs. */
+#v2-region-dashboard{overflow:clip!important;padding-bottom:0!important}
+.v2-free-canvas{position:relative;min-height:0;overflow:clip;touch-action:none;cursor:grab;background-image:radial-gradient(#86c2ca20 .8px,transparent .8px);background-size:28px 28px}
+.v2-free-canvas:active{cursor:grabbing}.v2-free-canvas.is-selecting{cursor:crosshair}
+.v2-free-world{position:absolute;inset:0;transform-origin:0 0;z-index:4;will-change:transform}
+.v2-free-world .v2-guide-scene{overflow:visible}
+.v2-shell:has(.v2-free-canvas) .v2-orb:not(.is-compact){pointer-events:none;transition:none}
+.v2-canvas-tools{position:absolute;left:12px;top:9px;z-index:12;display:flex;align-items:center;gap:3px;padding:3px;border:1px solid #3a647250;border-radius:11px;background:#0c1b25ed;cursor:default;max-width:calc(100% - 24px)}
+.v2-shell .v2-canvas-tools button{min-height:36px;min-width:36px;padding:5px 8px;border:0;background:transparent;color:#bddddf;font-size:20px}
+.v2-shell .v2-canvas-tools button[aria-pressed=true]{background:#224f58;color:#d6fff3}
+.v2-canvas-tools output{font-size:10px;min-width:32px;text-align:center;color:#8db2bc}
+.v2-canvas-selection-layer{position:absolute;inset:0;z-index:10;pointer-events:none;background:#030d1630}
+.v2-canvas-selection{position:absolute;border:1px solid #8cffe0;background:#8cffe014;box-shadow:0 0 0 9999px #020a1230}
+.v2-canvas-capture-actions{position:absolute;z-index:12;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;padding:7px 10px;border:1px solid #406e78;border-radius:12px;background:#0a1b25;white-space:nowrap;font-size:11px}
+.v2-shell .v2-canvas-capture-actions button{min-height:38px;font-size:12px;padding:6px 10px}
+.v2-canvas-error{position:absolute;bottom:68px;left:12px;right:12px;z-index:13;color:#ffcd94;font-size:12px;background:#182129;padding:10px;border-radius:8px;cursor:default}
+.v2-guide-orb-anchor{z-index:4}
+.v2-shell .v2-orb-plan{position:absolute;left:50%;top:34%;translate:-50% -50%;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:44px;width:160px;padding:6px;border:0;border-radius:0;background:transparent;color:#a7e5dc;pointer-events:auto;text-shadow:0 2px 10px #000;font-size:12px}
+.v2-orb-plan span{font-weight:650}.v2-orb-plan strong{font-size:10px;color:#abc0c9;font-weight:400}
+.v2-shell .v2-orb-plan:hover{background:#152d3680}
+.v2-idea-dialog{width:min(720px,calc(100% - 24px));max-height:calc(100dvh - 32px);padding:20px;background:#0e1c26;color:#e4f1f4;border:1px solid #3a6572;border-radius:16px;overflow:auto;scrollbar-width:thin;scrollbar-color:#356574 #0b1720;box-shadow:0 25px 90px #0008}
+.v2-idea-dialog::backdrop{background:#020910b8;backdrop-filter:blur(5px)}
+.v2-idea-dialog>header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.v2-idea-dialog h2{margin:0;font-size:20px;font-weight:600}.v2-idea-dialog h3{overflow-wrap:anywhere}
+.v2-shell .v2-idea-dialog header button{min-width:44px;padding:6px;font-size:22px}
+.v2-idea-dialog form{display:grid;gap:12px}.v2-idea-dialog label{display:grid;gap:6px;font-size:12px;color:#acc1ca}
+.v2-idea-dialog input,.v2-idea-dialog textarea,.v2-idea-dialog select{width:100%;min-width:0;padding:10px 12px;border:1px solid #35525f;border-radius:8px;background:#08141d;color:#eef9fa;font:inherit}
+.v2-idea-dialog textarea{min-height:100px;resize:vertical;line-height:1.6}
+.v2-idea-dialog footer{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+.v2-idea-preview{display:block;max-height:38dvh;max-width:100%;width:auto;object-fit:contain;border-radius:9px;border:1px solid #314c58;margin:auto;background:#081019}
+.v2-idea-filter{margin-bottom:14px}.v2-idea-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.v2-shell .v2-idea-grid>button{padding:8px;display:flex;flex-direction:column;gap:7px;text-align:left;min-width:0}
+.v2-idea-grid img{width:100%;height:130px;object-fit:contain;background:#07121b;border-radius:6px}
+.v2-idea-grid strong{font-size:13px;overflow-wrap:anywhere}.v2-idea-dialog small{font-size:11px;color:#8caebc}
+.v2-idea-detail p{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6}
+.v2-idea-dialog [role=alert]{color:#ffd390;line-height:1.5;font-size:13px}
+.v2-idea-detail .v2-actions a{display:flex;align-items:center;color:#95e3d9;padding:10px}
+.v2-today-list{list-style:none;padding:0;display:grid;gap:8px}
+.v2-today-list li{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #2d485450}
+.v2-today-list li.is-active{border-left:2px solid #91e2c8;padding-left:10px}
+.v2-today-list li>span{width:22px;flex:none;color:#a3d9cd;font-size:12px}
+.v2-today-list li>div{flex:1;min-width:0;display:grid;gap:5px}.v2-today-list strong{font-size:14px;overflow-wrap:anywhere}
+.v2-shell .v2-today-list button{min-height:40px;font-size:12px;padding:6px 10px}
+.v2-today-add{display:flex!important;align-items:end;margin-top:20px}.v2-today-add label{flex:1;min-width:0}.v2-today-add label>span{display:block}
+@media(max-width:900px){
+ .v2-dashboard-body.v2-free-canvas{flex:1;min-height:0}
+ .v2-free-world .v2-guide-scene{padding-top:58px}
+ .v2-shell .v2-orb-plan{top:50%;width:180px;font-size:15px}.v2-orb-plan strong{font-size:12px}
+}
+@media(max-width:600px){
+ .v2-canvas-tools{top:7px;left:6px;max-width:calc(100% - 12px)}
+ .v2-shell .v2-canvas-tools button{min-width:38px;min-height:40px}
+ .v2-canvas-capture-actions{width:max-content;max-width:calc(100% - 16px);gap:6px}
+ .v2-idea-dialog{padding:14px}.v2-today-list{gap:6px}.v2-today-list li{flex-wrap:wrap}
+ .v2-idea-grid{gap:8px}.v2-idea-grid img{height:100px}
+}
+
+.v2-orb-plan-preview{display:none}
+@media(max-width:900px){.v2-orb-plan-preview{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;max-width:190px;font-size:12px;line-height:1.4;color:#d2e5e9;text-wrap:balance}}
+
+.v2-shell .v2-canvas-tools button{display:grid;place-items:center}

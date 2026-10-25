@@ -11,6 +11,8 @@ const TaskEditor = lazy(() => import('./TaskEditor'));
 const PlanImporter = lazy(() => import('./PlanImporter'));
 const TaskFocusView = lazy(() => import('./TaskFocusView'));
 const DashboardTools = lazy(() => import('./DashboardTools'));
+const CanvasIdeas = lazy(() => import('./CanvasIdeas'));
+const TodayPlanPanel = lazy(() => import('./TodayPlanPanel'));
 
 function Region({region, viewport, children, onScroll}) {
   const element = useRef(null);
@@ -38,6 +40,7 @@ function SignedInWorkspace({user, logout}) {
   const viewport = useRef(null), orbAnchor = useRef(null), lastFraction = useRef(0), idle = useRef(null);
   const [active, setActive] = useState(regionFromHash(location.hash)), [selected, setSelected] = useState(null), [focusedTaskId, setFocusedTaskId] = useState(null);
   const [travelPage, setTravelPage] = useState(null);
+  const [ideaPanel,setIdeaPanel]=useState(null),[todayOpen,setTodayOpen]=useState(false),[restoreCanvas,setRestoreCanvas]=useState(null);
   const [importPlan, setImportPlan] = useState(null);
   const inspect = id => setFocusedTaskId(id);
   const [authError, setAuthError] = useState('');
@@ -59,7 +62,7 @@ function SignedInWorkspace({user, logout}) {
     const viewportRect = canvas?.getBoundingClientRect();
     const visibleHeight = rect && viewportRect
       ? Math.max(0, Math.min(rect.bottom, viewportRect.bottom) - Math.max(rect.top, viewportRect.top)) : 0;
-    const prominent = rect && canvas && visibleHeight >= Math.min(rect.height * .35, 180)
+    const prominent = rect && canvas && rect.right > viewportRect.left && rect.left < viewportRect.right && visibleHeight >= Math.min(rect.height * .35, 180)
       && canvas.scrollLeft < canvas.clientWidth*.35;
     const box = prominent ? {left: rect.left, top: rect.top, width: rect.width, height: rect.height, compact: false}
       : {left: innerWidth-66, top: 12, width: 48, height: 48, compact: true};
@@ -132,7 +135,7 @@ function SignedInWorkspace({user, logout}) {
       onKeyDown={event => {if (event.target !== event.currentTarget) return;let index = regions.findIndex(region => region.id === active);if (event.key === 'ArrowRight') index++;else if (event.key === 'ArrowLeft') index--;else if (event.key === 'Home') index=0;else if (event.key === 'End') index=regions.length-1;else return;event.preventDefault();navigate(regions[Math.max(0,Math.min(regions.length-1,index))].id);}}>
       {regions.map(region => <Region key={region.id} region={region} viewport={viewport} onScroll={moveOrb}>
         {!ready ? <div className="v2-panel v2-loading" role="status">Restoring tasks and your daily plan…</div> :
-          region.id === 'dashboard' ? <Dashboard data={data} plan={plan} timer={timer} onInspect={inspect} orbAnchor={mountOrbAnchor} theme={theme} onChangeTheme={changeTheme} onOpenWorkspace={() => navigate('workspace')} onTravel={setTravelPage}/> :
+          region.id === 'dashboard' ? <Dashboard data={data} plan={plan} timer={timer} onInspect={inspect} orbAnchor={mountOrbAnchor} theme={theme} onChangeTheme={changeTheme} onOpenWorkspace={() => navigate('workspace')} onTravel={setTravelPage} uid={user.uid} onPan={moveOrb} onCapture={capture=>setIdeaPanel({capture})} onIdeas={()=>setIdeaPanel({})} restoreView={restoreCanvas} onPlan={()=>setTodayOpen(true)}/> :
           <Workspace data={data} plan={plan} timer={timer} onInspect={inspect} uid={user.uid} onCreate={() => setSelected({id: newId('t'), create: true})} onPaste={() => setImportPlan({targetId: ''})}/>}
       </Region>)}
     </main>
@@ -140,9 +143,11 @@ function SignedInWorkspace({user, logout}) {
       onWheel={event => {const distance = event.deltaX + (event.shiftKey ? event.deltaY : 0); if (distance && viewport.current) {event.preventDefault(); viewport.current.scrollLeft += distance;}}}><FocusOrb theme={theme} spin={false} allowDrag={false} richParticles followPagePointer/>
       {orbBox.compact && <button className="v2-orb-theme" aria-label={'Orb theme: '+theme+'. Change theme'} onClick={changeTheme}>◐</button>}
     </div>
-    <footer className="v2-footer"><span>DASHBOARD MAP · PERSONAL WORKSPACE</span><span className="v2-footer-desktop">Choose a glow to enter its page · Swipe sideways for widgets</span><span className="v2-footer-mobile">Tap a glow to enter its page · Swipe sideways for widgets</span><span>{active === 'dashboard' ? '01' : '02'} / 02</span></footer>
+    <footer className="v2-footer"><span>DASHBOARD MAP · PERSONAL WORKSPACE</span><span className="v2-footer-desktop">{active==='dashboard'?'Drag to explore · Select an area to save':'Drag cards to organise your work'}</span><span className="v2-footer-mobile">{active==='dashboard'?'Pan or pinch · Tap the centre for today':'Move cards or open a project'}</span><span>{active === 'dashboard' ? '01' : '02'} / 02</span></footer>
     {travelPage && <div className="v2-travel" role="status" aria-live="polite"><span>ENTERING</span><strong>{travelPage.label}</strong><i aria-hidden="true"/></div>}
     <Suspense fallback={<p className="v2-editor-loading" role="status">Opening editor…</p>}>
+      {ideaPanel && <CanvasIdeas uid={user.uid} capture={ideaPanel.capture} onClose={()=>setIdeaPanel(null)} onRestore={view=>{setRestoreCanvas({...view});setIdeaPanel(null);navigate('dashboard');}}/>}
+      {todayOpen && <TodayPlanPanel uid={user.uid} plan={plan} tasks={data.tasks} onClose={()=>setTodayOpen(false)} onInspect={inspect}/>}
       {selected && <TaskEditor key={selected.id} uid={user.uid} taskId={selected.id} isNew={selected.create} task={data.tasks.find(task => task.id === selected.id)} onClose={() => setSelected(null)} onPaste={id => {setSelected(null); setImportPlan({targetId: id});}}/>}
       {importPlan && <PlanImporter uid={user.uid} tasks={data.tasks} targetId={importPlan.targetId} onClose={() => setImportPlan(null)}/>}
       {focusedTaskId && <TaskFocusView key={focusedTaskId} uid={user.uid} task={data.tasks.find(task => task.id === focusedTaskId)} onClose={() => setFocusedTaskId(null)} onPaste={id => {setFocusedTaskId(null); setImportPlan({targetId: id});}}/>}

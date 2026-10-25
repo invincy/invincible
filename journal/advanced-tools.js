@@ -207,11 +207,11 @@
     editor.className = "journal-text-editor";
     editor.value = existing?.text || "";
     editor.placeholder = "Type here…";
-    Object.assign(editor.style, { left: `${at.x}px`, top: `${at.y}px`, color: existing?.color || "#111827", fontSize: `${existing?.fontSize || 26}px` });
+    Object.assign(editor.style, { left: `${at.x}px`, top: `${at.y}px`, color: existing?.color || api().settings?.().color || "#111827", fontSize: `${existing?.fontSize || 26}px` });
     api().container().append(editor); editor.focus();
     const commit = () => {
       const text = editor.value.trim(); editor.remove(); if (!text) return;
-      const stroke = existing ? { ...existing, text } : { id: crypto.randomUUID(), tool: "text", text, color: "#111827", opacity: 1, fontSize: 26, width: 26, createdAtMs: Date.now(), points: [{ x: at.x, y: at.y, pressure: .5, timestamp: Date.now() }] };
+      const stroke = existing ? { ...existing, text } : { id: crypto.randomUUID(), tool: "text", text, color: api().settings?.().color || "#111827", opacity: 1, fontSize: 26, width: 26, createdAtMs: Date.now(), points: [{ x: at.x, y: at.y, pressure: .5, timestamp: Date.now() }] };
       api().save(stroke);
     };
     editor.addEventListener("keydown", (event) => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") { event.preventDefault(); commit(); } if (event.key === "Escape") editor.remove(); });
@@ -274,11 +274,12 @@
       const result = await window.Tesseract.recognize(canvas, "eng");
       const text = result?.data?.text?.trim(); if (!text) return status("No text recognised");
       const edited = window.prompt("Check and edit recognised text", text); if (!edited) return status("Conversion cancelled");
-      const textStroke = { id: crypto.randomUUID(), tool: "text", text: edited, color: "#111827", opacity: 1, fontSize: 26, width: 26, createdAtMs: Date.now(), points: [{ x: bounds.x, y: bounds.y, pressure: .5, timestamp: Date.now() }] };
+      const textStroke = { id: crypto.randomUUID(), tool: "text", text: edited, color: api().settings?.().color || "#111827", opacity: 1, fontSize: 26, width: 26, createdAtMs: Date.now(), points: [{ x: bounds.x, y: bounds.y, pressure: .5, timestamp: Date.now() }] };
       api().save(textStroke); strokes.forEach((stroke) => api().remove(stroke.id)); state.ids = new Set([textStroke.id]); setTimeout(showSelection, 120); status("Converted to editable text");
     } catch (error) { console.error(error); status("Recognition failed—your ink is unchanged"); }
   }
 
+  window.addEventListener("journal-tool-change",syncModeFromApp);
   const observer = new MutationObserver(install);
   observer.observe(document.documentElement, { childList: true, subtree: true });
   window.addEventListener("load", install);
