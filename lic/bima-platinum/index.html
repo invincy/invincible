@@ -14,7 +14,7 @@
 
   <link rel="preload" as="image" href="assets/scene-1-853.webp" imagesrcset="assets/scene-1-480.webp 480w, assets/scene-1-853.webp 853w" imagesizes="(max-width: 480px) 100vw, 420px" fetchpriority="high">
 
-  <link rel="stylesheet" href="presentation.css?v=9">
+  <link rel="stylesheet" href="presentation.css?v=12">
 </head>
 <body>
 
@@ -211,43 +211,41 @@
         </nav>
         <header class="scene-two-heading">
           <p class="scene-two-eyebrow">GROWTH &amp; STABILITY</p>
-          <h2 id="stagePreviewTitle">आपके पैसे के<br><span>दो अलग काम हैं।</span></h2>
-          <p class="scene-two-subtitle">एक हिस्सा growth के लिए, दूसरा<br>personal stability के लिए।</p>
+          <h2 id="stagePreviewTitle">आपके पैसे के <span>दो रास्ते</span></h2>
+          <p class="scene-two-subtitle">एक growth के लिए, दूसरा stability के लिए।</p>
         </header>
         <div class="scene-two-visual">
-          <img class="scene-two-presenter" src="assets/advisor-presenter.webp" alt="LIC advisor presenting the two roles of money" width="760" height="950" loading="lazy" decoding="async">
-          <figure class="balance-chart" aria-labelledby="balanceChartTitle" aria-describedby="balanceChartCaption">
-            <figcaption id="balanceChartTitle">Growth और stability — साथ में।</figcaption>
-            <svg class="balance-plot" viewBox="0 0 350 330" role="img" aria-labelledby="balancePlotTitle balancePlotDesc">
-              <title id="balancePlotTitle">Business growth and a stability-focused allocation</title>
-              <desc id="balancePlotDesc">An illustrative chart. Business sits toward higher growth potential and higher uncertainty. A proposed stability allocation focuses on predictability. These positions are conceptual, not measured product returns.</desc>
-              <defs><linearGradient id="plotWash" x2="1" y2="1"><stop stop-color="#a377251f"/><stop offset="1" stop-color="#41d4cb12"/></linearGradient></defs>
-              <rect x="43" y="28" width="283" height="254" rx="16" fill="url(#plotWash)"/>
-              <g class="chart-grid" stroke="#ffffff0d"><path d="M43 91H326M43 155H326M43 219H326M114 28V282M185 28V282M256 28V282"/></g>
-              <g stroke="#a7b5c8" stroke-width="1.2" fill="none"><path d="M43 282V24m-4 6 4-6 4 6M43 282H328m-6-4 6 4-6 4"/></g>
-              <text x="15" y="164" transform="rotate(-90 15 164)" class="chart-axis">Growth potential →</text>
-              <text x="190" y="319" text-anchor="middle" class="chart-axis">Stability / predictability →</text>
-              <g class="chart-business">
-                <circle cx="115" cy="100" r="48" fill="#f3c5680c" stroke="#e7ad4f88" stroke-dasharray="3 5"/>
-                <circle cx="115" cy="100" r="10" fill="#efc46e" stroke="#ffebbc" stroke-width="2"/>
-                <text x="115" y="67" text-anchor="middle" class="chart-point-title">Business</text>
-                <text x="115" y="131" text-anchor="middle" class="chart-point-note">Higher growth potential</text>
-                <text x="115" y="148" text-anchor="middle" class="chart-risk-note">Higher uncertainty</text>
-              </g>
-              <g class="chart-stability">
-                <circle cx="242" cy="217" r="24" fill="#72d5c312" stroke="#83d7c788"/>
-                <path d="m242 207 8 3v7c0 6-8 10-8 10s-8-4-8-10v-7l8-3Z" fill="#9ee4cd"/>
-                <text x="238" y="177" text-anchor="middle" class="chart-point-title stable-title">Stability allocation</text>
-                <text x="238" y="195" text-anchor="middle" class="chart-point-note">Predictability पर focus</text>
-              </g>
+          <img class="scene-two-presenter" src="assets/advisor-presenter.webp" alt="LIC advisor presenting the two financial structures" width="760" height="950" loading="lazy" decoding="async">
+          <figure class="balance-chart scenario-chart" aria-labelledby="balanceChartTitle" aria-describedby="balanceChartCaption">
+            <figcaption id="balanceChartTitle" class="scenario-chart-heading">Growth के साथ stability</figcaption>
+            <svg class="balance-plot" viewBox="0 0 350 285" role="img" aria-labelledby="balancePlotTitle balancePlotDesc">
+              <title id="balancePlotTitle">Business baseline and two combined financial structures</title>
+              <desc id="balancePlotDesc">Three illustrative paths share a starting point: the blue business baseline, red Business plus Share Market with sharper fluctuations that repeatedly fall below both the baseline and the green path, and green Business plus Bima Platinum with a steadier path. These are concepts, not measured or projected performance.</desc>
+              <defs>
+                <linearGradient id="scenarioGold" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#ba8b3c"/><stop offset="1" stop-color="#ffe4a0"/></linearGradient>
+                <linearGradient id="scenarioWash" x2="0" y2="1"><stop stop-color="#16324a" stop-opacity=".4"/><stop offset="1" stop-color="#071525" stop-opacity="0"/></linearGradient>
+              </defs>
+              <rect x="42" y="18" width="286" height="225" rx="12" fill="url(#scenarioWash)"/>
+              <g class="chart-grid" stroke="#b5cce010" stroke-width="1"><path d="M42 63H328M42 108H328M42 153H328M42 198H328M99 18V243M156 18V243M213 18V243M270 18V243"/></g>
+              <g stroke="#9aafc5" stroke-width="1.2" fill="none"><path d="M42 243V17m-3 5 3-5 3 5M42 243H330m-5-3 5 3-5 3"/></g>
+              <text x="14" y="140" transform="rotate(-90 14 140)" text-anchor="middle" class="chart-axis">Financial Outcome</text>
+              <text x="187" y="272" text-anchor="middle" class="chart-axis">Year / Time</text>
+              <path class="scenario-line scenario-business" pathLength="1" d="M43 242 C57 233 66 224 79 220 S96 217 107 213 S120 220 133 210 S148 192 160 192 S176 202 189 191 S202 181 215 178 S230 188 244 174 S260 170 274 166 S292 169 304 158 S319 157 326 150"/>
+              <path class="scenario-line scenario-market" pathLength="1" d="M43 242 61 217 76 237 96 169 110 213 126 128 143 221 162 149 174 173 191 69 207 202 224 91 239 122 254 29 270 180 285 68 300 137 312 121 326 85"/>
+              <path class="scenario-line scenario-platinum" pathLength="1" d="M43 242 C61 234 74 229 88 224 S109 213 123 207 S146 193 159 187 S178 177 193 170 S215 155 228 151 S247 141 261 134 S281 125 295 117 S315 106 326 100"/>
             </svg>
-            <p id="balanceChartCaption" class="chart-caption">Illustrative concept · Actual returns का chart नहीं।</p>
+            <div class="scenario-legend">
+              <div class="scenario-label market-label"><span class="scenario-key" aria-hidden="true"></span><div><strong>Business + Share Market</strong><small>Higher volatility</small></div></div>
+              <div class="scenario-label platinum-label"><span class="scenario-key" aria-hidden="true"></span><div><strong>Business + Bima Platinum</strong><small>More predictable</small></div></div>
+              <div class="scenario-label business-label"><span class="scenario-key" aria-hidden="true"></span><div><strong>Your Business</strong><small>Growth engine</small></div></div>
+            </div>
+            <p id="balanceChartCaption" class="chart-caption">Illustrative concept — not projected returns</p>
           </figure>
         </div>
         <footer class="scene-two-footer">
           <button id="sceneTwoDialogueBtn" class="scene-two-dialogue-btn" type="button" aria-label="Hear Scene 2 advisor recording"><span aria-hidden="true">▶</span> <span id="sceneTwoAudioLabel">Advisor की बात सुनें</span></button>
           <p id="sceneTwoAudioStatus" class="audio-status" role="status" aria-live="polite"></p>
-          <button id="sceneTwoNextBtn" class="scene-two-next" type="button" aria-controls="sceneThreeStatus">Stability कैसे मिलेगी? <span aria-hidden="true">→</span></button>
+          <button id="sceneTwoNextBtn" class="scene-two-next" type="button" aria-controls="sceneThreeStatus">अब Stability कैसे मिलेगी? <span aria-hidden="true">→</span></button>
           <p id="sceneThreeStatus" class="scene-three-status" role="status" hidden>अगला scene अभी तैयार हो रहा है।</p>
         </footer>
       </section>
@@ -277,6 +275,6 @@
 
 </div><!-- /.app-viewport-wrapper -->
 
-<script src="presentation.js?v=9"></script>
+<script src="presentation.js?v=12"></script>
 </body>
 </html>
