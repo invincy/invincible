@@ -43,6 +43,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const layerCheckboxes = document.querySelectorAll('.layer-toggle-input');
 
   // Audio Playback Engine State
+  let sceneTwoAudio = null;
+  let sceneTwoAttempt = 0;
+  let sceneTwoState = 'idle';
+  const sceneTwoAudioLabel = document.getElementById('sceneTwoAudioLabel');
+  const sceneTwoAudioStatus = document.getElementById('sceneTwoAudioStatus');
+  const sceneTwoDialogueBtn = document.getElementById('sceneTwoDialogueBtn');
+  function updateSceneTwoAudio(state) {
+    sceneTwoState = state;
+    if (sceneTwoAudioLabel) sceneTwoAudioLabel.textContent = state === 'playing' ? 'Pause audio' : state === 'paused' ? 'Resume audio' : state === 'loading' ? 'Loading audio…' : 'Advisor की बात सुनें';
+    if (sceneTwoDialogueBtn) {
+      sceneTwoDialogueBtn.setAttribute('aria-busy', String(state === 'loading'));
+      sceneTwoDialogueBtn.setAttribute('aria-label', state === 'playing' ? 'Pause Scene 2 advisor recording' : state === 'paused' ? 'Resume Scene 2 advisor recording' : 'Hear Scene 2 advisor recording');
+    }
+  }
+  function stopSceneTwoAudio() {
+    sceneTwoAttempt++;
+    if (sceneTwoAudio) { sceneTwoAudio.pause(); sceneTwoAudio.currentTime = 0; }
+    updateSceneTwoAudio('idle');
+  }
   let audioElement = null;
   let useSpeechFallback = false;
   let audioAttempt = 0;
@@ -77,6 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function stopAllAudio() {
+    stopSceneTwoAudio();
     audioAttempt++;
     if (audioElement) {
       audioElement.pause();
@@ -192,11 +212,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (firstScene) firstScene.inert = true;
       stagePreviewModal.inert = false;
       stagePreviewModal.classList.add('active');
+      stageContainer.classList.add('scene-two-open');
       previewDismissBtn.focus();
     });
   }
 
   function dismissPreview() {
+    stopSceneTwoAudio();
+    stageContainer.classList.remove('scene-two-open');
     stagePreviewModal.classList.remove('active');
     stagePreviewModal.inert = true;
     const firstScene = document.querySelector('.layer-stage-3d');
@@ -218,18 +241,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const sceneTwoDialogueBtn = document.getElementById('sceneTwoDialogueBtn');
-  const sceneTwoDialogue = document.getElementById('sceneTwoDialogue');
-  if (sceneTwoDialogueBtn && sceneTwoDialogue) {
-    sceneTwoDialogueBtn.addEventListener('click', () => {
-      sceneTwoDialogue.hidden = !sceneTwoDialogue.hidden;
-      sceneTwoDialogueBtn.setAttribute('aria-expanded', String(!sceneTwoDialogue.hidden));
+  if (sceneTwoDialogueBtn) {
+    sceneTwoDialogueBtn.addEventListener('click', async () => {
+      if (sceneTwoState === 'loading') return;
+      if (sceneTwoState === 'playing') { sceneTwoAudio.pause(); return; }
+      const attempt = ++sceneTwoAttempt;
+      if (sceneTwoAudioStatus) sceneTwoAudioStatus.textContent = '';
+      if (!sceneTwoAudio) {
+        sceneTwoAudio = new Audio('assets/audio/advisor-scene-2-hindi.mp3');
+        sceneTwoAudio.preload = 'none';
+        sceneTwoAudio.addEventListener('playing', () => updateSceneTwoAudio('playing'));
+        sceneTwoAudio.addEventListener('pause', () => {
+          if (sceneTwoAudio.currentTime > 0 && !sceneTwoAudio.ended) updateSceneTwoAudio('paused');
+        });
+        sceneTwoAudio.addEventListener('ended', () => { sceneTwoAudio.currentTime = 0; updateSceneTwoAudio('idle'); });
+      }
+      updateSceneTwoAudio('loading');
+      try {
+        await sceneTwoAudio.play();
+        if (attempt !== sceneTwoAttempt) { sceneTwoAudio.pause(); sceneTwoAudio.currentTime = 0; updateSceneTwoAudio('idle'); }
+      } catch (error) {
+        if (attempt !== sceneTwoAttempt) return;
+        updateSceneTwoAudio('idle');
+        if (sceneTwoAudioStatus) sceneTwoAudioStatus.textContent = error.name === 'NotAllowedError' ? 'Tap again to allow audio playback.' : 'Audio load नहीं हुआ। फिर tap करें।';
+      }
     });
   }
   const sceneTwoNextBtn = document.getElementById('sceneTwoNextBtn');
   const sceneThreeStatus = document.getElementById('sceneThreeStatus');
   if (sceneTwoNextBtn && sceneThreeStatus) {
-    sceneTwoNextBtn.addEventListener('click', () => { sceneThreeStatus.hidden = false; });
+    sceneTwoNextBtn.addEventListener('click', () => { stopSceneTwoAudio(); sceneThreeStatus.hidden = false; });
   }
 
   // Developer Tooling: Layer Inspector

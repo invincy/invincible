@@ -14,7 +14,7 @@
 
   <link rel="preload" as="image" href="assets/scene-1-853.webp" imagesrcset="assets/scene-1-480.webp 480w, assets/scene-1-853.webp 853w" imagesizes="(max-width: 480px) 100vw, 420px" fetchpriority="high">
 
-  <link rel="stylesheet" href="presentation.css?v=8">
+  <link rel="stylesheet" href="presentation.css?v=9">
 </head>
 <body>
 
@@ -216,33 +216,37 @@
         </header>
         <div class="scene-two-visual">
           <img class="scene-two-presenter" src="assets/advisor-presenter.webp" alt="LIC advisor presenting the two roles of money" width="760" height="950" loading="lazy" decoding="async">
-          <div class="money-roles" aria-label="Two roles for your money">
-            <article class="money-role role-growth">
-              <div class="role-summary">
-                <svg class="role-hero-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true"><ellipse cx="31" cy="54" rx="27" ry="7" stroke="currentColor" opacity=".5"/><path d="M15 50V40h8v10Zm13 0V31h8v19Zm13 0V20h8v30Z" fill="currentColor"/><path d="m13 32 32-23M34 10l13-3-2 13" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                <div><p>Business का पैसा</p><h3>Growth</h3></div>
-              </div>
-              <ul class="role-points">
-                <li><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 17V7M4 17h16M7 13l5-5 4 3 4-6M16 5h4v4"/></svg></span>High return potential</li>
-                <li><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m12 3 10 18H2L12 3Z"/><path d="M12 9v5M12 17v1"/></svg></span>Risk accepted</li>
-              </ul>
-            </article>
-            <div class="role-connector" aria-hidden="true"><i></i></div>
-            <article class="money-role role-stability">
-              <div class="role-summary">
-                <svg class="role-hero-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true"><ellipse cx="32" cy="55" rx="27" ry="7" stroke="currentColor" opacity=".5"/><path d="M32 5 52 12v17c0 16-20 26-20 26S12 45 12 29V12L32 5Z" stroke="currentColor" stroke-width="3"/><rect x="23" y="26" width="18" height="16" rx="3" fill="currentColor"/><path d="M26 26v-5a6 6 0 0 1 12 0v5" stroke="currentColor" stroke-width="3"/><path d="M32 31v6" stroke="#192333" stroke-width="2"/></svg>
-                <div><p>Personal savings का हिस्सा</p><h3>Stability</h3></div>
-              </div>
-              <ul class="role-points">
-                <li><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 13a9 9 0 0 1 18 0c-2-2-4-2-6 0-2-2-4-2-6 0-2-2-4-2-6 0ZM12 4V2M12 13v6a2 2 0 0 0 4 0"/></svg></span>Predictable</li>
-                <li><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 19c-5-2-7-6-5-11 3 1 5 4 5 11Zm0 0c5-2 7-6 5-11-3 1-5 4-5 11Zm0-2c-3-5-3-8 0-13 3 5 3 8 0 13ZM12 20c-6 0-9-3-10-7 4 0 7 1 10 7Zm0 0c6 0 9-3 10-7-4 0-7 1-10 7Z"/></svg></span>Peace of mind</li>
-              </ul>
-            </article>
-          </div>
+          <figure class="balance-chart" aria-labelledby="balanceChartTitle" aria-describedby="balanceChartCaption">
+            <figcaption id="balanceChartTitle">Growth और stability — साथ में।</figcaption>
+            <svg class="balance-plot" viewBox="0 0 350 330" role="img" aria-labelledby="balancePlotTitle balancePlotDesc">
+              <title id="balancePlotTitle">Business growth and a stability-focused allocation</title>
+              <desc id="balancePlotDesc">An illustrative chart. Business sits toward higher growth potential and higher uncertainty. A proposed stability allocation focuses on predictability. These positions are conceptual, not measured product returns.</desc>
+              <defs><linearGradient id="plotWash" x2="1" y2="1"><stop stop-color="#a377251f"/><stop offset="1" stop-color="#41d4cb12"/></linearGradient></defs>
+              <rect x="43" y="28" width="283" height="254" rx="16" fill="url(#plotWash)"/>
+              <g class="chart-grid" stroke="#ffffff0d"><path d="M43 91H326M43 155H326M43 219H326M114 28V282M185 28V282M256 28V282"/></g>
+              <g stroke="#a7b5c8" stroke-width="1.2" fill="none"><path d="M43 282V24m-4 6 4-6 4 6M43 282H328m-6-4 6 4-6 4"/></g>
+              <text x="15" y="164" transform="rotate(-90 15 164)" class="chart-axis">Growth potential →</text>
+              <text x="190" y="319" text-anchor="middle" class="chart-axis">Stability / predictability →</text>
+              <g class="chart-business">
+                <circle cx="115" cy="100" r="48" fill="#f3c5680c" stroke="#e7ad4f88" stroke-dasharray="3 5"/>
+                <circle cx="115" cy="100" r="10" fill="#efc46e" stroke="#ffebbc" stroke-width="2"/>
+                <text x="115" y="67" text-anchor="middle" class="chart-point-title">Business</text>
+                <text x="115" y="131" text-anchor="middle" class="chart-point-note">Higher growth potential</text>
+                <text x="115" y="148" text-anchor="middle" class="chart-risk-note">Higher uncertainty</text>
+              </g>
+              <g class="chart-stability">
+                <circle cx="242" cy="217" r="24" fill="#72d5c312" stroke="#83d7c788"/>
+                <path d="m242 207 8 3v7c0 6-8 10-8 10s-8-4-8-10v-7l8-3Z" fill="#9ee4cd"/>
+                <text x="238" y="177" text-anchor="middle" class="chart-point-title stable-title">Stability allocation</text>
+                <text x="238" y="195" text-anchor="middle" class="chart-point-note">Predictability पर focus</text>
+              </g>
+            </svg>
+            <p id="balanceChartCaption" class="chart-caption">Illustrative concept · Actual returns का chart नहीं।</p>
+          </figure>
         </div>
         <footer class="scene-two-footer">
-          <button id="sceneTwoDialogueBtn" class="scene-two-dialogue-btn" type="button" aria-expanded="false" aria-controls="sceneTwoDialogue">Advisor की बात <span aria-hidden="true">＋</span></button>
-          <p id="sceneTwoDialogue" class="scene-two-dialogue" hidden>Business में पैसा लगाइए growth के लिए। साथ ही, अपनी personal savings का एक हिस्सा future की stability के लिए अलग रखिए।</p>
+          <button id="sceneTwoDialogueBtn" class="scene-two-dialogue-btn" type="button" aria-label="Hear Scene 2 advisor recording"><span aria-hidden="true">▶</span> <span id="sceneTwoAudioLabel">Advisor की बात सुनें</span></button>
+          <p id="sceneTwoAudioStatus" class="audio-status" role="status" aria-live="polite"></p>
           <button id="sceneTwoNextBtn" class="scene-two-next" type="button" aria-controls="sceneThreeStatus">Stability कैसे मिलेगी? <span aria-hidden="true">→</span></button>
           <p id="sceneThreeStatus" class="scene-three-status" role="status" hidden>अगला scene अभी तैयार हो रहा है।</p>
         </footer>
@@ -273,6 +277,6 @@
 
 </div><!-- /.app-viewport-wrapper -->
 
-<script src="presentation.js?v=8"></script>
+<script src="presentation.js?v=9"></script>
 </body>
 </html>

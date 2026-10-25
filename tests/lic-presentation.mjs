@@ -20,7 +20,7 @@ function setup(play) {
   const doc = { events: {}, hidden: false, getElementById: el, querySelectorAll: () => [], querySelector: selector => selector === '.layer-stage-3d' ? el('firstScene') : null,
     body: el('body'), addEventListener(k, fn) { this.events[k] = fn; } };
   class Audio {
-    constructor() { this.events = {}; this.currentTime = 0; this.ended = false; audios.push(this); }
+    constructor(src) { this.src = src; this.events = {}; this.currentTime = 0; this.ended = false; audios.push(this); }
     addEventListener(k, fn) { this.events[k] = fn; }
     async play() { if (play) await play(); this.events.playing(); }
     pause() { this.events.pause(); }
@@ -82,18 +82,38 @@ test('page and narration use Hindi-English with no Gujarati remnants', () => {
   assert.match(source, /advisor-scene-1-hindi\.mp3/);
 });
 
-test('Scene 2 shows the advisor script on demand and keeps Scene 1 inert until returning', () => {
-  const s = setup();
-  s.click('ctaForwardBtn');
+test('Scene 2 recording pauses, resumes and rewinds on return', async () => {
+  const s = setup(); s.click('ctaForwardBtn');
   assert.equal(s.el('firstScene').inert, true);
-  s.click('sceneTwoDialogueBtn');
-  assert.equal(s.el('sceneTwoDialogue').hidden, false);
-  assert.equal(s.el('sceneTwoDialogueBtn').attrs['aria-expanded'], 'true');
-  s.click('sceneTwoDialogueBtn');
-  assert.equal(s.el('sceneTwoDialogue').hidden, true);
-  s.click('sceneTwoNextBtn');
-  assert.equal(s.el('sceneThreeStatus').hidden, false);
+  s.click('sceneTwoDialogueBtn'); await flush();
+  assert.match(s.audios[0].src, /advisor-scene-2-hindi\.mp3/);
+  assert.equal(s.el('sceneTwoAudioLabel').textContent, 'Pause audio');
+  s.audios[0].currentTime = 3;
+  s.click('sceneTwoDialogueBtn'); await flush();
+  assert.equal(s.el('sceneTwoAudioLabel').textContent, 'Resume audio');
+  s.click('sceneTwoDialogueBtn'); await flush();
+  assert.equal(s.audios[0].currentTime, 3);
   s.click('previewDismissBtn');
+  assert.equal(s.audios[0].currentTime, 0);
   assert.equal(s.el('firstScene').inert, false);
   assert.equal(s.el('stagePreviewModal').inert, true);
+});
+test('Scene 2 pending playback is cancelled when moving on', async () => {
+  let resolve;
+  const s = setup(() => new Promise(done => { resolve = done; }));
+  s.click('ctaForwardBtn'); s.click('sceneTwoDialogueBtn');
+  s.click('sceneTwoNextBtn');
+  resolve(); await flush();
+  assert.equal(s.audios[0].currentTime, 0);
+  assert.equal(s.el('sceneTwoAudioLabel').textContent, 'Advisor की बात सुनें');
+  assert.equal(s.el('sceneThreeStatus').hidden, false);
+});
+test('Scene 2 audio resets at the end and stops when the tab is hidden', async () => {
+  const s = setup(); s.click('ctaForwardBtn'); s.click('sceneTwoDialogueBtn'); await flush();
+  s.audios[0].events.ended();
+  assert.equal(s.el('sceneTwoAudioLabel').textContent, 'Advisor की बात सुनें');
+  s.click('sceneTwoDialogueBtn'); await flush(); s.audios[0].currentTime=4;
+  s.doc.hidden=true; s.doc.events.visibilitychange();
+  assert.equal(s.audios[0].currentTime,0);
+  assert.equal(s.el('sceneTwoAudioLabel').textContent,'Advisor की बात सुनें');
 });
