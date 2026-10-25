@@ -56,7 +56,8 @@ const server=http.createServer((req,res)=>{
   assert.ok((await page.evaluate(()=>window.__journalViewport.view)).x>100);
   assert.deepEqual(await page.evaluate(()=>window.__journalApi.strokes().map(s=>({id:s.id,points:s.points}))),old,'Panning never rewrites stroke coordinates');
   await page.getByRole('button',{name:'Zoom in journal',exact:true}).click();
-  const camera=await page.evaluate(()=>window.__journalViewport.view);assert.ok(camera.zoom>1);
+  await page.getByRole('button',{name:'Zoom in journal',exact:true}).focus();await page.keyboard.press('Space');
+  const camera=await page.evaluate(()=>window.__journalViewport.view);assert.ok(camera.zoom>1.5,'Space activates a focused canvas button');assert.ok(camera.zoom>1);
   const mapped=await page.evaluate(()=>{const r=document.querySelector('.canvas-container').getBoundingClientRect();return window.__journalViewport.point({clientX:r.left+120,clientY:r.top+80});});
   assert.ok(Math.abs(mapped.x-(120-camera.x)/camera.zoom)<.001);
   await page.getByRole('button',{name:'Pen',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[aria-label="Pan journal"]').getAttribute('aria-pressed')==='false');await page.keyboard.press('Escape');
