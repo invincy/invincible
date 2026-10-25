@@ -243,173 +243,6 @@ html, body {
   transform: translateZ(90px);
 }
 
-/* Advisor Interactive Tap-to-hear Pill Button */
-.advisor-audio-badge {
-  position: absolute;
-  top: 38%;
-  right: 10%;
-  padding: 6px 14px;
-  background: rgba(3, 15, 38, 0.90);
-  border: 1.5px solid var(--border-gold-bright);
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 11.5px;
-  font-weight: 700;
-  color: #FFE5A3;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 14px rgba(212, 175, 55, 0.35);
-  cursor: pointer;
-  animation: float-badge 3.5s ease-in-out infinite;
-  transition: all 0.25s var(--ease-spring);
-  user-select: none;
-  z-index: 38;
-}
-
-.advisor-audio-badge:hover,
-.advisor-audio-badge:focus-visible {
-  transform: scale(1.08);
-  background: rgba(6, 23, 56, 0.95);
-  border-color: #FFF;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7), 0 0 18px rgba(230, 198, 135, 0.5);
-}
-
-.advisor-audio-icon {
-  font-size: 12px;
-}
-
-.advisor-audio-label {
-  letter-spacing: 0.02em;
-}
-
-.pulse-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #34d399;
-  box-shadow: 0 0 8px #34d399;
-  animation: blink-dot 1.4s ease-in-out infinite;
-}
-
-@keyframes blink-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.8); }
-}
-
-@keyframes float-badge {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
-
-/* Translucent Glass Dialogue Speech Bubbles */
-.speech-bubble {
-  position: absolute;
-  z-index: 40;
-  max-width: 340px;
-  background: rgba(4, 16, 39, 0.95);
-  border: 1.5px solid var(--border-gold-subtle);
-  border-radius: 18px;
-  padding: 14px 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75), 0 0 20px rgba(212, 175, 55, 0.2);
-  backdrop-filter: blur(16px);
-  opacity: 0;
-  visibility: hidden;
-  transform: scale(0.85) translateY(10px);
-  transition: all 0.35s var(--ease-spring);
-  pointer-events: auto;
-}
-
-.speech-bubble.active {
-  opacity: 1;
-  visibility: visible;
-  transform: scale(1) translateY(0);
-}
-
-.speech-bubble-advisor {
-  top: 34%;
-  left: 6%;
-  right: 6%;
-  margin: 0 auto;
-}
-
-.speech-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.speech-speaker-tag {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-gold);
-}
-
-.speech-audio-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  color: #FFE5A3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 12px;
-  transition: background 0.2s;
-}
-.speech-audio-btn:hover {
-  background: rgba(212, 175, 55, 0.3);
-}
-
-.speech-gujarati {
-  font-family: var(--font-gujarati);
-  font-size: 13.5px;
-  line-height: 1.55;
-  color: #FFFFFF;
-  font-weight: 500;
-}
-
-.speech-caption-tag {
-  margin-top: 8px;
-  padding: 6px 10px;
-  background: rgba(212, 175, 55, 0.12);
-  border-left: 2.5px solid var(--text-gold);
-  border-radius: 0 8px 8px 0;
-  font-family: var(--font-gujarati);
-  font-size: 11.5px;
-  line-height: 1.45;
-  color: #FFE5A3;
-  font-weight: 500;
-}
-
-.caption-bullet {
-  margin-right: 4px;
-}
-
-.speech-close-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 14px;
-  cursor: pointer;
-  padding: 4px;
-  line-height: 1;
-}
-.speech-close-btn:hover {
-  color: #fff;
-}
-
 /* ==========================================================================
    LAYER 4: Foreground Contrast Vignette
    ========================================================================== */
@@ -559,90 +392,127 @@ html, body {
 }
 
 /* ==========================================================================
-   LAYER 7: Interactive Controls (Growth, Opportunity, Control)
+   LAYER 7: Advisor Audio Control (Only Interactive Voice)
+   Compact, ultra-premium audio button positioned cleanly between scene and CTA
    ========================================================================== */
-.layer-controls {
+.layer-advisor-audio {
   z-index: 70;
-  bottom: 84px;
+  bottom: 94px;
   left: 0;
   right: 0;
   width: 100%;
   height: auto;
-  padding: 0 16px;
+  padding: 0 18px;
   display: flex;
   justify-content: center;
+  align-items: center;
 }
-.stage-container.exploded-view .layer-controls {
+.stage-container.exploded-view .layer-advisor-audio {
   transform: translateZ(280px);
 }
 
-.pills-container {
+.advisor-audio-container {
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 10px;
+  align-items: center;
   width: 100%;
 }
 
-.btn-pill {
-  flex: 1;
-  max-width: 120px;
-  height: 40px;
-  background: rgba(5, 18, 42, 0.75);
-  border: 1px solid var(--border-gold-subtle);
-  border-radius: 999px;
-  display: flex;
+.advisor-audio-btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  color: #FFFFFF;
-  font-size: 12px;
-  font-weight: 600;
+  gap: 9px;
+  height: 42px;
+  padding: 0 20px;
+  background: rgba(3, 14, 34, 0.90);
+  border: 1.5px solid var(--border-gold-bright);
+  border-radius: 999px;
+  color: #FFE5A3;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6), 0 0 16px rgba(212, 175, 55, 0.28);
   cursor: pointer;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  user-select: none;
   transition: all 0.25s var(--ease-spring);
   position: relative;
   overflow: hidden;
 }
 
-.btn-pill::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 50% 0%, rgba(255, 229, 163, 0.25), transparent 70%);
-  opacity: 0;
-  transition: opacity 0.25s ease;
-}
-
-.btn-pill:hover,
-.btn-pill:focus-visible {
-  border-color: var(--border-gold-bright);
-  background: rgba(10, 30, 68, 0.88);
+.advisor-audio-btn:hover,
+.advisor-audio-btn:focus-visible {
+  background: rgba(6, 24, 58, 0.95);
+  border-color: #FFFFFF;
+  color: #FFFFFF;
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6), 0 0 16px rgba(212, 175, 55, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), 0 0 22px rgba(230, 198, 135, 0.45);
 }
 
-.btn-pill:hover::before {
-  opacity: 1;
+.advisor-audio-btn:active {
+  transform: translateY(1px) scale(0.98);
 }
 
-.btn-pill:active {
-  transform: translateY(1px) scale(0.97);
+.advisor-audio-icon {
+  font-size: 14px;
+  line-height: 1;
 }
 
-.btn-pill.active {
-  border-color: #FFE5A3;
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.35), rgba(7, 26, 60, 0.9));
-  box-shadow: 0 0 16px rgba(230, 198, 135, 0.45);
-}
-
-.pill-icon {
+.advisor-audio-label {
+  line-height: 1;
   font-size: 13px;
+  font-weight: 700;
 }
 
-.pill-text {
-  letter-spacing: 0.02em;
+/* Soundwave equalizer bars */
+.audio-wave-bars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2.5px;
+  height: 14px;
+}
+
+.audio-wave-bars .bar {
+  width: 2.5px;
+  height: 6px;
+  background: #34d399;
+  border-radius: 2px;
+  transition: height 0.2s ease, background 0.2s ease;
+}
+
+/* When playing */
+.advisor-audio-btn.is-playing {
+  border-color: #FFE5A3;
+  background: linear-gradient(135deg, rgba(14, 38, 80, 0.95), rgba(4, 16, 38, 0.95));
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.7), 0 0 20px rgba(212, 175, 55, 0.4);
+}
+
+.advisor-audio-btn.is-playing .audio-wave-bars .bar {
+  background: var(--text-gold);
+  animation: wave-equalizer 0.8s ease-in-out infinite alternate;
+}
+
+.advisor-audio-btn.is-playing .bar-1 { animation-delay: 0.1s; }
+.advisor-audio-btn.is-playing .bar-2 { animation-delay: 0.3s; }
+.advisor-audio-btn.is-playing .bar-3 { animation-delay: 0.2s; }
+.advisor-audio-btn.is-playing .bar-4 { animation-delay: 0.4s; }
+
+@keyframes wave-equalizer {
+  0% { height: 4px; }
+  50% { height: 14px; }
+  100% { height: 7px; }
+}
+
+/* When paused */
+.advisor-audio-btn.is-paused {
+  border-color: rgba(212, 175, 55, 0.6);
+}
+.advisor-audio-btn.is-paused .audio-wave-bars .bar {
+  background: #f59e0b;
+  height: 6px;
+  animation: none;
 }
 
 /* ==========================================================================
@@ -746,203 +616,6 @@ html, body {
 @keyframes pulse-ring {
   0% { transform: scale(0.95); opacity: 0.8; }
   100% { transform: scale(1.18); opacity: 0; }
-}
-
-/* ==========================================================================
-   LAYER 9: Interactive Bottom Sheet Modal
-   ========================================================================== */
-.bottom-sheet-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(1, 6, 16, 0.75);
-  backdrop-filter: blur(8px);
-  z-index: 90;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-.bottom-sheet-backdrop.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-.bottom-sheet-panel {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  max-height: 82%;
-  background: #041026;
-  border-top: 1.5px solid var(--border-gold-bright);
-  border-radius: 28px 28px 0 0;
-  z-index: 100;
-  padding: 14px 20px 28px;
-  transform: translateY(105%);
-  transition: transform 0.4s var(--ease-smooth);
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.85);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.bottom-sheet-panel.active {
-  transform: translateY(0);
-}
-
-.sheet-drag-handle {
-  width: 44px;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 2px;
-  margin: 0 auto 14px;
-  cursor: grab;
-}
-
-.sheet-header-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-
-.sheet-title-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-gold);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 4px;
-}
-
-.sheet-title {
-  font-family: var(--font-serif);
-  font-size: 22px;
-  color: #FFFFFF;
-  line-height: 1.2;
-}
-
-.sheet-close-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--border-glass);
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  color: #fff;
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.sheet-close-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: rotate(90deg);
-}
-
-/* Sheet Tab Selector */
-.sheet-tabs {
-  display: flex;
-  gap: 8px;
-  background: rgba(2, 9, 22, 0.6);
-  padding: 4px;
-  border-radius: 12px;
-  margin-bottom: 16px;
-}
-
-.sheet-tab-btn {
-  flex: 1;
-  padding: 8px 4px;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: center;
-}
-
-.sheet-tab-btn.active {
-  background: rgba(212, 175, 55, 0.18);
-  color: #FFE5A3;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-/* Scrollable Sheet Body */
-.sheet-scroll-body {
-  overflow-y: auto;
-  padding-right: 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.sheet-scroll-body::-webkit-scrollbar {
-  width: 4px;
-}
-.sheet-scroll-body::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.3);
-  border-radius: 4px;
-}
-
-/* Insight Cards inside Bottom Sheet */
-.insight-card {
-  background: rgba(8, 23, 50, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 16px;
-  padding: 16px;
-}
-
-.insight-card-highlight {
-  border-color: rgba(212, 175, 55, 0.35);
-  background: linear-gradient(135deg, rgba(14, 36, 75, 0.8), rgba(4, 16, 38, 0.9));
-}
-
-.insight-label {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-gold);
-  margin-bottom: 8px;
-}
-
-.insight-gujarati {
-  font-family: var(--font-gujarati);
-  font-size: 14px;
-  line-height: 1.55;
-  color: #FFFFFF;
-  font-weight: 500;
-}
-
-/* Quote Card */
-.sheet-character-quote {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  background: rgba(10, 28, 62, 0.6);
-  border-left: 3px solid var(--text-gold);
-  border-radius: 0 12px 12px 0;
-  padding: 12px 14px;
-}
-
-.quote-icon {
-  font-size: 20px;
-  color: var(--text-gold);
-  line-height: 1;
-}
-
-.quote-body {
-  font-family: var(--font-gujarati);
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: #FFE5A3;
 }
 
 /* ==========================================================================
@@ -1199,8 +872,8 @@ body.dev-mode .inspector-fab {
   .layer-headline {
     top: max(72px, calc(env(safe-area-inset-top) + 54px));
   }
-  .layer-controls {
-    bottom: calc(max(18px, env(safe-area-inset-bottom)) + 68px);
+  .layer-advisor-audio {
+    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 74px);
   }
   .layer-callout {
     bottom: max(16px, env(safe-area-inset-bottom));

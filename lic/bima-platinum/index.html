@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="presentation.css?v=5">
+  <link rel="stylesheet" href="presentation.css?v=6">
 </head>
 <body>
 
@@ -56,8 +56,8 @@
         <input type="checkbox" class="layer-toggle-input" data-target="layerHeadline" checked>
       </label>
       <label class="inspector-toggle-item">
-        <span>7. Interactive Controls</span>
-        <input type="checkbox" class="layer-toggle-input" data-target="layerControls" checked>
+        <span>7. Advisor Audio Control</span>
+        <input type="checkbox" class="layer-toggle-input" data-target="layerAdvisorAudio" checked>
       </label>
       <label class="inspector-toggle-item">
         <span>8. Value Callout & CTA</span>
@@ -103,38 +103,10 @@
         </div>
 
         <!-- ==========================================
-             LAYER 3: Interactive Characters & Advisor Voice
-             (Female LIC advisor speaks; Businessman visually present but silent)
+             LAYER 3: Characters Plate (Visual)
+             (Businessman & Female Advisor; Businessman is silent)
              ========================================== -->
-        <div id="layerCharacters" class="scene-layer layer-characters interactive">
-          
-          <!-- Advisor Audio Trigger / Tap-to-hear Pill -->
-          <button id="advisorAudioTrigger" class="advisor-audio-badge" aria-label="Tap to hear Advisor">
-            <span class="pulse-dot"></span>
-            <span class="advisor-audio-icon">🔊</span>
-            <span class="advisor-audio-label">Tap to hear</span>
-          </button>
-
-          <!-- Advisor Speech Dialogue Bubble -->
-          <div id="bubbleAdvisor" class="speech-bubble speech-bubble-advisor" role="dialog" aria-label="LIC Advisor Perspective">
-            <button id="closeBubbleAdvisor" class="speech-close-btn" aria-label="Close dialog">✕</button>
-            <div class="speech-header">
-              <span class="speech-speaker-tag">
-                <span class="advisor-audio-icon">🛡️</span>
-                <span>LIC Financial Advisor</span>
-              </span>
-              <button id="audioBtnAdvisor" class="speech-audio-btn" title="Replay Gujarati Audio" aria-label="Replay Audio">🔊</button>
-            </div>
-            <p class="speech-gujarati">
-              "તમારો business already growth potential આપે છે. Customers વધે, sales વધે, expansion થાય — તો returns પણ મોટા થઈ શકે. પણ જ્યાં growth હોય ત્યાં risk પણ હોય. એટલે તમારી personal savings નો દરેક રૂપિયા ફરી risk માં જવાની જરૂર નથી."
-            </p>
-            <div class="speech-caption-tag">
-              <span class="caption-bullet">💡</span>
-              <span>Business growth આપે છે — but personal money ને stability પણ જોઈએ.</span>
-            </div>
-          </div>
-
-        </div>
+        <div id="layerCharacters" class="scene-layer layer-characters"></div>
 
         <!-- ==========================================
              LAYER 4: Foreground Contrast Vignette
@@ -172,21 +144,26 @@
         </div>
 
         <!-- ==========================================
-             LAYER 7: Interactive Controls (Growth / Opportunity / Control)
+             LAYER 7: Advisor Audio Control (Only Interactive Voice)
+             (Positioned cleanly between character scene & bottom CTA)
              ========================================== -->
-        <div id="layerControls" class="scene-layer layer-controls interactive">
-          <div class="pills-container">
-            <button id="pillGrowth" class="btn-pill" aria-label="Explore Growth">
-              <span class="pill-icon">🌱</span>
-              <span class="pill-text">Growth</span>
-            </button>
-            <button id="pillOpportunity" class="btn-pill" aria-label="Explore Opportunity">
-              <span class="pill-icon">💡</span>
-              <span class="pill-text">Opportunity</span>
-            </button>
-            <button id="pillControl" class="btn-pill" aria-label="Explore Control">
-              <span class="pill-icon">🎛️</span>
-              <span class="pill-text">Control</span>
+        <div id="layerAdvisorAudio" class="scene-layer layer-advisor-audio interactive">
+          <div class="advisor-audio-container">
+            <button 
+              id="advisorAudioBtn" 
+              class="advisor-audio-btn" 
+              type="button"
+              aria-label="Hear Advisor Perspective"
+              title="તમારો business already growth potential આપે છે. Customers વધે, sales વધે, expansion થાય — તો returns પણ મોટા થઈ શકે. પણ જ્યાં growth હોય ત્યાં risk પણ હોય. એટલે તમારી personal savings નો દરેક રૂપિયા ફરી risk માં જવાની જરૂર નથી."
+            >
+              <span class="audio-wave-bars" aria-hidden="true">
+                <span class="bar bar-1"></span>
+                <span class="bar bar-2"></span>
+                <span class="bar bar-3"></span>
+                <span class="bar bar-4"></span>
+              </span>
+              <span id="advisorAudioIcon" class="advisor-audio-icon">🔊</span>
+              <span id="advisorAudioLabel" class="advisor-audio-label">Hear Advisor</span>
             </button>
           </div>
         </div>
@@ -209,46 +186,6 @@
         </div>
 
       </div><!-- /.layer-stage-3d -->
-
-      <!-- ==========================================
-           LAYER 9: Interactive Bottom Sheet Modal
-           (Focused purely on business strength & autonomy)
-           ========================================== -->
-      <div id="bottomSheetBackdrop" class="bottom-sheet-backdrop"></div>
-      <div id="bottomSheetPanel" class="bottom-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
-        <div class="sheet-drag-handle"></div>
-        <div class="sheet-header-row">
-          <div>
-            <span id="sheetBadge" class="sheet-title-badge">🌱 BUSINESS PILLAR · GROWTH</span>
-            <div style="display:flex; align-items:baseline; gap:8px;">
-              <h2 id="sheetTitle" class="sheet-title">Growth</h2>
-              <span id="sheetShortLine" style="font-family: var(--font-gujarati); font-size: 13px; color: var(--text-gold);">વધુ earning potential</span>
-            </div>
-          </div>
-          <button id="sheetCloseBtn" class="sheet-close-btn" aria-label="Close Bottom Sheet">✕</button>
-        </div>
-
-        <!-- Tab switcher inside modal -->
-        <div class="sheet-tabs">
-          <button class="sheet-tab-btn active" data-tab="growth">🌱 Growth</button>
-          <button class="sheet-tab-btn" data-tab="opportunity">💡 Opportunity</button>
-          <button class="sheet-tab-btn" data-tab="control">🎛️ Control</button>
-        </div>
-
-        <!-- Scrollable content -->
-        <div class="sheet-scroll-body">
-          <div class="insight-card insight-card-highlight">
-            <div class="insight-label">મુખ્ય વિચાર · Core Principle</div>
-            <p id="sheetExpanded" class="insight-gujarati" style="font-size: 15px; font-weight: 700; color: #FFFFFF; margin-bottom: 8px;"></p>
-            <p id="sheetSecondary" class="insight-gujarati" style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.55;"></p>
-          </div>
-
-          <div class="sheet-character-quote">
-            <span class="quote-icon">“</span>
-            <p id="sheetQuoteText" class="quote-body"></p>
-          </div>
-        </div>
-      </div><!-- /.bottom-sheet-panel -->
 
       <!-- ==========================================
            Stage 2 Preview Transition Modal (Placeholder)
@@ -291,6 +228,6 @@
 
 </div><!-- /.app-viewport-wrapper -->
 
-<script src="presentation.js?v=5"></script>
+<script src="presentation.js?v=6"></script>
 </body>
 </html>
