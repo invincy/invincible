@@ -17,8 +17,10 @@ function setup(play) {
     });
     return elements.get(id);
   }
+  const ageButtons = [15,25,35,45].map(age => { const b=el('sampleAge'+age); b.dataset={age:String(age)}; return b; });
+  const pptButtons = [7,10,12,15,18].map(ppt => { const b=el('samplePpt'+ppt); b.dataset={ppt:String(ppt)}; return b; });
   const audios=[]; const windowEvents={};
-  const doc={events:{}, hidden:false, getElementById:el, querySelectorAll:()=>[], querySelector:s=>s==='.layer-stage-3d'?el('firstScene'):s==='.scene-two-nav'?el('sceneNav'):s==='.scene-two-footer'?el('sceneFooter'):null,
+  const doc={events:{}, hidden:false, getElementById:el, querySelectorAll:selector=>selector==='#incomeAgeOptions button'?ageButtons:selector==='#incomePptOptions button'?pptButtons:[], querySelector:s=>s==='.layer-stage-3d'?el('firstScene'):s==='.scene-two-nav'?el('sceneNav'):s==='.scene-two-footer'?el('sceneFooter'):null,
     body:el('body'), addEventListener(k,fn) { this.events[k]=fn; }};
   class Audio {
     constructor(src) { this.src=src; this.events={}; this.currentTime=0; this.ended=false; this.paused=true; audios.push(this); }
@@ -26,10 +28,11 @@ function setup(play) {
     async play() { if(play) await play(); this.paused=false; this.events.playing(); }
     pause() { this.paused=true; this.events.pause(); }
   }
-  vm.runInNewContext(source,{document:doc, Audio, URLSearchParams, setTimeout,
-    window:{location:{search:'',hash:''},addEventListener(k,fn) { windowEvents[k]=fn; }}});
+  const context={document:doc, Audio, URLSearchParams, setTimeout,
+    window:{location:{search:'',hash:''},addEventListener(k,fn) { windowEvents[k]=fn; }}};
+  vm.runInNewContext(source,context);
   doc.events.DOMContentLoaded();
-  return {el,doc,audios,windowEvents,click:id=>el(id).events.click({stopPropagation(){}})};
+  return {el,doc,audios,windowEvents,premium:context.getLicSamplePremium,click:id=>el(id).events.click({stopPropagation(){}})};
 }
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 const focus=s=>s.el('storyChart').attrs['data-focus'];
@@ -154,7 +157,7 @@ test('page has one chart, original three paths and Hindi-English scripts without
 });
 
 
-test('Page 3 opens the reveal, Page 4 opens existing plan details as Page 5, and Back restores the chart',()=>{
+test('Page 3 opens the reveal, Page 4 opens compact income Page 5, and Back restores the chart',()=>{
   const s=setup(); s.click('ctaForwardBtn'); s.click('sceneTwoNextBtn');
   assert.equal(s.el('storyNextLabel').textContent,'Stability का अगला कदम');
   s.click('sceneTwoNextBtn');
@@ -167,8 +170,14 @@ test('Page 3 opens the reveal, Page 4 opens existing plan details as Page 5, and
   s.click('sceneTwoNextBtn');
   assert.equal(s.el('storyStageCounter').textContent,'5 / 10');
   assert.equal(s.el('planDetailsPage').hidden,false);
-  assert.equal(s.el('sceneFooter').hidden,true);
+  assert.equal(s.el('sceneFooter').hidden,false);
+  assert.equal(s.el('storyNextLabel').textContent,'See More Benefits');
+  assert.equal(s.el('planDetailsFrame').attrs.src,undefined);
+  s.click('sceneTwoNextBtn');
+  assert.equal(s.el('storyStageCounter').textContent,'6 / 10');
+  assert.equal(s.el('moreBenefitsPage').hidden,false);
   assert.equal(s.el('planDetailsFrame').attrs.src,'calculator.html#optionDetail');
+  s.click('previewDismissBtn');
   s.click('previewDismissBtn');
   assert.equal(s.el('productReveal').hidden,false);
   assert.equal(s.el('sceneFooter').hidden,false);
@@ -191,10 +200,58 @@ test('Page 4 shares recording controls, exact script and missing-file handling',
   s.click('sceneTwoNextBtn');
   assert.equal(audio.paused,true); assert.equal(audio.currentTime,0);
   audio.events.playing();
-  assert.equal(s.el('sceneTwoAudioLabel').textContent,'Advisor की बात सुनें');
+  assert.equal(s.el('sceneTwoAudioLabel').textContent,'Hear Advisor');
   assert.match(source,/यहीं Bima Platinum आपकी financial journey में stability जोड़ता है। यह आपके portfolio के एक हिस्से को guaranteed और predictable structure देने के लिए बनाया गया है।/);
   const missing=setup(()=>Promise.reject(new Error('missing')));
   missing.click('ctaForwardBtn'); missing.click('sceneTwoNextBtn'); missing.click('sceneTwoNextBtn');
   missing.click('sceneTwoDialogueBtn'); await flush();
   assert.match(missing.el('sceneTwoAudioStatus').textContent,/नई recording/);
+});
+
+
+test('all 20 official samples use fixed lookup premiums and update timing',()=>{
+  const s=setup(); s.click('ctaForwardBtn'); for(let i=0;i<3;i++) s.click('sceneTwoNextBtn');
+  const fixtures={15:[81810,54735,43020,32145,24990],25:[83145,55275,43290,32220,25005],35:[87495,57015,44160,32445,25005],45:[100365,62025,46770,33465,25425]};
+  const ppts=[7,10,12,15,18];
+  for(const [age,premiums] of Object.entries(fixtures)) {
+    s.click('sampleAge'+age);
+    for(let i=0;i<ppts.length;i++) {
+      const ppt=ppts[i]; s.click('samplePpt'+ppt);
+      assert.equal(s.premium(age,ppt),premiums[i]);
+      assert.equal(s.el('incomeAnnualPremium').textContent,'₹'+premiums[i].toLocaleString('en-IN'));
+      assert.equal(s.el('incomePptEnd').textContent,'Year '+ppt);
+      assert.equal(s.el('incomePayoutStart').textContent,'From end of Year '+ppt);
+      assert.equal(s.el('incomeFirstPayment').textContent,'First payment: end of Year '+ppt);
+      assert.equal(s.el('incomeLaterYears').textContent,'Years '+(ppt+5)+' / 30');
+      assert.equal(s.el('sampleAge'+age).attrs['aria-pressed'],'true');
+      assert.equal(s.el('samplePpt'+ppt).attrs['aria-pressed'],'true');
+    }
+  }
+  for(const [age,ppt] of [[34,7],[25,8],[60,15],[null,15]]) assert.equal(s.premium(age,ppt),null);
+});
+
+test('income defaults and selections persist when navigating back to Page 4',()=>{
+  const s=setup();
+  assert.equal(s.el('incomeAnnualPremium').textContent,'₹32,220');
+  s.click('ctaForwardBtn'); for(let i=0;i<3;i++) s.click('sceneTwoNextBtn');
+  s.click('sampleAge35'); s.click('samplePpt7');
+  assert.equal(s.el('incomeAnnualPremium').textContent,'₹87,495');
+  s.click('previewDismissBtn'); s.click('sceneTwoNextBtn');
+  assert.equal(s.el('incomeAnnualPremium').textContent,'₹87,495');
+  assert.equal(s.el('samplePpt7').attrs['aria-pressed'],'true');
+  const html=readFileSync(new URL('../lic/bima-platinum/index.html',import.meta.url),'utf8');
+  assert.match(html,/Sum Assured<\/dt><dd>₹3,00,000/);
+  assert.match(html,/Policy Term<\/dt><dd>30 years/);
+  assert.match(html,/income-amount">₹30,000/);
+  assert.doesNotMatch(html,/Choose an official LIC example/);
+});
+
+test('Page 5 advisor control uses shared audio lifecycle and stops on more benefits',async()=>{
+  const s=setup(); s.click('ctaForwardBtn'); for(let i=0;i<3;i++) s.click('sceneTwoNextBtn');
+  s.click('sceneTwoDialogueBtn'); await flush();
+  assert.equal(s.audios[0].src,'assets/audio/page5-advisor.mp3');
+  s.audios[0].currentTime=2;
+  s.click('sceneTwoDialogueBtn'); assert.equal(s.el('sceneTwoAudioLabel').textContent,'Resume audio');
+  s.click('sceneTwoDialogueBtn'); await flush();
+  s.click('sceneTwoNextBtn'); assert.equal(s.audios[0].paused,true); assert.equal(s.audios[0].currentTime,0);
 });

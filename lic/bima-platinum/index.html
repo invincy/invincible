@@ -14,7 +14,7 @@
 
   <link rel="preload" as="image" href="assets/scene-1-853.webp" imagesrcset="assets/scene-1-480.webp 480w, assets/scene-1-853.webp 853w" imagesizes="(max-width: 480px) 100vw, 420px" fetchpriority="high">
 
-  <link rel="stylesheet" href="presentation.css?v=16">
+  <link rel="stylesheet" href="presentation.css?v=17">
 </head>
 <body>
 
@@ -194,6 +194,7 @@
         <div class="scene-two-wash" aria-hidden="true"></div>
         <nav class="scene-two-nav" aria-label="Scene 2 navigation">
           <button id="previewDismissBtn" type="button" class="nav-btn" aria-label="Back to Scene 1">←</button>
+          <div id="incomeNavBrand" class="income-nav-brand" hidden><img class="income-nav-logo" src="assets/lic-logo.svg" alt="LIC" width="200" height="97"><strong>Bima Platinum</strong></div>
           <div id="storyStageBadge" class="nav-stage-badge" aria-label="Scene 2 of 10">
             <span id="storyStageCounter" class="stage-counter-text">2 / 10</span>
             <div class="stage-progress-bar"><div id="storyProgress" class="stage-progress-fill" style="width:20%"></div></div>
@@ -223,8 +224,34 @@
               <span class="reveal-limited">Limited-Period Plan</span>
             </div>
           </section>
-          <section id="planDetailsPage" class="plan-details-page" aria-label="Bima Platinum plan structure" hidden>
-            <iframe id="planDetailsFrame" title="Bima Platinum benefit structure" loading="lazy"></iframe>
+          <section id="planDetailsPage" class="plan-details-page income-guide" aria-label="Bima Platinum official sample illustration" hidden>
+            <div class="income-example-top">
+              <img class="income-advisor" src="assets/advisor-anniversary.webp" alt="LIC advisor introducing regular income" width="760" height="759" loading="lazy" decoding="async">
+              <div class="income-highlight"><strong>10<span>%</span></strong><span>of Basic Sum Assured<br><b>Every Year</b></span></div>
+              <div class="income-selectors">
+                <div class="income-selector"><span id="incomeAgeLabel">Age</span><div id="incomeAgeOptions" class="income-options" role="group" aria-labelledby="incomeAgeLabel">
+                  <button type="button" data-age="15" aria-pressed="false">15</button><button type="button" data-age="25" aria-pressed="true">25</button><button type="button" data-age="35" aria-pressed="false">35</button><button type="button" data-age="45" aria-pressed="false">45</button>
+                </div></div>
+                <div class="income-selector"><span id="incomePptLabel">PPT <small>years</small></span><div id="incomePptOptions" class="income-options" role="group" aria-labelledby="incomePptLabel">
+                  <button type="button" data-ppt="7" aria-pressed="false">7</button><button type="button" data-ppt="10" aria-pressed="false">10</button><button type="button" data-ppt="12" aria-pressed="false">12</button><button type="button" data-ppt="15" aria-pressed="true">15</button><button type="button" data-ppt="18" aria-pressed="false">18</button>
+                </div></div>
+              </div>
+            </div>
+            <dl class="income-facts"><div><dt>Sum Assured</dt><dd>₹3,00,000</dd></div><div><dt>Policy Term</dt><dd>30 years</dd></div><div class="income-premium"><dt>Annual Premium</dt><dd id="incomeAnnualPremium" aria-live="polite">₹32,220</dd></div></dl>
+            <div class="income-benefit" aria-label="Regular income benefit">
+              <p>Regular Income</p><div class="income-amount">₹30,000 <span>/ year</span></div>
+              <strong>10% of Basic Sum Assured</strong><small id="incomeFirstPayment">First payment: end of Year 15</small>
+            </div>
+            <ol class="income-timeline" aria-label="Policy timeline">
+              <li><span class="income-timeline-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span><b>Premium Start</b><small>Year 1</small></li>
+              <li><span class="income-timeline-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 4-5 8-8 9-3-1-8-5-8-9V6zM8 12l3 3 5-6"/></svg></span><b>PPT Ends</b><small id="incomePptEnd">Year 15</small></li>
+              <li><span class="income-timeline-icon income-rupee" aria-hidden="true">₹</span><b>₹30,000 / year</b><small id="incomePayoutStart">From end of Year 15</small></li>
+              <li><span class="income-timeline-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10h16v4H4zM6 14v7h12v-7M12 10v11M12 10C2 10 5 0 12 10c7-10 10 0 0 0"/></svg></span><b>Booster + Maturity</b><small id="incomeLaterYears">Years 20 / 30</small></li>
+            </ol>
+            <p class="income-sample-note">LIC sample • Offline • Standard lives • Taxes extra, if applicable.<br>Income during payout period, subject to survival and policy being in force. Not a personal quote.</p>
+          </section>
+          <section id="moreBenefitsPage" class="plan-details-page" aria-label="Further Bima Platinum benefit illustrations" hidden>
+            <iframe id="planDetailsFrame" title="Bima Platinum detailed benefit illustrations" loading="lazy"></iframe>
           </section>
           <figure id="storyChart" class="balance-chart scenario-chart" data-step="1" aria-labelledby="balanceChartTitle" aria-describedby="balanceChartCaption">
             <figcaption id="balanceChartTitle" class="scenario-chart-heading">Business · Growth engine</figcaption>
@@ -286,6 +313,6 @@
 
 </div><!-- /.app-viewport-wrapper -->
 
-<script src="presentation.js?v=15"></script>
+<script src="presentation.js?v=17"></script>
 </body>
 </html>

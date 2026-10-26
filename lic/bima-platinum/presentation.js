@@ -23,9 +23,23 @@ const STORY_SCENES = {
     script: 'यहीं Bima Platinum आपकी financial journey में stability जोड़ता है। यह आपके portfolio के एक हिस्से को guaranteed और predictable structure देने के लिए बनाया गया है।',
     cues: []
   },
-  // Reuse the existing benefit-structure page; no duplicated policy calculations.
-  5: { src: null, script: '', cues: [] }
+  5: { src: 'assets/audio/page5-advisor.mp3', script: 'इस उदाहरण में Basic Sum Assured तीन लाख रुपये है। इसका दस प्रतिशत, यानी तीस हज़ार रुपये, हर साल Regular Income के रूप में मिलता है। पहला भुगतान चुने हुए Premium Paying Term के अंत में शुरू होता है, policy की शर्तों के अनुसार।', cues: [] },
+  // Existing detailed examples remain available after the compact income page.
+  6: { src: null, script: '', cues: [] }
 };
+
+// LIC sales brochure, Sample Illustrative Premium (printed pp.15–16).
+// BSA ₹3,00,000, policy term 30 years, offline, standard lives; taxes excluded.
+// Fixed examples only: never interpolate, scale or extrapolate premiums.
+const LIC_SAMPLE_PREMIUMS = Object.freeze({
+  15: Object.freeze({ 7:81810, 10:54735, 12:43020, 15:32145, 18:24990 }),
+  25: Object.freeze({ 7:83145, 10:55275, 12:43290, 15:32220, 18:25005 }),
+  35: Object.freeze({ 7:87495, 10:57015, 12:44160, 15:32445, 18:25005 }),
+  45: Object.freeze({ 7:100365, 10:62025, 12:46770, 15:33465, 18:25425 })
+});
+function getLicSamplePremium(age, ppt) {
+  return LIC_SAMPLE_PREMIUMS[age]?.[ppt] ?? null;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   const stageContainer = document.getElementById('stageContainer');
@@ -48,6 +62,33 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggle3DExploded = document.getElementById('toggle3DExploded');
   const toggleDeviceFrame = document.getElementById('toggleDeviceFrame');
   const layerCheckboxes = document.querySelectorAll('.layer-toggle-input');
+  let selectedSampleAge = 25;
+  let selectedSamplePpt = 15;
+  const ageOptions = document.querySelectorAll('#incomeAgeOptions button');
+  const pptOptions = document.querySelectorAll('#incomePptOptions button');
+  function updateIncomeExample() {
+    const premium = getLicSamplePremium(selectedSampleAge, selectedSamplePpt);
+    document.getElementById('incomeAnnualPremium').textContent = '₹' + premium.toLocaleString('en-IN');
+    document.getElementById('incomePptEnd').textContent = `Year ${selectedSamplePpt}`;
+    document.getElementById('incomePayoutStart').textContent = `From end of Year ${selectedSamplePpt}`;
+    document.getElementById('incomeFirstPayment').textContent = `First payment: end of Year ${selectedSamplePpt}`;
+    document.getElementById('incomeLaterYears').textContent = `Years ${selectedSamplePpt + 5} / 30`;
+    ageOptions.forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.age) === selectedSampleAge)));
+    pptOptions.forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.ppt) === selectedSamplePpt)));
+  }
+  ageOptions.forEach(button => button.addEventListener('click', () => {
+    const age = Number(button.dataset.age);
+    if (getLicSamplePremium(age, selectedSamplePpt) === null) return;
+    selectedSampleAge = age;
+    updateIncomeExample();
+  }));
+  pptOptions.forEach(button => button.addEventListener('click', () => {
+    const ppt = Number(button.dataset.ppt);
+    if (getLicSamplePremium(selectedSampleAge, ppt) === null) return;
+    selectedSamplePpt = ppt;
+    updateIncomeExample();
+  }));
+  updateIncomeExample();
   let currentPage = 1;
   let audioElement = null;
   let audioAttempt = 0;
@@ -71,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateAudioUI(state) {
     playbackState = state;
-    const label = state === 'playing' ? 'Pause audio' : state === 'paused' ? 'Resume audio' : state === 'loading' ? 'Loading audio…' : 'Advisor की बात सुनें';
+    const label = state === 'playing' ? 'Pause audio' : state === 'paused' ? 'Resume audio' : state === 'loading' ? 'Loading audio…' : currentPage === 5 ? 'Hear Advisor' : 'Advisor की बात सुनें';
     for (const [button, text] of [[advisorAudioBtn, advisorAudioLabel], [sceneTwoDialogueBtn, sceneTwoAudioLabel]]) {
       text.textContent = label;
       button.setAttribute('aria-busy', String(state === 'loading'));
@@ -144,13 +185,16 @@ document.addEventListener('DOMContentLoaded', () => {
     stageContainer.setAttribute('data-story-step', String(page));
     const isReveal = page === 4;
     const isDetails = page === 5;
+    const isMoreBenefits = page === 6;
     document.getElementById('productReveal').hidden = !isReveal;
     document.getElementById('planDetailsPage').hidden = !isDetails;
+    document.getElementById('moreBenefitsPage').hidden = !isMoreBenefits;
+    document.getElementById('incomeNavBrand').hidden = !isDetails;
     document.getElementById('presenterChartHost').hidden = page >= 4;
     storyChart.hidden = page >= 4;
     document.getElementById('revealCtaIntro').hidden = !isReveal;
-    document.querySelector('.scene-two-footer').hidden = isDetails;
-    if (isDetails) {
+    document.querySelector('.scene-two-footer').hidden = isMoreBenefits;
+    if (isMoreBenefits) {
       const frame = document.getElementById('planDetailsFrame');
       if (!frame.getAttribute('src')) frame.setAttribute('src', 'calculator.html#optionDetail');
     }
@@ -178,12 +222,12 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('storyStageCounter').textContent = `${page} / 10`;
       document.querySelector('.scene-two-nav').setAttribute('aria-label', `Scene ${page} navigation`);
       document.getElementById('storyProgress').style.width = `${page * 10}%`;
-      document.getElementById('storyEyebrow').textContent = page === 2 ? 'GROWTH + VOLATILITY' : page === 3 ? 'GROWTH + STABILITY' : page === 4 ? 'THE STABILITY LAYER' : 'PLAN STRUCTURE';
+      document.getElementById('storyEyebrow').textContent = page === 2 ? 'GROWTH + VOLATILITY' : page === 3 ? 'GROWTH + STABILITY' : page === 4 ? 'THE STABILITY LAYER' : page === 5 ? 'REGULAR INCOME' : 'DETAILED EXAMPLES';
       const title = document.getElementById('stagePreviewTitle');
-      title.textContent = page === 2 ? 'Savings भी risk में?' : page === 3 ? 'Business से growth, savings से stability' : page === 4 ? 'अब Growth के साथ Stability' : 'Bima Platinum कैसे काम करता है?';
+      title.textContent = page === 2 ? 'Savings भी risk में?' : page === 3 ? 'Business से growth, savings से stability' : page === 4 ? 'अब Growth के साथ Stability' : page === 5 ? 'How Bima Platinum Works' : 'More Benefits';
       previewDismissBtn.setAttribute('aria-label', `Back to Scene ${page - 1}`);
-      document.getElementById('sceneTwoNextBtn').hidden = isDetails;
-      document.getElementById('storyNextLabel').textContent = page === 2 ? 'अब Stability कैसे मिलेगी?' : page === 3 ? 'Stability का अगला कदम' : 'Plan समझें';
+      document.getElementById('sceneTwoNextBtn').hidden = isMoreBenefits;
+      document.getElementById('storyNextLabel').textContent = page === 2 ? 'अब Stability कैसे मिलेगी?' : page === 3 ? 'Stability का अगला कदम' : page === 4 ? 'Plan समझें' : 'See More Benefits';
       sceneThreeStatus.hidden = true;
       stagePreviewModal.scrollTop = 0;
       if (focus) previewDismissBtn.focus();
@@ -197,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
   sceneTwoDialogueBtn.addEventListener('click', toggleAudioPlayback);
   ctaForwardBtn.addEventListener('click', () => showPage(2));
   previewDismissBtn.addEventListener('click', () => showPage(currentPage - 1));
-  document.getElementById('sceneTwoNextBtn').addEventListener('click', () => { if (currentPage >= 2 && currentPage < 5) showPage(currentPage + 1); });
+  document.getElementById('sceneTwoNextBtn').addEventListener('click', () => { if (currentPage >= 2 && currentPage < 6) showPage(currentPage + 1); });
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopAllAudio(); });
   window.addEventListener('pagehide', stopAllAudio);
   showPage(1, false);
