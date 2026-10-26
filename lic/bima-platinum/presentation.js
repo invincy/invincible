@@ -23,9 +23,7 @@ const STORY_SCENES = {
     script: 'यहीं Bima Platinum आपकी financial journey में stability जोड़ता है। यह आपके portfolio के एक हिस्से को guaranteed और predictable structure देने के लिए बनाया गया है।',
     cues: []
   },
-  5: { src: 'assets/audio/page5-advisor.mp3', script: 'इस उदाहरण में Basic Sum Assured तीन लाख रुपये है। इसका दस प्रतिशत, यानी तीस हज़ार रुपये, हर साल Regular Income के रूप में मिलता है। पहला भुगतान चुने हुए Premium Paying Term के अंत में शुरू होता है, policy की शर्तों के अनुसार।', cues: [] },
-  // Existing detailed examples remain available after the compact income page.
-  6: { src: null, script: '', cues: [] }
+  5: { src: 'assets/audio/page5-advisor.mp3', script: 'इस उदाहरण में Basic Sum Assured तीन लाख रुपये है। इसका दस प्रतिशत, यानी तीस हज़ार रुपये, हर साल Regular Income के रूप में मिलता है। पहला भुगतान चुने हुए Premium Paying Term के अंत में शुरू होता है, policy की शर्तों के अनुसार।', cues: [] }
 };
 
 // LIC sales brochure, Sample Illustrative Premium (printed pp.15–16).
@@ -70,8 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const premium = getLicSamplePremium(selectedSampleAge, selectedSamplePpt);
     document.getElementById('incomeAnnualPremium').textContent = '₹' + premium.toLocaleString('en-IN');
     document.getElementById('incomePptEnd').textContent = `Year ${selectedSamplePpt}`;
-    document.getElementById('incomePayoutStart').textContent = `From end of Year ${selectedSamplePpt}`;
-    document.getElementById('incomeFirstPayment').textContent = `First payment: end of Year ${selectedSamplePpt}`;
+    document.getElementById('incomePayoutStart').textContent = `End of Year ${selectedSamplePpt}`;
     document.getElementById('incomeLaterYears').textContent = `Years ${selectedSamplePpt + 5} / 30`;
     ageOptions.forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.age) === selectedSampleAge)));
     pptOptions.forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.ppt) === selectedSamplePpt)));
@@ -185,19 +182,12 @@ document.addEventListener('DOMContentLoaded', () => {
     stageContainer.setAttribute('data-story-step', String(page));
     const isReveal = page === 4;
     const isDetails = page === 5;
-    const isMoreBenefits = page === 6;
     document.getElementById('productReveal').hidden = !isReveal;
     document.getElementById('planDetailsPage').hidden = !isDetails;
-    document.getElementById('moreBenefitsPage').hidden = !isMoreBenefits;
     document.getElementById('incomeNavBrand').hidden = !isDetails;
     document.getElementById('presenterChartHost').hidden = page >= 4;
     storyChart.hidden = page >= 4;
     document.getElementById('revealCtaIntro').hidden = !isReveal;
-    document.querySelector('.scene-two-footer').hidden = isMoreBenefits;
-    if (isMoreBenefits) {
-      const frame = document.getElementById('planDetailsFrame');
-      if (!frame.getAttribute('src')) frame.setAttribute('src', 'calculator.html#optionDetail');
-    }
 
     storyChart.setAttribute('data-step', String(page));
     const host = document.getElementById(page === 1 ? 'sceneOneChartHost' : 'presenterChartHost');
@@ -222,12 +212,12 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('storyStageCounter').textContent = `${page} / 10`;
       document.querySelector('.scene-two-nav').setAttribute('aria-label', `Scene ${page} navigation`);
       document.getElementById('storyProgress').style.width = `${page * 10}%`;
-      document.getElementById('storyEyebrow').textContent = page === 2 ? 'GROWTH + VOLATILITY' : page === 3 ? 'GROWTH + STABILITY' : page === 4 ? 'THE STABILITY LAYER' : page === 5 ? 'REGULAR INCOME' : 'DETAILED EXAMPLES';
+      document.getElementById('storyEyebrow').textContent = page === 2 ? 'GROWTH + VOLATILITY' : page === 3 ? 'GROWTH + STABILITY' : page === 4 ? 'THE STABILITY LAYER' : 'REGULAR INCOME';
       const title = document.getElementById('stagePreviewTitle');
-      title.textContent = page === 2 ? 'Savings भी risk में?' : page === 3 ? 'Business से growth, savings से stability' : page === 4 ? 'अब Growth के साथ Stability' : page === 5 ? 'How Bima Platinum Works' : 'More Benefits';
+      title.textContent = page === 2 ? 'Savings भी risk में?' : page === 3 ? 'Business से growth, savings से stability' : page === 4 ? 'अब Growth के साथ Stability' : 'How Bima Platinum Works';
       previewDismissBtn.setAttribute('aria-label', `Back to Scene ${page - 1}`);
-      document.getElementById('sceneTwoNextBtn').hidden = isMoreBenefits;
-      document.getElementById('storyNextLabel').textContent = page === 2 ? 'अब Stability कैसे मिलेगी?' : page === 3 ? 'Stability का अगला कदम' : page === 4 ? 'Plan समझें' : 'See More Benefits';
+      document.getElementById('sceneTwoNextBtn').hidden = isDetails;
+      document.getElementById('storyNextLabel').textContent = page === 2 ? 'अब Stability कैसे मिलेगी?' : page === 3 ? 'Stability का अगला कदम' : 'Plan समझें';
       sceneThreeStatus.hidden = true;
       stagePreviewModal.scrollTop = 0;
       if (focus) previewDismissBtn.focus();
@@ -241,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
   sceneTwoDialogueBtn.addEventListener('click', toggleAudioPlayback);
   ctaForwardBtn.addEventListener('click', () => showPage(2));
   previewDismissBtn.addEventListener('click', () => showPage(currentPage - 1));
-  document.getElementById('sceneTwoNextBtn').addEventListener('click', () => { if (currentPage >= 2 && currentPage < 6) showPage(currentPage + 1); });
+  document.getElementById('sceneTwoNextBtn').addEventListener('click', () => { if (currentPage >= 2 && currentPage < 5) showPage(currentPage + 1); });
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopAllAudio(); });
   window.addEventListener('pagehide', stopAllAudio);
   showPage(1, false);

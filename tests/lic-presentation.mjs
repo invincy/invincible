@@ -157,7 +157,7 @@ test('page has one chart, original three paths and Hindi-English scripts without
 });
 
 
-test('Page 3 opens the reveal, Page 4 opens compact income Page 5, and Back restores the chart',()=>{
+test('Page 3 opens the reveal, Page 5 is the last page, and Back restores the chart',()=>{
   const s=setup(); s.click('ctaForwardBtn'); s.click('sceneTwoNextBtn');
   assert.equal(s.el('storyNextLabel').textContent,'Stability का अगला कदम');
   s.click('sceneTwoNextBtn');
@@ -170,17 +170,13 @@ test('Page 3 opens the reveal, Page 4 opens compact income Page 5, and Back rest
   s.click('sceneTwoNextBtn');
   assert.equal(s.el('storyStageCounter').textContent,'5 / 10');
   assert.equal(s.el('planDetailsPage').hidden,false);
-  assert.equal(s.el('sceneFooter').hidden,false);
-  assert.equal(s.el('storyNextLabel').textContent,'See More Benefits');
-  assert.equal(s.el('planDetailsFrame').attrs.src,undefined);
+  assert.equal(s.el('sceneTwoNextBtn').hidden,true);
   s.click('sceneTwoNextBtn');
-  assert.equal(s.el('storyStageCounter').textContent,'6 / 10');
-  assert.equal(s.el('moreBenefitsPage').hidden,false);
-  assert.equal(s.el('planDetailsFrame').attrs.src,'calculator.html#optionDetail');
-  s.click('previewDismissBtn');
+  assert.equal(s.el('storyStageCounter').textContent,'5 / 10');
+  const html=readFileSync(new URL('../lic/bima-platinum/index.html',import.meta.url),'utf8');
+  assert.doesNotMatch(html,/LIC sample • Offline|Income during payout period|moreBenefitsPage|planDetailsFrame/);
   s.click('previewDismissBtn');
   assert.equal(s.el('productReveal').hidden,false);
-  assert.equal(s.el('sceneFooter').hidden,false);
   s.click('previewDismissBtn');
   assert.equal(s.el('storyChart').hidden,false);
   assert.equal(s.el('productReveal').hidden,true);
@@ -220,8 +216,7 @@ test('all 20 official samples use fixed lookup premiums and update timing',()=>{
       assert.equal(s.premium(age,ppt),premiums[i]);
       assert.equal(s.el('incomeAnnualPremium').textContent,'₹'+premiums[i].toLocaleString('en-IN'));
       assert.equal(s.el('incomePptEnd').textContent,'Year '+ppt);
-      assert.equal(s.el('incomePayoutStart').textContent,'From end of Year '+ppt);
-      assert.equal(s.el('incomeFirstPayment').textContent,'First payment: end of Year '+ppt);
+      assert.equal(s.el('incomePayoutStart').textContent,'End of Year '+ppt);
       assert.equal(s.el('incomeLaterYears').textContent,'Years '+(ppt+5)+' / 30');
       assert.equal(s.el('sampleAge'+age).attrs['aria-pressed'],'true');
       assert.equal(s.el('samplePpt'+ppt).attrs['aria-pressed'],'true');
@@ -246,12 +241,12 @@ test('income defaults and selections persist when navigating back to Page 4',()=
   assert.doesNotMatch(html,/Choose an official LIC example/);
 });
 
-test('Page 5 advisor control uses shared audio lifecycle and stops on more benefits',async()=>{
+test('Page 5 advisor control uses shared audio lifecycle and stops on Back',async()=>{
   const s=setup(); s.click('ctaForwardBtn'); for(let i=0;i<3;i++) s.click('sceneTwoNextBtn');
   s.click('sceneTwoDialogueBtn'); await flush();
   assert.equal(s.audios[0].src,'assets/audio/page5-advisor.mp3');
   s.audios[0].currentTime=2;
   s.click('sceneTwoDialogueBtn'); assert.equal(s.el('sceneTwoAudioLabel').textContent,'Resume audio');
   s.click('sceneTwoDialogueBtn'); await flush();
-  s.click('sceneTwoNextBtn'); assert.equal(s.audios[0].paused,true); assert.equal(s.audios[0].currentTime,0);
+  s.click('previewDismissBtn'); assert.equal(s.audios[0].paused,true); assert.equal(s.audios[0].currentTime,0);
 });
