@@ -3,27 +3,27 @@
 // Add the supplied recordings here, then tune cue times to their spoken phrases.
 const STORY_SCENES = {
   1: {
-    src: 'assets/audio/advisor-story-1-hindi.mp3',
+    src: 'assets/audio/page1.mp3',
     script: 'आपका business ही आपका main growth engine है। यहीं से आपकी income और wealth grow होती है।',
     cues: [{ start: 0, focus: 'business' }]
   },
   2: {
-    src: 'assets/audio/advisor-story-2-hindi.mp3',
+    src: 'assets/audio/page2.mp3',
     script: 'Business में पैसा लगाइए growth के लिए। लेकिन अगर आपकी बाकी savings भी Share Market में जाएँ, तो overall volatility और बढ़ जाती है।',
     // Provisional boundary: replace 3.2 with the start of “लेकिन” in the new MP3.
     cues: [{ start: 0, focus: 'business' }, { start: 3.2, focus: 'market' }]
   },
   3: {
-    src: 'assets/audio/advisor-story-3-hindi.mp3',
+    src: 'assets/audio/page3.mp3',
     script: 'इसलिए अपनी personal savings का एक हिस्सा stability के लिए अलग रखिए। एक stable या guaranteed structure आपके overall finances में predictability जोड़ता है।',
     cues: [{ start: 0, focus: 'platinum' }]
   },
   4: {
-    src: 'assets/audio/page4-advisor.mp3',
+    src: 'assets/audio/page4.mp3',
     script: 'यहीं Bima Platinum आपकी financial journey में stability जोड़ता है। यह आपके portfolio के एक हिस्से को guaranteed और predictable structure देने के लिए बनाया गया है।',
     cues: []
   },
-  5: { src: 'assets/audio/page5-advisor.mp3', script: 'इस उदाहरण में Basic Sum Assured तीन लाख रुपये है। इसका दस प्रतिशत, यानी तीस हज़ार रुपये, हर साल Regular Income के रूप में मिलता है। पहला भुगतान चुने हुए Premium Paying Term के अंत में शुरू होता है, policy की शर्तों के अनुसार।', cues: [] },
+  5: { src: 'assets/audio/page5.mp3', script: 'इस उदाहरण में Basic Sum Assured तीन लाख रुपये है। इसका दस प्रतिशत, यानी तीस हज़ार रुपये, हर साल Regular Income के रूप में मिलता है। पहला भुगतान चुने हुए Premium Paying Term के अंत में शुरू होता है, policy की शर्तों के अनुसार।', cues: [] },
   6: { src: null, script: '', cues: [] }
 };
 

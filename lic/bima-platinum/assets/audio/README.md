@@ -25,24 +25,24 @@ assets/audio/advisor-scene-1-hindi.mp3
 
 One original `#storyChart` figure is moved between two hosts; Page 2 and Page 3 share the presenting scene. All SVG path geometry and blue/red/green colours are preserved. The large card is removed, labels are state-specific, and the business baseline remains visible beside each newly introduced path.
 
-The user will provide these **new recordings**. The older `advisor-scene-*.mp3` files remain unchanged as archives; they contain previous scripts and are not active in this story. No generated voice or browser speech is substituted.
+The supplied page recordings are installed. The older `advisor-scene-*.mp3` files remain unchanged as archives; they are not active in this story. No generated voice or browser speech is substituted.
 
 | Page | New file under assets/audio/ | Spoken script |
 | --- | --- | --- |
-| 1 | advisor-story-1-hindi.mp3 | आपका business ही आपका main growth engine है। यहीं से आपकी income और wealth grow होती है। |
-| 2 | advisor-story-2-hindi.mp3 | Business में पैसा लगाइए growth के लिए। लेकिन अगर आपकी बाकी savings भी Share Market में जाएँ, तो overall volatility और बढ़ जाती है। |
-| 3 | advisor-story-3-hindi.mp3 | इसलिए अपनी personal savings का एक हिस्सा stability के लिए अलग रखिए। एक stable या guaranteed structure आपके overall finances में predictability जोड़ता है। |
+| 1 | page1.mp3 | आपका business ही आपका main growth engine है। यहीं से आपकी income और wealth grow होती है। |
+| 2 | page2.mp3 | Business में पैसा लगाइए growth के लिए। लेकिन अगर आपकी बाकी savings भी Share Market में जाएँ, तो overall volatility और बढ़ जाती है। |
+| 3 | page3.mp3 | इसलिए अपनी personal savings का एक हिस्सा stability के लिए अलग रखिए। एक stable या guaranteed structure आपके overall finances में predictability जोड़ता है। |
 
-Configuration is at the top of presentation.js in STORY_SCENES. Page 1 draws blue business from 0s. Page 2 begins with blue and switches to red at 3.2s, a provisional cue that **must be aligned with the second sentence in the supplied recording**. Page 3 draws green from 0s. Drawing lasts 1.4 seconds per cue; pause/resume/seek follow media currentTime, never wall-clock timers. Reduced motion uses a static glow. Audio loads only on tap; Back, Next, Escape, tab hiding and pagehide stop it. Missing new recordings show an honest pending-recording status.
+Configuration is at the top of presentation.js in STORY_SCENES. Page 1 draws blue business from 0s. Page 2 begins with blue and switches to red at 3.2s, a provisional cue near the sentence transition. Page 3 draws green from 0s. Drawing lasts 1.4 seconds per cue; pause/resume/seek follow media currentTime, never wall-clock timers. Reduced motion uses a static glow. Audio loads only on tap; Back, Next, Escape, tab hiding and pagehide stop it. Missing-file handling remains for recovery.
 
-Verification: nine focused tests cover shared chart identity, forward/back navigation, all three audio sources and cue states, draw progress, seeking, pause/resume/replay, late-event cancellation, failures and page lifecycle. Mobile visual QA covers 320×568 and 390×844. Actual phrase alignment remains pending the user's three recordings. No product features, measured outcomes or guaranteed combined returns were added.
+Verification: focused tests cover shared chart identity, forward/back navigation, all three audio sources and cue states, draw progress, seeking, pause/resume/replay, late-event cancellation, failures and page lifecycle. Mobile visual QA covers 320×568 and 390×844. The exact Page 2 phrase boundary has not been independently transcribed. No product features, measured outcomes or guaranteed combined returns were added.
 
 
 ## Page 4 product reveal
 
 Page 3 now advances to a dedicated navy/gold Bima Platinum reveal inside the existing presentation shell. A small green-to-gold path settles before the product title, anniversary label and Limited-Period Plan label; reduced motion skips entrance animation. The presenting advisor remains at the right. No chart, calculations or benefit tables appear on Page 4. Pages 1–3 keep their existing copy, path geometry and audio scripts; only Page 3's forward CTA is added.
 
-New audio source: `assets/audio/page4-advisor.mp3`. Exact script: “यहीं Bima Platinum आपकी financial journey में stability जोड़ता है। यह आपके portfolio के एक हिस्से को guaranteed और predictable structure देने के लिए बनाया गया है।” The MP3 is not supplied yet. Existing missing-recording handling is retained, with no substituted voice. The same controls support play/pause/resume and stop on navigation/tab hiding. Anniversary and availability labels are visual only, outside the script.
+Current audio source: `assets/audio/page4.mp3`. Expected script: “यहीं Bima Platinum आपकी financial journey में stability जोड़ता है। यह आपके portfolio के एक हिस्से को guaranteed और predictable structure देने के लिए बनाया गया है।” The supplied MP3 is installed. The same controls support play/pause/resume and stop on navigation/tab hiding. Anniversary and availability labels are visual only, outside the script.
 
 Page 4's Plan समझें CTA opens Page 5, which embeds the existing calculator.html at #optionDetail to reuse the existing benefit-structure explanation rather than inventing another policy model. Back returns to Page 4; Page 5 is loaded only when requested. No existing calculator files are modified.
 
@@ -60,10 +60,12 @@ The earlier embedded calculator on Page 5 is replaced inside the existing presen
 
 Checked against the user-provided LIC Bima platinum Sales brochure.pdf, printed pages 15–16 (sample illustrative premiums: offline, standard lives, ₹3 lakh BSA and 30-year term), and printed page 5 (income payable at end of PPT, then through the anniversary before maturity, subject to survival and policy in force). Premiums exclude applicable taxes. The fixed table exactly matches all 20 brochure entries. The LIC logo is an unchanged SVG asset downloaded from the official LIC site: https://licindia.in/documents/d/guest/lic_log_updated .
 
-Page 5 uses the shared audio engine with `assets/audio/page5-advisor.mp3`; the user's recording is still pending. No synthetic voice is substituted. Fourteen focused tests cover all 20 premiums, timing updates, rejected unsupported combinations, default and retained selections, existing scene/navigation regression checks and Page 5 audio lifecycle. Browser QA checks 320×568 through 390×844, fixed income, no scrolling, and Back navigation. Actual recording content/timing remains pending the MP3.
+Page 5 uses the shared audio engine with the supplied `assets/audio/page5.mp3`. No synthetic voice is substituted. Focused tests cover all 20 premiums, timing updates, rejected unsupported combinations, default and retained selections, existing scene/navigation regression checks and Page 5 audio lifecycle. Browser QA checks 320×568 through 390×844, fixed income, no scrolling, and Back navigation.
 
 ## Page 6 guided journey
 
 Page 6 presents the five plan stages in one compact timeline, with automatic progression, optional node selection, pause/resume, and replay. Its selected age and PPT come from Page 5; the PPT controls the payment period, regular-income start, and booster year. The booster-year table is 7→12, 10→15, 12→17, 15→20, and 18→23. The ₹3 lakh Basic Sum Assured produces ₹30,000 annual Regular Income and a ₹2,10,000 Booster in the illustration. Maturity is shown as Basic Sum Assured plus accrued Guaranteed Additions without inventing a maturity amount. These mechanics were checked against LIC's Bima Platinum sales brochure: https://web.licindia.in/en/web/guest/lic-s-bima-platinum2 .
 
-The journey step data in `presentation.js` maps steps 1–5 to `assets/audio/page6-step1.mp3` through `page6-step5.mp3`. The files can be added later. If playback is unavailable, a per-step fallback timer continues the visual story. Audio completion advances a step when recordings exist. Leaving Page 6 clears timers and audio. The advisor uses `advisor-presenter.webp` for steps 1–3, with a subtle emphasis at the 10% moment, and `advisor-anniversary.webp` for steps 4–5, with a simple crossfade. The protection CTA appears after completion; its destination page is not built yet, so tapping it displays a coming-next status rather than pretending to navigate.
+The journey step data in `presentation.js` maps steps 1–5 to the supplied `assets/audio/page6-step1.mp3` through `page6-step5.mp3`. Audio completion advances the story; if playback is unavailable, a per-step fallback timer keeps the visuals working. Leaving Page 6 clears timers and audio. The advisor uses `advisor-presenter.webp` for steps 1–3, with a subtle emphasis at the 10% moment, and `advisor-anniversary.webp` for steps 4–5, with a simple crossfade. The protection CTA appears after completion; its destination page is not built yet, so tapping it displays a coming-next status rather than pretending to navigate.
+
+All ten supplied MP3 files decode cleanly as 44.1 kHz stereo MP3. Durations: pages 1–5 are 4.81, 6.90, 6.37, 10.14 and 8.83 seconds; Page 6 steps 1–5 are 8.57, 5.83, 5.25, 8.52 and 5.96 seconds. Voice content was not independently transcribed.

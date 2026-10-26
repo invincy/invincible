@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const source = readFileSync(new URL('../lic/bima-platinum/presentation.js', import.meta.url), 'utf8');
@@ -67,7 +67,7 @@ test('one original chart moves through pages 1 → 2 → 3 and back without clon
 test('Page 1 narration draws business only, holds on pause, replays after completion',async()=>{
   const s=setup(); s.click('advisorAudioBtn'); await flush();
   const audio=s.audios[0];
-  assert.match(audio.src,/advisor-story-1-hindi.mp3$/);
+  assert.match(audio.src,/page1.mp3$/);
   assert.equal(focus(s),'business');
   audio.currentTime=.7; audio.events.timeupdate();
   assert.equal(s.el('storyChart').style.values['--narration-reveal'],'0.5');
@@ -86,7 +86,7 @@ test('Page 1 narration draws business only, holds on pause, replays after comple
 test('Page 2 switches from business to market using media time and handles seeking',async()=>{
   const s=setup(); s.click('ctaForwardBtn'); s.click('sceneTwoDialogueBtn'); await flush();
   const audio=s.audios[0];
-  assert.match(audio.src,/advisor-story-2-hindi.mp3$/);
+  assert.match(audio.src,/page2.mp3$/);
   assert.equal(focus(s),'business');
   audio.currentTime=3.19; audio.events.timeupdate(); assert.equal(focus(s),'business');
   audio.currentTime=3.2; audio.events.timeupdate(); assert.equal(focus(s),'market');
@@ -100,7 +100,7 @@ test('Page 2 switches from business to market using media time and handles seeki
 test('Page 3 introduces stability, keeping the shared chart in its third state',async()=>{
   const s=setup(); s.click('ctaForwardBtn'); s.click('sceneTwoNextBtn');
   s.click('sceneTwoDialogueBtn'); await flush();
-  assert.match(s.audios[0].src,/advisor-story-3-hindi.mp3$/);
+  assert.match(s.audios[0].src,/page3.mp3$/);
   assert.equal(focus(s),'platinum');
   assert.equal(s.el('storyChart').attrs['data-step'],'3');
   s.click('previewDismissBtn');
@@ -157,6 +157,11 @@ test('page has one chart, original three paths and Hindi-English scripts without
   assert.doesNotMatch(html+source,/[\u0A80-\u0AFF]/);
 });
 
+test('all supplied page and journey voice recordings are installed',()=>{
+  const names=[...Array.from({length:5},(_,index)=>`page${index+1}.mp3`),...Array.from({length:5},(_,index)=>`page6-step${index+1}.mp3`)];
+  for(const name of names) assert.equal(existsSync(new URL(`../lic/bima-platinum/assets/audio/${name}`,import.meta.url)),true,name);
+});
+
 
 test('Page 3 opens the reveal, Page 5 leads to the journey, and Back restores the chart',()=>{
   const s=setup(); s.click('ctaForwardBtn'); s.click('sceneTwoNextBtn');
@@ -192,7 +197,7 @@ test('Page 4 shares recording controls, exact script and missing-file handling',
   const s=setup(); s.click('ctaForwardBtn'); s.click('sceneTwoNextBtn'); s.click('sceneTwoNextBtn');
   s.click('sceneTwoDialogueBtn'); await flush();
   const audio=s.audios[0];
-  assert.equal(audio.src,'assets/audio/page4-advisor.mp3');
+  assert.equal(audio.src,'assets/audio/page4.mp3');
   assert.equal(s.el('sceneTwoAudioLabel').textContent,'Pause audio');
   assert.equal(focus(s),'');
   audio.currentTime=2; s.click('sceneTwoDialogueBtn');
@@ -249,7 +254,7 @@ test('income defaults and selections persist when navigating back to Page 4',()=
 test('Page 5 advisor control uses shared audio lifecycle and stops on Back',async()=>{
   const s=setup(); s.click('ctaForwardBtn'); for(let i=0;i<3;i++) s.click('sceneTwoNextBtn');
   s.click('sceneTwoDialogueBtn'); await flush();
-  assert.equal(s.audios[0].src,'assets/audio/page5-advisor.mp3');
+  assert.equal(s.audios[0].src,'assets/audio/page5.mp3');
   s.audios[0].currentTime=2;
   s.click('sceneTwoDialogueBtn'); assert.equal(s.el('sceneTwoAudioLabel').textContent,'Resume audio');
   s.click('sceneTwoDialogueBtn'); await flush();
