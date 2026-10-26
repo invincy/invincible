@@ -14,7 +14,7 @@
 
   <link rel="preload" as="image" href="assets/scene-1-853.webp" imagesrcset="assets/scene-1-480.webp 480w, assets/scene-1-853.webp 853w" imagesizes="(max-width: 480px) 100vw, 420px" fetchpriority="high">
 
-  <link rel="stylesheet" href="presentation.css?v=18">
+  <link rel="stylesheet" href="presentation.css?v=19">
 </head>
 <body>
 
@@ -248,6 +248,21 @@
               <li><span class="income-timeline-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10h16v4H4zM6 14v7h12v-7M12 10v11M12 10C2 10 5 0 12 10c7-10 10 0 0 0"/></svg></span><b>Booster + Maturity</b><small id="incomeLaterYears">Years 20 / 30</small></li>
             </ol>
           </section>
+          <section id="planJourneyPage" class="plan-journey-page" aria-label="How Bima Platinum works in five steps" hidden>
+            <p class="journey-kicker">A SYSTEMATIC JOURNEY</p>
+            <img id="journeyAdvisorExplain" class="journey-advisor" src="assets/advisor-presenter.webp" alt="LIC advisor explaining the plan" width="760" height="950" loading="lazy" decoding="async">
+            <img id="journeyAdvisorCelebrate" class="journey-advisor journey-advisor-celebrate" src="assets/advisor-anniversary.webp" alt="" width="760" height="759" loading="lazy" decoding="async">
+            <div class="journey-content">
+              <div class="journey-track" role="group" aria-label="Five plan benefits">
+                <button type="button" class="journey-node" data-journey-step="0" aria-label="Step 1: Choose your premium paying term"><span class="journey-number">1</span><span class="journey-icon" aria-hidden="true">₹</span><span class="journey-node-label">Pay for<br><b id="journeyPptLabel">15 years</b></span></button>
+                <button type="button" class="journey-node" data-journey-step="1" aria-label="Step 2: Guaranteed Additions build"><span class="journey-number">2</span><span class="journey-icon" aria-hidden="true">＋</span><span class="journey-node-label">Guaranteed<br>Additions</span></button>
+                <button type="button" class="journey-node" data-journey-step="2" aria-label="Step 3: Regular Income"><span class="journey-number">3</span><span class="journey-icon" aria-hidden="true">10%</span><span class="journey-node-label">Regular<br>Income</span></button>
+                <button type="button" class="journey-node" data-journey-step="3" aria-label="Step 4: 70 percent Booster"><span class="journey-number">4</span><span class="journey-icon" aria-hidden="true">✦</span><span class="journey-node-label">70%<br>Booster</span></button>
+                <button type="button" class="journey-node" data-journey-step="4" aria-label="Step 5: Maturity"><span class="journey-number">5</span><span class="journey-icon" aria-hidden="true">◇</span><span class="journey-node-label">Maturity</span></button>
+              </div>
+              <div id="journeyDetail" class="journey-detail" aria-live="polite"></div>
+            </div>
+          </section>
           <figure id="storyChart" class="balance-chart scenario-chart" data-step="1" aria-labelledby="balanceChartTitle" aria-describedby="balanceChartCaption">
             <figcaption id="balanceChartTitle" class="scenario-chart-heading">Business · Growth engine</figcaption>
             <svg class="balance-plot" viewBox="0 0 350 285" role="img" aria-labelledby="balancePlotTitle balancePlotDesc">
@@ -277,6 +292,11 @@
         <footer class="scene-two-footer">
           <button id="sceneTwoDialogueBtn" class="scene-two-dialogue-btn" type="button" aria-label="Hear Scene 2 advisor recording"><span aria-hidden="true">▶</span> <span id="sceneTwoAudioLabel">Advisor की बात सुनें</span></button>
           <p id="sceneTwoAudioStatus" class="audio-status" role="status" aria-live="polite"></p>
+          <div id="journeyControls" class="journey-controls" hidden>
+            <button id="journeyPlayPause" type="button" class="journey-play-pause" aria-label="Pause story">⏸ <span>Pause Story</span></button>
+            <span id="journeyProgress" class="journey-progress" aria-live="polite">1 of 5</span>
+            <button id="journeyReplay" type="button" class="journey-replay" aria-label="Replay story" hidden>↻ Replay</button>
+          </div>
           <p id="revealCtaIntro" class="reveal-cta-intro" hidden>अब देखें Bima Platinum कैसे काम करता है</p>
           <button id="sceneTwoNextBtn" class="scene-two-next" type="button" aria-controls="stagePreviewModal"><span id="storyNextLabel">अब Stability कैसे मिलेगी?</span> <span aria-hidden="true">→</span></button>
           <p id="sceneThreeStatus" class="scene-three-status" role="status" hidden>आगे Bima Platinum को समझेंगे।</p>
@@ -308,6 +328,6 @@
 
 </div><!-- /.app-viewport-wrapper -->
 
-<script src="presentation.js?v=18"></script>
+<script src="presentation.js?v=19"></script>
 </body>
 </html>

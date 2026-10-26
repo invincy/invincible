@@ -23,8 +23,18 @@ const STORY_SCENES = {
     script: 'यहीं Bima Platinum आपकी financial journey में stability जोड़ता है। यह आपके portfolio के एक हिस्से को guaranteed और predictable structure देने के लिए बनाया गया है।',
     cues: []
   },
-  5: { src: 'assets/audio/page5-advisor.mp3', script: 'इस उदाहरण में Basic Sum Assured तीन लाख रुपये है। इसका दस प्रतिशत, यानी तीस हज़ार रुपये, हर साल Regular Income के रूप में मिलता है। पहला भुगतान चुने हुए Premium Paying Term के अंत में शुरू होता है, policy की शर्तों के अनुसार।', cues: [] }
+  5: { src: 'assets/audio/page5-advisor.mp3', script: 'इस उदाहरण में Basic Sum Assured तीन लाख रुपये है। इसका दस प्रतिशत, यानी तीस हज़ार रुपये, हर साल Regular Income के रूप में मिलता है। पहला भुगतान चुने हुए Premium Paying Term के अंत में शुरू होता है, policy की शर्तों के अनुसार।', cues: [] },
+  6: { src: null, script: '', cues: [] }
 };
+
+const JOURNEY_STEPS = [
+  { id:'ppt', title:'Choose Your PPT', visual:'pay', audio:'assets/audio/page6-step1.mp3', fallbackDuration:3600, script:'सबसे पहले आप चुनते हैं कि premium कितने साल pay करना है।' },
+  { id:'additions', title:'Guaranteed Additions', visual:'build', audio:'assets/audio/page6-step2.mp3', fallbackDuration:3600, script:'Premium paying period के दौरान Guaranteed Additions जुड़ते रहते हैं।' },
+  { id:'income', title:'Regular Income', visual:'income', audio:'assets/audio/page6-step3.mp3', fallbackDuration:4300, script:'Premium period पूरा होने के बाद हर साल Basic Sum Assured का 10% Regular Income मिलता है।' },
+  { id:'booster', title:'70% Booster', visual:'booster', audio:'assets/audio/page6-step4.mp3', fallbackDuration:3600, script:'इसके अलावा plan में 70% का Booster Income Benefit भी मिलता है।' },
+  { id:'maturity', title:'Maturity', visual:'maturity', audio:'assets/audio/page6-step5.mp3', fallbackDuration:3900, script:'और policy के अंत में Basic Sum Assured के साथ accrued Guaranteed Additions मिलते हैं।' }
+];
+const BOOSTER_YEAR_BY_PPT = Object.freeze({7:12,10:15,12:17,15:20,18:23});
 
 // LIC sales brochure, Sample Illustrative Premium (printed pp.15–16).
 // BSA ₹3,00,000, policy term 30 years, offline, standard lives; taxes excluded.
@@ -91,6 +101,133 @@ document.addEventListener('DOMContentLoaded', () => {
   let audioAttempt = 0;
   let playbackWanted = false;
   let playbackState = 'idle';
+  const journeyPage = document.getElementById('planJourneyPage');
+  const journeyControls = document.getElementById('journeyControls');
+  const journeyNodes = [...document.querySelectorAll('[data-journey-step]')];
+  const journeyToggle = document.getElementById('journeyPlayPause');
+  const journeyReplay = document.getElementById('journeyReplay');
+  const journeyNext = document.getElementById('sceneTwoNextBtn');
+  let journeyStep = -1;
+  let journeyAutoplay = false;
+  let journeyComplete = false;
+  let journeyAudio = null;
+  let journeyTimer = null;
+  let journeyLoadTimer = null;
+  let journeyDeadline = 0;
+  let journeyRemaining = 0;
+  let journeyMode = 'fallback';
+  let journeyGeneration = 0;
+
+  function clearJourneyRun() {
+    journeyGeneration++;
+    clearTimeout(journeyTimer);
+    clearTimeout(journeyLoadTimer);
+    journeyTimer = journeyLoadTimer = null;
+    if (journeyAudio) { journeyAudio.pause(); journeyAudio.currentTime = 0; journeyAudio = null; }
+  }
+  function stopJourney() {
+    clearJourneyRun();
+    journeyAutoplay = false;
+    journeyStep = -1;
+    journeyComplete = false;
+  }
+  function updateJourneyControls() {
+    journeyToggle.innerHTML = journeyAutoplay ? '⏸ <span>Pause Story</span>' : '▶ <span>Auto Play Story</span>';
+    journeyToggle.setAttribute('aria-label', journeyAutoplay ? 'Pause story' : 'Resume story');
+    journeyReplay.hidden = !journeyComplete;
+    document.getElementById('journeyProgress').textContent = journeyStep < 0 ? '0 of 5' : `${journeyStep + 1} of 5`;
+    if (currentPage === 6) document.getElementById('storyNextLabel').textContent = journeyComplete ? 'अब protection भी देखें' : 'Tap to reveal next benefit';
+    journeyNext.disabled = false;
+  }
+  function renderJourneyStep() {
+    const step = JOURNEY_STEPS[journeyStep];
+    const detail = document.getElementById('journeyDetail');
+    document.getElementById('journeyPptLabel').textContent = `${selectedSamplePpt} years`;
+    journeyNodes.forEach((node, index) => {
+      node.classList.toggle('is-active', index === journeyStep && !journeyComplete);
+      node.classList.toggle('is-complete', journeyComplete || index < journeyStep);
+      node.setAttribute('aria-current', index === journeyStep ? 'step' : 'false');
+    });
+    journeyPage.style.setProperty('--journey-progress', `${Math.max(0, journeyStep) * 25}%`);
+    journeyPage.dataset.visual = step?.visual || 'intro';
+    journeyPage.dataset.advisor = journeyStep >= 3 ? 'celebrate' : 'explain';
+    if (!step) { detail.innerHTML = '<p class="journey-detail-prompt">Your plan, in five clear steps.</p>'; updateJourneyControls(); return; }
+    const ppt = selectedSamplePpt;
+    const detailHtml = [
+      `<span class="journey-detail-title">Choose Your PPT</span><strong>${ppt} years of premium payments</strong><small>Age ${selectedSampleAge} · ₹3,00,000 Sum Assured · 30-year term</small>`,
+      `<span class="journey-detail-title">Guaranteed Additions Build</span><strong>Added during the ${ppt}-year PPT</strong><span class="journey-addition-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>`,
+      '<span class="journey-detail-title">Regular Income</span><strong class="journey-big-number">10% <em>of Basic Sum Assured</em></strong><b>₹30,000 / year</b><small>Starts at the end of PPT</small>',
+      `<span class="journey-detail-title">70% Booster</span><strong>₹2,10,000</strong><small>Policy Year ${BOOSTER_YEAR_BY_PPT[ppt]} · Can be deferred under plan terms</small>`,
+      '<span class="journey-detail-title">Maturity Benefit</span><strong>Basic Sum Assured +</strong><b>Accrued Guaranteed Additions</b><small>At the end of the 30-year policy term</small>'
+    ];
+    detail.innerHTML = detailHtml[journeyStep];
+    updateJourneyControls();
+  }
+  function completeJourney() {
+    clearJourneyRun();
+    journeyAutoplay = false;
+    journeyComplete = true;
+    renderJourneyStep();
+  }
+  function scheduleJourneyFallback(delay, generation) {
+    if (!journeyAutoplay || currentPage !== 6) return;
+    journeyMode = 'fallback';
+    journeyRemaining = delay;
+    journeyDeadline = Date.now() + delay;
+    journeyTimer = setTimeout(() => {
+      if (generation === journeyGeneration && currentPage === 6) advanceJourney();
+    }, delay);
+  }
+  function advanceJourney() {
+    if (journeyStep === JOURNEY_STEPS.length - 1) completeJourney();
+    else startJourneyStep(journeyStep + 1);
+  }
+  function startJourneyStep(index, manual = false) {
+    clearJourneyRun();
+    journeyStep = index;
+    journeyComplete = false;
+    renderJourneyStep();
+    if (currentPage !== 6) return;
+    const generation = journeyGeneration;
+    const step = JOURNEY_STEPS[index];
+    const fallback = () => {
+      if (generation !== journeyGeneration || currentPage !== 6 || journeyMode === 'fallback') return;
+      clearTimeout(journeyLoadTimer);
+      if (journeyAudio) { journeyAudio.pause(); journeyAudio = null; }
+      journeyMode = 'fallback';
+      scheduleJourneyFallback(step.fallbackDuration, generation);
+    };
+    journeyMode = 'loading';
+    const audio = new Audio(step.audio);
+    journeyAudio = audio;
+    audio.addEventListener('ended', () => { if (generation === journeyGeneration && journeyAutoplay) advanceJourney(); });
+    audio.addEventListener('error', fallback);
+    journeyLoadTimer = setTimeout(fallback, 2200);
+    audio.play().then(() => {
+      if (generation !== journeyGeneration) { audio.pause(); return; }
+      clearTimeout(journeyLoadTimer);
+      journeyMode = 'audio';
+      if (!journeyAutoplay && !manual) audio.pause();
+    }).catch(fallback);
+  }
+  function pauseJourney() {
+    journeyAutoplay = false;
+    if (journeyAudio) journeyAudio.pause();
+    if (journeyTimer) {
+      journeyRemaining = Math.max(0, journeyDeadline - Date.now());
+      clearTimeout(journeyTimer);
+      journeyTimer = null;
+    }
+    updateJourneyControls();
+  }
+  function resumeJourney() {
+    if (journeyComplete) { journeyAutoplay = true; startJourneyStep(0); return; }
+    journeyAutoplay = true;
+    if (journeyStep < 0) startJourneyStep(0);
+    else if (journeyMode === 'audio' && journeyAudio) journeyAudio.play().catch(() => scheduleJourneyFallback(JOURNEY_STEPS[journeyStep].fallbackDuration, journeyGeneration));
+    else if (journeyMode === 'fallback') scheduleJourneyFallback(journeyRemaining || JOURNEY_STEPS[journeyStep].fallbackDuration, journeyGeneration);
+    updateJourneyControls();
+  }
 
   function syncChart() {
     let cue = null;
@@ -177,14 +314,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function showPage(page, focus = true) {
     if (!STORY_SCENES[page]) return;
+    stopJourney();
     stopAllAudio();
     currentPage = page;
     stageContainer.setAttribute('data-story-step', String(page));
     const isReveal = page === 4;
     const isDetails = page === 5;
+    const isJourney = page === 6;
     document.getElementById('productReveal').hidden = !isReveal;
     document.getElementById('planDetailsPage').hidden = !isDetails;
-    document.getElementById('incomeNavBrand').hidden = !isDetails;
+    journeyPage.hidden = !isJourney;
+    journeyControls.hidden = !isJourney;
+    sceneTwoDialogueBtn.hidden = isJourney;
+    document.getElementById('incomeNavBrand').hidden = !(isDetails || isJourney);
     document.getElementById('presenterChartHost').hidden = page >= 4;
     storyChart.hidden = page >= 4;
     document.getElementById('revealCtaIntro').hidden = !isReveal;
@@ -212,15 +354,21 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('storyStageCounter').textContent = `${page} / 10`;
       document.querySelector('.scene-two-nav').setAttribute('aria-label', `Scene ${page} navigation`);
       document.getElementById('storyProgress').style.width = `${page * 10}%`;
-      document.getElementById('storyEyebrow').textContent = page === 2 ? 'GROWTH + VOLATILITY' : page === 3 ? 'GROWTH + STABILITY' : page === 4 ? 'THE STABILITY LAYER' : 'REGULAR INCOME';
+      document.getElementById('storyEyebrow').textContent = page === 2 ? 'GROWTH + VOLATILITY' : page === 3 ? 'GROWTH + STABILITY' : page === 4 ? 'THE STABILITY LAYER' : page === 5 ? 'REGULAR INCOME' : 'THE FIVE-STEP JOURNEY';
       const title = document.getElementById('stagePreviewTitle');
-      title.textContent = page === 2 ? 'Savings भी risk में?' : page === 3 ? 'Business से growth, savings से stability' : page === 4 ? 'अब Growth के साथ Stability' : 'How Bima Platinum Works';
+      title.textContent = page === 2 ? 'Savings भी risk में?' : page === 3 ? 'Business से growth, savings से stability' : page === 4 ? 'अब Growth के साथ Stability' : page === 5 ? 'How Bima Platinum Works' : 'How Bima Platinum Works';
       previewDismissBtn.setAttribute('aria-label', `Back to Scene ${page - 1}`);
-      document.getElementById('sceneTwoNextBtn').hidden = isDetails;
-      document.getElementById('storyNextLabel').textContent = page === 2 ? 'अब Stability कैसे मिलेगी?' : page === 3 ? 'Stability का अगला कदम' : 'Plan समझें';
+      journeyNext.hidden = false;
+      document.getElementById('storyNextLabel').textContent = page === 2 ? 'अब Stability कैसे मिलेगी?' : page === 3 ? 'Stability का अगला कदम' : page === 4 ? 'Plan समझें' : page === 5 ? 'See How It Works' : 'अब protection भी देखें';
       sceneThreeStatus.hidden = true;
       stagePreviewModal.scrollTop = 0;
       if (focus) previewDismissBtn.focus();
+      if (isJourney) {
+        journeyAutoplay = true;
+        renderJourneyStep();
+        const generation = journeyGeneration;
+        journeyTimer = setTimeout(() => { if (generation === journeyGeneration && currentPage === 6) startJourneyStep(0); }, 700);
+      } else journeyNext.disabled = false;
     }
     advisorAudioBtn.title = STORY_SCENES[1].script;
     sceneTwoDialogueBtn.title = STORY_SCENES[page].script;
@@ -229,11 +377,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   advisorAudioBtn.addEventListener('click', toggleAudioPlayback);
   sceneTwoDialogueBtn.addEventListener('click', toggleAudioPlayback);
+  journeyNodes.forEach(node => node.addEventListener('click', () => startJourneyStep(Number(node.dataset.journeyStep), true)));
+  journeyToggle.addEventListener('click', () => journeyAutoplay ? pauseJourney() : resumeJourney());
+  journeyReplay.addEventListener('click', () => { journeyAutoplay = true; startJourneyStep(0); });
   ctaForwardBtn.addEventListener('click', () => showPage(2));
   previewDismissBtn.addEventListener('click', () => showPage(currentPage - 1));
-  document.getElementById('sceneTwoNextBtn').addEventListener('click', () => { if (currentPage >= 2 && currentPage < 5) showPage(currentPage + 1); });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) stopAllAudio(); });
-  window.addEventListener('pagehide', stopAllAudio);
+  journeyNext.addEventListener('click', () => {
+    if (currentPage >= 2 && currentPage < 6) showPage(currentPage + 1);
+    else if (currentPage === 6 && !journeyComplete) advanceJourney();
+    else if (currentPage === 6) { sceneThreeStatus.textContent = 'Protection page is coming next.'; sceneThreeStatus.hidden = false; }
+  });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { stopAllAudio(); if (currentPage === 6) pauseJourney(); } });
+  window.addEventListener('pagehide', () => { stopAllAudio(); stopJourney(); });
   showPage(1, false);
 
   // Developer Tooling: Layer Inspector

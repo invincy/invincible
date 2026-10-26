@@ -8,9 +8,9 @@ function setup(play) {
   const elements = new Map();
   function el(id) {
     if (!elements.has(id)) elements.set(id, {
-      id, textContent:'', inert:false, hidden:false, events:{}, attrs:{}, children:[],
+      id, textContent:'', inert:false, hidden:false, disabled:false, events:{}, attrs:{}, children:[], dataset:{},
       style: { values:{}, setProperty(k,v) { this.values[k]=v; } },
-      classList: { values:new Set(), add(...v) { v.forEach(x=>this.values.add(x)); }, remove(...v) { v.forEach(x=>this.values.delete(x)); }, contains(v) { return this.values.has(v); } },
+      classList: { values:new Set(), add(...v) { v.forEach(x=>this.values.add(x)); }, remove(...v) { v.forEach(x=>this.values.delete(x)); }, contains(v) { return this.values.has(v); }, toggle(v,on) { if(on ?? !this.values.has(v)) this.values.add(v); else this.values.delete(v); } },
       appendChild(child) { if(child.parentElement) child.parentElement.children=child.parentElement.children.filter(x=>x!==child); this.children.push(child); child.parentElement=this; },
       addEventListener(k,fn) { this.events[k]=fn; }, setAttribute(k,v) { this.attrs[k]=v; }, getAttribute(k) { return this.attrs[k] ?? null; },
       focus() {}, querySelectorAll() { return []; }
@@ -19,16 +19,17 @@ function setup(play) {
   }
   const ageButtons = [15,25,35,45].map(age => { const b=el('sampleAge'+age); b.dataset={age:String(age)}; return b; });
   const pptButtons = [7,10,12,15,18].map(ppt => { const b=el('samplePpt'+ppt); b.dataset={ppt:String(ppt)}; return b; });
+  const journeyButtons = [0,1,2,3,4].map(index => { const b=el('journey'+index); b.dataset={journeyStep:String(index)}; return b; });
   const audios=[]; const windowEvents={};
-  const doc={events:{}, hidden:false, getElementById:el, querySelectorAll:selector=>selector==='#incomeAgeOptions button'?ageButtons:selector==='#incomePptOptions button'?pptButtons:[], querySelector:s=>s==='.layer-stage-3d'?el('firstScene'):s==='.scene-two-nav'?el('sceneNav'):s==='.scene-two-footer'?el('sceneFooter'):null,
+  const doc={events:{}, hidden:false, getElementById:el, querySelectorAll:selector=>selector==='#incomeAgeOptions button'?ageButtons:selector==='#incomePptOptions button'?pptButtons:selector==='[data-journey-step]'?journeyButtons:[], querySelector:s=>s==='.layer-stage-3d'?el('firstScene'):s==='.scene-two-nav'?el('sceneNav'):s==='.scene-two-footer'?el('sceneFooter'):null,
     body:el('body'), addEventListener(k,fn) { this.events[k]=fn; }};
   class Audio {
     constructor(src) { this.src=src; this.events={}; this.currentTime=0; this.ended=false; this.paused=true; audios.push(this); }
     addEventListener(k,fn) { this.events[k]=fn; }
-    async play() { if(play) await play(); this.paused=false; this.events.playing(); }
-    pause() { this.paused=true; this.events.pause(); }
+    async play() { if(play) await play(); this.paused=false; this.events.playing?.(); }
+    pause() { this.paused=true; this.events.pause?.(); }
   }
-  const context={document:doc, Audio, URLSearchParams, setTimeout,
+  const context={document:doc, Audio, URLSearchParams, setTimeout, clearTimeout,
     window:{location:{search:'',hash:''},addEventListener(k,fn) { windowEvents[k]=fn; }}};
   vm.runInNewContext(source,context);
   doc.events.DOMContentLoaded();
@@ -157,7 +158,7 @@ test('page has one chart, original three paths and Hindi-English scripts without
 });
 
 
-test('Page 3 opens the reveal, Page 5 is the last page, and Back restores the chart',()=>{
+test('Page 3 opens the reveal, Page 5 leads to the journey, and Back restores the chart',()=>{
   const s=setup(); s.click('ctaForwardBtn'); s.click('sceneTwoNextBtn');
   assert.equal(s.el('storyNextLabel').textContent,'Stability का अगला कदम');
   s.click('sceneTwoNextBtn');
@@ -170,11 +171,15 @@ test('Page 3 opens the reveal, Page 5 is the last page, and Back restores the ch
   s.click('sceneTwoNextBtn');
   assert.equal(s.el('storyStageCounter').textContent,'5 / 10');
   assert.equal(s.el('planDetailsPage').hidden,false);
-  assert.equal(s.el('sceneTwoNextBtn').hidden,true);
+  assert.equal(s.el('sceneTwoNextBtn').hidden,false);
   s.click('sceneTwoNextBtn');
-  assert.equal(s.el('storyStageCounter').textContent,'5 / 10');
+  assert.equal(s.el('storyStageCounter').textContent,'6 / 10');
+  assert.equal(s.el('planJourneyPage').hidden,false);
+  assert.equal(s.el('storyNextLabel').textContent,'Tap to reveal next benefit');
   const html=readFileSync(new URL('../lic/bima-platinum/index.html',import.meta.url),'utf8');
   assert.doesNotMatch(html,/LIC sample • Offline|Income during payout period|moreBenefitsPage|planDetailsFrame/);
+  s.click('previewDismissBtn');
+  assert.equal(s.el('planDetailsPage').hidden,false);
   s.click('previewDismissBtn');
   assert.equal(s.el('productReveal').hidden,false);
   s.click('previewDismissBtn');
@@ -249,4 +254,22 @@ test('Page 5 advisor control uses shared audio lifecycle and stops on Back',asyn
   s.click('sceneTwoDialogueBtn'); assert.equal(s.el('sceneTwoAudioLabel').textContent,'Resume audio');
   s.click('sceneTwoDialogueBtn'); await flush();
   s.click('previewDismissBtn'); assert.equal(s.audios[0].paused,true); assert.equal(s.audios[0].currentTime,0);
+});
+
+test('Page 6 carries selected PPT, maps booster year, and finishes with a replayable story',()=>{
+  const s=setup(); s.click('ctaForwardBtn'); for(let i=0;i<3;i++) s.click('sceneTwoNextBtn');
+  s.click('samplePpt7'); s.click('sceneTwoNextBtn');
+  s.click('journey3');
+  assert.match(s.el('journeyDetail').innerHTML,/Policy Year 12/);
+  assert.match(s.audios.at(-1).src,/page6-step4\.mp3$/);
+  s.click('journey4'); s.click('sceneTwoNextBtn');
+  assert.equal(s.el('journeyReplay').hidden,false);
+  assert.equal(s.el('storyNextLabel').textContent,'अब protection भी देखें');
+  assert.equal(s.el('journey0').classList.contains('is-complete'),true);
+  s.click('journeyReplay');
+  assert.equal(s.el('journeyProgress').textContent,'1 of 5');
+  assert.equal(s.el('journeyReplay').hidden,true);
+  s.click('previewDismissBtn');
+  assert.equal(s.el('storyStageCounter').textContent,'5 / 10');
+  assert.equal(s.audios.at(-1).paused,true);
 });
