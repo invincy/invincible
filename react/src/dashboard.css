@@ -270,15 +270,15 @@ body.home-page{margin:0;min-height:100dvh;background:radial-gradient(circle at 2
 .v2-shell .v2-constellation .v2-page-glow{width:44px;height:44px}
 .v2-shell .v2-constellation .v2-page-glow svg{width:34px;height:34px}
 .v2-shell .v2-constellation .v2-page-name{max-width:112px;overflow:visible;text-overflow:clip;text-wrap:balance}
-.v2-shell .v2-constellation [data-page="ai"]{--x:50%;--y:17%}
-.v2-shell .v2-constellation [data-page="journal"]{--x:27%;--y:22%}
-.v2-shell .v2-constellation [data-page="finance"]{--x:74%;--y:25%}
-.v2-shell .v2-constellation [data-page="garage"]{--x:16%;--y:44%}
-.v2-shell .v2-constellation [data-page="creator"]{--x:84%;--y:46%}
-.v2-shell .v2-constellation [data-page="workday"]{--x:25%;--y:67%}
-.v2-shell .v2-constellation [data-page="lic"]{--x:77%;--y:68%}
-.v2-shell .v2-constellation [data-page="reminders"]{--x:37%;--y:84%}
-.v2-shell .v2-constellation [data-page="portfolio"]{--x:63%;--y:84%}
+.v2-shell .v2-constellation [data-page="ai"]{--x:43%;--y:27%}
+.v2-shell .v2-constellation [data-page="journal"]{--x:27%;--y:19%}
+.v2-shell .v2-constellation [data-page="finance"]{--x:70%;--y:30%}
+.v2-shell .v2-constellation [data-page="garage"]{--x:17%;--y:43%}
+.v2-shell .v2-constellation [data-page="creator"]{--x:79%;--y:48%}
+.v2-shell .v2-constellation [data-page="workday"]{--x:29%;--y:64%}
+.v2-shell .v2-constellation [data-page="lic"]{--x:72%;--y:69%}
+.v2-shell .v2-constellation [data-page="reminders"]{--x:22%;--y:84%}
+.v2-shell .v2-constellation [data-page="portfolio"]{--x:58%;--y:82%}
 .v2-shell .v2-constellation .v2-orb-task{top:64%;width:32%;min-height:44px;padding:4px}
 .v2-shell .v2-constellation .v2-orb-task strong{font-size:clamp(12px,1vw,15px)}
 @media(max-width:900px){.v2-shell .v2-constellation .v2-page-point{width:auto;min-height:78px;font-size:12px}.v2-shell .v2-constellation .v2-page-glow{width:40px;height:40px}.v2-shell .v2-constellation .v2-page-glow svg{width:31px;height:31px}}
