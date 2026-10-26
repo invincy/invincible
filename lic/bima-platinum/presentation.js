@@ -308,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (attempt !== audioAttempt) return;
       playbackWanted = false;
       updateAudioUI('idle');
-      status.textContent = error.name === 'NotAllowedError' ? 'Audio के लिए दोबारा tap करें।' : 'इस scene की नई recording अभी जोड़नी है।';
+      status.textContent = error.name === 'NotAllowedError' ? 'Audio सुनने के लिए play पर tap करें।' : 'इस scene की नई recording अभी जोड़नी है।';
     }
   }
 
@@ -373,6 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
     advisorAudioBtn.title = STORY_SCENES[1].script;
     sceneTwoDialogueBtn.title = STORY_SCENES[page].script;
     updateAudioUI('idle');
+    if (!isJourney) toggleAudioPlayback();
   }
 
   advisorAudioBtn.addEventListener('click', toggleAudioPlayback);

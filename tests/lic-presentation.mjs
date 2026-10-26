@@ -42,7 +42,7 @@ test('one original chart moves through pages 1 → 2 → 3 and back without clon
   const s=setup(); const chart=s.el('storyChart');
   assert.equal(chart.parentElement,s.el('sceneOneChartHost'));
   assert.equal(chart.attrs['data-step'],'1');
-  assert.equal(s.audios.length,0);
+  assert.match(s.audios[0].src,/page1.mp3$/);
   s.click('ctaForwardBtn');
   assert.equal(chart.parentElement,s.el('presenterChartHost'));
   assert.equal(s.el('sceneOneChartHost').children.length,0);
@@ -65,7 +65,7 @@ test('one original chart moves through pages 1 → 2 → 3 and back without clon
 });
 
 test('Page 1 narration draws business only, holds on pause, replays after completion',async()=>{
-  const s=setup(); s.click('advisorAudioBtn'); await flush();
+  const s=setup(); await flush();
   const audio=s.audios[0];
   assert.match(audio.src,/page1.mp3$/);
   assert.equal(focus(s),'business');
@@ -83,9 +83,22 @@ test('Page 1 narration draws business only, holds on pause, replays after comple
   assert.equal(focus(s),'business');
 });
 
+test('opening pages starts audio and a blocked first load can be started by tapping play',async()=>{
+  let calls=0;
+  const s=setup(()=>++calls===1 ? Promise.reject(Object.assign(new Error('blocked'),{name:'NotAllowedError'})) : Promise.resolve());
+  await flush();
+  assert.match(s.el('audioStatus').textContent,/play पर tap/);
+  assert.equal(s.el('advisorAudioLabel').textContent,'Advisor की बात सुनें');
+  s.click('advisorAudioBtn'); await flush();
+  assert.equal(s.el('advisorAudioLabel').textContent,'Pause audio');
+  s.click('ctaForwardBtn'); await flush();
+  assert.match(s.audios.at(-1).src,/page2.mp3$/);
+  assert.equal(s.el('sceneTwoAudioLabel').textContent,'Pause audio');
+});
+
 test('Page 2 switches from business to market using media time and handles seeking',async()=>{
-  const s=setup(); s.click('ctaForwardBtn'); s.click('sceneTwoDialogueBtn'); await flush();
-  const audio=s.audios[0];
+  const s=setup(); s.click('ctaForwardBtn'); await flush();
+  const audio=s.audios.at(-1);
   assert.match(audio.src,/page2.mp3$/);
   assert.equal(focus(s),'business');
   audio.currentTime=3.19; audio.events.timeupdate(); assert.equal(focus(s),'business');
@@ -99,31 +112,31 @@ test('Page 2 switches from business to market using media time and handles seeki
 
 test('Page 3 introduces stability, keeping the shared chart in its third state',async()=>{
   const s=setup(); s.click('ctaForwardBtn'); s.click('sceneTwoNextBtn');
-  s.click('sceneTwoDialogueBtn'); await flush();
-  assert.match(s.audios[0].src,/page3.mp3$/);
+  await flush();
+  assert.match(s.audios.at(-1).src,/page3.mp3$/);
   assert.equal(focus(s),'platinum');
   assert.equal(s.el('storyChart').attrs['data-step'],'3');
   s.click('previewDismissBtn');
-  assert.equal(s.audios[0].paused,true); assert.equal(s.audios[0].currentTime,0);
-  assert.equal(focus(s),'');
+  assert.equal(s.audios.at(-2).paused,true); assert.equal(s.audios.at(-2).currentTime,0);
+  assert.equal(focus(s),'business');
 });
 
 test('navigation cancels pending play and ignores stale events on a different page',async()=>{
-  let resolve; const s=setup(()=>new Promise(done=>{resolve=done;}));
-  s.click('ctaForwardBtn'); s.click('sceneTwoDialogueBtn');
-  const old=s.audios[0]; s.click('sceneTwoNextBtn');
-  resolve(); await flush();
+  const resolves=[]; const s=setup(()=>new Promise(done=>{resolves.push(done);}));
+  s.click('ctaForwardBtn');
+  const old=s.audios.at(-1); s.click('sceneTwoNextBtn');
+  resolves[1](); await flush();
   old.events.timeupdate(); old.events.ended();
   assert.equal(old.paused,true); assert.equal(old.currentTime,0);
   assert.equal(s.el('storyChart').attrs['data-step'],'3');
   assert.equal(focus(s),'');
-  assert.equal(s.el('sceneTwoAudioLabel').textContent,'Advisor की बात सुनें');
+  assert.equal(s.el('sceneTwoAudioLabel').textContent,'Loading audio…');
 });
 
 test('a rejected old load cannot put an error on the next page',async()=>{
-  let reject; const s=setup(()=>new Promise((_,fail)=>{reject=fail;}));
-  s.click('advisorAudioBtn'); s.click('ctaForwardBtn');
-  reject(new Error('missing')); await flush();
+  const rejects=[]; const s=setup(()=>new Promise((_,fail)=>{rejects.push(fail);}));
+  s.click('ctaForwardBtn');
+  rejects[0](new Error('missing')); await flush();
   assert.equal(s.el('audioStatus').textContent,'');
   assert.equal(s.el('sceneTwoAudioStatus').textContent,'');
   assert.equal(focus(s),'');
@@ -140,12 +153,13 @@ test('missing new recordings show a truthful status and never play the old scrip
 
 test('tab hiding, pagehide and Escape stop narration and clear its highlight',async()=>{
   for(const action of ['hidden','pagehide','escape']) {
-    const s=setup(); s.click('ctaForwardBtn'); s.click('sceneTwoNextBtn'); s.click('sceneTwoDialogueBtn'); await flush();
-    s.audios[0].currentTime=4;
+    const s=setup(); s.click('ctaForwardBtn'); s.click('sceneTwoNextBtn'); await flush();
+    const audio=s.audios.at(-1); audio.currentTime=4;
     if(action==='hidden') {s.doc.hidden=true;s.doc.events.visibilitychange();}
     if(action==='pagehide') s.windowEvents.pagehide();
     if(action==='escape') s.doc.events.keydown({key:'Escape'});
-    assert.equal(s.audios[0].paused,true); assert.equal(s.audios[0].currentTime,0); assert.equal(focus(s),'');
+    assert.equal(audio.paused,true); assert.equal(audio.currentTime,0);
+    assert.equal(focus(s),action==='escape'?'business':'');
   }
 });
 
@@ -195,8 +209,8 @@ test('Page 3 opens the reveal, Page 5 leads to the journey, and Back restores th
 
 test('Page 4 shares recording controls, exact script and missing-file handling',async()=>{
   const s=setup(); s.click('ctaForwardBtn'); s.click('sceneTwoNextBtn'); s.click('sceneTwoNextBtn');
-  s.click('sceneTwoDialogueBtn'); await flush();
-  const audio=s.audios[0];
+  await flush();
+  const audio=s.audios.at(-1);
   assert.equal(audio.src,'assets/audio/page4.mp3');
   assert.equal(s.el('sceneTwoAudioLabel').textContent,'Pause audio');
   assert.equal(focus(s),'');
@@ -206,7 +220,7 @@ test('Page 4 shares recording controls, exact script and missing-file handling',
   s.click('sceneTwoNextBtn');
   assert.equal(audio.paused,true); assert.equal(audio.currentTime,0);
   audio.events.playing();
-  assert.equal(s.el('sceneTwoAudioLabel').textContent,'Hear Advisor');
+  assert.equal(s.el('sceneTwoAudioLabel').textContent,'Pause audio');
   assert.match(source,/यहीं Bima Platinum आपकी financial journey में stability जोड़ता है। यह आपके portfolio के एक हिस्से को guaranteed और predictable structure देने के लिए बनाया गया है।/);
   const missing=setup(()=>Promise.reject(new Error('missing')));
   missing.click('ctaForwardBtn'); missing.click('sceneTwoNextBtn'); missing.click('sceneTwoNextBtn');
@@ -253,12 +267,13 @@ test('income defaults and selections persist when navigating back to Page 4',()=
 
 test('Page 5 advisor control uses shared audio lifecycle and stops on Back',async()=>{
   const s=setup(); s.click('ctaForwardBtn'); for(let i=0;i<3;i++) s.click('sceneTwoNextBtn');
-  s.click('sceneTwoDialogueBtn'); await flush();
-  assert.equal(s.audios[0].src,'assets/audio/page5.mp3');
-  s.audios[0].currentTime=2;
+  await flush();
+  const audio=s.audios.at(-1);
+  assert.equal(audio.src,'assets/audio/page5.mp3');
+  audio.currentTime=2;
   s.click('sceneTwoDialogueBtn'); assert.equal(s.el('sceneTwoAudioLabel').textContent,'Resume audio');
   s.click('sceneTwoDialogueBtn'); await flush();
-  s.click('previewDismissBtn'); assert.equal(s.audios[0].paused,true); assert.equal(s.audios[0].currentTime,0);
+  s.click('previewDismissBtn'); assert.equal(audio.paused,true); assert.equal(audio.currentTime,0);
 });
 
 test('Page 6 carries selected PPT, maps booster year, and finishes with a replayable story',()=>{
@@ -274,7 +289,8 @@ test('Page 6 carries selected PPT, maps booster year, and finishes with a replay
   s.click('journeyReplay');
   assert.equal(s.el('journeyProgress').textContent,'1 of 5');
   assert.equal(s.el('journeyReplay').hidden,true);
+  const journeyAudio=s.audios.at(-1);
   s.click('previewDismissBtn');
   assert.equal(s.el('storyStageCounter').textContent,'5 / 10');
-  assert.equal(s.audios.at(-1).paused,true);
+  assert.equal(journeyAudio.paused,true);
 });
