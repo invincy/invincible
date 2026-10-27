@@ -2,7 +2,7 @@
 <html lang="en"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#07111d"><title>LIC Follow-up Manager · Invincible</title>
-  <link rel="stylesheet" href="../../site-nav.css?v=15"><link rel="stylesheet" href="follow-up.css?v=2">
+  <link rel="stylesheet" href="../../site-nav.css?v=15"><link rel="stylesheet" href="follow-up.css?v=3">
 </head><body>
   <nav class="global-nav" aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
   <main class="workspace">
@@ -11,8 +11,8 @@
     <p id="status" role="status" aria-live="polite">Restoring your Invincible account…</p>
     <div id="metrics" class="metrics" aria-label="Policy overview"></div>
     <section class="list-section" aria-label="Policy follow-ups">
-      <div class="filters"><label class="search">Search policies<input id="search" type="search" placeholder="Name, policy, phone or OP-NAPped policy"></label><label>View<select id="view"><option value="all">Active cases</option><option value="archived">Archived cases</option><option value="everything">All saved cases + history</option><option value="due">Follow-ups due today / overdue</option><option value="new">Not yet contacted · valid mobile</option><option value="uncontactable">Uncontactable</option><option value="op">With OP-NAPped policies</option><option value="missing_op">Missing/invalid mobile + OP-NAPped</option><option value="completed">Completed</option></select></label><label class="contact-filter">Contact Availability<select id="contactAvailability" aria-label="Contact Availability" aria-describedby="contactHelp" title="Counts include the current search, View and Plan"><option value="all">All Policies</option><option value="mobile">Mobile Available</option><option value="no_mobile">No Mobile</option><option value="op">OP-NAP Available</option><option value="no_mobile_op">No Mobile + OP-NAP</option><option value="neither">Neither Available</option></select></label><label>Plan<select id="plan"><option value="">All plans</option></select></label></div>
-      <p class="help" id="contactHelp">Mobile excludes invalid and reported-wrong numbers. OP-NAPped entries are linked policy references.</p>
+      <div class="filters"><label class="search">Search policies<input id="search" type="search" placeholder="Name, policy, phone or OP-NEFT policy"></label><label class="contact-filter">Contact Availability<select id="contactAvailability" aria-label="Contact Availability" aria-describedby="contactHelp" title="Counts follow search, View, Plan and the NEFT filter"><option value="all">All Policies</option><option value="mobile">Mobile Available</option><option value="no_mobile">No Mobile</option><option value="op">OP-NEFT Available</option><option value="no_mobile_op">No Mobile + OP-NEFT</option><option value="neither">Neither Mobile / OP-NEFT</option></select></label><label class="neft-filter">This-policy NEFT<select id="neftAvailability" aria-label="This-policy NEFT" title="This-policy NEFT only; counts follow search, View, Plan and Contact Availability"><option value="all">All NEFT statuses</option><option value="yes">NEFT: Yes</option><option value="no">NEFT: No</option><option value="unknown">NEFT: Unknown</option></select></label><label>View<select id="view"><option value="all">Active cases</option><option value="archived">Archived cases</option><option value="everything">All saved cases + history</option><option value="due">Follow-ups due today / overdue</option><option value="new">Not yet contacted · valid mobile</option><option value="uncontactable">Uncontactable</option><option value="op">With OP-NEFT policies</option><option value="missing_op">Missing/invalid mobile + OP-NEFT</option><option value="completed">Completed</option></select></label><label>Plan<select id="plan"><option value="">All plans</option></select></label></div>
+      <p class="help" id="contactHelp">NEFT is for this policy; OP-NEFT is in another policy. Unknown does not mean No. Invalid or reported-wrong mobiles are excluded.</p>
       <div class="list-meta"><span id="resultCount" role="status" aria-live="polite">Loading…</span><span>Amounts in INR</span></div>
       <div id="records" class="records"></div>
       <div class="pagination"><button id="previous" disabled>← Previous</button><span id="pageLabel"></span><button id="next" disabled>Next →</button></div>
@@ -23,7 +23,7 @@
     <label>Upload CSV<input id="csvFile" type="file" accept=".csv,text/csv"></label>
     <label>Or paste CSV<textarea id="csvText" rows="5" placeholder="Policyno,PH Name,Plan,Net Amount,Due Date,PH Mobile,OP_Neft1,OP_Neft2,OP_Neft3"></textarea></label>
     <button id="readCSV">Read columns</button>
-    <section id="mappingSection" hidden><h3>Match columns</h3><p class="notice">OP_Neft1, OP_Neft2 and OP_Neft3 mean <strong>OP-NAPped linked policy numbers</strong>. They are not bank or NEFT status.</p><div id="mapping" class="mapping"></div><button id="previewCSV">Preview import</button></section>
+    <section id="mappingSection" hidden><h3>Match columns</h3><p class="notice">OP_Neft1, OP_Neft2 and OP_Neft3 mean <strong>OP-NEFT linked policy numbers</strong>. They identify other policies with NEFT; they do not confirm NEFT on this policy.</p><div id="mapping" class="mapping"></div><button id="previewCSV">Preview import</button></section>
     <section id="previewSection" hidden><h3>Review import</h3><label>Import mode<select id="importMode"><option value="replace">Replace active list — archive cases missing from this CSV</option><option value="merge">Add/update only — keep other cases active</option></select></label><p id="replacementSummary" class="notice"></p><p id="importSummary"></p><div id="previewRows" class="preview-rows"></div><p class="help">Reimport matches policy numbers. Saved history, responses, schedules and corrected phones are preserved. Blank cells do not erase existing details; linked policies are combined. Missing cases are archived, not deleted. Cases archived because they were missing return when reimported; manually removed or completed cases stay archived until restored.</p><button id="confirmImport" class="primary">Import policies</button></section>
     <p id="importError" class="error" role="alert"></p>
   </dialog>
@@ -32,10 +32,10 @@
     <form id="responseForm"><h3>Log a response</h3><div id="quickResponses" class="quick-responses"></div>
       <div class="form-grid"><label>Response<select id="outcome"></select></label><label>Next follow-up<input id="followUpDate" type="date"></label></div>
       <label>Notes<textarea id="note" rows="3" maxlength="4000" placeholder="What did the customer say? What happens next?"></textarea></label>
-      <details><summary>Correct the policyholder’s mobile</summary><label>New mobile number<input id="phoneCorrection" type="tel" placeholder="10-digit Indian mobile" maxlength="30"></label><p class="help">A correction is saved with this log and is kept on future CSV imports.</p></details>
+      <details><summary>Update mobile / NEFT</summary><label>This-policy NEFT status<select id="neftCorrection" aria-label="Update this-policy NEFT"><option value="source">Use CSV · Unknown</option><option value="yes">Yes · registered</option><option value="no">No · not registered</option><option value="unknown">Unknown</option></select></label><label>New mobile number<input id="phoneCorrection" type="tel" placeholder="10-digit Indian mobile" maxlength="30"></label><p class="help">Updates are saved with this log and kept on future imports. Choose Use CSV to remove a manual NEFT override.</p></details>
       <p id="detailError" class="error" role="alert"></p><button id="saveResponse" class="primary" type="submit">Save response</button>
     </form>
     <section class="history-section"><h3>Conversation history</h3><p id="historyStatus" role="status"></p><ol id="history"></ol></section>
   </dialog>
-  <script type="module" src="../../site-nav.js?v=7"></script><script type="module" src="follow-up.js?v=2"></script>
+  <script type="module" src="../../site-nav.js?v=7"></script><script type="module" src="follow-up.js?v=3"></script>
 </body></html>

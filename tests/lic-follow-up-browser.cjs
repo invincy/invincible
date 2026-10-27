@@ -180,27 +180,56 @@ const csv = header + '\n00123,Asha Example,28,68230,2026-10-12,9876543210,00999,
       ['I', 'Archived Alpha', '28', '9876543210', ['00666'], 'submitting'],
       ['J', 'Placeholder OP', '28', '', ['NA', '-', '0000'], ''],
     ];
-    const contactData = Object.fromEntries(rows.map(([id, name, plan, phone, opPolicies, outcome]) => ['users/account-a/licFollowups/p-' + id, { policyNo: id, name, plan, phone, opPolicies, outcome, wrongNumber: id === 'G', ...(id === 'H' ? { phoneOverride: '9234567890' } : {}), archived: id === 'I' }]));
+    const contactData = Object.fromEntries(rows.map(([id, name, plan, phone, opPolicies, outcome]) => ['users/account-a/licFollowups/p-' + id, { policyNo: id, name, plan, phone, opPolicies, outcome, wrongNumber: id === 'G', ...(id === 'H' ? { phoneOverride: '9234567890' } : {}), archived: id === 'I', ...(['A', 'H', 'I'].includes(id) ? { neftStatus: 'yes' } : id === 'B' ? { neftStatus: 'no' } : {}) }]));
     contactData['users/account-a/licFollowups/p-A/history/saved'] = { outcome: 'submitting', note: 'Keep this policy history', at: '2026-10-26' };
     await contactPage.addInitScript(data => { if (!localStorage.getItem('test.lic')) localStorage.setItem('test.lic', JSON.stringify(data)); }, contactData);
     await contactPage.goto(base); await contactPage.locator('#openImport:enabled').waitFor();
     const contactSelect = contactPage.getByLabel('Contact Availability', { exact: true });
-    assert.deepEqual(await contactSelect.locator('option').allTextContents(), ['All Policies (9)', 'Mobile Available (3)', 'No Mobile (6)', 'OP-NAP Available (5)', 'No Mobile + OP-NAP (3)', 'Neither Available (3)']);
+    assert.deepEqual(await contactSelect.locator('option').allTextContents(), ['All Policies (9)', 'Mobile Available (3)', 'No Mobile (6)', 'OP-NEFT Available (5)', 'No Mobile + OP-NEFT (3)', 'Neither Mobile / OP-NEFT (3)']);
     const beforeFiltering = await contactPage.evaluate(() => localStorage.getItem('test.lic'));
+    const neftSelect = contactPage.getByLabel('This-policy NEFT', { exact: true });
+    assert.deepEqual(await neftSelect.locator('option').allTextContents(), ['All NEFT statuses (9)', 'NEFT: Yes (2)', 'NEFT: No (1)', 'NEFT: Unknown (6)']);
     for (const [contact, count] of [['all', 9], ['mobile', 3], ['no_mobile', 6], ['op', 5], ['no_mobile_op', 3], ['neither', 3]]) {
       await contactSelect.selectOption(contact); assert.equal(await contactPage.locator('.policy-card').count(), count);
       assert.equal(await contactPage.locator('#resultCount').innerText(), `${count} of 10 policies`);
     }
+    await contactSelect.selectOption('all'); await neftSelect.selectOption('yes'); assert.equal(await contactPage.locator('.policy-card').count(), 2);
+    assert.equal(await contactPage.locator('.policy-card[data-readiness=neft]').count(), 2);
+    assert.deepEqual(await contactSelect.locator('option').allTextContents(), ['All Policies (2)', 'Mobile Available (2)', 'No Mobile (0)', 'OP-NEFT Available (2)', 'No Mobile + OP-NEFT (0)', 'Neither Mobile / OP-NEFT (0)']);
+    await contactSelect.selectOption('mobile'); await neftSelect.selectOption('no'); assert.equal(await contactPage.locator('.policy-card').count(), 1); assert.match(await contactPage.locator('.policy-card').innerText(), /Beta mobile/);
+    assert.equal(await contactPage.locator('.policy-card[data-readiness=mobile]').count(), 1);
+    await contactSelect.selectOption('no_mobile_op'); await neftSelect.selectOption('unknown'); assert.equal(await contactPage.locator('.policy-card').count(), 3); assert.equal(await contactPage.locator('.policy-card[data-readiness=op]').count(), 3);
+    await neftSelect.selectOption('all');
     await contactPage.locator('#search').fill('Alpha'); await contactPage.locator('#view').selectOption('submitting'); await contactPage.locator('#plan').selectOption('28'); await contactSelect.selectOption('no_mobile_op');
     assert.equal(await contactPage.locator('.policy-card').count(), 1); assert.match(await contactPage.locator('.policy-card').innerText(), /Alpha missing/);
-    assert.deepEqual(await contactSelect.locator('option').allTextContents(), ['All Policies (3)', 'Mobile Available (2)', 'No Mobile (1)', 'OP-NAP Available (3)', 'No Mobile + OP-NAP (1)', 'Neither Available (0)']);
+    assert.deepEqual(await contactSelect.locator('option').allTextContents(), ['All Policies (3)', 'Mobile Available (2)', 'No Mobile (1)', 'OP-NEFT Available (3)', 'No Mobile + OP-NEFT (1)', 'Neither Mobile / OP-NEFT (0)']);
     await contactPage.locator('#search').fill(''); await contactPage.locator('#view').selectOption('all'); await contactPage.locator('#plan').selectOption('');
     await contactSelect.selectOption('mobile'); await contactPage.locator('.policy-card').filter({ has: contactPage.getByRole('heading', { name: 'Alpha mobile', exact: true }) }).getByRole('button', { name: 'Open / log' }).click();
     await contactPage.locator('#history li').waitFor(); assert.match(await contactPage.locator('#history').innerText(), /Keep this policy history/); await contactPage.getByLabel('Close policy', { exact: true }).click();
     await contactPage.locator('#view').selectOption('archived'); assert.equal(await contactPage.locator('.policy-card').count(), 1); await contactSelect.selectOption('no_mobile'); assert.equal(await contactPage.locator('.policy-card').count(), 0);
     await contactPage.locator('#view').selectOption('everything'); await contactSelect.selectOption('all'); assert.equal(await contactPage.locator('.policy-card').count(), 10);
     assert.equal(await contactPage.evaluate(() => localStorage.getItem('test.lic')), beforeFiltering); assert.equal(await contactPage.evaluate(() => window.txCount || 0), 0);
+    await contactPage.locator('#view').selectOption('all'); await contactSelect.selectOption('mobile');
+    await contactPage.locator('.policy-card').filter({ has: contactPage.getByRole('heading', { name: 'Alpha mobile', exact: true }) }).getByRole('button', { name: 'Open / log' }).click();
+    await contactPage.locator('#detailDialog summary').click(); await contactPage.getByLabel('Update this-policy NEFT', { exact: true }).selectOption('no');
+    await contactPage.evaluate(() => window.failAfterCommit = true); await contactPage.locator('#saveResponse').click(); await contactPage.waitForFunction(() => document.querySelector('#detailError').textContent.includes('unavailable'));
+    assert.equal(await contactPage.locator('#neftCorrection').inputValue(), 'no'); await contactPage.locator('#saveResponse').click();
+    await contactPage.waitForFunction(() => document.querySelector('#status').textContent.includes('Response and history saved')); assert.equal(await contactPage.locator('#history li').count(), 2); assert.match(await contactPage.locator('#history').innerText(), /This-policy NEFT: no/);
+    await contactPage.getByLabel('Close policy', { exact: true }).click();
+    await contactPage.locator('#openImport').click(); await contactPage.locator('#csvText').fill(header + ',NEFT Status\nA,Alpha mobile,28,100,,9876543210,00111,,,Yes'); await contactPage.locator('#readCSV').click();
+    assert.equal(await contactPage.locator('[data-map=neftStatus]').inputValue(), '9'); await contactPage.locator('#previewCSV').click(); assert.match(await contactPage.locator('#previewRows').innerText(), /NEFT: yes/); await contactPage.locator('#importMode').selectOption('merge'); await contactPage.locator('#confirmImport').click(); await contactPage.locator('#importDialog').waitFor({ state: 'hidden' });
+    const neftData = await contactPage.evaluate(() => JSON.parse(localStorage.getItem('test.lic'))); assert.equal(neftData['users/account-a/licFollowups/p-A'].neftOverride, 'no'); assert.equal(neftData['users/account-a/licFollowups/p-A'].neftStatus, 'yes');
+    assert.equal(Object.keys(neftData).filter(key => key.startsWith('users/account-a/licFollowups/p-A/history/')).length, 2);
     await contactPage.reload(); await contactPage.locator('#openImport:enabled').waitFor(); await contactSelect.selectOption('mobile'); assert.equal(await contactPage.locator('.policy-card').count(), 3);
+    await neftSelect.selectOption('no'); assert.equal(await contactPage.locator('.policy-card').count(), 2);
+    await contactPage.locator('.policy-card').filter({ has: contactPage.getByRole('heading', { name: 'Alpha mobile', exact: true }) }).getByRole('button', { name: 'Open / log' }).click();
+    await contactPage.locator('#detailDialog summary').click(); await contactPage.getByLabel('Update this-policy NEFT', { exact: true }).selectOption('source'); await contactPage.locator('#saveResponse').click(); await contactPage.waitForFunction(() => document.querySelector('#status').textContent.includes('Response and history saved'));
+    assert.match(await contactPage.locator('#detailInfo').innerText(), /NEFT: Yes/); await contactPage.getByLabel('Close policy', { exact: true }).click(); await neftSelect.selectOption('all');
+    // A response that never edits NEFT must preserve another client's newer NEFT value.
+    await contactPage.locator('.policy-card').filter({ has: contactPage.getByRole('heading', { name: 'Alpha mobile', exact: true }) }).getByRole('button', { name: 'Open / log' }).click();
+    await contactPage.evaluate(async () => { const f = await import('/test-firestore.mjs'); const key = 'users/account-a/licFollowups/p-A'; const current = JSON.parse(localStorage.getItem('test.lic'))[key]; await f.runTransaction(f.db, tx => tx.set(f.doc(f.db, ...key.split('/')), { ...current, neftOverride: 'no' })); });
+    await contactPage.locator('#note').fill('Keep the remote NEFT correction'); await contactPage.locator('#saveResponse').click(); await contactPage.waitForFunction(() => document.querySelector('#status').textContent.includes('Response and history saved'));
+    assert.match(await contactPage.locator('#detailInfo').innerText(), /NEFT: No/); await contactPage.getByLabel('Close policy', { exact: true }).click();
     for (const width of [1440, 768, 393, 320]) {
       await contactPage.setViewportSize({ width, height: 900 }); assert.ok(await contactPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `contact filter overflow at ${width}`);
       assert.ok(await contactSelect.evaluate(el => { const r = el.getBoundingClientRect(); return r.width >= 200 && r.right <= innerWidth; }), `contact selector reach at ${width}`);
@@ -208,7 +237,7 @@ const csv = header + '\n00123,Asha Example,28,68230,2026-10-12,9876543210,00999,
     }
     await contactPage.close();
     assert.deepEqual(errors, []);
-    console.log('LIC browser checks passed: six availability filters/counts, filter composition, imports, OP views, logging/history, completion/removal/restoration, replacement and merge imports, archive-preserving reimports, failure recovery, account isolation and 320–1440px layouts.');
+    console.log('LIC browser checks passed: NEFT tri-state/import/manual history, card channels, six availability filters/counts, filter composition, imports, OP views, logging/history, completion/removal/restoration, replacement and merge imports, archive-preserving reimports, failure recovery, account isolation and 320–1440px layouts.');
   } catch (error) { console.error('Browser errors:', errors); throw error; }
   finally { await browser.close(); server.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; server.close(); });

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { parseCSV, autoMapping, previewImport, mobile, dateValue, policyId, mergeImport, applyResponse, archiveCase, matches, contactFilters, contactFilterKeys, statusLabel, daysFromToday } from '../lic/follow-up/model.mjs';
+import { parseCSV, autoMapping, previewImport, mobile, dateValue, policyId, mergeImport, applyResponse, archiveCase, matches, contactFilters, contactFilterKeys, normalizeNeftStatus, currentNeftStatus, readinessKey, statusLabel, daysFromToday } from '../lic/follow-up/model.mjs';
 const header = 'Policyno,PH Name,Plan,Net Amount,Due Date,PH Mobile,OP_Neft1,OP_Neft2,OP_Neft3';
 const csv = header + '\r\n"00123","Patel, Asha",28,"68,230",2026-10-12,+91 9876543210,00999,00888,00777\r\n00456,"Name ""Quoted""\nSecond line",14,0,23/03/2026,NA,00666,,\r\n';
 const parsed = parseCSV('\uFEFF' + csv), mapping = autoMapping(parsed.headers);
@@ -143,4 +143,48 @@ test('contact availability combines with search, plan, outcome, archive and all 
   assert.equal(matches(archived, { contact: 'mobile' }), false);
   assert.equal(matches(archived, { contact: 'mobile', view: 'archived' }), true);
   assert.equal(matches(archived, { contact: 'mobile', view: 'everything' }), true);
+});
+
+
+test('this-policy NEFT is explicit and separate from other-policy NEFT and policy Status', () => {
+  const data = parseCSV('Policyno,PH Name,Status,OP_Neft1\n001,Asha,INFORCE-CEC - LIC,00999');
+  const map = autoMapping(data.headers), record = previewImport(data, map).records[0];
+  assert.equal(map.neftStatus, -1); assert.equal(currentNeftStatus(record), 'unknown');
+  assert.ok(contactFilterKeys(record).includes('op')); assert.equal(readinessKey(record), 'op');
+  assert.equal(Object.hasOwn(record, 'neftStatus'), false);
+  assert.equal(currentNeftStatus({ phone: '9876543210' }), 'unknown');
+  for (const [value, expected] of [['Yes', 'yes'], ['Y', 'yes'], ['registered', 'yes'], ['true', 'yes'], [1, 'yes'], ['No', 'no'], ['N', 'no'], ['not registered', 'no'], [false, 'no'], [0, 'no'], ['', 'unknown'], ['NA', 'unknown'], ['Unknown', 'unknown'], ['INFORCE', 'unknown']]) assert.equal(normalizeNeftStatus(value), expected);
+});
+test('NEFT CSV mapping accepts confirmed yes/no, ignores blanks and blocks ambiguous mapped values', () => {
+  for (const header of ['NEFT Status', 'NEFT Registered', 'This Policy NEFT', 'NEFT']) {
+    const csv = parseCSV('Policyno,PH Name,' + header + '\n01,Asha,Yes\n02,Bhavna,No\n03,Chandra,');
+    const mapping = autoMapping(csv.headers), preview = previewImport(csv, mapping);
+    assert.equal(mapping.neftStatus, 2); assert.deepEqual(preview.errors, []);
+    assert.equal(currentNeftStatus(preview.records[0]), 'yes'); assert.equal(currentNeftStatus(preview.records[1]), 'no');
+    assert.equal(currentNeftStatus(preview.records[2]), 'unknown'); assert.equal(Object.hasOwn(preview.records[2], 'neftStatus'), false);
+  }
+  const csv = parseCSV('Policyno,PH Name,NEFT Status\n01,Asha,unverified words');
+  assert.match(previewImport(csv, autoMapping(csv.headers)).errors.join(), /Use Yes \/ No/);
+  const conflict = parseCSV('Policyno,PH Name,NEFT Status\n01,Asha,Yes\n01,Asha,No');
+  assert.match(previewImport(conflict, autoMapping(conflict.headers)).errors.join(), /Conflicting duplicate/);
+});
+test('manual NEFT corrections are tri-state, import-safe and removable without faking a contact attempt', () => {
+  const original = { ...imported()[0], neftStatus: 'yes', extra: { keep: true } };
+  const event = { outcome: 'note', note: '', followUpDate: '', phoneCorrection: null, at: 'now', neftCorrection: 'no' };
+  const no = applyResponse(original, event); assert.equal(currentNeftStatus(no), 'no'); assert.equal(no.attemptedAt, undefined); assert.equal(no.contactedAt, undefined);
+  const reimported = mergeImport(no, { ...imported()[0], neftStatus: 'yes' }, 'later'); assert.equal(currentNeftStatus(reimported), 'no');
+  assert.deepEqual(reimported.extra, original.extra);
+  const unknown = applyResponse(reimported, { ...event, neftCorrection: 'unknown' }); assert.equal(currentNeftStatus(unknown), 'unknown');
+  const source = applyResponse(unknown, { ...event, neftCorrection: null }); assert.equal(currentNeftStatus(source), 'yes');
+  assert.equal(currentNeftStatus(mergeImport(original, imported()[0], 'later')), 'yes', 'old CSV without a NEFT column cannot erase confirmed NEFT');
+  assert.throws(() => applyResponse(original, { ...event, neftCorrection: 'maybe' }), /Choose Yes, No or Unknown/);
+  assert.equal(currentNeftStatus(applyResponse(no, { outcome: 'note', note: '', followUpDate: '', phoneCorrection: null, at: 'later' })), 'no', 'unrelated responses preserve another NEFT update');
+});
+test('NEFT filters combine with all other filters and card readiness honours independent channels', () => {
+  const record = { ...imported()[0], neftStatus: 'yes', outcome: 'submitting' };
+  assert.equal(matches(record, { contact: 'mobile', neft: 'yes', query: '00999', view: 'submitting', plan: '28' }), true);
+  assert.equal(matches(record, { neft: 'no' }), false); assert.equal(matches(record, { neft: 'unknown' }), false);
+  assert.equal(matches({ ...record, neftOverride: 'unknown' }, { neft: 'unknown' }), true);
+  assert.equal(readinessKey(record), 'neft'); assert.equal(readinessKey({ ...record, neftOverride: 'no' }), 'op');
+  assert.equal(readinessKey({ phone: '9876543210' }), 'mobile'); assert.equal(readinessKey({ phone: 'NA' }), 'missing');
 });
