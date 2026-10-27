@@ -1,6 +1,6 @@
 import { observeAuth, storageError } from '../../shared/firebase-client.js';
-import { fields, outcomes, parseCSV, autoMapping, previewImport, currentPhone, contactability, mobile, statusLabel, matches, contactFilters, contactFilterKeys, localDate, daysFromToday, applyResponse } from './model.mjs?v=2';
-import { watchPolicies, watchHistory, importPolicies, logResponse, changeCaseState } from './storage.js?v=2';
+import { fields, outcomes, parseCSV, autoMapping, previewImport, currentPhone, contactability, mobile, statusLabel, matches, contactFilters, contactFilterKeys, neftFilters, currentNeftStatus, readinessKey, otherNeftPolicies, localDate, daysFromToday, applyResponse } from './model.mjs?v=3';
+import { watchPolicies, watchHistory, importPolicies, logResponse, changeCaseState } from './storage.js?v=3';
 const $ = id => document.getElementById(id);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const money = value => value === null || value === undefined ? 'Amount unavailable' : new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(value);
@@ -20,34 +20,41 @@ function controls() {
   $('saveResponse').textContent = pendingResponse ? 'Retry saved response' : 'Save response';
   document.querySelectorAll('[data-open]').forEach(el => { el.disabled = busy || !loaded; });
 }
-function linked(record) { return record.opPolicies?.length ? `<div class="op-links"><strong>OP-NAPped</strong> · ${record.opPolicies.map(esc).join(' · ')}</div>` : ''; }
+function linked(record) { const policies = otherNeftPolicies(record); return policies.length ? `<div class="op-links"><strong>OP-NEFT</strong> · ${policies.map(esc).join(' · ')}</div>` : ''; }
+function availabilityHTML(record) {
+  const mobile = contactability(record).kind === 'valid', neft = currentNeftStatus(record), op = contactFilterKeys(record).includes('op');
+  return `<div class="availability-badges" aria-label="Availability"><span class="availability-badge ${mobile ? 'mobile' : 'unavailable'}">${mobile ? 'Mobile ✓' : 'No mobile'}</span><span class="availability-badge ${neft === 'yes' ? 'neft' : neft === 'no' ? 'neft-no' : 'unavailable'}">NEFT: ${neft === 'yes' ? 'Yes' : neft === 'no' ? 'No' : 'Unknown'}</span><span class="availability-badge ${op ? 'op' : 'unavailable'}" title="NEFT references in other policies">${op ? 'OP-NEFT ✓' : 'OP-NEFT —'}</span></div>`;
+}
 function phoneHTML(record) { const phone = contactability(record); return phone.tel ? `<a class="call" href="tel:${phone.tel}">${esc(phone.label)} ↗</a>` : `<span class="badge warn">${esc(phone.label)}</span><small>${esc(currentPhone(record))}</small>`; }
 function render() {
-  const today = localDate(), views = ['all', 'due', 'new', 'missing_op'], labels = ['Active cases', 'Follow-ups due', 'Not yet contacted', 'Missing/invalid mobile + OP-NAPped'];
+  const today = localDate(), views = ['all', 'due', 'new', 'missing_op'], labels = ['Active cases', 'Follow-ups due', 'Not yet contacted', 'Missing/invalid mobile + OP-NEFT'];
   $('metrics').innerHTML = views.map((view, i) => `<div class="metric"><strong>${records.filter(r => matches(r, { view, today })).length}</strong><span>${labels[i]}</span></div>`).join('');
   const plan = $('plan').value;
   $('plan').innerHTML = '<option value="">All plans</option>' + [...new Set(records.map(r => r.plan).filter(Boolean))].sort().map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
   $('plan').value = [...$('plan').options].some(o => o.value === plan) ? plan : '';
-  const contact = $('contactAvailability').value || 'all';
-  const counts = Object.fromEntries(contactFilters.map(([key]) => [key, 0])), filtered = [];
+  const contact = $('contactAvailability').value || 'all', neft = $('neftAvailability').value || 'all';
+  const counts = Object.fromEntries(contactFilters.map(([key]) => [key, 0])), neftCounts = Object.fromEntries(neftFilters.map(([key]) => [key, 0])), filtered = [];
   for (const record of records) {
     if (!matches(record, { query: $('search').value, view: $('view').value, plan: $('plan').value, today })) continue;
-    const keys = contactFilterKeys(record);
-    keys.forEach(key => counts[key]++);
-    if (keys.includes(contact)) filtered.push(record);
+    const keys = contactFilterKeys(record), ownNeft = currentNeftStatus(record), inContact = keys.includes(contact), inNeft = neft === 'all' || ownNeft === neft;
+    if (inNeft) keys.forEach(key => counts[key]++);
+    if (inContact) { neftCounts.all++; neftCounts[ownNeft]++; }
+    if (inContact && inNeft) filtered.push(record);
   }
   $('contactAvailability').replaceChildren(...contactFilters.map(([key, label]) => new Option(`${label} (${counts[key]})`, key)));
   $('contactAvailability').value = contact;
+  $('neftAvailability').replaceChildren(...neftFilters.map(([key, label]) => new Option(`${label} (${neftCounts[key]})`, key)));
+  $('neftAvailability').value = neft;
   filtered.sort((a, b) => (a.followUpDate || '9999').localeCompare(b.followUpDate || '9999') || a.name.localeCompare(b.name));
   const pages = Math.max(1, Math.ceil(filtered.length / 30)); page = Math.min(page, pages - 1);
   $('resultCount').textContent = `${filtered.length} of ${records.length} policies`;
   $('pageLabel').textContent = `Page ${page + 1} of ${pages}`; $('previous').disabled = !page; $('next').disabled = page + 1 >= pages;
-  $('records').innerHTML = filtered.slice(page * 30, page * 30 + 30).map(r => `<article class="policy-card"><div><h3>${esc(r.name)}</h3><small>Policy ${esc(r.policyNo)} · Plan ${esc(r.plan || '—')}</small>${linked(r)}</div><div><span class="amount">${money(r.amount)}</span><small>Due ${esc(r.dueDate || 'Not provided')}</small>${r.sourceStatus ? `<small>Source status: ${esc(r.sourceStatus)}</small>` : ''}</div><div>${phoneHTML(r)}<br><span class="badge ${contactability(r).kind !== 'valid' ? 'warn' : ''}">${esc(statusLabel(r))}</span><small>${r.followUpDate ? `Follow-up ${esc(r.followUpDate)}` : 'No follow-up scheduled'}</small></div><button data-open="${esc(r.id)}">Open / log</button></article>`).join('') || `<div class="empty"><strong>${!user ? 'Sign in to your Invincible account' : !loaded ? 'Loading your policies…' : records.length ? 'No matching policies' : 'Your follow-up list starts here'}</strong>${!user ? '<a href="../../">Open Dashboard to sign in</a>' : records.length ? 'Try another search or view.' : 'Import a CSV to review policies and plan your calls.'}</div>`;
+  $('records').innerHTML = filtered.slice(page * 30, page * 30 + 30).map(r => `<article class="policy-card" data-readiness="${readinessKey(r)}"><div><h3>${esc(r.name)}</h3><small>Policy ${esc(r.policyNo)} · Plan ${esc(r.plan || '—')}</small>${availabilityHTML(r)}${linked(r)}</div><div><span class="amount">${money(r.amount)}</span><small>Due ${esc(r.dueDate || 'Not provided')}</small>${r.sourceStatus ? `<small>Source status: ${esc(r.sourceStatus)}</small>` : ''}</div><div>${phoneHTML(r)}<br><span class="badge ${contactability(r).kind !== 'valid' ? 'warn' : ''}">${esc(statusLabel(r))}</span><small>${r.followUpDate ? `Follow-up ${esc(r.followUpDate)}` : 'No follow-up scheduled'}</small></div><button data-open="${esc(r.id)}">Open / log</button></article>`).join('') || `<div class="empty"><strong>${!user ? 'Sign in to your Invincible account' : !loaded ? 'Loading your policies…' : records.length ? 'No matching policies' : 'Your follow-up list starts here'}</strong>${!user ? '<a href="../../">Open Dashboard to sign in</a>' : records.length ? 'Try another search or view.' : 'Import a CSV to review policies and plan your calls.'}</div>`;
   controls();
 }
 function detailInfo(record) {
   $('detailTitle').textContent = record.name; $('detailPolicy').textContent = `POLICY ${record.policyNo} · PLAN ${record.plan || '—'}`;
-  $('detailInfo').innerHTML = `<div>${phoneHTML(record)} <span class="badge">${esc(statusLabel(record))}</span></div><div class="details-grid"><div><small>Amount</small>${money(record.amount)}</div><div><small>Due date</small>${esc(record.dueDate || 'Not provided')}</div><div><small>Branch / claim type</small>${esc(record.branch || '—')} / ${esc(record.claimType || '—')}</div><div><small>Source status</small>${esc(record.sourceStatus || '—')}</div></div>${linked(record)}`;
+  $('detailInfo').innerHTML = `<div>${availabilityHTML(record)}${phoneHTML(record)} <span class="badge">${esc(statusLabel(record))}</span></div><div class="details-grid"><div><small>Amount</small>${money(record.amount)}</div><div><small>Due date</small>${esc(record.dueDate || 'Not provided')}</div><div><small>Branch / claim type</small>${esc(record.branch || '—')} / ${esc(record.claimType || '—')}</div><div><small>Source status</small>${esc(record.sourceStatus || '—')}</div></div>${linked(record)}`;
   if (record.archived) $('detailInfo').insertAdjacentHTML('beforeend', `<p class="notice">Archived: ${esc({ completed: 'case completed', missing_csv: 'not in the latest replacement CSV', manual: 'removed from active list' }[record.archiveReason] || 'removed from active list')}. All remarks and history are retained.</p>`);
 }
 function stamp(value) { const date = value?.toDate ? value.toDate() : value?.seconds ? new Date(value.seconds * 1000) : new Date(value); return Number.isNaN(date.valueOf()) ? 'Time pending' : date.toLocaleString(); }
@@ -56,12 +63,12 @@ function openDetail(id) {
   if (busy || !loaded) return;
   const record = records.find(r => r.id === id); if (!record) return;
   stopHistory(); const historyToken = ++historyGeneration, token = generation;
-  selectedId = id; eventId = crypto.randomUUID(); pendingResponse = null; pendingCaseChange = null; $('responseForm').reset(); $('outcome').value = 'note'; $('followUpDate').value = record.followUpDate || ''; $('detailError').textContent = ''; detailInfo(record); controls();
+  selectedId = id; eventId = crypto.randomUUID(); pendingResponse = null; pendingCaseChange = null; $('responseForm').reset(); $('outcome').value = 'note'; $('followUpDate').value = record.followUpDate || ''; $('neftCorrection').value = ['yes', 'no', 'unknown'].includes(record.neftOverride) ? record.neftOverride : 'source'; $('neftCorrection').dataset.original = $('neftCorrection').value; $('neftCorrection').options[0].textContent = 'Use CSV · ' + ({ yes: 'Yes', no: 'No', unknown: 'Unknown' }[currentNeftStatus({ neftStatus: record.neftStatus })]); $('detailError').textContent = ''; detailInfo(record); controls();
   $('history').replaceChildren(); $('historyStatus').textContent = 'Loading history…'; $('detailDialog').showModal();
   stopHistory = watchHistory(user.uid, id, events => {
     if (token !== generation || historyToken !== historyGeneration) return;
     $('historyStatus').textContent = events.length ? `${events.length} saved entries` : 'No responses logged yet.';
-    $('history').innerHTML = events.map(event => `<li><strong>${esc(({ ...outcomes, case_removed: 'Removed from active list', case_restored: 'Restored to active list' })[event.outcome] || event.outcome)}</strong><time>${esc(stamp(event.at))}</time>${event.note ? `<p>${esc(event.note)}</p>` : ''}<small>Follow-up: ${esc(event.followUpDate || 'None')}${event.phoneCorrection ? ` · Mobile corrected to ${esc(event.phoneCorrection)}` : ''}</small></li>`).join('');
+    $('history').innerHTML = events.map(event => `<li><strong>${esc(({ ...outcomes, case_removed: 'Removed from active list', case_restored: 'Restored to active list' })[event.outcome] || event.outcome)}</strong><time>${esc(stamp(event.at))}</time>${event.note ? `<p>${esc(event.note)}</p>` : ''}<small>Follow-up: ${esc(event.followUpDate || 'None')}${event.phoneCorrection ? ` · Mobile corrected to ${esc(event.phoneCorrection)}` : ''}${Object.hasOwn(event, 'neftCorrection') ? ` · This-policy NEFT: ${esc(event.neftCorrection === null ? 'Use CSV status' : event.neftCorrection)}` : ''}</small></li>`).join('');
   }, error => { if (token === generation && historyToken === historyGeneration) $('historyStatus').textContent = storageError(error); });
 }
 $('outcome').innerHTML = Object.entries(outcomes).map(([key, label]) => `<option value="${key}">${label}</option>`).join('');
@@ -73,13 +80,13 @@ $('outcome').onchange = () => { if ($('outcome').value === 'completed') $('follo
 $('responseForm').onsubmit = async event => {
   event.preventDefault(); if (busy || !loaded || !user) return;
   const token = generation, account = user.uid, id = selectedId;
-  const response = pendingResponse || { id: eventId, outcome: $('outcome').value, note: $('note').value.trim(), followUpDate: $('followUpDate').value, phoneCorrection: $('phoneCorrection').value.trim() || null, at: new Date().toISOString() };
+  const response = pendingResponse || { id: eventId, outcome: $('outcome').value, note: $('note').value.trim(), followUpDate: $('followUpDate').value, phoneCorrection: $('phoneCorrection').value.trim() || null, ...($('neftCorrection').value !== $('neftCorrection').dataset.original ? { neftCorrection: $('neftCorrection').value === 'source' ? null : $('neftCorrection').value } : {}), at: new Date().toISOString() };
   try { applyResponse(records.find(r => r.id === id), response); } catch (error) { $('detailError').textContent = error.message; return; }
   pendingResponse = response; busy = true; controls(); $('detailError').textContent = ''; status('Saving response…');
   try {
     await logResponse(account, id, response, () => token === generation);
     if (token !== generation) return;
-    pendingResponse = null; eventId = crypto.randomUUID(); $('note').value = ''; $('phoneCorrection').value = ''; $('outcome').value = 'note'; status('Response and history saved to Firebase.');
+    pendingResponse = null; eventId = crypto.randomUUID(); $('neftCorrection').dataset.original = $('neftCorrection').value; $('note').value = ''; $('phoneCorrection').value = ''; $('outcome').value = 'note'; status('Response and history saved to Firebase.');
   } catch (error) { if (token === generation) { $('detailError').textContent = storageError(error) + ' Your original response is retained. Retry to confirm it before editing again.'; status('Response was not confirmed. Your form is retained; retry to finish saving.', true); } }
   finally { if (token === generation) { busy = false; controls(); } }
 };
@@ -97,7 +104,7 @@ async function setArchived(archived) {
 }
 $('archiveCase').onclick = () => setArchived(true); $('restoreCase').onclick = () => setArchived(false);
 $('records').onclick = event => { const button = event.target.closest('[data-open]'); if (button) openDetail(button.dataset.open); };
-for (const id of ['search', 'view', 'plan', 'contactAvailability']) $(id).addEventListener(id === 'search' ? 'input' : 'change', () => { page = 0; render(); });
+for (const id of ['search', 'view', 'plan', 'contactAvailability', 'neftAvailability']) $(id).addEventListener(id === 'search' ? 'input' : 'change', () => { page = 0; render(); });
 $('previous').onclick = () => { page--; render(); }; $('next').onclick = () => { page++; render(); };
 function invalidatePreview() { preview = null; $('previewSection').hidden = true; controls(); }
 function clearImport() { parsed = null; importId = crypto.randomUUID(); invalidatePreview(); $('importMode').value = 'replace'; $('mappingSection').hidden = true; $('mapping').replaceChildren(); $('csvText').value = ''; $('csvFile').value = ''; $('importError').textContent = ''; }
@@ -129,8 +136,8 @@ $('previewCSV').onclick = () => {
     preview = previewImport(parsed, Object.fromEntries([...document.querySelectorAll('[data-map]')].map(el => [el.dataset.map, Number(el.value)])));
     const existing = new Set(records.map(r => r.policyNo)), updates = preview.records.filter(r => existing.has(r.policyNo)).length;
     const missingOP = preview.records.filter(r => matches(r, { view: 'missing_op' })).length;
-    $('importSummary').textContent = `${preview.records.length} unique policies: ${preview.records.length - updates} new, ${updates} existing. ${preview.duplicates} identical duplicate rows skipped. ${missingOP} with missing/invalid mobile + OP-NAPped. ${preview.errors.length} errors.`;
-    $('previewRows').innerHTML = preview.records.map(r => `<div class="preview-row"><strong>${esc(r.name)}</strong> · ${esc(r.policyNo)} · Plan ${esc(r.plan || '—')}<br>${money(r.amount)} · Due ${esc(r.dueDate || '—')} · Mobile ${esc(r.phone || 'Missing')} ${mobile(r.phone).kind === 'invalid' ? '(invalid)' : ''}${linked(r)}</div>`).join('');
+    $('importSummary').textContent = `${preview.records.length} unique policies: ${preview.records.length - updates} new, ${updates} existing. ${preview.duplicates} identical duplicate rows skipped. ${missingOP} with missing/invalid mobile + OP-NEFT. ${preview.errors.length} errors.`;
+    $('previewRows').innerHTML = preview.records.map(r => `<div class="preview-row"><strong>${esc(r.name)}</strong> · ${esc(r.policyNo)} · Plan ${esc(r.plan || '—')}<br>${money(r.amount)} · Due ${esc(r.dueDate || '—')} · Mobile ${esc(r.phone || 'Missing')} ${mobile(r.phone).kind === 'invalid' ? '(invalid)' : ''} · NEFT: ${currentNeftStatus(r)}${linked(r)}</div>`).join('');
     $('importError').textContent = preview.errors.length ? preview.errors.slice(0, 30).join('\n') + '\nFix the errors in your CSV and preview again. Nothing has been imported.' : '';
     $('previewSection').hidden = false; replacementSummary(); controls();
   } catch (error) { $('importError').textContent = error.message; }
@@ -152,7 +159,7 @@ $('confirmImport').onclick = async () => {
 });
 observeAuth(current => {
   const token = ++generation; stopPolicies(); closeDetail(); $('importDialog').close(); clearImport(); user = current; records = []; loaded = false; busy = false; page = 0;
-  $('search').value = ''; $('view').value = 'all'; $('contactAvailability').value = 'all'; render();
+  $('search').value = ''; $('view').value = 'all'; $('contactAvailability').value = 'all'; $('neftAvailability').value = 'all'; render();
   if (!current) { status('Sign in on Dashboard to use your private follow-up manager.'); return; }
   status('Loading your policies…');
   stopPolicies = watchPolicies(current.uid, (rows, cached) => {

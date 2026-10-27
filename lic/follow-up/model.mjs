@@ -5,10 +5,11 @@ export const fields = [
   ['plan', 'Plan', ['plan', 'planno']],
   ['amount', 'Amount', ['netamount', 'amount']],
   ['dueDate', 'Due date', ['duedate']],
+  ['neftStatus', 'This-policy NEFT status', ['neft', 'neftstatus', 'neftregistered', 'neftregstatus', 'neftregistration', 'thispolicyneft', 'neftavailable']],
   ['phone', 'Policyholder mobile', ['phmobile', 'phone', 'mobile', 'mobilenumber']],
-  ['op1', 'OP-NAPped policy 1', ['opneft1', 'opnapped1']],
-  ['op2', 'OP-NAPped policy 2', ['opneft2', 'opnapped2']],
-  ['op3', 'OP-NAPped policy 3', ['opneft3', 'opnapped3']],
+  ['op1', 'OP-NEFT policy 1', ['opneft1', 'opnapped1']],
+  ['op2', 'OP-NEFT policy 2', ['opneft2', 'opnapped2']],
+  ['op3', 'OP-NEFT policy 3', ['opneft3', 'opnapped3']],
   ['sourceStatus', 'Source status', ['status']],
   ['branch', 'Branch', ['branch']],
   ['claimType', 'Claim type', ['claimtype']],
@@ -78,14 +79,30 @@ export function contactability(record) {
 }
 export const contactFilters = [
   ['all', 'All Policies'], ['mobile', 'Mobile Available'], ['no_mobile', 'No Mobile'],
-  ['op', 'OP-NAP Available'], ['no_mobile_op', 'No Mobile + OP-NAP'], ['neither', 'Neither Available'],
+  ['op', 'OP-NEFT Available'], ['no_mobile_op', 'No Mobile + OP-NEFT'], ['neither', 'Neither Mobile / OP-NEFT'],
 ];
-const hasOpPolicies = record => Array.isArray(record.opPolicies) && record.opPolicies.some(value => !empty(value) && !/^0+$/.test(policyKey(value)));
+export const otherNeftPolicies = record => Array.isArray(record.opPolicies) ? [...new Set(record.opPolicies.filter(value => !empty(value) && !/^0+$/.test(policyKey(value))).map(policyKey))] : [];
+const hasOpPolicies = record => otherNeftPolicies(record).length > 0;
 // Derived from existing fields only; a reported wrong number is not a usable mobile.
 export function contactFilterKeys(record) {
   const hasMobile = contactability(record).kind === 'valid';
   const hasOP = hasOpPolicies(record);
   return ['all', hasMobile ? 'mobile' : 'no_mobile', ...(hasOP ? ['op'] : []), ...(!hasMobile ? [hasOP ? 'no_mobile_op' : 'neither'] : [])];
+}
+export const neftFilters = [['all', 'All NEFT statuses'], ['yes', 'NEFT: Yes'], ['no', 'NEFT: No'], ['unknown', 'NEFT: Unknown']];
+export function normalizeNeftStatus(value, { strict = false } = {}) {
+  const raw = clean(value).toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').replace(/^neft /, '');
+  if (['yes', 'y', '1', 'true', 'registered', 'available'].includes(raw)) return 'yes';
+  if (['no', 'n', '0', 'false', 'not registered', 'not available', 'unregistered'].includes(raw)) return 'no';
+  if (empty(value) || ['unknown', 'not known', 'pending'].includes(raw)) return 'unknown';
+  if (strict) throw new Error('Use Yes / No for this-policy NEFT, or leave it blank if unknown.');
+  return 'unknown';
+}
+export const currentNeftStatus = record => normalizeNeftStatus(record.neftOverride ?? record.neftStatus);
+export function readinessKey(record) {
+  if (currentNeftStatus(record) === 'yes') return 'neft';
+  if (hasOpPolicies(record)) return 'op';
+  return contactability(record).kind === 'valid' ? 'mobile' : 'missing';
 }
 export function previewImport(parsed, mapping) {
   if (mapping.policyNo < 0 || mapping.name < 0) throw new Error('Map policy number and policyholder name.');
@@ -103,7 +120,8 @@ export function previewImport(parsed, mapping) {
       if (!empty(rawAmount) && !/^-?\d+(?:\.\d{1,2})?$/.test(rawAmount)) throw new Error('Invalid amount.');
       const amount = empty(rawAmount) ? null : Number(rawAmount);
       if (amount !== null && !Number.isSafeInteger(Math.round(amount * 100))) throw new Error('Amount is too large.');
-      const record = { policyNo, name, plan: get('plan'), amount, dueDate: dateValue(get('dueDate')), phone: get('phone'), sourceStatus: get('sourceStatus'), branch: get('branch'), claimType: get('claimType'), opPolicies: [...new Set(['op1', 'op2', 'op3'].map(get).filter(v => !empty(v) && v !== '0').map(policyKey))] };
+      const record = { policyNo, name, plan: get('plan'), amount, dueDate: dateValue(get('dueDate')), phone: get('phone'), sourceStatus: get('sourceStatus'), branch: get('branch'), claimType: get('claimType'), opPolicies: [...new Set(['op1', 'op2', 'op3'].map(get).filter(v => !empty(v) && !/^0+$/.test(policyKey(v))).map(policyKey))] };
+      if (mapping.neftStatus >= 0) { const neft = normalizeNeftStatus(get('neftStatus'), { strict: true }); if (neft !== 'unknown') record.neftStatus = neft; }
       if (Object.values(record).some(v => typeof v === 'string' && v.length > 500)) throw new Error('A field exceeds 500 characters.');
       const id = policyId(policyNo);
       if (records.has(id)) {
@@ -138,6 +156,10 @@ export function applyResponse(existing, event) {
   if (clean(event.note).length > 4000) throw new Error('Notes must be under 4,000 characters.');
   const followUpDate = dateValue(event.followUpDate);
   const next = { ...existing, followUpDate, updatedAt: event.at };
+  if (Object.hasOwn(event, 'neftCorrection')) {
+    if (event.neftCorrection !== null && !['yes', 'no', 'unknown'].includes(event.neftCorrection)) throw new Error('Choose Yes, No or Unknown for this-policy NEFT.');
+    next.neftOverride = event.neftCorrection;
+  }
   if (event.outcome !== 'note') Object.assign(next, { outcome: event.outcome, attemptedAt: event.at });
   if (event.outcome === 'wrong_number') next.wrongNumber = true;
   if (['replied', 'whatsapp', 'submitting', 'completed'].includes(event.outcome)) next.contactedAt = event.at;
@@ -157,7 +179,7 @@ export function statusLabel(record) {
   if (!record.attemptedAt) return 'Not yet contacted';
   return record.outcome === 'no_answer' ? 'Attempted · no answer' : outcomes[record.outcome] || 'Contact attempted';
 }
-export function matches(record, { query = '', view = 'all', today = '', plan = '', contact = 'all' } = {}) {
+export function matches(record, { query = '', view = 'all', today = '', plan = '', contact = 'all', neft = 'all' } = {}) {
   const availability = contactability(record);
   const filters = {
     all: true, everything: true, archived: !!record.archived, new: availability.kind === 'valid' && !record.attemptedAt,
@@ -169,7 +191,7 @@ export function matches(record, { query = '', view = 'all', today = '', plan = '
   const haystack = [record.name, record.policyNo, record.plan, record.phone, record.phoneOverride, record.sourceStatus, record.branch, ...(record.opPolicies || [])].join(' ').toLowerCase();
   const inView = Object.hasOwn(filters, view) ? filters[view] : Object.hasOwn(outcomes, view) && record.outcome === view;
   const includeArchived = ['archived', 'everything', 'completed'].includes(view);
-  return (contact === 'all' || contactFilterKeys(record).includes(contact)) && (includeArchived || !record.archived) && !!inView && (!plan || record.plan === plan) && query.trim().toLowerCase().split(/\s+/).every(word => haystack.includes(word));
+  return (neft === 'all' || currentNeftStatus(record) === neft) && (contact === 'all' || contactFilterKeys(record).includes(contact)) && (includeArchived || !record.archived) && !!inView && (!plan || record.plan === plan) && query.trim().toLowerCase().split(/\s+/).every(word => haystack.includes(word));
 }
 export function localDate(date = new Date()) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; }
 export function daysFromToday(days, date = new Date()) { date = new Date(date); date.setDate(date.getDate() + days); return localDate(date); }
