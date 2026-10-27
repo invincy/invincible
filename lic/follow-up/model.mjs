@@ -76,6 +76,17 @@ export function contactability(record) {
   const result = mobile(currentPhone(record));
   return result.kind === 'valid' && record.wrongNumber ? { ...result, kind: 'wrong', label: 'Reported wrong number', tel: '' } : result;
 }
+export const contactFilters = [
+  ['all', 'All Policies'], ['mobile', 'Mobile Available'], ['no_mobile', 'No Mobile'],
+  ['op', 'OP-NAP Available'], ['no_mobile_op', 'No Mobile + OP-NAP'], ['neither', 'Neither Available'],
+];
+const hasOpPolicies = record => Array.isArray(record.opPolicies) && record.opPolicies.some(value => !empty(value) && !/^0+$/.test(policyKey(value)));
+// Derived from existing fields only; a reported wrong number is not a usable mobile.
+export function contactFilterKeys(record) {
+  const hasMobile = contactability(record).kind === 'valid';
+  const hasOP = hasOpPolicies(record);
+  return ['all', hasMobile ? 'mobile' : 'no_mobile', ...(hasOP ? ['op'] : []), ...(!hasMobile ? [hasOP ? 'no_mobile_op' : 'neither'] : [])];
+}
 export function previewImport(parsed, mapping) {
   if (mapping.policyNo < 0 || mapping.name < 0) throw new Error('Map policy number and policyholder name.');
   const selected = Object.values(mapping).filter(index => index >= 0);
@@ -146,19 +157,19 @@ export function statusLabel(record) {
   if (!record.attemptedAt) return 'Not yet contacted';
   return record.outcome === 'no_answer' ? 'Attempted · no answer' : outcomes[record.outcome] || 'Contact attempted';
 }
-export function matches(record, { query = '', view = 'all', today = '', plan = '' } = {}) {
+export function matches(record, { query = '', view = 'all', today = '', plan = '', contact = 'all' } = {}) {
   const availability = contactability(record);
   const filters = {
     all: true, everything: true, archived: !!record.archived, new: availability.kind === 'valid' && !record.attemptedAt,
-    uncontactable: availability.kind !== 'valid', op: !!record.opPolicies?.length,
-    missing_op: ['missing', 'invalid'].includes(mobile(currentPhone(record)).kind) && !!record.opPolicies?.length,
+    uncontactable: availability.kind !== 'valid', op: hasOpPolicies(record),
+    missing_op: ['missing', 'invalid'].includes(mobile(currentPhone(record)).kind) && hasOpPolicies(record),
     due: !!record.followUpDate && record.followUpDate <= today && record.outcome !== 'completed',
     completed: record.outcome === 'completed',
   };
   const haystack = [record.name, record.policyNo, record.plan, record.phone, record.phoneOverride, record.sourceStatus, record.branch, ...(record.opPolicies || [])].join(' ').toLowerCase();
   const inView = Object.hasOwn(filters, view) ? filters[view] : Object.hasOwn(outcomes, view) && record.outcome === view;
   const includeArchived = ['archived', 'everything', 'completed'].includes(view);
-  return (includeArchived || !record.archived) && !!inView && (!plan || record.plan === plan) && query.trim().toLowerCase().split(/\s+/).every(word => haystack.includes(word));
+  return (contact === 'all' || contactFilterKeys(record).includes(contact)) && (includeArchived || !record.archived) && !!inView && (!plan || record.plan === plan) && query.trim().toLowerCase().split(/\s+/).every(word => haystack.includes(word));
 }
 export function localDate(date = new Date()) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; }
 export function daysFromToday(days, date = new Date()) { date = new Date(date); date.setDate(date.getDate() + days); return localDate(date); }

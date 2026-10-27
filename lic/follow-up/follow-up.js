@@ -1,6 +1,6 @@
 import { observeAuth, storageError } from '../../shared/firebase-client.js';
-import { fields, outcomes, parseCSV, autoMapping, previewImport, currentPhone, contactability, mobile, statusLabel, matches, localDate, daysFromToday, applyResponse } from './model.mjs';
-import { watchPolicies, watchHistory, importPolicies, logResponse, changeCaseState } from './storage.js';
+import { fields, outcomes, parseCSV, autoMapping, previewImport, currentPhone, contactability, mobile, statusLabel, matches, contactFilters, contactFilterKeys, localDate, daysFromToday, applyResponse } from './model.mjs?v=2';
+import { watchPolicies, watchHistory, importPolicies, logResponse, changeCaseState } from './storage.js?v=2';
 const $ = id => document.getElementById(id);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const money = value => value === null || value === undefined ? 'Amount unavailable' : new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(value);
@@ -28,7 +28,17 @@ function render() {
   const plan = $('plan').value;
   $('plan').innerHTML = '<option value="">All plans</option>' + [...new Set(records.map(r => r.plan).filter(Boolean))].sort().map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
   $('plan').value = [...$('plan').options].some(o => o.value === plan) ? plan : '';
-  const filtered = records.filter(r => matches(r, { query: $('search').value, view: $('view').value, plan: $('plan').value, today })).sort((a, b) => (a.followUpDate || '9999').localeCompare(b.followUpDate || '9999') || a.name.localeCompare(b.name));
+  const contact = $('contactAvailability').value || 'all';
+  const counts = Object.fromEntries(contactFilters.map(([key]) => [key, 0])), filtered = [];
+  for (const record of records) {
+    if (!matches(record, { query: $('search').value, view: $('view').value, plan: $('plan').value, today })) continue;
+    const keys = contactFilterKeys(record);
+    keys.forEach(key => counts[key]++);
+    if (keys.includes(contact)) filtered.push(record);
+  }
+  $('contactAvailability').replaceChildren(...contactFilters.map(([key, label]) => new Option(`${label} (${counts[key]})`, key)));
+  $('contactAvailability').value = contact;
+  filtered.sort((a, b) => (a.followUpDate || '9999').localeCompare(b.followUpDate || '9999') || a.name.localeCompare(b.name));
   const pages = Math.max(1, Math.ceil(filtered.length / 30)); page = Math.min(page, pages - 1);
   $('resultCount').textContent = `${filtered.length} of ${records.length} policies`;
   $('pageLabel').textContent = `Page ${page + 1} of ${pages}`; $('previous').disabled = !page; $('next').disabled = page + 1 >= pages;
@@ -87,7 +97,7 @@ async function setArchived(archived) {
 }
 $('archiveCase').onclick = () => setArchived(true); $('restoreCase').onclick = () => setArchived(false);
 $('records').onclick = event => { const button = event.target.closest('[data-open]'); if (button) openDetail(button.dataset.open); };
-for (const id of ['search', 'view', 'plan']) $(id).addEventListener(id === 'search' ? 'input' : 'change', () => { page = 0; render(); });
+for (const id of ['search', 'view', 'plan', 'contactAvailability']) $(id).addEventListener(id === 'search' ? 'input' : 'change', () => { page = 0; render(); });
 $('previous').onclick = () => { page--; render(); }; $('next').onclick = () => { page++; render(); };
 function invalidatePreview() { preview = null; $('previewSection').hidden = true; controls(); }
 function clearImport() { parsed = null; importId = crypto.randomUUID(); invalidatePreview(); $('importMode').value = 'replace'; $('mappingSection').hidden = true; $('mapping').replaceChildren(); $('csvText').value = ''; $('csvFile').value = ''; $('importError').textContent = ''; }
@@ -142,7 +152,7 @@ $('confirmImport').onclick = async () => {
 });
 observeAuth(current => {
   const token = ++generation; stopPolicies(); closeDetail(); $('importDialog').close(); clearImport(); user = current; records = []; loaded = false; busy = false; page = 0;
-  $('search').value = ''; $('view').value = 'all'; render();
+  $('search').value = ''; $('view').value = 'all'; $('contactAvailability').value = 'all'; render();
   if (!current) { status('Sign in on Dashboard to use your private follow-up manager.'); return; }
   status('Loading your policies…');
   stopPolicies = watchPolicies(current.uid, (rows, cached) => {

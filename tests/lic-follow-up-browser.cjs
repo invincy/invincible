@@ -148,6 +148,7 @@ const csv = header + '\n00123,Asha Example,28,68230,2026-10-12,9876543210,00999,
     await page.evaluate(() => window.failAt = 0); await confirm();
     data = await saved(); assert.equal(Object.keys(data).filter(k => !k.includes('/history/')).length, 109);
     await page.locator('#next').click(); assert.match(await page.locator('#pageLabel').innerText(), /Page 2/);
+    await page.locator('#contactAvailability').selectOption('no_mobile'); assert.equal(await page.locator('.policy-card').count(), 0); assert.match(await page.locator('#pageLabel').innerText(), /Page 1/); await page.locator('#contactAvailability').selectOption('all');
     // Retry even after only part of the missing-case archive phase committed.
     await pastePreview(csv); await page.evaluate(() => { window.txCount = 0; window.failAt = 3; }); await page.locator('#confirmImport').click();
     await page.waitForFunction(() => document.querySelector('#importError').textContent.includes('4 policies confirmed'));
@@ -164,8 +165,50 @@ const csv = header + '\n00123,Asha Example,28,68230,2026-10-12,9876543210,00999,
     assert.equal(await page.locator('#note').inputValue(), ''); assert.equal(await page.locator('.policy-card').count(), 0);
     await page.waitForTimeout(350); assert.equal(await page.locator('.policy-card').count(), 0); assert.equal(await page.locator('#detailTitle').innerText(), '');
     await page.evaluate(() => window.testAuth(null)); assert.equal(await page.locator('#openImport').isDisabled(), true);
+    // Availability is derived from existing records; filters never write or change history.
+    const contactPage = await browser.newPage({ viewport: { width: 393, height: 852 } });
+    contactPage.on('pageerror', error => errors.push(error.message)); await contactPage.route('https://**/*', route => route.abort());
+    const rows = [
+      ['A', 'Alpha mobile', '28', '9876543210', ['00111'], 'submitting'],
+      ['B', 'Beta mobile', '14', '+91 9123456789', [], 'no_answer'],
+      ['C', 'Alpha missing', '28', '', ['00222'], 'submitting'],
+      ['D', 'Delta NA', '28', 'NA', [], 'submitting'],
+      ['E', 'Echo zero', '14', '0000000000', ['00333'], ''],
+      ['F', 'Foxtrot invalid', '14', '12345', [], ''],
+      ['G', 'Wrong reported', '28', '9876543210', ['00444'], 'wrong_number'],
+      ['H', 'Alpha corrected', '28', 'NA', ['00555'], 'submitting'],
+      ['I', 'Archived Alpha', '28', '9876543210', ['00666'], 'submitting'],
+      ['J', 'Placeholder OP', '28', '', ['NA', '-', '0000'], ''],
+    ];
+    const contactData = Object.fromEntries(rows.map(([id, name, plan, phone, opPolicies, outcome]) => ['users/account-a/licFollowups/p-' + id, { policyNo: id, name, plan, phone, opPolicies, outcome, wrongNumber: id === 'G', ...(id === 'H' ? { phoneOverride: '9234567890' } : {}), archived: id === 'I' }]));
+    contactData['users/account-a/licFollowups/p-A/history/saved'] = { outcome: 'submitting', note: 'Keep this policy history', at: '2026-10-26' };
+    await contactPage.addInitScript(data => { if (!localStorage.getItem('test.lic')) localStorage.setItem('test.lic', JSON.stringify(data)); }, contactData);
+    await contactPage.goto(base); await contactPage.locator('#openImport:enabled').waitFor();
+    const contactSelect = contactPage.getByLabel('Contact Availability', { exact: true });
+    assert.deepEqual(await contactSelect.locator('option').allTextContents(), ['All Policies (9)', 'Mobile Available (3)', 'No Mobile (6)', 'OP-NAP Available (5)', 'No Mobile + OP-NAP (3)', 'Neither Available (3)']);
+    const beforeFiltering = await contactPage.evaluate(() => localStorage.getItem('test.lic'));
+    for (const [contact, count] of [['all', 9], ['mobile', 3], ['no_mobile', 6], ['op', 5], ['no_mobile_op', 3], ['neither', 3]]) {
+      await contactSelect.selectOption(contact); assert.equal(await contactPage.locator('.policy-card').count(), count);
+      assert.equal(await contactPage.locator('#resultCount').innerText(), `${count} of 10 policies`);
+    }
+    await contactPage.locator('#search').fill('Alpha'); await contactPage.locator('#view').selectOption('submitting'); await contactPage.locator('#plan').selectOption('28'); await contactSelect.selectOption('no_mobile_op');
+    assert.equal(await contactPage.locator('.policy-card').count(), 1); assert.match(await contactPage.locator('.policy-card').innerText(), /Alpha missing/);
+    assert.deepEqual(await contactSelect.locator('option').allTextContents(), ['All Policies (3)', 'Mobile Available (2)', 'No Mobile (1)', 'OP-NAP Available (3)', 'No Mobile + OP-NAP (1)', 'Neither Available (0)']);
+    await contactPage.locator('#search').fill(''); await contactPage.locator('#view').selectOption('all'); await contactPage.locator('#plan').selectOption('');
+    await contactSelect.selectOption('mobile'); await contactPage.locator('.policy-card').filter({ has: contactPage.getByRole('heading', { name: 'Alpha mobile', exact: true }) }).getByRole('button', { name: 'Open / log' }).click();
+    await contactPage.locator('#history li').waitFor(); assert.match(await contactPage.locator('#history').innerText(), /Keep this policy history/); await contactPage.getByLabel('Close policy', { exact: true }).click();
+    await contactPage.locator('#view').selectOption('archived'); assert.equal(await contactPage.locator('.policy-card').count(), 1); await contactSelect.selectOption('no_mobile'); assert.equal(await contactPage.locator('.policy-card').count(), 0);
+    await contactPage.locator('#view').selectOption('everything'); await contactSelect.selectOption('all'); assert.equal(await contactPage.locator('.policy-card').count(), 10);
+    assert.equal(await contactPage.evaluate(() => localStorage.getItem('test.lic')), beforeFiltering); assert.equal(await contactPage.evaluate(() => window.txCount || 0), 0);
+    await contactPage.reload(); await contactPage.locator('#openImport:enabled').waitFor(); await contactSelect.selectOption('mobile'); assert.equal(await contactPage.locator('.policy-card').count(), 3);
+    for (const width of [1440, 768, 393, 320]) {
+      await contactPage.setViewportSize({ width, height: 900 }); assert.ok(await contactPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `contact filter overflow at ${width}`);
+      assert.ok(await contactSelect.evaluate(el => { const r = el.getBoundingClientRect(); return r.width >= 200 && r.right <= innerWidth; }), `contact selector reach at ${width}`);
+      await contactPage.screenshot({ path: path.join(root, `.test-output/lic/contact-${width}.png`), fullPage: true });
+    }
+    await contactPage.close();
     assert.deepEqual(errors, []);
-    console.log('LIC browser checks passed: imports, OP views, logging/history, completion/removal/restoration, replacement and merge imports, archive-preserving reimports, failure recovery, account isolation and 320–1440px layouts.');
+    console.log('LIC browser checks passed: six availability filters/counts, filter composition, imports, OP views, logging/history, completion/removal/restoration, replacement and merge imports, archive-preserving reimports, failure recovery, account isolation and 320–1440px layouts.');
   } catch (error) { console.error('Browser errors:', errors); throw error; }
   finally { await browser.close(); server.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; server.close(); });
