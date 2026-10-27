@@ -1,6 +1,6 @@
 import { db } from '../../shared/firebase-client.js';
 import { collection, doc, getDocsFromServer, onSnapshot, query, orderBy, runTransaction, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
-import { policyId, mergeImport, applyResponse, archiveCase } from './model.mjs';
+import { policyId, mergeImport, applyResponse, archiveCase } from './model.mjs?v=2';
 const policies = uid => collection(db, 'users', uid, 'licFollowups');
 const policy = (uid, id) => doc(db, 'users', uid, 'licFollowups', id);
 export function watchPolicies(uid, next, error) {

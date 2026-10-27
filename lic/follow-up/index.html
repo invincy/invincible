@@ -2,7 +2,7 @@
 <html lang="en"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#07111d"><title>LIC Follow-up Manager · Invincible</title>
-  <link rel="stylesheet" href="../../site-nav.css?v=15"><link rel="stylesheet" href="follow-up.css">
+  <link rel="stylesheet" href="../../site-nav.css?v=15"><link rel="stylesheet" href="follow-up.css?v=2">
 </head><body>
   <nav class="global-nav" aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
   <main class="workspace">
@@ -11,9 +11,9 @@
     <p id="status" role="status" aria-live="polite">Restoring your Invincible account…</p>
     <div id="metrics" class="metrics" aria-label="Policy overview"></div>
     <section class="list-section" aria-label="Policy follow-ups">
-      <div class="filters"><label class="search">Search policies<input id="search" type="search" placeholder="Name, policy, phone or OP-NAPped policy"></label><label>View<select id="view"><option value="all">Active cases</option><option value="archived">Archived cases</option><option value="everything">All saved cases + history</option><option value="due">Follow-ups due today / overdue</option><option value="new">Not yet contacted · valid mobile</option><option value="uncontactable">Uncontactable</option><option value="op">With OP-NAPped policies</option><option value="missing_op">Missing/invalid mobile + OP-NAPped</option><option value="completed">Completed</option></select></label><label>Plan<select id="plan"><option value="">All plans</option></select></label></div>
-      <p class="help">OP-NAPped numbers are linked policies. “Not yet contacted” means no attempt has been logged; “Uncontactable” means a missing, invalid or reported wrong mobile.</p>
-      <div class="list-meta"><span id="resultCount">Loading…</span><span>Amounts in INR</span></div>
+      <div class="filters"><label class="search">Search policies<input id="search" type="search" placeholder="Name, policy, phone or OP-NAPped policy"></label><label>View<select id="view"><option value="all">Active cases</option><option value="archived">Archived cases</option><option value="everything">All saved cases + history</option><option value="due">Follow-ups due today / overdue</option><option value="new">Not yet contacted · valid mobile</option><option value="uncontactable">Uncontactable</option><option value="op">With OP-NAPped policies</option><option value="missing_op">Missing/invalid mobile + OP-NAPped</option><option value="completed">Completed</option></select></label><label class="contact-filter">Contact Availability<select id="contactAvailability" aria-label="Contact Availability" aria-describedby="contactHelp" title="Counts include the current search, View and Plan"><option value="all">All Policies</option><option value="mobile">Mobile Available</option><option value="no_mobile">No Mobile</option><option value="op">OP-NAP Available</option><option value="no_mobile_op">No Mobile + OP-NAP</option><option value="neither">Neither Available</option></select></label><label>Plan<select id="plan"><option value="">All plans</option></select></label></div>
+      <p class="help" id="contactHelp">Mobile excludes invalid and reported-wrong numbers. OP-NAPped entries are linked policy references.</p>
+      <div class="list-meta"><span id="resultCount" role="status" aria-live="polite">Loading…</span><span>Amounts in INR</span></div>
       <div id="records" class="records"></div>
       <div class="pagination"><button id="previous" disabled>← Previous</button><span id="pageLabel"></span><button id="next" disabled>Next →</button></div>
     </section>
@@ -37,5 +37,5 @@
     </form>
     <section class="history-section"><h3>Conversation history</h3><p id="historyStatus" role="status"></p><ol id="history"></ol></section>
   </dialog>
-  <script type="module" src="../../site-nav.js?v=7"></script><script type="module" src="follow-up.js"></script>
+  <script type="module" src="../../site-nav.js?v=7"></script><script type="module" src="follow-up.js?v=2"></script>
 </body></html>

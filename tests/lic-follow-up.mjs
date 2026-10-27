@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { parseCSV, autoMapping, previewImport, mobile, dateValue, policyId, mergeImport, applyResponse, archiveCase, matches, statusLabel, daysFromToday } from '../lic/follow-up/model.mjs';
+import { parseCSV, autoMapping, previewImport, mobile, dateValue, policyId, mergeImport, applyResponse, archiveCase, matches, contactFilters, contactFilterKeys, statusLabel, daysFromToday } from '../lic/follow-up/model.mjs';
 const header = 'Policyno,PH Name,Plan,Net Amount,Due Date,PH Mobile,OP_Neft1,OP_Neft2,OP_Neft3';
 const csv = header + '\r\n"00123","Patel, Asha",28,"68,230",2026-10-12,+91 9876543210,00999,00888,00777\r\n00456,"Name ""Quoted""\nSecond line",14,0,23/03/2026,NA,00666,,\r\n';
 const parsed = parseCSV('\uFEFF' + csv), mapping = autoMapping(parsed.headers);
@@ -95,4 +95,52 @@ test('returning CSV rows restore missing cases while keeping explicitly removed 
     const reimport = mergeImport(archived, imported()[0], 'later');
     assert.equal(reimport.archived, reason !== 'missing_csv'); assert.equal(reimport.remarks, 'Preserve this'); assert.equal(reimport.attemptedAt, 'before');
   }
+});
+
+
+test('six contact availability filters classify usable mobiles and OP-NAP references independently', () => {
+  const records = [
+    { id: 'both', phone: '9876543210', opPolicies: ['00999'] },
+    { id: 'mobile', phone: '+91 9123456789', opPolicies: [] },
+    { id: 'op', phone: 'NA', opPolicies: ['00888'] },
+    { id: 'neither', phone: '', opPolicies: [] },
+    { id: 'zero', phone: '0000000000', opPolicies: ['00777'] },
+    { id: 'invalid', phone: '12345', opPolicies: [] },
+    { id: 'wrong', phone: '9876543210', wrongNumber: true, opPolicies: ['00666'] },
+    { id: 'corrected', phone: 'NA', phoneOverride: '9234567890', opPolicies: ['00555'] },
+    { id: 'placeholder', phone: '', opPolicies: ['NA', '-', '0000', ''] },
+  ];
+  const expected = {
+    all: records.map(r => r.id), mobile: ['both', 'mobile', 'corrected'],
+    no_mobile: ['op', 'neither', 'zero', 'invalid', 'wrong', 'placeholder'],
+    op: ['both', 'op', 'zero', 'wrong', 'corrected'], no_mobile_op: ['op', 'zero', 'wrong'],
+    neither: ['neither', 'invalid', 'placeholder'],
+  };
+  assert.equal(contactFilters.length, 6);
+  const before = structuredClone(records);
+  for (const [contact] of contactFilters) {
+    assert.deepEqual(records.filter(r => matches(r, { contact })).map(r => r.id), expected[contact]);
+    assert.deepEqual(records.filter(r => contactFilterKeys(r).includes(contact)).map(r => r.id), expected[contact]);
+  }
+  assert.deepEqual(records, before, 'filtering never changes stored records');
+  for (const phone of ['', 'NA', 'N/A', '0000000000', '12345', '1234567890', '9999999999', '9876543210 ext 2', '+449876543210']) {
+    assert.equal(matches({ phone }, { contact: 'mobile' }), false, phone);
+    assert.equal(matches({ phone }, { contact: 'neither' }), true, phone);
+  }
+});
+test('contact availability combines with search, plan, outcome, archive and all three imported OP columns', () => {
+  for (let column = 0; column < 3; column++) {
+    const cells = ['1', 'Asha', '28', '100', '', 'NA', '', '', '']; cells[6 + column] = '000123';
+    const preview = previewImport(parseCSV(header + '\n' + cells.join(',')), mapping);
+    assert.deepEqual(preview.errors, []); assert.equal(matches(preview.records[0], { contact: 'no_mobile_op' }), true);
+  }
+  const record = { ...imported()[0], outcome: 'submitting', attemptedAt: 'before' };
+  assert.equal(matches(record, { contact: 'mobile', query: '00888', plan: '28', view: 'submitting' }), true);
+  for (const options of [{ contact: 'no_mobile' }, { query: 'missing' }, { plan: '14' }, { view: 'no_answer' }]) {
+    assert.equal(matches(record, { contact: 'mobile', query: '00888', plan: '28', view: 'submitting', ...options }), false);
+  }
+  const archived = { ...record, archived: true };
+  assert.equal(matches(archived, { contact: 'mobile' }), false);
+  assert.equal(matches(archived, { contact: 'mobile', view: 'archived' }), true);
+  assert.equal(matches(archived, { contact: 'mobile', view: 'everything' }), true);
 });
