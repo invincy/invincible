@@ -12,6 +12,7 @@ All internal pages use the Firebase project `life-by-adichimp`, the default Fire
 | Garage | Native JavaScript | `users/{uid}/garage/main` |
 | Creator Studio | Native JavaScript | Owned/invited `creatorProjects`; legacy `users/{uid}/creator/main` import |
 | Journal | Separate React bundle | `users/{uid}/journals/{date}/strokes/{id}` |
+| LIC Customer CRM | Native JavaScript | `users/{uid}/licCustomers/{customerId}` |
 | LIC Follow-up Manager | Native JavaScript | `users/{uid}/licFollowups/{policyId}` and `history/{eventId}` beneath each policy |
 
 This is a partial React migration. Garage and Creator have not been moved into the main React app. LIC landing/product pages are static content; its Follow-up Manager adds private, editable policy records through the shared Firebase adapter. The separately hosted Portfolio is outside this repository and has not been migrated to Firebase here.
@@ -136,3 +137,10 @@ The dashboard no longer reads or writes `invincible.dashboard.camera.<uid>` or c
 The later user clarification supersedes earlier OP-NAP wording: OP_Neft1/2/3 are references to other policies with NEFT registered. Existing opPolicies values and IDs remain unchanged. This-policy NEFT is independently derived from optional neftOverride ?? neftStatus and normalised to yes/no/unknown. Missing or unrecognised legacy values are Unknown, never No. No NEFT status is inferred from general policy Status or from another policy’s reference.
 
 Imports add neftStatus only for explicit, recognised current-policy Yes/No values; absent/blank/Unknown columns do not erase prior source values. Manual neftOverride survives imports. The existing logResponse transaction supports optional neftCorrection (yes/no/unknown/null) in the same stable history event: null restores source status, and an omitted field leaves the latest NEFT value intact. The form sends a correction only when its own editor choice changed, protecting concurrent updates from unrelated notes. Note-only NEFT changes do not fabricate attempts or contact timestamps. History, auth/account guards, paths, retries and permissions are unchanged. No bank-account details are collected.
+
+
+## LIC customer CRM — October 28, 2026
+
+Customers are independent documents under `users/{uid}/licCustomers/{customerId}`. Names and mobiles are not identity keys. A stable random ID is chosen when the form opens and retained on save retries. The document stores name, phone, email, birthday, notes and a bounded array (up to 50) of policies with text policy numbers, plan, nullable premium and manual next due date. Existing owner-only users rules apply. There is no sharing grant or girlfriend-specific account provisioning in this change.
+
+The adapter waits for restored auth and guards every listener/transaction with an account generation. On account change it disposes listeners, clears records and closes/clears sensitive forms. Server-confirmed snapshots update the list; cached reads are labelled. Explicit save reads the latest customer, compares `revision`, and preserves unknown fields. A concurrent content edit fails with the user's draft still visible. `lastMutationId` makes retries after lost acknowledgements no-ops. New documents get creation/update server timestamps; later saves preserve creation time. No CRM reads or writes touch `licFollowups`. No migration, auto-import, payment confirmation or external LIC lookup runs.
