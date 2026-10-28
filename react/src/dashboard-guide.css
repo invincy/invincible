@@ -2,15 +2,15 @@
 #v2-region-dashboard{display:flex;flex-direction:column;padding-top:0;padding-bottom:0;overflow-x:hidden}
 #v2-region-dashboard .v2-region-heading{position:absolute;left:0;top:0;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .v2-dashboard-body{flex:1;min-height:0}
-.v2-guide-scene{position:relative;width:100%;height:100%;min-height:0;color:#d9e9ee;overflow:hidden}
+.v2-guide-scene{--orb-size:clamp(420px,min(70vw,calc(100dvh - 160px)),1120px);position:relative;width:100%;height:100%;min-height:0;color:#d9e9ee;overflow:hidden}
 .v2-guide-atmosphere{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 50%,rgba(211,164,67,.12),transparent 30%),radial-gradient(circle at 50% 50%,rgba(45,190,207,.06),transparent 50%)}
 .v2-guide-particles{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
-.v2-guide-orb-anchor{position:absolute;left:50%;top:50%;width:clamp(375px,min(57vw,90dvh),780px);aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none}
+.v2-guide-orb-anchor{position:absolute;left:50%;top:50%;width:var(--orb-size);aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none}
 .v2-guide-mission,.v2-guide-timer,.v2-guide-work,.v2-guide-orb-label{position:absolute;z-index:4;min-width:0}
-.v2-guide-mission{top:18%;left:2.5%;width:28%}
-.v2-guide-timer{top:16%;right:2.5%;width:25%}
-.v2-guide-work{bottom:13%;right:2.5%;width:27%}
-.v2-guide-orb-label{left:50%;bottom:4%;transform:translateX(-50%);white-space:nowrap}
+.v2-guide-mission{top:7%;left:2.5%;width:24%}
+.v2-guide-timer{top:7%;right:2.5%;width:22%}
+.v2-guide-work{bottom:6%;right:2.5%;width:23%}
+.v2-guide-orb-label{left:50%;bottom:1%;transform:translateX(-50%);white-space:nowrap}
 .v2-guide-kicker{display:block;color:#8ac2ce;font-size:clamp(10px,.75vw,12px);font-weight:750;letter-spacing:.15em}
 .v2-guide-mission h2{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin:10px 0 16px;font:750 clamp(25px,2.4vw,42px)/1.13 'Exo 2',sans-serif;letter-spacing:-.035em;overflow-wrap:anywhere}
 .v2-guide-nextline{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin:0 0 18px;color:#b9d0d6;font-size:clamp(13px,1vw,16px);line-height:1.4;overflow-wrap:anywhere}
@@ -32,12 +32,12 @@
 .v2-shell .v2-guide-orb-label button{min-height:34px;padding:4px 12px;border:0;background:#07131aac;color:#b4cbd1;font-size:11px}
 .v2-shell .v2-guide-orb-label button:hover{background:#102733;color:#dceeee}
 @media(max-height:710px) and (min-width:901px){
-  .v2-guide-mission{top:11%}.v2-guide-timer{top:11%}.v2-guide-work{bottom:9%}
+  .v2-guide-mission{top:4%}.v2-guide-timer{top:4%}.v2-guide-work{bottom:4%}
   .v2-guide-mission h2{margin:7px 0 10px;font-size:clamp(23px,2vw,32px)}
   .v2-guide-nextline{margin-bottom:10px}.v2-guide-progress{margin-top:12px}
 }
 /* Nine real pages appear as unboxed glows within the existing irregular Orb. */
-.v2-constellation{position:absolute;left:50%;top:50%;width:clamp(375px,min(57vw,90dvh),780px);aspect-ratio:1;transform:translate(-50%,-50%);z-index:5;pointer-events:none}
+.v2-constellation{position:absolute;left:50%;top:50%;width:var(--orb-size);aspect-ratio:1;transform:translate(-50%,-50%);z-index:5;pointer-events:none}
 .v2-orb-pages{position:absolute;inset:0;pointer-events:none}
 .v2-page-point{--glow:#8cdde9;position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);display:flex;align-items:center;gap:7px;min-height:44px;padding:3px 5px;color:#dceef0!important;text-decoration:none;white-space:nowrap;font-size:clamp(10px,.85vw,13px);font-weight:650;text-shadow:0 1px 9px #020b0d;pointer-events:auto;transition:filter .25s,transform .25s}
 .v2-page-point:hover,.v2-page-point:focus-visible{filter:brightness(1.4);transform:translate(-50%,-50%) scale(1.08)}
@@ -60,45 +60,58 @@
 .v2-orb-task strong{display:block;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(13px,1.25vw,19px);font-weight:750}
 .v2-orb-task>span{color:#e8ca83;font-size:15px}
 .v2-orb.is-approaching{transform:scale(1.16);transition:left .28s cubic-bezier(.2,.8,.2,1),top .28s cubic-bezier(.2,.8,.2,1),width .28s ease,height .28s ease,transform .52s ease}
+/* The particle projection occupies about 60% of its canvas. Expand only the
+   Dashboard renderer so the visible globe fills the shared anchor/icon stage.
+   The compact Workspace orb and its single renderer keep their original size. */
+.v2-orb:not(.is-compact) .focus-orb-3d{inset:-24%}
+
+/* Keep the irregular page map inside the visible globe, not the canvas corners.
+   These scoped coordinates also replace the older dashboard.css positions. */
+#v2-region-dashboard .v2-page-point[data-page="ai"]{--x:50%;--y:13%}
+#v2-region-dashboard .v2-page-point[data-page="journal"]{--x:27%;--y:22%}
+#v2-region-dashboard .v2-page-point[data-page="finance"]{--x:74%;--y:25%}
+#v2-region-dashboard .v2-page-point[data-page="garage"]{--x:15%;--y:45%}
+#v2-region-dashboard .v2-page-point[data-page="creator"]{--x:85%;--y:46%}
+#v2-region-dashboard .v2-page-point[data-page="workday"]{--x:24%;--y:66%}
+#v2-region-dashboard .v2-page-point[data-page="lic"]{--x:76%;--y:65%}
+#v2-region-dashboard .v2-page-point[data-page="reminders"]{--x:39%;--y:86%}
+#v2-region-dashboard .v2-page-point[data-page="portfolio"]{--x:63%;--y:85%}
+
 @media(max-width:900px){
-  .v2-constellation{position:relative;inset:auto;transform:none;grid-column:1/-1;grid-row:3;width:min(100%,650px);aspect-ratio:auto;margin:0 auto;pointer-events:auto}
-  .v2-orb-pages{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-  .v2-page-point{position:relative;inset:auto!important;transform:none;justify-content:center;min-height:46px;font-size:11px;white-space:normal}
-  .v2-page-point:hover,.v2-page-point:focus-visible{transform:scale(1.04)}
-  .v2-page-point[data-page="journal"],.v2-page-point[data-page="garage"],.v2-page-point[data-page="workday"],.v2-page-point[data-page="reminders"]{flex-direction:row}
-  .v2-page-name{max-width:none}
+  #v2-region-dashboard{overflow-y:auto;padding-bottom:20px}
+  .v2-dashboard-body{flex:none}
+  .v2-guide-scene{--orb-size:min(100%,640px);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px;align-items:start;height:auto;min-height:0;padding:12px 0 24px;overflow:visible}
+  .v2-guide-atmosphere{inset:0 0 auto;height:var(--orb-size);background:radial-gradient(ellipse,#b58c3925,#24617215 36%,transparent 70%)}
+  .v2-guide-mission,.v2-guide-timer,.v2-guide-work,.v2-guide-orb-label{position:relative;inset:auto;transform:none;width:auto}
+  /* Both layers occupy the same square grid cell at every narrow width. */
+  .v2-guide-orb-anchor,.v2-constellation{position:relative;left:auto;top:auto;transform:none;grid-column:1/-1;grid-row:1;justify-self:center;align-self:start;width:var(--orb-size);aspect-ratio:1;margin:0}
+  .v2-orb-pages{position:absolute;inset:0;display:block;pointer-events:none}
+  #v2-region-dashboard .v2-page-point{width:88px;min-height:66px;gap:4px;padding:3px 2px;font-size:11px;line-height:1.15}
+  #v2-region-dashboard .v2-page-glow{width:36px;height:36px}
+  #v2-region-dashboard .v2-page-glow svg{width:28px;height:28px}
+  #v2-region-dashboard .v2-page-name{max-width:100%}
   .v2-shell .v2-orb-task{display:none}
   .v2-orb.is-approaching{transform:none}
-}
-@media(max-width:620px){
-  .v2-constellation{grid-column:1;grid-row:2}
-  .v2-page-point{flex-direction:column!important;gap:3px;text-align:center;font-size:10px;line-height:1.15;padding:4px 2px}
-  .v2-page-glow{width:27px;height:27px}
-  .v2-page-glow svg{width:19px;height:19px}
-}
-@media(max-width:900px){
-  #v2-region-dashboard{overflow-y:auto;padding-bottom:30px}
-  .v2-dashboard-body{flex:none}
-  .v2-guide-scene{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start;height:auto;min-height:0;padding:20px 4px 30px;overflow:visible}
-  .v2-guide-atmosphere{inset:140px 0 auto;height:400px;background:radial-gradient(ellipse at 50% 45%,#b58c3925,#24617215 36%,transparent 70%);mask-image:radial-gradient(ellipse,#000 35%,transparent 73%)}
-  .v2-guide-mission,.v2-guide-timer,.v2-guide-work,.v2-guide-orb-label{position:relative;inset:auto;transform:none;width:auto}
-  .v2-guide-mission{grid-column:1;grid-row:1}
-  .v2-guide-timer{grid-column:2;grid-row:1;justify-self:end;width:min(100%,250px)}
-  .v2-guide-orb-anchor{position:relative;left:auto;top:auto;transform:none;grid-column:1/-1;grid-row:2;justify-self:center;width:min(70vw,70dvh,600px)}
-  .v2-guide-orb-label{grid-column:1/-1;grid-row:3;justify-self:center;margin-top:-20px}
+  .v2-guide-orb-label{grid-column:1/-1;grid-row:2;justify-self:center;margin-top:-6px}
+  .v2-guide-mission{grid-column:1;grid-row:3}
+  .v2-guide-timer{grid-column:2;grid-row:3;justify-self:end;width:min(100%,250px)}
   .v2-guide-work{grid-column:1/-1;grid-row:4;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:18px}
   .v2-guide-statuses{margin-top:0}.v2-guide-work-link{margin-top:0!important}
 }
 @media(max-width:620px){
-  .v2-guide-scene{grid-template-columns:1fr;gap:16px;padding:12px 0 30px}
-  .v2-guide-mission,.v2-guide-timer,.v2-guide-work,.v2-guide-orb-label{grid-column:1;justify-self:stretch}
-  .v2-guide-orb-anchor{grid-column:1;grid-row:1;width:min(88vw,58dvh,380px)}
-  .v2-guide-orb-label{grid-row:2;justify-self:center;margin-top:-25px}
+  .v2-guide-scene{grid-template-columns:1fr;gap:14px;padding-top:8px}
+  .v2-guide-orb-anchor,.v2-constellation{grid-column:1}
+  #v2-region-dashboard .v2-page-point{width:64px;min-height:54px;gap:2px;font-size:10px;line-height:1.1;padding:1px}
+  #v2-region-dashboard .v2-page-glow{width:28px;height:28px}
+  #v2-region-dashboard .v2-page-glow svg{width:24px;height:24px}
+  .v2-shell #v2-region-dashboard .v2-orb-plan{width:38%;min-height:68px;max-width:200px;gap:4px;padding:4px 0;font-size:clamp(16px,4.6vw,23px)}
+  #v2-region-dashboard .v2-orb-plan strong{font-size:11px}
+  #v2-region-dashboard .v2-orb-plan-preview{font-size:10px;line-height:1.25}
+  .v2-guide-mission,.v2-guide-timer,.v2-guide-work{grid-column:1;justify-self:stretch}
+  .v2-guide-orb-label{grid-row:2}
   .v2-guide-mission{grid-row:3}
   .v2-guide-timer{grid-row:4;width:auto}
   .v2-guide-work{grid-row:5;display:block}
   .v2-guide-mission h2{font-size:clamp(25px,7vw,32px)}
   .v2-guide-work-link{max-width:none!important}
 }
-@media(max-width:900px){.v2-guide-orb-label{grid-row:4}.v2-guide-work{grid-row:5}}
-@media(max-width:620px){.v2-guide-orb-label{grid-row:3}.v2-guide-mission{grid-row:4}.v2-guide-timer{grid-row:5}.v2-guide-work{grid-row:6}}
