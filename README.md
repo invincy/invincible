@@ -169,3 +169,12 @@ Use **Complete** at the bottom right of the active scene, or select **Completed*
 Drag the main dashboard background or swipe to pan in any direction. Wheel moves the camera; Ctrl-wheel, pinch or the compact +/− controls zoom it. Home returns to the starting view. Select an area, choose **Save area**, then add a title and Future idea, YouTube idea or custom category. **Ideas** reopens saved images and notes, downloads a capture, or returns to its camera view. Only an explicit save writes a new idea. Today’s Plan is accessible in the orb centre on desktop and mobile and uses the existing queue.
 
 Journal’s drawing toolbar now has consistent icons, a 24-colour palette plus custom colour/hex entry, width and opacity previews, separate pen/highlighter preferences, and adjustable whole-stroke/area erasers. Existing handwriting, selection, undo/redo, Pencil guard and stroke syncing remain. Run `node tests/journal-tools-browser.cjs` for the controlled settings/renderer checks.
+
+
+## LIC workspaces — October 28, 2026
+
+The LIC home at `lic/index.html` has three entry points: **My Follow-ups** for staff service cases, **Customer CRM** for customer/policy details and premium dates, and **Agent Tools** for plans and sales presentations. Existing follow-up records and Bima Platinum URLs remain intact. The CRM is not a customer login portal. Agent Tools is a navigation area for the agent's work, not a new account or sharing permission.
+
+CRM uses shared Invincible sign-in and private `users/{uid}/licCustomers` documents, separately from staff follow-up records. Add a customer with contact details, date of birth, notes and up to 50 policies. Each policy stores its number as text, optional plan, premium and next due date. Views show overdue, due today/next 30 days and missing dates, using India's calendar date. Premium dates are manual; no LIC billing lookup, automatic payment status, notifications or automatic next-date advancement is implied. Editing a policy's next date updates the CRM after payment.
+
+Saving is explicit. Transactions preserve unknown fields, reject stale revisions, and retain one mutation ID for retry after uncertain acknowledgements. Failed saves keep the form; switching accounts clears records/drafts and stops listeners. Staff imports never populate CRM automatically. No Firebase project, rules, auth configuration or existing stored records are migrated.
