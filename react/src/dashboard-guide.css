@@ -2,7 +2,7 @@
 #v2-region-dashboard{display:flex;flex-direction:column;padding-top:0;padding-bottom:0;overflow-x:hidden}
 #v2-region-dashboard .v2-region-heading{position:absolute;left:0;top:0;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .v2-dashboard-body{flex:1;min-height:0}
-.v2-guide-scene{--orb-size:clamp(420px,min(70vw,calc(100dvh - 160px)),1120px);position:relative;width:100%;height:100%;min-height:0;color:#d9e9ee;overflow:hidden}
+.v2-guide-scene{--orb-size:clamp(420px,min(70vw,87.5dvh),1120px);position:relative;width:100%;height:100%;min-height:0;color:#d9e9ee;overflow:hidden}
 .v2-guide-atmosphere{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 50%,rgba(211,164,67,.12),transparent 30%),radial-gradient(circle at 50% 50%,rgba(45,190,207,.06),transparent 50%)}
 .v2-guide-particles{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
 .v2-guide-orb-anchor{position:absolute;left:50%;top:50%;width:var(--orb-size);aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none}
