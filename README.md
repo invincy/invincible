@@ -22,6 +22,8 @@ This document is the starting point for understanding what runs today, where to 
 
 The main React app chooses and lazily loads its page in `react/src/App.jsx`. Its HTML entry points load the same generated JS/CSS assets. Garage, Creator, Journal, and LIC have their own entry points; they are not silently redirected through React.
 
+Workday now opens a personal office task/case list (`react/src/OfficeWorkday.jsx`) with priority, status, optional due date, policy number/name, free-text notes, camera/gallery photos and later updates. Search combines with status/priority filters. Completed cases remain available through Completed/All work. The existing daily log, recurring work, shared workspaces and reports remain under **Report generator** (`workday/#reports`) with their existing records and storage paths. Cases are a separate private workspace, not shared copies or entries in the LIC CSV follow-up manager.
+
 ## Shared code and ownership
 
 - `shared/navigation.js` owns page links, route matching, mobile-tab defaults, and preference validation. React's `AppShell.jsx` and native `site-nav.js` render that same data. Native HTML contains only a navigation mount and a Dashboard fallback link.

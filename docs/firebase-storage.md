@@ -7,7 +7,8 @@ All internal pages use the Firebase project `life-by-adichimp`, the default Fire
 | Dashboard / Tasks | Main React app | `users/{uid}/tasks`, `streaks`, `countdowns`, `dailyPlans` |
 | Finance | Main React app | `users/{uid}/finance/{month}` |
 | Reminders | Main React app | `users/{uid}/reminders` |
-| Workday | Main React app | `users/{uid}/workdaySpaces/main` and invited `workdaySpaces` |
+| Workday cases | Main React app | `users/{uid}/workdayCases/{caseId}` and `entries/{entryId}` |
+| Workday report generator | Main React app | `users/{uid}/workday/main` and invited `workdaySpaces` |
 | Invincible AI | Main React app | Existing authenticated Functions tools and private user data |
 | Garage | Native JavaScript | `users/{uid}/garage/main` |
 | Creator Studio | Native JavaScript | Owned/invited `creatorProjects`; legacy `users/{uid}/creator/main` import |
@@ -144,3 +145,11 @@ Imports add neftStatus only for explicit, recognised current-policy Yes/No value
 Customers are independent documents under `users/{uid}/licCustomers/{customerId}`. Names and mobiles are not identity keys. A stable random ID is chosen when the form opens and retained on save retries. The document stores name, phone, email, birthday, notes and a bounded array (up to 50) of policies with text policy numbers, plan, nullable premium and manual next due date. Existing owner-only users rules apply. There is no sharing grant or girlfriend-specific account provisioning in this change.
 
 The adapter waits for restored auth and guards every listener/transaction with an account generation. On account change it disposes listeners, clears records and closes/clears sensitive forms. Server-confirmed snapshots update the list; cached reads are labelled. Explicit save reads the latest customer, compares `revision`, and preserves unknown fields. A concurrent content edit fails with the user's draft still visible. `lastMutationId` makes retries after lost acknowledgements no-ops. New documents get creation/update server timestamps; later saves preserve creation time. No CRM reads or writes touch `licFollowups`. No migration, auto-import, payment confirmation or external LIC lookup runs.
+
+## Workday office cases — October 31, 2026
+
+The default `workday/` view stores individual private cases under `users/{uid}/workdayCases/{caseId}`. Policy numbers remain strings, including leading zeroes. The original daily log stays in `users/{uid}/workday/main` and invited `workdaySpaces`; no existing records are moved or converted. The two views share the existing Google account and Firebase project.
+
+Each case has title, optional policy/name/notes, priority, status and optional due date. Case saves use a transaction, an expected revision and a stable mutation ID. Retries after an uncertain acknowledgement are idempotent; conflicting content edits retain the draft instead of overwriting another device. Updates and image attachments are separate `entries/{entryId}` documents, so photos and history do not grow the case document. Images follow the existing task-image approach: browser-compressed JPEG data, maximum 2,200px long edge and fewer than 850,000 data-URL characters per document. This is a compressed reference copy, not an original-resolution document archive. Camera capture uses a normal file input with `capture="environment"`; the device/browser controls camera availability.
+
+Text drafts are scoped to UID/case in localStorage. Selected unsaved photos remain in memory while the editor is open; closing warns before losing them. A successful case write followed by a photo failure keeps the editor open and retries the same photo IDs. Completed cases can be found and reopened via status editing; this feature has no delete operation. List and entry listeners unsubscribe on account/view changes. Existing owner-only `users/{uid}/**` rules cover the new records; no rules or access were broadened. Real signed-in production reads/writes, cross-device delivery and physical-camera behavior still require live verification.
