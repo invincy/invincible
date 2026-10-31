@@ -10,19 +10,19 @@
   "theme_color": "#000000",
   "icons": [
     {
-      "src": "/invincible/assets/branding/invincible-192.png?v=e6757acd7a31",
+      "src": "/invincible/assets/branding/invincible-192.png?v=0e7d7e1564b0",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/invincible/assets/branding/invincible-512.png?v=81b14ceed88d",
+      "src": "/invincible/assets/branding/invincible-512.png?v=c555bfb446ca",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/invincible/assets/branding/invincible-maskable-512.png?v=74e39f059cc2",
+      "src": "/invincible/assets/branding/invincible-maskable-512.png?v=77c2b663f4bb",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

@@ -2,7 +2,7 @@ const path=require('node:path'),fs=require('node:fs');
 const root=path.resolve(__dirname,'..'),esbuild=require(root+'/react/node_modules/esbuild');
 async function buildFixture(output,{withShell=false}={}){
  fs.mkdirSync(output,{recursive:true});
- if(withShell){const images=path.join(output,'invincible/assets/branding');fs.mkdirSync(images,{recursive:true});fs.copyFileSync(path.join(root,'assets/branding/invincible-192.png'),path.join(images,'invincible-192.png'))}
+ if(withShell){const images=path.join(output,'invincible/assets/branding');fs.mkdirSync(images,{recursive:true});fs.copyFileSync(path.join(root,'assets/branding/invincible-icon.svg'),path.join(images,'invincible-icon.svg'))}
  const mocks={
   './features/invincible-ai/InvincibleAiDock':`export const InvincibleAiDock=()=>null;`,
   './AuthContext':`import{useEffect,useState}from'react';import{auth}from'./firebase';export function useAuth(){const[user,setUser]=useState(auth.currentUser);useEffect(()=>{const cb=()=>setUser(auth.currentUser);window.addEventListener('test-account',cb);return()=>window.removeEventListener('test-account',cb)},[]);return{user,ready:true,login:()=>{}}}`,
