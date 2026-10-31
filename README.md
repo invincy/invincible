@@ -13,7 +13,7 @@ This document is the starting point for understanding what runs today, where to 
 | Task workspace | `task/index.html` | `react/src/TaskPage.jsx`, `task-model.js`, `useTasks.js` | Main React app |
 | Finance | `journal/finance.html` | `react/src/FinancePage.jsx`, `finance-storage.js` | Main React app |
 | Reminders | `reminders/index.html` | `react/src/RemindersPage.jsx`, `reminder-model.js`, `reminders/reminders.css` | Main React app |
-| Workday | `workday/index.html` | `react/src/WorkdayPage.jsx`, `workday.css` | Main React app |
+| Workday | `workday/index.html` | `react/src/WorkdayPage.jsx`, `WorkdayCases.jsx`, `workday-case-storage.js`, `workday-case-model.mjs` | Main React app |
 | Garage | `garage/index.html` | `garage/garage.js`, `garage-model.js` | Native JavaScript modules |
 | Creator Studio | `creator/index.html`, `project.html` | `creator/creator.js`, `project.js`, `scene-tools.js` | Native JavaScript modules |
 | Journal | `journal/index.html` | `journal/journal-strokes-hook.js`, `advanced-tools.js`; existing `assets/journal-v11.js` | Separate bundled React app |
@@ -178,3 +178,13 @@ The LIC home at `lic/index.html` has three entry points: **My Follow-ups** for s
 CRM uses shared Invincible sign-in and private `users/{uid}/licCustomers` documents, separately from staff follow-up records. Add a customer with contact details, date of birth, notes and up to 50 policies. Each policy stores its number as text, optional plan, premium and next due date. Views show overdue, due today/next 30 days and missing dates, using India's calendar date. Premium dates are manual; no LIC billing lookup, automatic payment status, notifications or automatic next-date advancement is implied. Editing a policy's next date updates the CRM after payment.
 
 Saving is explicit. Transactions preserve unknown fields, reject stale revisions, and retain one mutation ID for retry after uncertain acknowledgements. Failed saves keep the form; switching accounts clears records/drafts and stops listeners. Staff imports never populate CRM automatically. No Firebase project, rules, auth configuration or existing stored records are migrated.
+
+## Workday office cases — October 31, 2026
+
+Workday now opens a private LIC office case list. The existing report tool is preserved under **Report Generator** (`workday/?view=reports`), with its original data paths, drafts, routines and sharing behavior. Cases and reports stay separate.
+
+Create a task, policy/name reference, note or photo; a title is optional for quick capture. Set High/Normal/Low priority and Open/In progress/Waiting/Completed status. Search combines with status and priority filters. Reopen a case to append dated notes and photos; completed cases remain available in the Completed or All cases filter. Mobile offers Take photo and Add photos. Photos are JPEG-compressed for online saving; inspect document readability before relying on a saved copy.
+
+Cases use owner-only `users/{uid}/workdayCases/{caseId}` with append-only notes and compressed photos in `entries/{entryId}`. Each photo has its own document (data URL capped at 750,000 characters); no Firebase Storage bucket or new rules deployment is needed. Up to six photos can be added per save, with further batches later. Metadata and that save's entries commit atomically. Revision checks reject concurrent edits, stable operation IDs avoid duplicate acknowledgement retries, and failures retain the open form/photos. Unsaved forms are not a cross-reload draft store.
+
+Run `node --test tests/workday-cases.mjs` and `node tests/workday-cases-browser.cjs`. Browser fixtures exercise actual case components/storage against synthetic Firestore and do not establish deployed Firebase permissions or a physical phone's camera behavior.
