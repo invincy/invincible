@@ -19,7 +19,7 @@ const {chromium}=require('playwright');const root=path.resolve(__dirname,'..');
   assert.equal(await page.getByRole('button',{name:'Update and reload'}).isVisible(),false);
   assert.equal(await page.locator('.inv-settings').evaluate(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.bottom<=innerHeight}),true);
   fs.mkdirSync(root+'/.test-output',{recursive:true});await page.screenshot({path:root+`/.test-output/settings-${width}.png`});
-  await page.keyboard.press('Escape');assert.equal(await page.getByRole('button',{name:'Profile and settings'}).evaluate(e=>e===document.activeElement),true);
+  await page.keyboard.press('Escape');await page.waitForFunction(()=>document.querySelector('.inv-profile')===document.activeElement);
  }
  await page.getByRole('button',{name:'Profile and settings'}).click();await page.keyboard.press('Escape');assert.equal(await page.locator('.inv-account-options').isVisible(),false);
  await page.getByRole('button',{name:'Profile and settings'}).click();await page.getByRole('button',{name:'Settings',exact:true}).click();
