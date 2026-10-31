@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Invincible">
+  <rect width="512" height="512" rx="104" fill="#050608"/>
+  <circle cx="256" cy="256" r="181" fill="none" stroke="#d9a44f" stroke-width="22"/>
+  <path d="M193 145h126v35h-37v152h37v35H193v-35h37V180h-37z" fill="#68b9dc"/>
+</svg>

@@ -383,3 +383,8 @@ The navigation browser fixture serves PNG bytes correctly and verifies the logo 
 The manifest icon URLs include content hashes while preserving the manifest URL, ID, scope and start URL. This requests browser detection; it cannot bypass Android/Chrome identity-update approval or guarantee a launcher refresh. Chrome 144+ can offer **Review app update** in the installed app menu. No service-worker forced reload is introduced, so unsaved editors are not interrupted.
 
 Validation: root/Functions tests, production build, V2 build/stage and site reference checks; shared-shell Workday phone preview verifies the real header image, black canvas, LIC accents and connected dots. Full browser CI covers existing workflows across Chromium/Firefox and native navigation. Physical-device launcher approval remains a manual check.
+
+
+## Small icon clarity — October 31, 2026
+
+Replaced the dense orb artwork at icon sizes with a clean geometric blue I and gold ring on black. `assets/branding/invincible-icon.svg` is the source for the site favicon and shared headers; PNG exports cover browser/Apple/PWA sizes, including a safe-area maskable icon. Each manifest PNG URL has a new content hash so Chrome detects the artwork change. The PWA identity and storage paths are unchanged. Verify actual 24px and 64px legibility before publishing; existing browser navigation checks confirm decoded icons. Chrome may still require user approval to apply an installed icon update.

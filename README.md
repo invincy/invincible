@@ -195,3 +195,5 @@ The approved orb logo is shared by React, spatial and native page headers throug
 
 
 App pages and headers use `shared/app-theme.css` for a black canvas with module-specific accents and neutral surfaces. Workday retains LIC blue/yellow and the connected dots. The approved logo is shared by native/React headers and loading states. Manifest icon URLs are content-versioned to prompt browser update detection; installed-app name/icon changes can still require **Review app update** approval in Chrome. Reinstalling is not needed to fix an in-app header.
+
+The small app icon uses a simple vector blue I and gold ring. Browser/header marks use the SVG; 32/180/192/512px PNG and maskable PNG are rendered from the same source for installed app compatibility.
