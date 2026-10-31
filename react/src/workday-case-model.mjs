@@ -18,5 +18,16 @@ export function buildCaseChange(current,draft,{operationId,note='',photos=[],now
  if(!next.title)throw new Error('Add a task, policy reference, note or photo.');
  if(!Object.hasOwn(caseStatuses,next.status)||!Object.hasOwn(casePriorities,next.priority)||!caseTypes.includes(next.type))throw new Error('Choose a valid status, priority and case type.');
  if(next.title.length>200||next.policyNo.length>80||next.name.length>160||text.length>10000)throw new Error('One of the fields is too long.');
- return{...next,revision:(current?.revision||0)+1,createdAtMs:current?.createdAtMs||now,updatedAtMs:now,lastOperationId:operationId,latestNote:text||current?.latestNote||'',photoCount:(current?.photoCount||0)+photos.length};
+ return{...next,revision:(current?.revision||0)+1,createdAtMs:current?(current.createdAtMs??0):now,updatedAtMs:now,lastOperationId:operationId,latestNote:text||current?.latestNote||'',photoCount:(current?.photoCount||0)+photos.length};
+}
+
+export function caseTimestamp(value,fallback=0){
+ const remote=typeof value?.toMillis==='function'?value.toMillis():typeof value?.seconds==='number'?value.seconds*1000+(value.nanoseconds||0)/1e6:typeof value==='number'?value:0;
+ if(Number.isFinite(remote)&&remote>0)return remote;
+ const local=Number(fallback);return Number.isFinite(local)&&local>0?local:0;
+}
+export function caseHistory(entries,item){
+ const history=[...entries],created=caseTimestamp(item.createdAt,item.createdAtMs);
+ if(created&&!history.some(entry=>entry.kind==='activity'&&entry.action==='created'))history.push({id:'recorded-creation',kind:'activity',action:'created',text:'Case created',createdAtMs:created});
+ return history.sort((a,b)=>caseTimestamp(b.createdAt,b.createdAtMs)-caseTimestamp(a.createdAt,a.createdAtMs));
 }
