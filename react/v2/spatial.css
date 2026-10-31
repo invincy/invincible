@@ -9,7 +9,7 @@
 .v2-shell a,.v2-auth a{color:inherit;text-decoration:none}.v2-shell button,.v2-auth button{min-height:44px;border:1px solid #5d818947;background:#152530;color:#dce9ee;border-radius:9px;padding:10px 16px}
 .v2-shell button:hover,.v2-auth button:hover{background:#203a45;border-color:#81c5cc88}.v2-shell :focus-visible,.v2-auth :focus-visible{outline:2px solid #8ceddf;outline-offset:4px}
 .v2-topbar{display:flex;align-items:center;gap:32px;padding:12px 84px 12px 28px;min-height:76px;border-bottom:1px solid #b2e4eb12}
-.v2-brand{display:flex;align-items:center;gap:12px;letter-spacing:.2em;font-size:14px;font-weight:650}.v2-brand-mark{display:grid;place-items:center;border:1px solid #b1dce244;width:36px;height:40px;font-size:24px;color:#8aced5}.v2-brand small{display:block;font-size:9px;letter-spacing:.17em;color:#82959f;margin-top:5px}
+.v2-brand{display:flex;align-items:center;gap:12px;letter-spacing:.2em;font-size:14px;font-weight:650}.v2-brand-mark{display:block;flex:none;width:36px;height:36px;object-fit:contain}.v2-brand small{display:block;font-size:9px;letter-spacing:.17em;color:#82959f;margin-top:5px}
 .v2-topbar nav{display:flex;gap:8px;align-self:stretch;align-items:center}.v2-topbar nav a{display:flex;gap:10px;align-items:center;min-height:44px;padding:10px 16px;font-size:14px;border-radius:8px;white-space:nowrap;color:#9eafb9}.v2-topbar nav a span{color:#79969f;font-size:11px}.v2-topbar nav a[aria-current]{background:#88dddb10;color:#b5eeeb;box-shadow:inset 0 -1px #83cfcd}
 .v2-account{margin-left:auto;display:flex;gap:18px;align-items:center;font-size:12px;white-space:nowrap}.v2-account button{font-size:12px;background:transparent;padding:6px 12px}.v2-account a{min-height:44px;display:flex;align-items:center}
 .v2-connection{padding:9px 30px;color:#97adb5;font-size:12px;display:flex;align-items:center;gap:9px;min-height:36px}.v2-dot{width:5px;height:5px;border-radius:50%;background:#8ad8b9;flex-shrink:0}.v2-dot.error{background:#edb573}.v2-preview-label{margin-left:auto;letter-spacing:.12em;font-size:10px;color:#a7b4bc}.v2-connection button{font-size:12px;padding:2px 8px}
@@ -105,7 +105,7 @@
   .v2-widget-grid{grid-template-columns:1fr;grid-template-areas:"focus" "journey" "tasks"}
 }
 @media(max-width:600px){
-  .v2-topbar{padding:12px 76px 10px 16px;gap:10px}.v2-brand{font-size:12px}.v2-brand small{font-size:8px}.v2-brand-mark{display:none}
+  .v2-topbar{padding:12px 76px 10px 16px;gap:10px}.v2-brand{font-size:12px}.v2-brand small{font-size:8px}.v2-brand-mark{display:block;width:30px;height:30px}
   .v2-account{gap:8px}.v2-account a{display:none}
   .v2-topbar nav{margin-right:-60px}.v2-topbar nav a{font-size:12px;padding:8px;gap:6px}
   .v2-connection{padding:10px 16px;font-size:11px;flex-wrap:wrap}.v2-preview-label{display:none}

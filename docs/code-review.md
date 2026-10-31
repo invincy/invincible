@@ -368,3 +368,9 @@ Workday compact layout follow-up: removed the LIC OFFICE eyebrow, large page hea
 Successful case saves now append an automatic dated activity entry, including updates without a note. Creation/save metadata and history entries share the same transaction, operation ID and account/revision checks. Server timestamps drive display where available; existing creation milliseconds remain the fallback, and unknown dates are not invented. Mobile cards expose the last saved time. Workday and Report Generator share an LIC blue/yellow palette; the connected-dot SVG geometry and compact layout remain.
 
 Focused model/storage tests cover atomic denial/retry, one automatic event per operation, status-only saves, stale/wrong-account rejection, legacy dates and server-time ordering. Full repository checks and the browser fixture cover the updated history and responsive screens. Production account permissions and physical camera capture remain unverified.
+
+## Shared app logo — October 31, 2026
+
+The shared React header, loading/sign-in/error states, spatial header and native navigation now render the existing approved orb logo using one shared branding URL. Mobile spatial headers retain the logo instead of hiding the mark. Removed the CSS placeholder frames/gradient. The PWA manifest, app ID, start URL, scope, icon artwork and installed-app identity remain unchanged: the live manifest already points at the approved PNGs. This fixes in-app branding; installing the app again cannot replace a hardcoded header. Installed launcher updates remain browser-managed and may require identity-update approval.
+
+The navigation browser fixture serves PNG bytes correctly and verifies the logo decodes in native and React headers. A shared-shell Workday preview verifies phone placement. Full repository checks cover the shared UI and staged spatial build; no auth, data paths or ownership rules changed.

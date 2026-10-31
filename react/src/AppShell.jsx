@@ -1,3 +1,4 @@
+import{APP_ICON_URL}from'../../shared/branding';
 import{useEffect,useMemo,useState}from'react';
 import{useAuth}from'./AuthContext';
 import{InvincibleAiDock}from'./features/invincible-ai/InvincibleAiDock';
@@ -20,10 +21,10 @@ export function AppShell({children,pageTitle}){
  const selected=useMemo(()=>tabs.map(id=>pages.find(page=>page.id===id)).filter(Boolean),[tabs]);
  const toggle=id=>setDraft(current=>current.includes(id)?current.filter(value=>value!==id):current.length<3?[...current,id]:current);
  const save=()=>{if(draft.length!==3)return;localStorage.setItem(storageKey,JSON.stringify(draft));setTabs(draft);setEditing(false);setMoreOpen(false)};
- if(!ready)return <div className="app-loading"><span>I</span><p>Opening Invincible…</p><div className="auth-skeleton" aria-hidden="true"><i/><i/><i/></div></div>;
- if(!user)return <div className="app-login"><div className="login-card"><span className="login-mark">I</span><h1>Invincible</h1><p>One account for your complete personal operating system.</p><button onClick={login}>Continue with Google</button>{error&&<small>{error}</small>}</div></div>;
+ if(!ready)return <div className="app-loading"><img className="loading-mark" src={APP_ICON_URL} alt="" width="64" height="64"/><p>Opening Invincible…</p><div className="auth-skeleton" aria-hidden="true"><i/><i/><i/></div></div>;
+ if(!user)return <div className="app-login"><div className="login-card"><img className="login-mark" src={APP_ICON_URL} alt="" width="64" height="64"/><h1>Invincible</h1><p>One account for your complete personal operating system.</p><button onClick={login}>Continue with Google</button>{error&&<small>{error}</small>}</div></div>;
  return <div className="react-app-shell">
-  <header className="react-topbar"><a className="react-brand" href={base}><span>I</span><strong>INVINCIBLE</strong></a><nav className="react-desktop-nav" aria-label="Primary navigation">{pages.map(page=><NavLink key={page.id} page={page}/>)}</nav><span className="react-mobile-title">{pageTitle}</span></header>
+  <header className="react-topbar"><a className="react-brand" href={base}><img className="react-brand-mark" src={APP_ICON_URL} alt="" width="44" height="44"/><strong>INVINCIBLE</strong></a><nav className="react-desktop-nav" aria-label="Primary navigation">{pages.map(page=><NavLink key={page.id} page={page}/>)}</nav><span className="react-mobile-title">{pageTitle}</span></header>
   <main>{children}</main>
   <InvincibleAiDock pageTitle={pageTitle}/>
   <nav className="react-mobile-tabs" aria-label="Primary navigation"><NavLink page={pages[0]} mobile/>{selected.map(page=><NavLink key={page.id} page={page} mobile/>)}<button className={!['dashboard',...tabs].some(id=>active(pages.find(page=>page.id===id)))?'active':''} onClick={()=>setMoreOpen(true)}><span className="react-nav-icon"><NavIcon id="more"/></span><span>More</span></button></nav>

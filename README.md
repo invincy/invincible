@@ -190,3 +190,5 @@ Cases use owner-only `users/{uid}/workdayCases/{caseId}` with append-only notes 
 Run `node --test tests/workday-cases.mjs` and `node tests/workday-cases-browser.cjs`. Browser fixtures exercise actual case components/storage against synthetic Firestore and do not establish deployed Firebase permissions or a physical phone's camera behavior.
 
 Workday now uses LIC blue and yellow while retaining the connected-dot background and compact layout. Each successful creation/save appends an automatic activity entry with a server timestamp in the same transaction as the case changes. Blank-note saves are logged too; failed saves and acknowledgement retries do not add duplicate events. Existing cases display their recorded creation time without a background migration. Cards show the latest saved date/time on phones as well as desktop.
+
+The approved orb logo is shared by React, spatial and native page headers through `shared/branding.js`, including mobile. The in-app header is distinct from the browser-managed installed launcher icon. Reinstallation is not needed for header changes; these arrive with the published web app.
