@@ -1,3 +1,4 @@
+import {AccountMenu} from './AccountMenu';
 import{APP_ICON_URL}from'../../shared/branding';
 import{useEffect,useMemo,useState}from'react';
 import{useAuth}from'./AuthContext';
@@ -7,7 +8,7 @@ const active=page=>isActivePage(page,location.pathname);
 function NavIcon({id}){const paths={dashboard:'m3 10 9-7 9 7v10h-6v-7H9v7H3Z',ai:'m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z',journal:'M5 3h14v18H5ZM8 7h8M8 11h8M8 15h5',finance:'M3 18 9 12l4 3 8-10M16 5h5v5',garage:'m3 12 9-9 9 9-9 9Z',creator:'m7 4 13 8-13 8Z',workday:'M4 5h16v16H4ZM4 10h16M8 3v4M16 3v4',lic:'m12 3 8 3v6c0 5-8 9-8 9S4 17 4 12V6Z',reminders:'M5 17h14l-2-3V9a5 5 0 0 0-10 0v5ZM10 21h4',portfolio:'M4 20V10M12 20V4M20 20v-7',more:'M5 12h.01M12 12h.01M19 12h.01'};return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={id==='more'?'3.5':'1.7'} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[id]||paths.more}/></svg>}
 function NavLink({page,mobile=false}){return <a className={'react-nav-link'+(active(page)?' active':'')} href={page.href} target={page.external?'_blank':undefined} rel={page.external?'noopener':undefined} aria-current={active(page)?'page':undefined}><span className="react-nav-icon"><NavIcon id={page.id}/></span><span>{mobile?page.short||page.label:page.label}</span>{page.external&&<span aria-hidden="true">↗</span>}</a>}
 export function AppShell({children,pageTitle}){
- const{user,ready,error,login}=useAuth();
+ const{user,ready,error,login,logout}=useAuth();
  const[moreOpen,setMoreOpen]=useState(false),[editing,setEditing]=useState(false),[tabs,setTabs]=useState(readMobileTabs),[draft,setDraft]=useState(tabs);
  useEffect(()=>{
   const viewport=window.matchMedia('(max-width: 1100px)');
@@ -24,7 +25,7 @@ export function AppShell({children,pageTitle}){
  if(!ready)return <div className="app-loading"><img className="loading-mark" src={APP_ICON_URL} alt="" width="64" height="64"/><p>Opening Invincible…</p><div className="auth-skeleton" aria-hidden="true"><i/><i/><i/></div></div>;
  if(!user)return <div className="app-login"><div className="login-card"><img className="login-mark" src={APP_ICON_URL} alt="" width="64" height="64"/><h1>Invincible</h1><p>One account for your complete personal operating system.</p><button onClick={login}>Continue with Google</button>{error&&<small>{error}</small>}</div></div>;
  return <div className="react-app-shell">
-  <header className="react-topbar"><a className="react-brand" href={base}><img className="react-brand-mark" src={APP_ICON_URL} alt="" width="44" height="44"/><strong>INVINCIBLE</strong></a><nav className="react-desktop-nav" aria-label="Primary navigation">{pages.map(page=><NavLink key={page.id} page={page}/>)}</nav><span className="react-mobile-title">{pageTitle}</span></header>
+  <header className="react-topbar"><a className="react-brand" href={base}><img className="react-brand-mark" src={APP_ICON_URL} alt="" width="44" height="44"/><strong>INVINCIBLE</strong></a><nav className="react-desktop-nav" aria-label="Primary navigation">{pages.map(page=><NavLink key={page.id} page={page}/>)}</nav><span className="react-mobile-title">{pageTitle}</span><AccountMenu user={user} logout={logout} login={login}/></header>
   <main>{children}</main>
   <InvincibleAiDock pageTitle={pageTitle}/>
   <nav className="react-mobile-tabs" aria-label="Primary navigation"><NavLink page={pages[0]} mobile/>{selected.map(page=><NavLink key={page.id} page={page} mobile/>)}<button className={!['dashboard',...tabs].some(id=>active(pages.find(page=>page.id===id)))?'active':''} onClick={()=>setMoreOpen(true)}><span className="react-nav-icon"><NavIcon id="more"/></span><span>More</span></button></nav>
