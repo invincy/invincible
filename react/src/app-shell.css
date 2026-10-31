@@ -1,3 +1,4 @@
+@import "../../shared/app-theme.css";
 :root{--app-top:76px;--app-bottom:76px;--nav-accent:#64e6f7;--nav-line:rgba(100,230,247,.18)}
 body{padding-top:var(--app-top)}
 .react-topbar{position:fixed;z-index:1000;inset:0 0 auto;height:var(--app-top);display:flex;align-items:center;justify-content:space-between;gap:18px;padding:0 clamp(18px,2.4vw,38px);border-bottom:1px solid var(--nav-line);background:rgba(5,16,19,.96);backdrop-filter:blur(18px)}

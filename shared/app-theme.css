@@ -1,0 +1,105 @@
+/* Shared black canvas. Module colors belong to accents, not page washes.
+   Explicit surfaces keep media, charts, drawing paper and status colors intact. */
+:root {
+  color-scheme: dark;
+  --app-canvas: #000;
+  --app-surface: #080808;
+  --app-surface-raised: #111;
+  --dashboard-bg: #000 !important;
+  --dashboard-panel: #111 !important;
+  --bg-deep-navy: #000;
+  --bg-night-blue: #000;
+  --bg-card-glass: rgba(8,8,8,.9);
+  --bg-card-hover: rgba(17,17,17,.95);
+}
+html, body:not(.ai-widget-body) { background: var(--app-canvas) !important; }
+html:has(> body.ai-widget-body) { background: transparent !important; }
+.spatial-page, .v2-shell, .v2-auth, .v2-task-focus,
+.workday-page, .invincible-ai-page, .app-loading, .app-login,
+.app-runtime-error, .focus-shell, .app-viewport-wrapper, .stage-container {
+  background: var(--app-canvas) !important;
+}
+body.finance-page::before { background: none !important; }
+.wc-backdrop, .wd-modal-backdrop, .finance-modal-backdrop,
+.react-more-backdrop, .quick-backdrop { background: rgba(0,0,0,.82) !important; }
+.workday-page {
+  --wd-bg: #000;
+  --wd-panel: #080808;
+  --wd-muted: #aab3c1;
+}
+
+/* Navigation and fixed chrome use the same black on every route. */
+.react-topbar, .react-mobile-tabs, .global-nav, .mobile-tabbar,
+.app-header, .v2-topbar, .v2-task-focus-header, .finance-mobile-topbar {
+  background: #000 !important;
+}
+.react-more-sheet, .app-more-sheet, .quick-panel, .login-card,
+.v2-inspector, .v2-editor-heading, .v2-editor-footer, .v2-daily-menu,
+.finance-reminder-dialog, .v2-idea-dialog, .ai-dock-panel {
+  background: var(--app-surface-raised) !important;
+}
+
+/* Workday: LIC blue edges, yellow actions, connected dots on black. */
+.wc-card, .wc-card:hover, .wd-composer, .wd-lane, .wd-task-card,
+.wc-editor, .wc-editor footer, .wc-lightbox, .wd-modal, .wd-toast,
+body.wd-entry-focused .wd-composer {
+  background: var(--app-surface) !important;
+}
+.workday-page input, .workday-page textarea, .workday-page select {
+  background: #111 !important;
+}
+.wc-tabs button[aria-current=page] { background: #07111c; }
+.wc-card:hover { box-shadow: 0 0 0 1px rgba(255,204,0,.16); }
+
+/* Finance, task detail, reminders, and AI retain their existing accents. */
+.finance-hero, .finance-summary, .finance-panel, .finance-account,
+.finance-cash-journey, .finance-modal, .finance-mobile-balance,
+.finance-mobile-sheet, .finance-mobile-chart-handle, .finance-mobile-action-dock,
+.reminder-card, .task-workspace-page .panel, .ai-context-bar, .ai-chat-panel,
+.ai-message-body, .ai-message.user .ai-message-body, .ai-composer {
+  background: var(--app-surface) !important;
+}
+.v2-panel, .v2-summary-item, .v2-journey-steps li, .v2-flow-card,
+.v2-workspace-details .v2-panel, .v2-kanban-board .v2-task-card {
+  background-color: var(--app-surface) !important;
+  background-image: none !important;
+}
+
+/* Standalone modules share neutral surfaces, including their open dialogs. */
+.garage-page .vehicle-hero, .garage-page .summary-grid article,
+.garage-page .panel, .garage-page dialog,
+.creator-page .metric-card, .creator-page .column, .creator-page .content-card,
+.creator-page dialog, .creator-page #contentDialog .dialog-actions,
+.project-page .project-stats div, .project-page .panel, .project-page .scene-card,
+.project-page .project-asset-scene, .project-page .assets-dialog,
+.project-page .wb-import-body, .project-page .wb-group-body,
+.production-workbench .wb-navigator, .production-workbench .wb-active-editor,
+.production-workbench .wb-scene, .production-workbench .wb-text-card,
+.production-workbench .wb-commandbar, .production-workbench .wb-scene-footer,
+.workspace-card, .tool-list .tool, .hub .metric, .customer, .policy,
+.lic-page .panel, .lic-page .profile-card, .lic-page .bucket-grid article,
+.list-section, .policy-card, #importDialog, #detailDialog,
+.portfolio-page .card, #customerDialog, .hub .tool, .metrics .metric {
+  background: var(--app-surface) !important;
+}
+.workspace-card:hover { background: #111 !important; }
+.garage-page, .creator-page, .project-page {
+  --panel: #080808;
+  --panel2: #111;
+  --panel-2: #111;
+  --surface: #080808;
+  --wb-surface: #080808;
+}
+
+/* Journal paper is content; its surrounding controls follow the app theme. */
+.journal-page .topbar, .journal-page .toolbar,
+.journal-page .tool-panel, .journal-page .pencil-ready,
+.journal-page .selection-actions, .journal-canvas-tools, .journal-snap-dialog {
+  background: var(--app-surface-raised) !important;
+  color: #eef0f6;
+}
+.journal-page .icon-btn, .journal-page .btn-ghost {
+  background: #191919 !important;
+  color: #c9baff;
+}
+.journal-page .pencil-ready strong { color: #eef0f6; }

@@ -371,6 +371,15 @@ Focused model/storage tests cover atomic denial/retry, one automatic event per o
 
 ## Shared app logo — October 31, 2026
 
-The shared React header, loading/sign-in/error states, spatial header and native navigation now render the existing approved orb logo using one shared branding URL. Mobile spatial headers retain the logo instead of hiding the mark. Removed the CSS placeholder frames/gradient. The PWA manifest, app ID, start URL, scope, icon artwork and installed-app identity remain unchanged: the live manifest already points at the approved PNGs. This fixes in-app branding; installing the app again cannot replace a hardcoded header. Installed launcher updates remain browser-managed and may require identity-update approval.
+The shared React header, loading/sign-in/error states, spatial header and native navigation now render the existing approved orb logo using one shared branding URL. Mobile spatial headers retain the logo instead of hiding the mark. Removed the CSS placeholder frames/gradient. The app ID, start URL, scope and icon artwork stay the same. The manifest now versions each approved PNG URL by its content hash so browsers can detect an icon update. This fixes in-app branding; installing the app again cannot replace a hardcoded header. Installed launcher updates remain browser-managed and may require identity-update approval.
 
 The navigation browser fixture serves PNG bytes correctly and verifies the logo decodes in native and React headers. A shared-shell Workday preview verifies phone placement. Full repository checks cover the shared UI and staged spatial build; no auth, data paths or ownership rules changed.
+
+
+## Shared black theme and installed icon refresh — October 31, 2026
+
+`shared/app-theme.css` gives the React shell, spatial dashboard and native pages a pitch-black canvas/header with neutral near-black surfaces. Module accents remain on actions, borders and status indicators; Workday keeps LIC blue/yellow and its connected-dot SVG. Journal drawing paper, media and presentation artwork remain content rather than being recolored. The AI widget iframe retains its transparent host background. Browser theme-color and PWA launch background are black. Native stylesheet versions were bumped so existing clients fetch the theme import.
+
+The manifest icon URLs include content hashes while preserving the manifest URL, ID, scope and start URL. This requests browser detection; it cannot bypass Android/Chrome identity-update approval or guarantee a launcher refresh. Chrome 144+ can offer **Review app update** in the installed app menu. No service-worker forced reload is introduced, so unsaved editors are not interrupted.
+
+Validation: root/Functions tests, production build, V2 build/stage and site reference checks; shared-shell Workday phone preview verifies the real header image, black canvas, LIC accents and connected dots. Full browser CI covers existing workflows across Chromium/Firefox and native navigation. Physical-device launcher approval remains a manual check.
