@@ -1,3 +1,4 @@
+import{APP_ICON_URL}from'./shared/branding.js';
 import{APP_BASE as BASE,navigationPages as pages,mobilePages as selectableMobilePages,MOBILE_TABS_KEY,readMobileTabs,isActivePage}from'./shared/navigation.js';
 (() => {
   const icons = {
@@ -40,7 +41,7 @@ import{APP_BASE as BASE,navigationPages as pages,mobilePages as selectableMobile
   globalNav.innerHTML =
     '<div class="nav-head">' +
       '<a class="nav-brand" href="' + BASE + '" aria-label="Invincible dashboard">' +
-        '<span class="nav-mark">I</span><strong>INVINCIBLE</strong>' +
+        '<img class="nav-mark" src="'+APP_ICON_URL+'" alt="" width="44" height="44"><strong>INVINCIBLE</strong>' +
       '</a>' +
       '<span class="mobile-page-name">' + activePage.label + '</span>' +
     '</div>' +

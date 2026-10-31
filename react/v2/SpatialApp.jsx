@@ -1,3 +1,4 @@
+import{APP_ICON_URL}from'../../shared/branding';
 import React, {lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {useAuth} from '../src/AuthContext';
 import {FocusOrb} from '../src/FocusOrb';
@@ -126,7 +127,7 @@ function SignedInWorkspace({user, logout}) {
     return next;
   });
   return <div className="v2-shell">
-    <header className="v2-topbar"><a className="v2-brand" href="#dashboard" onClick={event => {event.preventDefault();navigate('dashboard');}}><span className="v2-brand-mark">I</span><span>INVINCIBLE<small>PERSONAL WORKSPACE</small></span></a>
+    <header className="v2-topbar"><a className="v2-brand" href="#dashboard" onClick={event => {event.preventDefault();navigate('dashboard');}}><img className="v2-brand-mark" src={APP_ICON_URL} alt="" width="36" height="36"/><span>INVINCIBLE<small>PERSONAL WORKSPACE</small></span></a>
       <nav aria-label="Explore spaces"><span className="v2-nav-caption" aria-hidden="true">VIEWS</span>{regions.map(region => <a key={region.id} href={'#'+region.id} aria-current={active === region.id ? 'location' : undefined} onClick={event => {if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;event.preventDefault();navigate(region.id);}}><span>{region.number}</span>{region.label}</a>)}</nav>
       <div className="v2-account"><Suspense fallback={null}><DashboardTools/></Suspense><button type="button" className="v2-saved-ideas" aria-label="Saved ideas" title="Saved ideas" onClick={()=>setIdeaPanel({})}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg></button><button aria-label="Sign out" onClick={async () => {try {await logout();} catch {setAuthError('Sign-out did not complete. Try again.');}}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M10 4H4v16h6M14 8l4 4-4 4M8 12h10"/></svg></button></div>
     </header>
