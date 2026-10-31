@@ -362,3 +362,9 @@ Workday defaults to a private case list; the former Workday tool remains under R
 Local validation: production build, site reference check, frontend/domain and Functions tests passed (one existing optional sample test skipped). Browser QA using synthetic data confirmed create/reload, photo attachment, denied-save form/photo recovery, successful retry, later note history and report-tab navigation. Full repository browser regressions are covered by the PR workflow. A signed-in production Firebase test and physical-device camera test remain outstanding.
 
 Workday compact layout follow-up: removed the LIC OFFICE eyebrow, large page headline and tagline. Sync state and New case now share one compact toolbar, and the existing counts occupy one inline row. Reduced top spacing on desktop and phone; case behavior and storage are unchanged. The browser navigation check waits for the filter controls instead of the removed headline.
+
+## Workday save history and LIC palette — October 31, 2026
+
+Successful case saves now append an automatic dated activity entry, including updates without a note. Creation/save metadata and history entries share the same transaction, operation ID and account/revision checks. Server timestamps drive display where available; existing creation milliseconds remain the fallback, and unknown dates are not invented. Mobile cards expose the last saved time. Workday and Report Generator share an LIC blue/yellow palette; the connected-dot SVG geometry and compact layout remain.
+
+Focused model/storage tests cover atomic denial/retry, one automatic event per operation, status-only saves, stale/wrong-account rejection, legacy dates and server-time ordering. Full repository checks and the browser fixture cover the updated history and responsive screens. Production account permissions and physical camera capture remain unverified.
