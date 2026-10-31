@@ -1,3 +1,4 @@
+import {mountAccountMenu} from './shared/account-menu.js';
 import{APP_ICON_URL}from'./shared/branding.js';
 import{APP_BASE as BASE,navigationPages as pages,mobilePages as selectableMobilePages,MOBILE_TABS_KEY,readMobileTabs,isActivePage}from'./shared/navigation.js';
 (() => {
@@ -49,6 +50,10 @@ import{APP_BASE as BASE,navigationPages as pages,mobilePages as selectableMobile
       pages.map(page => linkMarkup(page)).join('') +
     '</div>'+(compactNav?'<button type="button" class="compact-apps-trigger" aria-label="Open app menu" title="Apps" aria-expanded="false" aria-controls="appMoreSheet">'+icons.more+'</button>':'');
   globalNav.setAttribute('aria-label', 'App navigation');
+  const accountHost=document.createElement('div');accountHost.className='inv-account-host';globalNav.append(accountHost);
+  const accountMenu=mountAccountMenu(accountHost,{logout:async()=>{const [{auth},{signOut}]=await Promise.all([import('./shared/firebase-client.js'),import('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js')]);await signOut(auth);}});
+  Promise.all([import('./shared/firebase-client.js'),import('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js')]).then(([{auth,authReady},{onAuthStateChanged}])=>Promise.resolve(authReady).then(()=>onAuthStateChanged(auth,user=>accountMenu.updateUser(user)))).catch(()=>{});
+
 
   document.querySelector('.nav-backdrop')?.remove();
 
