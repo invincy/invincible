@@ -14,6 +14,7 @@
  const save=()=>{try{localStorage.setItem(key,JSON.stringify(config));}catch{}};
  const apply=tool=>{const value=config[tool];api()?.setSettings?.(tool==='eraser'?{eraserWidth:value.width,eraserMode:value.mode}:{color:value.color,opacity:value.opacity,[tool==='pen'?'penWidth':'highlighterWidth']:value.width});};
  const close=()=>{panel?.remove();panel=null;mode='';};
+ window.addEventListener('journal-controls-dismiss',close);
  const setColor=color=>{
   if(!panel||!config[mode]||mode==='eraser'||!/^#[0-9a-f]{6}$/i.test(color))return;
   config[mode].color=color.toLowerCase();apply(mode);save();

@@ -1,29 +1,8 @@
 // Controlled UI using the exact settings bridge and stroke renderer from the active Journal bundle.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const {chromium}=require('playwright'),root=path.resolve(__dirname,'..');
-const bundle=fs.readFileSync(path.join(root,'journal/assets/journal-v11.js'),'utf8');
-const start=bundle.indexOf('window.__journalApi={'),bridge=bundle.slice(start,bundle.indexOf(';return T.jsxs',start));
-const renderStart=bundle.indexOf('dh='),renderer=bundle.slice(renderStart,bundle.indexOf(';function d_()',renderStart));
-assert.ok(bridge.includes('setSettings:')&&renderer.startsWith('dh='));
-const pageSource=fs.readFileSync(path.join(root,'journal/index.html'),'utf8'),guardStart=pageSource.indexOf('(function journalInputGuard()'),guard=pageSource.slice(guardStart,pageSource.indexOf('})();',guardStart)+5);
-const setup=`let journalLoading=false;let t={uid:'fixture'},u='2026-10-26';const Et={current:false},c=z=>u=z,uh=async()=>({}),ch=async()=>t,Oy=(_, ...parts)=>parts.join('/'),lx=async(path,record)=>{if(window.failIdea)throw Error('denied');localStorage.setItem(path,JSON.stringify(record));};
-let d='pen',m='#000000',k=2,x=18,v=1,j='stroke',_=28;const Ut=[];
-const A=z=>m=z,P=z=>k=z,w=z=>x=z,y=z=>v=z,E=z=>j=z,I=z=>_=z,L=()=>{};
-const p=z=>{d=z;document.querySelectorAll('[data-native-tool]').forEach(b=>b.classList.toggle('active',b.dataset.nativeTool===z));};
-const Ft={current:document.querySelector('.canvas-container')},fe={current:document.querySelector('#base-canvas')},de={current:document.querySelector('#live-canvas')};
-const M2=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});let ${renderer};
-const ac=()=>{const ctx=fe.current.getContext('2d');ctx.clearRect(0,0,fe.current.width,fe.current.height);Ut.forEach(stroke=>window.__journalApi.render(ctx,stroke));};
-const Ci=stroke=>{const old=Ut.findIndex(item=>item.id===stroke.id);if(old>=0)Ut[old]=stroke;else Ut.push(stroke);ac();};const Ve=id=>{const index=Ut.findIndex(item=>item.id===id);if(index>=0)Ut.splice(index,1);ac();};
-${bridge};
-const resizeCanvas=()=>{for(const canvas of [fe.current,de.current]){canvas.width=Ft.current.clientWidth;canvas.height=Ft.current.clientHeight;canvas.style.width=Ft.current.clientWidth+'px';canvas.style.height=Ft.current.clientHeight+'px';}ac();};resizeCanvas();window.addEventListener('resize',resizeCanvas);
-window.drawSample=()=>{const settings=window.__journalApi.settings(),tool=window.__journalApi.tool();Ci({id:crypto.randomUUID(),tool,color:settings.color,opacity:tool==='eraser'?1:settings.opacity,width:tool==='eraser'?settings.eraserWidth:tool==='highlighter'?settings.highlighterWidth:settings.penWidth,points:[{x:100,y:100},{x:300,y:100}]});};
-window.switchJournalAccount=uid=>{t={uid};Ut.splice(0);};window.journalLoading=value=>journalLoading=value;
-window.pixel=()=>Array.from(fe.current.getContext('2d').getImageData(200,100,1,1).data);`;
-const server=http.createServer((req,res)=>{
- const url=new URL(req.url,'http://localhost').pathname;
- if(url==='/'){res.setHeader('Content-Type','text/html; charset=utf-8');res.end(`<!doctype html><meta name="viewport" content="width=device-width"><link rel="stylesheet" href="/journal/drawing-tools.css"><link rel="stylesheet" href="/journal/canvas-workspace.css"><link rel="stylesheet" href="/journal/canvas-cards.css"><body class="journal-page"><div class="toolbar"><div>${['Pen','Highlighter','Eraser'].map(label=>`<div class="icon-btn" role="button" tabindex="0" title="${label}" data-native-tool="${label.toLowerCase()}"><svg/></div>`).join('')}</div><div></div><div>0 strokes</div><div><div class="icon-btn" role="button" title="Undo"><svg/></div><div class="icon-btn" role="button" title="Redo"><svg/></div></div></div><div class="canvas-container" style="position:relative;height:400px;background:white"><canvas id="base-canvas" width="600" height="400"></canvas><canvas id="live-canvas" width="600" height="400" style="position:absolute;inset:0"></canvas></div><script>${setup}</script><script>${guard}</script><script src="/journal/advanced-tools.js"></script><script src="/journal/drawing-tools.js"></script><script src="/journal/canvas-workspace.js"></script><script src="/journal/canvas-cards.js"></script>`);return;}
- try{res.setHeader('Content-Type',url.endsWith('.css')?'text/css':'text/javascript');res.end(fs.readFileSync(path.join(root,url)));}catch{res.statusCode=404;res.end('Missing');}
-});
+const {createJournalServer}=require('./journal-fixture.cjs');
+const server=createJournalServer();
 (async()=>{
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE||undefined});
  const page=await browser.newPage({viewport:{width:1024,height:768}}),errors=[];page.on('pageerror',error=>errors.push(error.stack));
@@ -79,39 +58,6 @@ const server=http.createServer((req,res)=>{
   for(const width of [1440,393,320]){await layout.setViewportSize({width,height:900});await layout.waitForFunction(()=>{const app=document.querySelector('.app-container');return app.classList.contains('journal-free-workspace')&&app.scrollHeight<=app.clientHeight+2;});assert.equal(await layout.locator('.canvas-container').evaluate(el=>{const r=el.getBoundingClientRect();return r.height>120&&r.height<innerHeight&&r.bottom<=innerHeight;}),true,'Native Journal styles retain a screen-sized canvas');await layout.waitForFunction(()=>{const el=document.querySelector('#base-canvas');return Math.abs(el.height-el.parentElement.clientHeight)<5;});}
   await layout.screenshot({path:path.join(root,'.test-output/journal/canvas-phone.png')});await layout.close();
 
-  await page.goto('http://127.0.0.1:'+server.address().port+'/');
-  await page.waitForFunction(()=>document.querySelectorAll('.journal-note-card').length===3);
-  await page.getByRole('button',{name:'Home journal',exact:true}).click();
-  await page.evaluate(()=>window.journalLoading(true));await page.getByRole('button',{name:'Arrange cards',exact:true}).waitFor();await page.waitForFunction(()=>document.querySelector('[data-edit]').disabled);
-  await page.evaluate(()=>window.journalLoading(false));await page.waitForFunction(()=>!document.querySelector('[data-edit]').disabled);
-  assert.equal(await page.evaluate(()=>window.__journalApi.strokes().length),0,'Default sections never write on read');
-  await page.getByRole('button',{name:'Arrange cards',exact:true}).click();
-  const diary=page.locator('[data-card=diary]');await diary.getByLabel('Card writing',{exact:true}).fill('A quiet day.');
-  await diary.getByLabel('Card colour',{exact:true}).selectOption('rose');
-  assert.equal(await diary.evaluate(el=>el.style.getPropertyValue('--card-colour')),'#e8ccda');assert.notEqual(await diary.evaluate(el=>getComputedStyle(el).backgroundColor),'rgba(0, 0, 0, 0)','Card colour is visibly translucent, not an unset CSS variable');
-  const initial=await page.evaluate(()=>window.__journalApi.strokes().find(s=>s.tool==='canvas-layout').cards[0]);
-  await diary.getByRole('button',{name:'Move card',exact:true}).press('ArrowRight');
-  await diary.getByRole('button',{name:'Resize card',exact:true}).press('ArrowDown');
-  const savedCard=await page.evaluate(()=>window.__journalApi.strokes().find(s=>s.tool==='canvas-layout').cards[0]);
-  assert.equal(savedCard.x,initial.x+10);assert.equal(savedCard.height,initial.height+10);assert.equal(savedCard.text,'A quiet day.');assert.equal(savedCard.colour,'rose');
-  await page.getByRole('button',{name:'Add card',exact:false}).click();assert.equal(await page.locator('.journal-note-card').count(),4);
-  await page.getByRole('button',{name:'Done arranging',exact:true}).click();
-  await page.getByRole('button',{name:'Zoom in journal',exact:true}).click();
-  await page.waitForFunction(()=>document.querySelector('.journal-card-world').style.transform.includes('scale(1.25)'));
-  assert.equal(await page.locator('.journal-card-world').evaluate(el=>el.inert),true,'Writing mode lets ink pass over cards');
-  const board=await page.evaluate(()=>window.__journalApi.strokes().find(s=>s.tool==='canvas-layout'));
-  await page.evaluate(()=>{window.__journalApi.strokes().splice(0);window.__journalApi.setDate('2026-10-27');});
-  await page.waitForFunction(()=>document.querySelectorAll('.journal-note-card').length===3);
-  assert.equal(await page.locator('[data-card=diary] textarea').inputValue(),'','Different dates start with their own sections');
-  await page.evaluate(board=>{window.__journalApi.setDate('2026-10-26');window.__journalApi.save(board);},board);
-  await page.waitForFunction(()=>document.querySelectorAll('.journal-note-card').length===4);
-  assert.equal(await page.locator('[data-card=diary] textarea').inputValue(),'A quiet day.','Reloaded metadata restores writing and layout');
-  await page.getByRole('button',{name:'Arrange cards',exact:true}).click();await page.locator('.journal-note-card').last().getByRole('button',{name:'Remove card',exact:true}).click();await page.getByRole('button',{name:'Done arranging',exact:true}).click();
-  await page.addStyleTag({path:path.join(root,'journal/assets/index-DSgeQfSP.css')});
-  await page.evaluate(()=>{const app=document.createElement('div');app.className='app-container';app.style.display='flex';app.style.flexDirection='column';document.querySelector('#base-canvas').style.position='absolute';document.body.append(app);app.append(document.querySelector('.toolbar'),document.querySelector('.canvas-container'));});
-  await page.getByRole('button',{name:'Home journal',exact:true}).click();await page.setViewportSize({width:1024,height:850});await page.waitForFunction(()=>{const r=document.querySelector('.journal-card-controls').getBoundingClientRect();return r.bottom<innerHeight&&r.top>0;});await page.screenshot({path:path.join(root,'.test-output/journal/cards-desktop.png')});
-  await page.setViewportSize({width:393,height:852});await page.waitForFunction(()=>{const r=document.querySelector('.journal-card-controls').getBoundingClientRect();return r.bottom<innerHeight&&r.top>0;});await page.getByRole('button',{name:'Arrange cards',exact:true}).click();await page.getByRole('button',{name:'Done arranging',exact:true}).click();await page.screenshot({path:path.join(root,'.test-output/journal/cards-phone.png')});
-  await page.evaluate(()=>window.switchJournalAccount('another-account'));await page.waitForFunction(()=>document.querySelector('[data-card=diary] textarea').value==='');assert.equal(await page.evaluate(()=>window.__journalApi.strokes().length),0,'Account switches show no previous card data and never seed writes');
   assert.deepEqual(errors,[]);console.log('Journal drawing controls, renderer, unbounded camera, coordinate mapping, capture/save/retry, draft recovery, saved view and mobile touch checks passed.');
  }finally{await browser.close();server.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

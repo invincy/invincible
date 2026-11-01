@@ -16,6 +16,14 @@ for(const route of ['garage/','creator/','creator/project.html','journal/','lic/
   assert.equal(await page.getByRole('link',{name:'Home',exact:true}).getAttribute('href'),'/invincible/');
   continue;
  }
+ if(route==='journal/'){
+  await page.locator('.desktop-nav a').first().waitFor({state:'attached'});
+  assert.equal(await page.locator('.desktop-nav a').count(),10,'Journal retains the shared navigation registry');
+  assert.equal(await page.locator('.global-nav').isVisible(),false,'Notebook hides permanent navigation');
+  assert.equal(await page.locator('.mobile-tabbar').isVisible(),false,'Notebook reserves the viewport for paper');
+  assert.equal(await page.locator('.global-ai-widget').isVisible(),false,'The existing assistant is contextual on Journal');
+  continue; // Floating Home/AI/Apps/profile access is exercised in journal-notebook-browser.cjs.
+ }
  await page.locator('.desktop-nav a').first().waitFor();
  await page.getByRole('button',{name:'Profile and settings'}).click();await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('heading',{name:'App updates'}).waitFor();await page.keyboard.press('Escape');
  assert.equal(await page.locator('.desktop-nav a').count(),10);await page.waitForFunction(()=>{const image=document.querySelector('.nav-mark');return image?.complete&&image.naturalWidth>0});
