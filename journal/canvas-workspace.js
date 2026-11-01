@@ -9,7 +9,7 @@
  function screen(e){const r=surface.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
  function point(e){const p=screen(e);return{x:(p.x-view.x)/view.zoom,y:(p.y-view.y)/view.zoom};}
  function transform(ctx){if(!surface?.isConnected||!surface.getBoundingClientRect().width||!['base-canvas','live-canvas'].includes(ctx.canvas.id))return;const ratio=ctx.canvas.width/surface.getBoundingClientRect().width;ctx.setTransform(ratio*view.zoom,0,0,ratio*view.zoom,ratio*view.x,ratio*view.y);}
- function render(){frame=null;if(!surface?.isConnected)return;overlay.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.zoom})`;const bg=surface.querySelector('.background-layer');if(bg){bg.style.backgroundPosition=`${view.x}px ${view.y}px`;bg.style.backgroundSize=`${32*view.zoom}px ${32*view.zoom}px`;}
+ function render(){frame=null;if(!surface?.isConnected)return;overlay.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.zoom})`;const cards=surface.querySelector('.journal-card-world');if(cards)cards.style.transform=overlay.style.transform;const bg=surface.querySelector('.background-layer');if(bg){bg.style.backgroundPosition=`${view.x}px ${view.y}px`;bg.style.backgroundSize=`${32*view.zoom}px ${32*view.zoom}px`;}
   api().redraw();tools.querySelector('output').textContent=Math.round(view.zoom*100)+'%';try{localStorage.setItem(key,JSON.stringify(view));}catch{}
  }
  function change(next){view=normal(next);window.__journalViewport.view=view;if(frame===null)frame=requestAnimationFrame(render);}

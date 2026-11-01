@@ -6,7 +6,7 @@ const start=bundle.indexOf('window.__journalApi={'),bridge=bundle.slice(start,bu
 const renderStart=bundle.indexOf('dh='),renderer=bundle.slice(renderStart,bundle.indexOf(';function d_()',renderStart));
 assert.ok(bridge.includes('setSettings:')&&renderer.startsWith('dh='));
 const pageSource=fs.readFileSync(path.join(root,'journal/index.html'),'utf8'),guardStart=pageSource.indexOf('(function journalInputGuard()'),guard=pageSource.slice(guardStart,pageSource.indexOf('})();',guardStart)+5);
-const setup=`const journalLoading=false;let t={uid:'fixture'},u='2026-10-26';const Et={current:false},c=z=>u=z,uh=async()=>({}),ch=async()=>t,Oy=(_, ...parts)=>parts.join('/'),lx=async(path,record)=>{if(window.failIdea)throw Error('denied');localStorage.setItem(path,JSON.stringify(record));};
+const setup=`let journalLoading=false;let t={uid:'fixture'},u='2026-10-26';const Et={current:false},c=z=>u=z,uh=async()=>({}),ch=async()=>t,Oy=(_, ...parts)=>parts.join('/'),lx=async(path,record)=>{if(window.failIdea)throw Error('denied');localStorage.setItem(path,JSON.stringify(record));};
 let d='pen',m='#000000',k=2,x=18,v=1,j='stroke',_=28;const Ut=[];
 const A=z=>m=z,P=z=>k=z,w=z=>x=z,y=z=>v=z,E=z=>j=z,I=z=>_=z,L=()=>{};
 const p=z=>{d=z;document.querySelectorAll('[data-native-tool]').forEach(b=>b.classList.toggle('active',b.dataset.nativeTool===z));};
@@ -17,6 +17,7 @@ const Ci=stroke=>{const old=Ut.findIndex(item=>item.id===stroke.id);if(old>=0)Ut
 ${bridge};
 const resizeCanvas=()=>{for(const canvas of [fe.current,de.current]){canvas.width=Ft.current.clientWidth;canvas.height=Ft.current.clientHeight;canvas.style.width=Ft.current.clientWidth+'px';canvas.style.height=Ft.current.clientHeight+'px';}ac();};resizeCanvas();window.addEventListener('resize',resizeCanvas);
 window.drawSample=()=>{const settings=window.__journalApi.settings(),tool=window.__journalApi.tool();Ci({id:crypto.randomUUID(),tool,color:settings.color,opacity:tool==='eraser'?1:settings.opacity,width:tool==='eraser'?settings.eraserWidth:tool==='highlighter'?settings.highlighterWidth:settings.penWidth,points:[{x:100,y:100},{x:300,y:100}]});};
+window.switchJournalAccount=uid=>{t={uid};Ut.splice(0);};window.journalLoading=value=>journalLoading=value;
 window.pixel=()=>Array.from(fe.current.getContext('2d').getImageData(200,100,1,1).data);`;
 const server=http.createServer((req,res)=>{
  const url=new URL(req.url,'http://localhost').pathname;
@@ -80,6 +81,9 @@ const server=http.createServer((req,res)=>{
 
   await page.goto('http://127.0.0.1:'+server.address().port+'/');
   await page.waitForFunction(()=>document.querySelectorAll('.journal-note-card').length===3);
+  await page.getByRole('button',{name:'Home journal',exact:true}).click();
+  await page.evaluate(()=>window.journalLoading(true));await page.getByRole('button',{name:'Arrange cards',exact:true}).waitFor();await page.waitForFunction(()=>document.querySelector('[data-edit]').disabled);
+  await page.evaluate(()=>window.journalLoading(false));await page.waitForFunction(()=>!document.querySelector('[data-edit]').disabled);
   assert.equal(await page.evaluate(()=>window.__journalApi.strokes().length),0,'Default sections never write on read');
   await page.getByRole('button',{name:'Arrange cards',exact:true}).click();
   const diary=page.locator('[data-card=diary]');await diary.getByLabel('Card writing',{exact:true}).fill('A quiet day.');
@@ -101,8 +105,12 @@ const server=http.createServer((req,res)=>{
   await page.evaluate(board=>{window.__journalApi.setDate('2026-10-26');window.__journalApi.save(board);},board);
   await page.waitForFunction(()=>document.querySelectorAll('.journal-note-card').length===4);
   assert.equal(await page.locator('[data-card=diary] textarea').inputValue(),'A quiet day.','Reloaded metadata restores writing and layout');
+  await page.getByRole('button',{name:'Arrange cards',exact:true}).click();await page.locator('.journal-note-card').last().getByRole('button',{name:'Remove card',exact:true}).click();await page.getByRole('button',{name:'Done arranging',exact:true}).click();
+  await page.addStyleTag({path:path.join(root,'journal/assets/index-DSgeQfSP.css')});
+  await page.evaluate(()=>{const app=document.createElement('div');app.className='app-container';document.body.append(app);app.append(document.querySelector('.toolbar'),document.querySelector('.canvas-container'));});
   await page.getByRole('button',{name:'Home journal',exact:true}).click();await page.setViewportSize({width:1024,height:850});await page.screenshot({path:path.join(root,'.test-output/journal/cards-desktop.png')});
   await page.setViewportSize({width:393,height:852});await page.screenshot({path:path.join(root,'.test-output/journal/cards-phone.png')});
+  await page.evaluate(()=>window.switchJournalAccount('another-account'));await page.waitForFunction(()=>document.querySelector('[data-card=diary] textarea').value==='');assert.equal(await page.evaluate(()=>window.__journalApi.strokes().length),0,'Account switches show no previous card data and never seed writes');
   assert.deepEqual(errors,[]);console.log('Journal drawing controls, renderer, unbounded camera, coordinate mapping, capture/save/retry, draft recovery, saved view and mobile touch checks passed.');
  }finally{await browser.close();server.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});
