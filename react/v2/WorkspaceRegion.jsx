@@ -1,3 +1,5 @@
+import {deleteTaskWithAssets} from '../src/task-delete';
+import {clearDraft, draftKey} from './draft-store';
 import React, {useRef, useState} from 'react';
 import KanbanBoard from './KanbanBoard';
 import {Journey, FocusSession} from './widgets';
@@ -13,6 +15,15 @@ export default function WorkspaceRegion({data, plan, timer, onInspect, uid, onCr
     catch {setMessage(''); setError('The move could not be saved. Your task is back in its original lane. Try again.');}
     finally {busy.current.delete(id); setPending(previous => {const next = {...previous}; delete next[id]; return next;});}
   };
+  const remove = async id => {
+    const task = data.tasks.find(item => item.id === id);
+    if (!task || busy.current.has(id) || !confirm(`Delete “${task.title || 'this task'}” and all its attached images? This cannot be undone.`)) return;
+    busy.current.add(id); setError(''); setMessage('Deleting task…');
+    setPending(previous => ({...previous, [id]:'__delete__'}));
+    try {await deleteTaskWithAssets(uid,id); clearDraft(draftKey(uid,'editor',id)); setMessage('Task deleted.');}
+    catch {setMessage(''); setError('The task could not be deleted. Try again.');}
+    finally {busy.current.delete(id); setPending(previous => {const next={...previous};delete next[id];return next;});}
+  };
   return <div className="v2-workspace-body">
     <div className="v2-workspace-intro">
       <div>
@@ -21,7 +32,7 @@ export default function WorkspaceRegion({data, plan, timer, onInspect, uid, onCr
       <div className="v2-workspace-actions"><span className="v2-workspace-total">{data.tasks.length} tasks</span><button type="button" onClick={onPaste}>Paste plan</button><button type="button" className="v2-primary" onClick={onCreate}>+ New project</button></div>
     </div>
     <p className="v2-move-feedback" role={error ? 'alert' : 'status'}>{error || message || 'Drag a card or use Move to change its lane.'}</p>
-    <KanbanBoard tasks={data.tasks.map(task => pending[task.id] ? {...task, status: pending[task.id]} : task)} onInspect={onInspect} onMove={move} pending={pending}/>
+    <KanbanBoard tasks={data.tasks.map(task => pending[task.id] && pending[task.id] !== '__delete__' ? {...task, status: pending[task.id]} : task)} onInspect={onInspect} onMove={move} onDelete={remove} pending={pending}/>
     <div className="v2-workspace-details">
       <Journey task={plan.active?.task} onInspect={onInspect}/>
       <FocusSession timer={timer}/>

@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import {taskProgress} from '../src/task-model';
 import {kanbanLanes as lanes} from './move-task';
 
-export default function KanbanBoard({tasks, onInspect, onMove, pending = {}}) {
+export default function KanbanBoard({tasks, onInspect, onMove, onDelete, pending = {}}) {
   const [dragId, setDragId] = useState(null), [target, setTarget] = useState(null), [ghost, setGhost] = useState(null);
   const pointer = useRef(null), dragged = useRef(null), suppressClick = useRef(0), restoreFocus = useRef(null), board = useRef(null);
   const clear = () => {pointer.current = null; dragged.current = null; setDragId(null); setTarget(null); setGhost(null);};
@@ -37,7 +37,7 @@ export default function KanbanBoard({tasks, onInspect, onMove, pending = {}}) {
           }} onDragEnd={() => {suppressClick.current = Date.now() + 300; clear();}}
             onClick={() => {if (Date.now() >= suppressClick.current) onInspect(task.id);}}>
             <strong className="v2-task-card-title">{title}</strong>
-            <span className="v2-task-card-sub">{saving ? 'Saving move…' : progress.total ? `${progress.done} of ${progress.total} steps` : 'No saved steps'}</span>
+            <span className="v2-task-card-sub">{saving ? pending[task.id] === '__delete__' ? 'Deleting…' : 'Saving move…' : progress.total ? `${progress.done} of ${progress.total} steps` : 'No saved steps'}</span>
             {progress.total > 0 && <progress max={progress.total} value={progress.done} aria-label={'Progress for '+title}/>}
           </div>
           <button className="v2-drag-handle" tabIndex={-1} disabled={saving} aria-label={'Drag '+title} title="Drag to another lane" onClick={event => event.preventDefault()}
@@ -55,6 +55,7 @@ export default function KanbanBoard({tasks, onInspect, onMove, pending = {}}) {
               if (pointer.current?.pointerId !== event.pointerId) return;
               suppressClick.current = Date.now() + 300; drop(task.id, laneAt(event.clientX, event.clientY));
             }} onPointerCancel={clear} onLostPointerCapture={() => {if (pointer.current) clear();}}>⠿</button>
+          <button className="v2-task-delete" type="button" aria-label={'Delete '+title} disabled={saving} onClick={()=>onDelete(task.id)}>Delete</button>
           <select className="v2-task-move" aria-label={'Move '+title+' to'} disabled={saving} value="" onChange={event => {restoreFocus.current = task.id; drop(task.id, event.target.value);}}>
             <option value="" disabled>Move…</option>{lanes.map(([value, name]) => <option key={value} value={value} disabled={value === status}>{name}</option>)}
           </select>

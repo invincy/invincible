@@ -21,7 +21,7 @@ export const logout=async()=>{current=null;observer?.(null);};
 window.switchAccount=uid=>{current=uid?{uid}:null;observer?.(current);};
 `;
 const firestoreMock = `
-export const collection=(_,...parts)=>({path:parts.join('/')});
+export const collection=(_,...parts)=>({path:[_?.path,...parts].filter(Boolean).join('/')});
 export const doc=collection;
 export const query=ref=>ref,orderBy=()=>null,limit=()=>null;
 const listeners=new Set();const streaks={};
@@ -46,7 +46,15 @@ function snapshot(ref) {
 }
 export const serverTimestamp=()=>123;
 export const setDoc=(ref,patch)=>runTransaction({},tx=>tx.set(ref,patch));
-export const writeBatch=()=>{const entries=[];return {set:(ref,patch)=>entries.push([ref,patch]),commit:()=>runTransaction({},tx=>entries.forEach(([ref,patch])=>tx.set(ref,patch)))}};
+export const getDocs=async ref=>{if(window.failDelete)throw Error('permission-denied');return {docs:[{ref:{path:ref.path+'/image'}}]}};
+export async function deleteDoc(ref){
+ if(window.failDelete)throw Error('permission-denied');
+ if(ref.path.split('/').length===4){const index=tasks.findIndex(task=>task.id===ref.path.split('/').pop());if(index>=0)tasks.splice(index,1);}
+ window.writes++;window.writeLog.push({path:ref.path,deleted:true});
+ sessionStorage.setItem('v2-fixture-saved',JSON.stringify({tasks:Object.fromEntries(tasks.map(task=>[task.id,task])),plan,ideas}));
+ for(const listener of listeners)listener.next(snapshot(listener.ref));
+}
+export const writeBatch=()=>{const entries=[],deletes=[];return {delete:ref=>deletes.push(ref),set:(ref,patch)=>entries.push([ref,patch]),commit:async()=>{for(const ref of deletes)await deleteDoc(ref);if(entries.length)await runTransaction({},tx=>entries.forEach(([ref,patch])=>tx.set(ref,patch)))}}};
 
 export async function runTransaction(_,callback) {
   const patches=[];
@@ -425,7 +433,29 @@ window.listenerCount=()=>listeners.size;
         await card('t1').locator('select').selectOption('Backlog');
         await movePage.getByRole('alert').waitFor();
         assert.equal(await movePage.evaluate(()=>window.writes),writes,'a deleted task is never recreated by a move');
+        await movePage.evaluate(()=>{window.deletedTaskId=null;window.failDelete=true;});
+        movePage.once('dialog',dialog=>dialog.dismiss());await card('t1').getByRole('button',{name:/^Delete /}).click();
+        assert.equal(await card('t1').count(),1,'cancelling deletion keeps the task');
+        movePage.once('dialog',dialog=>dialog.accept());await card('t1').getByRole('button',{name:/^Delete /}).click();
+        await movePage.getByRole('alert').filter({hasText:'could not be deleted'}).waitFor();
+        assert.equal(await card('t1').count(),1,'denied deletion keeps the card for retry');
+        await movePage.evaluate(()=>window.failDelete=false);
+        movePage.once('dialog',dialog=>dialog.accept());await card('t1').getByRole('button',{name:/^Delete /}).click();
+        await card('t1').waitFor({state:'detached'});
+        assert.equal(await movePage.evaluate(()=>window.taskRecords().some(task=>task.id==='t1')),false);
+        assert.ok(await movePage.evaluate(()=>window.writeLog.some(entry=>entry.deleted&&entry.path==='users/alice/tasks/t1/assets/image')),'task attachment is deleted');
+        assert.ok(await movePage.evaluate(()=>window.taskRecords().some(task=>task.id==='t0')),'other tasks are preserved');
+        await movePage.reload();await movePage.getByRole('link',{name:'02 My Workspace'}).click();
+        await movePage.locator('[data-task-id="t0"]').waitFor();assert.equal(await card('t1').count(),0,'deletion survives reload');
         await movePage.close();
+        const compactPage=await context.newPage();await compactPage.setViewportSize({width:393,height:852});await compactPage.goto(base+'/fixture');
+        await compactPage.locator('.v2-guide-mission h2').waitFor();
+        assert.equal(await compactPage.locator('.v2-connection').count(),0,'healthy connection has no banner');
+        await compactPage.evaluate(()=>window.switchAccount('bob'));
+        await compactPage.locator('.v2-guide-empty').waitFor();
+        assert.equal(await compactPage.getByText('Make space for your next move.',{exact:true}).count(),0);
+        assert.ok(await compactPage.locator('.v2-guide-orb-label').evaluate(e=>e.getBoundingClientRect().top-document.querySelector('.v2-guide-scene').getBoundingClientRect().top<50),'colour selector stays at the top');
+        await compactPage.screenshot({path:path.join(output,'compact-empty-phone.png'),fullPage:true});await compactPage.close();
         const toolsPage=await context.newPage();await toolsPage.goto(base+'/fixture');
         await toolsPage.getByRole('button',{name:'Notifications: no pending reminders',exact:true}).click();
         await toolsPage.getByRole('dialog',{name:'You’re all caught up.'}).waitFor();

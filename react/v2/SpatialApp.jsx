@@ -127,12 +127,12 @@ function SignedInWorkspace({user, logout}) {
     try {localStorage.setItem('invincible-orb-theme', next);} catch {}
     return next;
   });
-  return <div className="v2-shell">
+  return <div className={'v2-shell'+(authError || error || !ready || data.tasksCached || data.planCached ? ' has-status' : '')}>
     <header className="v2-topbar"><a className="v2-brand" href="#dashboard" onClick={event => {event.preventDefault();navigate('dashboard');}}><img className="v2-brand-mark" src={APP_ICON_URL} alt="" width="36" height="36"/><span>INVINCIBLE<small>PERSONAL WORKSPACE</small></span></a>
       <nav aria-label="Explore spaces"><span className="v2-nav-caption" aria-hidden="true">VIEWS</span>{regions.map(region => <a key={region.id} href={'#'+region.id} aria-current={active === region.id ? 'location' : undefined} onClick={event => {if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;event.preventDefault();navigate(region.id);}}><span>{region.number}</span>{region.label}</a>)}</nav>
       <div className="v2-account"><Suspense fallback={null}><DashboardTools/></Suspense><button type="button" className="v2-saved-ideas" aria-label="Saved ideas" title="Saved ideas" onClick={()=>setIdeaPanel({})}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg></button><AccountMenu user={user} logout={logout}/></div>
     </header>
-    <div className="v2-connection" role="status"><span className={error ? 'v2-dot error' : 'v2-dot'}/>{authError || error || (!ready ? 'Restoring your workspace…' : data.tasksCached || data.planCached ? 'Showing cached records · Waiting for connection' : 'Connected to your existing workspace')}<span className="v2-preview-label">WORKSPACE</span>{error && <button onClick={data.retry}>Retry sync</button>}</div>
+    {(authError || error || !ready || data.tasksCached || data.planCached) && <div className="v2-connection" role="status"><span className={error ? 'v2-dot error' : 'v2-dot'}/>{authError || error || (!ready ? 'Loading workspace…' : 'Offline · Showing saved records')}{error && <button onClick={data.retry}>Retry sync</button>}</div>}
     <main ref={viewport} className="v2-canvas" aria-label="Continuous spatial workspace" tabIndex={0} onScroll={scroll}
       onKeyDown={event => {if (event.target !== event.currentTarget) return;let index = regions.findIndex(region => region.id === active);if (event.key === 'ArrowRight') index++;else if (event.key === 'ArrowLeft') index--;else if (event.key === 'Home') index=0;else if (event.key === 'End') index=regions.length-1;else return;event.preventDefault();navigate(regions[Math.max(0,Math.min(regions.length-1,index))].id);}}>
       {regions.map(region => <Region key={region.id} region={region} viewport={viewport} onScroll={moveOrb}>

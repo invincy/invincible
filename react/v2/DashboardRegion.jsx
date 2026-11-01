@@ -25,7 +25,7 @@ export default function DashboardRegion({data, plan, timer, onInspect, orbAnchor
 
       <div className="v2-guide-mission">
         <span className="v2-guide-kicker">IN FOCUS</span>
-        <h2 title={focus?.title}>{focus?.title || 'Make space for your next move.'}</h2>
+        {focus ? <h2 title={focus.title}>{focus.title}</h2> : <p className="v2-guide-empty">Choose a task in My Workspace.</p>}
         {next && <p className="v2-guide-nextline" title={next.title || next.text}><span>Next</span>{next.title || next.text}</p>}
         {focus && <button className="v2-guide-primary" onClick={() => onInspect(focus.id)}>Resume work <span aria-hidden="true">↗</span></button>}
         {focus && <div className="v2-guide-progress" aria-label="Project progress">
