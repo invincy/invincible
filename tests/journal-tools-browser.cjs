@@ -88,6 +88,7 @@ const server=http.createServer((req,res)=>{
   await page.getByRole('button',{name:'Arrange cards',exact:true}).click();
   const diary=page.locator('[data-card=diary]');await diary.getByLabel('Card writing',{exact:true}).fill('A quiet day.');
   await diary.getByLabel('Card colour',{exact:true}).selectOption('rose');
+  assert.equal(await diary.evaluate(el=>el.style.getPropertyValue('--card-colour')),'#e8ccda');assert.notEqual(await diary.evaluate(el=>getComputedStyle(el).backgroundColor),'rgba(0, 0, 0, 0)','Card colour is visibly translucent, not an unset CSS variable');
   const initial=await page.evaluate(()=>window.__journalApi.strokes().find(s=>s.tool==='canvas-layout').cards[0]);
   await diary.getByRole('button',{name:'Move card',exact:true}).press('ArrowRight');
   await diary.getByRole('button',{name:'Resize card',exact:true}).press('ArrowDown');
@@ -107,9 +108,9 @@ const server=http.createServer((req,res)=>{
   assert.equal(await page.locator('[data-card=diary] textarea').inputValue(),'A quiet day.','Reloaded metadata restores writing and layout');
   await page.getByRole('button',{name:'Arrange cards',exact:true}).click();await page.locator('.journal-note-card').last().getByRole('button',{name:'Remove card',exact:true}).click();await page.getByRole('button',{name:'Done arranging',exact:true}).click();
   await page.addStyleTag({path:path.join(root,'journal/assets/index-DSgeQfSP.css')});
-  await page.evaluate(()=>{const app=document.createElement('div');app.className='app-container';document.body.append(app);app.append(document.querySelector('.toolbar'),document.querySelector('.canvas-container'));});
-  await page.getByRole('button',{name:'Home journal',exact:true}).click();await page.setViewportSize({width:1024,height:850});await page.screenshot({path:path.join(root,'.test-output/journal/cards-desktop.png')});
-  await page.setViewportSize({width:393,height:852});await page.screenshot({path:path.join(root,'.test-output/journal/cards-phone.png')});
+  await page.evaluate(()=>{const app=document.createElement('div');app.className='app-container';app.style.display='flex';app.style.flexDirection='column';document.querySelector('#base-canvas').style.position='absolute';document.body.append(app);app.append(document.querySelector('.toolbar'),document.querySelector('.canvas-container'));});
+  await page.getByRole('button',{name:'Home journal',exact:true}).click();await page.setViewportSize({width:1024,height:850});await page.waitForFunction(()=>{const r=document.querySelector('.journal-card-controls').getBoundingClientRect();return r.bottom<innerHeight&&r.top>0;});await page.screenshot({path:path.join(root,'.test-output/journal/cards-desktop.png')});
+  await page.setViewportSize({width:393,height:852});await page.waitForFunction(()=>{const r=document.querySelector('.journal-card-controls').getBoundingClientRect();return r.bottom<innerHeight&&r.top>0;});await page.getByRole('button',{name:'Arrange cards',exact:true}).click();await page.getByRole('button',{name:'Done arranging',exact:true}).click();await page.screenshot({path:path.join(root,'.test-output/journal/cards-phone.png')});
   await page.evaluate(()=>window.switchJournalAccount('another-account'));await page.waitForFunction(()=>document.querySelector('[data-card=diary] textarea').value==='');assert.equal(await page.evaluate(()=>window.__journalApi.strokes().length),0,'Account switches show no previous card data and never seed writes');
   assert.deepEqual(errors,[]);console.log('Journal drawing controls, renderer, unbounded camera, coordinate mapping, capture/save/retry, draft recovery, saved view and mobile touch checks passed.');
  }finally{await browser.close();server.close();}
