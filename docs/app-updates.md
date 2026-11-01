@@ -17,3 +17,12 @@ Build/unit/reference checks and the full browser workflow verify this release. R
 ## Full-screen background and denser orb
 
 Moved the stars/connector canvas from the orb scene into a fixed viewport layer on Main Dashboard. It measures the viewport layer on resize and listens for pointer movement through the shell. The orb and page links remain centred independently. The rich dashboard orb has more streams, crossing filaments and flecks, with separate bounded mobile/low-capability budgets. Base/compact orb counts, frame-rate caps, pause/reduced-motion behavior and account data are unchanged. Browser checks verify canvas bounds at 1536, 1920 and 2560px widths; unit checks bound the rich particle budgets. The royal-blue/gold icon is a separate preview, not part of this app release.
+
+
+## Journal canvas cards
+
+Journal opens with soft translucent Daily diary, Personal notes and Ideas sections on the existing unbounded canvas. Arrange cards enables typed writing, title/colour edits, drag and keyboard movement/resizing; Done returns the surface to pen input. Add card places another section in the current view. Removing a populated card confirms first and keeps independent ink. Cards and connector lines follow the camera; area captures include cards beneath ink.
+
+Layout metadata is a points-empty canvas-layout record on the existing account/date stroke path, with the existing offline pending queue and retry behavior. Read-only defaults do not seed records, and editing waits for initial Journal loading. No auth, rules, Firebase configuration or existing stroke formats changed. The legacy bundle only exposes its existing loading state through the bridge. Whole-layout simultaneous edits use the existing last-write behavior; typed card text and independent handwritten ink are not grouped for movement. Limits: 80 cards and 5,000 typed characters per card.
+
+Validation: storage regressions cover layout metadata through denied saves, reload and reconnect; browser fixtures cover defaults without writes, editing, colouring, moving/resizing, camera alignment, date isolation and restored metadata. Full repository/browser checks run in CI. Real production Firebase permissions and physical stylus behavior remain unverified. The dark navy glass icon is an image preview, separate from this app release.

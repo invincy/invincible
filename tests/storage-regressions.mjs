@@ -32,11 +32,11 @@ test('Journal retains failed writes/deletes through snapshots and reload, then r
  const store={getJournalStrokes:async()=>[],upsertJournalStroke:async()=>{},deleteJournalStroke:async()=>{},bulkUpsertJournal:async()=>{}};
  const hook=journal.createJournalStrokesHook({React,openLocalStore:async()=>store,currentUser:async()=>user,getDb:async()=>({}),collection:(...parts)=>parts,query:ref=>ref,orderBy:()=>{},onSnapshot:(ref,options,cb)=>{snapshot=cb;return()=>{}},doc:(db,...parts)=>parts.join('/'),setDoc:async(ref,data)=>{if(fail)throw{code:'permission-denied'};rows.set(data.id,data)},deleteDoc:async ref=>{if(fail)throw{code:'permission-denied'};rows.delete(ref.split('/').at(-1))},readLegacy:()=>[]});
  const render=()=>{cursor=0;return hook('2026-10-03',user?.uid)};render();await new Promise(resolve=>setTimeout(resolve,0));
- await render().saveStroke({id:'one',createdAtMs:1,points:[1,2]});
+ await render().saveStroke({id:'one',createdAtMs:1,tool:'canvas-layout',points:[],cards:[{id:'diary',title:'Daily diary',text:'Retained writing',x:40,y:80,width:350,height:370,colour:'blue'}]});
  snapshot({metadata:{hasPendingWrites:false,fromCache:false},forEach:()=>{}});
  assert.equal(render().strokes[0].id,'one');assert.equal(render().error.code,'permission-denied');assert.equal(JSON.parse(storage.get('invincible.journalPending.same-google-account.2026-10-03')).length,1);
  cleanup();values=[];effectRun=false;render();await new Promise(resolve=>setTimeout(resolve,0));assert.equal(render().strokes[0].id,'one');
- fail=false;await events.get('online')();assert.equal(rows.size,1);assert.equal(render().user.pendingCount,0);
+ fail=false;await events.get('online')();assert.equal(rows.size,1);assert.equal(rows.get('one').cards[0].text,'Retained writing');assert.equal(render().user.pendingCount,0);
  fail=true;await render().deleteStroke('one');snapshot({metadata:{hasPendingWrites:false,fromCache:false},forEach:fn=>fn({id:'one',data:()=>rows.get('one')})});assert.equal(render().strokes.length,0);
  fail=false;await events.get('online')();assert.equal(rows.size,0);assert.equal(render().user.pendingCount,0);cleanup();
  user=null;values=[];effectRun=false;render();await new Promise(resolve=>setTimeout(resolve,0));assert.equal(render().user,null);cleanup();

@@ -32,6 +32,7 @@
  function clearSelection(){selection?.remove();selection=null;drag=null;}
  function capture(box){
   const canvas=document.createElement('canvas'),scale=Math.min(1,1100/Math.max(box.width,box.height));canvas.width=Math.round(box.width*scale);canvas.height=Math.round(box.height*scale);const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+  window.__journalCards?.paint(ctx,box);
   const base=api().base(),ratio=base.width/surface.clientWidth;ctx.drawImage(base,box.x*ratio,box.y*ratio,box.width*ratio,box.height*ratio,0,0,canvas.width,canvas.height);
   for(const q of [.85,.7,.5,.3]){const image=canvas.toDataURL('image/webp',q);if(image.length<=180000)return image;}throw Error('Select a smaller area.');
  }
