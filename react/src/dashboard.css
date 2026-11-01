@@ -287,3 +287,9 @@ body.home-page{margin:0;min-height:100dvh;background:radial-gradient(circle at 2
 .v2-shell .v2-account .v2-saved-ideas{display:grid;place-items:center;min-width:44px;padding:10px}
 
 @media(max-width:600px){.v2-shell .v2-topbar .v2-account{gap:4px}.v2-shell .v2-account>button[aria-label="Sign out"]{display:grid;place-items:center;width:44px;padding:10px}.v2-shell:has(.v2-orb:not(.is-compact)) .v2-topbar{padding-right:16px}.v2-shell .v2-brand{font-size:11px;letter-spacing:.12em}}
+
+/* The decorative network belongs to the viewport, not the square orb scene. */
+.v2-ambient-field{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.v2-ambient-field>.v2-guide-particles{position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;aspect-ratio:auto}
+.v2-shell>.v2-canvas{position:relative;z-index:1;width:100%;max-width:none;margin:0;min-height:0}
+.v2-shell>.v2-topbar,.v2-shell>.v2-footer{background:rgba(0,0,0,.88)}

@@ -17,3 +17,12 @@ test('all trail families taper size and alpha, with no oversized cell heads or w
   assert.ok(Math.abs(particles[offset+3]/head-.45)<.001);assert.equal(particles[offset+4],0);offset+=5;
  }
 });
+
+test('rich dashboard orb increases density with bounded mobile and low capability tiers',()=>{
+ for(const [mobile,lightweight,limit]of[[false,false,50000],[true,false,35000],[false,true,26000],[true,true,21000]]){
+  const base=orbParticleTier(mobile,lightweight),rich=orbParticleTier(mobile,lightweight,true);
+  const count=createOrbParticles(rich).length/5;
+  assert.ok(rich.streams>base.streams);assert.ok(rich.flecks>=base.flecks*3);
+  assert.ok(count<limit);assert.ok(count>createOrbParticles(base).length/5);
+ }
+});
