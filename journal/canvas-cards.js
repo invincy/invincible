@@ -1,8 +1,8 @@
-import {LAYOUT_ID,palette,colour,templates,readLayout,starterLayout,vacantPosition,anchor,hitStroke} from './layout-model.mjs';
+import {LAYOUT_ID,palette,colour,templates,readLayout,starterLayout,vacantPosition,anchor,hitStroke} from './layout-model.mjs?v=2';
 import {navigationPages} from '../shared/navigation.js';
 
 const api=()=>window.__journalApi, camera=()=>window.__journalViewport;
-let surface,layer,session='',signature='',layout=readLayout(),editing=false,gesture=null,connecting=null,wheelPage=0;
+let surface,layer,session='',signature='',layout=readLayout(),editing=false,gesture=null,connecting=null,wheelPage=0,defaultsSource='',defaultsCache=null;
 const context=()=>{const c=api()?.context();return c?c.uid+'.'+c.dateKey:'';};
 const uid=()=>crypto.randomUUID(), visible=c=>!c.hidden;
 const uiSignature=l=>JSON.stringify([l.cards,l.icons,l.connections,l.customIcons,l.settings]);
@@ -86,8 +86,10 @@ function paint(ctx,box){if(!camera())return;const v=camera().view;ctx.save();ctx
  for(const i of layout.icons){ctx.globalAlpha=.8;ctx.fillStyle=colour(i.colour);ctx.beginPath();ctx.arc(i.x+i.size/2,i.y+i.size/2,i.size/2,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.fillStyle='#344052';ctx.font='24px system-ui';ctx.fillText(i.symbol||'◇',i.x+i.size*.25,i.y+i.size*.64);}ctx.restore();
 }
 function install(){const next=api()?.container?.();if(!next?.isConnected||!camera()){layer?.remove();surface=null;return;}if(surface!==next){layer?.remove();surface=next;layer=el('div',{className:'journal-card-world'});surface.append(layer);session='';}
- if(session!==context()){session=context();signature='';gesture=null;connecting=null;editing=false;window.__journalNotebook?.closePanel();}
- const record=api().strokes().find(s=>s.id===LAYOUT_ID),nextLayout=record?readLayout(record):api().contentReady?.()?starterLayout(api().strokes(),surface.clientWidth,surface.clientHeight):readLayout(),nextSignature=uiSignature(nextLayout);
+ if(session!==context()){session=context();signature='';gesture=null;connecting=null;editing=false;defaultsSource='';defaultsCache=null;window.__journalNotebook?.closePanel();}
+ const record=api().strokes().find(s=>s.id===LAYOUT_ID),source=record?uiSignature(readLayout(record)):'empty';let nextLayout=readLayout();
+ if(record||api().contentReady?.()){if(!defaultsCache||defaultsSource!==source){defaultsSource=source;defaultsCache=starterLayout(api().strokes(),surface.clientWidth,surface.clientHeight,record);}nextLayout=defaultsCache;}
+ const nextSignature=uiSignature(nextLayout);
  if(!gesture&&signature!==nextSignature){layout=nextLayout;signature=nextSignature;draw();}const v=camera().view;layer.style.transform=`translate(${v.x}px,${v.y}px) scale(${v.zoom})`;updateLinks();
 }
 document.addEventListener('pointerdown',e=>{
