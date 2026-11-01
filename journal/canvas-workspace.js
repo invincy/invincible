@@ -9,7 +9,7 @@
  function screen(e){const r=surface.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
  function point(e){const p=screen(e);return{x:(p.x-view.x)/view.zoom,y:(p.y-view.y)/view.zoom};}
  function transform(ctx){if(!surface?.isConnected||!surface.getBoundingClientRect().width||!['base-canvas','live-canvas'].includes(ctx.canvas.id))return;const ratio=ctx.canvas.width/surface.getBoundingClientRect().width;ctx.setTransform(ratio*view.zoom,0,0,ratio*view.zoom,ratio*view.x,ratio*view.y);}
- function render(){frame=null;if(!surface?.isConnected)return;overlay.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.zoom})`;const bg=surface.querySelector('.background-layer');if(bg){bg.style.backgroundPosition=`${view.x}px ${view.y}px`;bg.style.backgroundSize=`${32*view.zoom}px ${32*view.zoom}px`;}
+ function render(){frame=null;if(!surface?.isConnected)return;overlay.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.zoom})`;const cards=surface.querySelector('.journal-card-world');if(cards)cards.style.transform=overlay.style.transform;const bg=surface.querySelector('.background-layer');if(bg){bg.style.backgroundPosition=`${view.x}px ${view.y}px`;bg.style.backgroundSize=`${32*view.zoom}px ${32*view.zoom}px`;}
   api().redraw();tools.querySelector('output').textContent=Math.round(view.zoom*100)+'%';try{localStorage.setItem(key,JSON.stringify(view));}catch{}
  }
  function change(next){view=normal(next);window.__journalViewport.view=view;if(frame===null)frame=requestAnimationFrame(render);}
@@ -32,6 +32,7 @@
  function clearSelection(){selection?.remove();selection=null;drag=null;}
  function capture(box){
   const canvas=document.createElement('canvas'),scale=Math.min(1,1100/Math.max(box.width,box.height));canvas.width=Math.round(box.width*scale);canvas.height=Math.round(box.height*scale);const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+  window.__journalCards?.paint(ctx,box);
   const base=api().base(),ratio=base.width/surface.clientWidth;ctx.drawImage(base,box.x*ratio,box.y*ratio,box.width*ratio,box.height*ratio,0,0,canvas.width,canvas.height);
   for(const q of [.85,.7,.5,.3]){const image=canvas.toDataURL('image/webp',q);if(image.length<=180000)return image;}throw Error('Select a smaller area.');
  }
