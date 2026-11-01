@@ -6,6 +6,7 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const svg = (body) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
   const icons = {
+    lasso: svg('<path d="M20 11c0 5-4 8-9 8S2 16 2 11s4-8 9-8 9 3 9 8Z"/><path d="M7 18c-3 4 1 5 4 2"/>'),
     select: svg('<path d="m5 3 14 9-7 2-3 7z"/><path d="m13 14 4 5"/>'),
     text: svg('<path d="M5 5h14M12 5v14M8 19h8"/>'),
     handwriting: svg('<path d="M3 17c3-7 5-10 7-10 3 0-1 10 2 10 2 0 3-5 5-5 2 0 0 5 4 5"/><path d="M3 21h18"/>')
@@ -35,6 +36,7 @@
     const group = toolbar.firstElementChild;
     if (group && !group.querySelector(".advanced-tool")) {
       group.append(toolButton("select", "Select and transform"));
+      group.append(toolButton("lasso", "Lasso selection"));
       group.append(toolButton("text", "Add text"));
       group.append(toolButton("handwriting", "Handwriting tools"));
     }
@@ -128,7 +130,7 @@
   }
 
   function canvasDown(event) {
-    if (!["select", "text", "handwriting"].includes(state.mode)) {
+    if (!["select", "lasso", "text", "handwriting"].includes(state.mode)) {
       batchHistory.redo.length = 0;
       return;
     }
@@ -138,6 +140,7 @@
     if (state.mode === "text") return placeText(point(event));
     if (state.mode === "handwriting") return;
     clearSelection();
+    if(state.mode==="lasso")return lassoStart(event);
     const start = point(event);
     const marquee = document.createElement("div");
     marquee.className = "journal-marquee";
@@ -162,6 +165,17 @@
     };
     window.addEventListener("pointermove", move, true);
     window.addEventListener("pointerup", up, true);
+  }
+
+  function lassoStart(event) {
+    const points=[point(event)],path=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    path.setAttribute('style','position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none');
+    const outline=document.createElementNS('http://www.w3.org/2000/svg','path');outline.setAttribute('fill','#8c85b419');outline.setAttribute('stroke','#8c85b4');outline.setAttribute('stroke-width','1.2');outline.setAttribute('stroke-dasharray','4 4');path.append(outline);(api().overlay?.()||api().container()).append(path);
+    const move=e=>{points.push(point(e));outline.setAttribute('d',points.map((p,i)=>(i?'L':'M')+p.x+' '+p.y).join(' ')+' Z');};
+    const up=e=>{window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',up,true);window.removeEventListener('pointercancel',up,true);path.remove();if(e.type==='pointercancel'||points.length<3)return;
+      const inside=p=>{let result=false;for(let i=0,j=points.length-1;i<points.length;j=i++){const a=points[i],b=points[j];if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)result=!result;}return result;};
+      state.ids=new Set(api().strokes().filter(s=>(s.points||[]).some(inside)).map(s=>s.id));showSelection();
+    };window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',up,true);window.addEventListener('pointercancel',up,true);
   }
 
   function moveStart(event) {
@@ -284,6 +298,7 @@
   }
 
   window.addEventListener("journal-tool-change",syncModeFromApp);
+  window.addEventListener("journal-controls-dismiss",closePanel);
   const observer = new MutationObserver(install);
   observer.observe(document.documentElement, { childList: true, subtree: true });
   window.addEventListener("load", install);
