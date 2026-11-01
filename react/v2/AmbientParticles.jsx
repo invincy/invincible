@@ -1,10 +1,10 @@
 import React, {useEffect, useRef} from 'react';
 
-// A bounded, mouse-responsive network behind the fixed dashboard layout.
+// A viewport-sized, bounded network independent of the square orb stage.
 export default function AmbientParticles({theme = 'gold'}) {
   const canvasRef = useRef(null);
   useEffect(() => {
-    const canvas = canvasRef.current, scene = canvas.parentElement, context = canvas.getContext('2d');
+    const canvas = canvasRef.current, scene = canvas.parentElement, pointerSurface = canvas.closest('.v2-shell') || scene, context = canvas.getContext('2d');
     if (!context) return;
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
     const colour = {gold:'238, 200, 123', cyan:'115, 221, 244', emerald:'112, 230, 175'}[theme] || '238, 200, 123';
@@ -37,9 +37,9 @@ export default function AmbientParticles({theme = 'gold'}) {
       canvas.dataset.linkCount=String(links);canvas.dataset.mouseLinks=String(mouseLinks);canvas.dataset.pointerActive=String(interactive);
     };
     const resize=()=>{
-      const rect=scene.getBoundingClientRect();width=rect.width;height=rect.height;if(!width||!height)return;
+      const rect=scene.getBoundingClientRect();width=rect.width;height=rect.height;canvas.dataset.fieldWidth=String(width);canvas.dataset.fieldHeight=String(height);if(!width||!height)return;
       const ratio=Math.min(devicePixelRatio||1,1.5);canvas.width=Math.round(width*ratio);canvas.height=Math.round(height*ratio);context.setTransform(ratio,0,0,ratio,0,0);
-      const count=Math.min(width<700?90:170,Math.max(width<700?64:110,Math.round(width*height/7500)));
+      const count=Math.min(width<700?90:260,Math.max(width<700?64:140,Math.round(width*height/7500)));
       particles=Array.from({length:count},(_,i)=>particles[i]||makeParticle(i));canvas.dataset.particleCount=String(count);draw(0);
     };
     const stop=()=>{cancelAnimationFrame(frame);frame=0;};
@@ -49,8 +49,8 @@ export default function AmbientParticles({theme = 'gold'}) {
     const move=event=>{if(event.pointerType!=='mouse'||reduced.matches)return;const rect=scene.getBoundingClientRect();pointer.x=event.clientX-rect.left;pointer.y=event.clientY-rect.top;pointer.active=pointer.x>=0&&pointer.x<=width&&pointer.y>=0&&pointer.y<=height;};
     const leave=()=>{pointer.active=false;};
     const resizeObserver=new ResizeObserver(resize),intersection=new IntersectionObserver(entries=>{inView=entries[0].isIntersecting;visibility();});
-    resizeObserver.observe(scene);intersection.observe(scene);scene.addEventListener('pointermove',move,{passive:true});scene.addEventListener('pointerleave',leave);window.addEventListener('blur',leave);document.addEventListener('visibilitychange',visibility);reduced.addEventListener('change',visibility);resize();schedule();
-    return()=>{stop();resizeObserver.disconnect();intersection.disconnect();scene.removeEventListener('pointermove',move);scene.removeEventListener('pointerleave',leave);window.removeEventListener('blur',leave);document.removeEventListener('visibilitychange',visibility);reduced.removeEventListener('change',visibility);};
+    resizeObserver.observe(scene);intersection.observe(scene);pointerSurface.addEventListener('pointermove',move,{passive:true});pointerSurface.addEventListener('pointerleave',leave);window.addEventListener('blur',leave);document.addEventListener('visibilitychange',visibility);reduced.addEventListener('change',visibility);resize();schedule();
+    return()=>{stop();resizeObserver.disconnect();intersection.disconnect();pointerSurface.removeEventListener('pointermove',move);pointerSurface.removeEventListener('pointerleave',leave);window.removeEventListener('blur',leave);document.removeEventListener('visibilitychange',visibility);reduced.removeEventListener('change',visibility);};
   }, [theme]);
   return <canvas ref={canvasRef} className="v2-guide-particles" aria-hidden="true"/>;
 }

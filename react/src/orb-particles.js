@@ -1,8 +1,17 @@
 // Short, closely sampled filaments keep fading tails continuous without filling the globe with ribbons.
-export function orbParticleTier(mobile,lightweight){
- if(mobile&&lightweight)return {streams:64,trailCount:100,wideStreams:8,cellStreams:8,flecks:1000};
- if(mobile||lightweight)return {streams:68,trailCount:128,wideStreams:10,cellStreams:10,flecks:1200};
- return {streams:96,trailCount:128,wideStreams:12,cellStreams:12,flecks:1600};
+export function orbParticleTier(mobile,lightweight,rich=false){
+ let tier;
+ if(mobile&&lightweight)tier={streams:64,trailCount:100,wideStreams:8,cellStreams:8,flecks:1000};
+ else if(mobile||lightweight)tier={streams:68,trailCount:128,wideStreams:10,cellStreams:10,flecks:1200};
+ else tier={streams:96,trailCount:128,wideStreams:12,cellStreams:12,flecks:1600};
+ if(rich){
+  const scale=lightweight?1.8:mobile?2:2.3;
+  tier.streams=Math.round(tier.streams*scale);
+  tier.wideStreams=Math.round(tier.wideStreams*(lightweight?1.15:1.5));
+  tier.cellStreams=Math.round(tier.cellStreams*(lightweight?1.15:1.5));
+  tier.flecks=Math.round(tier.flecks*(lightweight?3:mobile?4:5));
+ }
+ return tier;
 }
 export function createOrbParticles(tier){
  const {streams,trailCount,wideStreams,cellStreams,flecks}=tier,wideTrailCount=224,cellTrailCount=240;
