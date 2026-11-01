@@ -2,13 +2,13 @@ export const LAYOUT_ID='journal-canvas-layout-v1';
 export const palette={blue:'#c1d2ed',sage:'#c6dccd',sand:'#eadbbd',rose:'#e8ccda',lavender:'#d7cdeb'};
 export const colour=value=>/^#[0-9a-f]{6}$/i.test(value||'')?value:palette[value]||palette.blue;
 export const templates=[
- {kind:'mood',title:'Daily Mood',symbol:'◡',colour:'sand',width:260,height:130},
- {kind:'special',title:'Anything Special Today?',symbol:'◇',colour:'lavender',width:290,height:190},
- {kind:'diary',title:'Daily Diary',symbol:'▤',colour:'blue',width:310,height:290},
- {kind:'todo',title:'To-Do',symbol:'☑',colour:'blue',width:280,height:240},
- {kind:'tomorrow',title:'Tomorrow',symbol:'▣',colour:'sage',width:280,height:240},
- {kind:'ideas',title:'Ideas & Possibilities',symbol:'✧',colour:'sand',width:300,height:240},
- {kind:'planner',title:'Daily Planner',symbol:'▣',colour:'sage',width:300,height:190}
+ {kind:'mood',title:'Daily Mood',symbol:'◡',colour:'sand',width:360,height:148},
+ {kind:'special',title:'Anything Special Today?',symbol:'◇',colour:'lavender',width:440,height:340},
+ {kind:'diary',title:'Daily Diary',symbol:'▤',colour:'blue',width:560,height:620},
+ {kind:'todo',title:'To-Do',symbol:'☑',colour:'blue',width:440,height:520},
+ {kind:'tomorrow',title:'Tomorrow',symbol:'▣',colour:'sage',width:440,height:480},
+ {kind:'ideas',title:'Ideas & Possibilities',symbol:'✧',colour:'sand',width:480,height:560},
+ {kind:'planner',title:'Daily Planner',symbol:'▣',colour:'sage',width:700,height:440}
 ];
 export function readLayout(record){
  const value=record?structuredClone(record):{};
@@ -34,18 +34,31 @@ export function vacantPosition(start,size,layout,strokes,view){
  const chosen=inView||candidates[0];if(chosen)return {x:chosen.x,y:chosen.y};
  return {x:start.x,y:Math.max(start.y,...occupied.map(r=>r.y+r.height))+40};
 }
+const daily=[['planner','Daily Planner'],['todo','To-Do'],['ideas',"Today's Idea"],['mood',"Today's Mood"]];
+export function writingPage(width=800,height=1280){
+ const wide=width>=700,pageWidth=wide?Math.min(1040,width-48):Math.max(280,width-24),x=wide?(width-pageWidth)/2:12,y=80,pad=wide?28:16,gap=24,inner=pageWidth-pad*2;
+ if(!wide){let top=y+28;const cards={};for(const [kind]of daily){const tall=kind==='mood'?148:420;cards[kind]={x:x+pad,y:top,width:inner,height:tall,paperStyle:'ruled'};top+=tall+gap;}return {page:{x,y,width:pageWidth,height:top-y+4},cards};}
+ const pageHeight=Math.max(1080,height-130,Math.round(pageWidth*1.45)),usable=pageHeight-92,plannerHeight=Math.max(340,Math.min(560,Math.round(usable*.35))),lower=usable-plannerHeight-gap,half=(inner-gap)/2,second=y+36+plannerHeight+gap;
+ return {page:{x,y,width:pageWidth,height:pageHeight},cards:{planner:{x:x+pad,y:y+36,width:inner,height:plannerHeight,paperStyle:'ruled'},todo:{x:x+pad,y:second,width:half,height:lower-172,paperStyle:'ruled'},ideas:{x:x+pad+half+gap,y:second,width:half,height:lower,paperStyle:'ruled'},mood:{x:x+pad,y:second+lower-148,width:half,height:148,paperStyle:'ruled'}}};
+}
+export function arrangeWritingPage(record,width,height){
+ const layout=readLayout(record),design=writingPage(width,height);layout.page=design.page;layout.writingPageVersion=1;
+ for(const [kind]of daily){const card=layout.cards.find(c=>c.kind===kind||(!c.kind&&c.id===kind));if(card)Object.assign(card,design.cards[kind]);}
+ return layout;
+}
 export function starterLayout(strokes,width=1000,height=800,record){
- const layout=readLayout(record),wide=width>=700,top=wide?Math.max(100,height-500):70;
- const daily=[['planner','Daily Planner',190],['todo','To-Do',190],['ideas',"Today's Idea",180],['mood',"Today's Mood",130]];
- for(const [index,[kind,title,tall]]of daily.entries()){
+ let layout=readLayout(record);const design=writingPage(width,height),ink=strokes.some(s=>(s.points||[]).length),pageEligible=!ink&&!layout.icons.length&&!layout.connections.length&&layout.cards.every(c=>daily.some(([kind])=>c.kind===kind||(!c.kind&&c.id===kind)));
+ for(const [kind,title]of daily){
   // Hidden/removed daily cards count as present, so a user's choice survives reopening.
   if(layout.cards.some(c=>c.kind===kind||(!c.kind&&(c.id===kind||c.title===title))))continue;
-  const template=templates.find(t=>t.kind===kind),size={width:Math.min(template.width,Math.max(220,width-48)),height:wide?tall:kind==='mood'?130:150};
-  const start=wide?{x:index%2?356:28,y:top+Math.floor(index/2)*218}:{x:24,y:top+index*178};
+  const template=templates.find(t=>t.kind===kind),size={width:design.cards[kind].width,height:design.cards[kind].height},start={x:design.cards[kind].x,y:design.cards[kind].y};
   const position=vacantPosition(start,size,layout,strokes,{x:0,y:0,width,height:height-70});
   const id=layout.cards.some(c=>c.id===kind)?'daily-default-'+kind:kind;
-  layout.cards.push({...template,...size,...position,id,title,text:'',items:[]});
+  layout.cards.push({...template,...size,...position,id,title,text:'',items:[],paperStyle:'ruled'});
  }
+ // A new or ink-free daily-only page can be upgraded without moving any handwriting.
+ // Saved pages with ink/custom objects retain their geometry until an explicit reflow.
+ if(pageEligible&&!layout.writingPageVersion)layout=arrangeWritingPage(layout,width,height);
  return layout;
 }
 export function anchor(ref,layout,strokes){

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
-import {LAYOUT_ID,readLayout,starterLayout,vacantPosition,intersects,anchor,hitStroke,strokeBounds} from '../journal/layout-model.mjs';
+import {LAYOUT_ID,readLayout,starterLayout,vacantPosition,intersects,anchor,hitStroke,strokeBounds,writingPage,arrangeWritingPage} from '../journal/layout-model.mjs';
 
 test('layout reading preserves legacy writing, positions, extra fields and rows without migration',()=>{
  const legacy={id:LAYOUT_ID,schemaVersion:1,futureProperty:{retained:true},cards:Array.from({length:95},(_,i)=>({id:'old-'+i,x:i*20,y:17,width:310,height:240,colour:'rose',text:'Saved '+i,unknown:{preserve:i}}))};
@@ -23,7 +23,7 @@ test('new cards prefer unused visible paper before extending the world',()=>{
 });
 test('edit timeline undoes mixed ink/layout groups, retries through the same API and isolates dates/accounts',async()=>{
  const rows=new Map(),calls=[],listeners=new Map();let account='owner',date='2026-11-01';
- const rawSave=row=>{calls.push(['save',row.id]);rows.set(row.id,structuredClone(row));},rawRemove=id=>{calls.push(['remove',id]);rows.delete(id);};
+ const rawSave=row=>{calls.push(['save',row.id]);rows.set(row.id,{...rows.get(row.id),...structuredClone(row)});},rawRemove=id=>{calls.push(['remove',id]);rows.delete(id);};
  const api={context:()=>({uid:account,dateKey:date}),strokes:()=>[...rows.values()],rawSave,rawRemove};
  const sandbox={structuredClone,Map,JSON,setTimeout:()=>1,clearTimeout:()=>{},window:{__journalApi:api,addEventListener:()=>{}},document:{addEventListener:(name,fn)=>listeners.set(name,fn)}};
  vm.runInNewContext(await fs.readFile(new URL('../journal/edit-history.js',import.meta.url),'utf8'),sandbox);const history=sandbox.window.__journalHistory;
@@ -33,10 +33,24 @@ test('edit timeline undoes mixed ink/layout groups, retries through the same API
  save({...rows.get(LAYOUT_ID),cards:[{id:'mood',mood:5,text:'new writing'}]});history.flush();history.undo();assert.equal(rows.get(LAYOUT_ID).cards[0].text,'retained');history.redo();assert.equal(rows.get(LAYOUT_ID).cards[0].text,'new writing');
  history.undo();history.undo();history.undo();assert.equal(rows.size,0);history.redo();assert.ok(rows.has('ink'));history.redo();assert.ok(rows.has(LAYOUT_ID));
  date='2026-11-02';rows.clear();history.undo();assert.equal(rows.size,0);save({id:'new-day',tool:'pen',points:[{x:4,y:5}]});history.flush();account='other';rows.clear();history.redo();history.undo();assert.equal(rows.size,0);assert.ok(calls.length>8);
+ save({id:LAYOUT_ID,tool:'canvas-layout',cards:[],points:[]});history.flush();save({id:LAYOUT_ID,tool:'canvas-layout',cards:[],points:[],page:{x:24,y:80,width:752,height:1150},writingPageVersion:1});history.flush();history.undo();assert.equal(rows.get(LAYOUT_ID).page,null,'Undo clears a newly added paper frame even with merge writes');assert.equal(rows.get(LAYOUT_ID).writingPageVersion,0);
 });
 
 test('daily defaults preserve existing cards, hidden choices and stable IDs without duplicate additions',()=>{
  const existing={id:LAYOUT_ID,cards:[{id:'mood',kind:'mood',title:'My mood',mood:4,hidden:true,x:11,y:22,width:260,height:130},{id:'old-notes',title:'Personal notes',text:'Keep this',x:50,y:40,width:300,height:220}],connections:[{id:'link',from:{type:'card',id:'mood'},to:{type:'card',id:'old-notes'}}],customField:{keep:true}};
  const next=starterLayout([],800,1280,existing);assert.deepEqual(next.cards.slice(0,2),existing.cards);assert.deepEqual(next.connections,existing.connections);assert.deepEqual(next.customField,existing.customField);assert.equal(next.cards.length,5);assert.deepEqual(next.cards.filter(c=>c.kind==='mood'),[existing.cards[0]]);assert.deepEqual(starterLayout([],800,1280,next),next);assert.equal(existing.cards.length,2);
  assert.deepEqual(starterLayout([],800,1280).cards.map(c=>c.title),['Daily Planner','To-Do',"Today's Idea","Today's Mood"]);
+});
+test('tablet writing page has generous, varied ruled sections inside a portrait sheet',()=>{
+ const design=writingPage(800,1280),{planner,todo,ideas,mood}=design.cards;
+ assert.ok(planner.width>=680&&planner.height>=340);assert.ok(todo.width>=320&&todo.height>=400);assert.ok(ideas.height>todo.height&&ideas.width>=320);assert.ok(mood.height<180);assert.ok(design.page.height>design.page.width*1.4);
+ for(const card of Object.values(design.cards)){assert.ok(card.x>=design.page.x&&card.x+card.width<=design.page.x+design.page.width);assert.ok(card.y>=design.page.y&&card.y+card.height<=design.page.y+design.page.height);}
+ const cards=Object.values(design.cards);for(let i=0;i<cards.length;i++)for(let j=i+1;j<cards.length;j++)assert.equal(intersects(cards[i],cards[j],0),false);
+ const phone=writingPage(393,852);assert.ok(phone.page.height>852);assert.ok(phone.cards.planner.height>=400&&phone.cards.todo.height>=400,'Small screens pan a real writing page instead of shrinking handwriting cards');
+});
+test('ink-free daily pages upgrade without clearing text, checklists or mood; ink pages keep saved geometry',()=>{
+ const record={cards:[{id:'planner',kind:'planner',x:28,y:70,width:300,height:150,text:'Saved plan'},{id:'todo',kind:'todo',x:24,y:248,width:280,height:150,items:[{id:'one',text:'Keep task',done:true}]},{id:'ideas',kind:'ideas',x:24,y:426,width:300,height:150,text:'Saved thought'},{id:'mood',kind:'mood',x:24,y:604,width:260,height:130,mood:4}]};
+ const upgraded=starterLayout([],800,1280,record);assert.equal(upgraded.cards[0].text,'Saved plan');assert.deepEqual(upgraded.cards[1].items,record.cards[1].items);assert.equal(upgraded.cards[3].mood,4);assert.ok(upgraded.cards[0].width>600);
+ const ink=[{id:'ink',points:[{x:40,y:100},{x:180,y:100}]}],preserved=starterLayout(ink,800,1280,record);assert.deepEqual(preserved.cards,record.cards);assert.equal(preserved.page,undefined);
+ const explicit=arrangeWritingPage(preserved,800,1280);assert.equal(explicit.cards[2].text,'Saved thought');assert.equal(record.cards[0].width,300);
 });
