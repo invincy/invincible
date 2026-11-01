@@ -1,11 +1,11 @@
 .journal-card-world{position:absolute;left:0;top:0;width:0;height:0;z-index:0;transform-origin:0 0;pointer-events:none;color:#20334b;font:15px/1.55 Inter,system-ui,sans-serif}
 .journal-card-world.is-editing{z-index:125;pointer-events:auto}
-.journal-card-world:not(.is-editing) .journal-note-card header button:last-child{visibility:hidden}
+.journal-card-world:not(.is-editing) .journal-note-card header button:last-child{display:none}
 .journal-note-card header{min-height:34px;flex-shrink:0}
 .journal-note-card footer{flex-shrink:0}
 .journal-moods{display:flex;flex:1;align-items:center;justify-content:space-evenly;padding:4px 10px;gap:6px}
-.journal-moods button{width:36px;height:36px;border:1px solid #6e72752b;border-radius:50%;font-size:24px;line-height:1;background:#fff5;color:#656579}
-.journal-moods button[aria-pressed=true]{background:#ffe7accc;border-color:#d2b36e;box-shadow:0 0 0 4px #ffe9b944}
+.journal-note-card .journal-moods button{width:36px;height:36px;border:1px solid #6e72752b;border-radius:50%;font-size:24px;line-height:1;background:#fff5;color:#656579}
+.journal-note-card .journal-moods button[aria-pressed=true]{background:#ffe7accc;border-color:#d2b36e;box-shadow:0 0 0 4px #ffe9b944}
 .journal-checklist{flex:1;min-height:0;overflow:auto;padding:10px 14px;scrollbar-width:thin}
 .journal-checklist label{display:flex;align-items:center;gap:9px;margin:5px 0}
 .journal-note-card .journal-checklist input[type=checkbox]{width:16px;min-width:16px;height:16px;accent-color:#8593b2}

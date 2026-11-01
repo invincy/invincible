@@ -16,7 +16,7 @@ function persist(){
  signature=uiSignature(layout);api().save(next);return true;
 }
 function change(edit,{redraw=true}={}){if(!api()?.ready()||context()!==session)return;const before=structuredClone(layout);edit(layout);if(!persist()){layout=before;draw();return;}if(redraw)draw();}
-function atView(width,height){const v=camera().view;return vacantPosition({x:(28-v.x)/v.zoom,y:(110-v.y)/v.zoom},{width,height},layout,api().strokes());}
+function atView(width,height){const v=camera().view;return vacantPosition({x:(28-v.x)/v.zoom,y:(110-v.y)/v.zoom},{width,height},layout,api().strokes(),{x:-v.x/v.zoom,y:-v.y/v.zoom,width:surface.clientWidth/v.zoom,height:(surface.clientHeight-80)/v.zoom});}
 function place(node,item){Object.assign(node.style,{left:(Number(item.x)||0)+'px',top:(Number(item.y)||0)+'px',width:(Number(item.width)||300)+'px',height:(Number(item.height)||220)+'px'});node.style.setProperty('--card-colour',colour(item.colour));}
 function iconVisual(host,item){const svg=item.moduleId&&document.querySelector(`.app-nav-link[data-page="${item.moduleId}"] svg`);if(svg)host.append(svg.cloneNode(true));else host.textContent=item.symbol||item.icon||'◇';}
 function setEditing(value){editing=!!value&&!!api()?.ready();layer?.classList.toggle('is-editing',editing);if(layer)layer.inert=!editing;window.dispatchEvent(new CustomEvent('journal-card-mode',{detail:editing}));}

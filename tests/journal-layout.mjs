@@ -17,6 +17,10 @@ test('connections follow moved cards, icons and transformed handwriting without 
  assert.deepEqual(anchor({type:'card',id:'c'},layout,[ink]),{x:180,y:140});layout.cards[0].x+=80;assert.deepEqual(anchor({type:'card',id:'c'},layout,[ink]),{x:260,y:140});assert.deepEqual(anchor({type:'icon',id:'i'},layout,[ink]),{x:532,y:332});assert.deepEqual(anchor({type:'stroke',id:'s'},layout,[ink]),{x:200,y:300});ink.points.forEach(p=>p.x+=20);assert.equal(anchor({type:'stroke',id:'s'},layout,[ink]).x,220);layout.cards[0].hidden=true;assert.equal(anchor({type:'card',id:'c'},layout,[ink]),null);assert.equal(anchor({type:'stroke',id:'missing'},layout,[ink]),null);
  assert.equal(hitStroke({x:200,y:280},[ink],30)?.id,'s');assert.equal(hitStroke({x:900,y:900},[ink]),null);
 });
+test('new cards prefer unused visible paper before extending the world',()=>{
+ const layout=readLayout({cards:[{id:'diary',x:28,y:110,width:310,height:290}]}),position=vacantPosition({x:28,y:110},{width:280,height:240},layout,[],{x:0,y:0,width:800,height:1200});
+ assert.ok(position.x+280<=800&&position.y+240<=1200);assert.equal(intersects({...position,width:280,height:240},layout.cards[0]),false);
+});
 test('edit timeline undoes mixed ink/layout groups, retries through the same API and isolates dates/accounts',async()=>{
  const rows=new Map(),calls=[],listeners=new Map();let account='owner',date='2026-11-01';
  const rawSave=row=>{calls.push(['save',row.id]);rows.set(row.id,structuredClone(row));},rawRemove=id=>{calls.push(['remove',id]);rows.delete(id);};

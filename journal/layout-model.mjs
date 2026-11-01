@@ -24,10 +24,13 @@ export function strokeBounds(stroke){
 }
 export function intersects(a,b,pad=16){return a.x<aWidth(b)+pad&&aWidth(a)+pad>b.x&&a.y<b.y+b.height+pad&&a.y+a.height+pad>b.y;}
 const aWidth=r=>r.x+r.width;
-export function vacantPosition(start,size,layout,strokes){
+export function vacantPosition(start,size,layout,strokes,view){
  const occupied=[...layout.cards.filter(c=>!c.hidden),...layout.icons.map(i=>({x:i.x,y:i.y,width:i.size||64,height:i.size||64})),...strokes.map(strokeBounds).filter(Boolean)];
  // Search the nearby canvas first, then extend beyond all known content. Never move ink.
- for(let row=0;row<12;row++)for(let col=0;col<6;col++){const candidate={...size,x:start.x+col*(size.width+28),y:start.y+row*(size.height+28)};if(!occupied.some(r=>intersects(candidate,r)))return {x:candidate.x,y:candidate.y};}
+ const candidates=[];
+ for(let row=0;row<12;row++)for(let col=0;col<6;col++){const candidate={...size,x:start.x+col*(size.width+28),y:start.y+row*(size.height+28)};if(!occupied.some(r=>intersects(candidate,r)))candidates.push(candidate);}
+ const inView=view&&candidates.find(c=>c.x>=view.x&&c.y>=view.y&&c.x+c.width<=view.x+view.width&&c.y+c.height<=view.y+view.height);
+ const chosen=inView||candidates[0];if(chosen)return {x:chosen.x,y:chosen.y};
  return {x:start.x,y:Math.max(start.y,...occupied.map(r=>r.y+r.height))+40};
 }
 export function starterLayout(strokes,width=1000,height=800){
