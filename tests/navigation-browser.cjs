@@ -21,6 +21,7 @@ for(const route of ['garage/','creator/','creator/project.html','journal/','lic/
   assert.equal(await page.locator('.desktop-nav a').count(),10,'Journal retains the shared navigation registry');
   assert.equal(await page.locator('.global-nav').isVisible(),false,'Notebook hides permanent navigation');
   assert.equal(await page.locator('.mobile-tabbar').isVisible(),false,'Notebook reserves the viewport for paper');
+  assert.equal(await page.locator('.global-ai-widget').isVisible(),false,'The existing assistant is contextual on Journal');
   continue; // Floating Home/AI/Apps/profile access is exercised in journal-notebook-browser.cjs.
  }
  await page.locator('.desktop-nav a').first().waitFor();

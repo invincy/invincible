@@ -1,6 +1,9 @@
 /* Notebook chrome floats over the same drawing surface; opening menus never resizes it. */
 html:has(body.journal-page),body.journal-page{width:100%;height:100%;margin:0!important;padding:0!important;overflow:hidden!important;background:#fbf9f5!important;overscroll-behavior:none;--site-nav-height:0px;--site-nav-mobile:0px;--mobile-tabbar-height:0px}
 .journal-page>.global-nav,.journal-page>.mobile-tabbar,.journal-page #root>.global-nav{display:none!important}
+.journal-page>.global-ai-widget{display:none!important}
+.journal-page.journal-assistant-open>.global-ai-widget{display:block!important;position:fixed;z-index:620;right:16px;bottom:136px!important;width:70px;height:70px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 160px);border:0;border-radius:18px}
+.journal-page.journal-assistant-open>.global-ai-widget[data-mode=chat],.journal-page.journal-assistant-open>.global-ai-widget[data-mode=voice]{width:min(400px,calc(100vw - 24px));height:min(560px,calc(100dvh - 160px))}
 .journal-page #root,.journal-page .app-container.journal-free-workspace{width:100%!important;height:100dvh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}
 .journal-page .app-container>.topbar{display:none!important}
 .journal-page .app-container>.canvas-container.journal-free-surface,.journal-notebook-active .canvas-container.journal-free-surface{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;min-height:0!important;max-width:none!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:clip!important;background:#fbf9f5!important}
