@@ -7,7 +7,8 @@ export const templates=[
  {kind:'diary',title:'Daily Diary',symbol:'▤',colour:'blue',width:310,height:290},
  {kind:'todo',title:'To-Do',symbol:'☑',colour:'blue',width:280,height:240},
  {kind:'tomorrow',title:'Tomorrow',symbol:'▣',colour:'sage',width:280,height:240},
- {kind:'ideas',title:'Ideas & Possibilities',symbol:'✧',colour:'sand',width:300,height:240}
+ {kind:'ideas',title:'Ideas & Possibilities',symbol:'✧',colour:'sand',width:300,height:240},
+ {kind:'planner',title:'Daily Planner',symbol:'▣',colour:'sage',width:300,height:190}
 ];
 export function readLayout(record){
  const value=record?structuredClone(record):{};
@@ -33,10 +34,18 @@ export function vacantPosition(start,size,layout,strokes,view){
  const chosen=inView||candidates[0];if(chosen)return {x:chosen.x,y:chosen.y};
  return {x:start.x,y:Math.max(start.y,...occupied.map(r=>r.y+r.height))+40};
 }
-export function starterLayout(strokes,width=1000,height=800){
- const layout=readLayout();if(strokes.some(s=>(s.points||[]).length))return layout;
- const first=templates[0];layout.cards.push({...first,id:'mood',x:28,y:Math.max(170,height-290),text:'',items:[]});
- if(width>=700)layout.cards.push({...templates[1],id:'special',x:330,y:Math.max(170,height-280),text:'',items:[]});
+export function starterLayout(strokes,width=1000,height=800,record){
+ const layout=readLayout(record),wide=width>=700,top=wide?Math.max(100,height-500):70;
+ const daily=[['planner','Daily Planner',190],['todo','To-Do',190],['ideas',"Today's Idea",180],['mood',"Today's Mood",130]];
+ for(const [index,[kind,title,tall]]of daily.entries()){
+  // Hidden/removed daily cards count as present, so a user's choice survives reopening.
+  if(layout.cards.some(c=>c.kind===kind||(!c.kind&&(c.id===kind||c.title===title))))continue;
+  const template=templates.find(t=>t.kind===kind),size={width:Math.min(template.width,Math.max(220,width-48)),height:wide?tall:kind==='mood'?130:150};
+  const start=wide?{x:index%2?356:28,y:top+Math.floor(index/2)*218}:{x:24,y:top+index*178};
+  const position=vacantPosition(start,size,layout,strokes,{x:0,y:0,width,height:height-70});
+  const id=layout.cards.some(c=>c.id===kind)?'daily-default-'+kind:kind;
+  layout.cards.push({...template,...size,...position,id,title,text:'',items:[]});
+ }
  return layout;
 }
 export function anchor(ref,layout,strokes){

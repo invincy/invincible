@@ -1,4 +1,4 @@
-import {LAYOUT_ID,palette,colour,templates,readLayout,starterLayout,vacantPosition,anchor,hitStroke} from './layout-model.mjs';
+import {LAYOUT_ID,palette,colour,templates,readLayout,starterLayout,vacantPosition,anchor,hitStroke} from './layout-model.mjs?v=2';
 import {navigationPages} from '../shared/navigation.js';
 
 const api=()=>window.__journalApi, camera=()=>window.__journalViewport;
@@ -87,7 +87,7 @@ function paint(ctx,box){if(!camera())return;const v=camera().view;ctx.save();ctx
 }
 function install(){const next=api()?.container?.();if(!next?.isConnected||!camera()){layer?.remove();surface=null;return;}if(surface!==next){layer?.remove();surface=next;layer=el('div',{className:'journal-card-world'});surface.append(layer);session='';}
  if(session!==context()){session=context();signature='';gesture=null;connecting=null;editing=false;window.__journalNotebook?.closePanel();}
- const record=api().strokes().find(s=>s.id===LAYOUT_ID),nextLayout=record?readLayout(record):api().contentReady?.()?starterLayout(api().strokes(),surface.clientWidth,surface.clientHeight):readLayout(),nextSignature=uiSignature(nextLayout);
+ const record=api().strokes().find(s=>s.id===LAYOUT_ID),nextLayout=record||api().contentReady?.()?starterLayout(api().strokes(),surface.clientWidth,surface.clientHeight,record):readLayout(),nextSignature=uiSignature(nextLayout);
  if(!gesture&&signature!==nextSignature){layout=nextLayout;signature=nextSignature;draw();}const v=camera().view;layer.style.transform=`translate(${v.x}px,${v.y}px) scale(${v.zoom})`;updateLinks();
 }
 document.addEventListener('pointerdown',e=>{
