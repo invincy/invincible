@@ -6,7 +6,7 @@
 /* dashboard.css owns dashboard/orb layout; this sheet owns only the spatial shell and workspace region. */
 .spatial-page{font-family:Inter,"Segoe UI",system-ui,sans-serif;color:#e4edf3;background:#080e16;font-synthesis:none;color-scheme:dark}
 .spatial-page *{box-sizing:border-box}.spatial-page{margin:0;padding:0}.spatial-page :is(button,a){-webkit-tap-highlight-color:transparent;touch-action:manipulation}.spatial-page :is(button,input){font:inherit}.spatial-page button{cursor:pointer}
-.v2-shell{height:100dvh;display:grid;grid-template-rows:auto auto minmax(0,1fr) 34px;isolation:isolate;background:radial-gradient(ellipse at 20% 0%,#10252e88,transparent 55%),#080e16}
+.v2-shell{height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr) 34px;isolation:isolate;background:radial-gradient(ellipse at 20% 0%,#10252e88,transparent 55%),#080e16}
 .v2-shell a,.v2-auth a{color:inherit;text-decoration:none}.v2-shell button,.v2-auth button{min-height:44px;border:1px solid #5d818947;background:#152530;color:#dce9ee;border-radius:9px;padding:10px 16px}
 .v2-shell button:hover,.v2-auth button:hover{background:#203a45;border-color:#81c5cc88}.v2-shell :focus-visible,.v2-auth :focus-visible{outline:2px solid #8ceddf;outline-offset:4px}
 .v2-topbar{display:flex;align-items:center;gap:32px;padding:12px 84px 12px 28px;min-height:76px;border-bottom:1px solid #b2e4eb12}
@@ -144,11 +144,11 @@
 .v2-task-card progress{width:100%;height:3px;accent-color:var(--lane-accent)}
 .v2-task-wrap{position:relative;flex:none;min-width:0}
 .v2-task-wrap.is-dragging{opacity:.4}
-.v2-kanban-board .v2-task-card{width:100%;padding-right:42px;padding-bottom:36px;cursor:grab;user-select:none;touch-action:manipulation}
+.v2-kanban-board .v2-task-card{width:100%;padding-right:42px;padding-bottom:56px;cursor:grab;user-select:none;touch-action:manipulation}
 .v2-kanban-board .v2-lane.is-drop-target{outline:1px solid var(--lane-accent);outline-offset:-1px;background-color:color-mix(in srgb,var(--lane-accent) 10%,transparent)}
 .v2-shell .v2-drag-handle{position:absolute;right:4px;top:4px;width:34px;min-height:34px;padding:0;border:0;background:transparent;color:var(--lane-accent);font-size:22px;cursor:grab;touch-action:none;user-select:none}
 .v2-drag-handle:active{cursor:grabbing}
-.v2-task-move{position:absolute;right:9px;bottom:7px;width:78px;min-height:25px;border:0;background:#0c2029;color:#a6c8d0;font:11px Inter,'Segoe UI',sans-serif;cursor:pointer;border-radius:4px}
+.v2-task-move{position:absolute;right:9px;bottom:7px;width:78px;min-height:44px;border:0;background:#0c2029;color:#a6c8d0;font:11px Inter,'Segoe UI',sans-serif;cursor:pointer;border-radius:4px}
 .v2-task-move:disabled,.v2-drag-handle:disabled{opacity:.5;cursor:wait}
 .v2-drag-ghost{position:fixed;z-index:100;pointer-events:none;width:200px;padding:14px;background:#14343e;border-left:2px solid #8ceddf;color:#e5f4f4;box-shadow:0 8px 28px #0008;font-size:13px;overflow-wrap:anywhere}
 .v2-move-feedback{margin:0;min-height:16px;color:#9db6be;font-size:11px}
@@ -194,3 +194,12 @@
 .v2-account .finance-reminder-backdrop{white-space:normal}.v2-account .finance-reminder-dialog{font-size:14px}.v2-account .finance-reminder-dialog a{white-space:normal}
 /* Account menus must sit above the connection strip below the header. */
 .v2-topbar{z-index:6}
+
+/* Connection notices occupy space only while loading, offline or in error. */
+.v2-shell.has-status{grid-template-rows:auto auto minmax(0,1fr) 34px}
+.v2-topbar nav{border:0}
+.v2-topbar nav a,.v2-topbar nav a[aria-current]{border:0;box-shadow:none;background:transparent}
+.v2-shell .v2-topbar nav a:focus{outline:none}
+.v2-shell .v2-topbar nav a:focus-visible{text-decoration:underline;text-underline-offset:7px;text-decoration-thickness:2px}
+.v2-shell .v2-task-delete{position:absolute;left:9px;bottom:7px;min-height:44px;padding:3px 7px;border:0;background:transparent;color:#eaa79b;font-size:11px}
+.v2-task-delete:disabled{opacity:.5;cursor:wait}

@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const {chromium}=require('playwright');const root=path.resolve(__dirname,'..');
 (async()=>{
- let version='2026.11.01.1',offline=false,loads=0;
+ let version=JSON.parse(fs.readFileSync(path.join(root,'app-version.json'),'utf8')).version,offline=false,loads=0;
  const server=http.createServer((req,res)=>{
   const pathname=new URL(req.url,'http://localhost').pathname;
   if(pathname==='/invincible/app-version.json'){res.setHeader('Content-Type','application/json');res.statusCode=offline?503:200;res.end(JSON.stringify({version,notes:'Latest changes'}));return;}
