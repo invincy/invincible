@@ -46,3 +46,14 @@ Validation: layout/history unit tests, storage failure/reload/retry tests, exist
 Each daily canvas now supplies Daily Planner, To-Do, Today's Idea and Today's Mood, including phone layouts. Diary, special events, Tomorrow and other extra cards remain available through Add card. Missing daily cards are offered alongside saved layouts without moving, renaming or resetting any existing card, mood, checklist, icon or connection. Hidden/removed daily cards stay hidden and can be restored explicitly. Defaults are read-only until an explicit edit and initially use vacant world space away from ink. Their positions stay stable while writing during the session. Saved content is not migrated or overwritten on opening a date.
 
 Unit checks cover four defaults across screen sizes, safe placement, retained fields/positions/hidden choices and idempotent reopening. The notebook browser suite covers daily defaults, persistence, date/account isolation and existing controls; the full repository checks run before publication.
+
+
+## Tablet writing page and direct dates
+
+New daily layouts now use a portrait paper sheet with a wide planner, tall side-by-side to-do and ideas sections, and a compact mood section. On an 800px portrait tablet, the planner is at least 680px wide with multiple 36px writing lines; notes and checklist sections have several hundred pixels of writing height. Smaller screens pan a tall page instead of shrinking the cards to widget sizes. Added cards also have larger writing dimensions. Soft rules and the planner's time margin are visual guides behind the same pen canvas, not input overlays.
+
+Ink-free daily-only layouts upgrade their geometry without clearing typed writing, checklist items or mood. Pages containing handwriting/custom objects retain saved geometry. Canvas settings provides an explicit Use writing page layout action, with a warning when ink is present: card backgrounds reflow, while ink stays at its original world coordinates. Existing card movement, resizing, undo/redo and persistence are reused. The paper frame and rules are included in area captures.
+
+Previous/next day arrows are always visible beside the floating date. Clicking the date opens an inline month calendar directly beneath it without opening drawing tools; month navigation, Today and direct date entry remain accessible. Date changes reuse existing history and per-date camera handling.
+
+Validation includes tablet paper geometry, non-overlapping section sizes, larger small-screen sections, retained content/ink geometry, direct day/calendar access with collapsed tools and pen hit routing through ruled backgrounds. Full repository/browser checks and portrait/desktop/mobile screenshot review run before publication. Physical S Pen latency and production Firebase permissions remain outside controlled fixtures.
