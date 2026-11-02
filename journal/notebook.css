@@ -40,3 +40,6 @@ html:has(body.journal-page),body.journal-page{width:100%;height:100%;margin:0!im
 .journal-notebook-active .journal-canvas-tools button{width:32px;min-width:32px;min-height:32px;padding:5px;color:inherit;background:transparent;border:0}
 .journal-notebook-active .journal-pan-tool[aria-pressed=true]{background:#e4def2!important;color:#474960!important}
 .journal-notebook-active .toolbar .icon-btn{touch-action:manipulation}
+
+.journal-notebook-active .journal-canvas-tools [data-action=snap]{width:auto;display:flex;align-items:center;gap:5px;padding:5px 9px;font:11px Inter,system-ui;white-space:nowrap}
+.journal-canvas-tools [data-action=snap] span{font:11px Inter,system-ui}

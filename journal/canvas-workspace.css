@@ -17,3 +17,5 @@
 .journal-page .journal-free-workspace>.topbar,.journal-page .journal-free-workspace>.toolbar{position:relative!important;top:auto!important;flex-shrink:0}
 .journal-page .journal-free-workspace>.canvas-container.journal-free-surface{flex:1 1 0!important;height:auto!important;min-height:120px!important;margin-bottom:8px}
 @media(max-width:760px){.journal-page .app-container.journal-free-workspace{height:calc(100dvh - var(--site-nav-mobile,62px) - var(--mobile-tabbar-height,76px) - env(safe-area-inset-bottom))!important}}
+
+.journal-canvas-tools [data-action=snap]{width:auto;display:flex;align-items:center;gap:5px;padding:5px 9px;white-space:nowrap}
