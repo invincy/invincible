@@ -30,3 +30,13 @@ html:has(body.journal-page),body.journal-page{width:100%;height:100%;margin:0!im
 @media(max-width:400px){.journal-floating-dock{right:10px;bottom:76px;padding:4px;gap:0}.journal-floating-dock button{width:35px}.journal-floating-date{left:10px}.journal-notebook-panel{right:10px;width:calc(100vw - 20px)}.journal-icon-wheel{width:250px;height:250px}.journal-notebook-panel .journal-wheel-item{transform:translate(-50%,-50%) rotate(var(--angle)) translateY(-89px) rotate(calc(-1*var(--angle)))}}
 
 .journal-notebook-panel .inv-account-options{position:static;box-sizing:border-box;width:100%;margin-top:8px;background:#f8f5ef;border-color:#9990a42b;color:#4c5365;box-shadow:none}.journal-notebook-panel .inv-account-options small{color:#787e8c}.journal-notebook-panel .inv-account-options button{background:#fff9;color:#4c5365;border-color:#9990a422}
+
+/* The compact controls stay available; only secondary panels dismiss. */
+.journal-notebook-active .journal-tools-launcher{display:none}
+.journal-notebook-active .toolbar{top:64px!important}
+.journal-notebook-active .journal-floating-dock{display:flex;bottom:max(16px,env(safe-area-inset-bottom));right:50%;transform:translateX(50%);max-width:calc(100vw - 20px)}
+.journal-notebook-active .journal-canvas-tools{display:flex!important;position:fixed!important;z-index:510;top:auto!important;left:50%!important;right:auto!important;bottom:76px!important;transform:translateX(-50%);border:1px solid #aaa0b629;border-radius:16px;background:#fffdf8eb;color:#60647a;padding:4px;gap:2px;box-shadow:0 3px 16px #6453750b;backdrop-filter:blur(16px)}
+.journal-notebook-active .journal-canvas-tools [data-action=pan]{display:none}
+.journal-notebook-active .journal-canvas-tools button{width:32px;min-width:32px;min-height:32px;padding:5px;color:inherit;background:transparent;border:0}
+.journal-notebook-active .journal-pan-tool[aria-pressed=true]{background:#e4def2!important;color:#474960!important}
+.journal-notebook-active .toolbar .icon-btn{touch-action:manipulation}

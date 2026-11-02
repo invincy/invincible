@@ -13,7 +13,7 @@ function persist(){
  if(layout.schemaVersion===1&&!layout.connections.length){const first=layout.cards.find(visible);if(first)layout.connections=layout.cards.filter(c=>c!==first&&visible(c)).map(c=>({id:uid(),from:{type:'card',id:first.id},to:{type:'card',id:c.id},colour:'blue'}));}layout.schemaVersion=2;
  const record=api().strokes().find(s=>s.id===LAYOUT_ID),next={...record,...layout,schemaVersion:2};
  if(new TextEncoder().encode(JSON.stringify(next)).length>800000){notify('This layout is full. Shorten a card before saving more.');return false;}
- signature=uiSignature(layout);api().save(next);return true;
+ signature=uiSignature(layout);api().save(next);defaultsCache=null;return true;
 }
 function change(edit,{redraw=true}={}){if(!api()?.ready()||context()!==session)return;const before=structuredClone(layout);edit(layout);if(!persist()){layout=before;draw();return;}if(redraw)draw();}
 function atView(width,height){const v=camera().view;return vacantPosition({x:(28-v.x)/v.zoom,y:(110-v.y)/v.zoom},{width,height},layout,api().strokes(),{x:-v.x/v.zoom,y:-v.y/v.zoom,width:surface.clientWidth/v.zoom,height:(surface.clientHeight-80)/v.zoom});}
@@ -24,6 +24,30 @@ function updateLinks(){
  const svg=layer?.querySelector('.journal-card-links');if(!svg)return;svg.replaceChildren();let links=layout.connections;
  if(layout.schemaVersion===1){const first=layout.cards.find(visible);if(first)links=[...links,...layout.cards.filter(c=>visible(c)&&c!==first).map(c=>({from:{type:'card',id:first.id},to:{type:'card',id:c.id}}))];}
  for(const link of links){const a=anchor(link.from,layout,api().strokes()),b=anchor(link.to,layout,api().strokes());if(!a||!b)continue;const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.dataset.connection=link.id||'';path.setAttribute('d',`M${a.x} ${a.y} C${(a.x+b.x)/2} ${a.y},${(a.x+b.x)/2} ${b.y},${b.x} ${b.y}`);path.style.stroke=colour(link.colour||'blue');svg.append(path);}
+}
+// Hold a card with a finger to move it; short swipes remain camera navigation.
+let hold=null;const fingers=new Set();
+function cancelHold(rollback=false){if(!hold)return;clearTimeout(hold.timer);if(rollback&&hold.active&&hold.session===context()){layout=hold.initial;signature=uiSignature(layout);draw();}hold.node?.classList.remove('is-held');hold=null;}
+function touchCard(e){
+ if(e.type==='pointerdown'){
+  fingers.add(e.pointerId);if(fingers.size!==1||camera().panning||editing){cancelHold(true);gesture=null;return false;}
+  const p=camera().point(e),card=[...layout.cards].reverse().find(c=>visible(c)&&p.x>=c.x&&p.x<=c.x+c.width&&p.y>=c.y&&p.y<=c.y+c.height);
+  if(!card||!api().ready())return false;
+  hold={id:e.pointerId,x:e.clientX,y:e.clientY,card,start:{...card},session:context(),initial:structuredClone(layout)};const pending=hold;
+  hold.timer=setTimeout(()=>{if(hold!==pending||context()!==pending.session||fingers.size!==1)return cancelHold();camera().cancelTouch();hold.active=true;gesture={id:hold.id};hold.node=layer.querySelector('[data-card="'+CSS.escape(card.id)+'"]');hold.node?.classList.add('is-held');notify('Move card · handwriting stays on the paper');},450);
+  return false;
+ }
+ if(e.type==='pointerup'||e.type==='pointercancel')fingers.delete(e.pointerId);
+ if(!hold||hold.id!==e.pointerId)return false;
+ if(hold.session!==context()){cancelHold();gesture=null;return false;}
+ if(e.type==='pointermove'){
+  if(!hold.active){if(Math.hypot(e.clientX-hold.x,e.clientY-hold.y)>9)cancelHold();return false;}
+  const z=camera().view.zoom;hold.card.x=hold.start.x+(e.clientX-hold.x)/z;hold.card.y=hold.start.y+(e.clientY-hold.y)/z;place(hold.node,hold.card);updateLinks();return true;
+ }
+ if(e.type==='pointerup'||e.type==='pointercancel'){
+  const active=hold.active;if(active){gesture=null;if(e.type==='pointercancel')cancelHold(true);else{persist();cancelHold();}camera().cancelTouch();}else cancelHold();return active;
+ }
+ return !!hold.active;
 }
 function dragHandle(handle,item,node,kind,icon=false){
  handle.onpointerdown=e=>{if(e.pointerType==='pen'||e.button!==0||!editing)return;e.preventDefault();e.stopPropagation();gesture={id:e.pointerId,x:e.clientX,y:e.clientY,initial:structuredClone(layout),start:{...item},session};handle.setPointerCapture(e.pointerId);};
@@ -88,17 +112,18 @@ function paint(ctx,box){if(!camera())return;const v=camera().view;ctx.save();ctx
  for(const i of layout.icons){ctx.globalAlpha=.8;ctx.fillStyle=colour(i.colour);ctx.beginPath();ctx.arc(i.x+i.size/2,i.y+i.size/2,i.size/2,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.fillStyle='#344052';ctx.font='24px system-ui';ctx.fillText(i.symbol||'◇',i.x+i.size*.25,i.y+i.size*.64);}ctx.restore();
 }
 function install(){const next=api()?.container?.();if(!next?.isConnected||!camera()){layer?.remove();surface=null;return;}if(surface!==next){layer?.remove();surface=next;layer=el('div',{className:'journal-card-world'});surface.append(layer);session='';}
- if(session!==context()){session=context();signature='';gesture=null;connecting=null;editing=false;defaultsSource='';defaultsCache=null;window.__journalNotebook?.closePanel();}
+ if(session!==context()){session=context();cancelHold();fingers.clear();signature='';gesture=null;connecting=null;editing=false;defaultsSource='';defaultsCache=null;window.__journalNotebook?.closePanel();}
  const record=api().strokes().find(s=>s.id===LAYOUT_ID),source=record?uiSignature(readLayout(record)):'empty';let nextLayout=readLayout();
  if(record||api().contentReady?.()){if(!defaultsCache||defaultsSource!==source){defaultsSource=source;defaultsCache=starterLayout(api().strokes(),surface.clientWidth,surface.clientHeight,record);}nextLayout=defaultsCache;}
  const nextSignature=uiSignature(nextLayout);
  if(!gesture&&signature!==nextSignature){layout=nextLayout;signature=nextSignature;draw();}const v=camera().view;layer.style.transform=`translate(${v.x}px,${v.y}px) scale(${v.zoom})`;updateLinks();
 }
 document.addEventListener('pointerdown',e=>{
+ if(e.pointerType==='pen'){cancelHold(true);fingers.clear();gesture=null;}
  if(e.pointerType==='pen'&&e.target.closest?.('.journal-note-card,.journal-canvas-icon')){const live=api()?.live();if(!live)return;setEditing(false);e.preventDefault();e.stopImmediatePropagation();live.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerId:e.pointerId,pointerType:'pen',clientX:e.clientX,clientY:e.clientY,pressure:e.pressure,button:e.button,buttons:e.buttons,tiltX:e.tiltX,tiltY:e.tiltY}));return;}
  if(!connecting||e.target.id!=='live-canvas')return;if(context()!==session){connecting=null;return;}e.preventDefault();e.stopImmediatePropagation();const point=camera().point(e),stroke=hitStroke(point,api().strokes(),18/camera().view.zoom),id=connecting;connecting=null;connect(id,stroke?{type:'stroke',id:stroke.id}:{type:'point',...point});notify('Connection added.');
 },true);
 document.addEventListener('pointerover',e=>{if(e.pointerType==='pen'&&e.target.closest?.('.journal-note-card,.journal-canvas-icon'))setEditing(false);},true);
-document.addEventListener('keydown',e=>{if(e.key==='Escape')connecting=null;});window.addEventListener('journal-tool-change',()=>setEditing(false));
-window.__journalCards={paint,get layout(){return structuredClone(layout);},get editing(){return editing;},setEditing,addCard,useWritingPage,showLibrary,showWheel,editCustom,addIcon,connect,openIcon,toggleGrid(){change(l=>l.settings.grid=!l.settings.grid);}};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')connecting=null;});window.addEventListener('journal-tool-change',()=>{cancelHold(true);gesture=null;fingers.clear();setEditing(false);});window.addEventListener('blur',()=>{cancelHold(true);gesture=null;fingers.clear();});
+window.__journalCards={paint,touchCard,get layout(){return structuredClone(layout);},get editing(){return editing;},setEditing,addCard,useWritingPage,showLibrary,showWheel,editCustom,addIcon,connect,openIcon,toggleGrid(){change(l=>l.settings.grid=!l.settings.grid);}};
 setInterval(install,160);install();

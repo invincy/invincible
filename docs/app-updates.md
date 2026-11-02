@@ -57,3 +57,11 @@ Ink-free daily-only layouts upgrade their geometry without clearing typed writin
 Previous/next day arrows are always visible beside the floating date. Clicking the date opens an inline month calendar directly beneath it without opening drawing tools; month navigation, Today and direct date entry remain accessible. Date changes reuse existing history and per-date camera handling.
 
 Validation includes tablet paper geometry, non-overlapping section sizes, larger small-screen sections, retained content/ink geometry, direct day/calendar access with collapsed tools and pen hit routing through ruled backgrounds. Full repository/browser checks and portrait/desktop/mobile screenshot review run before publication. Physical S Pen latency and production Firebase permissions remain outside controlled fixtures.
+
+### Floating tools and S Pen navigation — November 2, 2026
+
+Journal keeps the compact drawing toolbar, notebook actions and zoom controls floating and visible. Pan is directly available beside the pen. Selecting another drawing tool returns straight to the canvas; tapping the active tool opens settings. Choosing a swatch, committed custom colour or eraser mode dismisses that settings panel. Width/opacity sliders remain open while adjusted.
+
+S Pen hover no longer counts as pen contact. Fingers pan and pinch immediately after release, while touches started during contact remain rejected until lifted. A 450 ms finger hold on a card enables a single drag without opening arrangement mode; short swipes remain panning, a second finger cancels the hold, and pen input cannot start card movement. Handwriting remains independent of card geometry. Layout moves use existing persistence and undo history.
+
+Verified with repository unit/Functions checks and browser coverage for pen-contact palm rejection, hover/release followed by finger pan and pinch, long-press movement/undo, explicit stylus Pan, immediate colour/eraser dismissal, and persistent controls across desktop, portrait tablet and phone sizes. Original renderer and saved data paths are unchanged. Physical Samsung S Pen latency and signed-in production Firebase still require device/account verification.
