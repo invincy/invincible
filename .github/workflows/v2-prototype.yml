@@ -18,6 +18,19 @@ permissions:
   contents: read
 
 jobs:
+  lic-agent-crm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: node --test tests/lic-agent-crm.mjs tests/lic-crm-service.mjs
+      - run: node tests/lic-agent-crm-browser.cjs
   journal:
     runs-on: ubuntu-latest
     timeout-minutes: 8
