@@ -128,5 +128,7 @@ production Firebase; its HTTP-only UUID/hash shims are never shipped.
 LIC now opens Agent CRM directly beside My Follow-ups. CRM uses LIC blue/yellow
 accents on black; office/client follow-ups keep their original route/data. The
 release CI independently runs both legacy CRM and Agent CRM browser workflows,
-including palette and route assertions. Firebase access must be connected before
-backend deployment; publishing static files alone does not activate cloud CRM.
+including palette and route assertions. Administrative access to the existing Firebase project is required for backend
+deployment; publishing static files alone does not activate cloud CRM. CRM users
+reuse their normal Invincible Google session, including invitation acceptance.
+No new Google login flow or account connection is required inside CRM.

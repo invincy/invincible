@@ -406,15 +406,19 @@ architecture document explicitly enumerates remaining work and scale limits.
 
 ## LIC publication verification — November 2, 2026
 
-The LIC landing page now links directly to Agent CRM; My Follow-ups retains its
+The LIC landing page links directly to Agent CRM; My Follow-ups retains its
 existing route and independent private storage. Agent CRM uses LIC blue/yellow
 accents on black, including the active navigation and primary import action.
 Browser coverage asserts both routes and computed dark/yellow colors.
 
-CI log inspection identified two prior verification failures. Notebook panels
-could open after an account switch before the 180ms context poll updated its key;
-the next poll then closed the new panel. Panel opening now synchronizes the existing card and notebook
-contexts first. No Journal ink/storage logic changes. The rich Orb test
-now waits for the same required influence value instead of a fixed 180ms delay;
-its assertion and particle behavior remain unchanged. Both fixes require the full
-browser rerun before publication. Backend deployment remains a separate step.
+Journal changes discovered during regression verification are separated into
+https://github.com/invincy/invincible/pull/122 for independent review. The CRM
+release restores all three Journal files byte-for-byte to its master baseline.
+No Google authentication, session persistence or Journal data changes are included.
+The rich Orb test waits for the same required influence value instead of assuming
+a fixed 180ms delay; its assertion and particle behavior are unchanged.
+
+Normal Invincible Google authentication is the only user login. The existing
+Firebase session also authenticates CRM callable requests and workspace invitation
+acceptance. Backend deployment permission is an administrator requirement, not
+another login or connection for CRM users. No deployment has been completed.
