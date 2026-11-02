@@ -65,3 +65,13 @@ Journal keeps the compact drawing toolbar, notebook actions and zoom controls fl
 S Pen hover no longer counts as pen contact. Fingers pan and pinch immediately after release, while touches started during contact remain rejected until lifted. A 450 ms finger hold on a card enables a single drag without opening arrangement mode; short swipes remain panning, a second finger cancels the hold, and pen input cannot start card movement. Handwriting remains independent of card geometry. Layout moves use existing persistence and undo history.
 
 Verified with repository unit/Functions checks and browser coverage for pen-contact palm rejection, hover/release followed by finger pan and pinch, long-press movement/undo, explicit stylus Pan, immediate colour/eraser dismissal, and persistent controls across desktop, portrait tablet and phone sizes. Original renderer and saved data paths are unchanged. Physical Samsung S Pen latency and signed-in production Firebase still require device/account verification.
+
+### Daily Journal proportions, resize and snapshots — November 2, 2026
+
+The default main card is Daily Journal, with roughly 62% of the page's writing height. To-Do and Today's Idea are reduced to leave more room for reflection; the journal card uses full-width ruled paper without a planner time margin. The optional Daily Planner template remains available. Existing custom headings are retained. Existing ink pages keep card geometry; choose Canvas settings → Use writing page layout to apply the new proportions explicitly. Empty daily layouts upgrade to writing-page version 2 without clearing text, checklists or mood.
+
+Arrange cards now places each resize handle in the top-right corner, within reach even for tall cards. Mouse, touch and stylus can drag that explicit handle; pen hover no longer cancels arrangement mode. Contact elsewhere on a card still returns the pen to free writing. Moving/resizing cards does not transform existing handwriting.
+
+Snapshot is labelled in the floating canvas controls. It exits card arrangement before selecting an area, so cards cannot intercept the capture gesture. The existing Save idea/draft/retry flow stores the image in Dashboard Ideas under the same account. No saved snapshot, stroke or journal path is replaced.
+
+Validation includes focused proportion/rename/preservation tests, added-card stylus resize with undo/redo and retained text, capture over cards while arranging, saved snapshot image metadata, and responsive notebook screenshots. Full repository checks are the merge gate. Physical S Pen behavior and signed-in production Firebase are not established by browser fixtures.
