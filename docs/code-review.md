@@ -413,8 +413,8 @@ Browser coverage asserts both routes and computed dark/yellow colors.
 
 CI log inspection identified two prior verification failures. Notebook panels
 could open after an account switch before the 180ms context poll updated its key;
-the next poll then closed the new panel. Panel opening now synchronizes that
-existing context first. No Journal ink/storage logic changes. The rich Orb test
+the next poll then closed the new panel. Panel opening now synchronizes the existing card and notebook
+contexts first. No Journal ink/storage logic changes. The rich Orb test
 now waits for the same required influence value instead of a fixed 180ms delay;
 its assertion and particle behavior remain unchanged. Both fixes require the full
 browser rerun before publication. Backend deployment remains a separate step.
