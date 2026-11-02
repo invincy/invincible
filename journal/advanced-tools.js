@@ -130,6 +130,7 @@
   }
 
   function canvasDown(event) {
+    if(window.__journalViewport?.capturing)return;
     if (!["select", "lasso", "text", "handwriting"].includes(state.mode)) {
       batchHistory.redo.length = 0;
       return;
@@ -297,6 +298,7 @@
     } catch (error) { console.error(error); status("Recognition failed—your ink is unchanged"); }
   }
 
+  window.addEventListener("journal-snapshot-start",()=>{clearSelection();closePanel();state.gesture=null;});
   window.addEventListener("journal-tool-change",syncModeFromApp);
   window.addEventListener("journal-controls-dismiss",closePanel);
   const observer = new MutationObserver(install);
