@@ -1,3 +1,4 @@
+import {startupMotion} from './startup-motion.mjs';
 import{useEffect,useRef}from'react';
 import{createOrbParticles,orbParticleTier}from'./orb-particles';
 
@@ -89,12 +90,12 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=fa
   const render=timestamp=>{
    frame=null;if(!canDraw())return;const renderedAt=performance.now();
    const dt=Math.min((timestamp-last)/1000||1/45,.05);last=timestamp;
-   const time=reduced.matches?8:(timestamp-start)/1000;
+   const motion=startupMotion((timestamp-start)/1000,reduced.matches),time=motion.phase;
    const smoothing=reduced.matches?1:1-Math.exp(-dt*9);
    hoverX+=(targetX-hoverX)*smoothing;hoverY+=(targetY-hoverY)*smoothing;hoverStrength+=(targetStrength-hoverStrength)*smoothing;
    if(!drag&&!reduced.matches){const decay=Math.exp(-dt*5);yaw+=velocityX*dt*30;pitch+=velocityY*dt*30;velocityX*=decay;velocityY*=decay}
    const autoInfluenceX=Math.cos(time*.43)*.78+Math.sin(time*.19+1.2)*.18,autoInfluenceY=Math.sin(time*.37)*.65+Math.cos(time*.23+.4)*.16,manualMix=Math.min(1,hoverStrength),influenceX=autoInfluenceX*(1-manualMix)+hoverX*manualMix,influenceY=autoInfluenceY*(1-manualMix)+hoverY*manualMix,influenceStrength=1+(richParticles?.9:.4)*manualMix;
-   gl.clear(gl.COLOR_BUFFER_BIT);gl.uniform1f(uniforms.time,time);gl.uniform2f(uniforms.rotation,yaw+influenceX*influenceStrength*(richParticles?.24:.16),pitch-influenceY*influenceStrength*(richParticles?.24:.16));gl.uniform3f(uniforms.influence,influenceX,influenceY,influenceStrength);gl.drawArrays(gl.POINTS,0,particleCount);
+   gl.clear(gl.COLOR_BUFFER_BIT);gl.uniform1f(uniforms.time,time);gl.uniform2f(uniforms.rotation,yaw+motion.turn+influenceX*influenceStrength*(richParticles?.24:.16),pitch-influenceY*influenceStrength*(richParticles?.24:.16));gl.uniform3f(uniforms.influence,influenceX,influenceY,influenceStrength);gl.drawArrays(gl.POINTS,0,particleCount);
    container.dataset.ready='true';schedule(renderedAt);
   };
   const resume=()=>{stop();if(canDraw())render(performance.now())};
