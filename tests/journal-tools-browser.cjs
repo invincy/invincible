@@ -42,7 +42,7 @@ const server=createJournalServer();
   assert.ok(Math.abs(mapped.x-(120-camera.x)/camera.zoom)<.001);
   await settingsFor('Pen');await page.waitForFunction(()=>document.querySelector('[aria-label="Pan journal"]').getAttribute('aria-pressed')==='false');await page.keyboard.press('Escape');
   await page.getByRole('button',{name:'Home journal',exact:true}).click();
-  await page.getByRole('button',{name:'Capture journal area',exact:true}).click();
+  await page.getByRole('button',{name:'Save snapshot',exact:true}).click();
   await page.mouse.move(bounds.x+15,bounds.y+100);await page.mouse.down();await page.mouse.move(bounds.x+250,bounds.y+250,{steps:4});await page.mouse.up();
   const capture=page.getByRole('dialog',{name:'Save journal idea'});await capture.waitFor();await capture.getByLabel('Title',{exact:true}).fill('Journal sketch');await capture.getByLabel('Category',{exact:true}).fill('YouTube idea');
   await page.evaluate(()=>window.failIdea=true);await capture.getByRole('button',{name:'Save idea',exact:true}).click();await capture.getByRole('status').filter({hasText:'draft is kept'}).waitFor();await capture.getByRole('button',{name:'Close capture'}).click();await page.getByRole('button',{name:'Resume idea draft'}).click();assert.equal(await capture.getByLabel('Title',{exact:true}).inputValue(),'Journal sketch');await page.evaluate(()=>window.failIdea=false);await capture.getByRole('button',{name:'Save idea',exact:true}).click();await capture.getByRole('status').filter({hasText:'Saved in Dashboard'}).waitFor();
