@@ -388,3 +388,14 @@ Validation: root/Functions tests, production build, V2 build/stage and site refe
 ## Small icon clarity — October 31, 2026
 
 Replaced the dense orb artwork at icon sizes with a clean geometric blue I and gold ring on black. `assets/branding/invincible-icon.svg` is the source for the site favicon and shared headers; PNG exports cover browser/Apple/PWA sizes, including a safe-area maskable icon. Each manifest PNG URL has a new content hash so Chrome detects the artwork change. The PWA identity and storage paths are unchanged. Verify actual 24px and 64px legibility before publishing; existing browser navigation checks confirm decoded icons. Chrome may still require user approval to apply an installed icon update.
+
+
+## Journal panel context synchronization — November 2, 2026
+
+Opening a notebook panel now synchronizes the existing card and notebook contexts
+before constructing its DOM. After an account/date switch, a delayed card poll
+could otherwise close a newly opened Saved ideas panel. The existing Journal
+browser workflow reproduced the close-button failure and passed with this change
+in CRM release verification run 116. This patch is separated for independent
+review; it does not change Google authentication, session persistence, stroke
+storage, notebook data or CRM. The HTML versions both readable adapters together.
