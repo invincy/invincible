@@ -112,3 +112,9 @@ backup/restore. Regional contact fields, rich branding/logos, expanded positive-
 formats and operational backups remain follow-up work. Deletion runs while the
 page is open and can be resumed if interrupted. Physical devices and signed-in
 production rules still require verification. No original private report is in Git.
+
+### Calendar month alerts and direct edits
+
+Premium alerts appear when opening/resuming CRM from one calendar month before the due date: 26 October appears from 26 September. Short months clamp to month-end; configured longer advance windows remain supported. No scheduler or automatic messaging is used. Policies have a direct Edit policy action, including contact and nominee fields, without another import. Only changed fields receive manual verified provenance; explicit clears are protected from later imports. Policy identity, customer linkage, original agency and claims remain intact.
+
+Verification: calendar boundary and manual edit/provenance unit tests, complete repository unit checks/builds, and dedicated CRM Firestore emulator/browser CI. Existing Journal remains outside this change.
