@@ -403,3 +403,18 @@ regressions are blocked locally by missing Chromium. The added browser test is w
 into the repository suite; controlled managed-browser smoke checks cover principal
 screens. This is not a complete implementation of every master-brief feature; the
 architecture document explicitly enumerates remaining work and scale limits.
+
+## LIC publication verification — November 2, 2026
+
+The LIC landing page now links directly to Agent CRM; My Follow-ups retains its
+existing route and independent private storage. Agent CRM uses LIC blue/yellow
+accents on black, including the active navigation and primary import action.
+Browser coverage asserts both routes and computed dark/yellow colors.
+
+CI log inspection identified two prior verification failures. Notebook panels
+could open after an account switch before the 180ms context poll updated its key;
+the next poll then closed the new panel. Panel opening now synchronizes that
+existing context first. No Journal ink/storage logic changes. The rich Orb test
+now waits for the same required influence value instead of a fixed 180ms delay;
+its assertion and particle behavior remain unchanged. Both fixes require the full
+browser rerun before publication. Backend deployment remains a separate step.

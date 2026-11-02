@@ -26,7 +26,7 @@ function policyMatches(p){const f=p.fields,c=customer(p),family=rows('households
 function metric(n,label){return `<div class="metric"><strong>${n}</strong><span>${label}</span></div>`;}
 function searchBar(){return `<div class="toolbar"><label class="sr" for="query">Search</label><input id="query" placeholder="Name, alias, mobile, policy, agency, plan or family" value="${esc(query)}">${edit()?button('Add customer','customer')+button('Add policy','newPolicy')+button('Split merged customer','split'):''}</div>`;}
 function render(){
- $('paste').disabled=!edit();$('newWorkspace').disabled=!user;$('tabs').innerHTML=tabs.map(t=>`<button data-tab="${t}" class="${tab===t?'active':''}">${t}</button>`).join('');
+ $('paste').disabled=!edit();$('newWorkspace').disabled=!user;$('tabs').innerHTML=tabs.map(t=>`<button data-tab="${t}" class="${tab===t?'active':''}">${t==='Follow-ups'?'Agent follow-ups':t}</button>`).join('');
  if(!data){$('content').innerHTML='<div class="empty">Choose or create a workspace. Existing customer records remain available below.</div>';return;}
  const policies=rows('policies'),customers=rows('customers').filter(c=>!c.mergedInto),events=schedule();let html='';
  if(tab==='Overview'){

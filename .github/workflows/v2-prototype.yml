@@ -30,7 +30,7 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: node --test tests/lic-agent-crm.mjs tests/lic-crm-service.mjs
-      - run: node tests/lic-agent-crm-browser.cjs
+      - run: node tests/lic-crm-browser.cjs && node tests/lic-agent-crm-browser.cjs
   journal:
     runs-on: ubuntu-latest
     timeout-minutes: 8

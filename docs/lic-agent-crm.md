@@ -122,3 +122,11 @@ in that existing CI command. Managed cloud-browser checks using a disposable
 synthetic fixture verified initial load, import preview/save, policy columns,
 customer editing, follow-up save and poster controls. This fixture does not use
 production Firebase; its HTTP-only UUID/hash shims are never shipped.
+
+## Publication follow-up
+
+LIC now opens Agent CRM directly beside My Follow-ups. CRM uses LIC blue/yellow
+accents on black; office/client follow-ups keep their original route/data. The
+release CI independently runs both legacy CRM and Agent CRM browser workflows,
+including palette and route assertions. Firebase access must be connected before
+backend deployment; publishing static files alone does not activate cloud CRM.
