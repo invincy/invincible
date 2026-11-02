@@ -1,12 +1,13 @@
 // Actual Web SDK transactions and deployed rules in the emulator; never production.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
-const {context,clear}=require('./lic-crm-emulator-fixture.cjs');
+const {context,clear,setRules,legacyRules,fullRules}=require('./lic-crm-emulator-fixture.cjs');
 (async()=>{
  await clear();const all=[];const make=async(uid,verified)=>{const c=await context(uid,verified);all.push(c);return c;};
  try{
  const owner=await make('owner'),editor=await make('editor'),viewer=await make('viewer'),outsider=await make('outsider'),unverified=await make('unverified',false);
+ const personal=await owner.execute({action:'create',name:'Private',shared:false,operationId:'personal'});await owner.execute({action:'saveCustomer',workspaceId:personal.id,id:'private-customer',revision:0,operationId:'private-customer',record:{name:'Private Example'}});await deniedPrivate();async function deniedPrivate(){await assert.rejects(()=>outsider.sdk.getDoc(outsider.sdk.doc(outsider.db,`users/owner/licAgentCrmWorkspaces/${personal.id}/customers/private-customer`)),e=>e.code==='permission-denied');}
  const {id:w}=await owner.execute({action:'create',shared:true,name:'Rule fixture',operationId:'shared'}),run=(c,action,d={})=>c.execute({action,workspaceId:w,...d});
- assert.equal((await owner.execute({action:'list'})).workspaces.length,1);
+ assert.equal((await owner.execute({action:'list'})).workspaces.length,2);
  const denied=async fn=>assert.rejects(fn,e=>e.code==='permission-denied'||/access denied|verified|expired|already used/.test(e.message));
  await denied(()=>run(outsider,'load'));
  for(const [c,role]of [[editor,'editor'],[viewer,'viewer']]){
@@ -30,7 +31,8 @@ const {context,clear}=require('./lic-crm-emulator-fixture.cjs');
  await run(editor,'import',{text:sample,operationId:'batch2'});assert.equal((await run(owner,'history',{policyId:p.id})).rows.filter(h=>h.sourceHash).length,2,'Reimport after rollback appends a new immutable history event');
  await run(editor,'communicate',{customerId:'c',state:'Prepared',text:'Verify payment',operationId:'message'});
  await run(owner,'removeMember',{uid:'editor',operationId:'revoke'});await denied(()=>run(editor,'load'));await denied(()=>editor.execute({action:'accept',invitationId:w+':editor@example.com'}));
- await run(owner,'deleteWorkspace');assert.equal((await owner.execute({action:'list'})).workspaces.length,0);
+ await run(owner,'deleteWorkspace');assert.equal((await owner.execute({action:'list'})).workspaces.length,1);
+ await setRules(legacyRules());const legacy=await make('legacy-owner');const privateSpace=await legacy.execute({action:'create',shared:false,name:'Legacy access',operationId:'legacy'});await legacy.execute({action:'saveCustomer',workspaceId:privateSpace.id,id:'c',revision:0,operationId:'legacy-save',record:{name:'Works with existing rules'}});const legacyList=await legacy.execute({action:'list'});assert.equal(legacyList.workspaces.length,1);assert.equal(legacyList.sharedAvailable,false);assert.equal((await legacy.execute({action:'load',workspaceId:privateSpace.id})).customers.rows[0].name,'Works with existing rules');
  console.log('CRM Web SDK/rules: invitations, role enforcement, forged writes, revocation, imports, linking, immutable history, rollback/reimport, tasks and deletion passed.');
- }finally{for(const c of all)await c.close();}
+ }finally{await setRules(fullRules());for(const c of all)await c.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -204,6 +204,7 @@ LIC opens Agent CRM beside the independent My Follow-ups module. The CRM reuses
 Invincible's Google login and saves directly through the existing Firestore Web
 SDK. Due/verification views are calculated when the page opens or resumes;
 WhatsApp sending stays manual. No CRM Cloud Functions or scheduler are needed.
-Apply the precise workspace/invitation rules in `firestore.rules` to the existing
-project before using the new collections. Existing records are preserved. See
+Personal workspaces reuse existing owner-only storage. Apply the precise
+workspace/invitation rules in `firestore.rules` once to enable shared workspaces;
+shared creation stays disabled until those permissions are available. Existing records are preserved. See
 [architecture, validation and limits](docs/lic-agent-crm.md).

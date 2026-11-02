@@ -21,9 +21,10 @@ export function createCrmRepository(db) {
   const d=input||{},action=d.action,now=new Date().toISOString(),uid=auth.uid,email=String(auth.token?.email||'').toLowerCase();
   const verified=auth.token?.email_verified===true;
   if(action==='list') {
-   const spaces=await workspaces.where('memberUids','array-contains',uid).get(),rows=spaces.docs.map(s=>({id:s.id,name:s.data().name,role:s.data().members[uid],shared:s.data().shared,deleting:!!s.data().deleting}));
-   const invitations=verified?await db.collection('licCrmInvitations').where('email','==',email).get():{docs:[]};
-   return {workspaces:rows,invitations:invitations.docs.filter(s=>!s.data().accepted&&s.data().expiresAt>now).map(s=>({id:s.id,workspaceId:s.data().workspaceId,name:s.data().name,role:s.data().role}))};
+   const personal=await workspaces.doc('personal-'+uid).get();let spaces={docs:[]},invitations={docs:[]},sharedAvailable=true;
+   try{spaces=await workspaces.where('memberUids','array-contains',uid).get();if(verified)invitations=await db.collection('licCrmInvitations').where('email','==',email).get();}catch(error){if(error.code!=='permission-denied')throw error;sharedAvailable=false;}
+   const docs=[...(personal.exists?[personal]:[]),...spaces.docs.filter(s=>s.id!==personal.id)],rows=docs.map(s=>({id:s.id,name:s.data().name,role:s.data().members[uid],shared:s.data().shared,deleting:!!s.data().deleting}));
+   return {workspaces:rows,sharedAvailable,invitations:invitations.docs.filter(s=>!s.data().accepted&&s.data().expiresAt>now).map(s=>({id:s.id,workspaceId:s.data().workspaceId,name:s.data().name,role:s.data().role}))};
   }
   if(action==='create') {
    const key=d.shared?id(d.operationId):'personal-'+uid,ref=workspaces.doc(key);const name=text(d.name,120)||'My agency workspace';

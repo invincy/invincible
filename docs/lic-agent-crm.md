@@ -21,7 +21,9 @@ for access, roles, invitations, allowed mutations and immutable history.
 
 ## Data model
 
-`licCrmWorkspaces/{workspaceId}` stores owner UID, role map, member UID list,
+Personal workspaces live under `users/{uid}/licAgentCrmWorkspaces/{personalId}`
+and reuse the existing owner-only access policy. Shared workspaces live under
+`licCrmWorkspaces/{workspaceId}`. Both store owner UID, role map, member UID list,
 profiles, personal/shared mode, settings and a write revision. Subcollections:
 
 - `agencies`, `customers`, `policies`, `households`, `followups`
@@ -43,9 +45,10 @@ member UID list; user-owned index documents do not grant workspace access.
 The adapter stamps each write with the authenticated UID and server timestamp.
 Every workspace mutation bumps a root write revision. Query-based merge/split
 operations read that root before querying, re-read matching documents inside the
-transaction and retry if concurrent mutations change the root. Rules require the
-same revision advance for all ordinary child writes. History and source reports
-are append-only; rollback metadata is owner-only. A separate receipt records
+transaction and retry if concurrent mutations change the root. Shared-workspace rules require the
+same revision advance for all ordinary child writes. Shared history and source
+reports are append-only; rollback metadata is owner-only. Personal workspaces keep
+the existing owner-only policy; their application transactions preserve history. A separate receipt records
 reapplication after rollback so the previous import history is retained.
 
 ## Dues and communication — revised scope
@@ -79,11 +82,13 @@ Unsupported positive-loan layouts warn and retain the original source for review
 
 Publish the static source through the existing GitHub Pages workflow. **No CRM
 Cloud Functions deployment, scheduler, new OAuth flow or server billing setup is
-needed.** Apply the updated `firestore.rules` to the existing Firebase project
-once before enabling the new workspace collections. This is database access
-configuration, not custom server code. Existing user/Creator/Workday rules remain.
-No production rules have been applied by this change; that needs an administrator
-with access to the existing project. Never weaken access rules to make writes work.
+needed.** Personal CRM uses the existing owner-only `users/{uid}` rules and can
+be published without changing Firebase configuration. Shared workspace creation
+is disabled when the new shared paths are denied. Apply `firestore.rules` once to
+the existing Firebase project to enable secure collaboration. This is database
+access configuration, not custom server code. Existing user/Creator/Workday rules
+remain. No production rules have been applied by this change. Never weaken access
+rules to make sharing work.
 
 ## Verification and limits
 
@@ -94,8 +99,9 @@ states, follow-up history and side-effect-free opening-time dues.
 
 `tests/lic-crm-rules.cjs` exercises the actual Firebase Web SDK, transactions and
 rules in a demo Firestore emulator, including forged direct writes, verified email,
-viewer/editor restrictions and revocation. The Agent CRM browser test uses that
-same SDK/emulator rather than a callable mock, with reload persistence, routes,
+viewer/editor restrictions and revocation. It also loads the original owner-only
+rules and verifies that private CRM works while sharing stays disabled. The Agent
+CRM browser test uses that same SDK/emulator with the original rules, with reload persistence, routes,
 colors and 320–1440px layouts. Run `npm run test:crm:browser` after React dependencies
 and Chromium are available. CI runs these tests; local emulator installation was
 blocked in this environment. Record actual CI outcomes in the PR before release.

@@ -159,12 +159,14 @@ Each confirmed save atomically appends `entries/save-{operationId}` with `kind: 
 ## LIC Agent CRM — November 2, 2026
 
 The native Agent CRM now uses the existing Google session and Firestore Web SDK
-directly, with additive `licCrmWorkspaces/{id}` collections and verified-email
+directly. Personal workspaces use `users/{uid}/licAgentCrmWorkspaces/{id}` with
+existing owner-only rules; shared workspaces use `licCrmWorkspaces/{id}` with verified-email
 `licCrmInvitations`. Member UID queries discover workspaces; a user-owned index is
 not an authorization source. Workspace roles, invitation acceptance/revocation,
 immutable histories and server-stamped transactions are enforced by the updated
 Firestore rules. No CRM callable, Admin SDK, scheduler or new login is required.
 Due/verification alerts are derived when the app opens/resumes without writes.
 The separate `users/{uid}/licCustomers` editor and `licFollowups` data remain intact.
-The rules must be deployed once to the existing project; no production permission
+The shared rules must be deployed once to enable collaboration; personal CRM
+needs no new permissions. No production permission
 change has been performed. See [Agent CRM architecture](lic-agent-crm.md).

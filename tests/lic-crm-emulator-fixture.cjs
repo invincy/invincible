@@ -12,4 +12,7 @@ async function context(uid,verified=true){
  return {db,sdk,user,app,execute:d=>repository({uid,token:{email:user.email,email_verified:verified}},d),invalidate:()=>{active=false;},close:async()=>{await sdk.terminate(db);await appSdk.deleteApp(app);}};
 }
 async function clear(){const {host,port}=emulatorAddress();const r=await fetch(`http://${host}:${port}/emulator/v1/projects/${projectId}/databases/(default)/documents`,{method:'DELETE'});if(!r.ok)throw Error('Could not reset emulator fixture.');}
-module.exports={context,clear,emulatorAddress,projectId,sdk};
+async function setRules(rules){const {host,port}=emulatorAddress();const response=await fetch(`http://${host}:${port}/emulator/v1/projects/${projectId}:securityRules`,{method:'PUT',body:JSON.stringify({rules:{files:[{content:rules}]}})});if(!response.ok)throw Error(await response.text());}
+function legacyRules(){return require('node:fs').readFileSync(require('node:path').resolve(__dirname,'../firestore.rules'),'utf8').split('    // Agent CRM uses')[0]+'  }\n}\n';}
+function fullRules(){return require('node:fs').readFileSync(require('node:path').resolve(__dirname,'../firestore.rules'),'utf8');}
+module.exports={context,clear,emulatorAddress,projectId,sdk,setRules,legacyRules,fullRules};

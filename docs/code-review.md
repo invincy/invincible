@@ -404,6 +404,9 @@ and root revision serialization. Client validation is not treated as authorizati
 Actual Web SDK/emulator rules tests and browser tests are wired into CI. Pure
 repository/domain checks and site references pass locally. Local emulator startup
 was blocked by package download approval; do not claim local rules tests passed.
-No rules or production database changes have been applied. A one-time rules update
-on the existing Firebase project is required, without a Cloud Functions deployment.
+No rules or production database changes have been applied. Personal CRM uses the
+existing owner-only user paths; shared creation stays disabled unless its new
+permissions are present. A one-time rules update enables collaboration, without
+a Cloud Functions deployment. Emulator/browser coverage includes the original
+rules to verify that private use is not blocked by sharing setup.
 Full scope, deployment and limits are recorded in [lic-agent-crm.md](lic-agent-crm.md).

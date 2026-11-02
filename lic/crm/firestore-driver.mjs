@@ -1,14 +1,18 @@
 // Firebase Web SDK adapter. Every write is authorized by deployed Firestore rules.
 // A workspace revision serializes relationship queries with concurrent mutations.
+export function crmWorkspacePath(uid,id){return id==='personal-'+uid?`users/${uid}/licAgentCrmWorkspaces/${id}`:`licCrmWorkspaces/${id}`;}
 export function createFirestoreDriver(database, user, isCurrent, sdk) {
   const check = () => { if (!isCurrent()) throw Error('Account or workspace changed. Operation stopped.'); };
-  const toDoc = snap => ({ id:snap.id, ref:new Document(snap.ref.path), raw:snap, exists:snap.exists(), data:()=>snap.data() });
+  const logicalPersonal='licCrmWorkspaces/personal-'+user.uid,physicalPersonal=crmWorkspacePath(user.uid,'personal-'+user.uid);
+  const physical=path=>path===logicalPersonal||path.startsWith(logicalPersonal+'/')?physicalPersonal+path.slice(logicalPersonal.length):path;
+  const logical=path=>path===physicalPersonal||path.startsWith(physicalPersonal+'/')?logicalPersonal+path.slice(physicalPersonal.length):path;
+  const toDoc = snap => ({ id:snap.id, ref:new Document(logical(snap.ref.path)), raw:snap, exists:snap.exists(), data:()=>snap.data() });
   const toQuery = docs => ({ docs, size:docs.length, empty:!docs.length });
   class Document {
     constructor(path) { this.path=path;this.id=path.split('/').at(-1); }
     collection(name) { return new Collection(this.path+'/'+name); }
-    async get() { check();const s=toDoc(await sdk.getDocFromServer(sdk.doc(database,this.path)));check();return s; }
-    async delete() { check();await sdk.deleteDoc(sdk.doc(database,this.path));check(); }
+    async get() { check();const s=toDoc(await sdk.getDocFromServer(sdk.doc(database,physical(this.path))));check();return s; }
+    async delete() { check();await sdk.deleteDoc(sdk.doc(database,physical(this.path)));check(); }
   }
   class Collection {
     constructor(path,constraints=[]) { this.path=path;this.constraints=constraints; }
@@ -17,7 +21,7 @@ export function createFirestoreDriver(database, user, isCurrent, sdk) {
     limit(n) { return new Collection(this.path,[...this.constraints,sdk.limit(n)]); }
     orderBy(name) { return new Collection(this.path,[...this.constraints,sdk.orderBy(name==='__name__'?sdk.documentId():name)]); }
     startAfter(snapshot) { return new Collection(this.path,[...this.constraints,sdk.startAfter(snapshot.raw)]); }
-    query() { return sdk.query(sdk.collection(database,this.path),...this.constraints); }
+    query() { return sdk.query(sdk.collection(database,physical(this.path)),...this.constraints); }
     async get() { check();const s=await sdk.getDocsFromServer(this.query());check();return toQuery(s.docs.map(toDoc)); }
   }
   const rootOf = path => path.startsWith('licCrmWorkspaces/') ? path.split('/').slice(0,2).join('/') : null;
@@ -35,7 +39,7 @@ export function createFirestoreDriver(database, user, isCurrent, sdk) {
           for(const doc of found.docs){const snap=await read(doc.ref);if(snap.exists)docs.push(snap);}
           return toQuery(docs);
         }
-        if(!reads.has(ref.path))reads.set(ref.path,toDoc(await native.get(sdk.doc(database,ref.path))));
+        if(!reads.has(ref.path))reads.set(ref.path,toDoc(await native.get(sdk.doc(database,physical(ref.path)))));
         check();return reads.get(ref.path);
       };
       const tx={get:read,set:(ref,value)=>writes.push({method:'set',ref,value}),update:(ref,value)=>writes.push({method:'update',ref,value}),create:(ref,value)=>writes.push({method:'create',ref,value}),delete:ref=>writes.push({method:'delete',ref})};
@@ -50,7 +54,7 @@ export function createFirestoreDriver(database, user, isCurrent, sdk) {
       else writes.push({method:'update',ref:new Document(root),value:{writeRevision:(snapshot.data().writeRevision||0)+1,...stamp}});
       // All reads are complete before the first SDK write.
       for(const w of writes){
-        const ref=sdk.doc(database,w.ref.path);
+        const ref=sdk.doc(database,physical(w.ref.path));
         if(w.method==='create'&&reads.get(w.ref.path)?.exists)throw Error('Record already exists.');
         if(w.method==='delete')native.delete(ref);
         else if(w.method==='update')native.update(ref,{...w.value,...stamp});
@@ -63,7 +67,7 @@ export function createFirestoreDriver(database, user, isCurrent, sdk) {
   async function purgeCollection(path,nested=[]) {
     for(;;){check();const page=await new Collection(path).limit(40).get();if(page.empty)return;
       for(const item of page.docs)for(const sub of nested)await purgeCollection(item.ref.path+'/'+sub);
-      const batch=sdk.writeBatch(database);for(const item of page.docs)batch.delete(sdk.doc(database,item.ref.path));check();await batch.commit();
+      const batch=sdk.writeBatch(database);for(const item of page.docs)batch.delete(sdk.doc(database,physical(item.ref.path)));check();await batch.commit();
     }
   }
   async function recursiveDelete(ref) {
