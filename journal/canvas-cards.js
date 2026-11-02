@@ -124,5 +124,5 @@ document.addEventListener('pointerdown',e=>{
  if(!connecting||e.target.id!=='live-canvas')return;if(context()!==session){connecting=null;return;}e.preventDefault();e.stopImmediatePropagation();const point=camera().point(e),stroke=hitStroke(point,api().strokes(),18/camera().view.zoom),id=connecting;connecting=null;connect(id,stroke?{type:'stroke',id:stroke.id}:{type:'point',...point});notify('Connection added.');
 },true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')connecting=null;});window.addEventListener('journal-tool-change',()=>{cancelHold(true);gesture=null;fingers.clear();setEditing(false);});window.addEventListener('blur',()=>{cancelHold(true);gesture=null;fingers.clear();});
-window.__journalCards={paint,touchCard,get layout(){return structuredClone(layout);},get editing(){return editing;},setEditing,addCard,useWritingPage,showLibrary,showWheel,editCustom,addIcon,connect,openIcon,toggleGrid(){change(l=>l.settings.grid=!l.settings.grid);}};
+window.__journalCards={syncContext:install,paint,touchCard,get layout(){return structuredClone(layout);},get editing(){return editing;},setEditing,addCard,useWritingPage,showLibrary,showWheel,editCustom,addIcon,connect,openIcon,toggleGrid(){change(l=>l.settings.grid=!l.settings.grid);}};
 setInterval(install,160);install();

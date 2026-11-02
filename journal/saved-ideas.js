@@ -12,7 +12,7 @@ function open(){
  panel.journalDispose=()=>{disposed=true;stop();ideas=[];};
  const search=element('input',undefined,{type:'search',placeholder:'Search saved ideas…'});search.setAttribute('aria-label','Search saved ideas');
  const scope=element('select');scope.setAttribute('aria-label','Saved idea dates');
- scope.append(element('option','All dates',{value:'all'}),element('option','This journal date',{value:'today'}));
+ scope.append(element('option','All dates',{value:'all'}),element('option','This journal date',{value:'today'}),element('option','Trash',{value:'trash'}));
  const status=element('p','Loading saved ideas…');status.setAttribute('role','status');
  const content=element('div',undefined,{className:'journal-idea-content'}),fields=element('div',undefined,{className:'journal-idea-filters'});fields.append(search,scope);panel.append(fields,status,content);
  const current=()=>!disposed&&panel.isConnected&&api().context().uid===owner;
@@ -25,12 +25,13 @@ function open(){
    const params=new URLSearchParams({date:idea.journalDate});if(idea.view)params.set('view',JSON.stringify(idea.view));
    content.append(element('a','Open journal area',{href:APP_BASE+'journal/?'+params}));
   }else content.append(element('a','Open dashboard',{href:APP_BASE}));
+  const remove=element('button',idea.deletedAt?'Restore snapshot':'Delete snapshot',{type:'button'});remove.onclick=async()=>{remove.disabled=true;status.textContent='Saving…';try{if(!current())return;await api().setIdeaTrashed(idea.id,!idea.deletedAt);if(!current())return;ideas=ideas.map(row=>row.id===idea.id?{...row,deletedAt:idea.deletedAt?null:new Date().toISOString()}:row);render();status.textContent=idea.deletedAt?'Snapshot restored.':'Snapshot moved to Trash. Original journal writing is unchanged.';}catch(error){if(current()){status.textContent=(error.message||'Could not update snapshot.')+' Retry; your snapshot is kept.';remove.disabled=false;}}};content.append(remove);
   if(source)content.append(element('a','Download image',{href:source,download:(idea.title||'Saved idea').replace(/[^a-z0-9-]/gi,'_')+'.webp'}));
  };
  const render=()=>{
   if(!current())return;selected=null;fields.hidden=false;content.replaceChildren();const query=search.value.trim().toLocaleLowerCase();
-  const matches=ideas.filter(idea=>(scope.value!=='today'||idea.source==='journal'&&idea.journalDate===api().context().dateKey)&&[idea.title,idea.category,idea.notes,idea.journalDate].join(' ').toLocaleLowerCase().includes(query));
-  status.textContent=matches.length?matches.length+' saved '+(matches.length===1?'idea':'ideas'):ideas.length?'No matching ideas.':'No saved ideas yet. Use Snapshot to select and save some writing.';
+  const matches=ideas.filter(idea=>(scope.value==='trash'?!!idea.deletedAt:!idea.deletedAt)&&(scope.value!=='today'||idea.source==='journal'&&idea.journalDate===api().context().dateKey)&&[idea.title,idea.category,idea.notes,idea.journalDate].join(' ').toLocaleLowerCase().includes(query));
+  status.textContent=matches.length?matches.length+' saved '+(matches.length===1?'idea':'ideas'):scope.value==='trash'?'Trash is empty.':ideas.some(idea=>!idea.deletedAt)?'No matching ideas.':'No saved ideas yet. Use Snapshot to select and save some writing.';
   const grid=element('div',undefined,{className:'journal-idea-grid'});for(const idea of matches){const button=element('button',undefined,{type:'button'}),source=imageSource(idea.image);button.setAttribute('aria-label','View saved idea '+(idea.title||'Untitled'));if(source)button.append(element('img',undefined,{src:source,alt:'',loading:'lazy'}));button.append(element('strong',idea.title||'Untitled idea'),element('small',[idea.category,idea.journalDate].filter(Boolean).join(' · ')));button.onclick=()=>detail(idea);grid.append(button);}content.append(grid);
  };
  search.oninput=render;scope.onchange=render;
