@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {parseReports,policyKey,reconcile,premiumSchedule,addMonths,rollbackFields,can,messageFor} from '../functions/src/crm/domain.mjs';
+import {parseReports,policyKey,reconcile,premiumSchedule,addMonths,rollbackFields,can,messageFor} from '../lic/crm/domain.mjs';
 // Synthetic data mirrors the inspected Print's exact columns; no private source is committed.
 const sample=fs.readFileSync(new URL('./fixtures/lic-print-v12.txt',import.meta.url),'utf8');
 test('Print v12 extracts independent premium dates, rider and claim columns without banking identity',()=>{

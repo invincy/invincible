@@ -1,5 +1,5 @@
-const {createHash}=require('node:crypto');
-const hash = text => createHash('sha256').update(text).digest('hex');
+// Browser-side CRM operations. Firestore Security Rules are the authority.
+const hash = async text => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text))),byte=>byte.toString(16).padStart(2,'0')).join('');
 const core = import('./domain.mjs');
 function id(value) { if (!/^[A-Za-z0-9_-]{1,100}$/.test(value || '')) throw Error('Invalid record ID.'); return value; }
 function text(v, max=200) { const s=String(v??'').trim(); if(s.length>max)throw Error('Field exceeds its size limit.');return s; }
@@ -12,37 +12,37 @@ function customerDraft(d) {
  if(r.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email))throw Error('Invalid email.');return r;
 }
 function agencyDraft(d) { const code=text(d.code,30);if(!/^\d{1,30}$/.test(code))throw Error('Agency code must be a string of digits.');return {code,name:text(d.name,150),phone:text(d.phone,30),branch:text(d.branch,40),division:text(d.division,100),notes:text(d.notes,4000),active:d.active!==false,brand:{displayName:text(d.brand?.displayName,150),color:/^#[a-fA-F0-9]{6}$/.test(d.brand?.color)?d.brand.color:'#d6b66c',signature:text(d.brand?.signature,150)}}; }
-function createCrmService(db) {
+export function createCrmRepository(db) {
  const workspaces=db.collection('licCrmWorkspaces');
- async function access(tx,ref,auth,action='read') {const w=data(await tx.get(ref));(await core).assertRole(!w?.deleting&&w?.members?.[auth.uid],action);return w;}
+ async function access(tx,ref,auth,action='read') {const w=data(await tx.get(ref));(await core).assertRole(w?.members?.[auth.uid],action);return w;}
  async function listing(ref) { const s=await ref.limit(1001).get();return {rows:s.docs.slice(0,1000).map(d=>({...d.data(),id:d.id})),truncated:s.size>1000}; }
  return async function execute(auth,input) {
   if(!auth?.uid)throw Error('Sign in to Invincible first.');
   const d=input||{},action=d.action,now=new Date().toISOString(),uid=auth.uid,email=String(auth.token?.email||'').toLowerCase();
   const verified=auth.token?.email_verified===true;
   if(action==='list') {
-   const links=await db.collection('users').doc(uid).collection('licWorkspaceLinks').get(),rows=[];
-   for(const link of links.docs){const s=await workspaces.doc(link.id).get(),w=data(s);if(w?.members?.[uid]&&!w.deleting)rows.push({id:s.id,name:w.name,role:w.members[uid],shared:w.shared});}
-   const invitations=verified?await db.collection('licCrmInvitations').where('emailHash','==',hash(email)).get():{docs:[]};
+   const spaces=await workspaces.where('memberUids','array-contains',uid).get(),rows=spaces.docs.map(s=>({id:s.id,name:s.data().name,role:s.data().members[uid],shared:s.data().shared,deleting:!!s.data().deleting}));
+   const invitations=verified?await db.collection('licCrmInvitations').where('email','==',email).get():{docs:[]};
    return {workspaces:rows,invitations:invitations.docs.filter(s=>!s.data().accepted&&s.data().expiresAt>now).map(s=>({id:s.id,workspaceId:s.data().workspaceId,name:s.data().name,role:s.data().role}))};
   }
   if(action==='create') {
    const key=d.shared?id(d.operationId):'personal-'+uid,ref=workspaces.doc(key);const name=text(d.name,120)||'My agency workspace';
-   await db.runTransaction(async tx=>{const s=await tx.get(ref);if(s.exists){if(s.data().ownerUid!==uid)throw Error('Workspace already exists.');return;}tx.create(ref,{name,shared:!!d.shared,ownerUid:uid,members:{[uid]:'owner'},memberProfiles:{[uid]:{name:text(auth.token?.name||email,150),email}},createdAt:now,revision:1,reminderDays:[-7,0,7]});tx.set(db.doc(`users/${uid}/licWorkspaceLinks/${key}`),{name});}); return {id:key};
+   await db.runTransaction(async tx=>{const s=await tx.get(ref);if(s.exists){if(s.data().ownerUid!==uid)throw Error('Workspace already exists.');return;}tx.create(ref,{name,shared:!!d.shared,ownerUid:uid,members:{[uid]:'owner'},memberUids:[uid],memberProfiles:{[uid]:{name:text(auth.token?.name||email,150),email}},createdAt:now,revision:1,reminderDays:[-7,0,7]});}); return {id:key};
   }
   if(action==='accept') {
    if(!verified)throw Error('A verified Google-linked email is required.');
-   const inv=db.collection('licCrmInvitations').doc(id(d.invitationId));
-   await db.runTransaction(async tx=>{const i=data(await tx.get(inv));if(!i||i.emailHash!==hash(email)||i.expiresAt<=now)throw Error('Invitation is invalid or expired.');const ref=workspaces.doc(i.workspaceId),w=data(await tx.get(ref));if(!w||w.deleting||!w.shared)throw Error('Workspace unavailable.');if(i.accepted){if(i.acceptedBy!==uid||!w.members[uid])throw Error('Invitation already used or access revoked.');return;}if(Object.keys(w.members).length>=100&&!w.members[uid])throw Error('Workspace member limit reached.');tx.update(ref,{members:{...w.members,[uid]:uid===w.ownerUid?'owner':i.role},memberProfiles:{...(w.memberProfiles||{}),[uid]:{name:text(auth.token?.name||email,150),email}}});tx.update(inv,{accepted:true,acceptedBy:uid});tx.set(db.doc(`users/${uid}/licWorkspaceLinks/${ref.id}`),{name:w.name});});return {ok:true};
+   const invitationId=text(d.invitationId,300);if(invitationId.includes('/'))throw Error('Invalid invitation.');const inv=db.collection('licCrmInvitations').doc(invitationId);
+   await db.runTransaction(async tx=>{const i=data(await tx.get(inv));if(!i||i.email!==email||i.expiresAt<=now)throw Error('Invitation is invalid or expired.');const ref=workspaces.doc(i.workspaceId),w=data(await tx.get(ref));if(!w||w.deleting||!w.shared)throw Error('Workspace unavailable.');if(i.accepted){if(i.acceptedBy!==uid||!w.members[uid])throw Error('Invitation already used or access revoked.');return;}if(Object.keys(w.members).length>=100&&!w.members[uid])throw Error('Workspace member limit reached.');tx.update(ref,{members:{...w.members,[uid]:uid===w.ownerUid?'owner':i.role},memberUids:[...new Set([...Object.keys(w.members),uid])],lastInvitationId:inv.id,memberProfiles:{...(w.memberProfiles||{}),[uid]:{name:text(auth.token?.name||email,150),email}}});tx.update(inv,{accepted:true,acceptedBy:uid});});return {ok:true};
   }
   const ref=workspaces.doc(id(d.workspaceId)),D=await core;
   // Every action below authorizes inside its transaction, including reads.
   if(action==='load') {
    await db.runTransaction(tx=>access(tx,ref,auth));
-   const result={};for(const c of ['agencies','customers','policies','households','followups','communications','alerts','imports','posterTemplates'])result[c]=await listing(ref.collection(c));
+   const result={};for(const c of ['agencies','customers','policies','households','followups','communications','imports','posterTemplates'])result[c]=await listing(ref.collection(c));
    // Recheck after reads so an in-flight member removal cannot return a snapshot.
    const w=await db.runTransaction(tx=>access(tx,ref,auth));return {...result,workspace:{id:ref.id,...w}};
   }
+  if(action!=='deleteWorkspace'&&action!=='load'){const w=await db.runTransaction(tx=>access(tx,ref,auth));if(w.deleting)throw Error('Workspace deletion is in progress.');}
   if(action==='preview') {
    await db.runTransaction(tx=>access(tx,ref,auth,'write'));
    const reports=D.parseReports(d.text),rows=[],customers=(await listing(ref.collection('customers'))).rows;
@@ -54,8 +54,8 @@ function createCrmService(db) {
    const results=[];
    for(const report of reports){
     if(!report.valid){results.push({error:'Invalid report; retained in preview for correction.'});continue;}
-    const key=D.policyKey(report.fields.policyNo),policyRef=ref.collection('policies').doc(key),fingerprint=hash(report.raw),receipt=policyRef.collection('history').doc(fingerprint),batchRef=ref.collection('imports').doc(operationId),rawRef=batchRef.collection('reports').doc(fingerprint);
-    if(Buffer.byteLength(report.raw)>200000)throw Error('Individual report exceeds 200 KB.');
+    const key=D.policyKey(report.fields.policyNo),policyRef=ref.collection('policies').doc(key),fingerprint=await hash(report.raw),receipt=policyRef.collection('receipts').doc(fingerprint),historyRef=policyRef.collection('history').doc(await hash(operationId+':'+fingerprint)),batchRef=ref.collection('imports').doc(operationId),rawRef=batchRef.collection('reports').doc(fingerprint);
+    if(new TextEncoder().encode(report.raw).length>200000)throw Error('Individual report exceeds 200 KB.');
     const result=await db.runTransaction(async tx=>{
      const w=await access(tx,ref,auth,'write'),p=data(await tx.get(policyRef)),seen=data(await tx.get(receipt)),batch=data(await tx.get(batchRef));
      if(seen&&!seen.rolledBack)return {policyNo:report.fields.policyNo,identical:true};
@@ -67,9 +67,9 @@ function createCrmService(db) {
      const next=delta.next;next.id=key;next.updatedAt=now;next.lastReportDate=[p?.lastReportDate||'',report.fields.reportDate||''].sort().at(-1)||null;
      next.originalAgencyCode=p?.originalAgencyCode||report.fields.agencyCode||null;next.assignedUid=p?.assignedUid||uid;next.managingWorkspace=ref.id;
      const changes=delta.changes.map(c=>({...c,oldProvenance:p?.provenance?.[c.field]||null}));for(const c of changes)next.provenance[c.field].sourceHash=fingerprint;
-     if(!p&&!next.customerId){const selected=d.links?.[key],customerId=selected?id(selected):'import-'+hash(key).slice(0,32),cRef=ref.collection('customers').doc(customerId),c=data(await tx.get(cRef));if(selected&&(!c||c.mergedInto))throw Error('Selected customer no longer available.');if(!c)tx.create(cRef,{name:report.fields.name||'Unnamed policyholder',phone:report.fields.mobile||'',birthday:report.fields.dob||'',source:'LIC report',aliases:[],consent:'Unknown',revision:1,createdAt:now});next.customerId=customerId;}
+     if(!p&&!next.customerId){const selected=d.links?.[key],customerId=selected?id(selected):'import-'+(await hash(key)).slice(0,32),cRef=ref.collection('customers').doc(customerId),c=data(await tx.get(cRef));if(selected&&(!c||c.mergedInto))throw Error('Selected customer no longer available.');if(!c)tx.create(cRef,{name:report.fields.name||'Unnamed policyholder',phone:report.fields.mobile||'',birthday:report.fields.dob||'',source:'LIC report',aliases:[],consent:'Unknown',revision:1,createdAt:now});next.customerId=customerId;}
      else if(p?.customerId){const cRef=ref.collection('customers').doc(p.customerId),c=data(await tx.get(cRef));if(c&&c.source==='LIC report'&&!c.phone&&next.fields.mobile)tx.update(cRef,{phone:next.fields.mobile,revision:(c.revision||0)+1,updatedAt:now});}
-     tx.set(policyRef,next);tx.set(receipt,{changes,sourceHash:fingerprint,importId:operationId,uid,at:now,reportDate:report.fields.reportDate,parserVersion:D.PARSER_VERSION,rolledBack:false});
+     tx.set(policyRef,next);tx.create(historyRef,{changes,sourceHash:fingerprint,importId:operationId,uid,at:now,reportDate:report.fields.reportDate,parserVersion:D.PARSER_VERSION,rolledBack:false});tx.set(receipt,{historyId:historyRef.id,sourceHash:fingerprint,importId:operationId,uid,at:now,rolledBack:false});
      tx.set(rawRef,{raw:report.raw,policyId:key,reportDate:report.fields.reportDate,parserVersion:D.PARSER_VERSION,warnings:report.warnings,uid,at:now});
      tx.set(batchRef,{uid,at:batch?.at||now,updatedAt:now,parserVersion:D.PARSER_VERSION,count:(batch?.count||0)+1});
      return {policyNo:report.fields.policyNo,changes:changes.length};
@@ -94,7 +94,7 @@ function createCrmService(db) {
   if(action==='rollback') {
    await db.runTransaction(tx=>access(tx,ref,auth,'members'));
    const batchId=id(d.importId),sources=await ref.collection('imports').doc(batchId).collection('reports').get(),results=[];
-   for(const source of sources.docs){const pRef=ref.collection('policies').doc(source.data().policyId),hRef=pRef.collection('history').doc(source.id);results.push(await db.runTransaction(async tx=>{await access(tx,ref,auth,'members');const p=data(await tx.get(pRef)),h=data(await tx.get(hRef));if(!p||!h||h.importId!==batchId||h.rolledBack)return {skipped:true};const r=D.rollbackFields(p,h.changes,source.id);tx.set(pRef,r.next);tx.update(hRef,{rolledBack:true,rollbackAt:now,rollbackUid:uid});tx.set(ref.collection('audit').doc('rollback-'+source.id),{action:'rollback',policyId:pRef.id,uid,at:now,skipped:r.skipped});return {policyId:pRef.id,skipped:r.skipped};}));}
+   for(const source of sources.docs){const pRef=ref.collection('policies').doc(source.data().policyId),hRef=pRef.collection('history').doc(await hash(batchId+':'+source.id)),receiptRef=pRef.collection('receipts').doc(source.id);results.push(await db.runTransaction(async tx=>{await access(tx,ref,auth,'members');const p=data(await tx.get(pRef)),h=data(await tx.get(hRef)),receipt=data(await tx.get(receiptRef));if(!p||!h||h.importId!==batchId||h.rolledBack)return {skipped:true};const r=D.rollbackFields(p,h.changes,source.id);tx.set(pRef,r.next);tx.update(hRef,{rolledBack:true,rollbackAt:now,rollbackUid:uid});if(receipt?.historyId===hRef.id)tx.update(receiptRef,{rolledBack:true});tx.set(ref.collection('audit').doc('rollback-'+source.id),{action:'rollback',policyId:pRef.id,uid,at:now,skipped:r.skipped});return {policyId:pRef.id,skipped:r.skipped};}));}
    return {results};
   }
   if(action==='export') {
@@ -102,7 +102,7 @@ function createCrmService(db) {
   }
   if(action==='deleteWorkspace') {
    await db.runTransaction(async tx=>{await access(tx,ref,auth,'delete');tx.update(ref,{deleting:true});});
-   await db.recursiveDelete(ref);const inv=await db.collection('licCrmInvitations').where('workspaceId','==',ref.id).get();for(const i of inv.docs)await i.ref.delete();return {ok:true};
+   const inv=await db.collection('licCrmInvitations').where('workspaceId','==',ref.id).get();for(const i of inv.docs)await i.ref.delete();await db.recursiveDelete(ref);return {ok:true};
   }
   // Single atomic mutation + stable audit record makes retries safe.
   const op=id(d.operationId),audit=ref.collection('audit').doc(op);
@@ -110,10 +110,10 @@ function createCrmService(db) {
    const w=await access(tx,ref,auth,['invite','removeMember','settings','saveAgency'].includes(action)?'members':'write'),prior=data(await tx.get(audit));if(prior)return prior.result||{ok:true};
    let result={ok:true};
    if(action==='invite') {
-    if(!w.shared)throw Error('Personal workspaces cannot be shared.');const target=text(d.email).toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)||!['editor','viewer'].includes(d.role))throw Error('Valid email and collaborator role required.');
-    tx.set(db.collection('licCrmInvitations').doc(hash(ref.id+':'+target)),{workspaceId:ref.id,name:w.name,emailHash:hash(target),role:d.role,accepted:false,createdBy:uid,expiresAt:new Date(Date.now()+7*86400000).toISOString()});
+    if(!w.shared)throw Error('Personal workspaces cannot be shared.');const target=text(d.email).toLowerCase();if(!/^[^\s@/]+@[^\s@/]+\.[^\s@/]+$/.test(target)||!['editor','viewer'].includes(d.role))throw Error('Valid email and collaborator role required.');
+    tx.set(db.collection('licCrmInvitations').doc(ref.id+':'+target),{workspaceId:ref.id,name:w.name,email:target,role:d.role,accepted:false,createdBy:uid,expiresAt:new Date(Date.now()+7*86400000).toISOString(),expiresAtMs:Date.now()+7*86400000});
    } else if(action==='removeMember') {
-    const target=id(d.uid);if(target===w.ownerUid)throw Error('Cannot remove the owner.');const members={...w.members};delete members[target];const memberProfiles={...(w.memberProfiles||{})};delete memberProfiles[target];tx.update(ref,{members,memberProfiles});tx.delete(db.doc(`users/${target}/licWorkspaceLinks/${ref.id}`));
+    const target=id(d.uid);if(target===w.ownerUid)throw Error('Cannot remove the owner.');const members={...w.members};delete members[target];const memberProfiles={...(w.memberProfiles||{})};delete memberProfiles[target];tx.update(ref,{members,memberProfiles,memberUids:Object.keys(members)});
     // Accepted invitations cannot be reused after removal.
    } else if(action==='settings') {
     const days=d.reminderDays;if(!Array.isArray(days)||!days.length||days.length>10||days.some(n=>!Number.isInteger(n)||n< -60||n>365))throw Error('Use up to ten reminder offsets between -60 and 365 days.');tx.update(ref,{reminderDays:[...new Set(days)]});
@@ -154,11 +154,10 @@ function createCrmService(db) {
    } else if(action==='communicate') {
     const c=data(await tx.get(ref.collection('customers').doc(id(d.customerId))));if(!c||c.consent==='No')throw Error('Customer not found or communication declined.');
     const record={customerId:d.customerId,policyId:d.policyId?id(d.policyId):null,text:text(d.text,4000),state:d.state,uid,at:now};if(!['Prepared','Opened','Manually marked sent'].includes(record.state))throw Error('Invalid communication state.');record.category=text(d.category||'general',60);record.installment=d.installment||null;
-    if(record.state!=='Prepared'){const guard=ref.collection('communicationGuards').doc(hash([d.customerId,d.policyId||'',record.category,record.installment||'',record.state].join(':'))),previous=data(await tx.get(guard));if(previous&&Date.parse(now)-Date.parse(previous.at)<86400000)throw Error('This reminder action was already recorded within the past 24 hours. Check communication history.');tx.set(guard,{at:now,uid});}
+    if(record.state!=='Prepared'){const guard=ref.collection('communicationGuards').doc(await hash([d.customerId,d.policyId||'',record.category,record.installment||'',record.state].join(':'))),previous=data(await tx.get(guard));if(previous&&Date.parse(now)-Date.parse(previous.at)<86400000)throw Error('This reminder action was already recorded within the past 24 hours. Check communication history.');tx.set(guard,{at:now,uid});}
     tx.set(ref.collection('communications').doc(op),record);
    } else throw Error('Unknown CRM action.');
    tx.create(audit,{action,uid,at:now,result});return result;
   });
  };
 }
-module.exports={createCrmService};

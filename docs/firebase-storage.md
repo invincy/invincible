@@ -158,10 +158,13 @@ Each confirmed save atomically appends `entries/save-{operationId}` with `kind: 
 
 ## LIC Agent CRM — November 2, 2026
 
-An additive callable-only workspace model uses `licCrmWorkspaces/{id}` and private
-subcollections. Existing `users/{uid}/licCustomers` and staff `licFollowups` remain
-unchanged. `users/{uid}/licWorkspaceLinks` indexes membership but grants no access.
-Verified-email invitations are hashed and validated by the existing Firebase ID
-token. Direct client access to new workspace collections stays denied by the
-existing rules. See [Agent CRM architecture and rollout](lic-agent-crm.md) for
-schema, deployment, limits and validation. No production migration/deployment ran.
+The native Agent CRM now uses the existing Google session and Firestore Web SDK
+directly, with additive `licCrmWorkspaces/{id}` collections and verified-email
+`licCrmInvitations`. Member UID queries discover workspaces; a user-owned index is
+not an authorization source. Workspace roles, invitation acceptance/revocation,
+immutable histories and server-stamped transactions are enforced by the updated
+Firestore rules. No CRM callable, Admin SDK, scheduler or new login is required.
+Due/verification alerts are derived when the app opens/resumes without writes.
+The separate `users/{uid}/licCustomers` editor and `licFollowups` data remain intact.
+The rules must be deployed once to the existing project; no production permission
+change has been performed. See [Agent CRM architecture](lic-agent-crm.md).

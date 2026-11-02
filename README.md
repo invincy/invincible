@@ -200,10 +200,10 @@ The small app icon uses a simple vector blue I and gold ring. Browser/header mar
 
 ### LIC Agent CRM
 
-Customer CRM now links to an additive Agent CRM at `lic/crm/agent.html` using the
-same Google session. It includes workspace collaboration, separate policy records,
-LIC Print preview/import, premium projections and servicing/communication tools.
-The existing customer editor and staff Follow-up Manager remain intact. Deploy the
-new Firebase callable/Scheduler before using the new workspace. Read
-[architecture, validation and remaining scope](docs/lic-agent-crm.md); full master
-brief completion and production permissions are not claimed.
+LIC opens Agent CRM beside the independent My Follow-ups module. The CRM reuses
+Invincible's Google login and saves directly through the existing Firestore Web
+SDK. Due/verification views are calculated when the page opens or resumes;
+WhatsApp sending stays manual. No CRM Cloud Functions or scheduler are needed.
+Apply the precise workspace/invitation rules in `firestore.rules` to the existing
+project before using the new collections. Existing records are preserved. See
+[architecture, validation and limits](docs/lic-agent-crm.md).

@@ -391,34 +391,19 @@ Replaced the dense orb artwork at icon sizes with a clean geometric blue I and g
 
 ## LIC Agent CRM — November 2, 2026
 
-Added a native agent workspace alongside the existing private customer CRM. Shared
-auth/Firebase and all old paths remain. New server-authorized workspace operations,
-Print parser, import synchronization/history/rollback, independent customer-policy
-relations, premium projections, scheduled alerts and manual communication/poster
-flows are detailed in [lic-agent-crm.md](lic-agent-crm.md). No customer report or
-production data is committed. No Firebase deployment or signed-in rule check ran.
+The CRM is a native agent workspace with LIC blue/yellow accents on black, separate
+from My Follow-ups and old customer data. The revised scope removes all CRM Cloud
+Functions and scheduling: browser code uses the shared Google identity/Firestore
+Web SDK, calculates due/verification views on opening/resume and prepares messages
+for manual sending. Unrelated existing AI Functions and all Journal files remain.
+Journal's independent panel fix is in draft PR #122.
 
-Domain/service tests and repository unit/build/reference checks pass. Full browser
-regressions are blocked locally by missing Chromium. The added browser test is wired
-into the repository suite; controlled managed-browser smoke checks cover principal
-screens. This is not a complete implementation of every master-brief feature; the
-architecture document explicitly enumerates remaining work and scale limits.
-
-## LIC publication verification — November 2, 2026
-
-The LIC landing page links directly to Agent CRM; My Follow-ups retains its
-existing route and independent private storage. Agent CRM uses LIC blue/yellow
-accents on black, including the active navigation and primary import action.
-Browser coverage asserts both routes and computed dark/yellow colors.
-
-Journal changes discovered during regression verification are separated into
-https://github.com/invincy/invincible/pull/122 for independent review. The CRM
-release restores all three Journal files byte-for-byte to its master baseline.
-No Google authentication, session persistence or Journal data changes are included.
-The rich Orb test waits for the same required influence value instead of assuming
-a fixed 180ms delay; its assertion and particle behavior are unchanged.
-
-Normal Invincible Google authentication is the only user login. The existing
-Firebase session also authenticates CRM callable requests and workspace invitation
-acceptance. Backend deployment permission is an administrator requirement, not
-another login or connection for CRM users. No deployment has been completed.
+New Firestore rules enforce workspace ownership, editor/viewer roles, verified-email
+invitation acceptance and revocation, immutable source/history, server actor stamps
+and root revision serialization. Client validation is not treated as authorization.
+Actual Web SDK/emulator rules tests and browser tests are wired into CI. Pure
+repository/domain checks and site references pass locally. Local emulator startup
+was blocked by package download approval; do not claim local rules tests passed.
+No rules or production database changes have been applied. A one-time rules update
+on the existing Firebase project is required, without a Cloud Functions deployment.
+Full scope, deployment and limits are recorded in [lic-agent-crm.md](lic-agent-crm.md).

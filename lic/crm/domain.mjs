@@ -94,6 +94,7 @@ export function premiumSchedule(policy, from, to, verification = {}) {
 export function rollbackFields(current, changes, sourceHash) {
   const next = structuredClone(current), skipped = [];
   for (const c of changes) {
+    if(c.field==='policyNo'&&c.old===null){skipped.push(c.field);continue;}
     if (equal(next.fields[c.field], c.value) && next.provenance[c.field]?.sourceHash === sourceHash) {
       if (c.old === null) delete next.fields[c.field]; else next.fields[c.field] = c.old;
       if (c.oldProvenance) next.provenance[c.field] = c.oldProvenance; else delete next.provenance[c.field];

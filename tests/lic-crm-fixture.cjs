@@ -9,11 +9,11 @@ class Ref {
 class Query {
  constructor(db,path,filters=[],maximum=Infinity,cursor=null){Object.assign(this,{db,path,filters,maximum,cursor});}
  doc(id){return new Ref(this.db,this.path+'/'+id);}
- where(field,op,value){if(op!=='==')throw Error('Unsupported fixture query');return new Query(this.db,this.path,[...this.filters,[field,value]],this.maximum,this.cursor);}
+ where(field,op,value){if(!['==','array-contains'].includes(op))throw Error('Unsupported fixture query');return new Query(this.db,this.path,[...this.filters,[field,op,value]],this.maximum,this.cursor);}
  limit(n){return new Query(this.db,this.path,this.filters,n,this.cursor);}
  orderBy(){return this;}
  startAfter(s){return new Query(this.db,this.path,this.filters,this.maximum,s.id);}
- async get(){const docs=[...this.db.records.keys()].filter(p=>p.startsWith(this.path+'/')&&!p.slice(this.path.length+1).includes('/')).sort().filter(p=>!this.cursor||p.split('/').at(-1)>this.cursor).map(p=>this.db.snapshot(new Ref(this.db,p))).filter(s=>this.filters.every(([k,v])=>s.data()[k]===v)).slice(0,this.maximum);return {docs,size:docs.length,empty:!docs.length};}
+ async get(){const docs=[...this.db.records.keys()].filter(p=>p.startsWith(this.path+'/')&&!p.slice(this.path.length+1).includes('/')).sort().filter(p=>!this.cursor||p.split('/').at(-1)>this.cursor).map(p=>this.db.snapshot(new Ref(this.db,p))).filter(s=>this.filters.every(([k,op,v])=>op==='array-contains'?s.data()[k]?.includes(v):s.data()[k]===v)).slice(0,this.maximum);return {docs,size:docs.length,empty:!docs.length};}
 }
 class MemoryDb {
  constructor(){this.records=new Map();this.queue=Promise.resolve();}

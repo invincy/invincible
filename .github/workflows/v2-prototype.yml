@@ -10,6 +10,8 @@ on:
       - 'tests/**'
       - 'scripts/**'
       - 'functions/**'
+      - 'firestore.rules'
+      - 'firebase.crm-test.json'
       - 'package*.json'
       - '.github/workflows/v2-prototype.yml'
   workflow_dispatch:
@@ -20,7 +22,7 @@ permissions:
 jobs:
   lic-agent-crm:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -28,9 +30,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm ci --prefix react
       - run: npx playwright install --with-deps chromium
       - run: node --test tests/lic-agent-crm.mjs tests/lic-crm-service.mjs
-      - run: node tests/lic-crm-browser.cjs && node tests/lic-agent-crm-browser.cjs
+      - run: node tests/lic-crm-browser.cjs && npm run test:crm:browser
   journal:
     runs-on: ubuntu-latest
     timeout-minutes: 8
