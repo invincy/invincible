@@ -388,3 +388,25 @@ Validation: root/Functions tests, production build, V2 build/stage and site refe
 ## Small icon clarity — October 31, 2026
 
 Replaced the dense orb artwork at icon sizes with a clean geometric blue I and gold ring on black. `assets/branding/invincible-icon.svg` is the source for the site favicon and shared headers; PNG exports cover browser/Apple/PWA sizes, including a safe-area maskable icon. Each manifest PNG URL has a new content hash so Chrome detects the artwork change. The PWA identity and storage paths are unchanged. Verify actual 24px and 64px legibility before publishing; existing browser navigation checks confirm decoded icons. Chrome may still require user approval to apply an installed icon update.
+
+## LIC Agent CRM — November 2, 2026
+
+The CRM is a native agent workspace with LIC blue/yellow accents on black, separate
+from My Follow-ups and old customer data. The revised scope removes all CRM Cloud
+Functions and scheduling: browser code uses the shared Google identity/Firestore
+Web SDK, calculates due/verification views on opening/resume and prepares messages
+for manual sending. Unrelated existing AI Functions and all Journal files remain.
+Journal's independent panel fix is in draft PR #122.
+
+New Firestore rules enforce workspace ownership, editor/viewer roles, verified-email
+invitation acceptance and revocation, immutable source/history, server actor stamps
+and root revision serialization. Client validation is not treated as authorization.
+Actual Web SDK/emulator rules tests and browser tests are wired into CI. Pure
+repository/domain checks and site references pass locally. Local emulator startup
+was blocked by package download approval; do not claim local rules tests passed.
+No rules or production database changes have been applied. Personal CRM uses the
+existing owner-only user paths; shared creation stays disabled unless its new
+permissions are present. A one-time rules update enables collaboration, without
+a Cloud Functions deployment. Emulator/browser coverage includes the original
+rules to verify that private use is not blocked by sharing setup.
+Full scope, deployment and limits are recorded in [lic-agent-crm.md](lic-agent-crm.md).

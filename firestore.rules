@@ -65,5 +65,180 @@ service cloud.firestore {
 
       allow delete: if owns(resource.data);
     }
+    // Agent CRM uses the existing Firebase session directly. No Cloud Functions.
+    function crmPath(w) { return /databases/$(database)/documents/licCrmWorkspaces/$(w); }
+    function crmSpace(w) { return get(crmPath(w)).data; }
+    function crmOwner(w) { return signedIn() && crmSpace(w).ownerUid == request.auth.uid; }
+    function crmMember(w) {
+      return signedIn() && request.auth.uid in crmSpace(w).memberUids
+        && crmSpace(w).members[request.auth.uid] in ['owner','editor','viewer'];
+    }
+    function crmReader(w) { return crmOwner(w) || (crmMember(w) && !crmSpace(w).get('deleting',false)); }
+    function crmEditor(w) {
+      return crmMember(w) && !crmSpace(w).get('deleting',false)
+        && crmSpace(w).members[request.auth.uid] in ['owner','editor'];
+    }
+    function crmInvitation(w) {
+      return /databases/$(database)/documents/licCrmInvitations/$(w + ':' + signedInEmail());
+    }
+    function crmPending(w) {
+      return signedIn() && request.auth.token.email_verified == true
+        && exists(crmInvitation(w))
+        && get(crmInvitation(w)).data.email == signedInEmail()
+        && get(crmInvitation(w)).data.workspaceId == w
+        && get(crmInvitation(w)).data.accepted == false
+        && get(crmInvitation(w)).data.expiresAtMs > request.time.toMillis();
+    }
+    function crmStamp(d) { return d.writtenBy == request.auth.uid && d.writtenAt == request.time; }
+    function crmAdvance(w) {
+      return getAfter(crmPath(w)).data.writeRevision == crmSpace(w).get('writeRevision',0) + 1
+        && crmStamp(getAfter(crmPath(w)).data);
+    }
+    function crmValidSpace(d) {
+      return d.name is string && d.name.size() > 0 && d.name.size() <= 120
+        && d.ownerUid is string && d.shared is bool && d.members is map
+        && d.memberProfiles is map && d.memberUids is list && d.memberUids.size() <= 100
+        && d.memberUids.toSet() == d.members.keys().toSet()
+        && d.members[d.ownerUid] == 'owner'
+        && d.members.values().hasOnly(['owner','editor','viewer'])
+        && d.members.values().removeAll(['editor','viewer']).size() == 1
+        && (d.shared || d.memberUids == [d.ownerUid]);
+    }
+    function crmAccept(w) {
+      let old=resource.data;
+      let next=request.resource.data;
+      let invite=get(crmInvitation(w)).data;
+      let after=getAfter(crmInvitation(w)).data;
+      return crmPending(w) && old.shared && !old.get('deleting',false)
+        && !(request.auth.uid in old.memberUids)
+        && next.diff(old).affectedKeys().hasOnly(['members','memberUids','memberProfiles','lastInvitationId','writeRevision','writtenBy','writtenAt'])
+        && next.members.diff(old.members).affectedKeys().hasOnly([request.auth.uid])
+        && next.memberProfiles.diff(old.memberProfiles).affectedKeys().hasOnly([request.auth.uid])
+        && next.members[request.auth.uid] == invite.role && invite.role in ['editor','viewer']
+        && next.lastInvitationId == w + ':' + signedInEmail()
+        && after.accepted == true && after.acceptedBy == request.auth.uid;
+    }
+    match /licCrmWorkspaces/{w} {
+      allow get: if signedIn() && (!exists(crmPath(w)) || crmReader(w) || crmPending(w));
+      allow list: if signedIn() && request.auth.uid in resource.data.memberUids;
+      allow create: if signedIn() && crmValidSpace(request.resource.data)
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.memberUids == [request.auth.uid]
+        && request.resource.data.writeRevision == 1 && crmStamp(request.resource.data);
+      allow update: if signedIn() && crmValidSpace(request.resource.data)
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.shared == resource.data.shared
+        && request.resource.data.writeRevision == resource.data.get('writeRevision',0) + 1
+        && crmStamp(request.resource.data)
+        && (crmOwner(w) || crmAccept(w) || (crmEditor(w)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['writeRevision','writtenBy','writtenAt'])));
+      allow delete: if crmOwner(w) && resource.data.get('deleting',false);
+
+      function writeData() { return crmEditor(w) && crmAdvance(w) && crmStamp(request.resource.data); }
+      function purge() { return crmOwner(w) && crmSpace(w).get('deleting',false); }
+      function revision() {
+        return request.resource.data.revision is int && request.resource.data.revision >= 1
+          && (resource == null || (request.resource.data.revision >= resource.data.revision
+          && request.resource.data.revision <= resource.data.revision + 1));
+      }
+      match /customers/{c} {
+        allow read: if crmReader(w);
+        allow create, update: if writeData() && revision()
+          && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 150
+          && request.resource.data.get('phone','') is string
+          && request.resource.data.get('phone','').size() <= 30
+          && request.resource.data.get('notes','').size() <= 4000
+          && request.resource.data.get('aliases',[]) is list && request.resource.data.get('aliases',[]).size() <= 30;
+        allow delete: if purge();
+      }
+      match /policies/{p} {
+        allow read: if crmReader(w);
+        allow create, update: if writeData() && revision()
+          && request.resource.data.fields.policyNo is string
+          && request.resource.data.fields.policyNo.matches('^[0-9]{1,30}$')
+          && p == 'LIC-' + request.resource.data.fields.policyNo
+          && request.resource.data.managingWorkspace == w
+          && request.resource.data.insurer == 'LIC'
+          && (resource == null || (request.resource.data.fields.policyNo == resource.data.fields.policyNo
+            && (resource.data.get('originalAgencyCode',null) == null || request.resource.data.originalAgencyCode == resource.data.originalAgencyCode)))
+          && (request.resource.data.get('customerId',null) == null
+            || getAfter(/databases/$(database)/documents/licCrmWorkspaces/$(w)/customers/$(request.resource.data.customerId)).data.name is string);
+        allow delete: if purge();
+        match /history/{h} {
+          allow read: if crmReader(w);
+          allow create: if writeData() && request.resource.data.uid == request.auth.uid;
+          allow update: if crmOwner(w) && writeData()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rolledBack','rollbackAt','rollbackUid','writtenBy','writtenAt'])
+            && request.resource.data.rolledBack == true && request.resource.data.rollbackUid == request.auth.uid;
+          allow delete: if purge();
+        }
+        match /receipts/{r} {
+          allow read: if crmReader(w);
+          allow create, update: if writeData() && request.resource.data.sourceHash == r
+            && ((request.resource.data.rolledBack == false && request.resource.data.uid == request.auth.uid
+              && (resource == null || resource.data.rolledBack == true)
+              && getAfter(/databases/$(database)/documents/licCrmWorkspaces/$(w)/policies/$(p)/history/$(request.resource.data.historyId)).data.sourceHash == r)
+              || (crmOwner(w) && resource != null && request.resource.data.rolledBack == true
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rolledBack','writtenBy','writtenAt'])));
+          allow delete: if purge();
+        }
+      }
+      match /followups/{f} {
+        allow read: if crmReader(w);
+        allow create, update: if writeData() && revision()
+          && request.resource.data.status in ['Pending','Snoozed','Completed']
+          && request.resource.data.notes is string && request.resource.data.notes.size() <= 4000;
+        allow delete: if purge();
+        match /history/{h} {
+          allow read: if crmReader(w);
+          allow create: if writeData() && request.resource.data.uid == request.auth.uid;
+          allow delete: if purge();
+        }
+      }
+      match /agencies/{a} {
+        allow read: if crmReader(w);
+        allow create, update: if crmOwner(w) && writeData() && revision()
+          && request.resource.data.code == a && a.matches('^[0-9]{1,30}$');
+        allow delete: if purge();
+      }
+      match /{kind}/{record} {
+        allow read: if kind in ['households','imports','communications','posterTemplates','audit','communicationGuards'] && crmReader(w);
+        allow create, update: if kind in ['households','imports','posterTemplates','communicationGuards'] && writeData();
+        allow create: if kind in ['communications','audit'] && writeData() && request.resource.data.uid == request.auth.uid
+          && (kind != 'communications' || (request.resource.data.state in ['Prepared','Opened','Manually marked sent']
+            && request.resource.data.text is string && request.resource.data.text.size() <= 4000
+            && get(/databases/$(database)/documents/licCrmWorkspaces/$(w)/customers/$(request.resource.data.customerId)).data.get('consent','Unknown') != 'No'));
+        allow delete: if kind in ['households','imports','communications','posterTemplates','audit','communicationGuards'] && purge();
+      }
+      match /imports/{batch}/reports/{report} {
+        allow read: if crmReader(w);
+        allow create: if writeData() && request.resource.data.uid == request.auth.uid
+          && request.resource.data.raw is string && request.resource.data.raw.size() <= 200000;
+        allow delete: if purge();
+      }
+    }
+    match /licCrmInvitations/{invitation} {
+      function owner() { return crmOwner(resource.data.workspaceId); }
+      function target() { return signedIn() && request.auth.token.email_verified == true && resource.data.email == signedInEmail(); }
+      allow read: if signedIn() && (target() || owner());
+      allow create, update: if signedIn()
+        && request.resource.data.workspaceId is string
+        && crmOwner(request.resource.data.workspaceId)
+        && crmSpace(request.resource.data.workspaceId).shared
+        && crmAdvance(request.resource.data.workspaceId)
+        && crmStamp(request.resource.data)
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.email == request.resource.data.email.lower()
+        && invitation == request.resource.data.workspaceId + ':' + request.resource.data.email
+        && request.resource.data.role in ['editor','viewer']
+        && request.resource.data.accepted == false && request.resource.data.expiresAtMs is int;
+      allow update: if target() && resource.data.accepted == false
+        && resource.data.expiresAtMs > request.time.toMillis()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['accepted','acceptedBy','writtenBy','writtenAt'])
+        && request.resource.data.accepted == true && request.resource.data.acceptedBy == request.auth.uid
+        && crmStamp(request.resource.data) && crmAdvance(resource.data.workspaceId)
+        && getAfter(crmPath(resource.data.workspaceId)).data.members[request.auth.uid] == resource.data.role;
+      allow delete: if signedIn() && owner();
+    }
   }
 }

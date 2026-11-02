@@ -1,0 +1,58 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {createRequire} from 'node:module';import fs from 'node:fs';const sample=fs.readFileSync(new URL('./fixtures/lic-print-v12.txt',import.meta.url),'utf8');
+import {createCrmRepository} from '../lic/crm/operations.mjs';import {dueAlerts} from '../lic/crm/due-alerts.mjs';
+const require=createRequire(import.meta.url),{MemoryDb}=require('./lic-crm-fixture.cjs');
+const auth=(uid,email=uid+'@example.com',verified=true)=>({uid,token:{email,email_verified:verified}});
+async function fixture(shared=true){const db=new MemoryDb(),service=createCrmRepository(db);const {id}=await service(auth('owner'),{action:'create',shared,name:'Test',operationId:'shared-test'});const run=(action,d={},user='owner')=>service(auth(user),{action,workspaceId:id,...d});return {db,service,run,id};}
+test('workspace owner/editor/viewer/isolation and invitation revocation enforced at service boundary',async()=>{
+ const {run,service,id,db}=await fixture();await assert.rejects(()=>run('load',{},'outsider'),/access denied/);await assert.rejects(()=>service(null,{action:'list'}),/Sign in/);
+ for(const [uid,role]of [['editor','editor'],['viewer','viewer']]){await run('invite',{email:uid+'@example.com',role,operationId:'invite-'+uid});const list=await service(auth(uid),{action:'list'});assert.equal(list.invitations.length,1);await service(auth(uid),{action:'accept',invitationId:list.invitations[0].id});}
+ await run('load',{},'viewer');await assert.rejects(()=>run('saveCustomer',{id:'c1',revision:0,operationId:'viewer-write',record:{name:'X'}},'viewer'),/access denied/);
+ await run('saveCustomer',{id:'c1',revision:0,operationId:'editor-write',record:{name:'X'}},'editor');
+ await assert.rejects(()=>run('invite',{email:'x@example.com',role:'editor',operationId:'bad'},'editor'),/access denied/);await assert.rejects(()=>run('saveAgency',{id:'001',revision:0,operationId:'bad2',record:{code:'001'}},'editor'),/access denied/);
+ await run('removeMember',{uid:'editor',operationId:'remove'});await assert.rejects(()=>run('load',{},'editor'),/access denied/);const inv=[...db.records.keys()].find(k=>k.startsWith('licCrmInvitations/')&&db.records.get(k).role==='editor');await assert.rejects(()=>service(auth('editor'),{action:'accept',invitationId:inv.split('/').at(-1)}),/revoked/);
+ await assert.rejects(()=>run('removeMember',{uid:'owner',operationId:'no-owner'}),/owner/);
+ await assert.rejects(()=>run('rollback',{importId:'nonexistent'},'outsider'),/access denied/);
+ const personal=await fixture(false);await assert.rejects(()=>personal.run('invite',{email:'x@example.com',role:'viewer',operationId:'x'}),/cannot be shared/);
+});
+test('verified invitation identity, expiry and pending access are checked before acceptance',async()=>{
+ const {run,service,db}=await fixture();await run('invite',{email:'invitee@example.com',role:'viewer',operationId:'invite'});const inv=[...db.records.keys()].find(k=>k.startsWith('licCrmInvitations/')),id=inv.split('/').at(-1);
+ await assert.rejects(()=>service(auth('wrong'),{action:'accept',invitationId:id}),/invalid/);await assert.rejects(()=>service(auth('invitee','invitee@example.com',false),{action:'accept',invitationId:id}),/verified/);db.records.get(inv).expiresAt='2000-01-01';await assert.rejects(()=>service(auth('invitee'),{action:'accept',invitationId:id}),/expired/);
+});
+test('bulk imports are deduplicated, keep customer links and detect concurrent approved conflicts',async()=>{
+ const {run,db,id}=await fixture();const first=await run('import',{text:sample,operationId:'batch1'});assert.equal(first.results[0].changes>0,true);const initial=await run('load');assert.equal(initial.policies.rows.length,1);assert.equal(initial.customers.rows.length,1);const p=initial.policies.rows[0],cid=p.customerId;
+ const repeated=await run('import',{text:sample,operationId:'batch1'});assert.equal(repeated.results[0].identical,true);assert.equal((await run('history',{policyId:p.id})).rows.length,1);
+ const source=(await run('history',{policyId:p.id})).rows[0];assert.equal((await run('source',{importId:'batch1',sourceHash:source.sourceHash})).raw,sample);
+ const updated=sample.replace('02/11/2026','03/11/2026').replace('10/2022','01/2023').replace('Mob No :','Mob No : 9876543210');await run('import',{text:updated,operationId:'batch2'});const next=(await run('load')).policies.rows[0];assert.equal(next.customerId,cid);assert.equal(next.originalAgencyCode,'00522858');assert.equal(next.fields.fup,'2023-01');assert.equal((await run('load')).customers.rows.length,1);
+ const older=sample.replace('02/11/2026','01/11/2026');const preview=await run('preview',{text:older});assert.ok(preview.reports[0].conflicts.length);const refused=await run('import',{text:older,operationId:'batch3'});assert.ok(refused.results[0].conflicts.length);
+ await assert.rejects(()=>run('import',{text:older,operationId:'batch3',approvals:{[p.id]:['fup']},revisions:{[p.id]:0}}),/changed since preview/);
+ assert.equal([...db.records.keys()].filter(k=>k.startsWith('users/')&&k.includes('licFollowups')).length,0);
+});
+test('link, unlink, merge, split by reassignment and household changes preserve independent policy histories',async()=>{
+ const {run}=await fixture();await run('import',{text:sample,operationId:'batch'});let load=await run('load'),p=load.policies.rows[0],source=load.customers.rows[0];
+ await run('saveHousehold',{id:'family',revision:0,operationId:'family',record:{name:'Example family'}});await run('saveCustomer',{id:'target',revision:0,operationId:'target',record:{name:source.name,householdId:'family',relationship:'Parent'}});
+ assert.equal((await run('load')).customers.rows.length,2); // identical names never merge automatically
+ await run('linkPolicy',{policyId:p.id,revision:p.revision,customerId:'target',operationId:'move'});p=(await run('load')).policies.rows[0];await run('linkPolicy',{policyId:p.id,revision:p.revision,customerId:null,operationId:'unlink'});p=(await run('load')).policies.rows[0];assert.equal(p.customerId,null);
+ await run('linkPolicy',{policyId:p.id,revision:p.revision,customerId:source.id,operationId:'relink'});await run('mergeCustomers',{sourceId:source.id,targetId:'target',sourceRevision:source.revision,targetRevision:1,operationId:'merge'});load=await run('load');assert.equal(load.policies.rows[0].customerId,'target');assert.equal(load.customers.rows.find(c=>c.id===source.id).mergedInto,'target');
+ await run('saveCustomer',{id:'split',revision:0,operationId:'split',record:{name:'Separate customer'}});p=load.policies.rows[0];await run('linkPolicy',{policyId:p.id,revision:p.revision,customerId:'split',operationId:'split-link'});assert.ok((await run('history',{policyId:p.id})).rows.some(h=>h.sourceHash));assert.equal((await run('load')).policies.rows[0].originalAgencyCode,'00522858');
+});
+test('lost-acknowledgement retry is idempotent and revisions reject competing customer edits',async()=>{
+ const {run,db}=await fixture();db.failAfterCommit=true;const d={id:'customer',revision:0,operationId:'stable',record:{name:'Keep'}};await assert.rejects(()=>run('saveCustomer',d),/acknowledgement/);await run('saveCustomer',d);const c=(await run('load')).customers.rows[0];assert.equal(c.revision,1);await assert.rejects(()=>run('saveCustomer',{...d,operationId:'new',record:{name:'Wrong'}}),/changed/);assert.equal((await run('load')).customers.rows[0].name,'Keep');
+});
+test('rollback preserves later verified edits; repeated rollback does not repeat history',async()=>{
+ const {run}=await fixture();await run('import',{text:sample,operationId:'batch'});let p=(await run('load')).policies.rows[0];await run('updatePolicy',{id:p.id,revision:p.revision,operationId:'manual',fields:{mobile:'9876543210'}});await run('rollback',{importId:'batch'});p=(await run('load')).policies.rows[0];assert.equal(p.fields.mobile,'9876543210');assert.ok(p.customerId);assert.equal(p.fields.fup,undefined);const result=await run('rollback',{importId:'batch'});assert.equal(result.results[0].skipped,true);
+});
+test('dues are derived on opening the app without scheduling or assuming payments',async()=>{
+ const {run,db}=await fixture();await run('updatePolicy',{id:'LIC-001',revision:0,operationId:'new-policy',fields:{policyNo:'001',name:'Example',doc:'2026-01-31',ppt:2,mode:'MLY',status:'IN-FORCE',lastDue:'2027-12',fup:'2026-01',premium:100}});
+ const policies=(await run('load')).policies.rows,before=JSON.stringify([...db.records]);const alerts=dueAlerts(policies,'2026-02-21');assert.ok(alerts.some(a=>a.due==='2026-02-28'));assert.equal(JSON.stringify([...db.records]),before);assert.deepEqual(dueAlerts(policies,'2026-02-21'),alerts);
+ await run('verifyPayment',{policyId:'LIC-001',due:'2026-02-28',evidence:'Receipt checked',operationId:'paid'});assert.equal(dueAlerts((await run('load')).policies.rows,'2026-02-21').some(a=>a.due==='2026-02-28'),false);
+});
+test('explicit split restores a merged customer and keeps later policy history',async()=>{
+ const {run}=await fixture();await run('import',{text:sample,operationId:'i'});const load=await run('load'),a=load.customers.rows[0],p=load.policies.rows[0];await run('saveCustomer',{id:'b',revision:0,operationId:'b',record:{name:'Same spelling'}});await run('mergeCustomers',{sourceId:a.id,targetId:'b',sourceRevision:a.revision,targetRevision:1,operationId:'m'});const merged=(await run('load')).customers.rows.find(c=>c.id===a.id);await run('splitCustomer',{sourceId:a.id,revision:merged.revision,policyIds:[p.id],operationId:'s'});const out=await run('load');assert.equal(out.customers.rows.find(c=>c.id===a.id).mergedInto,null);assert.equal(out.policies.rows[0].customerId,a.id);assert.equal((await run('history',{policyId:p.id})).rows.length,3);
+});
+test('communication preparation is distinct from opened/sent, with duplicate protection and consent',async()=>{
+ const {run}=await fixture();await run('saveCustomer',{id:'c',revision:0,operationId:'c',record:{name:'Example',consent:'Yes'}});const d={customerId:'c',text:'Please verify your policy payment.',category:'premium'};await run('communicate',{...d,state:'Prepared',operationId:'prepared'});await run('communicate',{...d,state:'Opened',operationId:'opened'});await run('communicate',{...d,state:'Opened',operationId:'opened'});await assert.rejects(()=>run('communicate',{...d,state:'Opened',operationId:'again'}),/24 hours/);await run('communicate',{...d,state:'Manually marked sent',operationId:'sent'});assert.equal((await run('load')).communications.rows.length,3);
+ await run('saveCustomer',{id:'c',revision:1,operationId:'decline',record:{name:'Example',consent:'No'}});await assert.rejects(()=>run('communicate',{...d,state:'Prepared',operationId:'blocked'}),/declined/);
+});
+test('follow-up edits retain task history and export/delete remain owner-only',async()=>{
+ const {run}=await fixture();const record={due:'2026-11-02',category:'General follow-up',status:'Pending',notes:'First call'};await run('saveFollowup',{id:'f',revision:0,operationId:'f1',record});await run('saveFollowup',{id:'f',revision:1,operationId:'f2',record:{...record,status:'Completed',notes:'Documents received'}});const history=await run('followupHistory',{id:'f'});assert.equal(history.rows.length,2);assert.equal(history.rows[1].value.status,'Completed');assert.equal(history.rows[1].previous.notes,'First call');const exported=await run('export');assert.equal(exported.schemaVersion,1);await run('deleteWorkspace');await assert.rejects(()=>run('load'),/access denied/);
+});

@@ -155,3 +155,18 @@ The report generator keeps all original saved records and sharing behavior. No m
 ### Automatic Workday save history — October 31, 2026
 
 Each confirmed save atomically appends `entries/save-{operationId}` with `kind: activity`, an explicit `created` or `saved` action, client fallback milliseconds and a server `createdAt` timestamp. New case metadata also receives server `createdAt`; existing cases retain any known creation timestamp. Unknown old creation dates remain unknown. Existing note/photo entries and metadata paths remain intact. Server timestamps take precedence in history ordering/display, with the recorded client timestamp used for older records or unresolved timestamps. Stable operation IDs and the existing revision/UID guards prevent duplicate retry events and cross-account writes. A legacy case's known creation event is shown from its stored metadata without silently writing a backfill.
+
+## LIC Agent CRM — November 2, 2026
+
+The native Agent CRM now uses the existing Google session and Firestore Web SDK
+directly. Personal workspaces use `users/{uid}/licAgentCrmWorkspaces/{id}` with
+existing owner-only rules; shared workspaces use `licCrmWorkspaces/{id}` with verified-email
+`licCrmInvitations`. Member UID queries discover workspaces; a user-owned index is
+not an authorization source. Workspace roles, invitation acceptance/revocation,
+immutable histories and server-stamped transactions are enforced by the updated
+Firestore rules. No CRM callable, Admin SDK, scheduler or new login is required.
+Due/verification alerts are derived when the app opens/resumes without writes.
+The separate `users/{uid}/licCustomers` editor and `licFollowups` data remain intact.
+The shared rules must be deployed once to enable collaboration; personal CRM
+needs no new permissions. No production permission
+change has been performed. See [Agent CRM architecture](lic-agent-crm.md).

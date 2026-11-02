@@ -1,0 +1,47 @@
+
+# Ver / 12.0         LIFE INSURANCE CORPORATION OF INDIA
+                            PRINTED AT BRANCH : 858
+
+STATUS REPORT OF POLICY-NO :000012345   NB SOURCE: Branch Proposal  Bran Agent
+********************************************************************************
+Date of print  Policy No      Type      Dup Pol
+02/11/2026     000012345      ORD
+--------------------------------------------------------------------------------
+PL/T/PPT/Accpr Sum Assd  Mode    Inst-prm   Extra Rate  Status   TrDO  GIVE/NCO
+178/77/20/20     200,000 YLY     10044.00   0.00 EDBA MAT-CL-PAID             00
+--------------------------------------------------------------------------------
+Issuing Branch              Cmcd  Med   Age   Adm      DOB       Age-Proof
+     858                      A   N.M.G  23   Yes  09/08/1983   PREV POLICY
+--------------------------------------------------------------------------------
+Agency Code :00522858       Dev Officer : 0015002
+              00522858
+--------------------------------------------------------------------------------
+D O C       Mat. Dt  Last Due    FUP   X-CH   Last A/C Dt.  Rate  No Bon.year
+19/10/2006  10/2083  10/2025  10/2022     .00  04/01/2022    9.50     00
+--------------------------------------------------------------------------------
+Name of the Nominee/Assignee     Relation ServBrn. BillType          VB/GA/LA
+SYNTHETIC NOMINEE               BROTHER        858         1
+--------------------------------------------------------------------------------
+Assignment  : REFER TO DOCKET                               NEFT Registered: YES
+--------------------------------------------------------------------------------
+PAN Available YES                         EDMS Status :Image Merged
+--------------------------------------------------------------------------------
+Sex :         M            Email Id    :
+--------------------------------------------------------------------------------
+Name  : SYNTHETIC CUSTOMER                       Mob No :
+Addr  : TEST ADDRESS
+        TEST TALUKA
+        TEST DISTRICT                                  Pin : 383430
+Email :                                                PAN : XXXXXX000X
+--------------------------------------------------------------------------------
+Loan Detail :
+No Previous Loan Exists
+xi              ----------------------------------------------------------------
+Deposit Not Present
+xi              ----------------------------------------------------------------
+                       CLAIM / SURRENDER HISTORY RECORD
+                       ********************************
+TYPE DUE-M/Y PAY-DATE   CHQ-NO  CHQ-DATE  AMT-PAYABLE  DEDUCTIONS   NET-PAID
+--------------------------------------------------------------------------------
+S/B 10/2026 30/10/2026 0000000 30/10/2026   315200.00      38.00   315162.00
+xi              ----------------------------------------------------------------

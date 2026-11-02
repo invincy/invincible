@@ -197,3 +197,14 @@ The approved orb logo is shared by React, spatial and native page headers throug
 App pages and headers use `shared/app-theme.css` for a black canvas with module-specific accents and neutral surfaces. Workday retains LIC blue/yellow and the connected dots. The approved logo is shared by native/React headers and loading states. Manifest icon URLs are content-versioned to prompt browser update detection; installed-app name/icon changes can still require **Review app update** approval in Chrome. Reinstalling is not needed to fix an in-app header.
 
 The small app icon uses a simple vector blue I and gold ring. Browser/header marks use the SVG; 32/180/192/512px PNG and maskable PNG are rendered from the same source for installed app compatibility.
+
+### LIC Agent CRM
+
+LIC opens Agent CRM beside the independent My Follow-ups module. The CRM reuses
+Invincible's Google login and saves directly through the existing Firestore Web
+SDK. Due/verification views are calculated when the page opens or resumes;
+WhatsApp sending stays manual. No CRM Cloud Functions or scheduler are needed.
+Personal workspaces reuse existing owner-only storage. Apply the precise
+workspace/invitation rules in `firestore.rules` once to enable shared workspaces;
+shared creation stays disabled until those permissions are available. Existing records are preserved. See
+[architecture, validation and limits](docs/lic-agent-crm.md).
