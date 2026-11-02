@@ -1,3 +1,4 @@
+import {startupMotion} from './startup-motion.mjs';
 import{useEffect,useRef}from'react';
 import{createOrbParticles,orbParticleTier}from'./orb-particles';
 
@@ -89,7 +90,7 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=fa
   const render=timestamp=>{
    frame=null;if(!canDraw())return;const renderedAt=performance.now();
    const dt=Math.min((timestamp-last)/1000||1/45,.05);last=timestamp;
-   const time=reduced.matches?8:(timestamp-start)/1000;
+   const time=startupMotion((timestamp-start)/1000,reduced.matches).phase;
    const smoothing=reduced.matches?1:1-Math.exp(-dt*9);
    hoverX+=(targetX-hoverX)*smoothing;hoverY+=(targetY-hoverY)*smoothing;hoverStrength+=(targetStrength-hoverStrength)*smoothing;
    if(!drag&&!reduced.matches){const decay=Math.exp(-dt*5);yaw+=velocityX*dt*30;pitch+=velocityY*dt*30;velocityX*=decay;velocityY*=decay}

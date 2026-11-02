@@ -1,8 +1,9 @@
+import {startupMotion} from '../src/startup-motion.mjs';
 import React, {useEffect, useRef} from 'react';
 
 // A viewport-sized, bounded network independent of the square orb stage.
 export default function AmbientParticles({theme = 'gold'}) {
-  const canvasRef = useRef(null);
+  const canvasRef = useRef(null), born = useRef(performance.now());
   useEffect(() => {
     const canvas = canvasRef.current, scene = canvas.parentElement, pointerSurface = canvas.closest('.v2-shell') || scene, context = canvas.getContext('2d');
     if (!context) return;
@@ -11,13 +12,17 @@ export default function AmbientParticles({theme = 'gold'}) {
     let width=0, height=0, frame=0, last=0, particles=[], inView=true;
     const pointer={x:0,y:0,active:false};
     const fractional=value=>value-Math.floor(value);
-    const makeParticle=index=>({x:fractional((index+1)*.61803398875),y:fractional((index+1)*.75487766625),vx:Math.sin(index*2.17)*(4+index%4),vy:Math.cos(index*1.73)*(3+index%3),size:index%9===0?1.8:1+index%3*.2,dx:0,dy:0});
+    const hash=(index,salt)=>fractional(Math.sin(index*127.1+salt*311.7)*43758.5453);
+    const makeParticle=index=>({x:hash(index,1),y:hash(index,2),vx:Math.sin(index*2.17)*(4+index%4),vy:Math.cos(index*1.73)*(3+index%3),size:index%9===0?1.8:1+index%3*.2,dx:0,dy:0});
     const draw=seconds=>{
       if(!width||!height)return;
       context.clearRect(0,0,width,height);
+      const motion=startupMotion((performance.now()-born.current)/1000,reduced.matches);
+      canvas.dataset.startupStorm=String(motion.storm);
       const interactive=pointer.active&&!reduced.matches, smoothing=1-Math.exp(-seconds*9), radius=190;
       for(const p of particles){
-        p.x=(p.x+p.vx*seconds/width+1)%1;p.y=(p.y+p.vy*seconds/height+1)%1;
+        const angle=seconds*4*motion.storm,cos=Math.cos(angle),sin=Math.sin(angle),x=p.x-.5,y=p.y-.5;
+        p.x=(.5+x*cos-y*sin+p.vx*seconds*motion.speed/width+2)%1;p.y=(.5+x*sin+y*cos+p.vy*seconds*motion.speed/height+2)%1;
         const dx=p.x*width-pointer.x,dy=p.y*height-pointer.y,distance=Math.hypot(dx,dy),push=interactive?Math.max(0,1-distance/radius)*34:0;
         p.dx+=((dx/Math.max(1,distance))*push-p.dx)*smoothing;p.dy+=((dy/Math.max(1,distance))*push-p.dy)*smoothing;
       }
@@ -27,7 +32,7 @@ export default function AmbientParticles({theme = 'gold'}) {
         const p=points[i];
         for(let j=i+1;j<points.length;j++){
           const q=points[j],distance=Math.hypot(p.x-q.x,p.y-q.y);if(distance>=reach)continue;
-          context.strokeStyle=`rgba(${colour},${(.29*(1-distance/reach)).toFixed(3)})`;context.lineWidth=.7;
+          context.strokeStyle=`rgba(${colour},${(.29*(1-distance/reach)*motion.links).toFixed(3)})`;context.lineWidth=.7;
           context.beginPath();context.moveTo(p.x,p.y);context.lineTo(q.x,q.y);context.stroke();links++;
         }
         const distance=Math.hypot(p.x-pointer.x,p.y-pointer.y),near=interactive&&distance<radius;
