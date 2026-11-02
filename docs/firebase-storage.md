@@ -174,3 +174,5 @@ change has been performed. See [Agent CRM architecture](lic-agent-crm.md).
 ## Saved snapshot Trash
 
 Journal and Dashboard share `users/{uid}/dashboardIdeas/{id}`. Delete snapshot sets `deletedAt` using a merge write; active lists hide these records and Trash can restore them by clearing that field. Image, title, source date, original creation date and view remain intact. No journal strokes or layout records are deleted. Existing records without this field remain active. Journal now exposes a labelled Snapshot action beside drawing tools as well as the canvas bar; selecting an area opens the existing Save idea form. No Firebase rule/auth changes or migration. Automated browser coverage exercises failed deletion, retry, Trash, restoration and unchanged journal ink in Journal and reload persistence/account isolation in Dashboard.
+
+Saved Ideas panel opening now synchronizes card/notebook account/date contexts before constructing the panel. This prevents a delayed context poll from closing a newly opened snapshot list after switching accounts. A browser assertion keeps it open across multiple polling intervals.
