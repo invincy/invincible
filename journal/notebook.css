@@ -43,3 +43,12 @@ html:has(body.journal-page),body.journal-page{width:100%;height:100%;margin:0!im
 
 .journal-notebook-active .journal-canvas-tools [data-action=snap]{width:auto;display:flex;align-items:center;gap:5px;padding:5px 9px;font:11px Inter,system-ui;white-space:nowrap}
 .journal-canvas-tools [data-action=snap] span{font:11px Inter,system-ui}
+
+.journal-notebook-panel.journal-saved-ideas{width:min(420px,calc(100vw - 32px))}
+.journal-idea-filters{display:flex;gap:8px;margin-bottom:10px}.journal-idea-filters input{min-width:0;width:100%}.journal-idea-filters select{max-width:145px}
+.journal-idea-content .journal-idea-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.journal-idea-grid button{display:flex;flex-direction:column;align-items:stretch;text-align:left;min-width:0;margin:0;padding:8px}
+.journal-idea-grid img{width:100%;height:100px;object-fit:contain;border-radius:7px;background:#fff}.journal-idea-grid strong{font-size:12px;overflow-wrap:anywhere;margin-top:6px}.journal-idea-grid small{font-size:10px;margin:3px 0}
+.journal-idea-preview{display:block;max-width:100%;width:auto;max-height:35dvh;margin:10px auto;object-fit:contain;border-radius:9px;background:#fff}.journal-idea-content h3{font-size:15px;margin:8px 0}.journal-idea-content p{white-space:pre-wrap;overflow-wrap:anywhere}.journal-idea-content a{display:inline-flex;margin:5px 4px;padding:8px;color:#5a5981}
+
+.journal-idea-filters[hidden]{display:none}

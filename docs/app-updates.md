@@ -75,3 +75,11 @@ Arrange cards now places each resize handle in the top-right corner, within reac
 Snapshot is labelled in the floating canvas controls. It exits card arrangement before selecting an area, so cards cannot intercept the capture gesture. The existing Save idea/draft/retry flow stores the image in Dashboard Ideas under the same account. No saved snapshot, stroke or journal path is replaced.
 
 Validation includes focused proportion/rename/preservation tests, added-card stylus resize with undo/redo and retained text, capture over cards while arranging, saved snapshot image metadata, and responsive notebook screenshots. Full repository checks are the merge gate. Physical S Pen behavior and signed-in production Firebase are not established by browser fixtures.
+
+### Saved ideas inside Journal — November 2, 2026
+
+Journal now has a Saved ideas action in its floating notebook dock. It reads the same account-owned users/{uid}/dashboardIdeas records as Dashboard, including previous captures; no second copy or migration is created. Snapshot confirmation names both places and offers View saved ideas.
+
+The compact browser offers title/category/note/date search, all dates or current-date filtering, an image/detail view, image download, and Open journal area at the saved date/camera. Legacy dashboard captures link back to Dashboard. Opening or dismissing the browser leaves the writing camera unchanged. It listens only while open, disposes on close/account/date changes, ignores stale owner callbacks and offers retry after read failure. A narrow read-only bridge in the single existing native bundle uses its existing authenticated Firestore SDK. Existing snapshot saving, recoverable drafts, strokes and history remain unchanged.
+
+Verification covers capture/save followed by reopening the same shared record in Journal, search, original-date/view links, image download, listener cleanup, retry, camera stability and account isolation. Full repository checks are the merge gate. Signed-in production Firebase remains a separate account/device check.
