@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {createRequire} from 'node:module';import fs from 'node:fs';const sample=fs.readFileSync(new URL('./fixtures/lic-print-v12.txt',import.meta.url),'utf8');
-import {createCrmRepository} from '../lic/crm/operations.mjs';import {dueAlerts} from '../lic/crm/due-alerts.mjs';
+import {createCrmRepository} from '../lic/crm/operations.mjs';import {reminderStart,dueAlerts} from '../lic/crm/due-alerts.mjs';
 const require=createRequire(import.meta.url),{MemoryDb}=require('./lic-crm-fixture.cjs');
 const auth=(uid,email=uid+'@example.com',verified=true)=>({uid,token:{email,email_verified:verified}});
 async function fixture(shared=true){const db=new MemoryDb(),service=createCrmRepository(db);const {id}=await service(auth('owner'),{action:'create',shared,name:'Test',operationId:'shared-test'});const run=(action,d={},user='owner')=>service(auth(user),{action,workspaceId:id,...d});return {db,service,run,id};}
@@ -55,4 +55,28 @@ test('communication preparation is distinct from opened/sent, with duplicate pro
 });
 test('follow-up edits retain task history and export/delete remain owner-only',async()=>{
  const {run}=await fixture();const record={due:'2026-11-02',category:'General follow-up',status:'Pending',notes:'First call'};await run('saveFollowup',{id:'f',revision:0,operationId:'f1',record});await run('saveFollowup',{id:'f',revision:1,operationId:'f2',record:{...record,status:'Completed',notes:'Documents received'}});const history=await run('followupHistory',{id:'f'});assert.equal(history.rows.length,2);assert.equal(history.rows[1].value.status,'Completed');assert.equal(history.rows[1].previous.notes,'First call');const exported=await run('export');assert.equal(exported.schemaVersion,1);await run('deleteWorkspace');await assert.rejects(()=>run('load'),/access denied/);
+});
+
+test('calendar-month reminders include the due day, short months and year rollover',()=>{
+ const make=(doc)=>({id:'LIC-1',fields:{policyNo:'1',doc,mode:'YLY',ppt:2,fup:doc.slice(0,7),lastDue:'2028-12',premium:100,status:'IN-FORCE'}});
+ const p=make('2026-10-26');
+ assert.equal(dueAlerts([p],'2026-09-25').length,0);
+ assert.equal(dueAlerts([p],'2026-09-26',[-7,0,7])[0].due,'2026-10-26');
+ assert.equal(reminderStart('2027-01-26'),'2026-12-26');
+ assert.equal(reminderStart('2027-03-31'),'2027-02-28');
+ assert.equal(reminderStart('2028-03-31'),'2028-02-29');
+ assert.equal(dueAlerts([make('2027-03-31')],'2027-02-28')[0].due,'2027-03-31');
+ assert.equal(dueAlerts([{...p,payments:{'2026-10-26':{status:'paid'}}}],'2026-09-26').length,0);
+ assert.equal(dueAlerts([{...p,fields:{...p.fields,status:'MAT-CL-PAID'}}],'2026-09-26').length,0);
+});
+test('direct policy edits protect links, origin and untouched report provenance and allow explicit clearing',async()=>{
+ const {run}=await fixture();await run('import',{text:sample,operationId:'initial'});
+ const before=(await run('load')).policies.rows[0];
+ await run('updatePolicy',{id:before.id,revision:before.revision,operationId:'edit',fields:{premium:12000,mobile:'9876543210',nominee:null}});
+ let p=(await run('load')).policies.rows[0];
+ assert.equal(p.fields.premium,12000);assert.equal(p.fields.nominee,null);assert.equal(p.provenance.premium.verified,true);
+ assert.deepEqual(p.provenance.fup,before.provenance.fup);assert.equal(p.customerId,before.customerId);assert.equal(p.originalAgencyCode,before.originalAgencyCode);assert.deepEqual(p.fields.claims,before.fields.claims);
+ await run('import',{text:sample.replace('10044','11044'),operationId:'reimport'});
+ p=(await run('load')).policies.rows[0];assert.equal(p.fields.premium,12000);assert.equal(p.fields.nominee,null);
+ assert.ok((await run('history',{policyId:p.id})).rows.some(h=>h.source==='manual'&&h.changes.some(c=>c.field==='premium'&&c.value===12000)));
 });

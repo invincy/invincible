@@ -144,7 +144,18 @@ export function createCrmRepository(db) {
     tx.update(sourceRef,{mergedInto:null,revision:source.revision+1,updatedAt:now});for(const p of selected){tx.update(p.ref,{customerId:sourceRef.id,revision:(p.data.revision||0)+1,updatedAt:now});tx.create(p.ref.collection('history').doc(op),{uid,at:now,source:'Customer split',changes:[{field:'customerId',old:source.mergedInto,value:sourceRef.id}]});}result={id:sourceRef.id,policyIds:selected.map(p=>p.ref.id)};
    } else if(action==='updatePolicy') {
     const pRef=ref.collection('policies').doc(id(d.id)),p=data(await tx.get(pRef));expect(p,d.revision);const fields={...(p?.fields||{})},provenance={...(p?.provenance||{})};
-    for(const [k,v] of Object.entries(d.fields||{})){if(!['policyNo','name','plan','doc','term','ppt','maturityPeriod','lastDue','fup','lastAccountDate','sumAssured','mode','premium','status','neft','dab','nominee','mobile','agencyCode'].includes(k))throw Error('Unsupported policy field.');if(v==null||v==='')continue;if(['premium','sumAssured','term','ppt'].includes(k)){if(typeof v!=='number'||!Number.isFinite(v)||v<0||v>1e12)throw Error('Invalid numeric field.');}else if(typeof v!=='string'||v.length>200)throw Error('Invalid field.');if(['doc','lastAccountDate'].includes(k)&&!D.validDate(v))throw Error('Invalid date.');if(['fup','lastDue','maturityPeriod'].includes(k)&&!/^\d{4}-(0[1-9]|1[0-2])$/.test(v))throw Error('Invalid period.');fields[k]=v;provenance[k]={source:'manual',verified:true,uid,at:now};}
+    for(const [k,v] of Object.entries(d.fields||{})){
+     if(!['policyNo','name','plan','doc','term','ppt','maturityPeriod','lastDue','fup','lastAccountDate','sumAssured','mode','premium','status','neft','dab','nominee','nomineeRelationship','mobile','agencyCode','dob','gender','email','pin','address'].includes(k))throw Error('Unsupported policy field.');
+     if(v==null||v===''){if(['policyNo','name'].includes(k))throw Error('Policy number and policyholder name are required.');fields[k]=null;provenance[k]={source:'manual',verified:true,uid,at:now};continue;}
+     if(['premium','sumAssured','term','ppt'].includes(k)){if(typeof v!=='number'||!Number.isFinite(v)||v<0||v>1e12)throw Error('Invalid numeric field.');}else if(typeof v!=='string'||v.length>(k==='address'?1500:200))throw Error('Invalid field.');
+     if(['doc','lastAccountDate','dob'].includes(k)&&!D.validDate(v))throw Error('Invalid date.');
+     if(k==='dob'&&v>D.indiaToday())throw Error('Date of birth cannot be in the future.');
+     if(['fup','lastDue','maturityPeriod'].includes(k)&&!/^\d{4}-(0[1-9]|1[0-2])$/.test(v))throw Error('Invalid period.');
+     if(k==='mobile'&&!/^\+?[\d ()-]{7,30}$/.test(v))throw Error('Enter a valid mobile number.');
+     if(k==='email'&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))throw Error('Enter a valid email.');
+     if(k==='pin'&&!/^\d{6}$/.test(v))throw Error('Enter a six-digit PIN code.');
+     fields[k]=v;provenance[k]={source:'manual',verified:true,uid,at:now};
+    }
     if(['ppt','term'].some(k=>fields[k]!=null&&(!Number.isInteger(fields[k])||fields[k]<1||fields[k]>120)))throw Error('Policy and premium terms must be whole years between 1 and 120.');
     if(D.policyKey(fields.policyNo)!==pRef.id)throw Error('Policy number cannot change.');if(!p&&!fields.name)throw Error('Policyholder name required.');
     const assignedUid=d.assignedUid??p?.assignedUid??uid;if(assignedUid&&!w.members[assignedUid])throw Error('Invalid servicing member.');
