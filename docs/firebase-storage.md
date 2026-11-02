@@ -170,3 +170,7 @@ The separate `users/{uid}/licCustomers` editor and `licFollowups` data remain in
 The shared rules must be deployed once to enable collaboration; personal CRM
 needs no new permissions. No production permission
 change has been performed. See [Agent CRM architecture](lic-agent-crm.md).
+
+## Saved snapshot Trash
+
+Journal and Dashboard share `users/{uid}/dashboardIdeas/{id}`. Delete snapshot sets `deletedAt` using a merge write; active lists hide these records and Trash can restore them by clearing that field. Image, title, source date, original creation date and view remain intact. No journal strokes or layout records are deleted. Existing records without this field remain active. Journal now exposes a labelled Snapshot action beside drawing tools as well as the canvas bar; selecting an area opens the existing Save idea form. No Firebase rule/auth changes or migration. Automated browser coverage exercises failed deletion, retry, Trash, restoration and unchanged journal ink in Journal and reload persistence/account isolation in Dashboard.

@@ -45,7 +45,7 @@ function snapshot(ref) {
   return {metadata:{fromCache:false},exists:()=>owner==='alice',data:()=>plan};
 }
 export const serverTimestamp=()=>123;
-export const setDoc=(ref,patch)=>runTransaction({},tx=>tx.set(ref,patch));
+export const setDoc=(ref,patch,options)=>runTransaction({},tx=>tx.set(ref,patch,options));
 export const getDocs=async ref=>{if(window.failDelete)throw Error('permission-denied');return {docs:[{ref:{path:ref.path+'/image'}}]}};
 export async function deleteDoc(ref){
  if(window.failDelete)throw Error('permission-denied');
@@ -61,12 +61,12 @@ export async function runTransaction(_,callback) {
   const result=await callback({get:async ref=>{
     if(ref.path.includes('/tasks/')){const task=tasks.find(task=>task.id===ref.path.split('/').pop()&&task.id!==window.deletedTaskId);return {exists:()=>Boolean(task)&&ref.path.startsWith('users/alice/'),data:()=>structuredClone(task)};}
     return snapshot(ref);
-  },set:(ref,patch)=>patches.push({path:ref.path,patch}),update:(ref,patch)=>patches.push({path:ref.path,patch})});
+  },set:(ref,patch,options)=>patches.push({path:ref.path,patch,merge:!!options?.merge}),update:(ref,patch)=>patches.push({path:ref.path,patch})});
   await new Promise(resolve=>setTimeout(resolve,100));
   if(window.failNextWrite){window.failNextWrite=false;throw Error('permission-denied');}
   for(const entry of patches){
     if(entry.path.includes('/tasks/')){const id=entry.path.split('/').pop(),task=tasks.find(task=>task.id===id);if(task)Object.assign(task,entry.patch);else tasks.push({id,...entry.patch});}
-    else if(entry.path.includes('/dashboardIdeas/'))ideas[entry.path.split('/').pop()]=entry.patch;
+    else if(entry.path.includes('/dashboardIdeas/'))ideas[entry.path.split('/').pop()]=entry.merge?{...ideas[entry.path.split('/').pop()],...entry.patch}:entry.patch;
     else if(entry.path.includes('/streaks/'))streaks[entry.path.split('/').pop()]=entry.patch;
     else plan={...plan,...entry.patch};
   }
