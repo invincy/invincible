@@ -40,3 +40,21 @@ exports.invincibleAiChat=onCall({region:'asia-south1',secrets:[openAiApiKey],tim
   throw new HttpsError('internal','Invincible AI could not complete that request. No unconfirmed change should be assumed.');
  }
 });
+
+// LIC Agent CRM shares the existing Firebase identity and default project.
+const {createCrmService}=require('./crm/service');
+const {runCrmReminders}=require('./crm/scheduler');
+const {onSchedule}=require('firebase-functions/v2/scheduler');
+const crmService=createCrmService(db);
+exports.licAgentCrm=onCall({region:'asia-south1',timeoutSeconds:540,memory:'512MiB'},async request=>{
+ if(!request.auth)throw new HttpsError('unauthenticated','Sign in to Invincible first.');
+ try{return await crmService(request.auth,request.data);}
+ catch(error){
+  // Never log request data or raw LIC reports.
+  if(error instanceof HttpsError)throw error;
+  const message=String(error?.message||'CRM operation failed.');
+  if(/access denied/i.test(message))throw new HttpsError('permission-denied','Workspace access denied.');
+  throw new HttpsError('failed-precondition',message.slice(0,300));
+ }
+});
+exports.licCrmPremiumReminders=onSchedule({schedule:'every day 08:00',timeZone:'Asia/Kolkata',region:'asia-south1',timeoutSeconds:540,memory:'512MiB'},()=>runCrmReminders(db));

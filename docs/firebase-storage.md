@@ -155,3 +155,13 @@ The report generator keeps all original saved records and sharing behavior. No m
 ### Automatic Workday save history — October 31, 2026
 
 Each confirmed save atomically appends `entries/save-{operationId}` with `kind: activity`, an explicit `created` or `saved` action, client fallback milliseconds and a server `createdAt` timestamp. New case metadata also receives server `createdAt`; existing cases retain any known creation timestamp. Unknown old creation dates remain unknown. Existing note/photo entries and metadata paths remain intact. Server timestamps take precedence in history ordering/display, with the recorded client timestamp used for older records or unresolved timestamps. Stable operation IDs and the existing revision/UID guards prevent duplicate retry events and cross-account writes. A legacy case's known creation event is shown from its stored metadata without silently writing a backfill.
+
+## LIC Agent CRM — November 2, 2026
+
+An additive callable-only workspace model uses `licCrmWorkspaces/{id}` and private
+subcollections. Existing `users/{uid}/licCustomers` and staff `licFollowups` remain
+unchanged. `users/{uid}/licWorkspaceLinks` indexes membership but grants no access.
+Verified-email invitations are hashed and validated by the existing Firebase ID
+token. Direct client access to new workspace collections stays denied by the
+existing rules. See [Agent CRM architecture and rollout](lic-agent-crm.md) for
+schema, deployment, limits and validation. No production migration/deployment ran.

@@ -197,3 +197,13 @@ The approved orb logo is shared by React, spatial and native page headers throug
 App pages and headers use `shared/app-theme.css` for a black canvas with module-specific accents and neutral surfaces. Workday retains LIC blue/yellow and the connected dots. The approved logo is shared by native/React headers and loading states. Manifest icon URLs are content-versioned to prompt browser update detection; installed-app name/icon changes can still require **Review app update** approval in Chrome. Reinstalling is not needed to fix an in-app header.
 
 The small app icon uses a simple vector blue I and gold ring. Browser/header marks use the SVG; 32/180/192/512px PNG and maskable PNG are rendered from the same source for installed app compatibility.
+
+### LIC Agent CRM
+
+Customer CRM now links to an additive Agent CRM at `lic/crm/agent.html` using the
+same Google session. It includes workspace collaboration, separate policy records,
+LIC Print preview/import, premium projections and servicing/communication tools.
+The existing customer editor and staff Follow-up Manager remain intact. Deploy the
+new Firebase callable/Scheduler before using the new workspace. Read
+[architecture, validation and remaining scope](docs/lic-agent-crm.md); full master
+brief completion and production permissions are not claimed.

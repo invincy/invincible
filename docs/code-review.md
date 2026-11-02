@@ -388,3 +388,18 @@ Validation: root/Functions tests, production build, V2 build/stage and site refe
 ## Small icon clarity — October 31, 2026
 
 Replaced the dense orb artwork at icon sizes with a clean geometric blue I and gold ring on black. `assets/branding/invincible-icon.svg` is the source for the site favicon and shared headers; PNG exports cover browser/Apple/PWA sizes, including a safe-area maskable icon. Each manifest PNG URL has a new content hash so Chrome detects the artwork change. The PWA identity and storage paths are unchanged. Verify actual 24px and 64px legibility before publishing; existing browser navigation checks confirm decoded icons. Chrome may still require user approval to apply an installed icon update.
+
+## LIC Agent CRM — November 2, 2026
+
+Added a native agent workspace alongside the existing private customer CRM. Shared
+auth/Firebase and all old paths remain. New server-authorized workspace operations,
+Print parser, import synchronization/history/rollback, independent customer-policy
+relations, premium projections, scheduled alerts and manual communication/poster
+flows are detailed in [lic-agent-crm.md](lic-agent-crm.md). No customer report or
+production data is committed. No Firebase deployment or signed-in rule check ran.
+
+Domain/service tests and repository unit/build/reference checks pass. Full browser
+regressions are blocked locally by missing Chromium. The added browser test is wired
+into the repository suite; controlled managed-browser smoke checks cover principal
+screens. This is not a complete implementation of every master-brief feature; the
+architecture document explicitly enumerates remaining work and scale limits.
