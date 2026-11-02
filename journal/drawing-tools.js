@@ -24,7 +24,7 @@
  };
  const remember=color=>{config.recent=[color,...config.recent.filter(value=>value!==color)].slice(0,8);save();};
  function open(tool,button){
-  const wasOpen=panel&&mode===tool;close();api().setTool(tool);apply(tool);requestAnimationFrame(()=>window.dispatchEvent(new Event('journal-tool-change')));if(wasOpen)return;
+  const wasOpen=panel&&mode===tool,current=api().tool();close();api().setTool(tool);apply(tool);requestAnimationFrame(()=>window.dispatchEvent(new Event('journal-tool-change')));if(wasOpen||current!==tool)return;
   mode=tool;anchor=button;const value=config[tool];panel=document.createElement('section');
   panel.className='journal-ink-panel';panel.setAttribute('role','dialog');panel.setAttribute('aria-label',tool==='eraser'?'Eraser settings':tool==='highlighter'?'Highlighter settings':'Pen settings');
   panel.innerHTML='<header><strong>'+tool[0].toUpperCase()+tool.slice(1)+'</strong><button type="button" aria-label="Close drawing settings">×</button></header>'+
@@ -35,9 +35,9 @@
   document.body.append(panel);panel.style.setProperty('--ink',value.color||'#fff');panel.style.setProperty('--ink-width',Math.min(value.width,24)+'px');panel.style.setProperty('--ink-opacity',value.opacity||1);
   const r=button.getBoundingClientRect();panel.style.left=Math.max(8,Math.min(r.left,innerWidth-Math.min(320,innerWidth-16)-8))+'px';panel.style.top=Math.min(document.querySelector('.toolbar').getBoundingClientRect().bottom+8,Math.max(8,innerHeight-panel.offsetHeight-12))+'px';
   panel.querySelector('header button').onclick=()=>{close();anchor?.focus();};
-  panel.addEventListener('click',event=>{const swatch=event.target.closest('[data-swatch]'),erase=event.target.closest('[data-erase]');if(swatch){setColor(swatch.dataset.swatch);remember(swatch.dataset.swatch);}if(erase){config.eraser.mode=erase.dataset.erase;apply('eraser');save();panel.querySelectorAll('[data-erase]').forEach(button=>button.setAttribute('aria-pressed',String(button===erase)));panel.querySelector('[data-erase-hint]').textContent=erase.dataset.erase==='stroke'?'Remove an entire line with a tap.':'Erase only the area under the cursor.';}});
+  panel.addEventListener('click',event=>{const swatch=event.target.closest('[data-swatch]'),erase=event.target.closest('[data-erase]');if(swatch){setColor(swatch.dataset.swatch);remember(swatch.dataset.swatch);close();}if(erase){config.eraser.mode=erase.dataset.erase;apply('eraser');save();panel.querySelectorAll('[data-erase]').forEach(button=>button.setAttribute('aria-pressed',String(button===erase)));close();}});
   panel.addEventListener('input',event=>{const input=event.target;if(input.hasAttribute('data-color'))setColor(input.value);if(input.hasAttribute('data-hex')){const color=input.value.startsWith('#')?input.value:'#'+input.value;input.setCustomValidity(/^#[0-9a-f]{6}$/i.test(color)?'':'Enter a six-digit hex colour.');if(!input.validationMessage)setColor(color);}if(input.hasAttribute('data-width')){config[tool].width=Number(input.value);apply(tool);save();panel.querySelector('[data-width-output]').textContent=input.value+' px';panel.style.setProperty('--ink-width',Math.min(Number(input.value),24)+'px');}if(input.hasAttribute('data-opacity')){config[tool].opacity=Number(input.value)/100;apply(tool);save();panel.querySelector('[data-opacity-output]').textContent=input.value+'%';panel.style.setProperty('--ink-opacity',config[tool].opacity);}});
-  panel.addEventListener('change',event=>{if(event.target.matches('[data-color],[data-hex]'))remember(config[tool].color);});
+  panel.addEventListener('change',event=>{if(event.target.matches('[data-color],[data-hex]')&&!event.target.validationMessage){remember(config[tool].color);close();}});
  }
  function install(){
   const toolbar=document.querySelector('.toolbar');if(!toolbar||!api()?.setSettings)return;

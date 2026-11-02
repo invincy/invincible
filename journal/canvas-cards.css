@@ -43,3 +43,5 @@
 .journal-card-controls{position:absolute;z-index:160;bottom:12px;right:12px;display:flex;align-items:center;gap:6px;padding:5px;border-radius:12px;border:1px solid #6e88b045;background:#101d32df;backdrop-filter:blur(16px);color:#d8e5f7;font:12px Inter,system-ui,sans-serif;box-shadow:0 4px 20px #0001}
 .journal-card-controls span{padding:0 7px;color:#adbed5}.journal-card-controls button{border:0;border-radius:8px;background:#ffffff0c;color:inherit;padding:9px 11px;min-height:40px;cursor:pointer;font:inherit}.journal-card-controls button[aria-pressed=true]{background:#6b8fbd42}.journal-card-controls button:focus-visible,.journal-note-card :focus-visible{outline:2px solid #6084bb}
 @media(max-width:600px){.journal-card-controls{bottom:10px;right:8px;max-width:calc(100% - 16px)}.journal-card-controls span{display:none}}
+
+.journal-note-card.is-held{border-color:#8b8eb6!important;box-shadow:0 0 0 3px #8b8eb622!important}

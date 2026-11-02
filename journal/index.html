@@ -12,17 +12,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <script type="module" crossorigin src="assets/journal-v11.js?v=5"></script>
     <script defer src="advanced-tools.js?v=20261101-1"></script>
-    <script defer src="drawing-tools.js?v=3"></script>
-    <script defer src="canvas-workspace.js?v=3"></script>
+    <script defer src="drawing-tools.js?v=4"></script>
+    <script defer src="canvas-workspace.js?v=4"></script>
     <link rel="stylesheet" href="canvas-workspace.css?v=1">
     <script defer src="edit-history.js?v=2"></script>
-    <script type="module" src="canvas-cards.js?v=4"></script>
-    <script type="module" src="notebook.js?v=2"></script>
-    <link rel="stylesheet" href="canvas-cards.css?v=3">
+    <script type="module" src="canvas-cards.js?v=5"></script>
+    <script type="module" src="notebook.js?v=3"></script>
+    <link rel="stylesheet" href="canvas-cards.css?v=4">
     <link rel="stylesheet" href="drawing-tools.css?v=1">
     <link rel="stylesheet" crossorigin href="assets/index-DSgeQfSP.css?v=20260913-2">
     <link rel="stylesheet" href="../site-nav.css?v=18">
-    <link rel="stylesheet" href="notebook.css?v=2">
+    <link rel="stylesheet" href="notebook.css?v=3">
 <style>.journal-cloud-status{position:fixed;bottom:calc(76px + env(safe-area-inset-bottom));right:12px;z-index:40;max-width:calc(100vw - 24px);padding:5px 9px;border-radius:8px;background:rgba(4,25,29,.9);color:#bce5e8;font:11px system-ui;pointer-events:none}</style><meta name="theme-color" content="#000000"></head>
   <body class="journal-page">
 <nav class="global-nav" aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
@@ -35,19 +35,24 @@
       const isPalmPointer = (event) => isDrawingCanvas(event.target) && event.pointerType === "touch";
       let pencilActive = false;
       let pencilGraceUntil = 0;
+      const blockedTouches = new Set();
       let fingerScroll = null;
 
       ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach((type) => {
         document.addEventListener(type, function (event) {
           if (isDrawingCanvas(event.target) && event.pointerType === "pen") {
-            pencilActive = type !== "pointerup" && type !== "pointercancel";
-            pencilGraceUntil = performance.now() + 250;
+            // Hover is not contact: S Pen hover must never lock out finger navigation.
+            pencilActive = type === "pointerdown" || (type === "pointermove" && event.buttons !== 0);
+            if (pencilActive) pencilGraceUntil = performance.now() + 120;
+            else pencilGraceUntil = 0;
             return;
           }
           if (!isPalmPointer(event)) return;
-          const palmBlocked = pencilActive || performance.now() < pencilGraceUntil;
+          if (type === "pointerdown" && (pencilActive || performance.now() < pencilGraceUntil)) blockedTouches.add(event.pointerId);
+          const palmBlocked = pencilActive || blockedTouches.has(event.pointerId);
+          if (type === "pointerup" || type === "pointercancel") blockedTouches.delete(event.pointerId);
           event.preventDefault();
-          if(!palmBlocked&&window.__journalViewport){window.__journalViewport.touch(event);event.stopImmediatePropagation();return;}
+          if(!palmBlocked&&window.__journalViewport){if (!window.__journalCards?.touchCard(event)) window.__journalViewport.touch(event);event.stopImmediatePropagation();return;}
           if (!palmBlocked && type === "pointerdown" && !fingerScroll) {
             const scroller = document.querySelector(".journal-page .app-container");
             if (scroller) fingerScroll = { id: event.pointerId, y: event.clientY, top: scroller.scrollTop, scroller: scroller };
