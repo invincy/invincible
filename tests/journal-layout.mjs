@@ -46,7 +46,7 @@ test('tablet writing page has generous, varied ruled sections inside a portrait 
  assert.ok(planner.width>=680&&planner.height>=640);assert.ok(todo.width>=320&&todo.height>=180&&todo.height<=260);assert.ok(ideas.height>todo.height&&ideas.height<=400&&ideas.width>=320);assert.ok(mood.height<180);assert.ok(design.page.height>design.page.width*1.4);
  for(const card of Object.values(design.cards)){assert.ok(card.x>=design.page.x&&card.x+card.width<=design.page.x+design.page.width);assert.ok(card.y>=design.page.y&&card.y+card.height<=design.page.y+design.page.height);}
  const cards=Object.values(design.cards);for(let i=0;i<cards.length;i++)for(let j=i+1;j<cards.length;j++)assert.equal(intersects(cards[i],cards[j],0),false);
- const phone=writingPage(393,852);assert.ok(phone.page.height>852);assert.ok(phone.cards.planner.height>=400&&phone.cards.todo.height>=180&&todo.height<=260,'Small screens pan a real writing page instead of shrinking handwriting cards');
+ const phone=writingPage(393,852);assert.ok(phone.page.height>852);assert.ok(phone.cards.planner.height>=640&&phone.cards.todo.height>=180&&phone.cards.todo.height<=260,'Small screens pan a real writing page instead of shrinking handwriting cards');
 });
 test('ink-free daily pages upgrade without clearing text, checklists or mood; ink pages keep saved geometry',()=>{
  const record={cards:[{id:'planner',kind:'planner',x:28,y:70,width:300,height:150,text:'Saved plan'},{id:'todo',kind:'todo',x:24,y:248,width:280,height:150,items:[{id:'one',text:'Keep task',done:true}]},{id:'ideas',kind:'ideas',x:24,y:426,width:300,height:150,text:'Saved thought'},{id:'mood',kind:'mood',x:24,y:604,width:260,height:130,mood:4}]};
