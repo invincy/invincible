@@ -24,7 +24,7 @@
  };
  const remember=color=>{config.recent=[color,...config.recent.filter(value=>value!==color)].slice(0,8);save();};
  function open(tool,button){
-  const wasOpen=panel&&mode===tool,current=api().tool();close();api().setTool(tool);apply(tool);requestAnimationFrame(()=>window.dispatchEvent(new Event('journal-tool-change')));if(wasOpen||current!==tool)return;
+  const wasOpen=panel&&mode===tool,current=api().tool();close();api().setTool(tool);apply(tool);requestAnimationFrame(()=>window.dispatchEvent(new Event('journal-tool-change')));if(wasOpen||current!==tool||window.__journalViewport?.panning)return;
   mode=tool;anchor=button;const value=config[tool];panel=document.createElement('section');
   panel.className='journal-ink-panel';panel.setAttribute('role','dialog');panel.setAttribute('aria-label',tool==='eraser'?'Eraser settings':tool==='highlighter'?'Highlighter settings':'Pen settings');
   panel.innerHTML='<header><strong>'+tool[0].toUpperCase()+tool.slice(1)+'</strong><button type="button" aria-label="Close drawing settings">×</button></header>'+
