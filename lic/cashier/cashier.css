@@ -100,20 +100,26 @@ p { line-height: 1.5; }
 .amount-context span { display: block; color: var(--muted); font-size: .78rem; margin-bottom: 5px; }
 .amount-context strong { color: var(--cyan); font-size: 1.6rem; }
 .amount-context button { background: transparent; font-size: .8rem; }
-.mode-tabs, .quick-step, .quick-step > div { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-.mode-tabs button[aria-pressed="true"], .quick-step button[aria-pressed="true"] { background: var(--cyan); color: var(--surface); border-color: var(--cyan); }
-.quick-step { margin-bottom: 16px; font-size: .85rem; }
-.quick-step button { min-width: 48px; padding: 8px 12px; }
-.denominations { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.denomination { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--field); }
-.denomination > button { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 54px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: var(--raised); text-align: left; }
-.denomination > button:focus-visible { outline-offset: -3px; }
-.denomination .value { color: var(--cyan); font-size: 1.35rem; }
-.denomination .tap { color: var(--muted); font-size: .75rem; }
-.count-row { display: grid; grid-template-columns: 44px 1fr; gap: 6px; padding: 8px; }
-.count-row input { text-align: center; padding: 6px; font-size: 1.1rem; font-weight: 700; }
-.count-row button { padding: 6px; }
-.denomination small { display: block; padding: 0 10px 8px; color: var(--muted); text-align: right; font-size: .75rem; font-variant-numeric: tabular-nums; }
+.mode-tabs { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.mode-tabs button[aria-pressed="true"] { background: var(--cyan); color: var(--surface); border-color: var(--cyan); }
+.denomination-heading, .denomination { display: grid; grid-template-columns: 68px minmax(196px, 1fr) 150px minmax(112px, .65fr); align-items: center; gap: 12px; }
+.denomination-heading { padding: 0 0 10px; color: var(--muted); font-size: .75rem; }
+.denomination-heading span:last-child { text-align: right; }
+.denominations { display: block; }
+.denomination { min-width: 0; padding: 12px 0; border-top: 1px solid var(--line); }
+.denomination .value { color: var(--cyan); font-size: 1.05rem; font-weight: 750; white-space: nowrap; }
+.times { color: var(--muted); font-size: .9rem; font-weight: 400; }
+.row-increments { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.row-increments button { padding: 8px 4px; font-size: .9rem; min-height: 48px; border-radius: 8px; }
+.count-row { display: grid; grid-template-columns: 38px minmax(48px, 1fr) 38px; gap: 4px; align-items: center; }
+.count-row input { padding: 6px 2px; min-height: 48px; text-align: center; font-size: 1rem; font-weight: 700; }
+.count-row button { padding: 6px 2px; min-height: 48px; border-radius: 8px; }
+.row-total { min-width: 0; padding: 12px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--field); text-align: right; font-size: .95rem; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.coin-rows { border-top: 1px solid var(--line); }
+.coin-rows summary { display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: 10px 0; cursor: pointer; color: var(--cyan); font-weight: 650; }
+.coin-rows summary::before { content: '+ '; margin-right: 8px; }
+.coin-rows[open] summary::before { content: '− '; }
+.coin-rows summary span { margin-left: auto; color: var(--muted); font-size: .8rem; font-weight: 400; }
 .loose-row { margin-top: 16px; }
 .loose-row label { max-width: 300px; }
 .loose-row strong { color: var(--cyan); font-size: 1.4rem; }
@@ -172,12 +178,6 @@ html[data-cashier-theme="light"] .inv-settings small { color: var(--muted); }
   .panel { padding: 16px; }
   .entry-steps { gap: 8px; }
   .entry-steps button { padding: 10px; font-size: .82rem; }
-  .denominations { gap: 8px; }
-  .denomination > button { display: grid; gap: 3px; padding: 10px; }
-  .denomination .value { font-size: 1.2rem; }
-  .count-row { grid-template-columns: 36px 1fr; gap: 4px; padding: 6px; }
-  .count-row button { padding: 4px; min-width: 0; }
-  .count-row input { padding: 4px; }
   .running-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .summary-item { padding: 12px; }
   .action-buttons { gap: 8px; }
@@ -193,7 +193,7 @@ html[data-cashier-theme="light"] .inv-settings small { color: var(--muted); }
 }
 @media (max-width: 760px) { .counter-actions { bottom: 86px; } }
 @media print {
-  .global-nav, .mobile-tabbar, .global-ai-widget, .page-heading, .counter-bar, #status, #error, #startPanel, #entrySteps, #entryPanel, #amountContext, #cashPanel, #runningSummary, #footerActions, #startCounter, dialog { display: none !important; }
+  .global-nav, .mobile-tabbar, .global-ai-widget, .page-heading, .counter-bar, #status, #error, #entrySteps, #entryPanel, #amountContext, #cashPanel, #runningSummary, #footerActions, dialog { display: none !important; }
   html[data-cashier-theme] { --app-canvas: white; --surface: white; --ink: black; --muted: #333; --cyan: #222; --line: #aaa; }
   body { padding-top: 0 !important; }
   .cashier { max-width: none; padding: 0; }
@@ -204,3 +204,14 @@ html[data-cashier-theme="light"] .inv-settings small { color: var(--muted); }
 .entry-actions button { flex: 1; min-height: 54px; }
 #entrySteps, #amountContext { scroll-margin-top: calc(var(--site-nav-height, 76px) + 14px); }
 @media(max-width:600px){.entry-actions { gap: 8px; }.entry-actions button { padding: 10px; font-size: .88rem; }}
+
+@media(max-width:700px) {
+  .denomination-heading { display: none; }
+  .denomination { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; padding: 12px 0; }
+  .denomination .value { grid-column: 1; font-size: .95rem; }
+  .times { display: none; }
+  .row-increments { grid-column: 2 / 7; gap: 5px; }
+  .row-increments button { font-size: .83rem; }
+  .count-row { grid-column: 1 / 4; grid-template-columns: 34px minmax(40px, 1fr) 34px; }
+  .row-total { grid-column: 4 / 7; }
+}
