@@ -13,13 +13,13 @@
     <script type="module" crossorigin src="assets/journal-v11.js?v=7"></script>
     <script defer src="advanced-tools.js?v=20261101-1"></script>
     <script defer src="drawing-tools.js?v=4"></script>
-    <script defer src="canvas-workspace.js?v=7"></script>
-    <link rel="stylesheet" href="canvas-workspace.css?v=2">
+    <script defer src="canvas-workspace.js?v=8"></script>
+    <link rel="stylesheet" href="canvas-workspace.css?v=3">
     <script defer src="edit-history.js?v=2"></script>
-    <script type="module" src="canvas-cards.js?v=7"></script>
+    <script type="module" src="canvas-cards.js?v=8"></script>
     <script type="module" src="notebook.js?v=6"></script>
     <script type="module" src="saved-ideas.js?v=2"></script>
-    <link rel="stylesheet" href="canvas-cards.css?v=5">
+    <link rel="stylesheet" href="canvas-cards.css?v=6">
     <link rel="stylesheet" href="drawing-tools.css?v=1">
     <link rel="stylesheet" crossorigin href="assets/index-DSgeQfSP.css?v=20260913-2">
     <link rel="stylesheet" href="../site-nav.css?v=18">
@@ -33,7 +33,7 @@
     /* iPad/Pencil guard: a palm is reported as touch, while Pencil is `pen`. */
     (function journalInputGuard() {
       const isDrawingCanvas = (target) => target && target.id === "live-canvas";
-      const isPalmPointer = (event) => isDrawingCanvas(event.target) && event.pointerType === "touch";
+      const isPalmPointer = (event) => event.target.closest?.(".canvas-container") && event.pointerType === "touch";
       let pencilActive = false;
       let pencilGraceUntil = 0;
       const blockedTouches = new Set();
@@ -41,7 +41,7 @@
 
       ["pointerdown", "pointermove", "pointerup", "pointercancel"].forEach((type) => {
         document.addEventListener(type, function (event) {
-          if (isDrawingCanvas(event.target) && event.pointerType === "pen") {
+          if (event.target.closest?.(".canvas-container") && event.pointerType === "pen") {
             // Hover is not contact: S Pen hover must never lock out finger navigation.
             pencilActive = type === "pointerdown" || (type === "pointermove" && event.buttons !== 0);
             if (pencilActive) pencilGraceUntil = performance.now() + 120;
@@ -52,6 +52,7 @@
           if (type === "pointerdown" && (pencilActive || performance.now() < pencilGraceUntil)) blockedTouches.add(event.pointerId);
           const palmBlocked = pencilActive || blockedTouches.has(event.pointerId);
           if (type === "pointerup" || type === "pointercancel") blockedTouches.delete(event.pointerId);
+          if (!isDrawingCanvas(event.target)) { if(palmBlocked){event.preventDefault();event.stopImmediatePropagation();}return; }
           event.preventDefault();
           if(!palmBlocked&&window.__journalViewport){if (!window.__journalCards?.touchCard(event)) window.__journalViewport.touch(event);event.stopImmediatePropagation();return;}
           if (!palmBlocked && type === "pointerdown" && !fingerScroll) {

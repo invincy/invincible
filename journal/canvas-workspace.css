@@ -19,3 +19,5 @@
 @media(max-width:760px){.journal-page .app-container.journal-free-workspace{height:calc(100dvh - var(--site-nav-mobile,62px) - var(--mobile-tabbar-height,76px) - env(safe-area-inset-bottom))!important}}
 
 .journal-canvas-tools [data-action=snap]{width:auto;display:flex;align-items:center;gap:5px;padding:5px 9px;white-space:nowrap}
+
+.journal-snapshot-export{display:flex;align-items:center;gap:12px}.journal-snapshot-export a{color:#99d7c7}

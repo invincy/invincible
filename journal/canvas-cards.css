@@ -46,7 +46,19 @@
 
 .journal-note-card.is-held{border-color:#8b8eb6!important;box-shadow:0 0 0 3px #8b8eb622!important}
 
-/* Keep the resize control reachable even when a tall card extends below the screen. */
-.journal-card-world .journal-card-resize{position:absolute;right:8px;top:8px;bottom:auto;width:36px;height:36px;min-height:36px;border:1px solid #8b8eb644;border-radius:9px;background:#fffdf8e8;font-size:23px;visibility:hidden;z-index:2}
-.journal-card-world.is-editing .journal-card-resize{visibility:visible}
-.journal-card-world.is-editing .journal-note-card header{padding-right:50px}
+/* Eight direct edge/corner targets retain a 24px screen hit area at every zoom. */
+.journal-card-world .journal-card-resize{position:absolute;box-sizing:border-box;width:var(--handle-size,24px);height:var(--handle-size,24px);min-width:0;min-height:0;padding:0;border:0;border-radius:0;background:transparent;visibility:hidden;z-index:4;touch-action:none}
+.journal-card-world .is-selected .journal-card-resize{visibility:visible}
+.journal-card-resize::after{content:'';position:absolute;width:var(--handle-dot,6px);height:var(--handle-dot,6px);left:50%;top:50%;transform:translate(-50%,-50%);box-sizing:border-box;border:1px solid #698aad;background:#fffdf8;border-radius:1px}
+.journal-card-resize[data-edge=n],.journal-card-resize[data-edge=s]{left:50%;transform:translateX(-50%);cursor:ns-resize!important}
+.journal-card-resize[data-edge=n],.journal-card-resize[data-edge=ne],.journal-card-resize[data-edge=nw]{top:0}
+.journal-card-resize[data-edge=s],.journal-card-resize[data-edge=se],.journal-card-resize[data-edge=sw]{bottom:0}
+.journal-card-resize[data-edge=e],.journal-card-resize[data-edge=w]{top:50%;transform:translateY(-50%);cursor:ew-resize!important}
+.journal-card-resize[data-edge=e],.journal-card-resize[data-edge=ne],.journal-card-resize[data-edge=se]{right:0}
+.journal-card-resize[data-edge=w],.journal-card-resize[data-edge=nw],.journal-card-resize[data-edge=sw]{left:0}
+.journal-card-resize[data-edge=ne],.journal-card-resize[data-edge=sw]{cursor:nesw-resize!important}
+.journal-card-world .is-selected{outline:1px solid #8198bb}
+.journal-note-card header{touch-action:none;cursor:grab}
+.journal-panning .journal-card-world,.journal-panning .journal-card-world *{pointer-events:none!important}
+
+.journal-card-world.is-editing .journal-card-move{margin-inline-start:var(--handle-size,24px)}
