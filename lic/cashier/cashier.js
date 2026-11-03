@@ -7,7 +7,7 @@ const format = value => new Intl.NumberFormat('en-IN', { style: 'currency', curr
 const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 const fresh = () => ({ id: crypto.randomUUID(), atMs: Date.now(), amounts: [{ amount: '', label: '' }], received: blankCash(), returned: blankCash() });
 let uid = null, generation = 0, stops = [], stopLog = () => {}, counters = [], active = null, selected = null, initialized = false;
-let logEntries = [], reviewing = false, reviewIndex = 0;
+let logEntries = [];
 let openingId = crypto.randomUUID(), draft = fresh(), mode = 'received', busy = false;
 const currentCounter = () => selected ? (active?.id === selected ? active : counters.find(item => item.id === selected)) : null;
 const starting = () => !currentCounter();
@@ -34,7 +34,7 @@ function setBusy(value) {
   $('nextTransaction').textContent = value ? 'Saving…' : 'Next Transaction';
   $('confirmClose').textContent = value ? 'Closing…' : 'Close Counter';
   for (const id of ['nextTransaction', 'closeCounter', 'retryCounter', 'confirmClose', 'cancelClose', 'counterPicker', 'addAmount', 'addAmountLine', 'doneAmounts', 'openCoins', 'openMenu', 'openLog']) $(id).disabled = value;
-  $('previousEntry').disabled = value || !uid || !logEntries.length;
+  $('entriesButton').disabled = value || !uid || !logEntries.length;
   $('amountInput').disabled = value;
   for (const id of ['amounts', 'coinDenominations']) $(id).querySelectorAll('input,button').forEach(el => { el.disabled = value; });
   if (draft.amounts.length === 1) $('amounts').querySelector('[data-remove]')?.setAttribute('disabled', '');
@@ -89,7 +89,9 @@ function updateSummary() {
   saveDraft();
 }
 function cashTable(value) {
-  return `<table class="cash-table"><thead><tr><th>Denomination</th><th>Count</th><th>Amount</th></tr></thead><tbody>${DENOMINATIONS.map(n => `<tr><td>₹${n}</td><td>${value.counts[n]}</td><td>${format(n * 100 * value.counts[n])}</td></tr>`).join('')}<tr><td>Misc. / loose change</td><td>—</td><td>${format(value.loose)}</td></tr><tr><th>Total cash</th><td></td><th>${format(cashTotal(value))}</th></tr></tbody></table>`;
+  const rows = DENOMINATIONS.filter(n => value.counts[n] > 0).map(n => `<tr data-denomination="${n}"><td>₹${n}</td><td>${value.counts[n]}</td><td>${format(n * 100 * value.counts[n])}</td></tr>`).join('');
+  const loose = value.loose > 0 ? `<tr data-loose><td>Misc. / loose change</td><td>—</td><td>${format(value.loose)}</td></tr>` : '';
+  return `<table class="cash-table"><thead><tr><th>Denomination</th><th>Count</th><th>Amount</th></tr></thead><tbody>${rows}${loose}${rows || loose ? '' : '<tr><td colspan="3">No cash</td></tr>'}<tr><th>Total cash</th><td></td><th>${format(cashTotal(value))}</th></tr></tbody></table>`;
 }
 function renderClosed(counter) {
   $('closingSummary').innerHTML = `<div class="closing-heading"><h2>Closing cash</h2><span>${counter.transactionCount} entries</span></div><div class="closing-totals"><div>Opening<strong>${format(cashTotal(counter.opening))}</strong></div><div>Collections<strong>${format(counter.collected)}</strong></div><div>Received<strong>${format(counter.cashIn)}</strong></div><div>Change<strong>${format(counter.cashOut)}</strong></div></div>${cashTable(counter.balance)}<div class="action-buttons"><button id="printSummary">Print</button><button id="newCounter" class="primary">New Counter</button></div>`;
@@ -108,33 +110,25 @@ function render() {
   else if (counter) renderClosed(counter);
   setBusy(busy);
 }
-function renderLog() {
-  $('previousEntry').disabled = busy || !uid || !logEntries.length;
-  $('logCount').textContent = `${logEntries.length} entries`;
-  $('logCount').hidden = reviewing;
+function renderLog({ collapse = false } = {}) {
+  const expanded = collapse ? new Set() : new Set([...$('log').querySelectorAll('details[open]')].map(item => item.dataset.entryId));
+  $('entriesButton').disabled = busy || !uid || !logEntries.length;
+  $('logCount').textContent = `${logEntries.length} ${logEntries.length === 1 ? 'entry' : 'entries'}`;
   $('logStatus').textContent = logEntries.length ? '' : 'No entries.';
-  $('reviewNav').hidden = !reviewing;
-  $('logTitle').textContent = reviewing && logEntries[reviewIndex] ? `Entry #${logEntries[reviewIndex].sequence}` : 'Transaction log';
-  $('olderEntry').disabled = reviewIndex >= logEntries.length - 1;
-  $('newerEntry').disabled = reviewIndex <= 0;
-  $('reviewPosition').textContent = logEntries.length ? `${reviewIndex + 1} / ${logEntries.length}` : '';
-  $('log').innerHTML = logEntries.map((entry, index) => `<details class="log-entry" ${reviewing ? (index === reviewIndex ? 'open' : 'hidden') : ''}><summary><strong>#${entry.sequence} · ${format(entry.due)}</strong> · ${esc(new Date(entry.atMs).toLocaleTimeString('en-IN'))} · In ${format(entry.received)}, out ${format(entry.returned)}</summary><p>${entry.amounts.map(item => `${esc(item.label || 'Amount')}: ${format(item.amount)}`).join('<br>')}</p><h3>Cash received</h3>${cashTable(entry.receivedCash)}<h3>Change given</h3>${cashTable(entry.returnedCash)}</details>`).join('');
-  if (reviewing && $('logDialog').open) $('logDialog').scrollTop = 0;
+  $('log').innerHTML = logEntries.map(entry => `<details class="log-entry" data-entry-id="${esc(entry.id)}" ${expanded.has(entry.id) ? 'open' : ''}><summary><span>Entry #${entry.sequence}</span><strong>${format(entry.due)}</strong></summary><div class="entry-detail"><p class="entry-time">${esc(new Date(entry.atMs).toLocaleString('en-IN'))}</p>${entry.amounts.length > 1 || entry.amounts.some(item => item.label) ? `<p>${entry.amounts.map(item => `${esc(item.label || 'Amount')}: ${format(item.amount)}`).join('<br>')}</p>` : ''}<section class="received-detail"><h3>Cash received</h3>${cashTable(entry.receivedCash)}</section>${cashTotal(entry.returnedCash) > 0 ? `<section class="returned-detail"><h3>Change given</h3>${cashTable(entry.returnedCash)}</section>` : ''}</div></details>`).join('');
 }
 function choose(id) {
   if (busy) return;
   if (id) $('retryCounter').hidden = true;
   for (const name of ['amountDialog', 'coinDialog', 'logDialog']) $(name).close();
-  logEntries = []; reviewing = false; reviewIndex = 0; $('previousEntry').disabled = true;
+  logEntries = []; $('entriesButton').disabled = true;
   selected = id; mode = 'received'; $('error').textContent = ''; restoreDraft();
   stopLog(); $('log').replaceChildren(); $('logCount').textContent = ''; $('logStatus').textContent = id ? 'Loading saved entries…' : '';
   if (id) {
     const token = generation, wanted = id;
     stopLog = watchTransactions(uid, id, entries => {
       if (token !== generation || wanted !== selected) return;
-      const inspectedId = reviewing ? logEntries[reviewIndex]?.id : null;
       logEntries = [...entries].sort((a, b) => (b.sequence || 0) - (a.sequence || 0) || b.atMs - a.atMs);
-      reviewIndex = Math.max(0, inspectedId ? logEntries.findIndex(item => item.id === inspectedId) : 0);
       renderLog();
     }, error => { if (token === generation) { $('logStatus').textContent = 'Could not load transaction log.'; fail(error); } });
   }
@@ -215,11 +209,12 @@ $('amountInput').oninput = () => { if (!busy && draft.amounts.length === 1) { dr
 $('amountInput').onkeydown = event => { if (event.key === 'Enter') { event.preventDefault(); $('amountInput').blur(); } };
 $('loose').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); $('loose').blur(); } });
 $('openMenu').onclick = () => $('menuDialog').showModal();
-$('openLog').onclick = () => { reviewing = false; renderLog(); $('menuDialog').close(); $('logDialog').showModal(); };
-$('previousEntry').onclick = () => { if (busy || !uid || !logEntries.length) return; reviewing = true; reviewIndex = 0; renderLog(); $('logDialog').showModal(); };
-$('olderEntry').onclick = () => { if (reviewIndex < logEntries.length - 1) { reviewIndex++; renderLog(); } };
-$('newerEntry').onclick = () => { if (reviewIndex > 0) { reviewIndex--; renderLog(); } };
-$('showAllEntries').onclick = () => { reviewing = false; renderLog(); };
+function openEntries() {
+  if (busy || !uid) return;
+  renderLog({ collapse: true }); $('menuDialog').close(); $('logDialog').showModal(); $('logDialog').scrollTop = 0;
+}
+$('openLog').onclick = openEntries;
+$('entriesButton').onclick = openEntries;
 $('openCoins').onclick = () => $('coinDialog').showModal();
 $('addAmount').onclick = () => { $('amountError').textContent = ''; renderAmounts(); $('amountDialog').showModal(); };
 $('doneAmounts').onclick = () => {
@@ -257,7 +252,7 @@ observeAuth(user => {
   generation++; const token = generation;
   stops.forEach(stop => stop()); stops = []; stopLog(); stopLog = () => {};
   uid = user?.uid || null; counters = []; active = null; selected = null; initialized = false; busy = false;
-  logEntries = []; reviewing = false; reviewIndex = 0; $('previousEntry').disabled = true;
+  logEntries = []; $('entriesButton').disabled = true;
   draft = fresh(); $('workspace').hidden = true; $('retryCounter').hidden = true; $('amounts').replaceChildren(); $('denominations').replaceChildren(); $('coinDenominations').replaceChildren(); $('amountError').textContent = ''; $('log').replaceChildren(); $('closingSummary').replaceChildren(); $('amountInput').value = ''; for (const dialog of document.querySelectorAll('dialog')) dialog.close(); $('error').textContent = '';
   $('counterPicker').innerHTML = '<option value="">New counter</option>'; $('counterPicker').disabled = !uid; $('openLog').disabled = !uid; $('counterLabel').textContent = ''; $('logCount').textContent = ''; $('logStatus').textContent = ''; $('runningSummary').replaceChildren(); $('loose').value = '0'; $('coinTotal').textContent = '₹0';
   $('status').textContent = uid ? 'Loading…' : 'Sign in from Dashboard.';
