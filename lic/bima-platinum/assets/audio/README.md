@@ -83,3 +83,9 @@ After the user's clipped-Next screenshot, the presentation additionally measures
 ## Automatic opening story — November 4, 2026
 
 Auto is enabled initially. Each completed voiceover advances Pages 1→2→3→4, and the next scene's voice begins using the same unlocked media element. Page 4 does not automatically advance to 5. Auto/Manual switches beside the stage counter keep the choice consistent across the opening pages. Manual preserves the completed graph and existing Next/Back behavior; turning Auto on after completion continues the story. Pause and navigation still cancel the current run, and per-session event listeners are removed before changing recordings. No duration timer replaces the actual ended event. The browser fixture tests the real MP3 continuation and mode switching, alongside the existing playback/viewport checks.
+
+## Page 5 spacing refinement — November 4, 2026
+
+Page 5 now distributes available vertical space between its existing illustration/selectors, policy facts, income benefit and timeline instead of leaving one large blank region beneath them. The heading uses the full content width, the advisor retains the same asset, and the floating audio control keeps clearance above Next. Short presentations retain compact sizing and the scene's existing scroll fallback. No premium tables, selection state, narration, other scenes or stored data change.
+
+Verified: `npm run check`, `npm test` (133 root tests passed, two skipped; eight Functions tests passed), `npm run build`, and visual inspection of Page 5 in the 420 × 861 presentation frame. The footer fits within the frame and all four timeline points remain visible. Physical-phone and landscape checks and the full automated browser suite were not run.

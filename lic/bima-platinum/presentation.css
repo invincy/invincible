@@ -1474,8 +1474,28 @@ body.dev-mode .desktop-tools-bar { display: flex; }
   [data-story-step="5"] .scene-two-footer { padding-bottom:7px; }
 }
 
-/* Page 5 follows its content instead of stretching the empty middle of the screen. */
-[data-story-step="5"] .scene-two-visual { flex:0 0 auto; }
+/* Page 5 distributes spare height between its existing content sections. */
+[data-story-step="5"] .scene-two-heading h2 { max-width:100%; font-size:clamp(20px,5.7cqw,25px); }
+[data-story-step="5"] .income-advisor { top:-40px; }
+[data-story-step="5"] .scene-two-visual { flex:1 0 auto; display:flex; }
+[data-story-step="5"] .plan-details-page:not([hidden]) {
+  flex:1; display:flex; flex-direction:column; justify-content:space-between;
+  gap:clamp(8px,1cqh,12px);
+}
+[data-story-step="5"] .income-example-top {
+  display:flex; flex-direction:column; justify-content:space-between;
+  min-height:clamp(202px,25cqh,230px);
+}
+[data-story-step="5"] .income-facts { margin-block:0; }
+[data-story-step="5"] .income-timeline { margin-block:0; }
+@container presentation (max-height:700px) {
+  [data-story-step="5"] .plan-details-page:not([hidden]) { gap:0; }
+  [data-story-step="5"] .income-example-top { min-height:174px; }
+}
+@container presentation (max-height:600px) {
+  [data-story-step="5"] .income-advisor { top:-8px; }
+  [data-story-step="5"] .income-example-top { min-height:117px; }
+}
 [data-story-step="5"] .scene-two-footer { margin-top:5px; background:none; }
 [data-story-step="5"] .income-benefit { padding-block:18px; }
 [data-story-step="5"] .income-timeline { margin-top:20px; margin-bottom:6px; }
@@ -1621,7 +1641,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 }
 [data-story-step="4"] .scene-two-visual { overflow:hidden; }
 [data-story-step="5"] .scene-two-footer { margin-top:auto; }
-[data-story-step="5"] .scene-two-visual { margin-bottom:48px; }
+[data-story-step="5"] .scene-two-visual { margin-bottom:64px; }
 [data-story-step="6"] .journey-content { bottom:48px; }
 @container presentation (max-height:520px) {
   [data-story-step="4"] .scene-two-visual { min-height:220px; }
@@ -1652,4 +1672,9 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 @container presentation (max-height:700px) {
   [data-story-step="2"] .scene-two-presenter { width:96%; height:96%; bottom:-48%; }
   [data-story-step="3"] .scene-two-presenter { width:80%; height:86%; bottom:-40%; }
+}
+
+/* Short screens keep the compact footer clearance rather than tall-screen spacing. */
+@container presentation (max-height:700px) {
+  [data-story-step="5"] .scene-two-visual { margin-bottom:48px; }
 }
