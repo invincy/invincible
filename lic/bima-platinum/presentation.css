@@ -1480,7 +1480,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 [data-story-step="5"] .scene-two-visual { flex:1 0 auto; display:flex; }
 [data-story-step="5"] .plan-details-page:not([hidden]) {
   flex:1; display:flex; flex-direction:column; justify-content:space-between;
-  gap:clamp(12px,2.5cqh,24px);
+  gap:clamp(8px,1cqh,12px);
 }
 [data-story-step="5"] .income-example-top {
   display:flex; flex-direction:column; justify-content:space-between;
