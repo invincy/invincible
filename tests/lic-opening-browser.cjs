@@ -170,12 +170,35 @@ fs.mkdirSync(out,{recursive:true});
    }
    await page.close();
   }
-  // Model a browser address bar: dynamic units shrink while legacy vh stays tall.
-  const mobile=await browser.newPage({viewport:{width:360,height:640}});
-  await mobile.route('**/presentation.css*',route=>route.fulfill({contentType:'text/css',body:fs.readFileSync('lic/bima-platinum/presentation.css','utf8').replaceAll('100dvh','calc(100vh - 60px)')}));
+  // Reproduce a phone/WebView whose layout viewport remains taller than its
+  // visible screen. CSS vh/dvh alone cannot catch this mismatch.
+  const mobile=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
+  await mobile.addInitScript(()=>{
+   window.viewportMock=Object.assign(new EventTarget(),{height:760,width:390,offsetTop:24,offsetLeft:0,scale:1});
+   Object.defineProperty(window,'visualViewport',{get:()=>window.viewportMock});
+  });
   await mobile.goto(`${base}/lic/bima-platinum/`);
-  const dynamic=await mobile.evaluate(()=>({frame:document.querySelector('#deviceFrame').getBoundingClientRect().height,wrapper:document.querySelector('.app-viewport-wrapper').getBoundingClientRect().height,next:document.querySelector('#ctaForwardBtn').getBoundingClientRect().bottom}));
-  assert.equal(dynamic.frame,580);assert.equal(dynamic.wrapper,580);assert.ok(dynamic.next<=580);
-  await mobile.close();console.log('Dynamic mobile viewport stays within the available screen.');
+  await mobile.evaluate(()=>document.fonts.ready);
+  for(let step=1;step<=6;step++) {
+   if(step>1) await mobile.click(step===2?'#ctaForwardBtn':'#sceneTwoNextBtn');
+   await mobile.locator(step===1?'#stageContainer':'#stagePreviewModal').evaluate(el=>Promise.all(el.getAnimations().map(a=>a.finished.catch(()=>{}))));
+   for(const [height,offsetTop,event] of [[760,24,'resize'],[640,12,'resize'],[480,0,'resize'],[760,32,'scroll']]) {
+    await mobile.evaluate(({height,offsetTop,event})=>{Object.assign(window.viewportMock,{height,offsetTop});window.viewportMock.dispatchEvent(new Event(event));},{height,offsetTop,event});
+    const visible=await mobile.evaluate(step=>{
+     const v=window.viewportMock,frame=document.querySelector('#deviceFrame').getBoundingClientRect();
+     const controls=[step===1?'#ctaForwardBtn':'#sceneTwoNextBtn',step===1?'#advisorAudioBtn':step===6?'#journeyPlayPause':'#sceneTwoDialogueBtn'];
+     const bounds=controls.map(selector=>{const e=document.querySelector(selector),r=e.getBoundingClientRect();return {selector,top:r.top,bottom:r.bottom,height:r.height};});
+     const container=step===1?document.querySelector('#stageContainer'):document.querySelector('#stagePreviewModal');
+     return {frame:{top:frame.top,height:frame.height,bottom:frame.bottom},bounds,bottom:v.offsetTop+v.height,top:v.offsetTop,overflow:container.scrollHeight-container.clientHeight};
+    },step);
+    assert.equal(visible.frame.height,height);assert.equal(visible.frame.top,offsetTop);
+    assert.ok(visible.bounds.every(r=>r.top>=visible.top&&r.bottom<=visible.bottom-6),JSON.stringify({step,height,offsetTop,visible}));
+    assert.ok(visible.overflow<=1,JSON.stringify({step,height,offsetTop,visible}));
+    await mobile.screenshot({path:`${out}/visible-${height}-${offsetTop}-page${step}.png`});
+   }
+  }
+  await mobile.mouse.wheel(0,500);
+  assert.equal(await mobile.evaluate(()=>window.scrollY),0);
+  await mobile.close();console.log('All six pages fit mismatched and changing visible phone viewports.');
  } finally {await browser.close();if(server) await new Promise(resolve=>server.close(resolve));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

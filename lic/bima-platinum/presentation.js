@@ -51,6 +51,29 @@ function getLicSamplePremium(age, ppt) {
 document.addEventListener('DOMContentLoaded', () => {
   const stageContainer = document.getElementById('stageContainer');
   const deviceFrame = document.getElementById('deviceFrame');
+  const viewportWrapper = document.querySelector('.app-viewport-wrapper');
+  if (viewportWrapper) {
+    // Embedded phone browsers can report a layout viewport taller than the
+    // visible screen. Clamp the scene to the visible viewport, not vh/dvh alone.
+    const fitVisibleViewport = () => {
+      const viewport = window.visualViewport;
+      const unzoomed = !viewport || Math.abs(viewport.scale - 1) < .01;
+      const top = unzoomed && viewport ? Math.max(0, viewport.offsetTop) : 0;
+      const heights = [window.innerHeight - top, document.documentElement.clientHeight - top];
+      if (viewport && unzoomed) heights.push(viewport.height);
+      const height = Math.floor(Math.min(...heights.filter(value => Number.isFinite(value) && value > 0)));
+      if (!Number.isFinite(height)) return;
+      viewportWrapper.style.setProperty('--presentation-height', `${height}px`);
+      viewportWrapper.style.setProperty('--presentation-top', `${top}px`);
+    };
+    fitVisibleViewport();
+    window.addEventListener('resize', fitVisibleViewport);
+    window.addEventListener('orientationchange', fitVisibleViewport);
+    window.visualViewport?.addEventListener('resize', fitVisibleViewport);
+    window.visualViewport?.addEventListener('scroll', fitVisibleViewport);
+    window.addEventListener('pageshow', fitVisibleViewport);
+  }
+
   const stagePreviewModal = document.getElementById('stagePreviewModal');
   const previewDismissBtn = document.getElementById('previewDismissBtn');
   const ctaForwardBtn = document.getElementById('ctaForwardBtn');
