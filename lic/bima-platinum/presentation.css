@@ -1629,10 +1629,14 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 [data-story-step="5"] .story-mode-toggle,
 [data-story-step="6"] .story-mode-toggle { display:none; }
 [data-story-step="2"] .scene-two-visual,
-[data-story-step="3"] .scene-two-visual { overflow:hidden; }
+[data-story-step="3"] .scene-two-visual { overflow:hidden; isolation:auto; }
+[data-story-step="2"] .scene-two-footer,
+[data-story-step="3"] .scene-two-footer { z-index:10; }
+#storyChart { z-index:6; }
 [data-story-step="2"] .scene-two-presenter,
-[data-story-step="3"] .scene-two-presenter { width:80%; height:80%; right:-10%; bottom:-12%; }
+[data-story-step="3"] .scene-two-presenter { width:80%; height:80%; right:-10%; bottom:0; mix-blend-mode:lighten; }
+[data-story-step="2"] .scene-two-presenter { width:100%; height:100%; right:-8%; }
 @container presentation (max-height:700px) {
-  [data-story-step="2"] .scene-two-presenter,
-  [data-story-step="3"] .scene-two-presenter { width:76%; height:76%; bottom:-23%; }
+  [data-story-step="2"] .scene-two-presenter { width:96%; height:96%; bottom:-48%; }
+  [data-story-step="3"] .scene-two-presenter { width:80%; height:86%; bottom:-40%; }
 }
