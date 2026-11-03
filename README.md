@@ -208,3 +208,11 @@ Personal workspaces reuse existing owner-only storage. Apply the precise
 workspace/invitation rules in `firestore.rules` once to enable shared workspaces;
 shared creation stays disabled until those permissions are available. Existing records are preserved. See
 [architecture, validation and limits](docs/lic-agent-crm.md).
+
+## LIC cash counter — November 3, 2026
+
+LIC → **Cashier** opens `lic/cashier/`. Enter opening denominations once, then enter one or several amounts per cash exchange. Choose 1 / 5 / 10 / 100 notes per tap, tap denominations or enter counts directly, and record miscellaneous/loose change as an amount. Cash received and change given have separate counts. Shortages, unreturned overpayments and unavailable change block saving. **Next Transaction** saves and immediately resets the entry without a confirmation. **Close Counter** asks for confirmation, atomically saves the balanced final entry (if present), and shows collections and remaining note/coin counts. A blank final entry closes without creating a log entry.
+
+The existing Google session owns counter records and immutable-by-UI transaction logs. Drafts recover per account and counter on the same device. Stable operation IDs prevent duplicate entries after uncertain acknowledgements; Firestore transactions serialize cash updates and reject closed counters. The last 30 counters are available in history; an older active counter is watched independently. Print summary uses the browser print dialog. No currency conversion, AI call, payment processing, bank connection or Firebase configuration/rule change is involved. Physical cash should be checked against the expected closing counts.
+
+Focused verification: `node --test tests/lic-cashier.mjs` and `node tests/lic-cashier-browser.cjs`. Production Firebase permissions require a real signed-in check.
