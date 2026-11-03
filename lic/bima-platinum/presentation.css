@@ -1149,12 +1149,20 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 #storyChart .scenario-legend { flex-direction:row; flex-wrap:wrap; gap:3px 10px; }
 #storyChart .scenario-label strong { font-size:11px; }
 #storyChart .business-label { order:-1; }
-#storyChart .graph-factors { position:absolute; inset:0; z-index:7; pointer-events:none; }
-#storyChart .graph-factors span { position:absolute; color:#cad5e5; font:500 10px/1.4 var(--font-sans); text-shadow:0 1px 4px #020b1c; }
-#storyChart .factor-0 { left:25%; top:43%; opacity:var(--factor-0,0); }
-#storyChart .factor-1 { left:40%; top:34%; opacity:var(--factor-1,0); }
-#storyChart .factor-2 { left:48%; top:29%; opacity:var(--factor-2,0); }
-#storyChart .factor-3 { left:66%; top:19%; opacity:var(--factor-3,0); }
+/* Page 1 annotations stay inside the existing plot, away from faces and hands. */
+#storyChart .business-events { display:none; }
+#storyChart[data-step="1"] .business-events { display:inline; }
+#storyChart .business-event { opacity:0; pointer-events:none; }
+#storyChart .business-event.is-visible { opacity:1; }
+#storyChart .business-event.is-positive { color:#8dbda7; }
+#storyChart .business-event.is-negative { color:#cc9293; }
+#storyChart .event-connector { fill:none; stroke:currentColor; stroke-width:.65; vector-effect:non-scaling-stroke; opacity:.75; }
+#storyChart .business-event circle { fill:currentColor; stroke:#061226; stroke-width:.7; }
+#storyChart .business-event text {
+  fill:#e1e8ee; font:400 var(--event-font-size,16px)/1.15 var(--font-sans);
+  stroke:#061226; stroke-width:3px; stroke-linejoin:round; paint-order:stroke fill;
+}
+#storyChart[data-step="1"] .chart-caption { max-width:100%; font-size:8px; line-height:1.4; }
 #storyChart .volatility-note { position:absolute; left:24%; top:6%; color:#cbbde9; font:500 10px var(--font-sans); opacity:var(--volatility-opacity,0); }
 [data-story-step="1"] .headline-main { font-family:var(--font-sans); font-size:32px; }
 [data-story-step="1"] .business-subtitle { color:#dfcc9d; font:500 11px/1.5 var(--font-sans); margin-top:4px; }
@@ -1217,6 +1225,10 @@ body.dev-mode .desktop-tools-bar { display: flex; }
   .layer-headline { top:69px; }
   .headline-main { font-size:22px; line-height:1.4; }
   .scene-one-chart-host { bottom:124px; width:64%; }
+  /* The shortest phones need annotation clearance below the characters' faces. */
+  [data-story-step="1"] .scene-one-chart-host { bottom:90px; }
+  #storyChart[data-step="1"] .scenario-chart-heading { display:none; }
+  #storyChart[data-step="1"] .balance-plot { height:105px; }
   #storyChart .balance-plot { height:125px; }
   #storyChart .scenario-label strong { font-size:9px; }
   #storyChart .scenario-chart-heading { font-size:10px !important; }
@@ -1227,6 +1239,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 }
 @media(prefers-reduced-motion:reduce) {
   #storyChart .scenario-line { stroke-dashoffset:0 !important; }
+  #storyChart[data-step="1"] .business-event { opacity:1; }
 }
 
 /* Page 4: a quiet product reveal. Earlier scenes keep their existing styling. */

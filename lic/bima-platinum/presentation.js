@@ -88,6 +88,35 @@ document.addEventListener('DOMContentLoaded', () => {
   const audioStatus = document.getElementById('audioStatus');
   const sceneTwoAudioStatus = document.getElementById('sceneTwoAudioStatus');
   const storyChart = document.getElementById('storyChart');
+  const businessEvents = [...document.querySelectorAll('#storyChart .business-event')];
+  const businessPath = document.querySelector('#storyChart .scenario-business');
+  // Find each event on the actual, unmodified curve. The same arc-length fraction
+  // controls the drawing and the label reveal, including pause, seek and replay.
+  businessEvents.forEach(event => {
+    const length = businessPath.getTotalLength();
+    const x = Number(event.dataset.graphX);
+    let low = 0, high = length;
+    for (let i = 0; i < 24; i++) {
+      const mid = (low + high) / 2;
+      if (businessPath.getPointAtLength(mid).x < x) low = mid;
+      else high = mid;
+    }
+    const distance = (low + high) / 2;
+    const point = businessPath.getPointAtLength(distance);
+    event.dataset.reveal = String(distance / length);
+    const dot = event.querySelector('circle');
+    dot.setAttribute('cx', point.x);
+    dot.setAttribute('cy', point.y);
+    event.querySelector('.event-connector').setAttribute('d',
+      `M${point.x} ${point.y} L${event.dataset.labelX} ${event.dataset.labelY}`);
+  });
+  // Keep annotations readable in CSS pixels without enlarging or moving the graph.
+  if (businessEvents.length && typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(() => {
+      const matrix = businessPath.getScreenCTM();
+      if (matrix?.a > 0) storyChart.style.setProperty('--event-font-size', `${9 / matrix.a}px`);
+    }).observe(storyChart);
+  }
   const firstScene = document.querySelector('.layer-stage-3d');
   const sceneThreeStatus = document.getElementById('sceneThreeStatus');
   const inspectorFab = document.getElementById('inspectorFab');
@@ -276,12 +305,8 @@ document.addEventListener('DOMContentLoaded', () => {
       storyChart.style.setProperty('--narration-reveal', String(1 - reveal));
       storyChart.style.setProperty('--volatility-opacity', String(currentPage === 2 ? Math.sin(Math.PI * reveal) * .65 : 0));
       storyChart.setAttribute('data-settled', String(reveal === 1));
-      // Brief, non-overlapping cues follow dips on the same business path.
-      const cueWindows = [[.19,.31],[.36,.48],[.54,.66],[.72,.84]];
-      cueWindows.forEach(([from,to], index) => {
-        const opacity = currentPage === 1 && progress > from && progress < to
-          ? Math.sin(Math.PI * (progress - from) / (to - from)) : 0;
-        storyChart.style.setProperty(`--factor-${index}`, String(opacity));
+      businessEvents.forEach(event => {
+        event.classList.toggle('is-visible', currentPage === 1 && reveal >= Number(event.dataset.reveal));
       });
       return;
     }
@@ -419,10 +444,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('balanceChartTitle').textContent = page === 1 ? 'Profit potential. Natural fluctuations.' : page === 2 ? 'Growth allocations' : 'Different roles for your savings';
     document.getElementById('balancePlotTitle').textContent = page === 1 ? 'Business growth engine' : page === 2 ? 'Business with added Share Market volatility' : 'Business growth with a stability bucket';
     document.getElementById('balancePlotDesc').textContent = page === 1
-      ? 'Business grows overall with short-term ups and downs. Illustrative concept, not projected returns.'
+      ? 'Illustrative business income fluctuations. Expansion and economic growth may support income; competition, recession and war may reduce it. These are possible influences, not historical data or guaranteed outcomes.'
       : page === 2
         ? 'Business stays visible as a separate Share Market allocation adds another source of fluctuation. Neither asset is described as bad. Illustrative concept, not projected returns.'
         : 'Business and Share Market stay visible. A gently rising gold Stable Allocation adds stability to part of personal savings. Independent illustrative paths, not combined portfolio returns or projected performance.';
+    document.getElementById('balanceChartCaption').textContent = page === 1
+      ? 'Illustrative only · Possible influences, not guaranteed outcomes. Not historical data.'
+      : 'Illustrative concept — not projected returns';
     firstScene.inert = page !== 1;
     stagePreviewModal.inert = page === 1;
     if (page === 1) {

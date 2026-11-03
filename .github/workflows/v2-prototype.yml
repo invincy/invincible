@@ -148,7 +148,7 @@ jobs:
           npm run test:browser
       - name: LIC presentation playback and fixed audio controls
         if: steps.scope.outputs.level == 'full'
-        run: node tests/lic-opening-browser.cjs
+        run: node tests/lic-opening-browser.cjs && node tests/lic-business-events-browser.cjs
         env:
           LIC_BASELINE_REF: ${{ github.event.pull_request.base.sha }}
       - uses: actions/upload-artifact@v4
