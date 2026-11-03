@@ -533,3 +533,10 @@ These Orb fixture issues were not changed as part of this bounded presentation e
 The remaining browser checks were attempted separately: Task copy and Creator passed;
 the unrelated Journal tools fixture stopped at its existing addStyleTag call.
 Physical-device browser checks remain unverified.
+
+
+### Cashier direction placement — November 4, 2026
+
+Moved Cash received above the amount field and Change given beneath the denomination/coin controls, at the bottom of the counting panel. Kept the existing mode handlers, counting, draft storage and transaction flow. Updated normal, short-screen and tall-screen grid rows and the cashier CSS cache key. Existing responsive browser checks now assert the requested vertical order.
+
+Verification: site reference check, all repository unit/Functions tests and production build passed. Local browser coverage could not run: Chromium launch is blocked by this environment (socket operation not permitted). Phone/tablet/desktop layout and live Firebase access remain unverified locally.

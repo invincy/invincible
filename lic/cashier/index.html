@@ -5,7 +5,7 @@
   <title>Cashier · Invincible LIC</title><meta name="theme-color" content="#071820">
   <script src="theme.js"></script>
   <link rel="icon" href="../../favicon.ico" sizes="any">
-  <link rel="stylesheet" href="../../site-nav.css?v=18"><link rel="stylesheet" href="cashier.css?v=20261103-balanced">
+  <link rel="stylesheet" href="../../site-nav.css?v=18"><link rel="stylesheet" href="cashier.css?v=20261104-direction-layout">
 </head>
 <body class="cashier-page">
   <nav class="global-nav" aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
@@ -13,11 +13,12 @@
     <header class="page-heading"><a class="back" href="../" aria-label="Back to LIC">←</a><h1>Cashier</h1><button id="entriesButton" aria-label="Cash entries" disabled>Entries</button><button id="openMenu" aria-label="Cashier menu" title="Menu">⋯</button></header>
     <p id="status" role="status" aria-live="polite">Loading…</p><p id="error" class="error" role="alert"></p><button id="retryCounter" hidden>Retry</button>
     <section id="workspace" hidden aria-label="Cash counter">
-      <section id="entryPanel" hidden aria-label="Amount to collect"><label for="amountInput">Amount ₹</label><input id="amountInput" class="amount-input" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off"><button id="addAmount" aria-label="Multiple amounts and reference">+</button><strong id="due" class="sr-only">₹0</strong></section>
       <section id="cashPanel" hidden aria-label="Count cash">
-        <div class="mode-tabs" role="group" aria-label="Cash direction"><button id="receivedMode" aria-pressed="true">Cash received</button><button id="returnedMode" aria-pressed="false">Change given</button></div>
+        <div class="mode-tabs" role="group" aria-label="Cash received mode"><button id="receivedMode" aria-pressed="true">Cash received</button></div>
+        <section id="entryPanel" hidden aria-label="Amount to collect"><label for="amountInput">Amount ₹</label><input id="amountInput" class="amount-input" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off"><button id="addAmount" aria-label="Multiple amounts and reference">+</button><strong id="due" class="sr-only">₹0</strong></section>
         <div id="denominations" class="denominations"></div>
         <div class="loose-row"><button id="openCoins">Coins <span id="coinTotal">₹0</span></button><label for="loose">Misc ₹</label><input id="loose" inputmode="decimal" type="text" value="0" autocomplete="off" enterkeyhint="done"><strong id="cashTotal" class="sr-only">₹0</strong></div>
+        <div class="mode-tabs" role="group" aria-label="Change given mode"><button id="returnedMode" aria-pressed="false">Change given</button></div>
       </section>
       <div id="runningSummary" class="running-summary" aria-live="polite" hidden></div>
       <div id="footerActions" class="counter-actions" hidden><div id="saveState" class="save-state" role="status"></div><div class="action-buttons"><button id="nextTransaction" class="primary">Next Transaction</button><button id="closeCounter">Close Counter</button></div></div>
