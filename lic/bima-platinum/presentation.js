@@ -1,20 +1,19 @@
 /** LIC Bima Platinum: existing chart story and a focused product reveal. */
-// New recordings use new paths so the older scripts are never played by mistake.
-// Add the supplied recordings here, then tune cue times to their spoken phrases.
+// Pages 1–3 use the supplied filenames and media-duration progress in syncChart.
+// Existing Page 4+ recordings and their lifecycle remain unchanged.
 const STORY_SCENES = {
   1: {
-    src: 'assets/audio/page1.mp3',
+    src: 'assets/audio/newpage1.mp3',
     script: 'आपका business ही आपका main growth engine है। यहीं से आपकी income और wealth grow होती है।',
     cues: [{ start: 0, focus: 'business' }]
   },
   2: {
-    src: 'assets/audio/page2.mp3',
+    src: 'assets/audio/newpage2.mp3',
     script: 'Business में पैसा लगाइए growth के लिए। लेकिन अगर आपकी बाकी savings भी Share Market में जाएँ, तो overall volatility और बढ़ जाती है।',
-    // Provisional boundary: replace 3.2 with the start of “लेकिन” in the new MP3.
-    cues: [{ start: 0, focus: 'business' }, { start: 3.2, focus: 'market' }]
+    cues: []
   },
   3: {
-    src: 'assets/audio/page3.mp3',
+    src: 'assets/audio/newpage3.mp3',
     script: 'इसलिए अपनी personal savings का एक हिस्सा stability के लिए अलग रखिए। एक stable या guaranteed structure आपके overall finances में predictability जोड़ता है।',
     cues: [{ start: 0, focus: 'platinum' }]
   },
@@ -101,6 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let audioAttempt = 0;
   let playbackWanted = false;
   let playbackState = 'idle';
+  let chartComplete = false;
+  let chartFrame = null;
   const journeyPage = document.getElementById('planJourneyPage');
   const journeyControls = document.getElementById('journeyControls');
   const journeyNodes = [...document.querySelectorAll('[data-journey-step]')];
@@ -230,6 +231,29 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function syncChart() {
+    if (currentPage <= 3) {
+      const duration = audioElement?.duration;
+      const progress = chartComplete ? 1 : Number.isFinite(duration) && duration > 0
+        ? Math.min(audioElement.currentTime / duration, 1) : 0;
+      // Keep the completed earlier lines. Only the new allocation draws.
+      const start = currentPage === 1 ? .03 : currentPage === 2 ? .16 : .1;
+      const end = .9;
+      const reveal = Math.max(0, Math.min((progress - start) / (end - start), 1));
+      const focus = currentPage === 1 ? 'business' : currentPage === 2 ? 'market' : 'platinum';
+      storyChart.setAttribute('data-focus', focus);
+      storyChart.setAttribute('data-playback', playbackState);
+      storyChart.style.setProperty('--narration-reveal', String(1 - reveal));
+      storyChart.style.setProperty('--volatility-opacity', String(currentPage === 2 ? Math.sin(Math.PI * reveal) * .65 : 0));
+      storyChart.setAttribute('data-settled', String(reveal === 1));
+      // Brief, non-overlapping cues follow dips on the same business path.
+      const cueWindows = [[.19,.31],[.36,.48],[.54,.66],[.72,.84]];
+      cueWindows.forEach(([from,to], index) => {
+        const opacity = currentPage === 1 && progress > from && progress < to
+          ? Math.sin(Math.PI * (progress - from) / (to - from)) : 0;
+        storyChart.style.setProperty(`--factor-${index}`, String(opacity));
+      });
+      return;
+    }
     let cue = null;
     if (audioElement && ['playing', 'paused'].includes(playbackState)) {
       for (const candidate of STORY_SCENES[currentPage].cues) {
@@ -244,6 +268,15 @@ document.addEventListener('DOMContentLoaded', () => {
     storyChart.style.setProperty('--narration-reveal', String(remaining));
   }
 
+  function followChartAudio() {
+    if (chartFrame !== null) window.cancelAnimationFrame?.(chartFrame);
+    chartFrame = null;
+    syncChart();
+    if (currentPage <= 3 && playbackState === 'playing') {
+      chartFrame = window.requestAnimationFrame?.(followChartAudio) ?? null;
+    }
+  }
+
   function updateAudioUI(state) {
     playbackState = state;
     const label = state === 'playing' ? 'Pause audio' : state === 'paused' ? 'Resume audio' : state === 'loading' ? 'Loading audio…' : currentPage === 5 ? 'Hear Advisor' : 'Advisor की बात सुनें';
@@ -256,11 +289,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (state === 'paused') button.classList.add('is-paused');
     }
     advisorAudioIcon.textContent = state === 'playing' ? '⏸' : '▶';
-    syncChart();
+    followChartAudio();
   }
 
   function stopAllAudio() {
     audioAttempt++;
+    chartComplete = false;
     playbackWanted = false;
     const previous = audioElement;
     audioElement = null; // Ignore late media events from the departing page.
@@ -288,10 +322,11 @@ document.addEventListener('DOMContentLoaded', () => {
       audio.addEventListener('ended', () => {
         if (!isCurrent()) return;
         playbackWanted = false;
+        if (page <= 3) chartComplete = true;
         audio.currentTime = 0;
         updateAudioUI('idle');
       });
-      for (const event of ['timeupdate', 'seeked']) audio.addEventListener(event, () => { if (isCurrent()) syncChart(); });
+      for (const event of ['timeupdate', 'seeked', 'loadedmetadata', 'durationchange']) audio.addEventListener(event, () => { if (isCurrent()) syncChart(); });
       audio.addEventListener('error', () => {
         if (!isCurrent()) return;
         playbackWanted = false;
@@ -300,6 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
     const audio = audioElement;
+    if (currentPage <= 3 && chartComplete) { chartComplete = false; audio.currentTime = 0; }
     updateAudioUI('loading');
     try {
       await audio.play();
@@ -334,13 +370,13 @@ document.addEventListener('DOMContentLoaded', () => {
     storyChart.setAttribute('data-step', String(page));
     const host = document.getElementById(page === 1 ? 'sceneOneChartHost' : 'presenterChartHost');
     host.appendChild(storyChart); // Move the actual original figure; never clone paths.
-    document.getElementById('balanceChartTitle').textContent = page === 1 ? 'Business · Growth engine' : page === 2 ? 'Business + Share Market' : 'Business + Stability';
+    document.getElementById('balanceChartTitle').textContent = page === 1 ? 'Profit potential. Natural fluctuations.' : page === 2 ? 'Growth allocations' : 'Different roles for your savings';
     document.getElementById('balancePlotTitle').textContent = page === 1 ? 'Business growth engine' : page === 2 ? 'Business with added Share Market volatility' : 'Business growth with a stability bucket';
     document.getElementById('balancePlotDesc').textContent = page === 1
-      ? 'The blue Business line is the growth engine. Other paths are not introduced yet. Illustrative concept, not projected returns.'
+      ? 'Business grows overall with short-term ups and downs. Illustrative concept, not projected returns.'
       : page === 2
-        ? 'The blue Business line stays visible. The red Business plus Share Market path has sharp peaks and dips below the business baseline. Illustrative concept, not projected returns.'
-        : 'The blue Business line stays visible alongside a smoother green Business plus Stability path. Illustrative concept, not projected returns.';
+        ? 'Business stays visible as a separate Share Market allocation adds another source of fluctuation. Neither asset is described as bad. Illustrative concept, not projected returns.'
+        : 'Business and Share Market stay visible. A gently rising gold Stable Allocation adds stability to part of personal savings. Independent illustrative paths, not combined portfolio returns or projected performance.';
     firstScene.inert = page !== 1;
     stagePreviewModal.inert = page === 1;
     if (page === 1) {
@@ -356,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('storyProgress').style.width = `${page * 10}%`;
       document.getElementById('storyEyebrow').textContent = page === 2 ? 'GROWTH + VOLATILITY' : page === 3 ? 'GROWTH + STABILITY' : page === 4 ? 'THE STABILITY LAYER' : page === 5 ? 'REGULAR INCOME' : 'THE FIVE-STEP JOURNEY';
       const title = document.getElementById('stagePreviewTitle');
-      title.textContent = page === 2 ? 'Savings भी risk में?' : page === 3 ? 'Business से growth, savings से stability' : page === 4 ? 'अब Growth के साथ Stability' : page === 5 ? 'How Bima Platinum Works' : 'How Bima Platinum Works';
+      title.textContent = page === 2 ? 'When everything fluctuates…' : page === 3 ? 'Add Stability' : page === 4 ? 'अब Growth के साथ Stability' : page === 5 ? 'How Bima Platinum Works' : 'How Bima Platinum Works';
       previewDismissBtn.setAttribute('aria-label', `Back to Scene ${page - 1}`);
       journeyNext.hidden = false;
       document.getElementById('storyNextLabel').textContent = page === 2 ? 'अब Stability कैसे मिलेगी?' : page === 3 ? 'Stability का अगला कदम' : page === 4 ? 'Plan समझें' : page === 5 ? 'See How It Works' : 'अब protection भी देखें';
