@@ -505,3 +505,31 @@ All 19 presentation tests pass. Added real-MP3 browser coverage for automatic co
 Installed the two supplied JPGs byte-for-byte: 19292 (concerned/explaining) on Page 2 and 19294 (reassuring, holding the LIC folder) on Page 3. The original files are retained as advisor-concerned-19292.jpg and advisor-reassuring-19294.jpg. Their black backdrops blend into the existing navy scene through CSS; no facial, identity, pose, logo or clothing pixels were regenerated. Both images preload before the opening voiceovers finish to avoid an image-loading flash during automatic progression.
 
 Adjusted each portrait's framing for its different aspect/pose, retaining larger presentation size and compact-frame cropping. Chart and footer layers remain above the portrait so graph labels and floating audio controls stay legible. The browser fixture waits for each actual asset to load and checks the correct page-specific source. All 19 focused presentation tests, existing responsive/visible-viewport checks and site references pass locally. Repository/Functions checks and the full verification pipeline run before publication. Auto/Manual behavior, voiceovers, graph data and Page 4 onward content are unchanged. The pending portrait replacement noted in the previous entry is now fulfilled.
+
+## Page 1 business graph events — November 4, 2026
+
+The existing cyan curve and narration timing are preserved. Expansion, Competition,
+Economic growth, Recession and War now reveal at arc-length positions on that same
+curve and remain anchored in SVG coordinates. Thin connectors and muted green/red
+point markers identify possible positive/negative influences. Labels hold on pause
+and completion, reset on replay and follow seeking; Pages 2–3 hide these annotations.
+Reduced motion shows the complete annotated curve. Type stays at 9 CSS pixels across
+responsive scaling. On presentation heights at or below 600px, only the graph's
+clearance is adjusted to keep labels below faces. Characters, scene assets, background,
+navigation and subsequent product sections are unchanged. The caption and accessible
+summary state that this is illustrative, not historical data or guaranteed outcomes.
+
+Validation: all 143 unit/Functions tests, production build, site reference check,
+existing six-page LIC playback/layout browser suite, and the new focused event browser
+suite passed. The new suite checks exact curve/reveal alignment, persistence, pause,
+seek, replay, reduced motion and non-overlapping, plot-bounded 9px labels at 320×480,
+320×568, 360×640, 390×844 and 1440×900; screenshots were visually inspected at the
+shortest and standard phone sizes. It is included in the existing presentation CI step.
+The complete browser command was also attempted: Garage/navigation/reminder checks
+passed, but the unrelated Orb fixture stopped at its pre-existing historical baseline
+reference (the expected FocusOrb source is absent there). Using current master as an
+explicit diagnostic baseline also fails on missing relative baseline helper imports.
+These Orb fixture issues were not changed as part of this bounded presentation edit.
+The remaining browser checks were attempted separately: Task copy and Creator passed;
+the unrelated Journal tools fixture stopped at its existing addStyleTag call.
+Physical-device browser checks remain unverified.
