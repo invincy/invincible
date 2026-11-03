@@ -18,7 +18,7 @@
 
   <link rel="preload" as="image" href="assets/scene-1-853.webp" imagesrcset="assets/scene-1-480.webp 480w, assets/scene-1-853.webp 853w" imagesizes="(max-width: 480px) 100vw, 420px" fetchpriority="high">
 
-  <link rel="stylesheet" href="presentation.css?v=22">
+  <link rel="stylesheet" href="presentation.css?v=23">
   <link rel="stylesheet" href="../../shared/app-theme.css?v=1">
 </head>
 <body>
@@ -160,7 +160,7 @@
           <div class="advisor-audio-container">
             <button
               id="advisorAudioBtn"
-              class="advisor-audio-btn"
+              class="advisor-audio-btn audio-float"
               type="button"
               aria-label="Hear Advisor Perspective"
               title="आपका business ही आपका main growth engine है। यहीं से आपकी income और wealth grow होती है।"
@@ -283,7 +283,7 @@
               <g stroke="#9aafc5" stroke-width="1.2" fill="none"><path d="M42 243V17m-3 5 3-5 3 5M42 243H330m-5-3 5 3-5 3"/></g>
               <text x="14" y="140" transform="rotate(-90 14 140)" text-anchor="middle" class="chart-axis">Financial Outcome</text>
               <text x="187" y="272" text-anchor="middle" class="chart-axis">Year / Time</text>
-              <path class="scenario-line scenario-business" pathLength="1" d="M43 211 C57 200 66 166 79 162 S96 192 107 183 S120 137 133 133 S148 168 160 153 S176 111 189 103 S202 139 215 121 S230 79 244 77 S260 111 274 88 S292 51 304 58 S319 43 326 38"/>
+              <path class="scenario-line scenario-business" pathLength="1" d="M43 214 C51 207 54 185 62 178 C69 171 72 185 79 190 S88 189 92 197 S102 211 112 202 C124 188 122 161 136 142 C144 132 151 148 160 148 S174 146 179 128 C185 109 187 87 198 94 C205 99 204 116 212 119 S224 141 232 126 C241 107 240 76 254 69 C263 65 269 83 278 79 C291 71 287 48 301 43 C310 40 311 57 317 53 S323 41 326 34"/>
               <path class="scenario-line scenario-market" pathLength="1" d="M43 216 61 184 76 211 96 135 110 183 126 104 143 201 162 125 174 153 191 53 207 176 224 73 239 110 254 30 270 151 285 60 300 119 312 98 326 72"/>
               <path class="scenario-line scenario-platinum" pathLength="1" d="M43 221 C105 219 142 212 185 207 S272 195 326 189"/>
             </svg>
@@ -298,10 +298,10 @@
           </figure>
         </div>
         <footer class="scene-two-footer">
-          <button id="sceneTwoDialogueBtn" class="scene-two-dialogue-btn" type="button" aria-label="Hear Scene 2 advisor recording"><span aria-hidden="true">▶</span> <span id="sceneTwoAudioLabel">Advisor की बात सुनें</span></button>
+          <button id="sceneTwoDialogueBtn" class="scene-two-dialogue-btn audio-float" type="button" aria-label="Hear Scene 2 advisor recording"><span id="sceneTwoAudioIcon" class="advisor-audio-icon" aria-hidden="true">▶</span> <span id="sceneTwoAudioLabel">Advisor की बात सुनें</span></button>
           <p id="sceneTwoAudioStatus" class="audio-status" role="status" aria-live="polite"></p>
           <div id="journeyControls" class="journey-controls" hidden>
-            <button id="journeyPlayPause" type="button" class="journey-play-pause" aria-label="Pause story">⏸ <span>Pause Story</span></button>
+            <button id="journeyPlayPause" type="button" class="journey-play-pause audio-float" aria-label="Pause story"><span class="advisor-audio-icon" aria-hidden="true">⏸</span><span>Pause Story</span></button>
             <span id="journeyProgress" class="journey-progress" aria-live="polite">1 of 5</span>
             <button id="journeyReplay" type="button" class="journey-replay" aria-label="Replay story" hidden>↻ Replay</button>
           </div>
@@ -336,6 +336,6 @@
 
 </div><!-- /.app-viewport-wrapper -->
 
-<script src="presentation.js?v=22"></script>
+<script src="presentation.js?v=23"></script>
 </body>
 </html>

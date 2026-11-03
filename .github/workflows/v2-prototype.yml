@@ -146,6 +146,11 @@ jobs:
         run: |
           export CHROMIUM_EXECUTABLE="$(node -e "console.log(require('playwright').chromium.executablePath())")"
           npm run test:browser
+      - name: LIC presentation playback and fixed audio controls
+        if: steps.scope.outputs.level == 'full'
+        run: node tests/lic-opening-browser.cjs
+        env:
+          LIC_BASELINE_REF: ${{ github.event.pull_request.base.sha }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
