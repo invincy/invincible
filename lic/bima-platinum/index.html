@@ -18,7 +18,7 @@
 
   <link rel="preload" as="image" href="assets/scene-1-853.webp" imagesrcset="assets/scene-1-480.webp 480w, assets/scene-1-853.webp 853w" imagesizes="(max-width: 480px) 100vw, 420px" fetchpriority="high">
 
-  <link rel="stylesheet" href="presentation.css?v=20">
+  <link rel="stylesheet" href="presentation.css?v=22">
   <link rel="stylesheet" href="../../shared/app-theme.css?v=1">
 </head>
 <body>
@@ -146,7 +146,8 @@
              (Pure business-growth statement; no product branding)
              ========================================== -->
         <div id="layerHeadline" class="scene-layer layer-headline">
-          <h1 class="headline-main">आपका business ही आपका <span class="gold-gradient-text">main growth engine है</span></h1>
+          <h1 class="headline-main"><span class="gold-gradient-text">Business</span></h1>
+          <p class="business-subtitle">Profit potential. Natural fluctuations.</p>
         </div>
 
         <!-- ==========================================
@@ -184,7 +185,7 @@
         <div id="layerCallout" class="scene-layer layer-callout interactive">
           <div id="calloutCard" class="callout-card">
             <button id="ctaForwardBtn" class="callout-cta-btn" aria-label="Advance to Next Stage">
-              <span>अगर savings भी risk में हों?</span>
+              <span>जब savings भी fluctuate करें?</span>
               <span class="cta-arrow">→</span>
             </button>
           </div>
@@ -208,7 +209,7 @@
         </nav>
         <header class="scene-two-heading">
           <p id="storyEyebrow" class="scene-two-eyebrow">GROWTH + VOLATILITY</p>
-          <h2 id="stagePreviewTitle">Savings भी <span>risk में?</span></h2>
+          <h2 id="stagePreviewTitle">When everything <span>fluctuates…</span></h2>
         </header>
         <div class="scene-two-visual">
           <img class="scene-two-presenter" src="assets/advisor-presenter.webp" alt="LIC advisor presenting the two financial structures" width="760" height="950" loading="lazy" decoding="async">
@@ -269,10 +270,10 @@
             </div>
           </section>
           <figure id="storyChart" class="balance-chart scenario-chart" data-step="1" aria-labelledby="balanceChartTitle" aria-describedby="balanceChartCaption">
-            <figcaption id="balanceChartTitle" class="scenario-chart-heading">Business · Growth engine</figcaption>
+            <figcaption id="balanceChartTitle" class="scenario-chart-heading">Profit potential. Natural fluctuations.</figcaption>
             <svg class="balance-plot" viewBox="0 0 350 285" role="img" aria-labelledby="balancePlotTitle balancePlotDesc">
-              <title id="balancePlotTitle">Business baseline and two combined financial structures</title>
-              <desc id="balancePlotDesc">Three illustrative paths share a starting point: the blue business baseline, red Business plus Share Market with sharper fluctuations that repeatedly fall below both the baseline and the green path, and green Business plus Stability with a steadier path. These are concepts, not measured or projected performance.</desc>
+              <title id="balancePlotTitle">Business and independent savings allocations</title>
+              <desc id="balancePlotDesc">Business grows overall with short-term fluctuations. A separate Share Market allocation adds another source of volatility, while a gentle gold Stable Allocation provides stability to part of savings. These are independent illustrative concepts, not measured or projected performance.</desc>
               <defs>
                 <linearGradient id="scenarioGold" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#ba8b3c"/><stop offset="1" stop-color="#ffe4a0"/></linearGradient>
                 <linearGradient id="scenarioWash" x2="0" y2="1"><stop stop-color="#16324a" stop-opacity=".4"/><stop offset="1" stop-color="#071525" stop-opacity="0"/></linearGradient>
@@ -282,14 +283,16 @@
               <g stroke="#9aafc5" stroke-width="1.2" fill="none"><path d="M42 243V17m-3 5 3-5 3 5M42 243H330m-5-3 5 3-5 3"/></g>
               <text x="14" y="140" transform="rotate(-90 14 140)" text-anchor="middle" class="chart-axis">Financial Outcome</text>
               <text x="187" y="272" text-anchor="middle" class="chart-axis">Year / Time</text>
-              <path class="scenario-line scenario-business" pathLength="1" d="M43 242 C57 233 66 224 79 220 S96 217 107 213 S120 220 133 210 S148 192 160 192 S176 202 189 191 S202 181 215 178 S230 188 244 174 S260 170 274 166 S292 169 304 158 S319 157 326 150"/>
-              <path class="scenario-line scenario-market" pathLength="1" d="M43 242 61 217 76 237 96 169 110 213 126 128 143 221 162 149 174 173 191 69 207 202 224 91 239 122 254 29 270 180 285 68 300 137 312 121 326 85"/>
-              <path class="scenario-line scenario-platinum" pathLength="1" d="M43 242 C61 234 74 229 88 224 S109 213 123 207 S146 193 159 187 S178 177 193 170 S215 155 228 151 S247 141 261 134 S281 125 295 117 S315 106 326 100"/>
+              <path class="scenario-line scenario-business" pathLength="1" d="M43 211 C57 200 66 166 79 162 S96 192 107 183 S120 137 133 133 S148 168 160 153 S176 111 189 103 S202 139 215 121 S230 79 244 77 S260 111 274 88 S292 51 304 58 S319 43 326 38"/>
+              <path class="scenario-line scenario-market" pathLength="1" d="M43 216 61 184 76 211 96 135 110 183 126 104 143 201 162 125 174 153 191 53 207 176 224 73 239 110 254 30 270 151 285 60 300 119 312 98 326 72"/>
+              <path class="scenario-line scenario-platinum" pathLength="1" d="M43 221 C105 219 142 212 185 207 S272 195 326 189"/>
             </svg>
+            <div class="graph-factors" aria-hidden="true"><span class="factor-0">◇ Demand</span><span class="factor-1">↗ Cost</span><span class="factor-2">◇ Competition</span><span class="factor-3">◇ Economy</span></div>
+            <span class="volatility-note" aria-hidden="true">More Volatility</span>
             <div class="scenario-legend">
-              <div class="scenario-label market-label"><span class="scenario-key" aria-hidden="true"></span><div><strong>Business + Share Market</strong><small>Higher volatility</small></div></div>
-              <div class="scenario-label platinum-label"><span class="scenario-key" aria-hidden="true"></span><div><strong>Business + Stability</strong><small>More predictable</small></div></div>
-              <div class="scenario-label business-label"><span class="scenario-key" aria-hidden="true"></span><div><strong>Your Business</strong><small>Growth engine</small></div></div>
+              <div class="scenario-label market-label"><span class="scenario-key" aria-hidden="true"></span><div><strong>Share Market</strong><small>Higher volatility</small></div></div>
+              <div class="scenario-label platinum-label"><span class="scenario-key" aria-hidden="true"></span><div><strong>Stable Allocation</strong><small>More predictable</small></div></div>
+              <div class="scenario-label business-label"><span class="scenario-key" aria-hidden="true"></span><div><strong>Business</strong><small>Growth engine</small></div></div>
             </div>
             <p id="balanceChartCaption" class="chart-caption">Illustrative concept — not projected returns</p>
           </figure>
@@ -333,6 +336,6 @@
 
 </div><!-- /.app-viewport-wrapper -->
 
-<script src="presentation.js?v=21"></script>
+<script src="presentation.js?v=22"></script>
 </body>
 </html>

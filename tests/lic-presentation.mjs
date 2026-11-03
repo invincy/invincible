@@ -24,7 +24,7 @@ function setup(play) {
   const doc={events:{}, hidden:false, getElementById:el, querySelectorAll:selector=>selector==='#incomeAgeOptions button'?ageButtons:selector==='#incomePptOptions button'?pptButtons:selector==='[data-journey-step]'?journeyButtons:[], querySelector:s=>s==='.layer-stage-3d'?el('firstScene'):s==='.scene-two-nav'?el('sceneNav'):s==='.scene-two-footer'?el('sceneFooter'):null,
     body:el('body'), addEventListener(k,fn) { this.events[k]=fn; }};
   class Audio {
-    constructor(src) { this.src=src; this.events={}; this.currentTime=0; this.ended=false; this.paused=true; audios.push(this); }
+    constructor(src) { this.src=src; this.events={}; this.currentTime=0; this.duration=10; this.ended=false; this.paused=true; audios.push(this); }
     addEventListener(k,fn) { this.events[k]=fn; }
     async play() { if(play) await play(); this.paused=false; this.events.playing?.(); }
     pause() { this.paused=true; this.events.pause?.(); }
@@ -69,16 +69,17 @@ test('Page 1 narration draws business only, holds on pause, replays after comple
   const audio=s.audios[0];
   assert.match(audio.src,/page1.mp3$/);
   assert.equal(focus(s),'business');
-  audio.currentTime=.7; audio.events.timeupdate();
-  assert.equal(s.el('storyChart').style.values['--narration-reveal'],'0.5');
+  audio.currentTime=4.65; audio.events.timeupdate();
+  assert.ok(Math.abs(Number(s.el('storyChart').style.values['--narration-reveal'])-.5)<1e-9);
   s.click('advisorAudioBtn');
   assert.equal(s.el('advisorAudioLabel').textContent,'Resume audio');
   assert.equal(focus(s),'business');
   s.click('advisorAudioBtn'); await flush();
-  assert.equal(audio.currentTime,.7);
+  assert.equal(audio.currentTime,4.65);
   audio.ended=true; audio.events.ended();
   assert.equal(audio.currentTime,0);
-  assert.equal(focus(s),'');
+  assert.equal(s.el('storyChart').style.values['--narration-reveal'],'0');
+  assert.equal(focus(s),'business');
   audio.ended=false; s.click('advisorAudioBtn'); await flush();
   assert.equal(focus(s),'business');
 });
@@ -96,18 +97,21 @@ test('opening pages starts audio and a blocked first load can be started by tapp
   assert.equal(s.el('sceneTwoAudioLabel').textContent,'Pause audio');
 });
 
-test('Page 2 switches from business to market using media time and handles seeking',async()=>{
+test('Page 2 draws only its new market allocation over the media duration and follows seeking',async()=>{
   const s=setup(); s.click('ctaForwardBtn'); await flush();
   const audio=s.audios.at(-1);
-  assert.match(audio.src,/page2.mp3$/);
-  assert.equal(focus(s),'business');
-  audio.currentTime=3.19; audio.events.timeupdate(); assert.equal(focus(s),'business');
-  audio.currentTime=3.2; audio.events.timeupdate(); assert.equal(focus(s),'market');
-  audio.currentTime=4.6; audio.events.timeupdate();
-  assert.ok(Number(s.el('storyChart').style.values['--narration-reveal'])<.001);
+  assert.match(audio.src,/newpage2.mp3$/);
+  assert.equal(focus(s),'market');
+  audio.currentTime=1; audio.events.timeupdate();
+  assert.equal(s.el('storyChart').style.values['--narration-reveal'],'1');
+  audio.currentTime=5.3; audio.events.timeupdate();
+  assert.ok(Math.abs(Number(s.el('storyChart').style.values['--narration-reveal'])-.5)<1e-9);
   s.click('sceneTwoDialogueBtn'); assert.equal(focus(s),'market');
   s.click('sceneTwoDialogueBtn'); await flush(); assert.equal(focus(s),'market');
-  audio.currentTime=1; audio.events.seeked(); assert.equal(focus(s),'business');
+  audio.currentTime=1; audio.events.seeked();
+  assert.equal(s.el('storyChart').style.values['--narration-reveal'],'1');
+  audio.duration=20; audio.currentTime=10.6; audio.events.durationchange();
+  assert.ok(Math.abs(Number(s.el('storyChart').style.values['--narration-reveal'])-.5)<1e-9);
 });
 
 test('Page 3 introduces stability, keeping the shared chart in its third state',async()=>{
@@ -118,7 +122,7 @@ test('Page 3 introduces stability, keeping the shared chart in its third state',
   assert.equal(s.el('storyChart').attrs['data-step'],'3');
   s.click('previewDismissBtn');
   assert.equal(s.audios.at(-2).paused,true); assert.equal(s.audios.at(-2).currentTime,0);
-  assert.equal(focus(s),'business');
+  assert.equal(focus(s),'market');
 });
 
 test('navigation cancels pending play and ignores stale events on a different page',async()=>{
@@ -129,7 +133,7 @@ test('navigation cancels pending play and ignores stale events on a different pa
   old.events.timeupdate(); old.events.ended();
   assert.equal(old.paused,true); assert.equal(old.currentTime,0);
   assert.equal(s.el('storyChart').attrs['data-step'],'3');
-  assert.equal(focus(s),'');
+  assert.equal(focus(s),'platinum');
   assert.equal(s.el('sceneTwoAudioLabel').textContent,'Loading audio…');
 });
 
@@ -139,7 +143,7 @@ test('a rejected old load cannot put an error on the next page',async()=>{
   rejects[0](new Error('missing')); await flush();
   assert.equal(s.el('audioStatus').textContent,'');
   assert.equal(s.el('sceneTwoAudioStatus').textContent,'');
-  assert.equal(focus(s),'');
+  assert.equal(focus(s),'market');
 });
 
 test('missing new recordings show a truthful status and never play the old script',async()=>{
@@ -147,7 +151,7 @@ test('missing new recordings show a truthful status and never play the old scrip
   s.click('advisorAudioBtn'); await flush();
   assert.match(s.el('audioStatus').textContent,/नई recording/);
   assert.equal(s.el('advisorAudioBtn').attrs['aria-busy'],'false');
-  assert.equal(focus(s),'');
+  assert.equal(focus(s),'business');
   assert.doesNotMatch(s.audios[0].src,/advisor-scene-/);
 });
 
@@ -159,7 +163,7 @@ test('tab hiding, pagehide and Escape stop narration and clear its highlight',as
     if(action==='pagehide') s.windowEvents.pagehide();
     if(action==='escape') s.doc.events.keydown({key:'Escape'});
     assert.equal(audio.paused,true); assert.equal(audio.currentTime,0);
-    assert.equal(focus(s),action==='escape'?'business':'');
+    assert.equal(focus(s),action==='escape'?'market':'platinum');
   }
 });
 
@@ -172,7 +176,7 @@ test('page has one chart, original three paths and Hindi-English scripts without
 });
 
 test('all supplied page and journey voice recordings are installed',()=>{
-  const names=[...Array.from({length:5},(_,index)=>`page${index+1}.mp3`),...Array.from({length:5},(_,index)=>`page6-step${index+1}.mp3`)];
+  const names=[...Array.from({length:3},(_,index)=>`newpage${index+1}.mp3`),...Array.from({length:5},(_,index)=>`page${index+1}.mp3`),...Array.from({length:5},(_,index)=>`page6-step${index+1}.mp3`)];
   for(const name of names) assert.equal(existsSync(new URL(`../lic/bima-platinum/assets/audio/${name}`,import.meta.url)),true,name);
 });
 

@@ -23,20 +23,19 @@ assets/audio/advisor-scene-1-hindi.mp3
 
 ## Three-page continuous story (current)
 
-One original `#storyChart` figure is moved between two hosts; Page 2 and Page 3 share the presenting scene. All SVG path geometry and blue/red/green colours are preserved. The large card is removed, labels are state-specific, and the business baseline remains visible beside each newly introduced path.
+The original `#storyChart` figure still moves between the existing two hosts. Its SVG, grid, axes and normalized paths are reused rather than cloned or replaced. Business now rises overall with meaningful short-term dips; Share Market is a separate, fluctuating growth allocation, shown in muted lavender rather than warning red. Page 3 retains both paths at lower opacity and adds a gently rising gold Stable Allocation. This is an allocation concept, not measured or projected portfolio performance. Bima Platinum remains a Page 4 reveal.
 
-The supplied page recordings are installed. The older `advisor-scene-*.mp3` files remain unchanged as archives; they are not active in this story. No generated voice or browser speech is substituted.
-
-| Page | New file under assets/audio/ | Spoken script |
+| Page | Active supplied filename | Browser-decoded duration |
 | --- | --- | --- |
-| 1 | page1.mp3 | आपका business ही आपका main growth engine है। यहीं से आपकी income और wealth grow होती है। |
-| 2 | page2.mp3 | Business में पैसा लगाइए growth के लिए। लेकिन अगर आपकी बाकी savings भी Share Market में जाएँ, तो overall volatility और बढ़ जाती है। |
-| 3 | page3.mp3 | इसलिए अपनी personal savings का एक हिस्सा stability के लिए अलग रखिए। एक stable या guaranteed structure आपके overall finances में predictability जोड़ता है। |
+| 1 | newpage1.mp3 | 8.751 seconds |
+| 2 | newpage2.mp3 | 8.515875 seconds |
+| 3 | newpage3.mp3 | 5.851375 seconds |
 
-Configuration is at the top of presentation.js in STORY_SCENES. Page 1 draws blue business from 0s. Page 2 begins with blue and switches to red at 3.2s, a provisional cue near the sentence transition. Page 3 draws green from 0s. Drawing lasts 1.4 seconds per cue; pause/resume/seek follow media currentTime, never wall-clock timers. Reduced motion uses a static glow. Audio starts when Pages 1–5 open; Back, Next, Escape, tab hiding and pagehide stop the previous page's recording. Missing-file handling remains for recovery.
+The uploaded bytes and filenames are preserved. Prior `page1.mp3`–`page3.mp3` files remain as inactive archives. Page 4 onward keeps its existing audio mapping. Voice content has not been independently transcribed; timing follows each recording's duration rather than assumed phrase boundaries.
 
-Verification: focused tests cover shared chart identity, forward/back navigation, all three audio sources and cue states, draw progress, seeking, pause/resume/replay, late-event cancellation, failures and page lifecycle. Mobile visual QA covers 320×568 and 390×844. The exact Page 2 phrase boundary has not been independently transcribed. No product features, measured outcomes or guaranteed combined returns were added.
+The new line starts at 3%, 16%, and 10% of the respective media duration and finishes at 90%, leaving a quiet final state. Only that page's newly introduced path draws; earlier lines remain complete. Four small Demand, Cost, Competition and Economy cues softly appear at selected business dips. A brief More Volatility label appears on Page 2. A media-clock animation loop follows pause, seek and resume, and stops when inactive. Completion retains the final graph; replay resets its drawing. Page changes stop/reset the old audio, reject late events and start the new recording. Autoplay denial retains the existing tap-to-play control. Reduced motion shows complete paths without progressive drawing.
 
+Verification: `node --test tests/lic-presentation.mjs` covers lifecycle, duration scaling, pause/replay, late events, original graph identity and unchanged later-page controls. `node tests/lic-opening-browser.cjs` checks real MP3 duration/playback, seeks, pause, replay, revisit, one active audio, one original chart, visible hit targets and no scroll at 320×568, 360×640, 390×844, 320×480 and 1440×900. It also compares Pages 4–6 screenshots against `origin/master` (override with `LIC_BASELINE_REF`) and confirms exact equality. This browser fixture starts its own range-capable server. Optional `CHROMIUM_EXECUTABLE` selects an installed Chromium browser. Screenshots are retained under ignored `.test-output/lic-opening/`. Physical-device/iOS audio policies remain device checks.
 
 ## Page 4 product reveal
 
