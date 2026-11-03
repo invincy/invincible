@@ -237,6 +237,7 @@ observeAuth(user => {
   stops.forEach(stop => stop()); stops = []; stopLog(); stopLog = () => {};
   uid = user?.uid || null; counters = []; active = null; selected = null; initialized = false; busy = false;
   draft = fresh(); $('workspace').hidden = true; $('retryCounter').hidden = true; $('amounts').replaceChildren(); $('denominations').replaceChildren(); $('coinDenominations').replaceChildren(); $('amountError').textContent = ''; $('log').replaceChildren(); $('closingSummary').replaceChildren(); $('amountInput').value = ''; for (const dialog of document.querySelectorAll('dialog')) dialog.close(); $('error').textContent = '';
+  $('counterPicker').innerHTML = '<option value="">New counter</option>'; $('counterPicker').disabled = !uid; $('openLog').disabled = !uid; $('counterLabel').textContent = ''; $('logCount').textContent = ''; $('logStatus').textContent = ''; $('runningSummary').replaceChildren(); $('loose').value = '0'; $('coinTotal').textContent = '₹0';
   $('status').textContent = uid ? 'Loading…' : 'Sign in from Dashboard.';
   if (!uid) return;
   stops.push(watchCounters(uid, (items, cached) => {
