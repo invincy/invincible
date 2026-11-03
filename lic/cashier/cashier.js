@@ -7,6 +7,7 @@ const format = value => new Intl.NumberFormat('en-IN', { style: 'currency', curr
 const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 const fresh = () => ({ id: crypto.randomUUID(), atMs: Date.now(), amounts: [{ amount: '', label: '' }], received: blankCash(), returned: blankCash() });
 let uid = null, generation = 0, stops = [], stopLog = () => {}, counters = [], active = null, selected = null, initialized = false;
+let logEntries = [], reviewing = false, reviewIndex = 0;
 let openingId = crypto.randomUUID(), draft = fresh(), mode = 'received', busy = false;
 const currentCounter = () => selected ? (active?.id === selected ? active : counters.find(item => item.id === selected)) : null;
 const starting = () => !currentCounter();
@@ -33,6 +34,7 @@ function setBusy(value) {
   $('nextTransaction').textContent = value ? 'Saving…' : 'Next Transaction';
   $('confirmClose').textContent = value ? 'Closing…' : 'Close Counter';
   for (const id of ['nextTransaction', 'closeCounter', 'retryCounter', 'confirmClose', 'cancelClose', 'counterPicker', 'addAmount', 'addAmountLine', 'doneAmounts', 'openCoins', 'openMenu', 'openLog']) $(id).disabled = value;
+  $('previousEntry').disabled = value || !uid || !logEntries.length;
   $('amountInput').disabled = value;
   for (const id of ['amounts', 'coinDenominations']) $(id).querySelectorAll('input,button').forEach(el => { el.disabled = value; });
   if (draft.amounts.length === 1) $('amounts').querySelector('[data-remove]')?.setAttribute('disabled', '');
@@ -106,19 +108,34 @@ function render() {
   else if (counter) renderClosed(counter);
   setBusy(busy);
 }
+function renderLog() {
+  $('previousEntry').disabled = busy || !uid || !logEntries.length;
+  $('logCount').textContent = `${logEntries.length} entries`;
+  $('logCount').hidden = reviewing;
+  $('logStatus').textContent = logEntries.length ? '' : 'No entries.';
+  $('reviewNav').hidden = !reviewing;
+  $('logTitle').textContent = reviewing && logEntries[reviewIndex] ? `Entry #${logEntries[reviewIndex].sequence}` : 'Transaction log';
+  $('olderEntry').disabled = reviewIndex >= logEntries.length - 1;
+  $('newerEntry').disabled = reviewIndex <= 0;
+  $('reviewPosition').textContent = logEntries.length ? `${reviewIndex + 1} / ${logEntries.length}` : '';
+  $('log').innerHTML = logEntries.map((entry, index) => `<details class="log-entry" ${reviewing ? (index === reviewIndex ? 'open' : 'hidden') : ''}><summary><strong>#${entry.sequence} · ${format(entry.due)}</strong> · ${esc(new Date(entry.atMs).toLocaleTimeString('en-IN'))} · In ${format(entry.received)}, out ${format(entry.returned)}</summary><p>${entry.amounts.map(item => `${esc(item.label || 'Amount')}: ${format(item.amount)}`).join('<br>')}</p><h3>Cash received</h3>${cashTable(entry.receivedCash)}<h3>Change given</h3>${cashTable(entry.returnedCash)}</details>`).join('');
+  if (reviewing && $('logDialog').open) $('logDialog').scrollTop = 0;
+}
 function choose(id) {
   if (busy) return;
   if (id) $('retryCounter').hidden = true;
   for (const name of ['amountDialog', 'coinDialog', 'logDialog']) $(name).close();
+  logEntries = []; reviewing = false; reviewIndex = 0; $('previousEntry').disabled = true;
   selected = id; mode = 'received'; $('error').textContent = ''; restoreDraft();
   stopLog(); $('log').replaceChildren(); $('logCount').textContent = ''; $('logStatus').textContent = id ? 'Loading saved entries…' : '';
   if (id) {
     const token = generation, wanted = id;
     stopLog = watchTransactions(uid, id, entries => {
       if (token !== generation || wanted !== selected) return;
-      $('logCount').textContent = `${entries.length} entries`;
-      $('logStatus').textContent = entries.length ? '' : 'No entries.';
-      $('log').innerHTML = entries.map(entry => `<details class="log-entry"><summary><strong>#${entry.sequence} · ${format(entry.due)}</strong> · ${esc(new Date(entry.atMs).toLocaleTimeString('en-IN'))} · In ${format(entry.received)}, out ${format(entry.returned)}</summary><p>${entry.amounts.map(item => `${esc(item.label || 'Amount')}: ${format(item.amount)}`).join('<br>')}</p><h3>Cash received</h3>${cashTable(entry.receivedCash)}<h3>Change given</h3>${cashTable(entry.returnedCash)}</details>`).join('');
+      const inspectedId = reviewing ? logEntries[reviewIndex]?.id : null;
+      logEntries = [...entries].sort((a, b) => (b.sequence || 0) - (a.sequence || 0) || b.atMs - a.atMs);
+      reviewIndex = Math.max(0, inspectedId ? logEntries.findIndex(item => item.id === inspectedId) : 0);
+      renderLog();
     }, error => { if (token === generation) { $('logStatus').textContent = 'Could not load transaction log.'; fail(error); } });
   }
   render();
@@ -198,7 +215,11 @@ $('amountInput').oninput = () => { if (!busy && draft.amounts.length === 1) { dr
 $('amountInput').onkeydown = event => { if (event.key === 'Enter') { event.preventDefault(); $('amountInput').blur(); } };
 $('loose').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); $('loose').blur(); } });
 $('openMenu').onclick = () => $('menuDialog').showModal();
-$('openLog').onclick = () => { $('menuDialog').close(); $('logDialog').showModal(); };
+$('openLog').onclick = () => { reviewing = false; renderLog(); $('menuDialog').close(); $('logDialog').showModal(); };
+$('previousEntry').onclick = () => { if (busy || !uid || !logEntries.length) return; reviewing = true; reviewIndex = 0; renderLog(); $('logDialog').showModal(); };
+$('olderEntry').onclick = () => { if (reviewIndex < logEntries.length - 1) { reviewIndex++; renderLog(); } };
+$('newerEntry').onclick = () => { if (reviewIndex > 0) { reviewIndex--; renderLog(); } };
+$('showAllEntries').onclick = () => { reviewing = false; renderLog(); };
 $('openCoins').onclick = () => $('coinDialog').showModal();
 $('addAmount').onclick = () => { $('amountError').textContent = ''; renderAmounts(); $('amountDialog').showModal(); };
 $('doneAmounts').onclick = () => {
@@ -236,6 +257,7 @@ observeAuth(user => {
   generation++; const token = generation;
   stops.forEach(stop => stop()); stops = []; stopLog(); stopLog = () => {};
   uid = user?.uid || null; counters = []; active = null; selected = null; initialized = false; busy = false;
+  logEntries = []; reviewing = false; reviewIndex = 0; $('previousEntry').disabled = true;
   draft = fresh(); $('workspace').hidden = true; $('retryCounter').hidden = true; $('amounts').replaceChildren(); $('denominations').replaceChildren(); $('coinDenominations').replaceChildren(); $('amountError').textContent = ''; $('log').replaceChildren(); $('closingSummary').replaceChildren(); $('amountInput').value = ''; for (const dialog of document.querySelectorAll('dialog')) dialog.close(); $('error').textContent = '';
   $('counterPicker').innerHTML = '<option value="">New counter</option>'; $('counterPicker').disabled = !uid; $('openLog').disabled = !uid; $('counterLabel').textContent = ''; $('logCount').textContent = ''; $('logStatus').textContent = ''; $('runningSummary').replaceChildren(); $('loose').value = '0'; $('coinTotal').textContent = '₹0';
   $('status').textContent = uid ? 'Loading…' : 'Sign in from Dashboard.';
