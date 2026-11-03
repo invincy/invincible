@@ -1,7 +1,7 @@
 # LIC Agent CRM — direct Firestore architecture
 
 The Agent CRM is an additive native module at `lic/crm/agent.html`, reached from
-LIC beside the independent My Follow-ups module. It uses LIC blue/yellow accents
+LIC beside the independent My Follow-ups module. It uses electric cyan (#37e6ff) and bright yellow (#ffe600) accents
 on black. Existing private customer records and staff/client follow-ups keep their
 routes, storage and histories. Journal files are unchanged in the CRM release.
 
@@ -118,3 +118,19 @@ production rules still require verification. No original private report is in Gi
 Premium alerts appear when opening/resuming CRM from one calendar month before the due date: 26 October appears from 26 September. Short months clamp to month-end; configured longer advance windows remain supported. No scheduler or automatic messaging is used. Policies have a direct Edit policy action, including contact and nominee fields, without another import. Only changed fields receive manual verified provenance; explicit clears are protected from later imports. Policy identity, customer linkage, original agency and claims remain intact.
 
 Verification: calendar boundary and manual edit/provenance unit tests, complete repository unit checks/builds, and dedicated CRM Firestore emulator/browser CI. Existing Journal remains outside this change.
+
+### LIC cyan and yellow accents — November 3, 2026
+
+The LIC hub, Agent Tools entry and both CRM screens now use electric cyan and
+bright yellow, with restrained static glows on shortcut icons, primary actions,
+active tabs and metric edges. Dark text keeps the cyan LIC badge legible. Layouts,
+routes and CRM behavior are unchanged. Versioned stylesheet links refresh the
+palette on existing installations; shared app styles and product presentations
+are unchanged.
+
+Validation: 128 frontend/domain and eight backend tests pass (two optional private
+fixtures skipped). Production build, V2 build/stage, unchanged V2 output, site
+reference checks and diff whitespace checks pass. The existing Agent CRM browser
+color expectation now matches the brighter yellow. Local Chromium browser checks
+are blocked by the environment's socket restriction; responsive rendering and the
+emulator/browser suite still require CI. No production account or data was used.
