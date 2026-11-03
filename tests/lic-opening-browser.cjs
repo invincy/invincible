@@ -171,6 +171,10 @@ fs.mkdirSync(out,{recursive:true});
    for(let step=1;step<=6;step++) {
     if(step>1) await page.click(step===2?'#ctaForwardBtn':'#sceneTwoNextBtn');
     await page.evaluate(()=>document.fonts.ready);
+    if(step===2||step===3) {
+     await page.waitForFunction(()=>{const image=document.querySelector('#storyPresenter');return image.complete&&image.naturalWidth>0;});
+     assert.ok((await page.locator('#storyPresenter').getAttribute('src')).endsWith(step===2?'advisor-concerned-19292.jpg':'advisor-reassuring-19294.jpg'));
+    }
     await page.locator(step===1?'#stageContainer':'#stagePreviewModal').evaluate(el=>Promise.all(el.getAnimations().map(a=>a.finished.catch(()=>{}))));
     if(step===6) await page.waitForFunction(()=>window.testAudios.at(-1).src.includes('page6-step1'));
     const selector=step===1?'#advisorAudioBtn':step===6?'#journeyPlayPause':'#sceneTwoDialogueBtn';

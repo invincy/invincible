@@ -26,8 +26,8 @@ const STORY_SCENES = {
   6: { src: null, script: '', cues: [] }
 };
 
-// Separate scene slots, ready for the supplied expression PNGs.
-const STORY_ADVISORS = { 2: 'assets/advisor-presenter.webp', 3: 'assets/advisor-presenter.webp' };
+// Original supplied portraits: concern for volatility, reassurance for stability.
+const STORY_ADVISORS = { 2: 'assets/advisor-concerned-19292.jpg', 3: 'assets/advisor-reassuring-19294.jpg' };
 
 const JOURNEY_STEPS = [
   { id:'ppt', title:'Choose Your PPT', visual:'pay', audio:'assets/audio/page6-step1.mp3', fallbackDuration:3600, script:'सबसे पहले आप चुनते हैं कि premium कितने साल pay करना है।' },
@@ -394,7 +394,11 @@ document.addEventListener('DOMContentLoaded', () => {
     stopJourney();
     stopAllAudio();
     currentPage = page;
-    if (STORY_ADVISORS[page]) document.getElementById('storyPresenter').src = STORY_ADVISORS[page];
+    if (STORY_ADVISORS[page]) {
+      const presenter = document.getElementById('storyPresenter');
+      presenter.src = STORY_ADVISORS[page];
+      presenter.alt = page === 2 ? 'Advisor explaining fluctuations with a concerned expression' : 'Advisor introducing stability with a reassuring expression';
+    }
     stageContainer.setAttribute('data-story-step', String(page));
     const isReveal = page === 4;
     const isDetails = page === 5;
