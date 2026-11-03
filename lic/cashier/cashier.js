@@ -7,23 +7,22 @@ const format = value => new Intl.NumberFormat('en-IN', { style: 'currency', curr
 const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 const fresh = () => ({ id: crypto.randomUUID(), atMs: Date.now(), stage: 'amounts', amounts: [{ amount: '', label: '' }], received: blankCash(), returned: blankCash() });
 let uid = null, generation = 0, stops = [], stopLog = () => {}, counters = [], active = null, selected = null, initialized = false;
-let opening = blankCash(), openingId = crypto.randomUUID(), draft = fresh(), mode = 'received', step = 1, busy = false, hasRecovery = false;
+let openingId = crypto.randomUUID(), draft = fresh(), mode = 'received', busy = false, hasRecovery = false;
 const currentCounter = () => selected ? (active?.id === selected ? active : counters.find(item => item.id === selected)) : null;
 const starting = () => !currentCounter();
 const editable = () => starting() || currentCounter()?.status === 'open';
-const cash = () => starting() ? opening : draft[mode];
-const key = () => uid ? `invincible.cashier.draft.${uid}.${selected || 'opening'}` : null;
+const cash = () => draft[mode];
+const key = () => uid && selected ? `invincible.cashier.draft.${uid}.${selected}` : null;
 function fail(error) { $('error').textContent = error?.code ? storageError(error) : error.message; }
 function saveDraft() {
-  try { if (key()) localStorage.setItem(key(), JSON.stringify(starting() ? { opening, openingId } : draft)); }
+  try { if (key()) localStorage.setItem(key(), JSON.stringify(draft)); }
   catch { $('error').textContent = 'Draft recovery is unavailable on this device. Keep this page open until your entry is saved.'; }
 }
 function restoreDraft() {
-  draft = fresh(); opening = blankCash(); openingId = crypto.randomUUID(); hasRecovery = false;
+  draft = fresh(); hasRecovery = false;
   try {
-    const stored = JSON.parse(localStorage.getItem(key()) || 'null');
-    if (stored && starting() && stored.opening && typeof stored.openingId === 'string') { opening = stored.opening; openingId = stored.openingId; }
-    else if (stored && Array.isArray(stored.amounts) && stored.received && stored.returned && typeof stored.id === 'string') {
+    const stored = key() ? JSON.parse(localStorage.getItem(key()) || 'null') : null;
+    if (stored && Array.isArray(stored.amounts) && stored.received && stored.returned && typeof stored.id === 'string') {
       draft = stored;
       if (!['amounts', 'cash'].includes(draft.stage)) draft.stage = cashTotal(draft.received) || cashTotal(draft.returned) ? 'cash' : 'amounts';
       hasRecovery = true;
@@ -33,7 +32,7 @@ function restoreDraft() {
 function clearDraft() { try { localStorage.removeItem(key()); } catch {} }
 function setBusy(value) {
   busy = value;
-  for (const id of ['nextTransaction', 'closeCounter', 'closeFromAmounts', 'startCounter', 'confirmClose', 'cancelClose', 'counterPicker', 'addAmount', 'countCash', 'editAmounts', 'amountStep', 'cashStep']) $(id).disabled = value;
+  for (const id of ['nextTransaction', 'closeCounter', 'closeFromAmounts', 'retryCounter', 'confirmClose', 'cancelClose', 'counterPicker', 'addAmount', 'countCash', 'editAmounts', 'amountStep', 'cashStep']) $(id).disabled = value;
   $('amounts').querySelectorAll('input,button').forEach(el => { el.disabled = value; });
   if (draft.amounts.length === 1) $('amounts').querySelector('[data-remove]')?.setAttribute('disabled', '');
   $('cashPanel').querySelectorAll('input,button').forEach(el => { el.disabled = value; });
@@ -48,12 +47,12 @@ function renderAmounts() {
   $('amounts').innerHTML = draft.amounts.map((item, i) => `<div class="amount-row"><label>Amount ${i + 1} (₹)<input class="amount-input" data-index="${i}" data-field="amount" inputmode="decimal" enterkeyhint="next" type="text" value="${esc(item.amount)}" autocomplete="off"></label><button class="remove-amount" data-remove="${i}" aria-label="Remove amount ${i + 1}" ${draft.amounts.length === 1 ? 'disabled' : ''}>×</button><details class="reference-field" ${item.label ? 'open' : ''}><summary>Add a reference / note</summary><label>Reference / note (optional)<input data-index="${i}" data-field="label" maxlength="120" value="${esc(item.label)}" autocomplete="off"></label></details></div>`).join('');
 }
 function renderCash() {
-  $('cashTitle').textContent = starting() ? 'Count opening cash' : mode === 'received' ? 'Cash received' : 'Change given';
-  document.querySelector('.mode-tabs').hidden = starting();
+  $('cashTitle').textContent = mode === 'received' ? 'Cash received' : 'Change given';
   $('receivedMode').setAttribute('aria-pressed', String(mode === 'received'));
   $('returnedMode').setAttribute('aria-pressed', String(mode === 'returned'));
-  document.querySelectorAll('[data-step]').forEach(el => el.setAttribute('aria-pressed', String(Number(el.dataset.step) === step)));
-  $('denominations').innerHTML = DENOMINATIONS.map(n => `<div class="denomination"><button type="button" data-note="${n}" aria-label="Add ${step} of ₹${n}"><span class="value">₹${n}</span><span class="tap">+${step} ${n >= 10 ? 'notes' : 'coins'}</span></button><div class="count-row"><button type="button" data-minus="${n}" aria-label="Remove one ₹${n}">−</button><input type="number" inputmode="numeric" min="0" max="1000000" step="1" data-count="${n}" aria-label="₹${n} count" value="${esc(cash().counts[n])}"></div><small data-subtotal="${n}">${format(n * 100 * cash().counts[n])}</small></div>`).join('');
+  const row = n => `<div class="denomination"><span class="value">₹${n} <span class="times" aria-hidden="true">×</span></span><div class="row-increments" role="group" aria-label="Add ₹${n} notes or coins">${[5, 10, 50, 100].map(count => `<button type="button" data-note="${n}" data-add="${count}" aria-label="Add ${count} of ₹${n}">+${count}</button>`).join('')}</div><div class="count-row"><button type="button" data-minus="${n}" aria-label="Remove one ₹${n}">−</button><input type="number" inputmode="numeric" min="0" max="1000000" step="1" data-count="${n}" aria-label="₹${n} count" value="${esc(cash().counts[n])}"><button type="button" data-note="${n}" data-add="1" aria-label="Add one ₹${n}">+</button></div><strong class="row-total" data-subtotal="${n}" aria-label="₹${n} row total">${format(n * 100 * cash().counts[n])}</strong></div>`;
+  const coinsOpen = [5, 2, 1].some(n => cash().counts[n] !== 0);
+  $('denominations').innerHTML = DENOMINATIONS.filter(n => n >= 10).map(row).join('') + `<details class="coin-rows" ${coinsOpen ? 'open' : ''}><summary>Coins <span>₹5 · ₹2 · ₹1</span></summary>${DENOMINATIONS.filter(n => n < 10).map(row).join('')}</details>`;
   $('loose').value = String(cash().loose / 100);
   updateSummary();
 }
@@ -98,21 +97,20 @@ function render() {
   if (!uid || !initialized) return;
   const counter = currentCounter(), isStarting = !counter, open = counter?.status === 'open';
   $('workspace').hidden = false;
-  $('startPanel').hidden = !isStarting; $('startCounter').hidden = !isStarting;
   $('entrySteps').hidden = !open;
   $('closingSummary').hidden = !counter || open; $('logPanel').hidden = !counter;
-  $('counterLabel').textContent = isStarting ? 'New counter' : `${open ? 'Counter open' : 'Counter closed'} · ${counter.transactionCount} saved entries`;
+  $('counterLabel').textContent = isStarting ? 'Loading your zero cash counter…' : `${open ? 'Counter open' : 'Counter closed'} · ${counter.transactionCount} saved entries`;
   $('entryNumber').textContent = `ENTRY ${(counter?.transactionCount || 0) + 1}${hasRecovery ? ' · RECOVERED DRAFT' : ''}`;
   renderPicker();
-  if (isStarting || open) { renderAmounts(); renderCash(); }
-  else renderClosed(counter);
+  if (open) { renderAmounts(); renderCash(); }
+  else if (counter) renderClosed(counter);
   showStage();
   setBusy(busy);
 }
 function showStage() {
   const counter = currentCounter(), open = counter?.status === 'open', counting = draft.stage === 'cash';
   $('entryPanel').hidden = !open || counting;
-  $('cashPanel').hidden = !(starting() || (open && counting));
+  $('cashPanel').hidden = !(open && counting);
   $('amountContext').hidden = !open || !counting;
   $('runningSummary').hidden = !open || !counting;
   $('footerActions').hidden = !open || !counting;
@@ -138,6 +136,7 @@ function goAmounts() {
 }
 function choose(id) {
   if (busy) return;
+  if (id) $('retryCounter').hidden = true;
   selected = id; mode = 'received'; $('error').textContent = ''; restoreDraft();
   stopLog(); $('log').replaceChildren(); $('logCount').textContent = ''; $('logStatus').textContent = id ? 'Loading saved entries…' : '';
   if (id) {
@@ -150,6 +149,7 @@ function choose(id) {
     }, error => { if (token === generation) { $('logStatus').textContent = 'Could not load transaction log.'; fail(error); } });
   }
   render();
+  if (!id) { openingId = crypto.randomUUID(); void openZeroCounter(); }
 }
 function hasEntry() {
   return draft.amounts.some(item => item.amount.trim() || item.label.trim()) || cashTotal(draft.received) !== 0 || cashTotal(draft.returned) !== 0;
@@ -199,7 +199,7 @@ $('denominations').addEventListener('click', event => {
   const add = event.target.closest('[data-note]'), minus = event.target.closest('[data-minus]');
   if (!add && !minus) return;
   const n = Number(add?.dataset.note || minus.dataset.minus);
-  const next = cash().counts[n] + (add ? step : -1);
+  const next = cash().counts[n] + (add ? Number(add.dataset.add) : -1);
   cash().counts[n] = Math.max(0, Math.min(1_000_000, next));
   document.querySelector(`[data-count="${n}"]`).value = cash().counts[n];
   document.querySelector(`[data-subtotal="${n}"]`).textContent = format(n * 100 * cash().counts[n]);
@@ -212,10 +212,6 @@ $('denominations').addEventListener('input', event => {
   document.querySelector(`[data-subtotal="${n}"]`).textContent = Number.isSafeInteger(cash().counts[n]) ? format(n * 100 * cash().counts[n]) : 'Check count';
   updateSummary();
 });
-document.querySelectorAll('[data-step]').forEach(button => { button.onclick = () => {
-  if (busy) return;
-  try { cash().loose = money($('loose').value); step = Number(button.dataset.step); renderCash(); } catch (error) { fail(error); }
-}; });
 for (const target of ['received', 'returned']) $(target + 'Mode').onclick = () => {
   if (busy) return;
   try { cash().loose = money($('loose').value); mode = target; renderCash(); } catch (error) { fail(error); }
@@ -236,25 +232,31 @@ $('closeFromAmounts').onclick = confirmCounterClose;
 $('cancelClose').onclick = () => { if (!busy) $('closeDialog').close(); };
 $('closeDialog').addEventListener('cancel', event => { if (busy) event.preventDefault(); });
 $('confirmClose').onclick = () => commit(true);
-$('startCounter').onclick = async () => {
+async function openZeroCounter() {
   if (busy || !uid || !starting()) return;
   const owner = uid, token = generation;
   try {
-    opening.loose = money($('loose').value); setBusy(true); $('error').textContent = '';
-    const id = await startCounter(owner, openingId, opening, () => uid === owner && generation === token);
+    setBusy(true); $('error').textContent = ''; $('retryCounter').hidden = true;
+    $('status').textContent = 'Opening a zero cash counter…';
+    const id = await startCounter(owner, openingId, blankCash(), () => uid === owner && generation === token);
     if (uid !== owner || token !== generation) return;
-    try { localStorage.removeItem(`invincible.cashier.draft.${owner}.opening`); } catch {}
-    // The active-counter listener provides the authoritative session before editing.
-    $('status').textContent = 'Counter started. Enter your first transaction.';
-    if (active?.id === id) { setBusy(false); choose(id); }
-  } catch (error) { if (token === generation) fail(error); }
+    if (active?.id !== id) active = { id, status: 'open', opening: blankCash(), balance: blankCash(), transactionCount: 0, collected: 0, cashIn: 0, cashOut: 0, createdAtMs: Date.now() };
+    setBusy(false); choose(id);
+    $('status').textContent = 'Counter starts at ₹0. Enter your first transaction.';
+  } catch (error) {
+    if (token === generation) {
+      if (active?.status === 'open') { setBusy(false); choose(active.id); $('status').textContent = 'Your open counter is ready.'; }
+      else { fail(error); $('status').textContent = 'Could not load your counter. Check your connection and retry.'; $('retryCounter').hidden = false; }
+    }
+  }
   finally { if (token === generation) setBusy(false); }
-};
+}
+$('retryCounter').onclick = openZeroCounter;
 observeAuth(user => {
   generation++; const token = generation;
   stops.forEach(stop => stop()); stops = []; stopLog(); stopLog = () => {};
   uid = user?.uid || null; counters = []; active = null; selected = null; initialized = false; busy = false;
-  draft = fresh(); opening = blankCash(); $('workspace').hidden = true; $('amounts').replaceChildren(); $('denominations').replaceChildren(); $('log').replaceChildren(); $('closingSummary').replaceChildren(); $('closeDialog').close(); $('error').textContent = '';
+  draft = fresh(); $('workspace').hidden = true; $('retryCounter').hidden = true; $('amounts').replaceChildren(); $('denominations').replaceChildren(); $('log').replaceChildren(); $('closingSummary').replaceChildren(); $('closeDialog').close(); $('error').textContent = '';
   $('status').textContent = uid ? 'Loading your counter…' : 'Sign in from Dashboard to open your personal cash counter.';
   if (!uid) return;
   stops.push(watchCounters(uid, (items, cached) => {
@@ -266,8 +268,8 @@ observeAuth(user => {
   stops.push(watchActive(uid, item => {
     if (token !== generation) return;
     active = item;
-    if (!initialized) { initialized = true; choose(item?.id || null); $('status').textContent = item?.status === 'open' ? 'Counter resumed. Your saved entries are below.' : 'Ready for your cash counter.'; }
-    else if (starting() && item?.status === 'open') { const wasBusy = busy; busy = false; choose(item.id); busy = wasBusy; }
+    if (!initialized) { initialized = true; choose(item?.status === 'open' ? item.id : null); if (item?.status === 'open') $('status').textContent = 'Counter resumed. Your saved entries are below.'; }
+    else if (!busy && starting() && item?.status === 'open') { choose(item.id); $('status').textContent = 'Your open counter is ready.'; }
     else if (!busy && item?.id === selected && item.status === 'closed') { render(); }
     else if (!busy) { renderPicker(); $('counterLabel').textContent = currentCounter() ? `${currentCounter().status === 'open' ? 'Counter open' : 'Counter closed'} · ${currentCounter().transactionCount} saved entries` : 'New counter'; }
   }, error => { if (token === generation) fail(error); }));
