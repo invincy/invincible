@@ -1150,6 +1150,8 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 #storyChart .factor-3 { left:66%; top:19%; opacity:var(--factor-3,0); }
 #storyChart .volatility-note { position:absolute; left:24%; top:6%; color:#cbbde9; font:500 10px var(--font-sans); opacity:var(--volatility-opacity,0); }
 [data-story-step="1"] .headline-main { font-family:var(--font-sans); font-size:32px; }
+[data-story-step="1"] .business-subtitle { color:#dfcc9d; font:500 11px/1.5 var(--font-sans); margin-top:4px; }
+#storyChart[data-step="1"] .scenario-chart-heading { visibility:hidden; }
 [data-story-step="1"] .scene-one-chart-host { width:76%; }
 /* Keep the graph above the presenting hand, with identical plot space on 2/3. */
 [data-story-step="2"] .scene-two-heading,
