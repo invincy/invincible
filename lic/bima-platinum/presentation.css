@@ -1489,7 +1489,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 [data-story-step="5"] .income-facts { margin-block:0; }
 [data-story-step="5"] .income-timeline { margin-block:0; }
 @container presentation (max-height:600px) {
-  [data-story-step="5"] .plan-details-page:not([hidden]) { gap:10px; }
+  [data-story-step="5"] .plan-details-page:not([hidden]) { gap:0; }
   [data-story-step="5"] .income-advisor { top:-8px; }
   [data-story-step="5"] .income-example-top { min-height:117px; }
 }
@@ -1669,4 +1669,9 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 @container presentation (max-height:700px) {
   [data-story-step="2"] .scene-two-presenter { width:96%; height:96%; bottom:-48%; }
   [data-story-step="3"] .scene-two-presenter { width:80%; height:86%; bottom:-40%; }
+}
+
+/* Short screens keep the compact footer clearance rather than tall-screen spacing. */
+@container presentation (max-height:600px) {
+  [data-story-step="5"] .scene-two-visual { margin-bottom:48px; }
 }
