@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cashier · Invincible LIC</title><meta name="theme-color" content="#071820">
+  <script src="theme.js"></script>
+  <link rel="icon" href="../../favicon.ico" sizes="any">
+  <link rel="stylesheet" href="../../site-nav.css?v=18"><link rel="stylesheet" href="cashier.css">
+</head>
+<body class="cashier-page">
+  <nav class="global-nav" aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
+  <main class="cashier">
+    <header class="page-heading"><div><a class="back" href="../">← LIC workspace</a><h1>Cashier <span class="currency-label">INR ₹</span></h1><p>Your counter, one transaction at a time.</p></div><div class="theme-switch" role="group" aria-label="Colour theme"><button type="button" data-theme-choice="light" aria-pressed="false">Light</button><button type="button" data-theme-choice="dark" aria-pressed="true">Dark</button></div></header>
+    <p id="status" role="status" aria-live="polite">Restoring your Invincible account…</p>
+    <p id="error" class="error" role="alert"></p>
+    <section id="workspace" hidden aria-label="Cash counter">
+      <div class="counter-bar"><div id="counterLabel"></div><label>Counter history<select id="counterPicker" aria-label="Counter history"><option value="">New counter</option></select></label></div>
+      <nav id="entrySteps" class="entry-steps" aria-label="Transaction steps" hidden><button id="amountStep" type="button" aria-current="step"><span>1</span> Enter amounts</button><button id="cashStep" type="button"><span>2</span> Count cash</button></nav>
+      <section id="startPanel" class="panel" hidden><p class="eyebrow">BEFORE YOUR FIRST TRANSACTION</p><h2>Opening cash</h2><p class="hint">Enter the notes / coins already in your counter. Leave all counts at zero if you have none.</p></section>
+      <section id="entryPanel" class="panel" hidden>
+        <div class="section-heading"><div><p class="eyebrow" id="entryNumber">NEXT ENTRY</p><h2>Transaction amount</h2></div><button id="addAmount" type="button">+ Add amount</button></div>
+        <div id="amounts"></div><div class="total-line"><span>Total to collect</span><strong id="due">₹0.00</strong></div><div class="entry-actions"><button id="countCash" class="primary" type="button">Count Cash →</button><button id="closeFromAmounts" type="button">Close Counter</button></div>
+      </section>
+      <div id="amountContext" class="amount-context" hidden><div><span>Total to collect</span><strong id="contextDue">₹0.00</strong></div><button id="editAmounts" type="button">Edit amounts</button></div>
+      <section id="cashPanel" class="panel" hidden aria-labelledby="cashTitle">
+        <div class="section-heading"><h2 id="cashTitle">Count cash</h2><div class="mode-tabs" role="group" aria-label="Cash direction"><button id="receivedMode" type="button" aria-pressed="true">Cash received</button><button id="returnedMode" type="button" aria-pressed="false">Change given</button></div></div>
+        <div class="quick-step"><span>Each tap adds</span><div role="group" aria-label="Notes per tap"><button data-step="1" aria-pressed="true">1</button><button data-step="5" aria-pressed="false">5</button><button data-step="10" aria-pressed="false">10</button><button data-step="100" aria-pressed="false">100</button></div><span class="hint">notes / coins</span></div>
+        <div id="denominations" class="denominations"></div>
+        <div class="loose-row"><label>Miscellaneous / loose change (₹)<input id="loose" inputmode="decimal" type="text" value="0" autocomplete="off"></label><strong id="cashTotal">₹0.00</strong></div>
+        <p class="hint">Tap a denomination to add notes. You can also type the count directly. Record returned change separately.</p>
+      </section>
+      <div id="runningSummary" class="running-summary" aria-live="polite" hidden></div>
+      <div id="footerActions" class="counter-actions" hidden><div id="saveState" class="save-state" role="status"></div><div class="action-buttons"><button id="nextTransaction" class="primary" type="button">Next Transaction</button><button id="closeCounter" type="button">Close Counter</button></div></div>
+      <button id="startCounter" class="primary start-button" type="button" hidden>Start Counter →</button>
+      <section id="closingSummary" class="panel" hidden></section>
+      <section id="logPanel" class="panel" hidden><div class="section-heading"><h2>Transaction log</h2><span id="logCount" class="hint"></span></div><p id="logStatus" class="hint"></p><div id="log"></div></section>
+    </section>
+  </main>
+  <dialog id="closeDialog" aria-labelledby="closeTitle"><h2 id="closeTitle">Are you sure you want to close the counter?</h2><p>The current balanced entry will be saved, and your final cash and denomination summary will be shown.</p><p id="closeError" class="error" role="alert"></p><div class="dialog-actions"><button id="cancelClose" autofocus>Cancel</button><button id="confirmClose" class="primary">Confirm Close Counter</button></div></dialog>
+  <script type="module" src="../../site-nav.js?v=7"></script><script type="module" src="cashier.js"></script>
+</body></html>
