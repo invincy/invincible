@@ -102,16 +102,16 @@ p { line-height: 1.5; }
 .amount-context button { background: transparent; font-size: .8rem; }
 .mode-tabs { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .mode-tabs button[aria-pressed="true"] { background: var(--cyan); color: var(--surface); border-color: var(--cyan); }
-.denomination-heading, .denomination { display: grid; grid-template-columns: 68px minmax(196px, 1fr) 150px minmax(112px, .65fr); align-items: center; gap: 12px; }
+.denomination-heading, .denomination { display: grid; grid-template-columns: 68px minmax(244px, 1fr) 114px minmax(112px, .65fr); align-items: center; gap: 12px; }
 .denomination-heading { padding: 0 0 10px; color: var(--muted); font-size: .75rem; }
 .denomination-heading span:last-child { text-align: right; }
 .denominations { display: block; }
 .denomination { min-width: 0; padding: 12px 0; border-top: 1px solid var(--line); }
 .denomination .value { color: var(--cyan); font-size: 1.05rem; font-weight: 750; white-space: nowrap; }
 .times { color: var(--muted); font-size: .9rem; font-weight: 400; }
-.row-increments { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.row-increments { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
 .row-increments button { padding: 8px 4px; font-size: .9rem; min-height: 48px; border-radius: 8px; }
-.count-row { display: grid; grid-template-columns: 38px minmax(48px, 1fr) 38px; gap: 4px; align-items: center; }
+.count-row { display: grid; grid-template-columns: 38px minmax(48px, 1fr); gap: 4px; align-items: center; }
 .count-row input { padding: 6px 2px; min-height: 48px; text-align: center; font-size: 1rem; font-weight: 700; }
 .count-row button { padding: 6px 2px; min-height: 48px; border-radius: 8px; }
 .row-total { min-width: 0; padding: 12px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--field); text-align: right; font-size: .95rem; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
@@ -123,7 +123,7 @@ p { line-height: 1.5; }
 .loose-row { margin-top: 16px; }
 .loose-row label { max-width: 300px; }
 .loose-row strong { color: var(--cyan); font-size: 1.4rem; }
-.running-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+.running-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
 .summary-item { min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
 .summary-item span { display: block; margin-bottom: 6px; color: var(--muted); font-size: .75rem; }
 .summary-item strong { font-size: 1.15rem; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
@@ -211,7 +211,9 @@ html[data-cashier-theme="light"] .inv-settings small { color: var(--muted); }
   .denomination .value { grid-column: 1; font-size: .95rem; }
   .times { display: none; }
   .row-increments { grid-column: 2 / 7; gap: 5px; }
-  .row-increments button { font-size: .83rem; }
-  .count-row { grid-column: 1 / 4; grid-template-columns: 34px minmax(40px, 1fr) 34px; }
+  .row-increments button { font-size: .78rem; padding-inline: 2px; }
+  .count-row { grid-column: 1 / 4; grid-template-columns: 34px minmax(40px, 1fr); }
   .row-total { grid-column: 4 / 7; }
 }
+
+#status:empty, #logStatus:empty { display: none; }
