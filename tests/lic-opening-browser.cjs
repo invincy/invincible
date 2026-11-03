@@ -26,6 +26,41 @@ fs.mkdirSync(out,{recursive:true});
  if(server){await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));base=`http://127.0.0.1:${server.address().port}`;}
  const browser=await chromium.launch({headless:true,executablePath,args:['--autoplay-policy=no-user-gesture-required']});
  try {
+  if(!process.env.LIC_LAYOUT_ONLY) {
+   const auto=await browser.newPage({viewport:{width:390,height:844}});
+   await auto.addInitScript(()=>{const RealAudio=window.Audio;window.testAudios=[];window.Audio=function(...args){const a=new RealAudio(...args);window.testAudios.push(a);return a;};});
+   await auto.goto(`${base}/lic/bima-platinum/`);
+   for(let step=1;step<=3;step++) {
+    await auto.waitForFunction(step=>document.querySelector('#stageContainer').dataset.storyStep===String(step)&&document.querySelector('#storyChart').dataset.playback==='playing'&&Number.isFinite(window.testAudios[0].duration),step);
+    if(step===2) {
+     await auto.click('#storyModeToggle');
+     assert.equal(await auto.locator('#storyModeToggle').innerText(),'Manual');
+    }
+    if(step===3) {
+     const graph=await auto.locator('.balance-plot').evaluate(svg=>{
+      const stable=svg.querySelector('.scenario-platinum'),market=svg.querySelector('.scenario-market');
+      const end=stable.getPointAtLength(stable.getTotalLength());
+      let lastDip=0;
+      for(let i=0;i<=1000;i++){const p=market.getPointAtLength(market.getTotalLength()*i/1000);if(p.x>=285)lastDip=Math.max(lastDip,p.y);}
+      return {end:end.y,lastDip};
+     });
+     assert.ok(Math.abs(graph.end-graph.lastDip)<2,'Gold ends at the final Share Market dip');
+    }
+    await auto.evaluate(()=>{const a=window.testAudios[0];a.currentTime=a.duration-.03;});
+    if(step===2) {
+     await auto.waitForFunction(()=>document.querySelector('#storyChart').dataset.playback==='idle');
+     assert.equal(await auto.locator('#stageContainer').getAttribute('data-story-step'),'2');
+     await auto.click('#storyModeToggle');
+    }
+    await auto.waitForFunction(step=>document.querySelector('#stageContainer').dataset.storyStep===String(step+1),step);
+    assert.equal(await auto.evaluate(()=>window.testAudios.length),1,'Same audio element continues through scenes');
+   }
+   await auto.waitForFunction(()=>Number.isFinite(window.testAudios[0].duration)&&window.testAudios[0].src.endsWith('page4.mp3'));
+   await auto.evaluate(()=>{const a=window.testAudios[0];a.currentTime=a.duration-.03;});
+   await auto.waitForFunction(()=>document.querySelector('#sceneTwoDialogueBtn').getAttribute('aria-pressed')==='false');
+   assert.equal(await auto.locator('#stageContainer').getAttribute('data-story-step'),'4');
+   await auto.close();console.log('Real audio automatically advances 1–4, with Manual hold and one player.');
+  }
   if(!process.env.LIC_LAYOUT_ONLY) for(const [width,height] of [[320,568],[360,640],[390,844],[320,480],[1440,900]]) {
    const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
    const errors=[]; page.on('pageerror',e=>errors.push(e.message));
@@ -35,6 +70,7 @@ fs.mkdirSync(out,{recursive:true});
     window.Audio=function(...args){const audio=new RealAudio(...args);window.testAudios.push(audio);return audio;};
    });
    await page.goto(`${base}/lic/bima-platinum/`);
+   await page.click('#storyModeToggleOne');
    const chart=await page.locator('#storyChart').elementHandle();
    for(let step=1;step<=3;step++) {
     if(step===2) await page.click('#ctaForwardBtn');
@@ -119,6 +155,7 @@ fs.mkdirSync(out,{recursive:true});
     };
    });
    await page.goto(`${base}/lic/bima-platinum/`);
+   await page.click('#storyModeToggleOne');
    await page.evaluate(()=>document.fonts.ready);
    const measure=async(step)=>page.evaluate(step=>{
     const audio=document.querySelector(step===1?'#advisorAudioBtn':step===6?'#journeyPlayPause':'#sceneTwoDialogueBtn');
@@ -178,6 +215,7 @@ fs.mkdirSync(out,{recursive:true});
    Object.defineProperty(window,'visualViewport',{get:()=>window.viewportMock});
   });
   await mobile.goto(`${base}/lic/bima-platinum/`);
+  await mobile.click('#storyModeToggleOne');
   await mobile.evaluate(()=>document.fonts.ready);
   for(let step=1;step<=6;step++) {
    if(step>1) await mobile.click(step===2?'#ctaForwardBtn':'#sceneTwoNextBtn');

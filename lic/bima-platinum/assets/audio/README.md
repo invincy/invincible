@@ -78,3 +78,8 @@ All six pages now use a circular 44px play/pause control at the lower right, abo
 ## Visible phone screen sizing — November 4, 2026
 
 After the user's clipped-Next screenshot, the presentation additionally measures the visible viewport, locks the mobile frame to it and uses frame-height breakpoints. This applies equally to Pages 1–6 and their existing floating audio buttons. The regression now leaves the reported layout viewport tall while shrinking/moving the visual viewport across every page; it no longer substitutes a smaller CSS dvh value as proof of visible-screen fitting.
+
+
+## Automatic opening story — November 4, 2026
+
+Auto is enabled initially. Each completed voiceover advances Pages 1→2→3→4, and the next scene's voice begins using the same unlocked media element. Page 4 does not automatically advance to 5. Auto/Manual switches beside the stage counter keep the choice consistent across the opening pages. Manual preserves the completed graph and existing Next/Back behavior; turning Auto on after completion continues the story. Pause and navigation still cancel the current run, and per-session event listeners are removed before changing recordings. No duration timer replaces the actual ended event. The browser fixture tests the real MP3 continuation and mode switching, alongside the existing playback/viewport checks.

@@ -1621,3 +1621,18 @@ body.dev-mode .desktop-tools-bar { display: flex; }
   [data-story-step="5"] .scene-two-next { height:44px; min-height:44px; padding-block:6px; }
   [data-story-step="5"] .scene-two-next span:last-child { font-size:20px; line-height:1; }
 }
+
+/* The opening story can run hands-free; manual navigation stays available. */
+.story-nav-group { display:flex; align-items:center; gap:10px; }
+.story-mode-toggle { width:48px; height:44px; padding:0; border:1px solid #e6c68755; border-radius:16px; background:#061226aa; color:#e6c687; font:600 10px var(--font-sans); cursor:pointer; }
+.story-mode-toggle:focus-visible { outline:2px solid #fff; outline-offset:2px; }
+[data-story-step="5"] .story-mode-toggle,
+[data-story-step="6"] .story-mode-toggle { display:none; }
+[data-story-step="2"] .scene-two-visual,
+[data-story-step="3"] .scene-two-visual { overflow:hidden; }
+[data-story-step="2"] .scene-two-presenter,
+[data-story-step="3"] .scene-two-presenter { width:80%; height:80%; right:-10%; bottom:-12%; }
+@container presentation (max-height:700px) {
+  [data-story-step="2"] .scene-two-presenter,
+  [data-story-step="3"] .scene-two-presenter { width:76%; height:76%; bottom:-23%; }
+}

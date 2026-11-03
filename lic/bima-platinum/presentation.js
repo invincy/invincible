@@ -26,6 +26,9 @@ const STORY_SCENES = {
   6: { src: null, script: '', cues: [] }
 };
 
+// Separate scene slots, ready for the supplied expression PNGs.
+const STORY_ADVISORS = { 2: 'assets/advisor-presenter.webp', 3: 'assets/advisor-presenter.webp' };
+
 const JOURNEY_STEPS = [
   { id:'ppt', title:'Choose Your PPT', visual:'pay', audio:'assets/audio/page6-step1.mp3', fallbackDuration:3600, script:'सबसे पहले आप चुनते हैं कि premium कितने साल pay करना है।' },
   { id:'additions', title:'Guaranteed Additions', visual:'build', audio:'assets/audio/page6-step2.mp3', fallbackDuration:3600, script:'Premium paying period के दौरान Guaranteed Additions जुड़ते रहते हैं।' },
@@ -119,6 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }));
   updateIncomeExample();
   let currentPage = 1;
+  let automaticStory = true;
+  let audioEvents = null;
+  const storyModeButtons = [document.getElementById('storyModeToggleOne'), document.getElementById('storyModeToggle')];
   let audioElement = null;
   let audioAttempt = 0;
   let playbackWanted = false;
@@ -322,6 +328,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function stopAllAudio() {
     audioAttempt++;
+    audioEvents?.abort();
+    audioEvents = null;
     chartComplete = false;
     playbackWanted = false;
     const previous = audioElement;
@@ -332,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sceneTwoAudioStatus.textContent = '';
   }
 
-  async function toggleAudioPlayback() {
+  async function toggleAudioPlayback(continuation = null) {
     if (!STORY_SCENES[currentPage].src || playbackState === 'loading') return;
     if (playbackState === 'playing') { audioElement.pause(); return; }
     const attempt = ++audioAttempt;
@@ -341,21 +349,26 @@ document.addEventListener('DOMContentLoaded', () => {
     status.textContent = '';
     playbackWanted = true;
     if (!audioElement) {
-      const audio = new Audio(STORY_SCENES[page].src);
+      const audio = continuation || new Audio(STORY_SCENES[page].src);
+      if (continuation) audio.src = STORY_SCENES[page].src;
       audioElement = audio;
+      const events = new AbortController();
+      audioEvents = events;
+      const listen = (event, handler) => audio.addEventListener(event, handler, {signal:events.signal});
       audio.preload = 'none';
-      const isCurrent = () => audioElement === audio && currentPage === page && playbackWanted;
-      audio.addEventListener('playing', () => { if (isCurrent()) updateAudioUI('playing'); });
-      audio.addEventListener('pause', () => { if (isCurrent() && !audio.ended) updateAudioUI('paused'); });
-      audio.addEventListener('ended', () => {
+      const isCurrent = () => audioElement === audio && audioEvents === events && currentPage === page && playbackWanted;
+      listen('playing', () => { if (isCurrent()) updateAudioUI('playing'); });
+      listen('pause', () => { if (isCurrent() && !audio.ended) updateAudioUI('paused'); });
+      listen('ended', () => {
         if (!isCurrent()) return;
         playbackWanted = false;
         if (page <= 3) chartComplete = true;
         audio.currentTime = 0;
         updateAudioUI('idle');
+        if (automaticStory && page < 4) showPage(page + 1, false, audio);
       });
-      for (const event of ['timeupdate', 'seeked', 'loadedmetadata', 'durationchange']) audio.addEventListener(event, () => { if (isCurrent()) syncChart(); });
-      audio.addEventListener('error', () => {
+      for (const event of ['timeupdate', 'seeked', 'loadedmetadata', 'durationchange']) listen(event, () => { if (isCurrent()) syncChart(); });
+      listen('error', () => {
         if (!isCurrent()) return;
         playbackWanted = false;
         updateAudioUI('idle');
@@ -367,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateAudioUI('loading');
     try {
       await audio.play();
-      if (attempt !== audioAttempt) { audio.pause(); audio.currentTime = 0; }
+      if (attempt !== audioAttempt && audioElement !== audio) { audio.pause(); audio.currentTime = 0; }
     } catch (error) {
       if (attempt !== audioAttempt) return;
       playbackWanted = false;
@@ -376,11 +389,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function showPage(page, focus = true) {
+  function showPage(page, focus = true, continuation = null) {
     if (!STORY_SCENES[page]) return;
     stopJourney();
     stopAllAudio();
     currentPage = page;
+    if (STORY_ADVISORS[page]) document.getElementById('storyPresenter').src = STORY_ADVISORS[page];
     stageContainer.setAttribute('data-story-step', String(page));
     const isReveal = page === 4;
     const isDetails = page === 5;
@@ -437,11 +451,24 @@ document.addEventListener('DOMContentLoaded', () => {
     advisorAudioBtn.title = STORY_SCENES[1].script;
     sceneTwoDialogueBtn.title = STORY_SCENES[page].script;
     updateAudioUI('idle');
-    if (!isJourney) toggleAudioPlayback();
+    if (!isJourney) toggleAudioPlayback(continuation);
   }
 
-  advisorAudioBtn.addEventListener('click', toggleAudioPlayback);
-  sceneTwoDialogueBtn.addEventListener('click', toggleAudioPlayback);
+  function updateStoryMode() {
+    storyModeButtons.forEach(button => {
+      button.textContent = automaticStory ? 'Auto' : 'Manual';
+      button.setAttribute('aria-pressed', String(automaticStory));
+      button.setAttribute('aria-label', automaticStory ? 'Automatic scene progression enabled. Switch to manual.' : 'Manual scene progression enabled. Switch to automatic.');
+    });
+  }
+  storyModeButtons.forEach(button => button.addEventListener('click', () => {
+    automaticStory = !automaticStory;
+    updateStoryMode();
+    if (automaticStory && currentPage < 4 && chartComplete) showPage(currentPage + 1, false, audioElement);
+  }));
+  updateStoryMode();
+  advisorAudioBtn.addEventListener('click', () => toggleAudioPlayback());
+  sceneTwoDialogueBtn.addEventListener('click', () => toggleAudioPlayback());
   journeyNodes.forEach(node => node.addEventListener('click', () => startJourneyStep(Number(node.dataset.journeyStep), true)));
   journeyToggle.addEventListener('click', () => journeyAutoplay ? pauseJourney() : resumeJourney());
   journeyReplay.addEventListener('click', () => { journeyAutoplay = true; startJourneyStep(0); });

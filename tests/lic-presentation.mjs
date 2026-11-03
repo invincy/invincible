@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const source = readFileSync(new URL('../lic/bima-platinum/presentation.js', import.meta.url), 'utf8');
-function setup(play) {
+function setup(play, {automatic=false}={}) {
   const elements = new Map();
   function el(id) {
     if (!elements.has(id)) elements.set(id, {
@@ -26,17 +26,45 @@ function setup(play) {
   class Audio {
     constructor(src) { this.src=src; this.events={}; this.currentTime=0; this.duration=10; this.ended=false; this.paused=true; audios.push(this); }
     addEventListener(k,fn) { this.events[k]=fn; }
-    async play() { if(play) await play(); this.paused=false; this.events.playing?.(); }
+    async play() { if(play) await play(); this.ended=false; this.paused=false; this.events.playing?.(); }
     pause() { this.paused=true; this.events.pause?.(); }
   }
-  const context={document:doc, Audio, URLSearchParams, setTimeout, clearTimeout,
+  const context={document:doc, Audio, AbortController, URLSearchParams, setTimeout, clearTimeout,
     window:{location:{search:'',hash:''},addEventListener(k,fn) { windowEvents[k]=fn; }}};
   vm.runInNewContext(source,context);
   doc.events.DOMContentLoaded();
+  if(!automatic) el('storyModeToggleOne').events.click();
   return {el,doc,audios,windowEvents,premium:context.getLicSamplePremium,click:id=>el(id).events.click({stopPropagation(){}})};
 }
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 const focus=s=>s.el('storyChart').attrs['data-focus'];
+
+test('Auto continues 1 → 2 → 3 → 4 on narration completion using one audio element',async()=>{
+  const s=setup(undefined,{automatic:true});
+  await flush();
+  const audio=s.audios[0],oldEnded=audio.events.ended;
+  for(let page=1;page<=3;page++) {
+    audio.currentTime=audio.duration;audio.ended=true;audio.events.ended();await flush();
+    assert.equal(s.el('stageContainer').attrs['data-story-step'],String(page+1));
+    assert.equal(s.audios.length,1,'Reuse the unlocked player for continuous mobile playback');
+    assert.match(audio.src,new RegExp(page===3?'page4.mp3$':`newpage${page+1}.mp3$`));
+    oldEnded();
+    assert.equal(s.el('stageContainer').attrs['data-story-step'],String(page+1),'Ignore a stale ended callback');
+  }
+  audio.ended=true;audio.events.ended();await flush();
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'4','Do not change later-page progression');
+});
+
+test('Manual holds the final graph; switching Auto on continues without another Next tap',async()=>{
+  const s=setup();await flush();const audio=s.audios[0];
+  audio.ended=true;audio.events.ended();await flush();
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'1');
+  s.click('storyModeToggleOne');await flush();
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'2');
+  assert.equal(s.el('storyModeToggle').textContent,'Auto');
+  s.click('storyModeToggle');
+  assert.equal(s.el('storyModeToggleOne').textContent,'Manual');
+});
 
 test('one original chart moves through pages 1 → 2 → 3 and back without cloning',()=>{
   const s=setup(); const chart=s.el('storyChart');
