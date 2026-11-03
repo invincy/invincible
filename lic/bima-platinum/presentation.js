@@ -133,8 +133,10 @@ document.addEventListener('DOMContentLoaded', () => {
     journeyComplete = false;
   }
   function updateJourneyControls() {
-    journeyToggle.innerHTML = journeyAutoplay ? '⏸ <span>Pause Story</span>' : '▶ <span>Auto Play Story</span>';
+    journeyToggle.innerHTML = journeyAutoplay ? '<span class="advisor-audio-icon" aria-hidden="true">⏸</span><span>Pause Story</span>' : '<span class="advisor-audio-icon" aria-hidden="true">▶</span><span>Auto Play Story</span>';
     journeyToggle.setAttribute('aria-label', journeyAutoplay ? 'Pause story' : 'Resume story');
+    journeyToggle.setAttribute('aria-pressed', String(journeyAutoplay));
+    journeyToggle.title = journeyAutoplay ? 'Pause story' : 'Resume story';
     journeyReplay.hidden = !journeyComplete;
     document.getElementById('journeyProgress').textContent = journeyStep < 0 ? '0 of 5' : `${journeyStep + 1} of 5`;
     if (currentPage === 6) document.getElementById('storyNextLabel').textContent = journeyComplete ? 'अब protection भी देखें' : 'Tap to reveal next benefit';
@@ -283,12 +285,15 @@ document.addEventListener('DOMContentLoaded', () => {
     for (const [button, text] of [[advisorAudioBtn, advisorAudioLabel], [sceneTwoDialogueBtn, sceneTwoAudioLabel]]) {
       text.textContent = label;
       button.setAttribute('aria-busy', String(state === 'loading'));
+      button.setAttribute('aria-pressed', String(state === 'playing'));
       button.setAttribute('aria-label', `${state === 'playing' ? 'Pause' : state === 'paused' ? 'Resume' : 'Hear'} Scene ${currentPage} advisor recording`);
       button.classList.remove('is-playing', 'is-paused');
       if (state === 'playing') button.classList.add('is-playing');
       if (state === 'paused') button.classList.add('is-paused');
     }
-    advisorAudioIcon.textContent = state === 'playing' ? '⏸' : '▶';
+    const icon = state === 'playing' ? '⏸' : state === 'loading' ? '…' : '▶';
+    advisorAudioIcon.textContent = icon;
+    document.getElementById('sceneTwoAudioIcon').textContent = icon;
     followChartAudio();
   }
 

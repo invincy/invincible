@@ -1558,3 +1558,56 @@ body.dev-mode .desktop-tools-bar { display: flex; }
   .plan-journey-page[data-visual="income"] .journey-advisor:not(.journey-advisor-celebrate) { transform:none; }
   .journey-addition-bars i { animation:none; }
 }
+
+/* Audio floats above Next. Media state never changes footer size or position. */
+#stageContainer .audio-float {
+  display:inline-grid; place-items:center; width:44px; height:44px;
+  min-width:44px; max-width:44px; min-height:44px; max-height:44px;
+  padding:0; margin:0; gap:0; border:1.5px solid #e6c687aa; border-radius:50%;
+  background:#061226ed; color:#ffe5a3; font:500 20px/1 var(--font-sans);
+  box-shadow:0 4px 15px #0006; transform:none;
+  transition:background .2s ease,border-color .2s ease;
+}
+#stageContainer .audio-float:hover,
+#stageContainer .audio-float:focus-visible,
+#stageContainer .audio-float:active { transform:none; border-color:#ffe5a3; }
+#stageContainer .audio-float:focus-visible { outline:2px solid #fff; outline-offset:3px; }
+#stageContainer .audio-float[hidden] { display:none; }
+#stageContainer .audio-float > span:not(.advisor-audio-icon) { display:none; }
+#stageContainer .audio-float > .advisor-audio-icon {
+  display:block; width:auto; height:auto; padding:0; margin:0; border:0;
+  background:none; border-radius:0; box-shadow:none; font:inherit; color:inherit;
+}
+#stageContainer .stage-footer .layer-advisor-audio {
+  position:absolute; inset:auto 16px calc(100% + 4px) auto;
+  width:44px; height:44px; padding:0;
+}
+#stageContainer .advisor-audio-container { height:44px; }
+#stageContainer .scene-two-dialogue-btn,
+#stageContainer .journey-play-pause {
+  position:absolute; right:16px; bottom:calc(100% + 4px); z-index:12;
+}
+#stageContainer .audio-status {
+  position:absolute; width:min(240px,70vw); margin:0; padding:6px 9px;
+  border-radius:8px; background:#061226f5; font-size:11px; pointer-events:none;
+}
+#audioStatus { right:60px; bottom:0; }
+#sceneTwoAudioStatus { right:76px; bottom:calc(100% + 4px); }
+#stageContainer .audio-status:empty { display:none; }
+#stageContainer .stage-footer { gap:0; }
+#stageContainer .journey-controls { min-height:34px; }
+[data-story-step="4"] .scene-two-visual { overflow:hidden; }
+[data-story-step="5"] .scene-two-footer { margin-top:auto; }
+[data-story-step="5"] .scene-two-visual { margin-bottom:48px; }
+[data-story-step="6"] .journey-content { bottom:48px; }
+@media(max-height:520px) {
+  [data-story-step="4"] .scene-two-visual { min-height:220px; }
+  [data-story-step="5"] .scene-two-visual { margin-top:5px; }
+  [data-story-step="5"] .income-selectors { margin-top:4px; }
+  [data-story-step="5"] .income-benefit { padding-block:5px; }
+  [data-story-step="5"] .income-amount { font-size:28px; }
+  [data-story-step="5"] .income-facts { margin-bottom:5px; padding-block:4px; }
+  [data-story-step="5"] .income-timeline { margin-top:5px; }
+  [data-story-step="5"] .scene-two-next { height:44px; min-height:44px; padding-block:6px; }
+  [data-story-step="5"] .scene-two-next span:last-child { font-size:20px; line-height:1; }
+}
