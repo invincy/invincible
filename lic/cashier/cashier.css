@@ -51,12 +51,13 @@ button:active { background: var(--cyan); color: var(--surface); }
 .primary { background: var(--yellow); border-color: #ddbb24; color: #172a33; }
 input, select { min-width: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--field); color: var(--ink); padding: 6px; min-height: 36px; font-size: 16px; }
 button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
-.cashier { width: 100%; max-width: 1000px; height: 100dvh; margin: auto; padding: max(6px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); display: flex; flex-direction: column; gap: 6px; }
+.cashier { width: 100%; max-width: 600px; height: min(100dvh,640px); margin: auto; padding: max(6px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); display: flex; flex-direction: column; gap: 6px; }
 .page-heading { display: flex; align-items: center; gap: 8px; flex: 0 0 36px; }
 h1 { font-size: 18px; margin: 0; letter-spacing: -.02em; }
 h2 { font-size: 18px; margin: 0; }
 .page-heading .back { display: grid; place-items: center; width: 36px; height: 36px; color: var(--cyan); text-decoration: none; font-size: 23px; }
-#openMenu { margin-left: auto; width: 40px; padding: 0; font-size: 24px; }
+#previousEntry { margin-left: auto; padding: 4px 9px; font-size: 12px; }
+#openMenu { width: 40px; padding: 0; font-size: 24px; }
 #status, #error { flex: 0 0 auto; margin: 0; font-size: 12px; line-height: 1.3; }
 #status { color: var(--muted); }
 .error { color: var(--error); white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -71,19 +72,19 @@ h2 { font-size: 18px; margin: 0; }
 .mode-tabs { display: flex; gap: 6px; }
 .mode-tabs button { flex: 1; min-height: 0; padding: 4px 8px; font-size: 12px; }
 .mode-tabs button[aria-pressed=true], .theme-switch button[aria-pressed=true] { background: var(--cyan); color: var(--surface); border-color: var(--cyan); }
-.denominations { display: grid; grid-template-rows: repeat(6,minmax(0,1fr)); gap: 4px; min-height: 0; }
+.denominations { display: grid; grid-template-rows: repeat(6,minmax(0,1fr)); gap: 2px; min-height: 0; }
 .denomination { display: grid; grid-template-columns: 36px minmax(0,1fr) 38px 66px; gap: 4px; align-items: center; min-height: 0; border-bottom: 1px solid var(--line); }
 .value { color: var(--cyan); font-size: 12px; font-weight: 750; }
-.row-increments { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 3px; height: min(100%,44px); min-height: 0; }
+.row-increments { display: grid; grid-template-columns: minmax(26px,.7fr) minmax(26px,.7fr) minmax(30px,1fr) minmax(30px,1fr) minmax(36px,1.2fr); gap: 2px; height: min(100%,44px); min-height: 0; }
 .row-increments button { min-height: 0; padding: 0; font-size: 12px; border-radius: 6px; }
 .count-row { min-width: 0; height: min(100%,44px); }
 .count-row input { width: 100%; height: 100%; min-height: 0; padding: 2px; text-align: center; font-size: 16px; font-weight: 650; appearance: textfield; -moz-appearance: textfield; }
 .count-row input::-webkit-inner-spin-button, .count-row input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .row-total { font-size: 11px; text-align: right; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; line-height: 1.1; }
 .loose-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
-#openCoins { flex: 1; padding: 4px 6px; font-size: 12px; height: 36px; }
+#openCoins { flex: 0 0 auto; padding: 4px 6px; font-size: 12px; height: 36px; }
 #coinTotal { font-variant-numeric: tabular-nums; color: var(--cyan); }
-.loose-row label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.loose-row label { margin-left: auto; font-size: 12px; color: var(--muted); white-space: nowrap; }
 #loose { width: 86px; min-height: 0; height: 36px; }
 .running-summary { display: flex; justify-content: space-between; gap: 10px; flex: 0 0 22px; align-items: center; font-size: 12px; color: var(--muted); }
 .running-summary strong { color: var(--ink); font-variant-numeric: tabular-nums; }
@@ -127,8 +128,19 @@ dialog button { min-height: 40px; }
 .dialog-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 [hidden] { display: none !important; }
-@media(min-width:700px) { .cashier { padding: 10px 18px; gap: 8px; }.denomination { grid-template-columns: 64px minmax(0,1fr) 70px 120px; gap: 10px; }.value { font-size: 16px; }.row-total { font-size: 14px; }.row-increments { gap: 8px; }.row-increments button { font-size: 15px; }.running-summary { font-size: 14px; } }
+@media(min-width:700px) { .cashier { padding: 10px 18px; gap: 8px; }.denomination { grid-template-columns: 64px minmax(0,1fr) 70px 120px; gap: 10px; }.value { font-size: 16px; }.row-total { font-size: 14px; }.row-increments { gap: 4px; }.row-increments button { font-size: 15px; }.running-summary { font-size: 14px; } }
 @media(max-width:350px) { .denomination { grid-template-columns: 32px minmax(0,1fr) 34px 60px; gap: 3px; }.row-increments { gap: 2px; }.row-increments button { font-size: 11px; }.row-total { font-size: 10px; }.value { font-size: 11px; } }
 @media(max-height:550px) { .cashier { gap: 3px; padding-block: 3px; }.page-heading { flex-basis: 30px; }.page-heading .back { height: 30px; }#openMenu { min-height: 30px; }#entryPanel { flex-basis: 40px; }#amountInput { height: 36px; }#cashPanel { grid-template-rows: 28px minmax(0,1fr) 30px; gap: 3px; }#openCoins,#loose { height: 30px; min-height: 30px; }.action-buttons button { height: 38px; min-height: 38px; }.running-summary { flex-basis: 18px; }.save-state { min-height: 17px; } }
-@media(max-height:500px) and (min-width:650px) { .denominations { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3,minmax(0,1fr)); gap: 4px 14px; }.denomination { grid-template-columns: 36px minmax(0,1fr) 38px 66px; gap: 4px; }.value { font-size: 12px; }.row-total { font-size: 11px; }.row-increments { gap: 3px; }.row-increments button { font-size: 12px; } }
+@media(max-height:500px) and (min-width:650px) { .cashier { max-width: 1000px; }.denominations { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3,minmax(0,1fr)); gap: 4px 14px; }.denomination { grid-template-columns: 36px minmax(0,1fr) 38px 66px; gap: 4px; }.value { font-size: 12px; }.row-total { font-size: 11px; }.row-increments { gap: 3px; }.row-increments button { font-size: 12px; } }
 @media print { html,body { height: auto; overflow: visible; } .cashier { height: auto; max-width: none; padding: 0; }.page-heading,#status,#error,#retryCounter,#entryPanel,#cashPanel,#runningSummary,#footerActions,dialog { display: none !important; }html[data-cashier-theme] { --app-canvas: white; --ink: black; --surface: white; --line: #aaa; --cyan: #222; }button { display: none !important; }.cash-table { font-size: 12px; } }
+
+#reviewNav { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+#reviewNav button { min-height: 36px; padding: 6px 8px; font-size: 12px; }
+#reviewPosition { color: var(--muted); font-size: 12px; white-space: nowrap; }
+#reviewNav #showAllEntries { margin-left: auto; }
+
+#logDialog > header { position: sticky; top: -18px; z-index: 2; padding-block: 4px; background: var(--surface); }
+#reviewNav { position: sticky; top: 30px; z-index: 1; padding-block: 4px; background: var(--surface); }
+
+#coinDenominations .denomination { grid-template-columns: 28px minmax(0,1fr) 36px; }
+#coinDenominations .row-total { grid-column: 2 / -1; }
