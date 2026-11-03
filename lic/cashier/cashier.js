@@ -5,7 +5,7 @@ import { watchActive, watchCounters, watchTransactions, startCounter, saveEntry 
 const $ = id => document.getElementById(id);
 const format = value => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value / 100);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
-const fresh = () => ({ id: crypto.randomUUID(), atMs: Date.now(), amounts: [{ amount: '', label: '' }], received: blankCash(), returned: blankCash() });
+const fresh = () => ({ id: crypto.randomUUID(), atMs: Date.now(), stage: 'amounts', amounts: [{ amount: '', label: '' }], received: blankCash(), returned: blankCash() });
 let uid = null, generation = 0, stops = [], stopLog = () => {}, counters = [], active = null, selected = null, initialized = false;
 let opening = blankCash(), openingId = crypto.randomUUID(), draft = fresh(), mode = 'received', step = 1, busy = false, hasRecovery = false;
 const currentCounter = () => selected ? (active?.id === selected ? active : counters.find(item => item.id === selected)) : null;
@@ -23,14 +23,19 @@ function restoreDraft() {
   try {
     const stored = JSON.parse(localStorage.getItem(key()) || 'null');
     if (stored && starting() && stored.opening && typeof stored.openingId === 'string') { opening = stored.opening; openingId = stored.openingId; }
-    else if (stored && Array.isArray(stored.amounts) && stored.received && stored.returned && typeof stored.id === 'string') { draft = stored; hasRecovery = true; }
+    else if (stored && Array.isArray(stored.amounts) && stored.received && stored.returned && typeof stored.id === 'string') {
+      draft = stored;
+      if (!['amounts', 'cash'].includes(draft.stage)) draft.stage = cashTotal(draft.received) || cashTotal(draft.returned) ? 'cash' : 'amounts';
+      hasRecovery = true;
+    }
   } catch { $('error').textContent = 'Could not restore the previous draft. Saved transaction logs are unaffected.'; }
 }
 function clearDraft() { try { localStorage.removeItem(key()); } catch {} }
 function setBusy(value) {
   busy = value;
-  for (const id of ['nextTransaction', 'closeCounter', 'startCounter', 'confirmClose', 'cancelClose', 'counterPicker', 'addAmount']) $(id).disabled = value;
+  for (const id of ['nextTransaction', 'closeCounter', 'closeFromAmounts', 'startCounter', 'confirmClose', 'cancelClose', 'counterPicker', 'addAmount', 'countCash', 'editAmounts', 'amountStep', 'cashStep']) $(id).disabled = value;
   $('amounts').querySelectorAll('input,button').forEach(el => { el.disabled = value; });
+  if (draft.amounts.length === 1) $('amounts').querySelector('[data-remove]')?.setAttribute('disabled', '');
   $('cashPanel').querySelectorAll('input,button').forEach(el => { el.disabled = value; });
 }
 function renderPicker() {
@@ -40,7 +45,7 @@ function renderPicker() {
   $('counterPicker').value = selected || '';
 }
 function renderAmounts() {
-  $('amounts').innerHTML = draft.amounts.map((item, i) => `<div class="amount-row"><label>Amount ${i + 1} (₹)<input class="amount-input" data-index="${i}" data-field="amount" inputmode="decimal" type="text" value="${esc(item.amount)}" autocomplete="off"></label><label class="amount-label">Reference / note (optional)<input data-index="${i}" data-field="label" maxlength="120" value="${esc(item.label)}" autocomplete="off"></label><button class="remove-amount" data-remove="${i}" aria-label="Remove amount ${i + 1}" ${draft.amounts.length === 1 ? 'disabled' : ''}>×</button></div>`).join('');
+  $('amounts').innerHTML = draft.amounts.map((item, i) => `<div class="amount-row"><label>Amount ${i + 1} (₹)<input class="amount-input" data-index="${i}" data-field="amount" inputmode="decimal" enterkeyhint="next" type="text" value="${esc(item.amount)}" autocomplete="off"></label><button class="remove-amount" data-remove="${i}" aria-label="Remove amount ${i + 1}" ${draft.amounts.length === 1 ? 'disabled' : ''}>×</button><details class="reference-field" ${item.label ? 'open' : ''}><summary>Add a reference / note</summary><label>Reference / note (optional)<input data-index="${i}" data-field="label" maxlength="120" value="${esc(item.label)}" autocomplete="off"></label></details></div>`).join('');
 }
 function renderCash() {
   $('cashTitle').textContent = starting() ? 'Count opening cash' : mode === 'received' ? 'Cash received' : 'Change given';
@@ -60,15 +65,20 @@ function updateSummary() {
     if (!starting()) {
       const details = transactionDetails(draft);
       $('due').textContent = format(details.due);
+      $('contextDue').textContent = format(details.due);
       const diff = details.difference;
       const label = diff === 0 ? 'Balanced' : diff < 0 ? 'Shortage' : 'Change still to give';
       $('runningSummary').innerHTML = metric('Total due', details.due) + metric('Cash received', details.received) + metric('Change given', details.returned) + metric(label, Math.abs(diff), diff === 0 ? 'balanced' : 'short');
+      $('saveState').textContent = diff === 0 ? 'Balanced · ready to save' : `${label}: ${format(Math.abs(diff))}`;
+      $('saveState').dataset.balanced = String(diff === 0);
     }
   } catch (e) {
     error = e.message;
     if (!starting()) {
       $('due').textContent = '—';
       $('runningSummary').innerHTML = `<div class="summary-item"><span>Entry incomplete</span><strong>${esc(error)}</strong></div>`;
+      $('saveState').textContent = error;
+      $('saveState').dataset.balanced = 'false';
     }
   }
   // Validation stays inline while typing; saving provides an explicit error if needed.
@@ -89,15 +99,42 @@ function render() {
   const counter = currentCounter(), isStarting = !counter, open = counter?.status === 'open';
   $('workspace').hidden = false;
   $('startPanel').hidden = !isStarting; $('startCounter').hidden = !isStarting;
-  $('entryPanel').hidden = !open; $('cashPanel').hidden = !(isStarting || open);
-  $('runningSummary').hidden = !open; $('footerActions').hidden = !open;
+  $('entrySteps').hidden = !open;
   $('closingSummary').hidden = !counter || open; $('logPanel').hidden = !counter;
   $('counterLabel').textContent = isStarting ? 'New counter' : `${open ? 'Counter open' : 'Counter closed'} · ${counter.transactionCount} saved entries`;
   $('entryNumber').textContent = `ENTRY ${(counter?.transactionCount || 0) + 1}${hasRecovery ? ' · RECOVERED DRAFT' : ''}`;
   renderPicker();
   if (isStarting || open) { renderAmounts(); renderCash(); }
   else renderClosed(counter);
+  showStage();
   setBusy(busy);
+}
+function showStage() {
+  const counter = currentCounter(), open = counter?.status === 'open', counting = draft.stage === 'cash';
+  $('entryPanel').hidden = !open || counting;
+  $('cashPanel').hidden = !(starting() || (open && counting));
+  $('amountContext').hidden = !open || !counting;
+  $('runningSummary').hidden = !open || !counting;
+  $('footerActions').hidden = !open || !counting;
+  $('amountStep').toggleAttribute('aria-current', !counting);
+  if (!counting) $('amountStep').setAttribute('aria-current', 'step');
+  $('cashStep').toggleAttribute('aria-current', counting);
+  if (counting) $('cashStep').setAttribute('aria-current', 'step');
+}
+function goCash() {
+  if (busy || currentCounter()?.status !== 'open') return;
+  try {
+    transactionDetails({ ...draft, received: blankCash(), returned: blankCash() });
+    draft.stage = 'cash'; $('error').textContent = ''; showStage(); updateSummary();
+    $('amountContext').scrollIntoView({ block: 'start' });
+    document.querySelector('[data-note]')?.focus({ preventScroll: true });
+  } catch (error) { fail(error); document.querySelector('.amount-input')?.focus(); }
+}
+function goAmounts() {
+  if (busy || currentCounter()?.status !== 'open') return;
+  draft.stage = 'amounts'; showStage(); saveDraft();
+  $('entrySteps').scrollIntoView({ block: 'start' });
+  document.querySelector('.amount-input')?.focus({ preventScroll: true });
 }
 function choose(id) {
   if (busy) return;
@@ -127,7 +164,7 @@ async function commit(close = false) {
   $('error').textContent = ''; $('closeError').textContent = '';
   try {
     // Explicitly reject incomplete cash inputs; never save a previously valid loose value.
-    if (!($('cashPanel').hidden)) cash().loose = money($('loose').value);
+    cash().loose = money($('loose').value);
     const entry = hasEntry() ? draft : null;
     if (!entry && !close) throw new Error('Enter a transaction amount first.');
     if (entry && transactionDetails(entry).difference !== 0) throw new Error('Balance the cash and change before saving.');
@@ -185,8 +222,17 @@ for (const target of ['received', 'returned']) $(target + 'Mode').onclick = () =
 };
 $('loose').oninput = updateSummary;
 $('counterPicker').onchange = () => choose($('counterPicker').value || null);
+$('countCash').onclick = goCash;
+$('cashStep').onclick = goCash;
+$('editAmounts').onclick = goAmounts;
+$('amountStep').onclick = goAmounts;
+$('amounts').addEventListener('keydown', event => {
+  if (event.key === 'Enter' && event.target.matches('.amount-input')) { event.preventDefault(); goCash(); }
+});
 $('nextTransaction').onclick = () => commit(false);
-$('closeCounter').onclick = () => { $('closeError').textContent = ''; $('closeDialog').showModal(); };
+const confirmCounterClose = () => { if (!busy) { $('closeError').textContent = ''; $('closeDialog').showModal(); } };
+$('closeCounter').onclick = confirmCounterClose;
+$('closeFromAmounts').onclick = confirmCounterClose;
 $('cancelClose').onclick = () => { if (!busy) $('closeDialog').close(); };
 $('closeDialog').addEventListener('cancel', event => { if (busy) event.preventDefault(); });
 $('confirmClose').onclick = () => commit(true);
