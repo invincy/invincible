@@ -170,5 +170,12 @@ fs.mkdirSync(out,{recursive:true});
    }
    await page.close();
   }
+  // Model a browser address bar: dynamic units shrink while legacy vh stays tall.
+  const mobile=await browser.newPage({viewport:{width:360,height:640}});
+  await mobile.route('**/presentation.css*',route=>route.fulfill({contentType:'text/css',body:fs.readFileSync('lic/bima-platinum/presentation.css','utf8').replaceAll('100dvh','calc(100vh - 60px)')}));
+  await mobile.goto(`${base}/lic/bima-platinum/`);
+  const dynamic=await mobile.evaluate(()=>({frame:document.querySelector('#deviceFrame').getBoundingClientRect().height,wrapper:document.querySelector('.app-viewport-wrapper').getBoundingClientRect().height,next:document.querySelector('#ctaForwardBtn').getBoundingClientRect().bottom}));
+  assert.equal(dynamic.frame,580);assert.equal(dynamic.wrapper,580);assert.ok(dynamic.next<=580);
+  await mobile.close();console.log('Dynamic mobile viewport stays within the available screen.');
  } finally {await browser.close();if(server) await new Promise(resolve=>server.close(resolve));}
 })().catch(e=>{console.error(e);process.exitCode=1;});
