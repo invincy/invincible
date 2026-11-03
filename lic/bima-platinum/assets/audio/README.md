@@ -73,3 +73,8 @@ All ten supplied MP3 files decode cleanly as 44.1 kHz stereo MP3. Durations: pag
 ## Fixed floating audio controls — November 4, 2026
 
 All six pages now use a circular 44px play/pause control at the lower right, above Next. Its dimensions and placement do not depend on the playback label. Loading, pause, completion, autoplay denial and errors cannot push Next down. Status messages are overlays, outside footer flow. Page 6 retains its separate progress/replay controls. Tests exercise all these states and protect important labels from overlap at the five viewport sizes listed above. Use `LIC_LAYOUT_ONLY=1` to run only the deterministic layout matrix while developing; full verification runs both real audio and layout checks.
+
+
+## Visible phone screen sizing — November 4, 2026
+
+After the user's clipped-Next screenshot, the presentation additionally measures the visible viewport, locks the mobile frame to it and uses frame-height breakpoints. This applies equally to Pages 1–6 and their existing floating audio buttons. The regression now leaves the reported layout viewport tall while shrinking/moving the visual viewport across every page; it no longer substitutes a smaller CSS dvh value as proof of visible-screen fitting.

@@ -47,7 +47,8 @@ html, body {
   background: #010814;
   color: var(--text-primary);
   font-family: var(--font-sans);
-  overflow-x: hidden;
+  overflow: hidden;
+  overscroll-behavior: none;
   touch-action: manipulation;
 }
 
@@ -80,7 +81,8 @@ html, body {
     0 0 80px rgba(212, 175, 55, 0.15);
   display: flex;
   flex-direction: column;
-  transition: all 0.4s var(--ease-smooth);
+  transition: border-radius 0.4s var(--ease-smooth), box-shadow 0.4s var(--ease-smooth);
+  container: presentation / size;
 }
 
 /* Edge-to-edge / Fullscreen mode override */
@@ -850,16 +852,17 @@ body.dev-mode .inspector-fab {
    ========================================================================== */
 @media (max-width: 480px) {
   .app-viewport-wrapper {
-    padding: 0;
-    min-height:0;
+    position:fixed;
+    top:var(--presentation-top,0px); left:0; right:0;
+    padding:0; min-height:0; overflow:hidden;
     height:100vh;
-    height:100dvh;
+    height:min(var(--presentation-height,100svh),100svh);
   }
   .device-frame {
     max-width: 100%;
-    height: 100vh;
-    height: 100dvh;
-    min-height: 0;
+    height:100%;
+    max-height:100%;
+    min-height:0;
     border-radius: 0;
     box-shadow: none;
     aspect-ratio: auto;
@@ -915,7 +918,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
   .callout-card { flex-direction: column; align-items: stretch; padding: 12px; }
   .callout-cta-btn { align-self: flex-end; }
 }
-@media (max-height: 650px) {
+@container presentation (max-height:650px) {
   .layer-headline { top: 66px; }
   .headline-main { font-size: 27px; }
   .headline-sub { font-size: 12px; }
@@ -978,10 +981,10 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 .scene-two-subtitle { max-width:67%; font-size:13px; }
 .scene-two-open .layer-stage-3d { visibility:hidden; }
 .scene-two-open .ambient-light-glow, .scene-two-open .callout-cta-btn::after { animation:none; }
-@media(max-height:700px) { .scene-two-heading { padding-top:14px; } .scene-two-heading h2 { font-size:27px; } .scene-two-eyebrow { margin-bottom:8px; } }
+@container presentation (max-height:700px) { .scene-two-heading { padding-top:14px; } .scene-two-heading h2 { font-size:27px; } .scene-two-eyebrow { margin-bottom:8px; } }
 @media(prefers-reduced-motion:reduce) { .scene-two.active .scenario-line { animation:none; } }
 .balance-chart { margin-top:20px; }
-@media(max-height:700px) {
+@container presentation (max-height:700px) {
   .scene-two-heading { padding-top:10px; }
   .scene-two-heading h2 { font-size:22px; line-height:1.3; }
   .scene-two-eyebrow { font-size:9px; margin-bottom:6px; }
@@ -995,14 +998,14 @@ body.dev-mode .desktop-tools-bar { display: flex; }
   .scene-two-dialogue-btn { min-height:40px; font-size:12px; }
   .scene-two-next { min-height:44px; font-size:14px; padding-block:8px; }
 }
-@media(max-height:700px) {
+@container presentation (max-height:700px) {
   .balance-chart { margin-top:10px; }
   .balance-plot { height:196px; }
 }
 
 /* Compact chart retains both labels and the CTA without shrinking the comparison. */
 .scenario-chart .balance-plot { height:250px; aspect-ratio:350 / 285; }
-@media(max-height:700px) {
+@container presentation (max-height:700px) {
   .scenario-chart .balance-plot { height:166px; }
   .scenario-legend { gap:6px; padding:0 9px 5px; }
   .scenario-label strong { font-size:10px; }
@@ -1010,7 +1013,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
   .scenario-chart .chart-caption { font-size:8px; }
   .scenario-chart { margin-top:8px; }
 }
-@media(max-height:600px) {
+@container presentation (max-height:600px) {
   .scenario-chart .balance-plot { height:144px; }
   .scenario-chart { padding-block:6px; }
   .scenario-legend { gap:4px; }
@@ -1038,7 +1041,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 .scenario-label strong { font-size:10px; }
 .scenario-label small { font-size:9px; }
 .scenario-chart .chart-caption { font-size:8px; padding-inline:3px; }
-@media(max-height:700px) {
+@container presentation (max-height:700px) {
   .scene-two-visual { min-height:318px; margin-top:10px; }
   .scenario-chart .balance-plot { height:170px; }
   .scenario-legend { gap:5px; }
@@ -1046,7 +1049,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
   .scenario-label small { font-size:8px; }
   .scenario-chart .chart-caption { font-size:7px; }
 }
-@media(max-height:600px) {
+@container presentation (max-height:600px) {
   .scene-two-visual { min-height:280px; margin-top:8px; }
   .scenario-chart { padding-top:8px; }
   .scenario-chart .balance-plot { height:142px; }
@@ -1055,7 +1058,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 }
 .scene-two-presenter { width:74%; height:100%; right:-8%; bottom:0; object-fit:contain; object-position:bottom right; }
 .scenario-chart { width:66%; }
-@media(max-height:600px) { .scene-two-visual { min-height:260px; } }
+@container presentation (max-height:600px) { .scene-two-visual { min-height:260px; } }
 /* Let the presenter sit in front of the glass, while chart strokes stay legible. */
 .scenario-chart {
   width:62%;
@@ -1071,8 +1074,8 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 .scenario-chart > .scenario-legend,
 .scenario-chart > .chart-caption { position:relative; z-index:6; }
 .scenario-chart .balance-plot { height:218px; }
-@media(max-height:700px) { .scenario-chart .balance-plot { height:164px; } }
-@media(max-height:600px) { .scenario-chart { padding-top:8px; } .scenario-chart .balance-plot { height:138px; } }
+@container presentation (max-height:700px) { .scenario-chart .balance-plot { height:164px; } }
+@container presentation (max-height:600px) { .scenario-chart { padding-top:8px; } .scenario-chart .balance-plot { height:138px; } }
 .scenario-chart > svg { z-index:4; }
 
 /* Give the opening copy the full width; wrap only when the screen requires it. */
@@ -1106,7 +1109,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
   background:radial-gradient(ellipse at 45% 45%,#061226b3 0%,#06122655 58%,transparent 78%);
 }
 #storyChart .scenario-chart-heading { font-size:11px !important; padding:0 0 1px 23px !important; color:#e6c687; }
-#storyChart .balance-plot { height:clamp(145px,22vh,190px); width:100%; }
+#storyChart .balance-plot { height:clamp(145px,22cqh,190px); width:100%; }
 #storyChart .scenario-legend { padding:0 0 0 23px; gap:4px; }
 #storyChart .scenario-label strong { font-size:10px; font-weight:500; }
 #storyChart .scenario-label small { display:none; }
@@ -1167,7 +1170,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 #storyChart[data-step="2"] .scenario-chart-heading,
 #storyChart[data-step="3"] .scenario-chart-heading { visibility:hidden; }
 #storyChart[data-step="1"][data-focus="business"] .scenario-business { filter:drop-shadow(0 0 3px #55a9ef66); }
-@media(max-height:700px) {
+@container presentation (max-height:700px) {
   [data-story-step="2"] .scene-two-heading,
   [data-story-step="3"] .scene-two-heading { min-height:105px; }
   [data-story-step="2"] .scene-two-presenter,
@@ -1176,7 +1179,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
   #storyChart[data-step="2"] .balance-plot,
   #storyChart[data-step="3"] .balance-plot { height:160px; }
 }
-@media(max-height:520px) {
+@container presentation (max-height:520px) {
   [data-story-step="2"] .scene-two-heading,
   [data-story-step="3"] .scene-two-heading { min-height:83px; }
   [data-story-step="2"] .scene-two-heading h2,
@@ -1203,14 +1206,14 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 .scene-two-next[hidden] { display:none; }
 .scene-two-footer { gap:10px; }
 @media(max-width:480px) { .layer-headline { top:76px; } }
-@media(max-height:700px) {
+@container presentation (max-height:700px) {
   .scene-one-chart-host { bottom:135px; }
   #storyChart .balance-plot { height:145px; }
   .scene-two-visual { min-height:220px; margin-top:10px; }
   .presenter-chart-host { top:16px; }
   .scene-two-heading h2 { font-size:25px; }
 }
-@media(max-height:600px) {
+@container presentation (max-height:600px) {
   .layer-headline { top:69px; }
   .headline-main { font-size:22px; line-height:1.4; }
   .scene-one-chart-host { bottom:124px; width:64%; }
@@ -1259,14 +1262,14 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 @keyframes reveal-path { from { stroke:#8bd477; stroke-dasharray:1; stroke-dashoffset:1; opacity:.2; } to { stroke:#e6c687; stroke-dasharray:1; stroke-dashoffset:0; opacity:1; } }
 @keyframes reveal-copy { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
 @keyframes reveal-light { from { opacity:0; } to { opacity:1; } }
-@media(max-height:700px) {
+@container presentation (max-height:700px) {
   .reveal-product-copy { padding-top:10px; }
   #revealProductName { font-size:45px; }
   .reveal-support { font-size:12px; line-height:1.65; max-width:165px; margin-top:14px; }
   .reveal-credentials { bottom:14px; }
   [data-story-step="4"] .scene-two-visual { min-height:275px; }
 }
-@media(max-height:600px) {
+@container presentation (max-height:600px) {
   [data-story-step="4"] .scene-two-heading { padding-top:8px; }
   [data-story-step="4"] .scene-two-heading h2 { font-size:20px; }
   [data-story-step="4"] .scene-two-eyebrow { margin-bottom:4px; }
@@ -1333,13 +1336,13 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 }
 [data-story-step="4"] .scene-two-footer { z-index:8; background:linear-gradient(transparent,#020b1cef 80%); }
 [data-story-step="4"] .scene-two-next { background:linear-gradient(105deg,#f4df9f,#d0ac55); box-shadow:0 5px 22px #0005; border-color:#e6c687aa; }
-@media(max-height:700px) {
+@container presentation (max-height:700px) {
   .reveal-advisor { top:19%; width:105%; right:-23%; }
   .reveal-credentials { bottom:16px; }
   .reveal-product-copy { padding-top:3px; }
   .reveal-support { font-size:11.5px; max-width:165px; }
 }
-@media(max-height:600px) {
+@container presentation (max-height:600px) {
   [data-story-step="4"] .scene-two-heading::after { margin-top:5px; }
   .reveal-advisor { top:20%; width:103%; right:-24%; }
   .reveal-product-copy { padding-top:0; }
@@ -1392,7 +1395,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 [data-story-step="5"] .scene-two-footer { padding:12px 16px max(16px,env(safe-area-inset-bottom)); gap:9px; background:linear-gradient(transparent,#061226 35%); }
 [data-story-step="5"] .scene-two-dialogue-btn { min-height:40px; font:500 12px var(--font-sans); color:#efd393; padding:7px 17px; }
 [data-story-step="5"] .scene-two-next { min-height:51px; font:700 15px var(--font-sans); border-radius:15px; }
-@media(max-height:700px) {
+@container presentation (max-height:700px) {
   [data-story-step="5"] .scene-two-nav { padding-top:12px; }
   [data-story-step="5"] .scene-two-heading { padding-top:6px; }
   [data-story-step="5"] .scene-two-heading h2 { font-size:23px; }
@@ -1421,7 +1424,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 [data-story-step="5"] .scene-two-shop { opacity:.12; }
 [data-story-step="5"] .scene-two-wash { background:linear-gradient(180deg,#081c34,#061629e8 55%,#061226); }
 .income-nav-logo { width:43px; height:auto; object-fit:contain; }
-@media(max-height:600px) {
+@container presentation (max-height:600px) {
   [data-story-step="5"] .scene-two-nav { padding-top:8px; }
   [data-story-step="5"] .scene-two-heading { padding-top:4px; }
   [data-story-step="5"] .scene-two-heading h2 { max-width:100%; font-size:20px; line-height:1.25; }
@@ -1451,7 +1454,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 }
 .income-highlight > span { font-size:10px; }
 .income-highlight b { font-size:12px; }
-@media(max-height:600px) {
+@container presentation (max-height:600px) {
   .income-example-top { min-height:117px; }
   .income-highlight > span { font-size:8.5px; }
   .income-highlight b { font-size:10.5px; }
@@ -1463,12 +1466,12 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 [data-story-step="5"] .scene-two-footer { margin-top:5px; background:none; }
 [data-story-step="5"] .income-benefit { padding-block:18px; }
 [data-story-step="5"] .income-timeline { margin-top:20px; margin-bottom:6px; }
-@media(max-height:700px) {
+@container presentation (max-height:700px) {
   [data-story-step="5"] .income-benefit { padding-block:12px; }
   [data-story-step="5"] .income-timeline { margin-top:10px; }
   [data-story-step="5"] .scene-two-footer { margin-top:2px; }
 }
-@media(max-height:600px) {
+@container presentation (max-height:600px) {
   [data-story-step="5"] .income-benefit { padding-block:9px; }
   [data-story-step="5"] .income-timeline { margin-top:10px; }
 }
@@ -1530,7 +1533,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 [data-story-step="6"] .scene-two-next { min-height:43px; padding:7px 14px; font:700 12px var(--font-sans); border-radius:13px; }
 [data-story-step="6"] .scene-two-next span:last-child { font-size:20px; }
 [data-story-step="6"] .scene-three-status { font:400 10px/1.3 var(--font-sans); }
-@media(max-height:700px) {
+@container presentation (max-height:700px) {
   [data-story-step="6"] .scene-two-nav { padding-top:8px; }
   [data-story-step="6"] .scene-two-heading { padding-top:4px; }
   [data-story-step="6"] .scene-two-heading h2 { font-size:21px; }
@@ -1540,7 +1543,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
   .journey-icon { width:38px; height:38px; font-size:16px; }
   .journey-detail { min-height:91px; padding:9px 12px; }
 }
-@media(max-height:600px) {
+@container presentation (max-height:600px) {
   .journey-kicker { font-size:7px; }
   .journey-advisor { height:52%; top:0; }
   .journey-content { gap:5px; }
@@ -1600,11 +1603,14 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 #stageContainer .audio-status:empty { display:none; }
 #stageContainer .stage-footer { gap:0; }
 #stageContainer .journey-controls { min-height:34px; }
+@container presentation (min-height:701px) and (max-height:800px) {
+  [data-story-step="5"] .income-example-top { min-height:186px; }
+}
 [data-story-step="4"] .scene-two-visual { overflow:hidden; }
 [data-story-step="5"] .scene-two-footer { margin-top:auto; }
 [data-story-step="5"] .scene-two-visual { margin-bottom:48px; }
 [data-story-step="6"] .journey-content { bottom:48px; }
-@media(max-height:520px) {
+@container presentation (max-height:520px) {
   [data-story-step="4"] .scene-two-visual { min-height:220px; }
   [data-story-step="5"] .scene-two-visual { margin-top:5px; }
   [data-story-step="5"] .income-selectors { margin-top:4px; }
