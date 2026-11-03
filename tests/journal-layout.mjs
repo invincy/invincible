@@ -2,7 +2,22 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
-import {LAYOUT_ID,readLayout,starterLayout,vacantPosition,intersects,anchor,hitStroke,strokeBounds,writingPage,arrangeWritingPage} from '../journal/layout-model.mjs';
+import {LAYOUT_ID,readLayout,starterLayout,vacantPosition,intersects,anchor,hitStroke,strokeBounds,writingPage,arrangeWritingPage,resizeCard} from '../journal/layout-model.mjs';
+
+test('eight resize directions anchor the opposite edges at every supported zoom without changing content',()=>{
+ const card={id:'legacy',x:-300,y:120,width:500,height:400,text:'Keep text',items:[{text:'Keep task',done:true}],unknown:{retained:true}};
+ for(const zoom of [.15,.5,1,2,3])for(const edge of ['n','ne','e','se','s','sw','w','nw']){
+  const result=resizeCard(card,edge,60/zoom,-45/zoom);
+  if(edge.includes('w'))assert.equal(result.x+result.width,card.x+card.width);else assert.equal(result.x,card.x);
+  if(edge.includes('n'))assert.equal(result.y+result.height,card.y+card.height);else assert.equal(result.y,card.y);
+  if(!/[we]/.test(edge))assert.equal(result.width,card.width);
+  if(!/[ns]/.test(edge))assert.equal(result.height,card.height);
+  assert.deepEqual({...card,...result}.items,card.items);assert.equal(card.width,500);
+ }
+ assert.deepEqual(resizeCard(card,'nw',9999,9999),{x:-20,y:370,width:220,height:150});
+ assert.equal(resizeCard(card,'se',10000,10000).width,10500);
+ assert.equal(resizeCard(card,'se',10000,10000).height,10400);
+});
 
 test('layout reading preserves legacy writing, positions, extra fields and rows without migration',()=>{
  const legacy={id:LAYOUT_ID,schemaVersion:1,futureProperty:{retained:true},cards:Array.from({length:95},(_,i)=>({id:'old-'+i,x:i*20,y:17,width:310,height:240,colour:'rose',text:'Saved '+i,unknown:{preserve:i}}))};

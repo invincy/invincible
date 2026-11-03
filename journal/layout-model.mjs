@@ -1,4 +1,14 @@
 export const LAYOUT_ID='journal-canvas-layout-v1';
+// Deltas are world coordinates. Clamp the moving edge, preserving its opposite anchor.
+export function resizeCard(start,edge,dx,dy){
+ const minWidth=220,minHeight=start.kind==='mood'?120:150;
+ let {x,y,width,height}=start;
+ if(edge.includes('w')){x=Math.min(start.x+dx,start.x+start.width-minWidth);width=start.x+start.width-x;}
+ if(edge.includes('e'))width=Math.max(minWidth,start.width+dx);
+ if(edge.includes('n')){y=Math.min(start.y+dy,start.y+start.height-minHeight);height=start.y+start.height-y;}
+ if(edge.includes('s'))height=Math.max(minHeight,start.height+dy);
+ return {x,y,width,height};
+}
 export const palette={blue:'#c1d2ed',sage:'#c6dccd',sand:'#eadbbd',rose:'#e8ccda',lavender:'#d7cdeb'};
 export const colour=value=>/^#[0-9a-f]{6}$/i.test(value||'')?value:palette[value]||palette.blue;
 export const templates=[
