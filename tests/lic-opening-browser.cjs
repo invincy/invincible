@@ -140,11 +140,11 @@ fs.mkdirSync(out,{recursive:true});
   // Audio placement may change later-page layout; product sections stay identical.
   const before=execFileSync('git',['show',`${process.env.LIC_BASELINE_REF || 'origin/master'}:lic/bima-platinum/index.html`],{encoding:'utf8'});
   const after=fs.readFileSync('lic/bima-platinum/index.html','utf8');
-  for(const id of ['planDetailsPage','planJourneyPage']) {
+  for(const id of ['planDetailsPage']) {
    const re=new RegExp(`<section id="${id}"[\\s\\S]*?</section>`);
    assert.equal(after.match(re)?.[0].replace(/ id="incomeSelectorHome"/g,'').replace(/ id="incomeSelectors"/g,'').replace(/\r\n/g,'\n'),before.match(re)?.[0].replace(/ id="incomeSelectorHome"/g,'').replace(/ id="incomeSelectors"/g,'').replace(/\r\n/g,'\n'),id);
   }
-  console.log('Page 5–6 product sections retain existing values and controls.');
+  console.log('Page 5 retains its existing values and controls.');
   assert.match(after,/31 March 2027 तक/);
   // Deterministic media states exercise layout during loading and failures too.
   for(const [width,height] of [[320,480],[320,568],[360,640],[390,844],[1440,900]]) {
@@ -171,9 +171,9 @@ fs.mkdirSync(out,{recursive:true});
     const visible=r=>r.x>=0&&r.y>=0&&r.right<=innerWidth+.5&&r.bottom<=innerHeight+.5;
     const hit=e=>{const r=e.getBoundingClientRect(),h=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return e===h||e.contains(h);};
     const container=step===1?document.querySelector('#stageContainer'):document.querySelector('#stagePreviewModal');
-    const protectedSelectors=step===5?'.income-timeline':step===6?'.journey-track,.journey-detail':step<=3?'#storyChart .scenario-legend':'.reveal-product-copy,.reveal-credentials';
+    const protectedSelectors=step===5?'.income-timeline':step===6?'.journey-stages,.journey-benefit-panel,.journey-policy-timeline':step<=3?'#storyChart .scenario-legend':'.reveal-product-copy,.reveal-credentials';
     const clear=[...document.querySelectorAll(protectedSelectors)].every(e=>{const r=e.getBoundingClientRect();return a.right<=r.left||a.left>=r.right||a.bottom<=r.top||a.top>=r.bottom;});
-    return {audio:{x:a.x,y:a.y,width:a.width,height:a.height},next:{x:n.x,y:n.y,width:n.width,height:n.height},visible:visible(a)&&visible(n),hit:hit(audio)&&hit(next),clear,separate:a.bottom<=n.top,overflow:container.scrollHeight-container.clientHeight,pageOverflow:document.documentElement.scrollHeight-innerHeight,icon:audio.querySelector('.advisor-audio-icon')?.textContent};
+    return {audio:{x:a.x,y:a.y,width:a.width,height:a.height},next:{x:n.x,y:n.y,width:n.width,height:n.height},visible:visible(a)&&visible(n),hit:hit(audio)&&hit(next),clear,separate:a.bottom<=n.top||n.bottom<=a.top||a.right<=n.left||n.right<=a.left,overflow:container.scrollHeight-container.clientHeight,pageOverflow:document.documentElement.scrollHeight-innerHeight,icon:audio.querySelector('.advisor-audio-icon')?.textContent};
    },step);
    for(let step=1;step<=6;step++) {
     if(step>1) await page.click(step===2?'#ctaForwardBtn':'#sceneTwoNextBtn');
@@ -224,13 +224,15 @@ fs.mkdirSync(out,{recursive:true});
      for(let stage=0;stage<5;stage++) {
       await page.click(`[data-journey-step="${stage}"]`);
       const layout=await page.locator('#planJourneyPage').evaluate(el=>{
-       const v=el.querySelector('#journeyIllustration');
-       const visible=[...v.children].filter(x=>getComputedStyle(x).display!=='none');
-       const bottom=Math.max(...visible.map(x=>x.getBoundingClientRect().bottom));
-       return {bottom,trackTop:el.querySelector('.journey-track').getBoundingClientRect().top,detailBottom:el.querySelector('#journeyDetail').getBoundingClientRect().bottom,audioTop:document.querySelector('#journeyPlayPause').getBoundingClientRect().top};
+       const rect=selector=>el.querySelector(selector).getBoundingClientRect();
+       const stages=rect('.journey-stages'), panel=rect('.journey-benefit-panel'), timeline=rect('.journey-policy-timeline');
+       return {expanded:el.querySelectorAll('.journey-stage[aria-expanded="true"]').length,kickerBottom:rect('.journey-kicker').bottom,stagesTop:stages.top,stagesBottom:stages.bottom,panelTop:panel.top,panelBottom:panel.bottom,timelineTop:timeline.top,timelineBottom:timeline.bottom,audioTop:document.querySelector('#journeyPlayPause').getBoundingClientRect().top};
       });
-      assert.ok(layout.bottom<=layout.trackTop,JSON.stringify({width,height,stage,layout}));
-      assert.ok(layout.detailBottom<=layout.audioTop+.5,JSON.stringify({width,height,stage,layout}));
+      assert.equal(layout.expanded,1);
+      assert.ok(layout.kickerBottom<=layout.stagesTop+.5,JSON.stringify({width,height,stage,layout}));
+      assert.ok(layout.stagesBottom<=layout.panelTop+.5,JSON.stringify({width,height,stage,layout}));
+      assert.ok(layout.panelBottom<=layout.timelineTop,JSON.stringify({width,height,stage,layout}));
+      assert.ok(layout.timelineBottom<=layout.audioTop,JSON.stringify({width,height,stage,layout}));
       await page.screenshot({path:`${out}/${width}x${height}-stage${stage+1}.png`});
      }
     }

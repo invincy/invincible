@@ -1777,3 +1777,143 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 }
 
 @container presentation (max-height:600px) { .reveal-support { max-width:125px; } }
+
+/* Page 6: expanding stages beside the advisor, visual below, policy line last. */
+#planJourneyPage:not([hidden]) { display:grid; grid-template-rows:minmax(0,1fr) auto; gap:10px; padding:25px 12px 0; }
+#planJourneyPage .journey-kicker { top:4px; left:16px; }
+#planJourneyPage .journey-advisor { width:74%; right:-12%; height:63%; top:0; object-position:top right; }
+#planJourneyPage .journey-stages { position:relative; z-index:3; align-self:center; width:52%; display:flex; flex-direction:column; gap:7px; padding-left:15px; }
+.journey-stages::before { content:''; position:absolute; top:18px; bottom:18px; left:6px; width:2px; background:linear-gradient(#e4c477 var(--journey-progress),#315e85 var(--journey-progress)); box-shadow:0 0 7px #6ca0ce33; }
+.journey-stage { position:relative; display:flex; align-items:flex-start; gap:7px; width:100%; min-height:38px; padding:10px 7px; border:1px solid transparent; border-radius:10px; background:#06172ac9; color:#bacde0; text-align:left; cursor:pointer; transition:border-color .25s,background .25s; }
+.journey-stage-number { position:absolute; left:-20px; top:11px; display:grid; place-items:center; width:21px; height:21px; border:1px solid #5e91ba; border-radius:50%; background:#09233b; color:#b8cfe3; font:600 10px var(--font-sans); }
+.journey-stage-text { display:block; min-width:0; padding-left:3px; }
+.journey-stage-text > b { display:block; color:inherit; font:600 11px/1.3 var(--font-sans); }
+.journey-stage-body { display:block; margin-top:6px; color:#dce4ec; font:400 10px/1.45 var(--font-sans); }
+.journey-stage-body[hidden] { display:none; }
+.journey-stage.is-complete .journey-stage-number { color:#06243b; border-color:#97d9b2; background:#8ccca3; }
+.journey-stage.is-active { border-color:#e9c979; background:linear-gradient(120deg,#163958ed,#09203be8); color:#ffe4a0; box-shadow:0 0 0 2px #dbad4922,0 0 16px #e5b95433; }
+.journey-stage.is-active .journey-stage-number { color:#06243b; background:#f5d17e; border-color:#ffe4a0; box-shadow:0 0 12px #e6ba6080; }
+.journey-stage:focus-visible { outline:2px solid #fff1bf; outline-offset:2px; }
+#planJourneyPage .journey-content { position:relative; inset:auto; z-index:4; gap:10px; }
+.journey-benefit-panel { display:grid; grid-template-columns:46% 54%; align-items:center; min-height:156px; padding:12px 10px; border:1px solid #dbba70aa; border-radius:17px; background:linear-gradient(130deg,#102e4a,#06182d); box-shadow:0 0 0 2px #d8b55518,0 7px 25px #0004; }
+#planJourneyPage .journey-detail { min-height:0; padding:0 9px 0 0; gap:5px; border:0; border-radius:0; background:none; box-shadow:none; text-align:left; align-items:flex-start; }
+#planJourneyPage .journey-detail-title { font-size:10px; line-height:1.35; }
+#planJourneyPage .journey-detail strong { font-size:18px; }
+#planJourneyPage .journey-detail b { font-size:13px; }
+#planJourneyPage .journey-detail small { font-size:8px; }
+#planJourneyPage .journey-detail .journey-big-number { font-size:28px; }
+#planJourneyPage .journey-big-number em { display:block; font-size:9px; }
+#planJourneyPage .journey-illustration { position:static; width:auto; max-height:none; padding-left:10px; border-left:1px solid #7194b633; gap:5px; }
+#planJourneyPage .journey-illustration[hidden] { display:none; }
+#planJourneyPage .journey-visual-label { display:none; }
+#planJourneyPage .journey-illustration strong { font-size:20px; }
+#planJourneyPage .journey-visual-note { display:block; font-size:8px; line-height:1.35; }
+#planJourneyPage .journey-ppt-comparison { gap:4px; }
+#planJourneyPage .journey-ppt-row { height:13px; font-size:9px; }
+#planJourneyPage .journey-ppt-row small { font-size:8px; }
+#planJourneyPage .journey-ga-chart { height:45px; }
+#planJourneyPage .journey-income-payments { gap:5px; }
+#planJourneyPage .journey-income-payments .journey-visual-part { flex-direction:row; align-items:center; justify-content:space-between; padding-left:5px; font-size:8px; }
+#planJourneyPage .journey-income-payments b { font-size:11px; white-space:nowrap; }
+#planJourneyPage[data-visual="income"] .journey-illustration > strong,
+#planJourneyPage[data-visual="income"] .journey-illustration > .journey-visual-note,
+#planJourneyPage[data-visual="pay"] .journey-illustration > .journey-visual-note { display:none; }
+#planJourneyPage .journey-illustration .journey-booster-number { font-size:34px; }
+#planJourneyPage .journey-maturity-part { flex-direction:column; align-items:flex-start; font-size:8px; gap:1px; }
+#planJourneyPage .journey-maturity-part b { font-size:13px; }
+#planJourneyPage .journey-maturity-total { font-size:20px; padding-top:5px; }
+.journey-policy-timeline { padding:5px 0 0; }
+.journey-policy-periods { display:grid; grid-template-columns:1fr 2fr; margin:0 8px 6px; font:500 8px/1.3 var(--font-sans); color:#a5c5df; }
+.journey-policy-periods span { padding:4px 3px; border-bottom:2px solid #477ba5; text-align:center; }
+.journey-policy-periods span + span { border-color:#ccae63; color:#e7cb85; }
+.journey-policy-milestones { position:relative; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); list-style:none; padding:0; margin:0; }
+.journey-policy-milestones::before { content:''; position:absolute; left:12.5%; right:12.5%; top:5px; height:2px; background:linear-gradient(90deg,#f1d181 var(--policy-progress,0%),#315b7c var(--policy-progress,0%)); transition:background .4s; }
+.journey-policy-milestones li { position:relative; display:flex; flex-direction:column; align-items:center; gap:3px; text-align:center; color:#9db9d0; }
+.journey-policy-milestones i { width:11px; height:11px; margin-bottom:2px; border:1px solid #679bc1; border-radius:50%; background:#09253e; transition:background .35s,box-shadow .35s; }
+.journey-policy-milestones b { font:600 8px/1.3 var(--font-sans); }
+.journey-policy-milestones span { font:400 7px/1.3 var(--font-sans); white-space:nowrap; }
+.journey-policy-milestones .is-reached i { background:#e3c272; border-color:#f1d48a; }
+.journey-policy-milestones .is-current i { box-shadow:0 0 0 3px #edc87422,0 0 9px #edc87499; }
+#stageContainer[data-story-step="6"] .scene-two-footer { display:flex; flex-direction:row; align-items:center; gap:8px; padding:10px 12px; }
+#stageContainer[data-story-step="6"] .journey-controls { order:2; min-height:44px; gap:5px; }
+#stageContainer[data-story-step="6"] .journey-play-pause { position:static; inset:auto; }
+#stageContainer[data-story-step="6"] .journey-progress { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+#stageContainer[data-story-step="6"] .scene-two-next { order:1; flex:1; min-width:0; height:44px; min-height:44px; padding:7px 12px; font-size:11px; }
+#stageContainer[data-story-step="6"] .journey-replay { min-height:44px; font-size:9px; padding-inline:8px; }
+#stageContainer[data-story-step="6"] .scene-three-status:not([hidden]) { position:absolute; bottom:100%; left:12px; right:12px; padding:7px; background:#06182d; border-radius:8px; }
+@container presentation (max-height:700px) {
+  #planJourneyPage:not([hidden]) { padding-top:20px; gap:6px; }
+  #planJourneyPage .journey-stages { gap:4px; }
+  .journey-stage { min-height:32px; padding:7px 5px; }
+  .journey-stage-text > b { font-size:10px; }
+  .journey-stage-body { font-size:9px; margin-top:4px; }
+  .journey-stage-number { top:7px; width:19px; height:19px; left:-19px; font-size:9px; }
+  .journey-benefit-panel { min-height:120px; padding:8px; }
+  #planJourneyPage .journey-content { gap:6px; }
+  #planJourneyPage .journey-detail strong { font-size:15px; }
+  #planJourneyPage .journey-illustration strong { font-size:17px; }
+  #planJourneyPage .journey-ppt-row { height:10px; }
+  #planJourneyPage .journey-ga-chart { height:27px; }
+  #planJourneyPage .journey-visual-note { font-size:7px; }
+  .journey-policy-periods { margin-bottom:4px; font-size:7px; }
+}
+@container presentation (max-height:560px) {
+  #planJourneyPage:not([hidden]) { padding-top:17px; gap:4px; }
+  #planJourneyPage .journey-stages { gap:3px; width:53%; padding-left:12px; }
+  #planJourneyPage .journey-kicker { font-size:7px; }
+  .journey-stage { min-height:25px; padding:5px 4px; border-radius:7px; }
+  .journey-stage-text > b { font-size:8.5px; }
+  .journey-stage-body { font-size:8px; line-height:1.3; margin-top:3px; }
+  .journey-stage-number { width:16px; height:16px; top:4px; left:-16px; font-size:8px; }
+  .journey-stages::before { left:3px; top:12px; bottom:12px; }
+  .journey-benefit-panel { min-height:88px; padding:7px; border-radius:12px; }
+  #planJourneyPage .journey-detail { gap:2px; padding-right:5px; }
+  #planJourneyPage .journey-detail-title { font-size:8px; }
+  #planJourneyPage .journey-detail strong { font-size:12px; }
+  #planJourneyPage .journey-detail b { font-size:10px; }
+  #planJourneyPage .journey-detail small { font-size:6.5px; }
+  #planJourneyPage .journey-detail .journey-big-number { font-size:22px; }
+  #planJourneyPage .journey-big-number em { font-size:7px; }
+  #planJourneyPage .journey-illustration { gap:3px; padding-left:6px; }
+  #planJourneyPage .journey-illustration strong { font-size:14px; }
+  #planJourneyPage .journey-illustration strong small { font-size:7px; }
+  #planJourneyPage .journey-ppt-row { height:9px; font-size:7px; }
+  #planJourneyPage .journey-ppt-row i { width:calc(var(--term) * 45px); }
+  #planJourneyPage .journey-ppt-row small { font-size:6px; }
+  #planJourneyPage .journey-ppt-comparison { gap:2px; }
+  #planJourneyPage .journey-ga-chart { height:20px; }
+  #planJourneyPage .journey-visual-note { font-size:6.5px; }
+  #planJourneyPage .journey-illustration .journey-booster-number { font-size:22px; }
+  #planJourneyPage .journey-income-payments b { font-size:9px; }
+  #planJourneyPage .journey-maturity-part { flex-direction:row; align-items:baseline; justify-content:space-between; font-size:7px; }
+  #planJourneyPage .journey-maturity-part b { font-size:9px; }
+  #planJourneyPage .journey-maturity-total { padding-top:3px; }
+  #planJourneyPage[data-visual="maturity"] .journey-visual-note { display:none; }
+  .journey-policy-periods { font-size:6.5px; margin:0 4px 4px; }
+  .journey-policy-periods span { padding:2px; }
+  .journey-policy-milestones b { font-size:7px; }
+  .journey-policy-milestones span { font-size:6px; }
+  #stageContainer[data-story-step="6"] .scene-two-footer { padding-block:7px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .journey-stage,.journey-policy-milestones::before,.journey-policy-milestones i { transition:none; }
+}
+
+@container presentation (max-height:560px) {
+  #planJourneyPage .journey-stages { gap:2px; }
+  .journey-stage { min-height:24px; padding-block:4px; }
+  .journey-stage-body { font-size:7.5px; }
+  .journey-policy-periods { font-size:7px; }
+  .journey-policy-milestones b { font-size:7.5px; }
+  .journey-policy-milestones span { font-size:7px; }
+}
+#planJourneyPage[data-visual="booster"] .journey-illustration > .journey-visual-part:nth-of-type(2) { display:none; }
+.journey-stage-body:not([hidden]) { animation:journey-stage-open .3s ease-out; }
+@keyframes journey-stage-open { from { opacity:0; } to { opacity:1; } }
+.journey-policy-milestones::before { background:#315b7c; }
+.journey-policy-milestones::after { content:''; position:absolute; top:5px; left:12.5%; width:calc(var(--policy-progress,0%) * .75); height:2px; background:#f1d181; box-shadow:0 0 7px #edc87455; transition:width .6s ease; }
+.journey-policy-milestones li { z-index:1; }
+@media (prefers-reduced-motion:reduce) {
+  .journey-stage-body:not([hidden]) { animation:none; }
+  .journey-policy-milestones::after { transition:none; }
+}

@@ -208,13 +208,24 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderJourneyStep() {
     const step = JOURNEY_STEPS[journeyStep];
     const detail = document.getElementById('journeyDetail');
-    document.getElementById('journeyPptLabel').textContent = `${selectedSamplePpt} years`;
+    const stageDescriptions = [
+      `Policy starts · Pay for ${selectedSamplePpt} years`,
+      `Build during ${selectedSamplePpt}-year PPT`,
+      `₹30,000/year · Year ${selectedSamplePpt}+`,
+      `₹2,10,000 · Year ${BOOSTER_YEAR_BY_PPT[selectedSamplePpt]}`,
+      'Full Basic SA + accrued GA'
+    ];
     journeyNodes.forEach((node, index) => {
-      node.classList.toggle('is-active', index === journeyStep && !journeyComplete);
+      node.classList.toggle('is-active', index === journeyStep);
       node.classList.toggle('is-complete', journeyComplete || index < journeyStep);
       node.setAttribute('aria-current', index === journeyStep ? 'step' : 'false');
+      node.setAttribute('aria-expanded', String(index === journeyStep));
+      const body = document.getElementById(`journeyStageBody${index}`);
+      body.textContent = stageDescriptions[index];
+      body.hidden = index !== journeyStep;
     });
     journeyPage.style.setProperty('--journey-progress', `${Math.max(0, journeyStep) * 25}%`);
+    updateJourneyPolicyTimeline();
     journeyPage.dataset.visual = step?.visual || 'intro';
     journeyPage.dataset.advisor = journeyStep >= 3 ? 'celebrate' : 'explain';
     renderJourneyIllustration();
@@ -229,6 +240,24 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     detail.innerHTML = detailHtml[journeyStep];
     updateJourneyControls();
+  }
+  function updateJourneyPolicyTimeline() {
+    const ppt = selectedSamplePpt, age = selectedSampleAge;
+    const booster = BOOSTER_YEAR_BY_PPT[ppt];
+    document.getElementById('journeyPolicyStart').textContent = `Age ${age} · Year 0`;
+    document.getElementById('journeyPolicyIncome').textContent = `Age ${age + ppt} · Year ${ppt}`;
+    document.getElementById('journeyPolicyBooster').textContent = `Age ${age + booster} · Year ${booster}`;
+    document.getElementById('journeyPolicyMaturity').textContent = `Age ${age + 30} · Year 30`;
+    document.getElementById('journeyPolicyPay').textContent = `Pay for ${ppt} years`;
+    const milestone = journeyComplete ? 3 : [0, 1, 1, 2, 3][Math.max(0, journeyStep)];
+    const timeline = document.getElementById('journeyPolicyTimeline');
+    timeline.style.setProperty('--policy-progress', `${milestone / 3 * 100}%`);
+    timeline.dataset.stage = journeyStep < 0 ? 'intro' : JOURNEY_STEPS[journeyStep].id;
+    for (let index = 0; index < 4; index++) {
+      const point = document.getElementById(`journeyPolicyMilestone${index}`);
+      point.classList.toggle('is-reached', journeyStep >= 0 && index <= milestone);
+      point.classList.toggle('is-current', journeyStep >= 0 && index === milestone);
+    }
   }
   // Brochure pp.6–7: base GA rate is ₹70 per ₹1,000 of cumulative
   // annualized premiums paid. ₹3 lakh BSA has no high-SA incentive (p.17).

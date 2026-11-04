@@ -443,3 +443,33 @@ test('Back and tab hiding cancel stale selection timers and restore visible cont
   assert.equal(s.el('planDetailsPage').inert,false);
   s.windowEvents.pagehide();
 });
+
+test('only the current side stage expands and the policy timeline follows the same stage',()=>{
+  const s=setup();enterSelection(s);s.click('sceneTwoNextBtn');
+  for(let stage=0;stage<5;stage++) {
+    s.click('journey'+stage);
+    for(let index=0;index<5;index++) {
+      assert.equal(s.el('journey'+index).attrs['aria-expanded'],String(index===stage));
+      assert.equal(s.el('journeyStageBody'+index).hidden,index!==stage);
+    }
+    assert.equal(s.el('journeyPolicyTimeline').dataset.stage,['ppt','additions','income','booster','maturity'][stage]);
+    const milestone=[0,1,1,2,3][stage];
+    assert.equal(s.el('journeyPolicyMilestone'+milestone).classList.contains('is-current'),true);
+  }
+  s.click('sceneTwoNextBtn');
+  assert.equal(s.el('journey4').attrs['aria-expanded'],'true','Keep the final stage readable at completion');
+  s.click('journeyReplay');
+  assert.equal(s.el('journey0').attrs['aria-expanded'],'true');
+  assert.equal(s.el('journey4').attrs['aria-expanded'],'false');
+  s.windowEvents.pagehide();
+});
+
+test('policy milestone ages and years use the selected age and PPT, not reference-image amounts',()=>{
+  const s=setup();enterSelection(s);s.click('sampleAge35');s.click('samplePpt7');s.click('sceneTwoNextBtn');s.click('journey3');
+  assert.equal(s.el('journeyPolicyStart').textContent,'Age 35 · Year 0');
+  assert.equal(s.el('journeyPolicyIncome').textContent,'Age 42 · Year 7');
+  assert.equal(s.el('journeyPolicyBooster').textContent,'Age 47 · Year 12');
+  assert.equal(s.el('journeyPolicyMaturity').textContent,'Age 65 · Year 30');
+  assert.match(s.el('journeyStageBody3').textContent,/₹2,10,000.*12/);
+  s.windowEvents.pagehide();
+});
