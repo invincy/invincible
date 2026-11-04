@@ -1,6 +1,6 @@
 /** LIC Bima Platinum: existing chart story and a focused product reveal. */
 // Pages 1–3 use the supplied filenames and media-duration progress in syncChart.
-// Page 4 continues to the example after narration; Page 5 waits for selection.
+// Page 5 prompts for sample selections, then resumes narration and the story.
 const STORY_SCENES = {
   1: {
     src: 'assets/audio/newpage1.mp3',
@@ -142,12 +142,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (getLicSamplePremium(age, selectedSamplePpt) === null) return;
     selectedSampleAge = age;
     updateIncomeExample();
+    resetSelectionCountdown(true);
   }));
   pptOptions.forEach(button => button.addEventListener('click', () => {
     const ppt = Number(button.dataset.ppt);
     if (getLicSamplePremium(selectedSampleAge, ppt) === null) return;
     selectedSamplePpt = ppt;
     updateIncomeExample();
+    resetSelectionCountdown(true);
   }));
   updateIncomeExample();
   let currentPage = 1;
@@ -418,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (page <= 3) chartComplete = true;
         audio.currentTime = 0;
         updateAudioUI('idle');
-        if (automaticStory && page <= 4) showPage(page + 1, false, audio);
+        if (automaticStory && page <= 5) showPage(page + 1, false, audio);
       });
       for (const event of ['timeupdate', 'seeked', 'loadedmetadata', 'durationchange']) listen(event, () => { if (isCurrent()) syncChart(); });
       listen('error', () => {
@@ -443,8 +445,85 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  const incomePrompt = document.getElementById('incomeSelectionPrompt');
+  const incomeContinue = document.getElementById('incomeSelectionContinue');
+  const incomePause = document.getElementById('incomeSelectionPause');
+  let selectionTimer = null;
+  let selectionGeneration = 0;
+  let selectionSeconds = 10;
+  let selectionPaused = false;
+  let selectionChanged = false;
+  let selectionContinuation = null;
+
+  function clearSelectionTimer() {
+    selectionGeneration++;
+    clearTimeout(selectionTimer);
+    selectionTimer = null;
+  }
+  function updateSelectionPrompt() {
+    document.getElementById('incomeSelectionSummary').textContent = `Age ${selectedSampleAge} · PPT ${selectedSamplePpt} years`;
+    document.getElementById('incomeSelectionCountdown').textContent = selectionPaused
+      ? 'Timer paused · अपनी values चुनें और Continue दबाएँ।'
+      : `${selectionSeconds} second${selectionSeconds === 1 ? '' : 's'} में ${selectionChanged ? 'चुनी हुई' : 'default'} values के साथ auto-resume होगा।`;
+    incomePause.textContent = selectionPaused ? 'Resume timer' : 'मुझे थोड़ा समय दें · Pause timer';
+    incomePause.setAttribute('aria-pressed', String(selectionPaused));
+  }
+  function scheduleSelectionTick() {
+    if (incomePrompt.hidden || selectionPaused || document.hidden || currentPage !== 5) return;
+    const generation = selectionGeneration;
+    selectionTimer = setTimeout(() => {
+      if (generation !== selectionGeneration || incomePrompt.hidden || currentPage !== 5) return;
+      selectionSeconds--;
+      updateSelectionPrompt();
+      if (selectionSeconds <= 0) confirmIncomeSelection(false);
+      else scheduleSelectionTick();
+    }, 1000);
+  }
+  function resetSelectionCountdown(changed = false) {
+    if (incomePrompt.hidden || currentPage !== 5) return;
+    clearSelectionTimer();
+    selectionSeconds = 10;
+    selectionChanged ||= changed;
+    updateSelectionPrompt();
+    scheduleSelectionTick();
+  }
+  function closeSelectionPrompt() {
+    clearSelectionTimer();
+    incomePrompt.hidden = true;
+    document.getElementById('incomeSelectorHome').appendChild(document.getElementById('incomeSelectors'));
+    document.getElementById('planDetailsPage').inert = false;
+    document.querySelector('.scene-two-footer').inert = false;
+    selectionContinuation = null;
+  }
+  function openSelectionPrompt(continuation) {
+    selectionContinuation = continuation;
+    selectionPaused = false;
+    selectionChanged = false;
+    incomePrompt.hidden = false;
+    document.getElementById('incomeSelectionOptions').appendChild(document.getElementById('incomeSelectors'));
+    document.getElementById('planDetailsPage').inert = true;
+    document.querySelector('.scene-two-footer').inert = true;
+    resetSelectionCountdown();
+    incomeContinue.focus();
+  }
+  function confirmIncomeSelection(focus = true) {
+    if (incomePrompt.hidden || currentPage !== 5) return;
+    const continuation = selectionContinuation;
+    closeSelectionPrompt();
+    if (focus) journeyNext.focus();
+    toggleAudioPlayback(continuation);
+  }
+  incomeContinue.addEventListener('click', () => confirmIncomeSelection());
+  incomePause.addEventListener('click', () => {
+    clearSelectionTimer();
+    selectionPaused = !selectionPaused;
+    updateSelectionPrompt();
+    scheduleSelectionTick();
+  });
+
   function showPage(page, focus = true, continuation = null) {
     if (!STORY_SCENES[page]) return;
+    closeSelectionPrompt();
     stopJourney();
     stopAllAudio();
     currentPage = page;
@@ -512,7 +591,8 @@ document.addEventListener('DOMContentLoaded', () => {
     advisorAudioBtn.title = STORY_SCENES[1].script;
     sceneTwoDialogueBtn.title = STORY_SCENES[page].script;
     updateAudioUI('idle');
-    if (!isJourney) toggleAudioPlayback(continuation);
+    if (isDetails) openSelectionPrompt(continuation);
+    else if (!isJourney) toggleAudioPlayback(continuation);
   }
 
   function updateStoryMode() {
@@ -540,8 +620,11 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (currentPage === 6 && !journeyComplete) advanceJourney();
     else if (currentPage === 6) { sceneThreeStatus.textContent = 'Protection page is coming next.'; sceneThreeStatus.hidden = false; }
   });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) { stopAllAudio(); if (currentPage === 6) pauseJourney(); } });
-  window.addEventListener('pagehide', () => { stopAllAudio(); stopJourney(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { clearSelectionTimer(); stopAllAudio(); if (currentPage === 6) pauseJourney(); }
+    else if (currentPage === 5 && !incomePrompt.hidden) scheduleSelectionTick();
+  });
+  window.addEventListener('pagehide', () => { closeSelectionPrompt(); stopAllAudio(); stopJourney(); });
   showPage(1, false);
 
   // Developer Tooling: Layer Inspector
@@ -609,6 +692,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Keyboard navigation & accessibility
   document.addEventListener('keydown', (e) => {
+    if (currentPage === 5 && !incomePrompt.hidden) {
+      if (e.key === 'Escape') { e.preventDefault(); confirmIncomeSelection(); return; }
+      if (e.key === 'Tab') {
+        const buttons = [...incomePrompt.querySelectorAll('button')];
+        const first = buttons[0], last = buttons[buttons.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        return;
+      }
+    }
     if (e.key === 'Tab' && stagePreviewModal.classList.contains('active')) {
       const focusable = Array.from(stagePreviewModal.querySelectorAll('button, a[href], iframe')).filter(el => !el.hidden && !el.closest('[hidden]'));
       const first = focusable[0];
