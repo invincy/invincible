@@ -1,3 +1,4 @@
+import {resolveMapAsset} from './map-assets-client.js';
 import {icons,layerActive,layerStart,transformedCorners} from './map-editor-model.js';
 import {routeAt,timeOf} from './history-model.js';
 // Each geographic object gets its own style layer, in the saved bottom-to-top order.
@@ -15,9 +16,9 @@ export function createVisualRenderer(map,project,onError){
    try{
     if(l.kind==='glb'){
      const {createModelLayer}=await import('./vendor/map-model.mjs');if(disposed||rev!==revision)return;
-     const asset=spec.visual.assets.find(a=>a.id===l.assetId),model=createModelLayer(key,l,asset.url,onError);models.set(key,model);map.addLayer(model);continue;
+     const asset=spec.visual.assets.find(a=>a.id===l.assetId),model=createModelLayer(key,l,await resolveMapAsset(asset),onError);if(disposed||rev!==revision)return;models.set(key,model);map.addLayer(model);continue;
     }
-    if(l.kind==='image'){const a=spec.visual.assets.find(a=>a.id===l.assetId);map.addSource(key,{type:'image',url:a.url,coordinates:transformedCorners(l)});map.addLayer({id:key,type:'raster',source:key,paint:{'raster-opacity':l.opacity,'raster-fade-duration':0}});continue;}
+    if(l.kind==='image'){const a=spec.visual.assets.find(a=>a.id===l.assetId),url=await resolveMapAsset(a);if(disposed||rev!==revision)return;map.addSource(key,{type:'image',url,coordinates:transformedCorners(l)});map.addLayer({id:key,type:'raster',source:key,paint:{'raster-opacity':l.opacity,'raster-fade-duration':0}});continue;}
     map.addSource(key,{type:'geojson',data:{type:'FeatureCollection',features:[]}});
     if(l.kind==='feature'||l.kind==='route'){
      const f=spec.features.features.find(f=>f.properties.id===l.ref),line=l.kind==='route'||f?.geometry.type==='LineString';

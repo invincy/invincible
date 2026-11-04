@@ -145,3 +145,42 @@ Export/import `invincible-map-assets` version-1 JSON to reuse the library across
 projects. Import allocates fresh IDs, skips existing type/URL pairs and validates
 all resulting references before saving. It does not add scenes or artwork placements.
 The durable HTTPS URL requirement and absence of automatic uploads remain unchanged.
+
+
+### Direct custom-asset uploads (not deployed)
+
+**Upload and place file** now accepts PNG, JPEG, WebP and self-contained GLB up to
+5 MB in a saved Creator project. A dropped file can use this action or the hosted
+URL alternative. Failed requests retain their upload ID for retry. The endpoint
+checks owner/verified-editor access before writing an immutable object and again
+before issuing its upload receipt. Existing objects are reused only when their
+SHA-256 hash matches. File type/header/size checks reject mismatched formats; GLB
+version, length and JSON are checked and external resource URIs are rejected.
+Image signature checks are not a complete image decoder or malware scan.
+
+Objects use `creatorProjects/{projectId}/mapAssets/{uploadId}` in the existing
+configured `CREATOR_STORAGE_BUCKET`. Backend-only Firestore receipts use
+`creatorProjects/{projectId}/mapAssets/{uploadId}`. Current rules do not grant
+client access to these receipts; Admin callables authorize against the project.
+The frontend attaches the returned descriptor to its normal project save/draft
+queue; no whole-project backend overwrite is introduced. An abandoned project
+save can leave an uploaded object/receipt retained for later recovery, with no
+automatic deletion. The same storage bucket/IAM and CORS configuration needed for
+private clip playback is required. No Firebase rule is broadened.
+
+Private descriptors contain `storageProjectId` and `storagePath`, not expiring
+URLs. Preview resolves authorized 15-minute read links on demand. JSON and scene/
+library exports preserve durable storage references. Cross-project reuse requires
+continued access to the original source project; importing a library grants no
+new access. Link revocation follows signed-link expiry (up to 15 minutes).
+
+Enablement requires approval to deploy only `creatorMapAssetUpload` and
+`creatorMapAssetUrl`, configure the existing bucket parameter and verify its
+signing permissions/CORS, then test signed-in owner, verified editor and denied
+accounts. Nothing has been deployed or configured in production. Unsaved projects
+and environments without these endpoints retain hosted-URL placement.
+
+Tests cover denied/owner/editor access, idempotent retry and hash conflicts,
+rejected file formats/GLB resources, private-reference validation and browser
+upload failure/retry/placement using controlled backend fixtures. Live Storage,
+IAM and signed-in production behavior remain unverified.

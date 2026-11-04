@@ -621,3 +621,18 @@ Nine focused model tests and the expanded native MapLibre browser regression pas
 including library search, shared reference editing, in-use removal rejection and
 idempotent library import. Existing map/history browser checks, site references and
 whitespace checks pass. No upload backend, auth, Firebase or deployment changes.
+
+
+### Private map asset uploads — November 5, 2026 (not deployed)
+
+Adds dedicated map upload/read callables, immutable hashed objects, backend-only
+receipts and stable private asset references. Saved-project upload UI retains IDs
+on failed retries. Existing URL references, library/scene exports and normal
+project save callbacks remain available. Backend access checks and fixture tests
+cover owner, verified editor, denied accounts, missing receipts, changed-file ID
+conflicts and invalid files. Browser fixtures cover failure/retry and placement
+without saving signed links. All 159 repository unit tests pass (two existing
+skips), all 15 Functions tests pass, ten map model tests and the expanded native
+map browser suite pass. Site references and whitespace checks pass. Production
+bucket/IAM/CORS, callable deployment and live signed-in behavior remain unverified;
+no live changes or permission/rule changes were made.

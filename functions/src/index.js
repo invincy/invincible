@@ -42,3 +42,4 @@ exports.invincibleAiChat=onCall({region:'asia-south1',secrets:[openAiApiKey],tim
 });
 
 Object.assign(exports,require('./creator/callables'));
+Object.assign(exports,require('./creator/map-asset-callables'));

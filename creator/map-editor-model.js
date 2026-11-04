@@ -5,7 +5,7 @@ export function assetLibrary(map){return {format:'invincible-map-assets',version
 export function importAssetLibrary(map,pkg){
  if(pkg?.format!=='invincible-map-assets'||pkg.version!==1||!Array.isArray(pkg.assets))throw Error('Use an Invincible asset library JSON file.');
  const out=structuredClone(map);
- for(const asset of pkg.assets){if(!out.visual.assets.some(a=>a.type===asset.type&&a.url===asset.url))out.visual.assets.push({...structuredClone(asset),id:uid()});}
+ for(const asset of pkg.assets){if(!out.visual.assets.some(a=>a.type===asset.type&&(asset.url?a.url===asset.url:a.storagePath===asset.storagePath)))out.visual.assets.push({...structuredClone(asset),id:uid()});}
  return out;
 }
 const finite=(v,a,b)=>typeof v==='number'&&Number.isFinite(v)&&v>=a&&v<=b;
@@ -15,7 +15,7 @@ export function validateVisual(map,project){
  const v=map.visual;if(v===undefined)return;
  if(v.version!==1||!Array.isArray(v.layers)||v.layers.length>100||!Array.isArray(v.assets)||v.assets.length>50)throw Error('Visual map requires version 1, up to 100 layers and 50 assets.');
  const ids=new Set(),assets=new Map();
- for(const a of v.assets){if(!a.id||assets.has(a.id)||!['image','glb'].includes(a.type)||!https(a.url)||!String(a.name||'').trim())throw Error('Assets need unique IDs, a name, image/GLB type and a durable HTTPS URL.');assets.set(a.id,a);}
+ for(const a of v.assets){if(!a.id||assets.has(a.id)||!['image','glb'].includes(a.type)||!((https(a.url)&&!a.storagePath&&!a.storageProjectId)||(!a.url&&typeof a.storageProjectId==='string'&&/^[a-zA-Z0-9_-]{1,100}$/.test(a.storageProjectId)&&typeof a.storagePath==='string'&&new RegExp('^creatorProjects/'+a.storageProjectId+'/mapAssets/[a-zA-Z0-9_-]{1,100}$').test(a.storagePath)))||!String(a.name||'').trim())throw Error('Assets need unique IDs, a name, image/GLB type and a durable HTTPS URL or a valid private storage reference.');assets.set(a.id,a);}
  for(const l of v.layers){
   if(!l.id||ids.has(l.id)||!String(l.name||'').trim()||!['feature','event','icon','image','glb','label','route'].includes(l.kind))throw Error('Layer IDs must be unique, with a name and supported type.');ids.add(l.id);
   if(typeof l.visible!=='boolean'||!finite(l.opacity,0,1)||!/^#[0-9a-f]{6}$/i.test(l.color))throw Error('Invalid visibility, opacity or layer color.');
