@@ -20,7 +20,7 @@
 
   <link rel="preload" as="image" href="assets/advisor-concerned-19292.jpg">
   <link rel="preload" as="image" href="assets/advisor-reassuring-19294.jpg">
-  <link rel="stylesheet" href="presentation.css?v=27">
+  <link rel="stylesheet" href="presentation.css?v=28">
   <link rel="stylesheet" href="../../shared/app-theme.css?v=1">
 </head>
 <body>
@@ -227,18 +227,18 @@
             <div class="reveal-product-copy">
               <p class="reveal-brand">LIC</p>
               <h3 id="revealProductName"><span class="reveal-accessible-brand">LIC </span>Bima<br>Platinum</h3>
-              <p class="reveal-support">आपके financial portfolio के लिए एक guaranteed और predictable layer</p>
+              <p class="reveal-support">Guaranteed Additions<br>हर साल Income<br>70% Booster</p>
             </div>
             <div class="reveal-credentials">
               <div class="reveal-anniversary" aria-label="Celebrating 70 Years of LIC"><span class="reveal-years" aria-hidden="true">70</span><span>Celebrating<br><strong>70 Years of LIC</strong></span></div>
-              <span class="reveal-limited">Limited-Period Plan</span>
+              <span class="reveal-limited">Limited-Period Plan<strong>31 March 2027 तक</strong></span>
             </div>
           </section>
           <section id="planDetailsPage" class="plan-details-page income-guide" aria-label="Bima Platinum official sample illustration" hidden>
-            <div class="income-example-top">
+            <div id="incomeSelectorHome" class="income-example-top">
               <img class="income-advisor" src="assets/advisor-anniversary.webp" alt="LIC advisor introducing regular income" width="760" height="759" loading="lazy" decoding="async">
               <div class="income-highlight"><strong>10<span>%</span></strong><span>of Basic Sum Assured<br><b>Every Year</b></span></div>
-              <div class="income-selectors">
+              <div id="incomeSelectors" class="income-selectors">
                 <div class="income-selector"><span id="incomeAgeLabel">Age</span><div id="incomeAgeOptions" class="income-options" role="group" aria-labelledby="incomeAgeLabel">
                   <button type="button" data-age="15" aria-pressed="false">15</button><button type="button" data-age="25" aria-pressed="true">25</button><button type="button" data-age="35" aria-pressed="false">35</button><button type="button" data-age="45" aria-pressed="false">45</button>
                 </div></div>
@@ -325,6 +325,18 @@
             <p id="balanceChartCaption" class="chart-caption">Illustrative concept — not projected returns</p>
           </figure>
         </div>
+        <section id="incomeSelectionPrompt" class="income-selection-prompt" role="dialog" aria-modal="true" aria-labelledby="incomeSelectionTitle" aria-describedby="incomeSelectionHint" hidden>
+          <div class="income-selection-card">
+            <p class="income-selection-kicker">अपना example चुनें</p>
+            <h3 id="incomeSelectionTitle">Age और Premium Paying Term चुनें</h3>
+            <p id="incomeSelectionHint">PPT यानी कितने साल premium भरना है।</p>
+            <div id="incomeSelectionOptions"></div>
+            <p id="incomeSelectionSummary" class="income-selection-summary"></p>
+            <p class="income-selection-timing"><span id="incomeSelectionCountdown" role="timer" aria-live="off">10 seconds में इन values के साथ कहानी जारी होगी।</span></p>
+            <button id="incomeSelectionContinue" class="income-selection-continue" type="button">Continue <span aria-hidden="true">→</span></button>
+            <button id="incomeSelectionPause" class="income-selection-pause" type="button" aria-pressed="false">मुझे थोड़ा समय दें · Pause timer</button>
+          </div>
+        </section>
         <footer class="scene-two-footer">
           <button id="sceneTwoDialogueBtn" class="scene-two-dialogue-btn audio-float" type="button" aria-label="Hear Scene 2 advisor recording"><span id="sceneTwoAudioIcon" class="advisor-audio-icon" aria-hidden="true">▶</span> <span id="sceneTwoAudioLabel">Advisor की बात सुनें</span></button>
           <p id="sceneTwoAudioStatus" class="audio-status" role="status" aria-live="polite"></p>
@@ -364,6 +376,6 @@
 
 </div><!-- /.app-viewport-wrapper -->
 
-<script src="presentation.js?v=27"></script>
+<script src="presentation.js?v=28"></script>
 </body>
 </html>

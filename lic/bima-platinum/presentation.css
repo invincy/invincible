@@ -1743,3 +1743,37 @@ body.dev-mode .desktop-tools-bar { display: flex; }
   .journey-progress { margin-left:0; }
 }
 @media (prefers-reduced-motion:reduce) { .journey-visual-part { animation:none; } }
+
+/* Guided example selection pauses narration until confirmation or inactivity. */
+.income-selection-prompt[hidden] { display:none; }
+.income-selection-prompt { position:absolute; inset:0; z-index:30; display:grid; place-items:center; padding:16px; background:#020b1ce8; backdrop-filter:blur(8px); }
+.income-selection-card { width:100%; max-width:370px; max-height:100%; overflow:auto; padding:20px; border:1px solid #d7b96b80; border-radius:22px; background:linear-gradient(145deg,#102b47,#061629); box-shadow:0 18px 60px #0007; }
+.income-selection-kicker { color:#e4c57c; font:500 10px/1.4 var(--font-hindi); letter-spacing:.05em; }
+.income-selection-card h3 { margin:7px 0; color:#f8e5b4; font:600 20px/1.35 var(--font-hindi); }
+#incomeSelectionHint { color:#b9cadd; font:400 11px/1.45 var(--font-hindi); }
+.income-selection-card .income-selectors { width:100%; margin:16px 0 13px; gap:12px; }
+.income-selection-card .income-selector { display:block; }
+.income-selection-card .income-selector > span { font-size:11px; margin-bottom:5px; }
+.income-selection-card .income-selector small { display:inline; font-size:9px; }
+.income-selection-card .income-options { gap:6px; }
+.income-selection-card .income-options button { min-height:40px; font-size:13px; }
+.income-selection-summary { margin-bottom:7px; color:#f5dc9c; font:600 11px/1.4 var(--font-sans); }
+.income-selection-timing { min-height:34px; margin-bottom:12px; color:#b9cadd; font:400 11px/1.5 var(--font-hindi); }
+.income-selection-continue { display:flex; justify-content:space-between; align-items:center; width:100%; min-height:44px; padding:10px 14px; border:1px solid #f3d68a; border-radius:12px; color:#07152b; background:linear-gradient(110deg,#f6e1a5,#cfaa4f); font:700 14px var(--font-sans); cursor:pointer; }
+.income-selection-pause { display:block; margin:9px auto 0; min-height:32px; border:0; background:none; color:#d0def0; font:400 10px var(--font-hindi); cursor:pointer; }
+.income-selection-card button:focus-visible { outline:2px solid #fff1bf; outline-offset:3px; }
+.reveal-limited { letter-spacing:.02em; }
+.reveal-limited strong { display:block; margin-top:5px; color:#ffe4a2; font:700 16px/1.25 var(--font-hindi); letter-spacing:0; }
+@container presentation (max-height:600px) {
+  .income-selection-prompt { padding:12px; }
+  .income-selection-card { padding:15px; border-radius:17px; }
+  .income-selection-card h3 { font-size:17px; line-height:1.25; margin:5px 0; }
+  #incomeSelectionHint { font-size:10px; }
+  .income-selection-card .income-selectors { margin:11px 0 9px; gap:8px; }
+  .income-selection-card .income-options button { min-height:34px; font-size:12px; }
+  .income-selection-timing { min-height:29px; margin-bottom:8px; font-size:10px; }
+  .income-selection-pause { margin-top:5px; min-height:28px; }
+  .reveal-limited strong { font-size:13px; margin-top:3px; }
+}
+
+@container presentation (max-height:600px) { .reveal-support { max-width:125px; } }
