@@ -1678,3 +1678,68 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 @container presentation (max-height:700px) {
   [data-story-step="5"] .scene-two-visual { margin-bottom:48px; }
 }
+
+/* Stage-specific explanations occupy the open space left of the advisor. */
+.journey-illustration { position:absolute; z-index:3; top:42px; left:17px; width:42%; max-height:calc(100% - 280px); display:flex; flex-direction:column; gap:9px; color:#dce8f2; pointer-events:none; }
+.journey-illustration[hidden] { display:none; }
+.journey-visual-label { color:#d8b969; font:600 11px/1.3 var(--font-sans); }
+.journey-illustration strong { font:700 clamp(18px,6cqw,27px)/1.15 var(--font-sans); color:#ffe0a0; letter-spacing:-.03em; }
+.journey-illustration strong small { font-size:10px; font-weight:400; letter-spacing:0; }
+.journey-visual-note { font:400 9px/1.45 var(--font-sans); color:#b6cadb; }
+.journey-visual-part { animation:journey-explain .65s ease both; animation-delay:calc(var(--part) * .3s); }
+.journey-ppt-comparison { display:flex; flex-direction:column; gap:6px; }
+.journey-ppt-row { display:flex; align-items:center; gap:6px; height:18px; color:#8faec7; font:500 10px var(--font-sans); }
+.journey-ppt-row b { width:17px; }
+.journey-ppt-row i { height:4px; width:calc(var(--term) * 65px); background:#5486ab; border-radius:3px; }
+.journey-ppt-row small { font-size:8px; }
+.journey-ppt-row.is-selected { color:#ffe1a0; }
+.journey-ppt-row.is-selected i { background:#f3ce79; box-shadow:0 0 9px #e8ba5d66; }
+.journey-ga-chart { display:flex; gap:6px; align-items:flex-end; height:66px; border-bottom:1px solid #4b7394; }
+.journey-ga-chart .journey-visual-part { height:100%; flex:1; display:flex; align-items:flex-end; }
+.journey-ga-chart i { width:100%; height:calc(var(--bar) * 100%); background:linear-gradient(#f9df9e,#af8233); border-radius:3px 3px 0 0; }
+.journey-income-payments { display:flex; flex-direction:column; gap:9px; }
+.journey-income-payments .journey-visual-part { display:flex; flex-direction:column; gap:2px; padding-left:8px; border-left:1px solid #668ca8; font:400 9px var(--font-sans); }
+.journey-income-payments b { color:#ffe0a0; font-size:14px; }
+.journey-illustration .journey-booster-number { font-size:clamp(34px,12cqw,52px); }
+.journey-booster-year { display:inline-block; padding:5px 7px; border:1px solid #d0ae6266; border-radius:6px; font:500 10px var(--font-sans); }
+.journey-maturity-part { display:flex; flex-direction:column; gap:3px; color:#b6cadb; font:400 10px var(--font-sans); }
+.journey-maturity-part b { font-size:17px; color:#f1d99e; }
+.journey-maturity-total { display:block; padding-top:9px; border-top:1px solid #b9974b99; }
+.plan-journey-page[data-paused="true"] .journey-visual-part, .plan-journey-page[data-paused="true"] .journey-addition-bars i { animation-play-state:paused; }
+@keyframes journey-explain { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:translateY(0); } }
+
+.plan-journey-page[data-manual="true"] .journey-visual-part,
+.plan-journey-page[data-complete="true"] .journey-visual-part { animation:none; }
+@container presentation (max-height:800px) {
+  [data-story-step="6"] .journey-content { bottom:4px; }
+  .journey-illustration { top:20px; max-height:none; gap:3px; }
+  .journey-visual-label { font-size:9px; }
+  .journey-visual-note { font-size:8px; line-height:1.2; }
+  .journey-ppt-comparison { gap:1px; }
+  .journey-ppt-row { height:10px; font-size:8px; }
+  .journey-ppt-row small { font-size:7px; }
+  .plan-journey-page[data-visual="pay"] .journey-visual-note,
+  .plan-journey-page[data-visual="income"] .journey-illustration > .journey-visual-note,
+  .plan-journey-page[data-visual="booster"] .journey-illustration > .journey-visual-note { display:none; }
+  .journey-illustration strong { font-size:18px; }
+  .journey-illustration .journey-booster-number { font-size:24px; }
+  .journey-booster-year { padding:3px 5px; font-size:8px; }
+  .journey-ga-chart { height:20px; }
+  .journey-income-payments { gap:4px; }
+  .journey-income-payments .journey-visual-part { flex-direction:row; justify-content:space-between; align-items:center; padding-left:4px; font-size:8px; }
+  .journey-income-payments b { font-size:10px; }
+  .journey-maturity-part { flex-direction:row; justify-content:space-between; align-items:baseline; gap:1px; font-size:8px; }
+  .journey-maturity-part b { font-size:11px; }
+  .journey-maturity-total { padding-top:4px; }
+  .plan-journey-page[data-visual="maturity"] .journey-visual-note { font-size:7px; }
+  .journey-detail { gap:1px; }
+  .journey-detail-title { font-size:8px; }
+  .journey-detail strong { font-size:14px; }
+  .journey-detail .journey-big-number { font-size:20px; }
+  .journey-big-number em { display:none; }
+  .journey-detail small { font-size:8px; }
+  #stageContainer .journey-controls { min-height:48px; }
+  #stageContainer .journey-play-pause { bottom:calc(100% - 44px); }
+  .journey-progress { margin-left:0; }
+}
+@media (prefers-reduced-motion:reduce) { .journey-visual-part { animation:none; } }

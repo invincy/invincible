@@ -533,3 +533,12 @@ These Orb fixture issues were not changed as part of this bounded presentation e
 The remaining browser checks were attempted separately: Task copy and Creator passed;
 the unrelated Journal tools fixture stopped at its existing addStyleTag call.
 Physical-device browser checks remain unverified.
+
+
+### Bima Platinum page 4 progression and page 6 illustrations — November 4, 2026
+
+Page 4 now continues to Page 5 when its narration ends in Auto mode, reusing the unlocked audio element. Manual mode holds; enabling Auto after completion continues once. Page 5 still waits for interaction. Age/PPT/SA selector changes are deferred pending the user's full office premium table; the existing fixed ₹3 lakh examples remain unchanged.
+
+Page 6 uses the space beside the existing advisor for five stage-specific explanations: non-interactive PPT comparisons, base GA accrual, yearly income payments, the booster year/amount, and maturity components. Values follow the existing selected age/PPT and brochure's 30-year ₹3 lakh offline example. Base GA is ₹70 per thousand cumulative annualized premiums paid at each year-end during PPT; the illustrated maturity excludes eligibility-based extra incentives. Short screens compact the illustrations and place the fixed audio control within the footer row. Manual stage selection, pause/resume, replay, navigation cleanup and reduced-motion preferences remain supported.
+
+Verification: all 21 focused presentation tests pass; all repository unit and Functions tests pass (143 passed, two existing skips); local site references and JavaScript/diff checks pass. Live cloud-browser preview confirmed real audio progression through Page 4 to Page 5, all five stage controls, and inspected phone layouts at 320×480, 360×640 and 390×844 plus the desktop phone frame. Browser regression source now checks every stage's visual/track and detail/audio clearance. The complete automated browser suite was not run in this managed environment. Physical-device/iOS rendering remains unverified. No Firebase data or rules changed.

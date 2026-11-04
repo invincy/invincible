@@ -39,7 +39,7 @@ function setup(play, {automatic=false}={}) {
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 const focus=s=>s.el('storyChart').attrs['data-focus'];
 
-test('Auto continues 1 → 2 → 3 → 4 on narration completion using one audio element',async()=>{
+test('Auto continues through reveal to Page 5 using one audio element',async()=>{
   const s=setup(undefined,{automatic:true});
   await flush();
   const audio=s.audios[0],oldEnded=audio.events.ended;
@@ -52,7 +52,9 @@ test('Auto continues 1 → 2 → 3 → 4 on narration completion using one audio
     assert.equal(s.el('stageContainer').attrs['data-story-step'],String(page+1),'Ignore a stale ended callback');
   }
   audio.ended=true;audio.events.ended();await flush();
-  assert.equal(s.el('stageContainer').attrs['data-story-step'],'4','Do not change later-page progression');
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'5','Reveal continues to the example');
+  audio.ended=true;audio.events.ended();await flush();
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'5','Wait on the selection page');
 });
 
 test('Manual holds the final graph; switching Auto on continues without another Next tap',async()=>{
@@ -325,4 +327,34 @@ test('Page 6 carries selected PPT, maps booster year, and finishes with a replay
   s.click('previewDismissBtn');
   assert.equal(s.el('storyStageCounter').textContent,'5 / 10');
   assert.equal(journeyAudio.paused,true);
+});
+
+
+test('Manual Page 4 holds after narration and switching Auto advances exactly once', async()=>{
+  const s=setup();s.click('ctaForwardBtn');s.click('sceneTwoNextBtn');s.click('sceneTwoNextBtn');await flush();
+  const audio=s.audios.at(-1), ended=audio.events.ended;
+  audio.ended=true;ended();await flush();
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'4');
+  s.click('storyModeToggle');await flush();
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'5');
+  ended();
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'5');
+});
+
+test('stage illustrations follow selected example and base GA, never change the selection',()=>{
+  const s=setup();s.click('ctaForwardBtn');for(let i=0;i<3;i++)s.click('sceneTwoNextBtn');
+  s.click('sampleAge35');s.click('samplePpt7');s.click('sceneTwoNextBtn');
+  s.click('journey0');
+  assert.match(s.el('journeyIllustration').innerHTML,/₹87,495/);
+  assert.match(s.el('journeyIllustration').innerHTML,/Selected: 7 years/);
+  assert.doesNotMatch(s.el('journeyIllustration').innerHTML,/<button/);
+  s.click('journey1');assert.match(s.el('journeyIllustration').innerHTML,/7%/);
+  s.click('journey2');assert.match(s.el('journeyIllustration').innerHTML,/Year 7 से Year 29/);
+  s.click('journey3');assert.match(s.el('journeyIllustration').innerHTML,/Policy Year 12/);
+  s.click('journey4');
+  // 87,495 × .07 × (1+2+...+7) = 171,490.20; plus 300,000 BSA.
+  assert.match(s.el('journeyIllustration').innerHTML,/₹1,71,490/);
+  assert.match(s.el('journeyIllustration').innerHTML,/₹4,71,490/);
+  s.click('journeyPlayPause');assert.equal(s.el('planJourneyPage').dataset.paused,'true');
+  s.click('previewDismissBtn');assert.equal(s.el('incomeAnnualPremium').textContent,'₹87,495');
 });
