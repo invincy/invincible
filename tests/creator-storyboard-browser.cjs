@@ -132,7 +132,7 @@ const server=http.createServer((req,res)=>{
   // Creation still uses existing Creator pipeline, owner fields and acknowledgement.
   await page.goto(base);await page.locator('#addContent:enabled').click();await page.locator('[name=title]').fill('Gaganyaan production');
   assert.equal(await page.locator('#contentDetails').evaluate(node=>node.open),false);
-  assert.equal(await page.locator('#contentStoryboard .wb-tabs button').count(),4);
+  assert.deepEqual(await page.locator('#contentStoryboard .wb-tabs button').evaluateAll(nodes=>nodes.map(node=>node.dataset.tab)),['Storyboard','Production','Assets','Overview','Maps','Clips']);
   assert.equal(await page.locator('#contentStoryboard [data-paste]').isVisible(),true);
   await page.locator('#contentStoryboard [data-tab=Overview]').click();
   await page.locator('#contentStoryboard .wb-script summary').click();
