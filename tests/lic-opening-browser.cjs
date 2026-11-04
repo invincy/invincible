@@ -57,9 +57,15 @@ fs.mkdirSync(out,{recursive:true});
    }
    await auto.waitForFunction(()=>Number.isFinite(window.testAudios[0].duration)&&window.testAudios[0].src.endsWith('page4.mp3'));
    await auto.evaluate(()=>{const a=window.testAudios[0];a.currentTime=a.duration-.03;});
-   await auto.waitForFunction(()=>document.querySelector('#sceneTwoDialogueBtn').getAttribute('aria-pressed')==='false');
-   assert.equal(await auto.locator('#stageContainer').getAttribute('data-story-step'),'4');
-   await auto.close();console.log('Real audio automatically advances 1–4, with Manual hold and one player.');
+   await auto.waitForFunction(()=>document.querySelector('#stageContainer').dataset.storyStep==='5');
+   assert.equal(await auto.locator('#stageContainer').getAttribute('data-story-step'),'5');
+   await auto.locator('#incomeSelectionPrompt').waitFor({state:'visible'});
+   assert.match(await auto.locator('#incomeSelectionCountdown').innerText(),/default values/);
+   await auto.locator('#incomeSelectionPrompt').waitFor({state:'hidden',timeout:14000});
+   await auto.waitForFunction(()=>Number.isFinite(window.testAudios[0].duration)&&window.testAudios[0].src.endsWith('page5.mp3'));
+   await auto.evaluate(()=>{const a=window.testAudios[0];a.currentTime=a.duration-.03;});
+   await auto.waitForFunction(()=>document.querySelector('#stageContainer').dataset.storyStep==='6');
+   await auto.close();console.log('Real audio automatically advances 1–5, with Manual hold and one player.');
   }
   if(!process.env.LIC_LAYOUT_ONLY) for(const [width,height] of [[320,568],[360,640],[390,844],[320,480],[1440,900]]) {
    const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
@@ -134,11 +140,12 @@ fs.mkdirSync(out,{recursive:true});
   // Audio placement may change later-page layout; product sections stay identical.
   const before=execFileSync('git',['show',`${process.env.LIC_BASELINE_REF || 'origin/master'}:lic/bima-platinum/index.html`],{encoding:'utf8'});
   const after=fs.readFileSync('lic/bima-platinum/index.html','utf8');
-  for(const id of ['productReveal','planDetailsPage','planJourneyPage']) {
+  for(const id of ['planDetailsPage','planJourneyPage']) {
    const re=new RegExp(`<section id="${id}"[\\s\\S]*?</section>`);
-   assert.equal(after.match(re)?.[0].replace(/\r\n/g,'\n'),before.match(re)?.[0].replace(/\r\n/g,'\n'),id);
+   assert.equal(after.match(re)?.[0].replace(/ id="incomeSelectorHome"/g,'').replace(/ id="incomeSelectors"/g,'').replace(/\r\n/g,'\n'),before.match(re)?.[0].replace(/ id="incomeSelectorHome"/g,'').replace(/ id="incomeSelectors"/g,'').replace(/\r\n/g,'\n'),id);
   }
-  console.log('Page 4–6 product sections are unchanged.');
+  console.log('Page 5–6 product sections retain existing values and controls.');
+  assert.match(after,/31 March 2027 तक/);
   // Deterministic media states exercise layout during loading and failures too.
   for(const [width,height] of [[320,480],[320,568],[360,640],[390,844],[1440,900]]) {
    const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
@@ -171,6 +178,12 @@ fs.mkdirSync(out,{recursive:true});
    for(let step=1;step<=6;step++) {
     if(step>1) await page.click(step===2?'#ctaForwardBtn':'#sceneTwoNextBtn');
     await page.evaluate(()=>document.fonts.ready);
+    if(step===5) {
+     const card=await page.locator('.income-selection-card').evaluate(el=>({height:el.clientHeight,scroll:el.scrollHeight,top:el.getBoundingClientRect().top,bottom:el.getBoundingClientRect().bottom}));
+     assert.ok(card.scroll<=card.height+1&&card.top>=0&&card.bottom<=height,JSON.stringify({width,height,card}));
+     await page.screenshot({path:`${out}/${width}x${height}-selection-prompt.png`});
+     await page.click('#incomeSelectionContinue');
+    }
     if(step===2||step===3) {
      await page.waitForFunction(()=>{const image=document.querySelector('#storyPresenter');return image.complete&&image.naturalWidth>0;});
      assert.ok((await page.locator('#storyPresenter').getAttribute('src')).endsWith(step===2?'advisor-concerned-19292.jpg':'advisor-reassuring-19294.jpg'));
@@ -206,6 +219,21 @@ fs.mkdirSync(out,{recursive:true});
      await page.evaluate(()=>window.testAudios.at(-1).dispatchEvent(new Event('error')));
      await check('error');
     }
+    if(step===6) {
+     await page.click('#journeyPlayPause');
+     for(let stage=0;stage<5;stage++) {
+      await page.click(`[data-journey-step="${stage}"]`);
+      const layout=await page.locator('#planJourneyPage').evaluate(el=>{
+       const v=el.querySelector('#journeyIllustration');
+       const visible=[...v.children].filter(x=>getComputedStyle(x).display!=='none');
+       const bottom=Math.max(...visible.map(x=>x.getBoundingClientRect().bottom));
+       return {bottom,trackTop:el.querySelector('.journey-track').getBoundingClientRect().top,detailBottom:el.querySelector('#journeyDetail').getBoundingClientRect().bottom,audioTop:document.querySelector('#journeyPlayPause').getBoundingClientRect().top};
+      });
+      assert.ok(layout.bottom<=layout.trackTop,JSON.stringify({width,height,stage,layout}));
+      assert.ok(layout.detailBottom<=layout.audioTop+.5,JSON.stringify({width,height,stage,layout}));
+      await page.screenshot({path:`${out}/${width}x${height}-stage${stage+1}.png`});
+     }
+    }
     await page.screenshot({path:`${out}/${width}x${height}-floating-page${step}.png`});
     console.log(`Fixed audio/Next layout: ${width}x${height} page ${step}`);
    }
@@ -223,6 +251,7 @@ fs.mkdirSync(out,{recursive:true});
   await mobile.evaluate(()=>document.fonts.ready);
   for(let step=1;step<=6;step++) {
    if(step>1) await mobile.click(step===2?'#ctaForwardBtn':'#sceneTwoNextBtn');
+   if(step===5) await mobile.click('#incomeSelectionContinue');
    await mobile.locator(step===1?'#stageContainer':'#stagePreviewModal').evaluate(el=>Promise.all(el.getAnimations().map(a=>a.finished.catch(()=>{}))));
    for(const [height,offsetTop,event] of [[760,24,'resize'],[640,12,'resize'],[480,0,'resize'],[760,32,'scroll']]) {
     await mobile.evaluate(({height,offsetTop,event})=>{Object.assign(window.viewportMock,{height,offsetTop});window.viewportMock.dispatchEvent(new Event(event));},{height,offsetTop,event});

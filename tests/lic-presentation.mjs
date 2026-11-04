@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const source = readFileSync(new URL('../lic/bima-platinum/presentation.js', import.meta.url), 'utf8');
-function setup(play, {automatic=false}={}) {
+function setup(play, {automatic=false, selection=false, clock=null}={}) {
   const elements = new Map();
   function el(id) {
     if (!elements.has(id)) elements.set(id, {
@@ -29,17 +29,21 @@ function setup(play, {automatic=false}={}) {
     async play() { if(play) await play(); this.ended=false; this.paused=false; this.events.playing?.(); }
     pause() { this.paused=true; this.events.pause?.(); }
   }
-  const context={document:doc, Audio, AbortController, URLSearchParams, setTimeout, clearTimeout,
+  const context={document:doc, Audio, AbortController, URLSearchParams, setTimeout:clock?.setTimeout || setTimeout, clearTimeout:clock?.clearTimeout || clearTimeout,
     window:{location:{search:'',hash:''},addEventListener(k,fn) { windowEvents[k]=fn; }}};
   vm.runInNewContext(source,context);
   doc.events.DOMContentLoaded();
   if(!automatic) el('storyModeToggleOne').events.click();
-  return {el,doc,audios,windowEvents,premium:context.getLicSamplePremium,click:id=>el(id).events.click({stopPropagation(){}})};
+  const click = id => {
+    el(id).events.click({stopPropagation(){}});
+    if (!selection && el('stageContainer').attrs['data-story-step'] === '5' && !el('incomeSelectionPrompt').hidden) el('incomeSelectionContinue').events.click();
+  };
+  return {el,doc,audios,windowEvents,premium:context.getLicSamplePremium,click};
 }
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 const focus=s=>s.el('storyChart').attrs['data-focus'];
 
-test('Auto continues 1 → 2 → 3 → 4 on narration completion using one audio element',async()=>{
+test('Auto continues through reveal to Page 5 using one audio element',async()=>{
   const s=setup(undefined,{automatic:true});
   await flush();
   const audio=s.audios[0],oldEnded=audio.events.ended;
@@ -52,7 +56,12 @@ test('Auto continues 1 → 2 → 3 → 4 on narration completion using one audio
     assert.equal(s.el('stageContainer').attrs['data-story-step'],String(page+1),'Ignore a stale ended callback');
   }
   audio.ended=true;audio.events.ended();await flush();
-  assert.equal(s.el('stageContainer').attrs['data-story-step'],'4','Do not change later-page progression');
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'5','Reveal continues to the example');
+  assert.equal(s.el('incomeSelectionPrompt').hidden,false);
+  s.click('incomeSelectionContinue');await flush();
+  audio.ended=true;audio.events.ended();await flush();
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'6','Confirmed example continues to journey');
+  s.windowEvents.pagehide();
 });
 
 test('Manual holds the final graph; switching Auto on continues without another Next tap',async()=>{
@@ -325,4 +334,112 @@ test('Page 6 carries selected PPT, maps booster year, and finishes with a replay
   s.click('previewDismissBtn');
   assert.equal(s.el('storyStageCounter').textContent,'5 / 10');
   assert.equal(journeyAudio.paused,true);
+});
+
+
+test('Manual Page 4 holds after narration and switching Auto advances exactly once', async()=>{
+  const s=setup();s.click('ctaForwardBtn');s.click('sceneTwoNextBtn');s.click('sceneTwoNextBtn');await flush();
+  const audio=s.audios.at(-1), ended=audio.events.ended;
+  audio.ended=true;ended();await flush();
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'4');
+  s.click('storyModeToggle');await flush();
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'5');
+  s.click('incomeSelectionContinue');
+  ended();
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'5');
+});
+
+test('stage illustrations follow selected example and base GA, never change the selection',()=>{
+  const s=setup();s.click('ctaForwardBtn');for(let i=0;i<3;i++)s.click('sceneTwoNextBtn');
+  s.click('sampleAge35');s.click('samplePpt7');s.click('sceneTwoNextBtn');
+  s.click('journey0');
+  assert.match(s.el('journeyIllustration').innerHTML,/₹87,495/);
+  assert.match(s.el('journeyIllustration').innerHTML,/Selected: 7 years/);
+  assert.doesNotMatch(s.el('journeyIllustration').innerHTML,/<button/);
+  s.click('journey1');assert.match(s.el('journeyIllustration').innerHTML,/7%/);
+  s.click('journey2');assert.match(s.el('journeyIllustration').innerHTML,/Year 7 से Year 29/);
+  s.click('journey3');assert.match(s.el('journeyIllustration').innerHTML,/Policy Year 12/);
+  s.click('journey4');
+  // 87,495 × .07 × (1+2+...+7) = 171,490.20; plus 300,000 BSA.
+  assert.match(s.el('journeyIllustration').innerHTML,/₹1,71,490/);
+  assert.match(s.el('journeyIllustration').innerHTML,/₹4,71,490/);
+  s.click('journeyPlayPause');assert.equal(s.el('planJourneyPage').dataset.paused,'true');
+  s.click('previewDismissBtn');assert.equal(s.el('incomeAnnualPremium').textContent,'₹87,495');
+});
+
+function selectionClock() {
+  let now=0, nextId=0;
+  const timers=new Map();
+  return {
+    setTimeout(fn,delay) { const id=++nextId;timers.set(id,{fn,at:now+delay});return id; },
+    clearTimeout(id) { timers.delete(id); },
+    advance(ms) {
+      const end=now+ms;
+      for(;;) {
+        const due=[...timers].filter(([,t])=>t.at<=end).sort((a,b)=>a[1].at-b[1].at)[0];
+        if(!due)break;
+        now=due[1].at;timers.delete(due[0]);due[1].fn();
+      }
+      now=end;
+    }
+  };
+}
+function enterSelection(s) {s.click('ctaForwardBtn');for(let i=0;i<3;i++)s.click('sceneTwoNextBtn');}
+
+test('Page 5 prompts before narration and resumes default example after exactly ten seconds',async()=>{
+  const clock=selectionClock(),s=setup(undefined,{automatic:true,selection:true,clock});
+  enterSelection(s);await flush();
+  assert.equal(s.el('incomeSelectionPrompt').hidden,false);
+  assert.equal(s.el('planDetailsPage').inert,true);
+  assert.match(s.el('incomeSelectionSummary').textContent,/Age 25 · PPT 15/);
+  assert.doesNotMatch(s.audios.at(-1).src,/page5/);
+  clock.advance(9000);assert.match(s.el('incomeSelectionCountdown').textContent,/^1 second/);
+  assert.equal(s.el('incomeSelectionPrompt').hidden,false);
+  clock.advance(1000);await flush();
+  assert.equal(s.el('incomeSelectionPrompt').hidden,true);
+  assert.equal(s.el('planDetailsPage').inert,false);
+  assert.match(s.audios.at(-1).src,/page5.mp3$/);
+  assert.equal(s.el('incomeAnnualPremium').textContent,'₹32,220');
+  s.audios.at(-1).events.ended();await flush();
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'6');
+  s.windowEvents.pagehide();
+});
+
+test('changing age or PPT resets inactivity countdown and Continue preserves the chosen example',async()=>{
+  const clock=selectionClock(),s=setup(undefined,{automatic:true,selection:true,clock});
+  enterSelection(s);clock.advance(7000);s.click('sampleAge35');s.click('samplePpt7');
+  assert.match(s.el('incomeSelectionSummary').textContent,/Age 35 · PPT 7/);
+  assert.match(s.el('incomeSelectionCountdown').textContent,/^10 seconds/);
+  clock.advance(9000);assert.equal(s.el('incomeSelectionPrompt').hidden,false);
+  s.click('incomeSelectionContinue');await flush();
+  assert.equal(s.el('incomeAnnualPremium').textContent,'₹87,495');
+  s.audios.at(-1).events.ended();await flush();s.click('journey0');
+  assert.match(s.el('journeyIllustration').innerHTML,/Selected: 7 years/);
+  s.windowEvents.pagehide();clock.advance(30000);
+  assert.equal(s.el('incomeSelectionPrompt').hidden,true);
+});
+
+test('selection timer can pause and resume without leaving the prompt',async()=>{
+  const clock=selectionClock(),s=setup(undefined,{selection:true,clock});
+  enterSelection(s);clock.advance(3000);s.click('incomeSelectionPause');clock.advance(20000);
+  assert.equal(s.el('incomeSelectionPrompt').hidden,false);
+  assert.match(s.el('incomeSelectionCountdown').textContent,/Timer paused/);
+  s.click('samplePpt10');s.click('incomeSelectionPause');clock.advance(10000);await flush();
+  assert.equal(s.el('incomeSelectionPrompt').hidden,true);
+  s.audios.at(-1).events.ended();
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'5','Manual narration holds after confirmation');
+  s.windowEvents.pagehide();
+});
+
+test('Back and tab hiding cancel stale selection timers and restore visible controls',()=>{
+  const clock=selectionClock(),s=setup(undefined,{selection:true,clock});
+  enterSelection(s);clock.advance(3000);s.doc.hidden=true;s.doc.events.visibilitychange();
+  clock.advance(20000);assert.equal(s.el('incomeSelectionPrompt').hidden,false);
+  s.doc.hidden=false;s.doc.events.visibilitychange();clock.advance(6000);
+  assert.equal(s.el('incomeSelectionPrompt').hidden,false);
+  s.click('previewDismissBtn');clock.advance(30000);
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'4');
+  assert.equal(s.el('incomeSelectionPrompt').hidden,true);
+  assert.equal(s.el('planDetailsPage').inert,false);
+  s.windowEvents.pagehide();
 });

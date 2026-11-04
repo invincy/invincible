@@ -1,6 +1,6 @@
 /** LIC Bima Platinum: existing chart story and a focused product reveal. */
 // Pages 1–3 use the supplied filenames and media-duration progress in syncChart.
-// Existing Page 4+ recordings and their lifecycle remain unchanged.
+// Page 5 prompts for sample selections, then resumes narration and the story.
 const STORY_SCENES = {
   1: {
     src: 'assets/audio/newpage1.mp3',
@@ -142,12 +142,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (getLicSamplePremium(age, selectedSamplePpt) === null) return;
     selectedSampleAge = age;
     updateIncomeExample();
+    resetSelectionCountdown(true);
   }));
   pptOptions.forEach(button => button.addEventListener('click', () => {
     const ppt = Number(button.dataset.ppt);
     if (getLicSamplePremium(selectedSampleAge, ppt) === null) return;
     selectedSamplePpt = ppt;
     updateIncomeExample();
+    resetSelectionCountdown(true);
   }));
   updateIncomeExample();
   let currentPage = 1;
@@ -159,6 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let playbackWanted = false;
   let playbackState = 'idle';
   let chartComplete = false;
+  let narrationComplete = false;
   let chartFrame = null;
   const journeyPage = document.getElementById('planJourneyPage');
   const journeyControls = document.getElementById('journeyControls');
@@ -191,6 +194,8 @@ document.addEventListener('DOMContentLoaded', () => {
     journeyComplete = false;
   }
   function updateJourneyControls() {
+    journeyPage.dataset.paused = String(!journeyAutoplay || journeyComplete);
+    journeyPage.dataset.complete = String(journeyComplete);
     journeyToggle.innerHTML = journeyAutoplay ? '<span class="advisor-audio-icon" aria-hidden="true">⏸</span><span>Pause Story</span>' : '<span class="advisor-audio-icon" aria-hidden="true">▶</span><span>Auto Play Story</span>';
     journeyToggle.setAttribute('aria-label', journeyAutoplay ? 'Pause story' : 'Resume story');
     journeyToggle.setAttribute('aria-pressed', String(journeyAutoplay));
@@ -212,6 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
     journeyPage.style.setProperty('--journey-progress', `${Math.max(0, journeyStep) * 25}%`);
     journeyPage.dataset.visual = step?.visual || 'intro';
     journeyPage.dataset.advisor = journeyStep >= 3 ? 'celebrate' : 'explain';
+    renderJourneyIllustration();
     if (!step) { detail.innerHTML = '<p class="journey-detail-prompt">Your plan, in five clear steps.</p>'; updateJourneyControls(); return; }
     const ppt = selectedSamplePpt;
     const detailHtml = [
@@ -223,6 +229,27 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     detail.innerHTML = detailHtml[journeyStep];
     updateJourneyControls();
+  }
+  // Brochure pp.6–7: base GA rate is ₹70 per ₹1,000 of cumulative
+  // annualized premiums paid. ₹3 lakh BSA has no high-SA incentive (p.17).
+  // These examples exclude additional eligibility-based incentives.
+  function renderJourneyIllustration() {
+    const visual = document.getElementById('journeyIllustration');
+    const ppt = selectedSamplePpt;
+    const premium = getLicSamplePremium(selectedSampleAge, ppt);
+    const money = value => '₹' + Math.round(value).toLocaleString('en-IN');
+    const additions = premium * .07 * ppt * (ppt + 1) / 2;
+    const part = (content, index) => `<div class="journey-visual-part" style="--part:${index}">${content}</div>`;
+    const visuals = [
+      `<span class="journey-visual-label">Premium कितने साल?</span><div class="journey-ppt-comparison">${[7,10,12,15,18].map((years, i) => part(`<span class="journey-ppt-row ${years === ppt ? 'is-selected' : ''}"><b>${years}</b><i style="--term:${years / 18}"></i><small>years</small></span>`, i)).join('')}</div><strong>${money(premium)}<small> / year</small></strong><span class="journey-visual-note">Selected: ${ppt} years</span>`,
+      `<span class="journey-visual-label">Guaranteed Additions</span><strong>7% <small>base rate</small></strong><span class="journey-visual-note">Cumulative premiums paid पर<br>हर साल, PPT तक</span><div class="journey-ga-chart" aria-label="Accrued additions grow during premium payments">${[1,2,3,4,5].map((n, i) => part(`<i style="--bar:${n * (n + 1) / 30}"></i>`, i)).join('')}</div><span class="journey-visual-note">Year 1 → Year ${ppt} · फिर accrual बंद</span>`,
+      `<span class="journey-visual-label">हर साल Regular Income</span><strong>${money(30000)}</strong><span class="journey-visual-note">10% of ₹3,00,000</span><div class="journey-income-payments">${[ppt, ppt + 1, 29].map((year, i) => part(`<span>Year ${year}</span><b>↓ ${money(30000)}</b>`, i)).join('')}</div><span class="journey-visual-note">Year ${ppt} से Year 29 तक<br>बीच के हर साल भी</span>`,
+      `<span class="journey-visual-label">एक अतिरिक्त Booster</span>${part('<strong class="journey-booster-number">70%</strong>', 0)}${part(`<strong>${money(210000)}</strong>`, 1)}${part(`<span class="journey-booster-year">Policy Year ${BOOSTER_YEAR_BY_PPT[ppt]}</span>`, 2)}<span class="journey-visual-note">₹3,00,000 का 70%<br>Defer कर सकते हैं, plan terms अनुसार</span>`,
+      `<span class="journey-visual-label">Year 30 · Maturity</span>${part('<span class="journey-maturity-part">Basic SA <b>₹3,00,000</b></span>', 0)}${part(`<span class="journey-maturity-part">+ Accrued GA <b>${money(additions)}</b></span>`, 1)}${part(`<strong class="journey-maturity-total">${money(300000 + additions)}</strong>`, 2)}<span class="journey-visual-note">7% base GA · All premiums paid<br>Income / Booster अलग</span>`
+    ];
+    visual.innerHTML = journeyStep < 0 ? '' : visuals[journeyStep];
+    visual.hidden = journeyStep < 0;
+    journeyPage.dataset.paused = String(!journeyAutoplay || journeyComplete);
   }
   function completeJourney() {
     clearJourneyRun();
@@ -246,6 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function startJourneyStep(index, manual = false) {
     clearJourneyRun();
     journeyStep = index;
+    journeyPage.dataset.manual = String(manual);
     journeyComplete = false;
     renderJourneyStep();
     if (currentPage !== 6) return;
@@ -356,6 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
     audioEvents?.abort();
     audioEvents = null;
     chartComplete = false;
+    narrationComplete = false;
     playbackWanted = false;
     const previous = audioElement;
     audioElement = null; // Ignore late media events from the departing page.
@@ -387,10 +416,11 @@ document.addEventListener('DOMContentLoaded', () => {
       listen('ended', () => {
         if (!isCurrent()) return;
         playbackWanted = false;
+        narrationComplete = true;
         if (page <= 3) chartComplete = true;
         audio.currentTime = 0;
         updateAudioUI('idle');
-        if (automaticStory && page < 4) showPage(page + 1, false, audio);
+        if (automaticStory && page <= 5) showPage(page + 1, false, audio);
       });
       for (const event of ['timeupdate', 'seeked', 'loadedmetadata', 'durationchange']) listen(event, () => { if (isCurrent()) syncChart(); });
       listen('error', () => {
@@ -401,6 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
     const audio = audioElement;
+    narrationComplete = false;
     if (currentPage <= 3 && chartComplete) { chartComplete = false; audio.currentTime = 0; }
     updateAudioUI('loading');
     try {
@@ -414,8 +445,85 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  const incomePrompt = document.getElementById('incomeSelectionPrompt');
+  const incomeContinue = document.getElementById('incomeSelectionContinue');
+  const incomePause = document.getElementById('incomeSelectionPause');
+  let selectionTimer = null;
+  let selectionGeneration = 0;
+  let selectionSeconds = 10;
+  let selectionPaused = false;
+  let selectionChanged = false;
+  let selectionContinuation = null;
+
+  function clearSelectionTimer() {
+    selectionGeneration++;
+    clearTimeout(selectionTimer);
+    selectionTimer = null;
+  }
+  function updateSelectionPrompt() {
+    document.getElementById('incomeSelectionSummary').textContent = `Age ${selectedSampleAge} · PPT ${selectedSamplePpt} years`;
+    document.getElementById('incomeSelectionCountdown').textContent = selectionPaused
+      ? 'Timer paused · अपनी values चुनें और Continue दबाएँ।'
+      : `${selectionSeconds} second${selectionSeconds === 1 ? '' : 's'} में ${selectionChanged ? 'चुनी हुई' : 'default'} values के साथ auto-resume होगा।`;
+    incomePause.textContent = selectionPaused ? 'Resume timer' : 'मुझे थोड़ा समय दें · Pause timer';
+    incomePause.setAttribute('aria-pressed', String(selectionPaused));
+  }
+  function scheduleSelectionTick() {
+    if (incomePrompt.hidden || selectionPaused || document.hidden || currentPage !== 5) return;
+    const generation = selectionGeneration;
+    selectionTimer = setTimeout(() => {
+      if (generation !== selectionGeneration || incomePrompt.hidden || currentPage !== 5) return;
+      selectionSeconds--;
+      updateSelectionPrompt();
+      if (selectionSeconds <= 0) confirmIncomeSelection(false);
+      else scheduleSelectionTick();
+    }, 1000);
+  }
+  function resetSelectionCountdown(changed = false) {
+    if (incomePrompt.hidden || currentPage !== 5) return;
+    clearSelectionTimer();
+    selectionSeconds = 10;
+    selectionChanged ||= changed;
+    updateSelectionPrompt();
+    scheduleSelectionTick();
+  }
+  function closeSelectionPrompt() {
+    clearSelectionTimer();
+    incomePrompt.hidden = true;
+    document.getElementById('incomeSelectorHome').appendChild(document.getElementById('incomeSelectors'));
+    document.getElementById('planDetailsPage').inert = false;
+    document.querySelector('.scene-two-footer').inert = false;
+    selectionContinuation = null;
+  }
+  function openSelectionPrompt(continuation) {
+    selectionContinuation = continuation;
+    selectionPaused = false;
+    selectionChanged = false;
+    incomePrompt.hidden = false;
+    document.getElementById('incomeSelectionOptions').appendChild(document.getElementById('incomeSelectors'));
+    document.getElementById('planDetailsPage').inert = true;
+    document.querySelector('.scene-two-footer').inert = true;
+    resetSelectionCountdown();
+    incomeContinue.focus();
+  }
+  function confirmIncomeSelection(focus = true) {
+    if (incomePrompt.hidden || currentPage !== 5) return;
+    const continuation = selectionContinuation;
+    closeSelectionPrompt();
+    if (focus) journeyNext.focus();
+    toggleAudioPlayback(continuation);
+  }
+  incomeContinue.addEventListener('click', () => confirmIncomeSelection());
+  incomePause.addEventListener('click', () => {
+    clearSelectionTimer();
+    selectionPaused = !selectionPaused;
+    updateSelectionPrompt();
+    scheduleSelectionTick();
+  });
+
   function showPage(page, focus = true, continuation = null) {
     if (!STORY_SCENES[page]) return;
+    closeSelectionPrompt();
     stopJourney();
     stopAllAudio();
     currentPage = page;
@@ -483,7 +591,8 @@ document.addEventListener('DOMContentLoaded', () => {
     advisorAudioBtn.title = STORY_SCENES[1].script;
     sceneTwoDialogueBtn.title = STORY_SCENES[page].script;
     updateAudioUI('idle');
-    if (!isJourney) toggleAudioPlayback(continuation);
+    if (isDetails) openSelectionPrompt(continuation);
+    else if (!isJourney) toggleAudioPlayback(continuation);
   }
 
   function updateStoryMode() {
@@ -496,7 +605,7 @@ document.addEventListener('DOMContentLoaded', () => {
   storyModeButtons.forEach(button => button.addEventListener('click', () => {
     automaticStory = !automaticStory;
     updateStoryMode();
-    if (automaticStory && currentPage < 4 && chartComplete) showPage(currentPage + 1, false, audioElement);
+    if (automaticStory && currentPage <= 4 && narrationComplete) showPage(currentPage + 1, false, audioElement);
   }));
   updateStoryMode();
   advisorAudioBtn.addEventListener('click', () => toggleAudioPlayback());
@@ -511,8 +620,11 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (currentPage === 6 && !journeyComplete) advanceJourney();
     else if (currentPage === 6) { sceneThreeStatus.textContent = 'Protection page is coming next.'; sceneThreeStatus.hidden = false; }
   });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) { stopAllAudio(); if (currentPage === 6) pauseJourney(); } });
-  window.addEventListener('pagehide', () => { stopAllAudio(); stopJourney(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { clearSelectionTimer(); stopAllAudio(); if (currentPage === 6) pauseJourney(); }
+    else if (currentPage === 5 && !incomePrompt.hidden) scheduleSelectionTick();
+  });
+  window.addEventListener('pagehide', () => { closeSelectionPrompt(); stopAllAudio(); stopJourney(); });
   showPage(1, false);
 
   // Developer Tooling: Layer Inspector
@@ -580,6 +692,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Keyboard navigation & accessibility
   document.addEventListener('keydown', (e) => {
+    if (currentPage === 5 && !incomePrompt.hidden) {
+      if (e.key === 'Escape') { e.preventDefault(); confirmIncomeSelection(); return; }
+      if (e.key === 'Tab') {
+        const buttons = [...incomePrompt.querySelectorAll('button')];
+        const first = buttons[0], last = buttons[buttons.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        return;
+      }
+    }
     if (e.key === 'Tab' && stagePreviewModal.classList.contains('active')) {
       const focusable = Array.from(stagePreviewModal.querySelectorAll('button, a[href], iframe')).filter(el => !el.hidden && !el.closest('[hidden]'));
       const first = focusable[0];
