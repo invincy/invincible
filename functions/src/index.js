@@ -40,3 +40,5 @@ exports.invincibleAiChat=onCall({region:'asia-south1',secrets:[openAiApiKey],tim
   throw new HttpsError('internal','Invincible AI could not complete that request. No unconfirmed change should be assumed.');
  }
 });
+
+Object.assign(exports,require('./creator/callables'));

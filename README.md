@@ -222,3 +222,9 @@ The Cashier working screen shows the amount, all six note rows, cash direction, 
 Cashier uses short labels without instructional paragraphs. The explicit +1 button shares each row with the larger increments: 501 notes can be entered with five +100 taps followed by +1. The receipt summary shows received cash and change, while the action bar shows the balance.
 
 **Entries** opens the selected counter's saved records as collapsed rows showing Entry # and amount. Expand a row to see its date, component amounts/references and cash breakdown. Only nonzero denominations and miscellaneous amounts appear; an unused change section is omitted. Review is read-only and preserves the current draft. The working layout uses the full viewport height, with more breathing room around the amount, compact rounded note buttons, and cash-direction tabs sized to their labels.
+
+## Historical Creator production — Phase 1 draft
+
+Creator's existing workbench now includes **Maps** and **Clips**. Maps supports sourced events/GeoJSON, scene-linked camera/timing, local voiceover preview and real-time WebM export. Clips groups adjacent storyboard scene IDs and retains prompts, keyframe references and versioned manual video assets. The unsaved demonstration is `creator/history-demo.html`; existing projects can explicitly append its British India scenes. React, Firebase auth, existing paths and import columns remain unchanged.
+
+[Architecture, official Kling feasibility and remaining work](docs/creator-history-phase1.md) distinguishes implemented behavior from unfinished territorial geometry, live OAuth/account verification, paid generation, full sequence export and P4 integrations. No production deployment or billed generation is included. Run `node --test tests/creator*.mjs`, `npm --prefix functions test` and `node tests/creator-history-browser.cjs` (Playwright Chromium required). MapLibre's pinned local files regenerate with `npm run vendor:creator-map`.

@@ -1,5 +1,5 @@
-import {attachImportedGroups} from './production-model.js?v=4';
-import{createProductionWorkbench}from'./production-workbench.js?v=12';
+import {attachImportedGroups} from './production-model.js?v=5';
+import{createProductionWorkbench}from'./production-workbench.js?v=13';
 import{db,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,serverTimestamp,setDoc,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
@@ -94,7 +94,7 @@ function subscribeProjects(){
 function openDialog(item=null){
   editingId=item?.id||"";dialogId=editingId||newId();
   const clone=value=>JSON.parse(JSON.stringify(value));
-  dialogProject={...(item||{}),title:item?.title||"",script:item?.script||"",hook:item?.hook||"",notes:item?.notes||"",scenes:clone(item?.scenes||[]),animationGroups:clone(item?.animationGroups||[]),assets:clone(item?.assets||[])};
+  dialogProject={...(item||{}),title:item?.title||"",script:item?.script||"",hook:item?.hook||"",notes:item?.notes||"",historicalMap:item?.historicalMap?clone(item.historicalMap):null,productionClips:clone(item?.productionClips||[]),scenes:clone(item?.scenes||[]),animationGroups:clone(item?.animationGroups||[]),assets:clone(item?.assets||[])};
   dialogScenes=dialogProject.scenes;
   $("contentSaveError").textContent="";
   const form=$("contentForm");form.reset();
@@ -144,7 +144,7 @@ $("board").onkeydown=event=>{if((event.key==="Enter"||event.key===" ")&&!event.t
 $("contentForm").onsubmit=async event=>{
   event.preventDefault();if(savingContent||!user)return;
   const form=event.currentTarget,data=new FormData(form),existing=state.items.find(row=>row.id===editingId),generation=authGeneration;
-  const item={...(existing||{}),id:dialogId,title:data.get("title").trim(),format:data.get("format"),stage:data.get("stage"),series:data.get("series"),publishDate:data.get("publishDate"),hook:data.get("hook").trim(),script:data.get("script"),notes:data.get("notes"),visualStyle:dialogProject.visualStyle||"",aspectRatio:dialogProject.aspectRatio||"9:16",language:dialogProject.language||"",characterBible:dialogProject.characterBible||"",continuityNotes:dialogProject.continuityNotes||"",animationGroups:dialogProject.animationGroups||[],assets:dialogProject.assets||[],scenes:dialogScenes.map(scene=>({...scene})),ownerUid:existing?.ownerUid||user.uid,ownerEmail:existing?.ownerEmail||(user.email||"").toLowerCase(),editorEmails:existing?.editorEmails||[]};
+  const item={...(existing||{}),id:dialogId,title:data.get("title").trim(),format:data.get("format"),stage:data.get("stage"),series:data.get("series"),publishDate:data.get("publishDate"),hook:data.get("hook").trim(),script:data.get("script"),notes:data.get("notes"),visualStyle:dialogProject.visualStyle||"",aspectRatio:dialogProject.aspectRatio||"9:16",language:dialogProject.language||"",characterBible:dialogProject.characterBible||"",continuityNotes:dialogProject.continuityNotes||"",historicalMap:dialogProject.historicalMap||null,productionClips:dialogProject.productionClips||[],animationGroups:dialogProject.animationGroups||[],assets:dialogProject.assets||[],scenes:dialogScenes.map(scene=>({...scene})),ownerUid:existing?.ownerUid||user.uid,ownerEmail:existing?.ownerEmail||(user.email||"").toLowerCase(),editorEmails:existing?.editorEmails||[]};
   if(!item.title){form.elements.title.setCustomValidity("Enter a working title.");form.elements.title.reportValidity();return;}
   savingContent=true;$("contentSaveError").textContent="";
   const controls=[...form.querySelectorAll("button,input,select,textarea")],disabled=controls.map(control=>control.disabled);
@@ -173,3 +173,5 @@ observeAuth(async current=>{
  subscribeProjects();
  try{await migrateLegacyProjects()}catch(error){if(generation===authGeneration)status("Legacy import failed. "+storageError(error),"error")}
 }).catch(error=>status("Could not restore your Google session: "+error.message,"error"));
+
+$('contentDialog').addEventListener('close',()=>storyboard.suspend());

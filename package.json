@@ -13,9 +13,11 @@
     "test:v2": "node --test tests/v2-*.mjs",
     "test:v2:smoke": "node tests/v2-browser.cjs --smoke",
     "test:v2:browser": "node tests/v2-browser.cjs",
-    "test:crm:browser": "npx --yes firebase-tools@13.24.1 emulators:exec --only firestore --project demo-invincible-crm --config firebase.crm-test.json \"node tests/lic-crm-rules.cjs && node tests/lic-agent-crm-browser.cjs\""
+    "test:crm:browser": "npx --yes firebase-tools@13.24.1 emulators:exec --only firestore --project demo-invincible-crm --config firebase.crm-test.json \"node tests/lic-crm-rules.cjs && node tests/lic-agent-crm-browser.cjs\"",
+    "vendor:creator-map": "node scripts/vendor-creator-map.mjs"
   },
   "devDependencies": {
+    "maplibre-gl": "6.16.0",
     "playwright": "1.56.1"
   }
 }

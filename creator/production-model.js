@@ -1,5 +1,5 @@
 import {makeScene,parseTsv,storyboardDuration} from './storyboard-model.js?v=3';
-export const METHODS=['Blender','AI Video','Existing Footage','Editing'];
+export const METHODS=['Blender','AI Video','Existing Footage','Editing','Animated Maps','3D Civilizations','Canva','Voiceover'];
 export const SCENE_STATES=['Planned','Assets Ready','Editing','Completed'];
 export const uid=()=>globalThis.crypto?.randomUUID?.()||String(Date.now()+Math.random());
 const norm=value=>String(value??'').toLowerCase().replace(/[^a-z0-9]/g,'');
