@@ -56,7 +56,7 @@ production clips or provider integrations.
 
 ### Editing
 
-- Drag a gold/ship/fort/army icon onto the map, or select it and tap a location.
+- Drag a gold/diamond/ship/fort/army icon onto the map, or select it and tap a location.
   Select a placed object and drag its anchor; numeric longitude/latitude fields
   provide precise and keyboard-accessible placement. A drag ghost previews the
   destination. Labels and drawn routes are explicitly illustrative.
@@ -131,3 +131,17 @@ time and should start only after visible assets have finished loading.
 Official implementation references: [MapLibre custom layers](https://maplibre.org/maplibre-gl-js/docs/API/interfaces/CustomLayerInterface/),
 [MapLibre image and raster DEM sources](https://maplibre.org/maplibre-style-spec/sources/),
 and [Three.js GLTFLoader](https://threejs.org/docs/pages/GLTFLoader.html).
+
+
+### Asset library follow-up
+
+The visual editor now includes a diamond symbol and a searchable library of custom
+image/GLB references. **Edit reference → Save asset changes** updates its URL/name/
+credit for all placements sharing that reference. Types remain fixed to prevent
+breaking image/model placements. Unused references can be removed; referenced
+assets must have their placements removed first. Map Undo restores library edits.
+
+Export/import `invincible-map-assets` version-1 JSON to reuse the library across
+projects. Import allocates fresh IDs, skips existing type/URL pairs and validates
+all resulting references before saving. It does not add scenes or artwork placements.
+The durable HTTPS URL requirement and absence of automatic uploads remain unchanged.

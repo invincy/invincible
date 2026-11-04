@@ -611,3 +611,13 @@ claim. CI is enabled for the new map tests. Real signed-in Firebase access, exte
 provider terrain coverage, arbitrary production asset files and physical mobile
 devices remain unverified. No deployment, publishing, live data changes or paid
 generation took place.
+
+
+### Map asset library follow-up — November 5, 2026
+
+Adds a diamond symbol, searchable reusable asset references, shared URL/credit
+editing, protected removal of unused references and library JSON import/export.
+Nine focused model tests and the expanded native MapLibre browser regression pass,
+including library search, shared reference editing, in-use removal rejection and
+idempotent library import. Existing map/history browser checks, site references and
+whitespace checks pass. No upload backend, auth, Firebase or deployment changes.

@@ -9,3 +9,5 @@
 
 .map-drag-ghost{position:absolute;z-index:3;pointer-events:none;transform:translate(-50%,-50%);padding:8px 12px;border:1px solid #d8b873;border-radius:6px;background:#102331dd;color:#e8d9b8;font:12px system-ui}.visual-map-editor input[type=color]{height:40px}
 .history-workspace .maplibregl-ctrl-group button{padding:0;border:0;border-radius:0;background-color:#e9dfca;width:32px;height:32px;min-width:32px}.visual-map-editor button{min-height:40px}.visual-map-editor .maplibregl-ctrl-group button{min-height:32px}
+
+.visual-map-editor .map-library-card{display:flex;flex-wrap:wrap;gap:6px;padding:10px;border:1px solid #3d515d;border-radius:8px;width:100%;box-sizing:border-box}.map-library-card strong,.map-library-card small{flex-basis:100%;overflow-wrap:anywhere}

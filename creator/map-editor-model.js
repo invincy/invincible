@@ -1,6 +1,13 @@
 // Additive visual metadata. Historical events/features remain in the original schema.
-export const icons = {gold:'◆',ship:'⛵',fort:'♜',army:'⚑'};
+export const icons = {gold:'◆',diamond:'◇',ship:'⛵',fort:'♜',army:'⚑'};
 export const uid = () => crypto.randomUUID();
+export function assetLibrary(map){return {format:'invincible-map-assets',version:1,assets:structuredClone(map.visual?.assets||[])};}
+export function importAssetLibrary(map,pkg){
+ if(pkg?.format!=='invincible-map-assets'||pkg.version!==1||!Array.isArray(pkg.assets))throw Error('Use an Invincible asset library JSON file.');
+ const out=structuredClone(map);
+ for(const asset of pkg.assets){if(!out.visual.assets.some(a=>a.type===asset.type&&a.url===asset.url))out.visual.assets.push({...structuredClone(asset),id:uid()});}
+ return out;
+}
 const finite=(v,a,b)=>typeof v==='number'&&Number.isFinite(v)&&v>=a&&v<=b;
 const https=v=>{try{const u=new URL(v);return u.protocol==='https:'&&!u.username&&!u.password;}catch{return false;}};
 const point=p=>Array.isArray(p)&&p.length===2&&finite(p[0],-180,180)&&finite(p[1],-85,85);
