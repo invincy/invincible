@@ -582,3 +582,32 @@ Verification: 31 Creator unit tests pass. Full repository unit run: 149 passed, 
 ### Creator publication checks — November 5, 2026
 
 The publication CI run caught the legacy four-tab assertion after adding Maps/Clips. The regression now checks the exact six-tab identities. The new playback check also exposed a map-loading race: controls are now disabled until MapLibre/fallback data is ready, and the regression waits for actual timeline progression instead of a fixed 500 ms delay. Creator unit tests pass. GitHub CI supplies full browser verification; the local browser executable cannot launch under this managed workspace's socket restrictions. Publish only after the corrected Creator and repository CI checks complete successfully. Existing territorial-data and Kling-account limitations remain as documented above.
+
+### Historical visual map editor — November 5, 2026 (draft, not deployed)
+
+Adds the optional visual editor inside Maps, reusing existing MapLibre/player,
+storyboard timing and save flow. Includes a layer stack, illustrative icons/labels/
+routes, georeferenced images and GLB references, attributed DEM terrain, camera
+keyframe editing, undo/redo, validated JSON and append-only reusable scene packages.
+Source-reviewed geography stays distinct from artwork. No historical boundaries
+were invented. React/auth/Firebase/backend and unrelated production modules are
+unchanged. See `creator-history-phase1.md` for workflow, data schema and limits.
+
+Local validation: 156 repository unit tests passed with two existing skips; all
+12 Functions tests passed. Main React build, V2 build/stage, site reference check
+and whitespace checks passed. Generated React/V2 output has no retained changes.
+The visual editor browser regression passed in Chrome with real WebGL2 MapLibre,
+synthetic CORS image/GLB/DEM fixtures, file-drop positioning and object dragging,
+layer/state edits, route/camera playback, reviewed imports, scene reuse, atomic
+failure recovery and responsive widths 320–1440px. Existing Creator storyboard
+and history browser regressions passed. Full V2 browser coverage passed in Chromium
+and Firefox. Desktop/mobile screenshots were visually inspected.
+
+The full V1 browser command passed Garage/storage, shared navigation, dashboard/
+reminders, orb, task copy and Creator, then stopped at the unchanged Journal test's
+`Save journal idea` dialog timeout (`tests/journal-tools-browser.cjs:54`). Later
+V1 scenarios were not reached by that command. This is not an all-green full-suite
+claim. CI is enabled for the new map tests. Real signed-in Firebase access, external
+provider terrain coverage, arbitrary production asset files and physical mobile
+devices remain unverified. No deployment, publishing, live data changes or paid
+generation took place.

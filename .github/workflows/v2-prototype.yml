@@ -66,7 +66,7 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: node --test tests/creator*.mjs
-      - run: node tests/creator-storyboard-browser.cjs && node tests/creator-history-browser.cjs
+      - run: node tests/creator-storyboard-browser.cjs && node tests/creator-history-browser.cjs && node tests/creator-map-editor-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

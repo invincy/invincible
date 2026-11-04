@@ -189,4 +189,10 @@ The row-layout follow-up opens a new counter automatically with zero opening den
 
 Additive `historicalMap`, `productionClips[]` and optional scene `voiceoverAssetId` stay on the existing `creatorProjects/{id}` document. New Content clones nested metadata and serializes it through the existing explicit create/edit flow. Map/clip edits use the saved-project autosave/draft queue. No project/scene IDs, database paths, rules, auth policy or production records are migrated.
 
+The visual map editor adds optional `historicalMap.visual` layer, asset-reference and
+terrain metadata through those same callbacks. Asset binaries stay at user-supplied
+HTTPS URLs; local dropped files are not uploaded or embedded in Firestore. Scene
+packages append fresh scene/object IDs only after validation and retain existing
+project fields. No new collection, rule, Storage permission or migration is needed.
+
 Optional, undeployed backend callables authorize project owners/verified invited editors before Admin Storage access. The Kling probe additionally requires an explicitly configured matching account UID. Manual video objects are immutable under `creatorProjects/{id}/clips/{clipId}/{versionId}` in the configured private bucket; metadata is returned to the caller and attached through the regular client save queue. Failed/abandoned metadata saves may leave an orphan object for manual recovery. Signed read URLs expire after 15 minutes; stored paths remain stable. No bucket/rule/IAM or deployment change was made. Existing whole-document collaboration/size limitations still apply; see [Phase 1 architecture and limits](creator-history-phase1.md).

@@ -44,3 +44,90 @@ Only additive `historicalMap`, `productionClips`, optional scene audio reference
 ## Validation
 
 See the dated entry in `docs/code-review.md` for actual commands/results. No paid generation, production deployment, account token provisioning, production Firestore mutation or credit purchase took place.
+
+## Historical visual map editor — November 5, 2026
+
+Open **Creator Studio → Maps → Open visual editor**. The existing map workspace,
+JSON editor, playback and recording remain available through **Advanced / recording**.
+The visual editor reuses `history-player.js`, the local MapLibre 6.16 distribution,
+physical coastline, canonical storyboard clock and existing project save callbacks.
+It does not change React, authentication, Firebase rules/paths, storyboard imports,
+production clips or provider integrations.
+
+### Editing
+
+- Drag a gold/ship/fort/army icon onto the map, or select it and tap a location.
+  Select a placed object and drag its anchor; numeric longitude/latitude fields
+  provide precise and keyboard-accessible placement. A drag ghost previews the
+  destination. Labels and drawn routes are explicitly illustrative.
+- Drop PNG/JPEG/WebP/GLB files to capture a position and prepare their asset form.
+  Images have a local preview. Supply a durable, CORS-enabled HTTPS asset URL before
+  saving the placement; there is no new upload backend. GLB requires embedded
+  resources and uses metres per model unit. A pinned, locally bundled Three.js
+  renderer loads only when a GLB layer is present (`npm run vendor:map-model`).
+- Images use four geographic corners (TL, TR, BR, BL), editable as coordinates,
+  plus scale and rotation. GLB models have scale, rotation and altitude above the
+  supplied terrain. Image/model errors are reported without replacing their references.
+- The stack supports selection, visibility, color, opacity, order and deletion.
+  Illustrative layers have scene-relative start and duration. Undo/redo retains
+  up to 30 in-session map states. Deleting a historical layer also removes its
+  corresponding event/feature; Undo restores it. Unused asset references remain
+  available for reuse. Historical event callouts remain an annotation overlay above
+  geographic layers; their order controls callout collision priority. 3D models
+  also obey the shared depth buffer.
+- Import GeoJSON polygons/multipolygons/routes with a historical date, HTTPS source,
+  provenance/precision note and explicit geometry review. Validation checks structure
+  and records the editor's review; it does not independently establish historical
+  accuracy. No new historical boundaries or claimed troop routes are bundled.
+- Terrain accepts an attributed raster DEM TileJSON URL, Mapbox/Terrarium encoding
+  and 0–5 exaggeration. No provider credentials or endpoint are preconfigured.
+  Coverage, CORS, licensing and dataset age remain provider responsibilities. A
+  modern elevation surface is not represented as verified historical topography.
+- Scrub/play the existing storyboard timeline, pan/zoom/tilt the camera, capture
+  keyframes at the playhead, edit their scene offset, replace their view or delete
+  them. Camera controls support numeric editing as well as MapLibre navigation.
+
+### Data and scene reuse
+
+Existing version-1 maps are accepted without migration. Optional
+`historicalMap.visual = {version: 1, layers: [], assets: [], terrain?: {...}}`
+is additive. Historical layers reference existing feature/event IDs; illustrative
+layers declare `classification: "illustrative"`. Assets contain IDs, names, types,
+HTTPS URLs and optional rights notes, never local file/blob/data URLs. Map size
+validation counts UTF-8 bytes and keeps the existing 240 KB limit.
+
+**Download map JSON** is a complete map specification bound to current scene IDs.
+**Export scene** creates an `invincible-map-scene` version-1 package containing
+the selected storyboard scene, its map content, initial camera and referenced
+assets. Importing that package in another Creator project's visual editor appends
+a new scene, remaps linked IDs and preserves all existing scenes and project fields.
+The destination's existing basemap/terrain settings take precedence when merging.
+JSON validation completes before mutation. Scene-package append clears map-only
+undo history because undo does not own the canonical storyboard.
+
+The existing explicit New Content save and saved-project autosave/recovery flows
+persist the metadata. Their prior collaboration/whole-document and Firestore size
+limits remain. A URL labeled durable still needs to be genuinely durable; expiring
+signed URLs are unsuitable for long-term reuse. No asset is silently uploaded.
+
+### Verification and remaining limits
+
+`npm run test:map-editor` covers model invariants and real Chromium/MapLibre behavior,
+including synthetic image, GLB and DEM responses, drop/drag placement, undo/redo,
+layer ordering/visibility, route drawing, camera playback, GeoJSON review, atomic
+bad-import rejection, scene reimport and 320/390/820/1440px layouts. Test coordinates
+and assets are expressly synthetic and are not historical examples. The existing
+history browser regression also checks opening and closing the editor. The Creator
+CI job runs these checks and uploads screenshots.
+
+WebGL2 is required for images, GLB, terrain and direct dragging. The existing 2D
+fallback supports historical geometry plus illustrative icons, labels and routes;
+it clearly reports its limits. GLB animation clips, Draco/KTX2 decoders, terrain
+offline caching, automatic asset uploads and historical territory datasets are not
+included. Camera keyframes have an editable list and playhead capture; the list is
+not a draggable multi-track video timeline. Existing WebM recording remains real
+time and should start only after visible assets have finished loading.
+
+Official implementation references: [MapLibre custom layers](https://maplibre.org/maplibre-gl-js/docs/API/interfaces/CustomLayerInterface/),
+[MapLibre image and raster DEM sources](https://maplibre.org/maplibre-style-spec/sources/),
+and [Three.js GLTFLoader](https://threejs.org/docs/pages/GLTFLoader.html).
