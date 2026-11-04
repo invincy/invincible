@@ -57,9 +57,9 @@ fs.mkdirSync(out,{recursive:true});
    }
    await auto.waitForFunction(()=>Number.isFinite(window.testAudios[0].duration)&&window.testAudios[0].src.endsWith('page4.mp3'));
    await auto.evaluate(()=>{const a=window.testAudios[0];a.currentTime=a.duration-.03;});
-   await auto.waitForFunction(()=>document.querySelector('#sceneTwoDialogueBtn').getAttribute('aria-pressed')==='false');
-   assert.equal(await auto.locator('#stageContainer').getAttribute('data-story-step'),'4');
-   await auto.close();console.log('Real audio automatically advances 1–4, with Manual hold and one player.');
+   await auto.waitForFunction(()=>document.querySelector('#stageContainer').dataset.storyStep==='5');
+   assert.equal(await auto.locator('#stageContainer').getAttribute('data-story-step'),'5');
+   await auto.close();console.log('Real audio automatically advances 1–5, with Manual hold and one player.');
   }
   if(!process.env.LIC_LAYOUT_ONLY) for(const [width,height] of [[320,568],[360,640],[390,844],[320,480],[1440,900]]) {
    const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
@@ -136,9 +136,9 @@ fs.mkdirSync(out,{recursive:true});
   const after=fs.readFileSync('lic/bima-platinum/index.html','utf8');
   for(const id of ['productReveal','planDetailsPage','planJourneyPage']) {
    const re=new RegExp(`<section id="${id}"[\\s\\S]*?</section>`);
-   assert.equal(after.match(re)?.[0].replace(/\r\n/g,'\n'),before.match(re)?.[0].replace(/\r\n/g,'\n'),id);
+   assert.equal(after.match(re)?.[0].replace(/            <div id="journeyIllustration"[^>]*><\/div>\r?\n/, '').replace(/\r\n/g,'\n'),before.match(re)?.[0].replace(/\r\n/g,'\n'),id);
   }
-  console.log('Page 4–6 product sections are unchanged.');
+  console.log('Page 4–6 product sections are preserved apart from the stage illustration mount.');
   // Deterministic media states exercise layout during loading and failures too.
   for(const [width,height] of [[320,480],[320,568],[360,640],[390,844],[1440,900]]) {
    const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
@@ -205,6 +205,21 @@ fs.mkdirSync(out,{recursive:true});
      await page.evaluate(()=>{window.testDeny=false;});await page.click(selector);await page.evaluate(()=>window.testAudios.at(-1).start());
      await page.evaluate(()=>window.testAudios.at(-1).dispatchEvent(new Event('error')));
      await check('error');
+    }
+    if(step===6) {
+     await page.click('#journeyPlayPause');
+     for(let stage=0;stage<5;stage++) {
+      await page.click(`[data-journey-step="${stage}"]`);
+      const layout=await page.locator('#planJourneyPage').evaluate(el=>{
+       const v=el.querySelector('#journeyIllustration');
+       const visible=[...v.children].filter(x=>getComputedStyle(x).display!=='none');
+       const bottom=Math.max(...visible.map(x=>x.getBoundingClientRect().bottom));
+       return {bottom,trackTop:el.querySelector('.journey-track').getBoundingClientRect().top,detailBottom:el.querySelector('#journeyDetail').getBoundingClientRect().bottom,audioTop:document.querySelector('#journeyPlayPause').getBoundingClientRect().top};
+      });
+      assert.ok(layout.bottom<=layout.trackTop,JSON.stringify({width,height,stage,layout}));
+      assert.ok(layout.detailBottom<=layout.audioTop+.5,JSON.stringify({width,height,stage,layout}));
+      await page.screenshot({path:`${out}/${width}x${height}-stage${stage+1}.png`});
+     }
     }
     await page.screenshot({path:`${out}/${width}x${height}-floating-page${step}.png`});
     console.log(`Fixed audio/Next layout: ${width}x${height} page ${step}`);
