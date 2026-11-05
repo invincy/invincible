@@ -132,6 +132,31 @@ Official implementation references: [MapLibre custom layers](https://maplibre.or
 [MapLibre image and raster DEM sources](https://maplibre.org/maplibre-style-spec/sources/),
 and [Three.js GLTFLoader](https://threejs.org/docs/pages/GLTFLoader.html).
 
+## Timed instruction import, map library and HD rendering — November 5, 2026
+
+The visual editor now provides **Import animation → Check instructions → Add animation → Play → Render silent MP4**. ChatGPT can supply an `invincible-map-animation` version-1 JSON file using **Copy ChatGPT brief**. This is a declarative importer, not an AI prompt interpreter or a Python/JavaScript runtime. No OpenAI API, provider generation account or additional AI credits are used by import/playback/render. Road/border geometry is never inferred from place names.
+
+Instructions use absolute seconds, aspect ratio, library style, camera keys, relief-light keys, assets and timed layers. Imports create canonical scenes automatically (1–60 seconds each, exact combined timing), append fresh IDs, and retain existing project fields, scenes, assets and narration. Established destination map/terrain preferences win when appending. Invalid files fail validation before any project change. Imports containing boundary/highlight geometry need source/date/precision metadata and a separate user review checkbox; a `reviewed` flag inside an instruction is not sufficient. Changing the input clears the checkbox. Illustrative routes remain expressly illustrative.
+
+Imported historical layers have optional visibility windows, fades, dash patterns, line widths and reveal durations. IB/LoC/LAC/claim presets select distinct patterns and disable arrowheads. Historical geometry retires when its window ends. Existing unwindowed layers retain their prior persistent behavior. Optional relief lighting interpolates direction/intensity, including shortest angular turns. These controls shade terrain, not arbitrary imported GLB lights. Static GLB opacity now follows layer fades; animation clips remain unsupported.
+
+Library choices:
+
+* Clean physical: bundled generalized Natural Earth coastline, unchanged as a legacy option.
+* Vivid topography: NASA GIBS ASTER GDEM colour shaded relief, GoogleMapsCompatible Level12, plus Mapzen/AWS Terrarium terrain.
+* Natural Earth imagery: NASA GIBS Blue Marble shaded-relief/bathymetry composite, Level8. This is regional/global imagery, not live or street-resolution photography.
+* Detailed atlas: OpenFreeMap Liberty vector cartography. Modern labels and administrative borders are hidden by default and independently opt-in; this cartography is not historical evidence.
+
+New visual-editor maps start with detailed topography. Existing saved maps keep their style. Imagery saturation/contrast controls apply only to raster styles. Preview thumbnails are captures of the actual runtime sources (`node scripts/map-library-previews.cjs`), not generated concept artwork. Public providers require network/CORS availability and proper attribution; no uptime or unlimited-resolution guarantee is implied. Enlarging an export never creates source detail above the provider's maximum zoom.
+
+**Render silent MP4** uses locally bundled Mediabunny 1.65.2 and browser WebCodecs/H.264. Each frame is evaluated at its exact 30-fps timestamp, waits for current map tiles/style/artwork, and is encoded independently of wall-clock playback. The map framebuffer is enlarged at the source via MapLibre pixel ratio, rather than scaling a small preview. Landscape/portrait and 720p/1080p/4K are available; encoding support depends on the browser/device and is checked before rendering. The renderer supports up to 10 minutes per file, buffers the result in browser memory, includes attribution, has cancellation, and restores the preview viewport/time/interaction state. Keep the page open. Unsupported codecs, tile errors, failed assets and loading timeouts produce errors instead of a misleading complete export. Final duration is rounded upward to a whole video frame.
+
+MP4 is picture-only, matching the map-animation workflow; add narration in the finishing editor. WebM remains real-time and can include local audio, now with selected native export resolution. Pause/visibility loss still ends WebM as a partial recording; explicit Cancel discards it. No server render API, paid generation, asset upload, Firebase deployment, rule change or project migration is introduced.
+
+`creator/map-animation-demo.html` is an unsaved local/public-page-compatible demonstration. Its bright dotted Gujarat–Kashmir connection draws in five seconds and holds for three, with terrain and camera changes. The line is explicitly illustrative and is not a real road or border. `map-animation-example.json` is the reusable instruction file.
+
+References: [NASA GIBS tile matrices](https://nasa-gibs.github.io/gibs-api-docs/map-library-usage/), [Mapzen terrain attribution](https://github.com/tilezen/joerd/blob/master/docs/attribution.md), [OpenFreeMap](https://openfreemap.org/quick_start/), [Mediabunny](https://mediabunny.dev/guide/writing-media-files). Library/source availability and metadata were checked live on November 5, 2026.
+
 
 ### Asset library follow-up
 

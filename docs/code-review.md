@@ -652,3 +652,39 @@ inspected. The preceding PR run passed Creator, Journal and CRM jobs; its broad
 verification job failed an unchanged LIC presentation layout assertion at
 `tests/lic-opening-browser.cjs:232` (320×568, stage 4). No LIC code is edited here.
 Latest CI reruns after push. Nothing deployed or published.
+
+## Map instruction import, library and HD export — November 5, 2026
+
+Implemented declarative ChatGPT instruction import with atomic validation and
+append-only canonical scene creation; no free-text AI endpoint or script execution.
+Added actual-source map previews, NASA topographic/natural imagery and a modern
+OpenFreeMap atlas, opt-in modern labels/borders, terrain presets, timed relief
+lighting, fades, dotted/dashed boundary styling and layer expiry. Existing project
+data and map sources remain compatible. New maps default to detailed topography.
+
+Added native framebuffer sizing and deterministic silent MP4 rendering with
+Mediabunny/WebCodecs, 30-fps timestamps, 720p/1080p/4K landscape/portrait choices,
+asset/tile readiness checks, cancellation and viewport/interaction restoration.
+Retained WebM/audio recording. Static GLB opacity follows layer fades; custom
+GLB lights, animation clips and globe GLB rendering remain outside this change.
+
+Verification: repository tests passed (168 passes, two existing skips) and all
+15 Functions tests passed. Creator history, visual-editor and instruction/import
+browser regressions passed in real Chrome/WebGL2, including actual H.264 download
+and decoding of a five-second 1920×1080 MP4, native framebuffer dimensions,
+cancellation and 320/390/820/1440px layouts. Live public-provider previews for all
+four styles loaded; a separate unsaved example exported eight seconds of actual
+detailed terrain footage from the editor at 1920×1080, 30 fps. FFmpeg fully decoded
+all 240 frames successfully. Main React build, V2 build/stage and site references
+passed; unrelated regenerated React/vendor files were restored. V2 browser suites
+passed in Chromium and Firefox.
+
+The full V1 browser command passed Garage/storage, navigation, reminders, Orb,
+task copy and Creator, then hit the existing Journal `Save journal idea` dialog
+timeout at `tests/journal-tools-browser.cjs:54`. It is not an all-green full-suite
+result; later cases were not reached by that command. Initial shallow-checkout
+Orb baseline lookup was repaired by fetching its required baseline commit before
+rerunning; no Orb/Journal source or tests were changed. Real signed-in Firebase,
+Safari/physical devices, 4K encoder throughput and long-render memory limits are
+not established by these checks. No paid generation, live project writes,
+backend deployment, merge or site publication was performed.

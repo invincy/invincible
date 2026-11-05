@@ -206,3 +206,14 @@ storage paths/source project IDs. Authorized short-lived preview URLs stay out o
 saved JSON. The regular project save/draft queue attaches metadata, so interrupted
 saves can leave retained objects/receipts. See the direct-upload section of the
 historical Creator documentation for deployment prerequisites and verification.
+
+Map-animation upgrade (November 5, 2026): optional `historicalMap.basemap` and
+scene-linked `lighting[]`, optional layer timing/fade/dash/reveal metadata, and
+HTTPS `visual.terrain.tiles[]` use the same existing project save/draft flow.
+Instruction import appends canonical scenes only after complete validation, with
+fresh linked IDs; map-only undo is cleared because it does not own storyboard
+history. Scene packages remap lighting anchors as well as geometry/camera/assets.
+Library preferences and asset references are metadata, not embedded tile imagery.
+MP4 output is rendered locally and downloaded, never automatically uploaded or
+saved to Firestore. Local audio remains session-only. Existing collaboration and
+document-size limits remain. No account, collection, rule or backend changes.
