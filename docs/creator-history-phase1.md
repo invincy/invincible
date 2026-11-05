@@ -245,3 +245,7 @@ Native Chromium coverage checks globe rendering with terrain/images, front/back
 visibility, rejecting sky placement, GLB hide/restore, fly-in/orbit generation,
 invalid-script rejection and projection switching. The globe screenshot was
 visually inspected. No deployment or historical-data additions were made.
+
+### Reuse your own named artwork in animation instructions
+
+Add custom image/GLB assets under Images & 3D assets and give them clear names such as BSF or ITBP. Copy ChatGPT brief includes the current project's asset names, types and IDs. Generated instructions may declare `assets: [{id: "bsf-art", libraryName: "BSF"}]`, then refer to `bsf-art` from an image layer. This uses the existing uploaded/hosted image rather than the built-in BSF text symbol. Matching ignores case and outer whitespace only; missing/duplicate names stop import. For duplicate names, `libraryId` selects the exact entry listed in the brief. Image corners and layer timing still belong to the instruction. Upload names entered in Asset name are retained in project metadata. Direct private upload deployment prerequisites remain unchanged; hosted HTTPS assets remain supported.

@@ -688,3 +688,9 @@ rerunning; no Orb/Journal source or tests were changed. Real signed-in Firebase,
 Safari/physical devices, 4K encoder throughput and long-render memory limits are
 not established by these checks. No paid generation, live project writes,
 backend deployment, merge or site publication was performed.
+
+### Named custom assets — November 6, 2026
+
+Animation instructions can reuse existing project assets with `assets: [{id: "art", libraryName: "BSF"}]` and an image/GLB layer's `assetId: "art"`. Names match case-insensitively after trimming outer whitespace; missing or duplicate names reject the complete import. Use `libraryId` instead of `libraryName` to disambiguate. Do not mix these references with new-asset URLs or storage fields. Resolved assets keep their existing IDs and private storage descriptors; no duplicate binaries or references are created. Copy ChatGPT brief includes only each library asset's name, type and ID. User-selected upload names override the filename in the saved project metadata.
+
+Verification: 170 repository tests passed, two existing skips; all 15 Functions tests passed. Real Chrome map-editor coverage checks upload naming, private-reference reuse, duplicate-name rejection and explicit-ID resolution. Animation browser coverage checks H.264 export and cancellation. Site references and whitespace pass. No backend functions, bucket configuration, auth, rules or production data changed. Direct private uploads still require the separately documented Creator Storage enablement; this change does not establish live signed-in upload capability.
