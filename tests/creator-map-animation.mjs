@@ -1,12 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readAnimation,compileAnimation} from '../creator/map-animation-import.js';
+import {readAnimation,compileAnimation,animationBrief} from '../creator/map-animation-import.js';
 import {emptyMap,mapFrame,lightingFrame} from '../creator/history-model.js';
 import {layerAlpha} from '../creator/map-editor-model.js';
 import {scenePackage,appendScenePackage} from '../creator/map-editor-model.js';
 import {baseStyle,defaultTerrain} from '../creator/map-style-library.js';
 import {exportDimensions} from '../creator/map-video-export.js';
 const plan=()=>({format:'invincible-map-animation',version:1,title:'Synthetic animation fixture',duration:167.7,aspectRatio:'16:9',basemap:'physical',terrain:false,camera:[{time:0,center:[72,23],zoom:4,pitch:30,bearing:0},{time:5,center:[75,34],zoom:5,pitch:40,bearing:0}],lighting:[{time:0,direction:350,intensity:0.2},{time:5,direction:10,intensity:0.6}],layers:[{id:'line',type:'route',name:'Illustrative line, not a road or boundary',start:0,end:7,coordinates:[[72,23],[75,34]],color:'#ffd05e',dash:[2,3],arrowhead:false,revealDuration:5}]});
+test('named custom assets reuse existing private references and are included safely in the ChatGPT brief',()=>{
+ const m=emptyMap(),asset={id:'saved-bsf',name:'BSF',type:'image',storageProjectId:'project',storagePath:'creatorProjects/project/mapAssets/saved-bsf',credit:'User supplied'};m.visual={version:1,assets:[asset],layers:[]};
+ const project={scenes:[{id:'old',duration:2}],historicalMap:m},before=structuredClone(project),p=plan();p.assets=[{id:'art',libraryName:' bsf '}];p.layers=[{id:'badge',type:'image',name:'Custom BSF',start:0,end:7,assetId:'art',corners:[[72,24],[73,24],[73,23],[72,23]],position:[72.5,23.5]}];
+ const r=compileAnimation(project,p);assert.deepEqual(project,before);assert.deepEqual(r.project.historicalMap.visual.assets,[asset]);assert.equal(r.project.historicalMap.visual.layers[0].assetId,'saved-bsf');assert.equal(r.project.historicalMap.visual.layers[0].kind,'image');
+ const brief=animationBrief([asset]);assert.match(brief,/libraryName/);assert.match(brief,/"name":"BSF"/);assert.equal(brief.includes('storagePath'),false);assert.equal(brief.includes('User supplied'),false);
+ p.assets=[{id:'art',libraryId:'saved-bsf'}];assert.equal(compileAnimation(project,p).project.historicalMap.visual.layers[0].assetId,'saved-bsf');
+});
+test('missing, ambiguous, mixed and mismatched asset references reject the whole import',()=>{
+ const m=emptyMap(),a={id:'a',name:'BSF',type:'image',url:'https://example.org/a.png'};m.visual={version:1,assets:[a,{...a,id:'b',name:'bsf',url:'https://example.org/b.png'}],layers:[]};const project={scenes:[],historicalMap:m},before=JSON.stringify(project),p=plan();
+ for(const ref of [{id:'art',libraryName:'missing'},{id:'art',libraryName:'BSF'},{id:'art',libraryId:'missing'},{id:'art',libraryName:'BSF',url:'https://example.org/a.png'},{id:'art',libraryName:'BSF',libraryId:'a'}]){p.assets=[ref];assert.throws(()=>compileAnimation(project,p),/Missing library|More than one|Library references/);assert.equal(JSON.stringify(project),before);}
+ p.assets=[{id:'art',libraryId:'a'}];p.layers=[{id:'wrong',type:'glb',start:0,end:7,assetId:'art',position:[72,23]}];assert.throws(()=>compileAnimation(project,p),/matching asset/);assert.equal(JSON.stringify(project),before);
+});
 test('instruction import appends precise canonical timing without altering original scenes or metadata',()=>{
  const original={id:'saved',custom:{keep:true},scenes:[{id:'old',duration:8,voiceover:'Original'}],historicalMap:emptyMap()},before=structuredClone(original);
  const result=compileAnimation(original,plan());assert.deepEqual(original,before);assert.equal(result.project.scenes.length,4);assert.deepEqual(result.project.scenes[0],before.scenes[0]);assert.equal(result.summary.start,8);assert.equal(result.project.scenes.slice(1).reduce((n,s)=>n+s.duration,0),167.7);

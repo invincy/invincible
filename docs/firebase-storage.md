@@ -217,3 +217,5 @@ Library preferences and asset references are metadata, not embedded tile imagery
 MP4 output is rendered locally and downloaded, never automatically uploaded or
 saved to Firestore. Local audio remains session-only. Existing collaboration and
 document-size limits remain. No account, collection, rule or backend changes.
+
+Named animation asset references (November 6, 2026) resolve to existing asset IDs during atomic import; private descriptors and binary storage locations are unchanged. The copied ChatGPT brief shares asset names, types and IDs only, without signed URLs or storage paths. No new collections, backend deployment, rules or migrations. Direct private file upload enablement remains a separate prerequisite.
