@@ -1,0 +1,10 @@
+{
+ "format":"invincible-map-animation","version":1,"title":"Gujarat to Kashmir — illustrative connection","duration":8,"aspectRatio":"16:9","basemap":"terrain","terrain":true,
+ "camera":[{"time":0,"center":[74,28],"zoom":4.3,"pitch":35,"bearing":0,"easing":"smooth"},{"time":5,"center":[75.4,32.6],"zoom":5.3,"pitch":45,"bearing":0,"easing":"hold"}],
+ "lighting":[{"time":0,"direction":315,"intensity":0.25},{"time":5,"direction":30,"intensity":0.45}],
+ "layers":[
+  {"id":"connection","type":"route","name":"Illustrative connection — not a road or border","start":0,"end":8,"coordinates":[[72.6,23.1],[74.8,34.1]],"color":"#ffdc4f","lineWidth":4,"dash":[2,3],"arrowhead":false,"revealDuration":5,"fadeIn":0,"fadeOut":0},
+  {"id":"gujarat","type":"label","name":"Gujarat","start":0,"end":8,"position":[71.5,23.1],"color":"#ffffff","scale":1},
+  {"id":"kashmir","type":"label","name":"Kashmir","start":4,"end":8,"position":[74.8,34.4],"color":"#ffffff","scale":1}
+ ]
+}
