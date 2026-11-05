@@ -184,3 +184,39 @@ Tests cover denied/owner/editor access, idempotent retry and hash conflicts,
 rejected file formats/GLB resources, private-reference validation and browser
 upload failure/retry/placement using controlled backend fixtures. Live Storage,
 IAM and signed-in production behavior remain unverified.
+
+
+### Globe and scripted camera movements
+
+Choose **Map view → Globe** to render a round Earth with the existing physical
+coastline, geography, imagery and symbols. Flat map remains the default for old
+projects. Optional top-level `historicalMap.projection` is `globe` or `mercator`;
+it is preserved in JSON/scene exports and accepted by the existing playback/
+recording workspace. WebGL2 is required; fallback continues to display a flat map.
+
+**Camera & keyframes → Globe fly-in** creates an Earth-wide start and approaches
+the current camera location during the scene at the playhead. **360° orbit** uses
+four evenly timed bearing keyframes around the current target. These actions
+replace only that scene's camera keys, preserve other scenes and support Undo.
+The editable **Camera script** is a JSON array using existing scene IDs, scene-
+relative offsets, center, zoom, bearing and pitch. Apply validates the full array
+before changing any camera data. No arbitrary JavaScript is executed.
+
+Keyframes accept optional `easing: "smooth" | "linear" | "hold"`, applying from
+that keyframe to the next. Smooth remains the default. Globe longitude and camera
+bearing interpolate across the shortest angular path to avoid spinning through
+the long side of the dateline. A full orbit is expressed by several keyframes,
+not two equivalent endpoints. Scrubbing and playback use the same deterministic
+frame function. Globe overlays hide far-side event labels and arrowheads; sky
+clicks/drops are rejected instead of creating false geographic anchors.
+
+**Current limit:** custom Three.js GLB models still use Mercator-only projection.
+They remain in saved data but are hidden in Globe view, with an explicit notice;
+switching to Flat map restores their preview. Globe-aware model shaders are
+separate work. Camera pitch stays within the existing 0–60 degree range. This is
+a globe/tilted map camera, not a free-flight camera beneath terrain.
+
+Native Chromium coverage checks globe rendering with terrain/images, front/back
+visibility, rejecting sky placement, GLB hide/restore, fly-in/orbit generation,
+invalid-script rejection and projection switching. The globe screenshot was
+visually inspected. No deployment or historical-data additions were made.

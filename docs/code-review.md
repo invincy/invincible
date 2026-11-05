@@ -636,3 +636,19 @@ skips), all 15 Functions tests pass, ten map model tests and the expanded native
 map browser suite pass. Site references and whitespace checks pass. Production
 bucket/IAM/CORS, callable deployment and live signed-in behavior remain unverified;
 no live changes or permission/rule changes were made.
+
+
+### Globe and camera script follow-up — November 5, 2026
+
+Adds optional Globe/Flat projection, scene-local fly-in/orbit presets, validated
+camera JSON editing and smooth/linear/hold easing. Globe longitude and bearing
+follow shortest angular paths. Front-surface round trips suppress far-side canvas
+annotations and reject sky placement. Existing GLB models are retained but hidden
+in globe projection, with a visible limitation notice, and restored in Flat mode.
+All 161 repository unit tests pass with two existing skips; 15 Functions tests pass.
+Twelve map model tests, expanded native map browser coverage, legacy history browser
+coverage, site references and whitespace checks pass. The globe screenshot was
+inspected. The preceding PR run passed Creator, Journal and CRM jobs; its broad
+verification job failed an unchanged LIC presentation layout assertion at
+`tests/lic-opening-browser.cjs:232` (320×568, stage 4). No LIC code is edited here.
+Latest CI reruns after push. Nothing deployed or published.

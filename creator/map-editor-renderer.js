@@ -1,3 +1,4 @@
+import {locationVisible} from './map-globe.js';
 import {resolveMapAsset} from './map-assets-client.js';
 import {icons,layerActive,layerStart,transformedCorners} from './map-editor-model.js';
 import {routeAt,timeOf} from './history-model.js';
@@ -15,6 +16,7 @@ export function createVisualRenderer(map,project,onError){
    if(l.kind==='event')continue;const key=id(l);owned.push(key);
    try{
     if(l.kind==='glb'){
+     if(spec.projection==='globe'){onError('3D models are retained but hidden in Globe view. Switch to Flat map to preview them.');continue;}
      const {createModelLayer}=await import('./vendor/map-model.mjs');if(disposed||rev!==revision)return;
      const asset=spec.visual.assets.find(a=>a.id===l.assetId),model=createModelLayer(key,l,await resolveMapAsset(asset),onError);if(disposed||rev!==revision)return;models.set(key,model);map.addLayer(model);continue;
     }
@@ -50,7 +52,7 @@ export function createVisualRenderer(map,project,onError){
   if(!spec)return;
   for(const l of spec.visual?.layers||[]){
    if(!layerActive(project,l,time))continue;
-   if(l.kind==='route'){const points=routeAt(l.coordinates,(time-layerStart(project,l))/l.duration),a=map.project(points.at(-2)),b=map.project(points.at(-1));ctx.save();ctx.globalAlpha=l.opacity;ctx.fillStyle=l.color;if(!native){ctx.strokeStyle=l.color;ctx.lineWidth=3;ctx.beginPath();points.forEach((c,i)=>{const p=map.project(c);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);});ctx.stroke();}ctx.translate(b.x,b.y);ctx.rotate(Math.atan2(b.y-a.y,b.x-a.x));ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-12,-5);ctx.lineTo(-12,5);ctx.fill();ctx.restore();}
+   if(l.kind==='route'){const points=routeAt(l.coordinates,(time-layerStart(project,l))/l.duration);if(!locationVisible(map,points.at(-1),spec.projection)||!locationVisible(map,points.at(-2),spec.projection))continue;const a=map.project(points.at(-2)),b=map.project(points.at(-1));ctx.save();ctx.globalAlpha=l.opacity;ctx.fillStyle=l.color;if(!native){ctx.strokeStyle=l.color;ctx.lineWidth=3;ctx.beginPath();points.forEach((c,i)=>{const p=map.project(c);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);});ctx.stroke();}ctx.translate(b.x,b.y);ctx.rotate(Math.atan2(b.y-a.y,b.x-a.x));ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-12,-5);ctx.lineTo(-12,5);ctx.fill();ctx.restore();}
    if(!native&&['icon','label'].includes(l.kind)){const p=map.project(l.position);ctx.save();ctx.globalAlpha=l.opacity;ctx.fillStyle=l.color;ctx.font=`${24*Math.min(l.scale,10)}px system-ui`;ctx.fillText(l.kind==='icon'?icons[l.icon]:l.name,p.x,p.y);ctx.restore();}
   }
   if(spec.visual?.layers.some(l=>!['feature','event'].includes(l.kind)&&layerActive(project,l,time))){ctx.fillStyle='#d8be85';ctx.font='11px system-ui';ctx.fillText('Illustrative artwork / drawn routes',8,62);}

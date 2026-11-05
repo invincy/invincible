@@ -47,7 +47,20 @@ const server=http.createServer((req,res)=>{try{const route=new URL(req.url,'http
  await page.evaluate(()=>renderPlayer.seek(9));assert.equal(await page.evaluate(()=>renderPlayer.map.getLayer('visual-glb').implementation.visible),false);
  await page.evaluate(async()=>{renderSpec.visual.layers.reverse();await renderPlayer.setSpec(renderSpec);renderPlayer.seek(2);});
  assert.deepEqual(await page.evaluate(()=>renderErrors),[]);assert.ok(await page.evaluate(()=>renderPlayer.map.getLayer('visual-glb')));assert.deepEqual(await page.evaluate(()=>renderPlayer.map.style._order.filter(id=>id.startsWith('visual-'))),['visual-glb','visual-image']);
+
+ await page.evaluate(async()=>{renderSpec.projection='globe';renderSpec.camera[0]={...renderSpec.camera[0],zoom:0,pitch:0};await renderPlayer.setSpec(renderSpec);renderPlayer.seek(0);});
+ await page.waitForFunction(()=>renderPlayer.map.getProjection().type==='globe');
+ assert.equal(await page.evaluate(()=>!!renderPlayer.map.getLayer('visual-glb')),false);
+ assert.equal(await page.evaluate(()=>renderSpec.visual.layers.some(l=>l.kind==='glb')),true);
+ const visibility=await page.evaluate(async()=>{const {locationVisible,surfacePosition}=await import('/creator/map-globe.js');let rejected=false;try{surfacePosition(renderPlayer.map,[0,0],'globe');}catch{rejected=true;}return [locationVisible(renderPlayer.map,[80,23],'globe'),locationVisible(renderPlayer.map,[-100,-23],'globe'),rejected];});assert.deepEqual(visibility,[true,false,true]);
+ await page.evaluate(()=>{renderHost.scrollIntoView();});await page.waitForTimeout(1000);fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});await page.locator('body > div').last().screenshot({path:path.join(root,'.test-output/creator-globe.png')});
+ await page.evaluate(async()=>{renderSpec.projection='mercator';await renderPlayer.setSpec(renderSpec);});assert.ok(await page.evaluate(()=>renderPlayer.map.getLayer('visual-glb')));
  await page.evaluate(()=>{renderPlayer.destroy();renderHost.remove();});
+
+ await page.locator('summary').filter({hasText:'Camera & keyframes'}).click();await click('fly-in');await settled();assert.equal(await page.evaluate(()=>project.historicalMap.projection),'globe');assert.equal(await page.evaluate(()=>project.historicalMap.camera.some(c=>c.zoom===0)),true);
+ await click('orbit');await settled();assert.equal(await page.evaluate(()=>project.historicalMap.camera.filter(c=>c.sceneId===project.scenes[0].id).length),4);
+ const savedCamera=await page.evaluate(()=>JSON.stringify(project.historicalMap.camera));await page.locator('[data-camera-script]').fill('[{"sceneId":"missing"}]');await click('camera-script');assert.match(await page.locator('[data-editor-status]').textContent(),/missing scene/);assert.equal(await page.evaluate(()=>JSON.stringify(project.historicalMap.camera)),savedCamera);
+ await page.locator('[data-projection]').selectOption('mercator');await settled();
  // Download/import uses real browser file handling and proves append-only scene reuse.
  const downloadPromise=page.waitForEvent('download');await click('scene-export');const download=await downloadPromise;const packageText=fs.readFileSync(await download.path(),'utf8');await page.locator('summary').filter({hasText:'Import / export'}).click();await page.locator('[data-import]').setInputFiles({name:'scene.json',mimeType:'application/json',buffer:Buffer.from(packageText)});await page.waitForFunction(()=>project.scenes.length===5);assert.equal(await page.evaluate(()=>project.scenes[0].voiceover),JSON.parse(packageText).scene.voiceover);
  // Failed import leaves the current map and scenes untouched.
