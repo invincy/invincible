@@ -44,3 +44,179 @@ Only additive `historicalMap`, `productionClips`, optional scene audio reference
 ## Validation
 
 See the dated entry in `docs/code-review.md` for actual commands/results. No paid generation, production deployment, account token provisioning, production Firestore mutation or credit purchase took place.
+
+## Historical visual map editor — November 5, 2026
+
+Open **Creator Studio → Maps → Open visual editor**. The existing map workspace,
+JSON editor, playback and recording remain available through **Advanced / recording**.
+The visual editor reuses `history-player.js`, the local MapLibre 6.16 distribution,
+physical coastline, canonical storyboard clock and existing project save callbacks.
+It does not change React, authentication, Firebase rules/paths, storyboard imports,
+production clips or provider integrations.
+
+### Editing
+
+- Drag a gold/diamond/ship/fort/army icon onto the map, or select it and tap a location.
+  Select a placed object and drag its anchor; numeric longitude/latitude fields
+  provide precise and keyboard-accessible placement. A drag ghost previews the
+  destination. Labels and drawn routes are explicitly illustrative.
+- Drop PNG/JPEG/WebP/GLB files to capture a position and prepare their asset form.
+  Images have a local preview. Supply a durable, CORS-enabled HTTPS asset URL before
+  saving the placement; there is no new upload backend. GLB requires embedded
+  resources and uses metres per model unit. A pinned, locally bundled Three.js
+  renderer loads only when a GLB layer is present (`npm run vendor:map-model`).
+- Images use four geographic corners (TL, TR, BR, BL), editable as coordinates,
+  plus scale and rotation. GLB models have scale, rotation and altitude above the
+  supplied terrain. Image/model errors are reported without replacing their references.
+- The stack supports selection, visibility, color, opacity, order and deletion.
+  Illustrative layers have scene-relative start and duration. Undo/redo retains
+  up to 30 in-session map states. Deleting a historical layer also removes its
+  corresponding event/feature; Undo restores it. Unused asset references remain
+  available for reuse. Historical event callouts remain an annotation overlay above
+  geographic layers; their order controls callout collision priority. 3D models
+  also obey the shared depth buffer.
+- Import GeoJSON polygons/multipolygons/routes with a historical date, HTTPS source,
+  provenance/precision note and explicit geometry review. Validation checks structure
+  and records the editor's review; it does not independently establish historical
+  accuracy. No new historical boundaries or claimed troop routes are bundled.
+- Terrain accepts an attributed raster DEM TileJSON URL, Mapbox/Terrarium encoding
+  and 0–5 exaggeration. No provider credentials or endpoint are preconfigured.
+  Coverage, CORS, licensing and dataset age remain provider responsibilities. A
+  modern elevation surface is not represented as verified historical topography.
+- Scrub/play the existing storyboard timeline, pan/zoom/tilt the camera, capture
+  keyframes at the playhead, edit their scene offset, replace their view or delete
+  them. Camera controls support numeric editing as well as MapLibre navigation.
+
+### Data and scene reuse
+
+Existing version-1 maps are accepted without migration. Optional
+`historicalMap.visual = {version: 1, layers: [], assets: [], terrain?: {...}}`
+is additive. Historical layers reference existing feature/event IDs; illustrative
+layers declare `classification: "illustrative"`. Assets contain IDs, names, types,
+HTTPS URLs and optional rights notes, never local file/blob/data URLs. Map size
+validation counts UTF-8 bytes and keeps the existing 240 KB limit.
+
+**Download map JSON** is a complete map specification bound to current scene IDs.
+**Export scene** creates an `invincible-map-scene` version-1 package containing
+the selected storyboard scene, its map content, initial camera and referenced
+assets. Importing that package in another Creator project's visual editor appends
+a new scene, remaps linked IDs and preserves all existing scenes and project fields.
+The destination's existing basemap/terrain settings take precedence when merging.
+JSON validation completes before mutation. Scene-package append clears map-only
+undo history because undo does not own the canonical storyboard.
+
+The existing explicit New Content save and saved-project autosave/recovery flows
+persist the metadata. Their prior collaboration/whole-document and Firestore size
+limits remain. A URL labeled durable still needs to be genuinely durable; expiring
+signed URLs are unsuitable for long-term reuse. No asset is silently uploaded.
+
+### Verification and remaining limits
+
+`npm run test:map-editor` covers model invariants and real Chromium/MapLibre behavior,
+including synthetic image, GLB and DEM responses, drop/drag placement, undo/redo,
+layer ordering/visibility, route drawing, camera playback, GeoJSON review, atomic
+bad-import rejection, scene reimport and 320/390/820/1440px layouts. Test coordinates
+and assets are expressly synthetic and are not historical examples. The existing
+history browser regression also checks opening and closing the editor. The Creator
+CI job runs these checks and uploads screenshots.
+
+WebGL2 is required for images, GLB, terrain and direct dragging. The existing 2D
+fallback supports historical geometry plus illustrative icons, labels and routes;
+it clearly reports its limits. GLB animation clips, Draco/KTX2 decoders, terrain
+offline caching, automatic asset uploads and historical territory datasets are not
+included. Camera keyframes have an editable list and playhead capture; the list is
+not a draggable multi-track video timeline. Existing WebM recording remains real
+time and should start only after visible assets have finished loading.
+
+Official implementation references: [MapLibre custom layers](https://maplibre.org/maplibre-gl-js/docs/API/interfaces/CustomLayerInterface/),
+[MapLibre image and raster DEM sources](https://maplibre.org/maplibre-style-spec/sources/),
+and [Three.js GLTFLoader](https://threejs.org/docs/pages/GLTFLoader.html).
+
+
+### Asset library follow-up
+
+The visual editor now includes a diamond symbol and a searchable library of custom
+image/GLB references. **Edit reference → Save asset changes** updates its URL/name/
+credit for all placements sharing that reference. Types remain fixed to prevent
+breaking image/model placements. Unused references can be removed; referenced
+assets must have their placements removed first. Map Undo restores library edits.
+
+Export/import `invincible-map-assets` version-1 JSON to reuse the library across
+projects. Import allocates fresh IDs, skips existing type/URL pairs and validates
+all resulting references before saving. It does not add scenes or artwork placements.
+The durable HTTPS URL requirement and absence of automatic uploads remain unchanged.
+
+
+### Direct custom-asset uploads (not deployed)
+
+**Upload and place file** now accepts PNG, JPEG, WebP and self-contained GLB up to
+5 MB in a saved Creator project. A dropped file can use this action or the hosted
+URL alternative. Failed requests retain their upload ID for retry. The endpoint
+checks owner/verified-editor access before writing an immutable object and again
+before issuing its upload receipt. Existing objects are reused only when their
+SHA-256 hash matches. File type/header/size checks reject mismatched formats; GLB
+version, length and JSON are checked and external resource URIs are rejected.
+Image signature checks are not a complete image decoder or malware scan.
+
+Objects use `creatorProjects/{projectId}/mapAssets/{uploadId}` in the existing
+configured `CREATOR_STORAGE_BUCKET`. Backend-only Firestore receipts use
+`creatorProjects/{projectId}/mapAssets/{uploadId}`. Current rules do not grant
+client access to these receipts; Admin callables authorize against the project.
+The frontend attaches the returned descriptor to its normal project save/draft
+queue; no whole-project backend overwrite is introduced. An abandoned project
+save can leave an uploaded object/receipt retained for later recovery, with no
+automatic deletion. The same storage bucket/IAM and CORS configuration needed for
+private clip playback is required. No Firebase rule is broadened.
+
+Private descriptors contain `storageProjectId` and `storagePath`, not expiring
+URLs. Preview resolves authorized 15-minute read links on demand. JSON and scene/
+library exports preserve durable storage references. Cross-project reuse requires
+continued access to the original source project; importing a library grants no
+new access. Link revocation follows signed-link expiry (up to 15 minutes).
+
+Enablement requires approval to deploy only `creatorMapAssetUpload` and
+`creatorMapAssetUrl`, configure the existing bucket parameter and verify its
+signing permissions/CORS, then test signed-in owner, verified editor and denied
+accounts. Nothing has been deployed or configured in production. Unsaved projects
+and environments without these endpoints retain hosted-URL placement.
+
+Tests cover denied/owner/editor access, idempotent retry and hash conflicts,
+rejected file formats/GLB resources, private-reference validation and browser
+upload failure/retry/placement using controlled backend fixtures. Live Storage,
+IAM and signed-in production behavior remain unverified.
+
+
+### Globe and scripted camera movements
+
+Choose **Map view → Globe** to render a round Earth with the existing physical
+coastline, geography, imagery and symbols. Flat map remains the default for old
+projects. Optional top-level `historicalMap.projection` is `globe` or `mercator`;
+it is preserved in JSON/scene exports and accepted by the existing playback/
+recording workspace. WebGL2 is required; fallback continues to display a flat map.
+
+**Camera & keyframes → Globe fly-in** creates an Earth-wide start and approaches
+the current camera location during the scene at the playhead. **360° orbit** uses
+four evenly timed bearing keyframes around the current target. These actions
+replace only that scene's camera keys, preserve other scenes and support Undo.
+The editable **Camera script** is a JSON array using existing scene IDs, scene-
+relative offsets, center, zoom, bearing and pitch. Apply validates the full array
+before changing any camera data. No arbitrary JavaScript is executed.
+
+Keyframes accept optional `easing: "smooth" | "linear" | "hold"`, applying from
+that keyframe to the next. Smooth remains the default. Globe longitude and camera
+bearing interpolate across the shortest angular path to avoid spinning through
+the long side of the dateline. A full orbit is expressed by several keyframes,
+not two equivalent endpoints. Scrubbing and playback use the same deterministic
+frame function. Globe overlays hide far-side event labels and arrowheads; sky
+clicks/drops are rejected instead of creating false geographic anchors.
+
+**Current limit:** custom Three.js GLB models still use Mercator-only projection.
+They remain in saved data but are hidden in Globe view, with an explicit notice;
+switching to Flat map restores their preview. Globe-aware model shaders are
+separate work. Camera pitch stays within the existing 0–60 degree range. This is
+a globe/tilted map camera, not a free-flight camera beneath terrain.
+
+Native Chromium coverage checks globe rendering with terrain/images, front/back
+visibility, rejecting sky placement, GLB hide/restore, fly-in/orbit generation,
+invalid-script rejection and projection switching. The globe screenshot was
+visually inspected. No deployment or historical-data additions were made.

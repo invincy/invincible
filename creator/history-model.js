@@ -1,4 +1,5 @@
 // Pure, additive production metadata. Master storyboard IDs and order remain canonical.
+import {validateVisual} from './map-editor-model.js';
 export const productionId=()=>globalThis.crypto?.randomUUID?.()||'clip-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
 export const emptyMap=()=>({version:1,theme:'parchment',events:[],features:{type:'FeatureCollection',features:[]},camera:[]});
 const finite=(n,min,max)=>typeof n==='number'&&Number.isFinite(n)&&n>=min&&n<=max;
@@ -9,7 +10,8 @@ export function timeOf(project,item){const row=sceneTimeline(project).find(row=>
 function position(p){if(!Array.isArray(p)||p.length!==2||!finite(p[0],-180,180)||!finite(p[1],-85,85))throw Error('Coordinates must be [longitude, latitude] in valid map bounds.');}
 export function validateMap(map,project){
  if(!map||map.version!==1||!['parchment','night'].includes(map.theme))throw Error('Use map version 1 and parchment or night theme.');
- if(JSON.stringify(map).length>240000)throw Error('Map metadata exceeds 240 KB; simplify geometry or split the project.');
+ if(map.projection!==undefined&&!['mercator','globe'].includes(map.projection))throw Error('Projection must be mercator or globe.');
+ if(new TextEncoder().encode(JSON.stringify(map)).length>240000)throw Error('Map metadata exceeds 240 KB; simplify geometry or split the project.');
  const ids=new Set((project.scenes||[]).map(s=>s.id)),seen=new Set();
  function anchor(item){if(!ids.has(item.sceneId))throw Error('An event, feature or camera refers to a missing scene.');const scene=project.scenes.find(s=>s.id===item.sceneId);if(!finite(item.offset??0,0,scene.duration))throw Error('Offset must be within the associated scene.');}
  function sourced(item){if(!item.id||seen.has(item.id))throw Error('Event and feature IDs must be unique.');seen.add(item.id);anchor(item);if(!String(item.label||'').trim()||!String(item.date||'').trim()||!safeUrl(item.sourceUrl)||!String(item.sourceNote||'').trim())throw Error('Every event and geometry needs a label, historical date, HTTPS source and provenance note.');}
@@ -26,7 +28,8 @@ export function validateMap(map,project){
   else if(g.type==='Polygon')polygon(g.coordinates);else {if(!Array.isArray(g.coordinates)||!g.coordinates.length)throw Error('Empty MultiPolygon.');g.coordinates.forEach(polygon);}
  }
  if(!Array.isArray(map.camera)||map.camera.length>150)throw Error('Use at most 150 camera keyframes.');
- for(const c of map.camera){anchor(c);position(c.center);if(!finite(c.zoom,0,12)||!finite(c.bearing??0,-180,180)||!finite(c.pitch??0,0,60))throw Error('Invalid camera zoom, bearing or pitch.');}
+ for(const c of map.camera){if(c.easing!==undefined&&!['smooth','linear','hold'].includes(c.easing))throw Error('Camera easing must be smooth, linear or hold.');anchor(c);position(c.center);if(!finite(c.zoom,0,12)||!finite(c.bearing??0,-180,180)||!finite(c.pitch??0,0,60))throw Error('Invalid camera zoom, bearing or pitch.');}
+ validateVisual(map,project);
  return structuredClone(map);
 }
 export function routeAt(coordinates,progress){
@@ -40,9 +43,9 @@ export function mapFrame(project,map,time){
  const frames=[...map.camera].sort((a,b)=>timeOf(project,a)-timeOf(project,b));
  let a=frames[0]||{center:[80,23],zoom:3.2,bearing:0,pitch:0},b=a;
  for(const c of frames){if(timeOf(project,c)<=time)a=c;else {b=c;break;}b=c;}
- const start=timeOf(project,a),end=timeOf(project,b),t=end>start?Math.max(0,Math.min(1,(time-start)/(end-start))):0,u=t*t*(3-2*t);
- const mix=(x,y)=>x+(y-x)*u;
- return {events,features:{type:'FeatureCollection',features},camera:{center:a.center.map((n,i)=>mix(n,b.center[i])),zoom:mix(a.zoom,b.zoom),bearing:mix(a.bearing||0,b.bearing||0),pitch:mix(a.pitch||0,b.pitch||0)}};
+ const start=timeOf(project,a),end=timeOf(project,b),t=end>start?Math.max(0,Math.min(1,(time-start)/(end-start))):0,u=a.easing==='hold'?(t===1?1:0):a.easing==='linear'?t:t*t*(3-2*t);
+ const mix=(x,y)=>x+(y-x)*u,wrap=n=>((n+180)%360+360)%360-180,angle=(x,y)=>wrap(x+wrap(y-x)*u);
+ return {events,features:{type:'FeatureCollection',features},camera:{center:a.center.map((n,i)=>i===0&&map.projection==='globe'?angle(n,b.center[i]):mix(n,b.center[i])),zoom:mix(a.zoom,b.zoom),bearing:angle(a.bearing||0,b.bearing||0),pitch:mix(a.pitch||0,b.pitch||0)}};
 }
 export function createClip(project,sceneIds,name){
  const rows=sceneTimeline(project).filter(row=>sceneIds.includes(row.sceneId));
