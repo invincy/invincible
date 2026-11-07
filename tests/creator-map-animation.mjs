@@ -49,3 +49,10 @@ test('scene reuse remaps relief-light anchors and preserves the destination map 
  const destination={scenes:[{id:'other',duration:4}],historicalMap:{...emptyMap(),basemap:{id:'satellite',labels:false,borders:false}}};
  const appended=appendScenePackage(destination,pkg);assert.equal(appended.historicalMap.basemap.id,'satellite');assert.ok(appended.historicalMap.lighting.every(k=>k.sceneId===appended.scenes[1].id));assert.notEqual(appended.scenes[1].id,pkg.scene.id);
 });
+
+test('satellite colour instructions reproduce the raster style and preserve existing project appearance',async()=>{
+ const p=plan();p.basemap='satellite';p.basemapOptions={saturation:.3,contrast:.12};p.aspectRatio='9:16';
+ const r=compileAnimation({scenes:[]},p);const style=await baseStyle(r.project.historicalMap);assert.equal(r.project.aspectRatio,'9:16');assert.equal(style.layers.find(l=>l.id==='library-imagery').paint['raster-saturation'],.3);assert.equal(style.layers.find(l=>l.id==='library-imagery').paint['raster-contrast'],.12);
+ const existing={scenes:[{id:'old',duration:2}],historicalMap:{...emptyMap(),basemap:{id:'satellite',labels:false,borders:false,saturation:.05,contrast:0}}};assert.equal(compileAnimation(existing,p).project.historicalMap.basemap.saturation,.05);
+ for(const appearance of [{saturation:2},{contrast:null},{url:'https://example.org/tiles'},{labels:true},[],null]){p.basemapOptions=appearance;assert.throws(()=>compileAnimation(existing,p));}
+});
