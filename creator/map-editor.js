@@ -92,7 +92,7 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced}){
   }
   if(b.dataset.edit==='animation-add'){
    const compiled=compileAnimation(project,q('[data-animation-plan]').value,{geometryReviewed:q('[data-animation-reviewed]').checked});project.scenes=compiled.project.scenes;if(compiled.project.aspectRatio)project.aspectRatio=compiled.project.aspectRatio;undo.length=redo.length=0;await commit(compiled.project.historicalMap,{history:false});
-   q('[data-export-ratio]').value=project.aspectRatio||'16:9';player.seek(compiled.summary.start);q('[data-edit=animation-add]').disabled=true;status('Animation appended. Press Play to preview, then Render silent MP4.');return;
+   q('[data-export-ratio]').value=project.aspectRatio||'16:9';sizeMapFrame(host,q('[data-export-ratio]').value);player.seek(compiled.summary.start);q('[data-edit=animation-add]').disabled=true;status('Animation appended. Press Play to preview, then Render silent MP4.');return;
   }
   if(b.dataset.tool){armed=b.dataset.tool;if(!player.isNative)await add('icon',center());else status('Click the map to place '+armed+', or drag it from the toolbar.');return;}
   if(b.dataset.assetEdit){const a=spec.visual.assets.find(a=>a.id===b.dataset.assetEdit);editingAsset=a.id;q('[data-asset-name]').value=a.name;q('[data-asset-type]').value=a.type;q('[data-asset-url]').value=a.url||'';q('[data-asset-credit]').value=a.credit||'';renderAssets();status('Edit this reference, then Save asset changes. All its placements will use the updated URL.');return;}
