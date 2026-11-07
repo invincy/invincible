@@ -1,0 +1,182 @@
+[
+  {
+    "id": "india-flag-map",
+    "name": "India flag overlay",
+    "file": "india-map.png",
+    "svg": "india-map.svg",
+    "width": 1536,
+    "height": 1744,
+    "bounds": [
+      68.143403,
+      6.745551,
+      97.362253,
+      37.054484
+    ],
+    "corners": [
+      [
+        68.143403,
+        37.054484
+      ],
+      [
+        97.362253,
+        37.054484
+      ],
+      [
+        97.362253,
+        6.745551
+      ],
+      [
+        68.143403,
+        6.745551
+      ]
+    ],
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Flag_of_India.svg",
+    "author": "Government of India",
+    "license": "Public domain",
+    "licenseUrl": ""
+  },
+  {
+    "id": "pakistan-flag-map",
+    "name": "Pakistan flag overlay",
+    "file": "pakistan-map.png",
+    "svg": "pakistan-map.svg",
+    "width": 1536,
+    "height": 1931,
+    "bounds": [
+      65.5,
+      23.694525,
+      75.359048,
+      34.5
+    ],
+    "corners": [
+      [
+        65.5,
+        34.5
+      ],
+      [
+        75.359048,
+        34.5
+      ],
+      [
+        75.359048,
+        23.694525
+      ],
+      [
+        65.5,
+        23.694525
+      ]
+    ],
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Flag_of_Pakistan.svg",
+    "author": "User:Zscout370",
+    "license": "Public domain",
+    "licenseUrl": ""
+  },
+  {
+    "id": "china-flag-map",
+    "name": "China flag overlay",
+    "file": "china-map.png",
+    "svg": "china-map.svg",
+    "width": 1536,
+    "height": 1494,
+    "bounds": [
+      77.5,
+      33.3,
+      84.5,
+      38.8
+    ],
+    "corners": [
+      [
+        77.5,
+        38.8
+      ],
+      [
+        84.5,
+        38.8
+      ],
+      [
+        84.5,
+        33.3
+      ],
+      [
+        77.5,
+        33.3
+      ]
+    ],
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Flag_of_the_People%27s_Republic_of_China.svg",
+    "author": "Zeng Liansong",
+    "license": "Public domain",
+    "licenseUrl": ""
+  },
+  {
+    "id": "bangladesh-flag-map",
+    "name": "Bangladesh flag overlay",
+    "file": "bangladesh-map.png",
+    "svg": "bangladesh-map.svg",
+    "width": 1536,
+    "height": 2137,
+    "bounds": [
+      88.02179,
+      20.738715,
+      92.642851,
+      26.623544
+    ],
+    "corners": [
+      [
+        88.02179,
+        26.623544
+      ],
+      [
+        92.642851,
+        26.623544
+      ],
+      [
+        92.642851,
+        20.738715
+      ],
+      [
+        88.02179,
+        20.738715
+      ]
+    ],
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Flag_of_Bangladesh.svg",
+    "author": "See File history below for details.",
+    "license": "Public domain",
+    "licenseUrl": ""
+  },
+  {
+    "id": "myanmar-flag-map",
+    "name": "Myanmar flag overlay",
+    "file": "myanmar-map.png",
+    "svg": "myanmar-map.svg",
+    "width": 1536,
+    "height": 2399,
+    "bounds": [
+      92.17828,
+      18.5,
+      99.2,
+      28.538466
+    ],
+    "corners": [
+      [
+        92.17828,
+        28.538466
+      ],
+      [
+        99.2,
+        28.538466
+      ],
+      [
+        99.2,
+        18.5
+      ],
+      [
+        92.17828,
+        18.5
+      ]
+    ],
+    "sourcePage": "https://commons.wikimedia.org/wiki/File:Flag_of_Myanmar.svg",
+    "author": "Unknown authorUnknown author",
+    "license": "Public domain",
+    "licenseUrl": ""
+  }
+]
