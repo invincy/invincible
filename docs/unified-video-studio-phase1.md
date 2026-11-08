@@ -118,25 +118,63 @@ an explicit review flag and source provenance. Financial scenes use
 `timeSeconds`, `year`, `label` and optional nonnegative `premium`, `addition`,
 `income`, `booster`, `maturity`. Their time is scene-local, like overlay keyframes.
 
-### Verification commands and current evidence
+### Verification and remaining limits
 
-- `node --test tests/creator-video-studio.mjs`: 15 focused tests passed.
-- `npm test`: 186 repository tests passed, two existing skips; 15 Functions
-  tests passed. Production build and site-reference check passed.
-- Local headless Chromium: new UI import/playback, original-byte save/reload,
-  account isolation and brand-template checks passed. Native map-editor browser
-  regression passed. Its H.264 encoder is absent: MP4 assertions were not run
-  in that browser. The full Chrome executable cannot start in this workspace
-  because its process-singleton socket is blocked. The managed HTTP preview
-  lacks WebCodecs; it cannot establish encoded A/V behavior.
-- `npm run test:video-studio` is a strict real-media test, not a mock encoder test.
-  The dedicated GitHub Chrome job encodes/decodes portrait and landscape MP4,
-  measures audible energy and onset against a visual change within one video
-  frame, exercises graphics/LIC/Map adapters, verifies original bytes, brands,
-  cancellation and existing-data isolation, and uploads evidence. No claim of
-  audible export is established until that job passes.
-- `tests/fixtures/video-studio-verification.html` runs the same media verification
-  interactively when served from localhost or HTTPS with H.264/WebCodecs support.
-  It uses only synthetic WAV/graph/map fixtures and never production Firebase.
+- `node --test tests/creator-video-studio.mjs`: 16 focused tests pass, including
+  reusable brand assets. Local UI regression also covers uploaded PNG placement,
+  profile reuse in a second video, byte-identical WAV persistence and account isolation.
+- Feature branch local repository tests: 187 passed, two existing skips;
+  15 Functions tests passed. Production build, V2 build/stage, Chromium V2 browser coverage and site-reference checks passed.
+- GitHub Chrome media acceptance passed on commit `fb6033d` in run
+  https://github.com/invincy/invincible/actions/runs/42439770958 . Actual encoded
+  files were decoded, not mocked. Portrait is 1080 × 1920 and landscape
+  1920 × 1080. Both used H.264 + Opus. Measured tone onset was 0.79179s for an
+  expected 0.80000s cue; the branded UI export measured 2.29018s versus 2.30000s.
+  Error is under 10 ms, below one 30-fps frame. Branding, financial graphics,
+  native Map adapter/framebuffer, cancellation and original bytes all passed.
+  Subsequent asset/profile coverage reruns on the final PR head.
+- Downloaded CI output was independently inspected with FFprobe/FFmpeg:
+  180 decoded H.264 frames, 1080 × 1920, 30/1 fps, six seconds of video,
+  an Opus track (6.0135s including codec padding), and no decode errors.
+  Evidence: https://github.com/invincy/invincible/actions/runs/42439770958/artifacts/13601022568 .
+- Existing Creator storyboard, history, native map editor and animation browser
+  regressions passed locally and in CI. Journal and LIC CRM CI jobs passed.
+- The broader CI job fails five **pre-existing master** LIC Page 6 unit tests
+  (`tests/lic-presentation.mjs`, lines 320, 352, 408, 447 and 467). The same five
+  failures were reproduced in an isolated, unchanged `master` worktree at
+  `7bca110c83dc76c3c52fb7292bb89760d7771381` (Page 6 journey PR #153).
+  They concern removed journey DOM selectors. This branch changes no LIC files
+  or those tests. That CI job stops before its later build/V2/V1 browser steps;
+  it must not be described as an all-green repository run.
+- The local broad V1 browser command passed Garage, navigation, reminders, Orb,
+  Task Copy and Creator, then stopped at the unchanged Journal browser test's
+  `page.addStyleTag` error at line 56. Later scenarios were not reached locally;
+  the separate Journal CI job passed. Its initial shallow Orb baseline prerequisite
+  was fetched before this run. Full Chrome cannot launch under local socket
+  restrictions; local bundled Chromium lacks H.264 encoding. Managed HTTP preview
+  lacks WebCodecs, so real MP4 evidence comes from Chrome CI.
+- AAC encoding, Safari, physical mobile devices, maximum-duration memory/throughput,
+  actual voiceover speech perception and live Firebase/private asset permissions
+  are not established by synthetic fixtures. Opus MP4 requires compatible players.
+  No cloud voiceover storage, automatic speech alignment, arbitrary 3D graphics,
+  official benefit calculation or automatic advisor lip-sync is implemented.
+  The local feature has no API key, generation endpoint or paid generation.
+- `tests/fixtures/video-studio-verification.html` runs the media verification
+  interactively from localhost/HTTPS. Synthetic WAV, finance and geography only;
+  it does not touch production Firebase. `npm run test:video-studio` is strict:
+  missing H.264 fails media acceptance instead of silently skipping it. The
+  optional `STUDIO_SKIP_ENCODING=1` flag is local UI-only evidence, explicitly
+  reporting that media assertions were not run; CI never sets it.
 
-Final CI outcomes and any regression limitations are recorded in the PR.
+### Changed files
+
+| Area | Files |
+| --- | --- |
+| Workspace and domain | `creator/video-studio/{workspace,model,storage,audio,adapters,export}.js`, `studio.css`, `example.json` |
+| Integration | `creator/production-workbench.js`, `project.js`, `creator.js`, `project.html`, `index.html`, read-only readiness method in `history-player.js` |
+| Existing dependency bundle | `creator/vendor/studio-video.mjs`, `scripts/vendor-studio-video.mjs` (pinned MediaBunny; no new dependency) |
+| Tests and CI | `tests/creator-video-studio.mjs`, `creator-video-studio-browser.cjs`, `tests/fixtures/video-studio-verification.{html,js}`, `.github/workflows/v2-prototype.yml`, `package.json` |
+| Documentation | This document, `docs/code-review.md`, `README.md` |
+
+No LIC presentation source, existing Map Editor schema/importer/exporter,
+Firebase security rule, authentication, backend or generated React output changes.

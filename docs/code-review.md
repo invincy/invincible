@@ -716,11 +716,21 @@ exposes its existing frame-readiness guard for adapter reuse. The original Map
 Editor MP4 command remains silent. AAC is preferred in Video Studio, with an
 Opus MP4 fallback where available; other players may not support Opus MP4.
 
-Local checks: 15 new unit tests pass. Repository tests: 186 passed, two existing
-skips; Functions: 15 passed. Production build and site-reference checks pass.
-Local browser UI checks establish safe imports, playback, account isolation and
-byte-identical voiceover persistence. Native map editor regression passes.
-Full media acceptance must pass the strict GitHub Chrome job before calling
-export audio-verified; local Chromium has no H.264 encoder, full Chrome cannot
-launch under socket restrictions, and managed HTTP preview lacks WebCodecs.
-See unified-video-studio-phase1.md and the PR for final results and limitations.
+Local feature-branch checks: 16 focused unit tests pass; repository 187 passed,
+two existing skips; Functions 15 passed. Production build/site references pass.
+The strict Chrome CI media job passed: real H.264 + Opus MP4, exact portrait and
+landscape sizes, audible decoded energy and under-10-ms onset error against a
+visual cue, all adapters, branding, cancellation and original-byte persistence.
+FFprobe/FFmpeg independently verified the downloaded six-second portrait sample:
+180 H.264 frames at 30 fps, an Opus track and no decoding errors. AAC is still
+feature-detected but unverified here. Additional PNG/profile reuse checks rerun
+on the final PR head. Creator/map, Journal and LIC CRM CI jobs passed.
+
+Full CI is not green: its repository unit stage fails five unchanged LIC Page 6
+tests, reproduced on unchanged master `7bca110` as well (selectors removed by
+PR #153). Later broad checks in that CI job were skipped. Local broad V1 passed
+Garage/navigation/reminders/Orb/Task Copy/Creator, then stopped at unchanged
+Journal test line 56 (`page.addStyleTag`); separate Journal CI passed. No LIC
+source or old LIC test was edited to mask those failures. Keep PR #154 as draft
+until those upstream failures are resolved. Full details and changed files are in
+unified-video-studio-phase1.md. Nothing merged, deployed or published.

@@ -1,7 +1,7 @@
 export async function decodeVoiceover(file){
  if(!file||file.size>100*1024*1024)throw Error('Choose an MP3 or WAV up to 100 MB.');
  const context=new AudioContext();
- try{const buffer=await context.decodeAudioData(await file.arrayBuffer());if(buffer.duration>600)throw Error('Voiceover must be at most ten minutes.');return buffer;}finally{await context.close();}
+ try{const buffer=await context.decodeAudioData(await file.arrayBuffer());if(buffer.numberOfChannels>2)throw Error('Use a mono or stereo voiceover; multichannel audio is not downmixed automatically.');if(buffer.duration>600)throw Error('Voiceover must be at most ten minutes.');return buffer;}finally{await context.close();}
 }
 // Chunking bounds extra memory and preserves all original samples, with leading silence.
 export function audioChunk(buffer,startSeconds,gain,at,length,rate=48000){

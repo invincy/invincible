@@ -1,4 +1,4 @@
-import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions} from './model.js';
+import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js';
 import {createStudioRenderer} from './adapters.js';
 import {decodeVoiceover} from './audio.js';
 import {encodeStudioVideo} from './export.js';
@@ -117,7 +117,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    const next=structuredClone(state.manifest);
    if(target.matches('[data-vs-title]'))next.title=target.value;
    else if(target.matches('[data-vs-ratio]'))next.aspectRatio=target.value;
-   else if(target.matches('[data-vs-brand]')){next.brandPresetId=target.value;const b=state.brands.find(b=>b.id===target.value),ids=new Set([b.logoAssetId,...[b.intro,b.outro].flatMap(s=>(s?.overlays||[]).filter(l=>l.type==='image').map(l=>l.assetId))]);for(const a of state.brandAssets)if(ids.has(a.id)&&!next.assets.some(x=>x.id===a.id))next.assets.push(a);}
+   else if(target.matches('[data-vs-brand]')){next.brandPresetId=target.value;const b=state.brands.find(b=>b.id===target.value);next.assets=assetsForBrand(b,next.assets,state.brandAssets);}
    else if(target.matches('[data-vs-intro]')){if(target.checked&&!brand().intro)throw Error('Add an intro template in Brand profile first.');next.introEnabled=target.checked;}
    else if(target.matches('[data-vs-outro]')){if(target.checked&&!brand().outro)throw Error('Add an outro template in Brand profile first.');next.outroEnabled=target.checked;}
    else if(target.matches('[data-vs-audio-start],[data-vs-gain]')){if(!next.audio)throw Error('Upload voiceover first.');next.audio.startSeconds=Number($('[data-vs-audio-start]').value);next.audio.gain=Number($('[data-vs-gain]').value);}
@@ -126,7 +126,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   });
  });
  const ready=run(async()=>{
-  if(!state.loaded){if(store){const library=await store.get('brands');if(library){state.brands=library.brands;state.brandAssets=library.assets;}if(projectId){const version=await store.get('draft:'+projectId);if(version){const saved=await store.get('version:'+projectId+':'+version);if(saved)state.manifest=validateManifest(saved,{mapAssets:mapAssets()});}}}state.loaded=true;}
+  if(!state.loaded){if(store){const library=await store.get('brands');if(library){state.brands=library.brands;state.brandAssets=library.assets;}if(projectId){const version=await store.get('draft:'+projectId);if(version){const saved=await store.get('version:'+projectId+':'+version);if(saved)state.manifest=validateManifest(saved,{mapAssets:mapAssets()});}}}state.manifest.assets=assetsForBrand(brand(),state.manifest.assets,state.brandAssets);state.loaded=true;}
   sync();await draw();status('Import instructions or load an example to start. Save is explicit.');
  });
  const hidden=()=>{if(document.hidden)stop();};document.addEventListener('visibilitychange',hidden);

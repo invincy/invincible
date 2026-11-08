@@ -51,7 +51,7 @@ export function validateManifest(input,{mapAssets=[]}={}){
  let m;try{m=typeof input==='string'?JSON.parse(input):structuredClone(input);}catch{fail('Choose a complete Video Studio JSON file.');}
  if(new TextEncoder().encode(JSON.stringify(m)).length>1000000)fail('Use a manifest under 1 MB.');
  keys(m,['schemaVersion','title','aspectRatio','fps','brandPresetId','scenes','assets','audio','introEnabled','outroEnabled'],'manifest');
- if(m.schemaVersion!==1||m.fps!==30||!['9:16','16:9'].includes(m.aspectRatio))fail('Use schemaVersion 1, fps 30 and 9:16 or 16:9.');str(m.title,200,'title');if(m.brandPresetId!==undefined)id(m.brandPresetId);
+ if(m.schemaVersion!==1||m.fps!==30||!['9:16','16:9'].includes(m.aspectRatio))fail('Use schemaVersion 1, fps 30 and 9:16 or 16:9.');str(m.title,200,'title');id(m.brandPresetId);
  for(const p of ['introEnabled','outroEnabled'])if(m[p]!==undefined&&typeof m[p]!=='boolean')fail(p+' must be boolean.');
  if(!Array.isArray(m.assets)||m.assets.length>200)fail('Use up to 200 asset references.');const assets=new Set();
  for(const a of m.assets){keys(a,['id','name','fileId','url','libraryId'],'asset');id(a.id);str(a.name,200,'asset name');if(assets.has(a.id))fail('Duplicate asset ID.');assets.add(a.id);
@@ -91,3 +91,10 @@ export function layerFrame(layer,time){
  return out;
 }
 export function sceneAt(timeline,time){return timeline.scenes.find(s=>time>=s.startSeconds&&time<s.startSeconds+s.durationSeconds);}
+
+// Include only a profile's referenced assets when reusing it in another video.
+export function assetsForBrand(brand,existing,catalog){
+ const needed=new Set([brand.logoAssetId,...[brand.intro,brand.outro].flatMap(scene=>(scene?.overlays||[]).filter(layer=>layer.type==='image').map(layer=>layer.assetId))]);
+ const present=new Set(existing.map(asset=>asset.id));
+ return [...existing,...catalog.filter(asset=>needed.has(asset.id)&&!present.has(asset.id))];
+}

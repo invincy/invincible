@@ -11,7 +11,8 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
  const destroy=()=>{if(disposed)return;disposed=true;for(const {player} of maps.values())player.destroy();for(const h of hosts)h.remove();for(const url of ownedUrls)URL.revokeObjectURL(url);};
  try{
   await document.fonts.ready;
-  for(const asset of manifest.assets){
+  const required=new Set([brand.logoAssetId,...timeline.scenes.flatMap(scene=>scene.overlays.filter(layer=>layer.type==='image').map(layer=>layer.assetId))]);
+  for(const asset of manifest.assets.filter(asset=>required.has(asset.id))){
    signal?.throwIfAborted();let url=asset.url;
    if(asset.fileId){const file=await getFile(asset.fileId);if(!file)throw Error(`Upload missing image again: ${asset.name}`);url=URL.createObjectURL(file);ownedUrls.push(url);}
    if(asset.libraryId)url=await resolveMapAsset(mapAssets.find(a=>a.id===asset.libraryId));

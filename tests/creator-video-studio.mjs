@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,layerFrame,sceneAt,exportDimensions} from '../creator/video-studio/model.js';
+import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,layerFrame,sceneAt,exportDimensions,assetsForBrand} from '../creator/video-studio/model.js';
 import {audioChunk} from '../creator/video-studio/audio.js';
 import {encodeStudioVideo} from '../creator/video-studio/export.js';
 const graphic=(id,start=0,duration=2)=>({id,startSeconds:start,durationSeconds:duration,engineType:'graphic',engineData:{},overlays:[]});
@@ -63,3 +63,9 @@ test('audio resampling uses timeline seconds, including nonzero chunk starts',()
  assert.deepEqual(Array.from(audioChunk(b,0,1,1,3,4).data),[.5,1,.5]);
 });
 test('unsupported MP4 capability fails explicitly instead of exporting silent media',async()=>{await assert.rejects(encodeStudioVideo({canvas:{},timeline:{duration:2}}),/WebCodecs/);});
+
+test('reusable profiles carry only referenced logo/template assets into a new video',()=>{
+ const b={...PRESETS[0],logoAssetId:'logo',intro:{...graphic('intro'),overlays:[{id:'image',type:'image',assetId:'intro-art'}]}},catalog=[{id:'logo',fileId:'original-logo'},{id:'intro-art',fileId:'original-intro'},{id:'unrelated',fileId:'other'}];
+ const prior=[{id:'existing',url:'https://example.com/a.png'}],result=assetsForBrand(b,prior,catalog);
+ assert.deepEqual(result.map(a=>a.id),['existing','logo','intro-art']);assert.equal(prior.length,1);assert.deepEqual(assetsForBrand(b,result,catalog),result);assert.equal(result[1].fileId,'original-logo');
+});
