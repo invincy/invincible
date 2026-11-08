@@ -59,20 +59,19 @@
       ${txt(70,82,`Selected ${ppt} years · ${money(premium)}/year`,16,'#e7f3ff','start')}
       ${txt(xPpt,102,'GA during PPT · 7% base',14,'#f9d27a')}
       ${stack(xPpt-28,110,3)}
-      ${incomeMarks}
-      ${txt(xPpt+145,75,`${money(annualIncome)} / year`,19,'#ffe2a0')}
-      ${txt(xPpt+145,96,`From end of year ${ppt}`,13,'#b7d2e8')}
-      ${pile(xBoost,134)}
-      ${txt(xBoost,65,'70% BOOSTER',17,'#ffe0a0')}
-      ${txt(xBoost,86,`${money(booster)} · Y${boosterYear}`,16,'#fff1d0')}
-      ${pile(910,158,true)}${bag(951,122)}
-      ${txt(895,40,'MATURITY · Y'+term,18,'#ffe0a0')}
-      ${txt(895,62,money(baseSA+ga),20,'#fff1c4')}
-      ${txt(895,80,'Basic SA + base GA',13,'#b9d1e6')}
+      ${step>=2?incomeMarks:""}
+      ${step>=2?txt(xPpt+145,75,`${money(annualIncome)} / year`,19,'#ffe2a0')}
+      ${txt(xPpt+145,96,`From end of year ${ppt}`,13,'#b7d2e8'):''}
+      ${step>=3?pile(xBoost,134):''}
+      ${step>=3?txt(xBoost,65,'70% BOOSTER',17,'#ffe0a0'):''}
+      ${step>=3?txt(xBoost,86,`${money(booster)} · Y${boosterYear}`,16,'#fff1d0'):''}
+      ${step>=4?pile(910,158,true)+bag(951,122):''}
+      ${step>=4?txt(895,40,'MATURITY · Y'+term,18,'#ffe0a0'):''}
+      ${step>=4?txt(895,62,money(baseSA+ga),20,'#fff1c4'):''}
+      ${step>=4?txt(895,80,'Basic SA + base GA',13,'#b9d1e6'):''}
       ${txt(520,261,'Illustrative timeline · not an investment account balance',12,'#8eacc4')}
     </svg>`;
     svg=root.querySelector('svg');
-    current=targets[Math.max(0,Math.min(4,step))].slice();
     svg.setAttribute('viewBox',current.join(' '));
   }
   let previousKey='';
@@ -81,7 +80,7 @@
       if(root)root.textContent='Verified premium illustration unavailable';
       return;
     }
-    const key=[data.ppt,data.premium,data.age,data.boosterYear].join(':');
+    const key=[data.step,data.ppt,data.premium,data.age,data.boosterYear].join(':');
     if(key!==previousKey || !svg || !root.contains(svg)) {
       draw(root,data); previousKey=key;
     }
