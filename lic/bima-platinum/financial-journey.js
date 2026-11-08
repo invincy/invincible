@@ -27,7 +27,7 @@
       return `<rect x="${x}" y="${218-h}" width="${Math.max(4,150/ppt)}" height="${h}" rx="2" fill="url(#journeyBlue)"/>`;
     }).join('');
     const paths=['M24 205L185 142','M185 142H370','M370 142L425 93','M425 93L570 45'];
-    const icons=[stack(98,212,2),stack(162,212,4),[286,327,368].map(x=>stack(x,212,2)+arrow(x,187,101,'income-out')).join(''),stack(425,212,7),stack(504,212,9)+bag];
+    const icons=[stack(50,212,1)+stack(98,212,2),stack(130,212,3)+stack(162,212,4),stack(206,212,2)+stack(246,212,2)+[286,327,368].map(x=>stack(x,212,2)+arrow(x,187,101,'income-out')).join(''),stack(425,212,7),stack(504,212,9)+bag];
     const labels=['Premium','Additions','Income','Booster','Maturity'];
     const amounts=[money(premium)+'/yr',money(ga),money(baseSA*.1)+'/yr',money(baseSA*.7),money(baseSA+ga)];
     const descriptions=[`Pay ${money(premium)} yearly for ${ppt} years.`, `Base Guaranteed Additions ${money(ga)}.`, `Income ${money(baseSA*.1)} at each year-end from year ${ppt} through ${term-1}.`, `Booster ${money(baseSA*.7)} at year ${boosterYear}.`, `Maturity ${money(baseSA+ga)} at year ${term}.`];
