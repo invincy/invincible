@@ -1,3 +1,4 @@
+import {compactControls} from './compact-controls.js';
 import {cameraPreset,surfacePosition,locationVisible} from './map-globe.js';
 import {uploadMapAsset} from './map-assets-client.js';
 import {emptyMap,validateMap,sceneTimeline,durationOf,productionId,mapFrame} from './history-model.js';
@@ -15,7 +16,7 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced}){
  const project=getProject();let spec=visualMap(project.historicalMap||{...emptyMap(),theme:'night',basemap:{id:'terrain',labels:false,borders:false},visual:{version:1,layers:[],assets:[],terrain:defaultTerrain()}}),player,disposed=false,selected='',armed='',route=[],drag=null,pendingPosition=null,localPreview=null,playing=false,working=false,editingAsset='';let pendingFile=null,pendingUploadId='';
  const undo=[],redo=[];
  root.classList.add('history-workspace','visual-map-editor');
- root.innerHTML=`<div class="history-heading"><div><span class="eyebrow">CREATOR / MAPS</span><h2>Historical map editor</h2><p>Import timed animation, choose your map and render.</p></div><div class="history-controls">${button('open-instructions','Import animation')}${button('open-library','Map library')}${button('advanced','Advanced / recording')}</div></div>
+ root.innerHTML=`<div class="history-heading"><div><h2>Map editor</h2></div><div class="history-controls">${button('advanced','Advanced / recording')}</div></div>
  <p data-editor-status role="status" aria-live="polite">Loading map…</p>${instructionPanel()}${mapLibraryPanel()}
  <label>Map view<select data-projection><option value="mercator">Flat map</option><option value="globe">Globe</option></select></label><p data-projection-note></p><div class="map-editor-toolbar">${Object.keys(icons).map(k=>`<button type="button" draggable="true" data-tool="${k}">${icons[k]} ${k}</button>`).join('')}${button('label','Label')}${button('route','Draw route')}${button('finish','Finish route')}${button('cancel','Cancel tool')}${button('undo','Undo')}${button('redo','Redo')}</div>
  <div class="map-editor-layout"><section class="map-editor-stage"><div data-map class="history-map" tabindex="0" role="region" aria-label="Editable geographic canvas"></div>
@@ -48,7 +49,7 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced}){
   q('[data-keyframes]').innerHTML=spec.camera.map((c,i)=>`<div class="map-keyframe"><button type="button" data-key="${i}">S${project.scenes.findIndex(s=>s.id===c.sceneId)+1} +${c.offset.toFixed(1)}s</button><label>Offset<input type="number" data-key-offset="${i}" value="${c.offset}" min="0" step="0.1"></label><button type="button" data-key-replace="${i}">Use view</button><button type="button" data-key-remove="${i}" aria-label="Delete keyframe ${i+1}">×</button></div>`).join('')||'<p>Pan or adjust the camera, then capture a keyframe at the playhead.</p>';
   q('[data-sources]').innerHTML=[...spec.events,...spec.features.features.map(f=>f.properties)].map(e=>`<p><a href="${esc(e.sourceUrl)}" target="_blank" rel="noopener">${esc(e.label)} · ${esc(e.date)}</a><br>${esc(e.sourceNote)}</p>`).join('')+spec.visual.assets.map(a=>`<p>Illustrative asset: <a href="${esc(a.url||'#')}" target="_blank" rel="noopener">${esc(a.name)}</a><br>${esc(a.credit||'Credit / rights not supplied')}</p>`).join('');
   const t=spec.visual.terrain;if(t){q('[data-dem-url]').value=t.url;q('[data-dem-credit]').value=t.attribution;q('[data-dem-encoding]').value=t.encoding;q('[data-dem-scale]').value=t.exaggeration;q('[data-dem-enabled]').checked=t.enabled;}
-  inspector();cameraFields();
+  inspector();cameraFields();compactControls(root);
  }
  function renderAssets(){
   const term=q('[data-asset-search]').value.trim().toLowerCase();
@@ -77,7 +78,6 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced}){
  root.ondragstart=e=>{const el=e.target.closest('[data-tool],[data-asset-ref]');if(el)e.dataTransfer.setData('application/x-invincible-map',el.dataset.tool||'asset:'+el.dataset.assetRef);};
  root.onclick=async e=>{const b=e.target.closest('button');if(!b)return;e.preventDefault();e.stopPropagation();try{
   if(b.dataset.mapExport==='cancel'){await handleMapExport(root,player,'cancel');return;}
-  if(b.dataset.edit==='open-instructions'||b.dataset.edit==='open-library'){const panel=q(b.dataset.edit==='open-instructions'?'.map-instructions':'.map-library');panel.open=true;panel.scrollIntoView({block:'nearest'});return;}
   if(b.dataset.edit==='advanced'){onAdvanced();return;}
   if(b.dataset.edit==='animation-brief'){await navigator.clipboard.writeText(animationBrief(spec.visual.assets));status('ChatGPT brief copied. Add your narration and desired timing before sending it.');return;}
   requireReady();

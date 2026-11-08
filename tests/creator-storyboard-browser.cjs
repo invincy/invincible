@@ -41,6 +41,7 @@ const server=http.createServer((req,res)=>{
   assert.equal(await page.evaluate(()=>window.writes||0),0);
   await dialog.locator('[data-filter-search]').fill('');
   const draftTable='Voiceover\tVisual / Animation\tAssets Required\tTimeline\tProduction Method\tAnimation Group\tTimestamp\nभारत — exact narration!\tRocket orbit\tLVM3\t0–4s\tBlender\tUpper assembly\t00:00.125–00:04.875\nSecond voice\tEarth\tTexture\t4–8s\tAI Video\t\t00:04.875–00:08.250';
+  await dialog.locator('.wb-import summary').click();
   await dialog.locator('[data-paste]').fill(draftTable);
   await dialog.locator('[data-action=preview]').click();
   assert.equal(await dialog.locator('.wb-preview article').count(),2);
@@ -133,7 +134,7 @@ const server=http.createServer((req,res)=>{
   await page.goto(base);await page.locator('#addContent:enabled').click();await page.locator('[name=title]').fill('Gaganyaan production');
   assert.equal(await page.locator('#contentDetails').evaluate(node=>node.open),false);
   assert.deepEqual(await page.locator('#contentStoryboard .wb-tabs button').evaluateAll(nodes=>nodes.map(node=>node.dataset.tab)),['Storyboard','Production','Assets','Overview','Maps','Clips']);
-  assert.equal(await page.locator('#contentStoryboard [data-paste]').isVisible(),true);
+  assert.equal(await page.locator('#contentStoryboard [data-paste]').isVisible(),false);
   await page.locator('#contentStoryboard [data-tab=Overview]').click();
   await page.locator('#contentStoryboard .wb-script summary').click();
   await page.locator('#contentStoryboard [data-script-draft]').fill('Existing manual draft');
@@ -146,6 +147,7 @@ const server=http.createServer((req,res)=>{
   const projectId=new URL(page.url()).searchParams.get('id');
   const stamp=seconds=>String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');
   const table='Voiceover\tVisual / Animation\tAssets Required\tTimeline\tTimestamp\n'+Array.from({length:16},(_,i)=>'भारत का मिशन '+(i+1)+'!\t'+(i===0?'Gaganyaan upper assembly को orbit में दिखाएं. Start with a wide view of the complete spacecraft, then move the camera slowly around the Crew Module and Service Module. Preserve realistic proportions and show the protective structure clearly. Keep the background dark, use soft cyan rim lighting, and finish with a stable three-quarter view. Do not show liftoff or add new objects.':'Camera '+(i+1))+'\tLVM3 model\t'+(i*4)+'–'+(i*4+4)+'s\t'+stamp(i*4)+'.125–'+stamp(i*4+4)+'.875').join('\n');
+  await page.locator('.wb-import summary').click();
   const paste=page.locator('#projectStoryboard [data-paste]');
   await paste.fill(table);await page.locator('[data-action=preview]').click();
   assert.match(await page.locator('.wb-preview article').first().textContent(),/00:00.125–00:04.875/);
@@ -353,7 +355,7 @@ const server=http.createServer((req,res)=>{
   const directSaved=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/direct-completion']);
   await page.locator('[data-field=sceneState]').selectOption('Completed');
   await page.waitForFunction(()=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/direct-completion'].scenes[0].completed);
-  assert.equal(await page.locator('[data-action=complete-scene]').textContent(),'Completed');
+  assert.equal(await page.locator('[data-action=complete-scene]').getAttribute('aria-pressed'),'true');
   assert.equal(await page.locator('.wb-nav-entry [data-select-scene]').first().getAttribute('data-scene-status'),'completed');
   await page.reload();await page.getByRole('button',{name:'Reopen scene',exact:true}).waitFor();
   await page.getByRole('button',{name:'Reopen scene',exact:true}).click();
@@ -363,7 +365,7 @@ const server=http.createServer((req,res)=>{
   for(const size of [{width:1366,height:768},{width:393,height:852},{width:320,height:700}]){
    await page.setViewportSize(size);
    const button=page.getByRole('button',{name:'Complete scene',exact:true});
-   assert.equal(await button.evaluate(el=>{const r=el.getBoundingClientRect(),editor=el.closest('.wb-scene').getBoundingClientRect();return r.height>=44&&r.width>=120&&r.bottom<=innerHeight&&r.top>=0&&Math.abs(editor.right-r.right)<100&&el.contains(document.elementFromPoint(r.right-10,r.top+r.height/2));}),true,'Bottom-right completion stays reachable at '+size.width);
+   assert.equal(await button.evaluate(el=>{const r=el.getBoundingClientRect(),editor=el.closest('.wb-scene').getBoundingClientRect();return r.height>=44&&r.width>=44&&r.bottom<=innerHeight&&r.top>=0&&Math.abs(editor.right-r.right)<100&&el.contains(document.elementFromPoint(r.right-10,r.top+r.height/2));}),true,'Bottom-right completion stays reachable at '+size.width);
    const scroll=page.locator('.wb-scene-content');await scroll.evaluate(el=>el.scrollTop=el.scrollHeight);
    assert.equal(await button.evaluate(el=>{const r=el.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}),true);
   }
@@ -379,7 +381,7 @@ const server=http.createServer((req,res)=>{
   assert.deepEqual(finished.animationGroups,direct.animationGroups);assert.deepEqual(finished.assets,direct.assets);
   for(const item of finished.scenes){assert.equal(item.voiceoverReady,false);assert.equal(item.editingDone,false);assert.deepEqual(item.production,{});assert.equal(item.checklist[0].done,false);}
   await page.locator('[data-field=sceneState]').selectOption('Planned');
-  assert.equal(await page.locator('[data-action=complete-scene]').textContent(),'Complete');
+  assert.equal(await page.locator('[data-action=complete-scene]').getAttribute('aria-pressed'),'false');
   await page.locator('[data-field=sceneState]').selectOption('Completed');
   await page.locator('[data-action=view-mode]').click();
   assert.equal(await page.locator('[data-action=complete-scene]').count(),0,'Collapsed scenes do not add repeated footers');
