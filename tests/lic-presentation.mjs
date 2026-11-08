@@ -261,9 +261,9 @@ test('stages cumulatively reveal their path, benefits and accessible description
   for(let step=0;step<5;step++) {
     ctx.window.renderBimaFinancialJourney(root,{step,ppt:7,premium:87495,age:35,boosterYear:12,term:30,baseSA:300000});
     const has=(minimum,pattern)=>step>=minimum?assert.match(root.innerHTML,pattern):assert.doesNotMatch(root.innerHTML,pattern);
-    has(1,/₹1,71,490/);has(2,/Years 7–29/);has(3,/₹2,10,000/);has(4,/₹4,71,490/);
+    has(1,/₹1,71,490/);has(2,/from year 7 through 29/);has(3,/₹2,10,000/);has(4,/₹4,71,490/);
     has(3,/70% booster/);has(4,/Maturity/);
-    assert.equal((root.innerHTML.match(/class="journey-path /g)||[]).length,step+1);
+    assert.equal((root.innerHTML.match(/class="journey-path /g)||[]).length,[1,1,2,3,4][step]);
     assert.equal((root.innerHTML.match(/class="journey-money /g)||[]).length,step+1);
     assert.doesNotMatch(root.innerHTML,/<button|7% base|7Y|10Y/);
     assert.equal(root.dataset.stage,String(step));
@@ -281,8 +281,24 @@ test('replaying or selecting an earlier stage removes unreached graph content',(
   const root={dataset:{}},data={ppt:15,premium:32220,age:25,boosterYear:20,term:30,baseSA:300000};
   for(const step of [4,0,3,1,4,0]) {
     ctx.window.renderBimaFinancialJourney(root,{...data,step});
-    assert.equal((root.innerHTML.match(/class="journey-path /g)||[]).length,step+1);
+    assert.equal((root.innerHTML.match(/class="journey-path /g)||[]).length,[1,1,2,3,4][step]);
     assert.equal(root.innerHTML.includes('₹5,70,648'),step===4);
     assert.equal(root.innerHTML.includes('70% booster'),step>=3);
   }
+});
+
+test('additions stay in the premium period and cash arrows have the intended directions',()=>{
+  const ctx={window:{}};vm.runInNewContext(readFileSync(new URL('../lic/bima-platinum/financial-journey.js',import.meta.url),'utf8'),ctx);
+  const root={dataset:{}},data={ppt:15,premium:32220,age:25,boosterYear:20,term:30,baseSA:300000};
+  const areas=[];
+  for(let step=0;step<5;step++) {
+    ctx.window.renderBimaFinancialJourney(root,{...data,step});
+    areas.push(root.innerHTML.match(/class="journey-area" d="([^"]+)"/)[1]);
+    assert.equal((root.innerHTML.match(/journey-cash-arrow premium-in/g)||[]).length,3);
+    assert.equal((root.innerHTML.match(/journey-cash-arrow income-out/g)||[]).length,step>=2?3:0);
+    assert.doesNotMatch(root.innerHTML,/benefit-journey-heading|benefit-journey-context|benefit-journey-note/);
+    assert.equal(root.innerHTML.includes('journey-ga-accrual'),step>=1);
+  }
+  assert.equal(areas[0],areas[1],'GA overlays the premium period without extending time');
+  assert.notEqual(areas[1],areas[2],'Income begins the next phase');
 });
