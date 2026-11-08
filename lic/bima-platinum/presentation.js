@@ -1,6 +1,6 @@
 /** LIC Bima Platinum: existing chart story and a focused product reveal. */
 // Pages 1–3 use the supplied filenames and media-duration progress in syncChart.
-// Page 5 prompts for sample selections, then resumes narration and the story.
+// Page 5 is the five-stage journey; the previous selection page was removed.
 const STORY_SCENES = {
   1: {
     src: 'assets/audio/newpage1.mp3',
@@ -22,8 +22,7 @@ const STORY_SCENES = {
     script: 'यहीं Bima Platinum आपकी financial journey में stability जोड़ता है। यह आपके portfolio के एक हिस्से को guaranteed और predictable structure देने के लिए बनाया गया है।',
     cues: []
   },
-  5: { src: 'assets/audio/page5.mp3', script: 'इस उदाहरण में Basic Sum Assured तीन लाख रुपये है। इसका दस प्रतिशत, यानी तीस हज़ार रुपये, हर साल Regular Income के रूप में मिलता है। पहला भुगतान चुने हुए Premium Paying Term के अंत में शुरू होता है, policy की शर्तों के अनुसार।', cues: [] },
-  6: { src: null, script: '', cues: [] }
+  5: { src: null, script: '', cues: [] }
 };
 
 // Original supplied portraits: concern for volatility, reassurance for stability.
@@ -129,29 +128,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const ageOptions = document.querySelectorAll('#incomeAgeOptions button');
   const pptOptions = document.querySelectorAll('#incomePptOptions button');
   function updateIncomeExample() {
-    const premium = getLicSamplePremium(selectedSampleAge, selectedSamplePpt);
-    document.getElementById('incomeAnnualPremium').textContent = '₹' + premium.toLocaleString('en-IN');
-    document.getElementById('incomePptEnd').textContent = `Year ${selectedSamplePpt}`;
-    document.getElementById('incomePayoutStart').textContent = `End of Year ${selectedSamplePpt}`;
-    document.getElementById('incomeLaterYears').textContent = `Years ${selectedSamplePpt + 5} / 30`;
-    ageOptions.forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.age) === selectedSampleAge)));
-    pptOptions.forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.ppt) === selectedSamplePpt)));
+    ageOptions.forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.age)===selectedSampleAge)));
+    pptOptions.forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.ppt)===selectedSamplePpt)));
+    if(currentPage===5) renderJourneyStep();
   }
-  ageOptions.forEach(button => button.addEventListener('click', () => {
-    const age = Number(button.dataset.age);
-    if (getLicSamplePremium(age, selectedSamplePpt) === null) return;
-    selectedSampleAge = age;
-    updateIncomeExample();
-    resetSelectionCountdown(true);
-  }));
-  pptOptions.forEach(button => button.addEventListener('click', () => {
-    const ppt = Number(button.dataset.ppt);
-    if (getLicSamplePremium(selectedSampleAge, ppt) === null) return;
-    selectedSamplePpt = ppt;
-    updateIncomeExample();
-    resetSelectionCountdown(true);
-  }));
-  updateIncomeExample();
+  ageOptions.forEach(button=>button.addEventListener('click',()=>{const age=Number(button.dataset.age);if(getLicSamplePremium(age,selectedSamplePpt)==null)return;selectedSampleAge=age;updateIncomeExample();}));
+  pptOptions.forEach(button=>button.addEventListener('click',()=>{const ppt=Number(button.dataset.ppt);if(getLicSamplePremium(selectedSampleAge,ppt)==null)return;selectedSamplePpt=ppt;updateIncomeExample();}));
   let currentPage = 1;
   let automaticStory = true;
   let audioEvents = null;
@@ -202,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
     journeyToggle.title = journeyAutoplay ? 'Pause story' : 'Resume story';
     journeyReplay.hidden = !journeyComplete;
     document.getElementById('journeyProgress').textContent = journeyStep < 0 ? '0 of 5' : `${journeyStep + 1} of 5`;
-    if (currentPage === 6) document.getElementById('storyNextLabel').textContent = journeyComplete ? 'अब protection भी देखें' : 'Tap to reveal next benefit';
+    if (currentPage === 5) document.getElementById('storyNextLabel').textContent = journeyComplete ? 'अब protection भी देखें' : 'Tap to reveal next benefit';
     journeyNext.disabled = false;
   }
   function renderJourneyStep() {
@@ -244,12 +226,12 @@ document.addEventListener('DOMContentLoaded', () => {
     renderJourneyStep();
   }
   function scheduleJourneyFallback(delay, generation) {
-    if (!journeyAutoplay || currentPage !== 6) return;
+    if (!journeyAutoplay || currentPage !== 5) return;
     journeyMode = 'fallback';
     journeyRemaining = delay;
     journeyDeadline = Date.now() + delay;
     journeyTimer = setTimeout(() => {
-      if (generation === journeyGeneration && currentPage === 6) advanceJourney();
+      if (generation === journeyGeneration && currentPage === 5) advanceJourney();
     }, delay);
   }
   function advanceJourney() {
@@ -262,11 +244,11 @@ document.addEventListener('DOMContentLoaded', () => {
     journeyPage.dataset.manual = String(manual);
     journeyComplete = false;
     renderJourneyStep();
-    if (currentPage !== 6) return;
+    if (currentPage !== 5) return;
     const generation = journeyGeneration;
     const step = JOURNEY_STEPS[index];
     const fallback = () => {
-      if (generation !== journeyGeneration || currentPage !== 6 || journeyMode === 'fallback') return;
+      if (generation !== journeyGeneration || currentPage !== 5 || journeyMode === 'fallback') return;
       clearTimeout(journeyLoadTimer);
       if (journeyAudio) { journeyAudio.pause(); journeyAudio = null; }
       journeyMode = 'fallback';
@@ -349,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateAudioUI(state) {
     playbackState = state;
-    const label = state === 'playing' ? 'Pause audio' : state === 'paused' ? 'Resume audio' : state === 'loading' ? 'Loading audio…' : currentPage === 5 ? 'Hear Advisor' : 'Advisor की बात सुनें';
+    const label = state === 'playing' ? 'Pause audio' : state === 'paused' ? 'Resume audio' : state === 'loading' ? 'Loading audio…' : 'Advisor की बात सुनें';
     for (const [button, text] of [[advisorAudioBtn, advisorAudioLabel], [sceneTwoDialogueBtn, sceneTwoAudioLabel]]) {
       text.textContent = label;
       button.setAttribute('aria-busy', String(state === 'loading'));
@@ -406,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (page <= 3) chartComplete = true;
         audio.currentTime = 0;
         updateAudioUI('idle');
-        if (automaticStory && page <= 5) showPage(page + 1, false, audio);
+        if (automaticStory && page <= 4) showPage(page + 1, false, audio);
       });
       for (const event of ['timeupdate', 'seeked', 'loadedmetadata', 'durationchange']) listen(event, () => { if (isCurrent()) syncChart(); });
       listen('error', () => {
@@ -431,85 +413,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  const incomePrompt = document.getElementById('incomeSelectionPrompt');
-  const incomeContinue = document.getElementById('incomeSelectionContinue');
-  const incomePause = document.getElementById('incomeSelectionPause');
-  let selectionTimer = null;
-  let selectionGeneration = 0;
-  let selectionSeconds = 10;
-  let selectionPaused = false;
-  let selectionChanged = false;
-  let selectionContinuation = null;
-
-  function clearSelectionTimer() {
-    selectionGeneration++;
-    clearTimeout(selectionTimer);
-    selectionTimer = null;
-  }
-  function updateSelectionPrompt() {
-    document.getElementById('incomeSelectionSummary').textContent = `Age ${selectedSampleAge} · PPT ${selectedSamplePpt} years`;
-    document.getElementById('incomeSelectionCountdown').textContent = selectionPaused
-      ? 'Timer paused · अपनी values चुनें और Continue दबाएँ।'
-      : `${selectionSeconds} second${selectionSeconds === 1 ? '' : 's'} में ${selectionChanged ? 'चुनी हुई' : 'default'} values के साथ auto-resume होगा।`;
-    incomePause.textContent = selectionPaused ? 'Resume timer' : 'मुझे थोड़ा समय दें · Pause timer';
-    incomePause.setAttribute('aria-pressed', String(selectionPaused));
-  }
-  function scheduleSelectionTick() {
-    if (incomePrompt.hidden || selectionPaused || document.hidden || currentPage !== 5) return;
-    const generation = selectionGeneration;
-    selectionTimer = setTimeout(() => {
-      if (generation !== selectionGeneration || incomePrompt.hidden || currentPage !== 5) return;
-      selectionSeconds--;
-      updateSelectionPrompt();
-      if (selectionSeconds <= 0) confirmIncomeSelection(false);
-      else scheduleSelectionTick();
-    }, 1000);
-  }
-  function resetSelectionCountdown(changed = false) {
-    if (incomePrompt.hidden || currentPage !== 5) return;
-    clearSelectionTimer();
-    selectionSeconds = 10;
-    selectionChanged ||= changed;
-    updateSelectionPrompt();
-    scheduleSelectionTick();
-  }
-  function closeSelectionPrompt() {
-    clearSelectionTimer();
-    incomePrompt.hidden = true;
-    document.getElementById('incomeSelectorHome').appendChild(document.getElementById('incomeSelectors'));
-    document.getElementById('planDetailsPage').inert = false;
-    document.querySelector('.scene-two-footer').inert = false;
-    selectionContinuation = null;
-  }
-  function openSelectionPrompt(continuation) {
-    selectionContinuation = continuation;
-    selectionPaused = false;
-    selectionChanged = false;
-    incomePrompt.hidden = false;
-    document.getElementById('incomeSelectionOptions').appendChild(document.getElementById('incomeSelectors'));
-    document.getElementById('planDetailsPage').inert = true;
-    document.querySelector('.scene-two-footer').inert = true;
-    resetSelectionCountdown();
-    incomeContinue.focus();
-  }
-  function confirmIncomeSelection(focus = true) {
-    if (incomePrompt.hidden || currentPage !== 5) return;
-    const continuation = selectionContinuation;
-    closeSelectionPrompt();
-    if (focus) journeyNext.focus();
-    toggleAudioPlayback(continuation);
-  }
-  incomeContinue.addEventListener('click', () => confirmIncomeSelection());
-  incomePause.addEventListener('click', () => {
-    clearSelectionTimer();
-    selectionPaused = !selectionPaused;
-    updateSelectionPrompt();
-    scheduleSelectionTick();
-  });
-
   function showPage(page, focus = true, continuation = null) {
     if (!STORY_SCENES[page]) return;
-    closeSelectionPrompt();
     stopJourney();
     stopAllAudio();
     currentPage = page;
@@ -520,14 +425,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     stageContainer.setAttribute('data-story-step', String(page));
     const isReveal = page === 4;
-    const isDetails = page === 5;
-    const isJourney = page === 6;
+    const isJourney = page === 5;
     document.getElementById('productReveal').hidden = !isReveal;
-    document.getElementById('planDetailsPage').hidden = !isDetails;
     journeyPage.hidden = !isJourney;
     journeyControls.hidden = !isJourney;
     sceneTwoDialogueBtn.hidden = isJourney;
-    document.getElementById('incomeNavBrand').hidden = !(isDetails || isJourney);
+    document.getElementById('incomeNavBrand').hidden = !isJourney;
     document.getElementById('presenterChartHost').hidden = page >= 4;
     storyChart.hidden = page >= 4;
     document.getElementById('revealCtaIntro').hidden = !isReveal;
@@ -554,16 +457,16 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       stagePreviewModal.classList.add('active');
       stageContainer.classList.add('scene-two-open');
-      document.getElementById('storyStageBadge').setAttribute('aria-label', `Scene ${page} of 10`);
-      document.getElementById('storyStageCounter').textContent = `${page} / 10`;
+      document.getElementById('storyStageBadge').setAttribute('aria-label', `Scene ${page} of 5`);
+      document.getElementById('storyStageCounter').textContent = `${page} / 5`;
       document.querySelector('.scene-two-nav').setAttribute('aria-label', `Scene ${page} navigation`);
-      document.getElementById('storyProgress').style.width = `${page * 10}%`;
-      document.getElementById('storyEyebrow').textContent = page === 2 ? 'GROWTH + VOLATILITY' : page === 3 ? 'GROWTH + STABILITY' : page === 4 ? 'THE STABILITY LAYER' : page === 5 ? 'REGULAR INCOME' : 'THE FIVE-STEP JOURNEY';
+      document.getElementById('storyProgress').style.width = `${page * 20}%`;
+      document.getElementById('storyEyebrow').textContent = page === 2 ? 'GROWTH + VOLATILITY' : page === 3 ? 'GROWTH + STABILITY' : page === 4 ? 'THE STABILITY LAYER' : 'THE FIVE-STEP JOURNEY';
       const title = document.getElementById('stagePreviewTitle');
       title.textContent = page === 2 ? 'When everything fluctuates…' : page === 3 ? 'Add Stability' : page === 4 ? 'अब Growth के साथ Stability' : page === 5 ? 'How Bima Platinum Works' : 'How Bima Platinum Works';
       previewDismissBtn.setAttribute('aria-label', `Back to Scene ${page - 1}`);
       journeyNext.hidden = false;
-      document.getElementById('storyNextLabel').textContent = page === 2 ? 'अब Stability कैसे मिलेगी?' : page === 3 ? 'Stability का अगला कदम' : page === 4 ? 'Plan समझें' : page === 5 ? 'See How It Works' : 'अब protection भी देखें';
+      document.getElementById('storyNextLabel').textContent = page === 2 ? 'अब Stability कैसे मिलेगी?' : page === 3 ? 'Stability का अगला कदम' : page === 4 ? 'Plan समझें' : 'अब protection भी देखें';
       sceneThreeStatus.hidden = true;
       stagePreviewModal.scrollTop = 0;
       if (focus) previewDismissBtn.focus();
@@ -571,14 +474,13 @@ document.addEventListener('DOMContentLoaded', () => {
         journeyAutoplay = true;
         renderJourneyStep();
         const generation = journeyGeneration;
-        journeyTimer = setTimeout(() => { if (generation === journeyGeneration && currentPage === 6) startJourneyStep(0); }, 700);
+        journeyTimer = setTimeout(() => { if (generation === journeyGeneration && currentPage === 5) startJourneyStep(0); }, 700);
       } else journeyNext.disabled = false;
     }
     advisorAudioBtn.title = STORY_SCENES[1].script;
     sceneTwoDialogueBtn.title = STORY_SCENES[page].script;
     updateAudioUI('idle');
-    if (isDetails) openSelectionPrompt(continuation);
-    else if (!isJourney) toggleAudioPlayback(continuation);
+    if (!isJourney) toggleAudioPlayback(continuation);
   }
 
   function updateStoryMode() {
@@ -602,15 +504,14 @@ document.addEventListener('DOMContentLoaded', () => {
   ctaForwardBtn.addEventListener('click', () => showPage(2));
   previewDismissBtn.addEventListener('click', () => showPage(currentPage - 1));
   journeyNext.addEventListener('click', () => {
-    if (currentPage >= 2 && currentPage < 6) showPage(currentPage + 1);
-    else if (currentPage === 6 && !journeyComplete) advanceJourney();
-    else if (currentPage === 6) { sceneThreeStatus.textContent = 'Protection page is coming next.'; sceneThreeStatus.hidden = false; }
+    if (currentPage >= 2 && currentPage < 5) showPage(currentPage + 1);
+    else if (currentPage === 5 && !journeyComplete) advanceJourney();
+    else if (currentPage === 5) { sceneThreeStatus.textContent = 'Protection page is coming next.'; sceneThreeStatus.hidden = false; }
   });
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { clearSelectionTimer(); stopAllAudio(); if (currentPage === 6) pauseJourney(); }
-    else if (currentPage === 5 && !incomePrompt.hidden) scheduleSelectionTick();
+    if (document.hidden) { stopAllAudio(); if (currentPage === 5) pauseJourney(); }
   });
-  window.addEventListener('pagehide', () => { closeSelectionPrompt(); stopAllAudio(); stopJourney(); });
+  window.addEventListener('pagehide', () => { stopAllAudio(); stopJourney(); });
   showPage(1, false);
 
   // Developer Tooling: Layer Inspector
@@ -661,7 +562,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Secret triple-click on stage indicator (1 / 10) to toggle dev mode
+  // Secret triple-click on stage indicator (1 / 5) to toggle dev mode
   let clickCount = 0;
   const stageBadge = document.querySelector('.nav-stage-badge');
   if (stageBadge) {
@@ -678,16 +579,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Keyboard navigation & accessibility
   document.addEventListener('keydown', (e) => {
-    if (currentPage === 5 && !incomePrompt.hidden) {
-      if (e.key === 'Escape') { e.preventDefault(); confirmIncomeSelection(); return; }
-      if (e.key === 'Tab') {
-        const buttons = [...incomePrompt.querySelectorAll('button')];
-        const first = buttons[0], last = buttons[buttons.length - 1];
-        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-        return;
-      }
-    }
     if (e.key === 'Tab' && stagePreviewModal.classList.contains('active')) {
       const focusable = Array.from(stagePreviewModal.querySelectorAll('button, a[href], iframe')).filter(el => !el.hidden && !el.closest('[hidden]'));
       const first = focusable[0];

@@ -20,7 +20,7 @@
 
   <link rel="preload" as="image" href="assets/advisor-concerned-19292.jpg">
   <link rel="preload" as="image" href="assets/advisor-reassuring-19294.jpg">
-  <link rel="stylesheet" href="presentation.css?v=30">
+  <link rel="stylesheet" href="presentation.css?v=31">
   <link rel="stylesheet" href="../../shared/app-theme.css?v=1">
 </head>
 <body>
@@ -132,8 +132,8 @@
              ========================================== -->
         <div id="layerNav" class="scene-layer layer-nav interactive">
           <a href="../" class="nav-btn" title="Back to LIC Plans" aria-label="Back">←</a>
-          <div class="story-nav-group"><div class="nav-stage-badge" title="Stage 1 of 10">
-            <span class="stage-counter-text">1 / 10</span>
+          <div class="story-nav-group"><div class="nav-stage-badge" title="Stage 1 of 5">
+            <span class="stage-counter-text">1 / 5</span>
             <div class="stage-progress-bar">
               <div class="stage-progress-fill"></div>
             </div>
@@ -204,8 +204,8 @@
         <nav class="scene-two-nav" aria-label="Scene 2 navigation">
           <button id="previewDismissBtn" type="button" class="nav-btn" aria-label="Back to Scene 1">←</button>
           <div id="incomeNavBrand" class="income-nav-brand" hidden><img class="income-nav-logo" src="assets/lic-logo.svg" alt="LIC" width="200" height="97"><strong>Bima Platinum</strong></div>
-          <div class="story-nav-group"><div id="storyStageBadge" class="nav-stage-badge" aria-label="Scene 2 of 10">
-            <span id="storyStageCounter" class="stage-counter-text">2 / 10</span>
+          <div class="story-nav-group"><div id="storyStageBadge" class="nav-stage-badge" aria-label="Scene 2 of 5">
+            <span id="storyStageCounter" class="stage-counter-text">2 / 5</span>
             <div class="stage-progress-bar"><div id="storyProgress" class="stage-progress-fill" style="width:20%"></div></div>
           </div>
           <button id="storyModeToggle" class="story-mode-toggle" type="button" aria-pressed="true" aria-label="Automatic scene progression enabled">Auto</button></div>
@@ -234,34 +234,11 @@
               <span class="reveal-limited">Limited-Period Plan<strong>31 March 2027 तक</strong></span>
             </div>
           </section>
-          <section id="planDetailsPage" class="plan-details-page income-guide" aria-label="Bima Platinum official sample illustration" hidden>
-            <div id="incomeSelectorHome" class="income-example-top">
-              <img class="income-advisor" src="assets/advisor-anniversary.webp" alt="LIC advisor introducing regular income" width="760" height="759" loading="lazy" decoding="async">
-              <div class="income-highlight"><strong>10<span>%</span></strong><span>of Basic Sum Assured<br><b>Every Year</b></span></div>
-              <div id="incomeSelectors" class="income-selectors">
-                <div class="income-selector"><span id="incomeAgeLabel">Age</span><div id="incomeAgeOptions" class="income-options" role="group" aria-labelledby="incomeAgeLabel">
-                  <button type="button" data-age="15" aria-pressed="false">15</button><button type="button" data-age="25" aria-pressed="true">25</button><button type="button" data-age="35" aria-pressed="false">35</button><button type="button" data-age="45" aria-pressed="false">45</button>
-                </div></div>
-                <div class="income-selector"><span id="incomePptLabel">PPT <small>years</small></span><div id="incomePptOptions" class="income-options" role="group" aria-labelledby="incomePptLabel">
-                  <button type="button" data-ppt="7" aria-pressed="false">7</button><button type="button" data-ppt="10" aria-pressed="false">10</button><button type="button" data-ppt="12" aria-pressed="false">12</button><button type="button" data-ppt="15" aria-pressed="true">15</button><button type="button" data-ppt="18" aria-pressed="false">18</button>
-                </div></div>
-              </div>
-            </div>
-            <dl class="income-facts"><div><dt>Sum Assured</dt><dd>₹3,00,000</dd></div><div><dt>Policy Term</dt><dd>30 years</dd></div><div class="income-premium"><dt>Annual Premium</dt><dd id="incomeAnnualPremium" aria-live="polite">₹32,220</dd></div></dl>
-            <div class="income-benefit" aria-label="Regular income benefit">
-              <p>Regular Income</p><div class="income-amount">₹30,000 <span>/ year</span></div>
-            </div>
-            <ol class="income-timeline" aria-label="Policy timeline">
-              <li><span class="income-timeline-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span><b>Premium Start</b><small>Year 1</small></li>
-              <li><span class="income-timeline-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 4-5 8-8 9-3-1-8-5-8-9V6zM8 12l3 3 5-6"/></svg></span><b>PPT Ends</b><small id="incomePptEnd">Year 15</small></li>
-              <li><span class="income-timeline-icon income-rupee" aria-hidden="true">₹</span><b>Income starts</b><small id="incomePayoutStart">End of Year 15</small></li>
-              <li><span class="income-timeline-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10h16v4H4zM6 14v7h12v-7M12 10v11M12 10C2 10 5 0 12 10c7-10 10 0 0 0"/></svg></span><b>Booster + Maturity</b><small id="incomeLaterYears">Years 20 / 30</small></li>
-            </ol>
-          </section>
           <section id="planJourneyPage" class="plan-journey-page" aria-label="How Bima Platinum works in five steps" hidden>
             <p class="journey-kicker">A SYSTEMATIC JOURNEY</p>
             <img id="journeyAdvisorExplain" class="journey-advisor" src="assets/advisor-presenter.webp" alt="LIC advisor explaining the plan" width="760" height="950" loading="lazy" decoding="async">
             <img id="journeyAdvisorCelebrate" class="journey-advisor journey-advisor-celebrate" src="assets/advisor-anniversary.webp" alt="" width="760" height="759" loading="lazy" decoding="async">
+            <div class="journey-sample-controls"><span>Age</span><div id="incomeAgeOptions" class="journey-sample-options"><button type="button" data-age="15">15</button><button type="button" data-age="25">25</button><button type="button" data-age="35">35</button><button type="button" data-age="45">45</button></div><span>PPT</span><div id="incomePptOptions" class="journey-sample-options"><button type="button" data-ppt="7">7</button><button type="button" data-ppt="10">10</button><button type="button" data-ppt="12">12</button><button type="button" data-ppt="15">15</button><button type="button" data-ppt="18">18</button></div></div>
             <div class="journey-stages" role="group" aria-label="Five plan stages">
               <button type="button" class="journey-stage" data-journey-step="0" aria-expanded="false" aria-controls="journeyStageBody0"><span class="journey-stage-number" aria-hidden="true">1</span><span class="journey-stage-text"><b>Premium Paying Period</b><span id="journeyStageBody0" class="journey-stage-body" hidden></span></span></button>
               <button type="button" class="journey-stage" data-journey-step="1" aria-expanded="false" aria-controls="journeyStageBody1"><span class="journey-stage-number" aria-hidden="true">2</span><span class="journey-stage-text"><b>Guaranteed Additions</b><span id="journeyStageBody1" class="journey-stage-body" hidden></span></span></button>
@@ -327,18 +304,7 @@
             <p id="balanceChartCaption" class="chart-caption">Illustrative concept — not projected returns</p>
           </figure>
         </div>
-        <section id="incomeSelectionPrompt" class="income-selection-prompt" role="dialog" aria-modal="true" aria-labelledby="incomeSelectionTitle" aria-describedby="incomeSelectionHint" hidden>
-          <div class="income-selection-card">
-            <p class="income-selection-kicker">अपना example चुनें</p>
-            <h3 id="incomeSelectionTitle">Age और Premium Paying Term चुनें</h3>
-            <p id="incomeSelectionHint">PPT यानी कितने साल premium भरना है।</p>
-            <div id="incomeSelectionOptions"></div>
-            <p id="incomeSelectionSummary" class="income-selection-summary"></p>
-            <p class="income-selection-timing"><span id="incomeSelectionCountdown" role="timer" aria-live="off">10 seconds में इन values के साथ कहानी जारी होगी।</span></p>
-            <button id="incomeSelectionContinue" class="income-selection-continue" type="button">Continue <span aria-hidden="true">→</span></button>
-            <button id="incomeSelectionPause" class="income-selection-pause" type="button" aria-pressed="false">मुझे थोड़ा समय दें · Pause timer</button>
-          </div>
-        </section>
+
         <footer class="scene-two-footer">
           <button id="sceneTwoDialogueBtn" class="scene-two-dialogue-btn audio-float" type="button" aria-label="Hear Scene 2 advisor recording"><span id="sceneTwoAudioIcon" class="advisor-audio-icon" aria-hidden="true">▶</span> <span id="sceneTwoAudioLabel">Advisor की बात सुनें</span></button>
           <p id="sceneTwoAudioStatus" class="audio-status" role="status" aria-live="polite"></p>
@@ -379,6 +345,6 @@
 </div><!-- /.app-viewport-wrapper -->
 
 <script src="financial-journey.js?v=1"></script>
-<script src="presentation.js?v=30"></script>
+<script src="presentation.js?v=31"></script>
 </body>
 </html>
