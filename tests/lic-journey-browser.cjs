@@ -43,6 +43,11 @@ const server=http.createServer((req,res)=>{
     await page.waitForFunction(stage=>document.querySelector('#journeyFinancialGraph').dataset.stage===String(stage),stage);
     await page.waitForFunction(stage=>window.testAudios.at(-1).src.endsWith(`page6-step${stage+1}.mp3`)&&Number.isFinite(window.testAudios.at(-1).duration)&&!window.testAudios.at(-1).paused,stage);
     assert.equal(await page.locator('.journey-stage[aria-expanded="true"]').count(),1);
+    assert.equal(await page.locator('.journey-path').count(),stage+1,'Only reached path segments exist');
+    assert.equal(await page.locator('.journey-money').count(),stage+1,'Only reached money illustrations exist');
+    assert.equal(await page.locator('.benefit-journey-legend > div').count(),stage+1,'No future amounts shown');
+    assert.equal((await page.locator('#journeyFinancialGraph').innerText()).includes('Maturity'),stage===4);
+    if(width===320) assert.equal(await page.locator('.journey-reveal').evaluate(el=>getComputedStyle(el).animationName),'none');
     assert.equal(await page.locator('.benefit-journey-legend > .is-current').count(),1);
     const bounds=await page.evaluate(()=>{
      const box=s=>{const r=document.querySelector(s).getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height};};
@@ -55,13 +60,18 @@ const server=http.createServer((req,res)=>{
     assert.ok(bounds.svg.width>250&&bounds.svg.height>110,'Chart is prominent');
     assert.ok(bounds.scroll<=bounds.window,'No horizontal page overflow');
     assert.ok(bounds.chart.x>=bounds.shell.x-1&&bounds.chart.right<=bounds.shell.right+1,'Card within shell');
+    if([390,1440,320].includes(width)){await page.waitForTimeout(750);await page.locator('.journey-financial-panel').screenshot({path:`${out}/${width}x${height}-stage${stage+1}.png`});}
     if(stage===0&&[390,1440,320].includes(width)){await page.locator('#stagePreviewModal').evaluate(el=>el.scrollTop=0);await page.screenshot({path:`${out}/${width}x${height}-upper.png`});await page.locator('.journey-financial-panel').screenshot({path:`${out}/${width}x${height}-chart.png`});}
    }
    await page.evaluate(()=>{const a=window.testAudios.at(-1);a.currentTime=a.duration-.05;});
    await page.waitForFunction(()=>document.querySelector('#planJourneyPage').dataset.complete==='true');
    assert.equal(await page.locator('#storyNextLabel').innerText(),'Replay journey');
    await page.click('#sceneTwoNextBtn');await page.waitForFunction(()=>document.querySelector('#journeyFinancialGraph').dataset.stage==='0');
+   assert.equal(await page.locator('.journey-path').count(),1,'Replay resets the extent');
    await page.click('[data-journey-step="3"]');
+   assert.equal(await page.locator('.journey-path').count(),4);
+   await page.click('[data-journey-step="1"]');
+   assert.equal(await page.locator('.journey-path').count(),2,'Selecting an earlier stage retracts future benefits');
    await page.click('#previewDismissBtn');
    assert.equal(await page.locator('#policyExampleAge').inputValue(),'35');assert.equal(await page.locator('#policyExamplePpt').inputValue(),'7');
    assert.equal(await page.evaluate(()=>window.testAudios.at(-1).paused),false,'Page 4 recording starts');
