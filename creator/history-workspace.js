@@ -1,3 +1,5 @@
+import {defaultBasemap} from './documentary-map.js';
+import {defaultTerrain} from './map-style-library.js';
 import {productionId,emptyMap,validateMap,sceneTimeline,durationOf,createClip,clipTiming,exportManifest,safeUrl,timeOf} from './history-model.js';
 import {britishIndiaDemo,archiveSource} from './history-demo.js';
 import {createHistoryPlayer,downloadBlob,sizeMapFrame} from './history-player.js';
@@ -9,7 +11,7 @@ const opts=(project)=>sceneTimeline(project).map((r,i)=>`<option value="${esc(r.
 const jsonDownload=(data,name)=>downloadBlob(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),name);
 export function mountHistoryWorkspace(root,{getProject,onChange,copyText,onRefresh,area='Maps'}){
  root.classList.add('history-workspace');let player=null,visualEditor=null,disposed=false,busy=false,playing=false;
- const project=getProject(),map=project.historicalMap||emptyMap();
+ const project=getProject(),map=project.historicalMap||{...emptyMap(),theme:'night',basemap:defaultBasemap(),visual:{version:1,layers:[],assets:[],terrain:defaultTerrain()}};
  const message=text=>{if(!disposed)root.querySelector('[data-history-status]').textContent=text;};
  const changed=()=>onChange();
  function mountAgain(){destroy();onRefresh();}

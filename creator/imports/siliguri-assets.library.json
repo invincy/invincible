@@ -1,0 +1,41 @@
+{
+  "format": "invincible-map-assets",
+  "version": 1,
+  "assets": [
+    {
+      "id": "siliguri-northeast-supply-convoy",
+      "name": "Northeast Supply Convoy",
+      "type": "image",
+      "url": "https://raw.githubusercontent.com/invincy/invincible/578ff50035978a017cd5016d8bb488bda4526109/creator/imports/assets/siliguri/northeast-supply-convoy.png",
+      "credit": "User-supplied artwork for the Siliguri project; illustrative."
+    },
+    {
+      "id": "siliguri-cargo-truck",
+      "name": "Cargo Truck",
+      "type": "image",
+      "url": "https://raw.githubusercontent.com/invincy/invincible/578ff50035978a017cd5016d8bb488bda4526109/creator/imports/assets/siliguri/cargo-truck.png",
+      "credit": "User-supplied artwork for the Siliguri project; illustrative."
+    },
+    {
+      "id": "siliguri-freight-train",
+      "name": "Freight Train",
+      "type": "image",
+      "url": "https://raw.githubusercontent.com/invincy/invincible/578ff50035978a017cd5016d8bb488bda4526109/creator/imports/assets/siliguri/freight-train.png",
+      "credit": "User-supplied artwork for the Siliguri project; illustrative."
+    },
+    {
+      "id": "siliguri-mountain-illustration",
+      "name": "Mountain Illustration",
+      "type": "image",
+      "url": "https://raw.githubusercontent.com/invincy/invincible/578ff50035978a017cd5016d8bb488bda4526109/creator/imports/assets/siliguri/mountain-illustration.png",
+      "credit": "User-supplied artwork for the Siliguri project; illustrative."
+    },
+    {
+      "id": "siliguri-railway-bridge",
+      "name": "Railway Bridge",
+      "type": "image",
+      "url": "https://raw.githubusercontent.com/invincy/invincible/578ff50035978a017cd5016d8bb488bda4526109/creator/imports/assets/siliguri/railway-bridge.png",
+      "credit": "User-supplied artwork for the Siliguri project; illustrative."
+    }
+  ]
+}
