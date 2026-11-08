@@ -1996,3 +1996,12 @@ body.dev-mode .desktop-tools-bar { display: flex; }
   #revealProductName{font-size:34px}.reveal-brand{font-size:10px;margin-bottom:5px}.reveal-support{font-size:10px;line-height:1.45;margin-top:8px}
   .reveal-deadline{margin-top:12px}.reveal-deadline>span{display:none}.reveal-deadline strong>span{font-size:24px}.reveal-deadline strong>span+span{font-size:36px}
 }
+/* Reveal only benefits reached by narration; keep the same scale and card size. */
+.benefit-journey-legend { min-height:70px; align-content:start; }
+.journey-reveal { animation:journey-extend .7s ease-out both; }
+.journey-path.is-current { animation:none; stroke-dasharray:none; }
+#planJourneyPage[data-paused="true"] .journey-reveal { animation-play-state:paused; }
+#planJourneyPage[data-complete="true"] .journey-reveal,
+#planJourneyPage[data-complete="true"] .journey-money { animation:none; }
+@keyframes journey-extend { from { width:var(--reveal-from); } to { width:var(--reveal-to); } }
+@media (prefers-reduced-motion:reduce) { .journey-reveal { animation:none; } }

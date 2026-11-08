@@ -255,14 +255,17 @@ test('pause, resume, manual stage selection and Back cancel stale journey audio'
   const ended=audio.events.ended;s.click('previewDismissBtn');ended();
   assert.equal(s.el('stageContainer').attrs['data-story-step'],'4');assert.equal(audio.paused,true);s.windowEvents.pagehide();
 });
-test('every stage renders the complete chart with base GA and correct payout years',()=>{
+test('stages cumulatively reveal their path, benefits and accessible description',()=>{
   const ctx={window:{}};vm.runInNewContext(readFileSync(new URL('../lic/bima-platinum/financial-journey.js',import.meta.url),'utf8'),ctx);
   const root={dataset:{}};
   for(let step=0;step<5;step++) {
     ctx.window.renderBimaFinancialJourney(root,{step,ppt:7,premium:87495,age:35,boosterYear:12,term:30,baseSA:300000});
-    assert.match(root.innerHTML,/₹1,71,490/);assert.match(root.innerHTML,/₹4,71,490/);
-    assert.match(root.innerHTML,/Years 7–29/);assert.match(root.innerHTML,/Year 12/);assert.match(root.innerHTML,/Year 30/);
-    assert.match(root.innerHTML,/Maturity/);assert.doesNotMatch(root.innerHTML,/<button|7% base|7Y|10Y/);
+    const has=(minimum,pattern)=>step>=minimum?assert.match(root.innerHTML,pattern):assert.doesNotMatch(root.innerHTML,pattern);
+    has(1,/₹1,71,490/);has(2,/Years 7–29/);has(3,/₹2,10,000/);has(4,/₹4,71,490/);
+    has(3,/70% booster/);has(4,/Maturity/);
+    assert.equal((root.innerHTML.match(/class="journey-path /g)||[]).length,step+1);
+    assert.equal((root.innerHTML.match(/class="journey-money /g)||[]).length,step+1);
+    assert.doesNotMatch(root.innerHTML,/<button|7% base|7Y|10Y/);
     assert.equal(root.dataset.stage,String(step));
   }
 });
@@ -271,4 +274,15 @@ test('hiding the journey pauses at its current media position',async()=>{
   const s=setup();enterJourney(s);await flush();const audio=s.audios.at(-1);audio.currentTime=2;
   s.doc.hidden=true;s.doc.events.visibilitychange();assert.equal(audio.paused,true);assert.equal(audio.currentTime,2);
   s.doc.hidden=false;s.click('journeyPlayPause');await flush();assert.equal(audio.paused,false);assert.equal(audio.currentTime,2);s.windowEvents.pagehide();
+});
+
+test('replaying or selecting an earlier stage removes unreached graph content',()=>{
+  const ctx={window:{}};vm.runInNewContext(readFileSync(new URL('../lic/bima-platinum/financial-journey.js',import.meta.url),'utf8'),ctx);
+  const root={dataset:{}},data={ppt:15,premium:32220,age:25,boosterYear:20,term:30,baseSA:300000};
+  for(const step of [4,0,3,1,4,0]) {
+    ctx.window.renderBimaFinancialJourney(root,{...data,step});
+    assert.equal((root.innerHTML.match(/class="journey-path /g)||[]).length,step+1);
+    assert.equal(root.innerHTML.includes('₹5,70,648'),step===4);
+    assert.equal(root.innerHTML.includes('70% booster'),step>=3);
+  }
 });

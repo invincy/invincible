@@ -784,3 +784,11 @@ visually inspected. External fonts were blocked in the local fixture, so these
 captures use fallback fonts; physical devices and live Firebase were not tested.
 Full repository browser coverage remains delegated to the PR's existing CI.
 No merge or publication performed for this change.
+
+### Bima Platinum Page 5 cumulative reveal correction — November 8, 2026
+
+Captured and inspected the live graph at all five narration stages. The prior redesign had drawn the complete path, fill, illustrations and future amounts at every stage; only the active highlight changed. The user's clarified behavior is cumulative disclosure, not a complete chart from entry.
+
+The graph now renders only the reached segments, corresponding fill/axis extent, milestone dots, money illustrations, labels and amount cells. Premiums appear first, then additions, annual income, booster and maturity. Prior benefits remain visible as the current segment extends. Future amounts are also withheld from the accessible description. The coordinate system and card dimensions stay stable; no camera zoom/crop or duplicate selectors were introduced. The current extension pauses with the story and reduced-motion users see the reached state immediately. Replay and selecting an earlier stage remove unreached content. The advisor/accordion, selection carry-forward, audio recordings/lifecycle, navigation and financial calculations remain unchanged.
+
+Verification: all 20 focused presentation tests pass; the full unit suite passes 180 tests with 2 existing skips, and all 15 Functions tests pass. Real-audio browser checks pass every stage at seven viewports, including landscape, reduced motion, replay, manual backward selection, Back/re-entry, and graph/footer clearance. Tests now assert exactly 1/2/3/4/5 paths, illustration groups and amount cells as narration advances, plus absence of maturity until stage 5. Captured and visually inspected the five updated 390×844 graph screenshots against the five live before screenshots. Browser evidence includes per-stage PNGs at 320, 390 and desktop widths under .test-output/lic-journey; CI uploads these in lic-presentation-evidence. Build/site/opening/business-label and CI outcomes are recorded in the PR. Physical iOS/Safari remains unverified.
