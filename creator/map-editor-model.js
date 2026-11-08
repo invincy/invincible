@@ -69,7 +69,7 @@ export function moveLayer(layer,position){
 }
 export function scenePackage(project,map,sceneId,initialCamera){
  const scene=project.scenes.find(s=>s.id===sceneId);if(!scene)throw Error('Select a scene.');
- const out=structuredClone(map);out.events=out.events.filter(e=>e.sceneId===sceneId);out.features.features=out.features.features.filter(f=>f.properties.sceneId===sceneId);out.camera=out.camera.filter(c=>c.sceneId===sceneId);if(out.lighting)out.lighting=out.lighting.filter(c=>c.sceneId===sceneId);
+ const out=structuredClone(map);out.events=out.events.filter(e=>e.sceneId===sceneId);out.features.features=out.features.features.filter(f=>f.properties.sceneId===sceneId);out.camera=out.camera.filter(c=>c.sceneId===sceneId);if(out.lighting)out.lighting=out.lighting.filter(c=>c.sceneId===sceneId);if(out.overlayKeys)out.overlayKeys=out.overlayKeys.filter(c=>c.sceneId===sceneId);
  if(initialCamera&&!out.camera.some(c=>c.offset===0))out.camera.unshift({...structuredClone(initialCamera),sceneId,offset:0});
  const keep=new Set([...out.events.map(e=>e.id),...out.features.features.map(f=>f.properties.id)]);
  if(out.visual){out.visual.layers=out.visual.layers.filter(l=>['feature','event'].includes(l.kind)?keep.has(l.ref):l.sceneId===sceneId);const assets=new Set(out.visual.layers.map(l=>l.assetId));out.visual.assets=out.visual.assets.filter(a=>assets.has(a.id));}
@@ -81,10 +81,10 @@ export function appendScenePackage(project,pkg){
  const p=structuredClone(project),scene=structuredClone(pkg.scene),old=scene.id;scene.id=uid();const incoming=structuredClone(pkg.historicalMap);
  const remap=new Map(),next=id=>{if(!remap.has(id))remap.set(id,uid());return remap.get(id);};
  const anchor=o=>{if(o.sceneId!==old)throw Error('Scene package contains an unrelated scene reference.');o.sceneId=scene.id;};
- for(const e of incoming.events){anchor(e);e.id=next(e.id);}for(const f of incoming.features.features){anchor(f.properties);f.properties.id=next(f.properties.id);}incoming.camera.forEach(anchor);incoming.lighting?.forEach(anchor);
+ for(const e of incoming.events){anchor(e);e.id=next(e.id);}for(const f of incoming.features.features){anchor(f.properties);f.properties.id=next(f.properties.id);}incoming.camera.forEach(anchor);incoming.lighting?.forEach(anchor);incoming.overlayKeys?.forEach(anchor);
  if(incoming.visual){for(const a of incoming.visual.assets)a.id=next(a.id);for(const l of incoming.visual.layers){l.id=uid();if(l.ref)l.ref=next(l.ref);else anchor(l);if(l.assetId)l.assetId=next(l.assetId);}}
  p.scenes.push(scene);
  if(!p.historicalMap)p.historicalMap=incoming;
- else {const m=visualMap(p.historicalMap);m.events.push(...incoming.events);m.features.features.push(...incoming.features.features);m.camera.push(...incoming.camera);if(incoming.lighting){m.lighting??=[];m.lighting.push(...incoming.lighting);}m.visual.layers.push(...(incoming.visual?.layers||[]));m.visual.assets.push(...(incoming.visual?.assets||[]));p.historicalMap=visualMap(m);}
+ else {const m=visualMap(p.historicalMap);m.events.push(...incoming.events);m.features.features.push(...incoming.features.features);m.camera.push(...incoming.camera);if(incoming.lighting){m.lighting??=[];m.lighting.push(...incoming.lighting);}if(incoming.overlayKeys){m.overlayKeys??=[];m.overlayKeys.push(...incoming.overlayKeys);}m.visual.layers.push(...(incoming.visual?.layers||[]));m.visual.assets.push(...(incoming.visual?.assets||[]));p.historicalMap=visualMap(m);}
  return p;
 }

@@ -6,3 +6,20 @@
 Event sources and precision notes are embedded individually in `../history-demo.js`. Approximate city/regional anchors are locators, not surveyed battlefield or factory footprints. The Diwani marker denotes revenue rights, not full sovereignty over modern states.
 
 No historical territorial polygons or military routes are bundled: none was verified to event-level fidelity. Do not substitute modern state polygons. Import reviewed GeoJSON with the source, date, provenance/uncertainty note and `reviewed: true`. The application verifies structure/provenance presence; a human must verify historical truth and reuse rights.
+
+## Modern appearance reference data (November 8, 2026)
+
+`countries.geojson` and `countries-labels.geojson` derive from Natural Earth's
+`ne_110m_admin_0_countries.geojson`; `india-states.geojson` and its labels derive
+from the India subset of `ne_50m_admin_1_states_provinces.geojson`.
+Sources: https://github.com/nvkelso/natural-earth-vector/tree/master/geojson
+and https://www.naturalearthdata.com/about/terms-of-use/ (public domain).
+Only geometry, stable region ID, English name, label position and palette index
+are retained. Dataset snapshot downloaded November 8, 2026. Country overrides
+use ADM0_A3 (`IND`, `CHN`); states use ISO 3166-2 (`IN-GJ`, `IN-MP`).
+
+These are generalized modern reference boundaries, not authoritative Indian
+political/claim boundaries or verified historical control. State polygons use a
+different cartographic scale from countries; coastlines can differ slightly.
+Do not infer a contemporary boundary revision from this snapshot. Existing
+reviewed boundary/claim artwork remains separate and is never replaced.

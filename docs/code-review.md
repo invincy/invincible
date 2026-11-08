@@ -704,3 +704,29 @@ Validation: 171 repository tests passed (two existing skips), all 15 Functions t
 ### Border-film flag textures — November 8, 2026
 
 Adds five sourced national-flag SVG originals and transparent PNG map textures, with vector clipping sources, geographic corners and license metadata. India uses the requested Indian territorial-claim extent; foreign textures exclude that extent. Country silhouettes/claim geometry are generalized Natural Earth, with Survey of India political-map presentation used as reference. Administration remains a separate green/red shading layer and internal LoC/LAC patterns remain distinct in the production JSON. Flag fields extend into the masks while emblem proportions are preserved; textures are editorial artwork, not boundary evidence. No renderer/schema, auth, backend or rules changes. Site references, SVG/PNG decoding, geographic containment checks and model validation pass; film-specific live previews follow before export.
+
+### India map presets and independent overlays — November 8, 2026
+
+New visual maps default to India Satellite (9:16, 85% country fill). Centralized
+India Satellite, Political (85%), Topographic (25%) and Custom presets resolve
+partial JSON overrides without adopting new styling in legacy sessions. Added
+compact Map Appearance controls, country/state overrides, independent borders and
+labels, scene-relative opacity/color keys, and an export-composited 24-spoke
+Chakra at [78.5,23.5]. Viewport-aware Mercator fitting is separate from that anchor;
+existing camera keyframes take precedence. Scene packages remap overlay keys.
+No Firebase, storage paths, auth, assets, other Creator modules or generated React
+bundles changed. Natural Earth modern reference data is attributed separately;
+it does not replace reviewed historical/claim geometry or baked flag artwork.
+
+Validation: `npm test` passed 179 repository tests (two existing skips) plus all
+15 Functions tests; eight new appearance tests are included. `npm run build`,
+`npm run check`, and whitespace checks passed. Existing map-editor browser
+coverage passed, including native artwork ordering, scene reuse and responsive
+layout. Existing animation-browser coverage passed import/timing/cancellation and
+responsive layout. New `npm run test:map-appearance` covers native preset layers,
+20–85% interpolation, geographic anchoring, UI changes and defaults. Browser tests
+use synthetic imagery/DEM fixtures; they do not validate live provider availability.
+This Chromium build lacks an H.264 encoder: MP4 encoding and decoded-frame pixel
+comparison are explicitly skipped, not claimed as verified. Those assertions are
+retained in the browser test for a codec-capable Chrome build. Production Firebase
+and live-provider validation were not performed; no production data was changed.
