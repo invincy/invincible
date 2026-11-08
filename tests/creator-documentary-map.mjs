@@ -21,7 +21,7 @@ test('default reference imagery, persistent overlays and borders retain source s
  const style=await baseStyle({basemap:defaultBasemap()});
  assert.match(style.sources['library-imagery'].tiles[0],/BlueMarble/);
  assert.equal(style.layers.find(l=>l.id==='library-imagery').paint['raster-saturation'],.3);
- const flags=style.layers.filter(l=>l.id.startsWith('reference-')&&l.type==='raster');assert.equal(flags.length,5);
+ const flags=style.layers.filter(l=>l.id.startsWith('reference-')&&l.type==='raster');assert.equal(flags.length,4);
  for(const l of flags){assert.equal(l.layout?.visibility,undefined);assert.equal(l.paint['raster-fade-duration'],0);assert.ok(l.paint['raster-opacity']>0);}
  for(const flag of documentaryFlags)assert.ok(fs.existsSync(new URL('../creator/history-data/border-flags-v3/'+flag.file,import.meta.url)));
  assert.ok(data.features.some(f=>f.properties.semantic==='loc'));assert.ok(data.features.some(f=>f.properties.semantic==='lac'));assert.ok(data.features.some(f=>f.properties.semantic==='claim'));
@@ -33,14 +33,12 @@ test('Siliguri animates only the map and geographic labels',()=>{
  const r=compileAnimation({scenes:[]},p,{geometryReviewed:true});assert.equal(r.summary.duration,70.478375);assert.equal(p.basemap,'documentary');assert.ok(p.layers.every(l=>['label','route','boundary'].includes(l.type)));assert.equal(p.assets,undefined);assert.ok(p.camera.every(c=>c.pitch===0));
 });
 
-test('transport animation uses the catalog geometry and a schematic double-headed width marker',()=>{
+test('regional connections span the source-mapped western and Northeast endpoints',()=>{
  const p=JSON.parse(fs.readFileSync(new URL('../creator/imports/siliguri-corridor-portrait.animation.json',import.meta.url)));
- const data=JSON.parse(fs.readFileSync(new URL('../creator/history-data/siliguri-transport.geojson',import.meta.url)));
- const imported=compileAnimation({scenes:[]},p,{geometryReviewed:true});
- const lines=p.layers.filter(l=>l.id.startsWith('transport-'));assert.equal(lines.length,data.features.length);
- for(const line of lines){const item=data.features.find(f=>JSON.stringify(f.geometry)===JSON.stringify(line.geometry));assert.ok(item);assert.ok(item.properties.osmWayIds.length);assert.match(line.source.url,/openstreetmap.org/);assert.equal(line.semantic,'other');}
- assert.deepEqual([...new Set(data.features.map(f=>f.properties.kind))].sort(),['NH27','NH327','rail']);
- const arrows=p.layers.filter(l=>l.id.startsWith('width-arrow-'));assert.equal(arrows.length,2);assert.deepEqual(arrows[0].coordinates,[...arrows[1].coordinates].reverse());assert.ok(arrows.every(l=>l.arrowhead===true));assert.match(p.layers.find(l=>l.id==='width-note').name,/SCHEMATIC/);
- const m=imported.project.historicalMap;assert.ok(m.visual.layers.filter(l=>l.kind==='feature').every(l=>l.arrowhead===false));
- assert.ok(fs.statSync(new URL('../creator/imports/siliguri-map-only.animation.json',import.meta.url)).size<500000);
+ const data=JSON.parse(fs.readFileSync(new URL('../creator/history-data/regional-transport-connections.geojson',import.meta.url)));
+ const result=compileAnimation({scenes:[]},p,{geometryReviewed:true});assert.equal(data.features.length,2);
+ for(const f of data.features){const xs=f.geometry.coordinates.map(c=>c[0]);assert.ok(Math.min(...xs)<87.6);assert.ok(Math.max(...xs)>91.7);assert.match(f.properties.source.url,/naturalearthdata.com/);}
+ const arrows=p.layers.filter(l=>l.id.startsWith('width-arrow-'));assert.equal(arrows.length,2);assert.deepEqual(arrows[0].coordinates,[...arrows[1].coordinates].reverse());
+ const locator=result.project.historicalMap.visual.layers.find(l=>l.name.includes('TRI-JUNCTION'));assert.equal(locator.marker,true);assert.deepEqual(locator.labelOffset,[0,110]);
+ const china=JSON.parse(fs.readFileSync(new URL('../creator/history-data/china-country-tint.geojson',import.meta.url)));const cs=china.features[0].geometry.coordinates.flat(Infinity);assert.ok(cs.some(x=>x>130));assert.ok(cs.some(x=>x>50&&x<54));
 });

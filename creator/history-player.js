@@ -1,4 +1,5 @@
-import {documentaryLabels} from './documentary-map.js';
+import {drawMapLabel} from './map-label-card.js';
+import {documentaryLabels,documentaryStates} from './documentary-map.js';
 import {locationVisible} from './map-globe.js';
 import {CanvasHistoricalMap} from './history-canvas.js';
 import {mapFrame,durationOf,sceneTimeline} from './history-model.js';
@@ -23,7 +24,7 @@ export async function createHistoryPlayer(host,project,spec,{onTime=()=>{},onErr
  const loaded=new Promise((resolve,reject)=>{map.once('load',async()=>{ready=true;historyLayers();try{await visual.setSpec(spec);if(disposed)return;seek(0);resolve();}catch(e){reject(e);}});map.on('error',e=>{renderError='Map: '+(e.error?.message||'render error');onError(renderError);if(!ready)reject(e.error||Error('Map failed to load.'));});});
  function overlay(target,w,h){
   const sx=w/host.clientWidth,sy=h/host.clientHeight;target.save();target.scale(sx,sy);const width=host.clientWidth,height=host.clientHeight;
-  const frame=mapFrame(project,spec,time),occupied=[];
+  const frame=mapFrame(project,spec,time),occupied=[],labelBoxes=[];
   target.font='600 12px system-ui';target.textBaseline='middle';
   const eventOrder=new globalThis.Map((spec.visual?.layers||[]).map((l,i)=>[l.ref,i]));for(const event of [...frame.events].sort((a,b)=>(eventOrder.get(a.id)||0)-(eventOrder.get(b.id)||0))){const layer=spec.visual?.layers.find(l=>l.kind==='event'&&l.ref===event.id);if(layer?.visible===false)continue;if(!locationVisible(map,event.coordinates,spec.projection))continue;const p=map.project(event.coordinates);if(p.x<0||p.y<50||p.x>width||p.y>height-50)continue;target.globalAlpha=layer?layerAlpha(project,layer,time):1;target.fillStyle=layer?.color||'#b25f3d';target.beginPath();target.arc(p.x,p.y,4,0,Math.PI*2);target.fill();const text=layer?.name||event.label,tw=Math.min(target.measureText(text).width+16,width-20);let x=Math.max(6,Math.min(width-tw-6,p.x+10)),y=p.y-15;
    for(let i=0;i<8&&occupied.some(r=>x<r.x+r.w&&x+tw>r.x&&y<r.y+25&&y+25>r.y);i++)y+=27;
@@ -32,14 +33,13 @@ export async function createHistoryPlayer(host,project,spec,{onTime=()=>{},onErr
   target.globalAlpha=1;for(const f of frame.features.features.filter(f=>f.geometry.type==='LineString')){const layer=spec.visual?.layers.find(l=>l.kind==='feature'&&l.ref===f.properties.id);if(layer?.visible===false||layer?.arrowhead===false)continue;const c=f.geometry.coordinates;if(!locationVisible(map,c.at(-1),spec.projection)||!locationVisible(map,c.at(-2),spec.projection))continue;const a=map.project(c.at(-2)),b=map.project(c.at(-1));target.save();target.globalAlpha=layer?layerAlpha(project,layer,time):1;target.translate(b.x,b.y);target.rotate(Math.atan2(b.y-a.y,b.x-a.x));target.fillStyle=layer?.color||'#ae4b33';target.beginPath();target.moveTo(0,0);target.lineTo(-12,-5);target.lineTo(-12,5);target.closePath();target.fill();target.restore();}
   if(spec.basemap?.id==='documentary'&&spec.basemap.labels){
    for(const label of documentaryLabels){
+    if(spec.visual?.layers.some(l=>l.kind==='label'&&l.name.toUpperCase()===label.name.toUpperCase()&&layerAlpha(project,l,time)>.1))continue;
     if(!locationVisible(map,label.position,spec.projection))continue;
-    const p=map.project(label.position);target.font=`600 ${Math.max(10,18*label.scale)}px system-ui`;
-    const w=target.measureText(label.name).width;
-    if(p.x-w/2<5||p.x+w/2>width-5||p.y<20||p.y>height-55)continue;
-    target.save();target.textAlign='center';target.lineJoin='round';target.lineWidth=3;target.strokeStyle='#102331';target.fillStyle='#f5fbff';target.strokeText(label.name,p.x,p.y);target.fillText(label.name,p.x,p.y);target.restore();
+    const p=map.project(label.position);drawMapLabel(target,label.name,p.x,p.y,{width,height,size:label.name==='India'?23:18,color:'#ffffff',offset:label.name==='Nepal'?[0,-36]:label.name==='Myanmar'?[30,60]:label.name==='Bangladesh'?[12,0]:[0,0],occupied:labelBoxes});
    }
   }
-  visual.overlay(target,time);
+  if(spec.basemap?.id==='documentary'&&spec.basemap.labels&&map.getZoom()>=3&&map.getZoom()<7.3){for(const label of documentaryStates){const p=map.project(label.position),busy=spec.visual?.layers.some(l=>{if(l.kind!=='label'||layerAlpha(project,l,time)<.1)return false;const q=map.project(l.position);return Math.abs(q.x+(l.labelOffset?.[0]||0)-p.x)<110&&Math.abs(q.y+(l.labelOffset?.[1]||0)-p.y)<55;});if(!busy){target.save();target.globalAlpha=.8;drawMapLabel(target,label.name,p.x,p.y,{width,height,size:16,color:'#d8e0e5',occupied:labelBoxes});target.restore();}}}
+  visual.overlay(target,time,labelBoxes);
   const active=frame.events.at(-1);target.globalAlpha=1;target.fillStyle=night?'#102331e8':'#eee4cde8';if(active){target.fillRect(0,0,width,45);target.fillStyle=night?'#eee4cd':'#312c25';target.font='600 15px system-ui';target.fillText(active.date,12,23,width-24);}target.fillStyle=night?'#102331e8':'#eee4cde8';const osmCredit=spec.features.features.some(f=>f.properties.sourceUrl?.includes('openstreetmap.org'));target.fillRect(0,height-(osmCredit?54:40),width,osmCredit?54:40);target.font='9px system-ui';target.fillStyle=night?'#eee4cd':'#312c25';target.fillText((styleFor(spec)?.credit||'Natural Earth')+' · Imported geography: see Sources',8,height-12,width-16);if(spec.visual?.terrain?.enabled)target.fillText(spec.visual.terrain.attribution,8,height-26,width-16);if(osmCredit)target.fillText('Transport: © OpenStreetMap contributors · ODbL 1.0',8,height-40,width-16);target.restore();
  }
  function draw(){if(disposed)return;ctx.clearRect(0,0,canvas.width,canvas.height);if(ready)overlay(ctx,canvas.width,canvas.height);if(recording){const {out,context}=recording;context.drawImage(map.getCanvas(),0,0,out.width,out.height);overlay(context,out.width,out.height);}}

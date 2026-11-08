@@ -1,3 +1,4 @@
+import {drawMapLabel} from './map-label-card.js';
 import {locationVisible} from './map-globe.js';
 import {resolveMapAsset} from './map-assets-client.js';
 import {icons,layerActive,layerStart,layerAlpha,transformedCorners} from './map-editor-model.js';
@@ -14,7 +15,7 @@ export function createVisualRenderer(map,project,onError){
   if(map.getTerrain())map.setTerrain(null);if(map.getSource('visual-dem'))map.removeSource('visual-dem');
   const terrain=spec.visual?.terrain;if(terrain?.enabled){map.addSource('visual-dem',{type:'raster-dem',...(terrain.tiles?{tiles:terrain.tiles,minzoom:0,maxzoom:15}:{url:terrain.url}),encoding:terrain.encoding,attribution:terrain.attribution,tileSize:256});map.setTerrain({source:'visual-dem',exaggeration:terrain.exaggeration});map.addLayer({id:'map-relief',type:'hillshade',source:'visual-dem',paint:{'hillshade-illumination-anchor':'map','hillshade-exaggeration':0.45,'hillshade-shadow-color':'#273c58','hillshade-highlight-color':'#fff1ca','hillshade-accent-color':'#4e705b'}});}
   for(const l of spec.visual?.layers||[]){
-   if(l.kind==='event')continue;const key=id(l);owned.push(key);
+   if(l.kind==='event'||l.kind==='label')continue;const key=id(l);owned.push(key);
    try{
     if(l.kind==='glb'){
      if(spec.projection==='globe'){onError('3D models are retained but hidden in Globe view. Switch to Flat map to preview them.');continue;}
@@ -51,12 +52,13 @@ export function createVisualRenderer(map,project,onError){
    map.getSource(key)?.setData({type:'Feature',properties:{},geometry});
   }
  }
- function overlay(ctx,time){
+ function overlay(ctx,time,occupied=[]){
   if(!spec)return;
   for(const l of spec.visual?.layers||[]){
    if(!layerActive(project,l,time))continue;
    if(l.kind==='route'){const points=routeAt(l.coordinates,(time-layerStart(project,l))/(l.revealDuration??l.duration));if(!locationVisible(map,points.at(-1),spec.projection)||!locationVisible(map,points.at(-2),spec.projection))continue;const a=map.project(points.at(-2)),b=map.project(points.at(-1));ctx.save();ctx.globalAlpha=layerAlpha(project,l,time);ctx.fillStyle=l.color;if(!native){ctx.strokeStyle=l.color;ctx.lineWidth=l.lineWidth??3;ctx.setLineDash((l.dash||[]).map(n=>n*ctx.lineWidth));ctx.beginPath();points.forEach((c,i)=>{const p=map.project(c);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);});ctx.stroke();}if(l.arrowhead!==false){ctx.translate(b.x,b.y);ctx.rotate(Math.atan2(b.y-a.y,b.x-a.x));ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-12,-5);ctx.lineTo(-12,5);ctx.fill();}ctx.restore();}
-   if(!native&&['icon','label'].includes(l.kind)){const p=map.project(l.position);ctx.save();ctx.globalAlpha=layerAlpha(project,l,time);ctx.fillStyle=l.color;ctx.font=`${24*Math.min(l.scale,10)}px system-ui`;ctx.fillText(l.kind==='icon'?icons[l.icon]:l.name,p.x,p.y);ctx.restore();}
+   if(l.kind==='label'){if(!locationVisible(map,l.position,spec.projection))continue;const p=map.project(l.position),host=map.getContainer?.()||map.host;ctx.save();ctx.globalAlpha=layerAlpha(project,l,time);drawMapLabel(ctx,l.name,p.x,p.y,{width:host.clientWidth,height:host.clientHeight,color:l.color,size:Math.max(17,28*l.scale),offset:l.labelOffset||[0,0],marker:!!l.marker,occupied});ctx.restore();}
+   if(!native&&l.kind==='icon'){const p=map.project(l.position);ctx.save();ctx.globalAlpha=layerAlpha(project,l,time);ctx.fillStyle=l.color;ctx.font=`${24*Math.min(l.scale,10)}px system-ui`;ctx.fillText(l.kind==='icon'?icons[l.icon]:l.name,p.x,p.y);ctx.restore();}
   }
  }
  return {setSpec,frame,overlay,native,get assetErrors(){return [...assetErrors];},get assetsReady(){return [...models.values()].every(m=>m.loaded);},destroy(){disposed=true;revision++;if(native){clear();map.setTerrain(null);if(map.getLayer('map-relief'))map.removeLayer('map-relief');if(map.getSource('visual-dem'))map.removeSource('visual-dem');}}};

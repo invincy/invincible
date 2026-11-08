@@ -36,6 +36,8 @@ export function validateVisual(map,project){
   if(!scene||!finite(l.offset,0,scene.duration)||!finite(l.duration,0.1,3600))throw Error('Layer timing must reference an existing scene and valid offset/duration.');
   if(l.kind==='route'){if(!Array.isArray(l.coordinates)||l.coordinates.length<2||!l.coordinates.every(point))throw Error('A drawn route needs two or more valid positions.');}
   else if(!point(l.position)||!finite(l.scale,0.1,100000)||!finite(l.rotation,-180,180)||!finite(l.altitude,-1000,100000))throw Error('Invalid asset position, scale, rotation or altitude.');
+  if(l.labelOffset!==undefined&&(!Array.isArray(l.labelOffset)||l.labelOffset.length!==2||!l.labelOffset.every(n=>finite(n,-300,300))))throw Error('Label offsets need two pixel values between -300 and 300.');
+  if(l.marker!==undefined&&typeof l.marker!=='boolean')throw Error('Label marker must be true or false.');
   if(l.kind==='icon'&&!Object.hasOwn(icons,l.icon))throw Error('Unknown icon.');
   if(['image','glb'].includes(l.kind)&&assets.get(l.assetId)?.type!==l.kind)throw Error('Layer needs a matching asset reference.');
   if(l.kind==='image'&&(!Array.isArray(l.corners)||l.corners.length!==4||!l.corners.every(point)||!transformedCorners(l).every(point)))throw Error('Image requires four in-bounds corners: top-left, top-right, bottom-right, bottom-left.');

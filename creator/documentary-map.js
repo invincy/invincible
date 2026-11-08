@@ -52,31 +52,6 @@ export const documentaryFlags = [
   "credit": "User:Zscout370; Public domain; https://commons.wikimedia.org/wiki/File:Flag_of_Pakistan.svg; editorial geographic clipping, see Sources."
  },
  {
-  "id": "china-flag-map",
-  "file": "china-map.png",
-  "name": "China flag overlay",
-  "corners": [
-   [
-    77.5,
-    38.8
-   ],
-   [
-    84.5,
-    38.8
-   ],
-   [
-    84.5,
-    33.3
-   ],
-   [
-    77.5,
-    33.3
-   ]
-  ],
-  "opacity": 0.23,
-  "credit": "Zeng Liansong; Public domain; https://commons.wikimedia.org/wiki/File:Flag_of_the_People%27s_Republic_of_China.svg; editorial geographic clipping, see Sources."
- },
- {
   "id": "bangladesh-flag-map",
   "file": "bangladesh-map.png",
   "name": "Bangladesh flag overlay",
@@ -187,12 +162,19 @@ export const documentaryLabels = [
 ];
 export const defaultBasemap = () => ({id:'documentary',labels:true,borders:true,saturation:0.3,contrast:0.12});
 export async function addDocumentaryReference(style,{labels=true,borders=true}={}){
- for(const flag of documentaryFlags){
+ style.sources['reference-china-country']={type:'geojson',data:new URL('./history-data/china-country-tint.geojson',import.meta.url).href};
+ style.layers.push({id:'reference-china-country',source:'reference-china-country',type:'fill',paint:{'fill-color':'#d52b32','fill-opacity':0.28}});
+ for(const flag of documentaryFlags.filter(f=>f.id!=='china-flag-map')){
   const id='reference-'+flag.id;
   style.sources[id]={type:'image',url:new URL('./history-data/border-flags-v3/'+flag.file,import.meta.url).href,coordinates:flag.corners};
   style.layers.push({id,source:id,type:'raster',paint:{'raster-opacity':flag.opacity,'raster-fade-duration':0}});
  }
  if(borders){
+  style.sources['reference-states']={type:'geojson',data:new URL('./history-data/regional-state-lines.geojson',import.meta.url).href};
+  style.layers.push({id:'reference-states',source:'reference-states',type:'line',paint:{'line-color':'#ffffff','line-width':0.75,'line-opacity':0.3}});
+  style.sources['reference-doklam']={type:'geojson',data:new URL('./history-data/doklam-reference-borders.geojson',import.meta.url).href};
+  style.layers.push({id:'reference-doklam',source:'reference-doklam',type:'line',filter:['==',['get','disputed'],false],minzoom:5.5,paint:{'line-color':['case',['get','disputed'],'#f4c785','#f8fbff'],'line-width':2.2,'line-opacity':0.95,'line-dasharray':[1,0]}});
+  style.layers.push({id:'reference-doklam-disputed',source:'reference-doklam',type:'line',filter:['==',['get','disputed'],true],minzoom:5.5,paint:{'line-color':'#ffc77d','line-width':2.5,'line-opacity':1,'line-dasharray':[3,2]}});
   const response=await fetch(new URL('./history-data/documentary-borders.geojson',import.meta.url));
   if(!response.ok)throw Error('The default reference borders could not load.');
   const data=await response.json();
@@ -204,3 +186,5 @@ export async function addDocumentaryReference(style,{labels=true,borders=true}={
  }
  return style;
 }
+
+export const documentaryStates=[{name:'BIHAR',position:[85.7,25.6]},{name:'WEST BENGAL',position:[87.5,24]},{name:'ASSAM',position:[92.3,26.5]},{name:'SIKKIM',position:[88.45,27.7]},{name:'ARUNACHAL PRADESH',position:[94.2,28.2]}];
