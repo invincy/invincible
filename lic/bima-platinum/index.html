@@ -20,7 +20,7 @@
 
   <link rel="preload" as="image" href="assets/advisor-concerned-19292.jpg">
   <link rel="preload" as="image" href="assets/advisor-reassuring-19294.jpg">
-  <link rel="stylesheet" href="presentation.css?v=29">
+  <link rel="stylesheet" href="presentation.css?v=30">
   <link rel="stylesheet" href="../../shared/app-theme.css?v=1">
 </head>
 <body>
@@ -270,19 +270,10 @@
               <button type="button" class="journey-stage" data-journey-step="4" aria-expanded="false" aria-controls="journeyStageBody4"><span class="journey-stage-number" aria-hidden="true">5</span><span class="journey-stage-text"><b>Maturity</b><span id="journeyStageBody4" class="journey-stage-body" hidden></span></span></button>
             </div>
             <div class="journey-content">
-              <div class="journey-benefit-panel">
-                <div id="journeyDetail" class="journey-detail" aria-live="polite"></div>
-                <div id="journeyIllustration" class="journey-illustration"></div>
+              <div class="journey-benefit-panel journey-financial-panel">
+                <div id="journeyFinancialGraph" class="journey-financial-graph" aria-live="polite"></div>
               </div>
-              <div id="journeyPolicyTimeline" class="journey-policy-timeline" role="group" aria-label="Policy timeline for the selected example">
-                <div class="journey-policy-periods"><span id="journeyPolicyPay">Pay premiums</span><span>₹30,000 / year Income</span></div>
-                <ol class="journey-policy-milestones">
-                  <li id="journeyPolicyMilestone0"><i aria-hidden="true"></i><b>Policy starts</b><span id="journeyPolicyStart"></span></li>
-                  <li id="journeyPolicyMilestone1"><i aria-hidden="true"></i><b>Income starts</b><span id="journeyPolicyIncome"></span></li>
-                  <li id="journeyPolicyMilestone2"><i aria-hidden="true"></i><b>Booster</b><span id="journeyPolicyBooster"></span></li>
-                  <li id="journeyPolicyMilestone3"><i aria-hidden="true"></i><b>Maturity</b><span id="journeyPolicyMaturity"></span></li>
-                </ol>
-              </div>
+
             </div>
           </section>
           <figure id="storyChart" class="balance-chart scenario-chart" data-step="1" aria-labelledby="balanceChartTitle" aria-describedby="balanceChartCaption">
@@ -387,6 +378,7 @@
 
 </div><!-- /.app-viewport-wrapper -->
 
-<script src="presentation.js?v=29"></script>
+<script src="financial-journey.js?v=1"></script>
+<script src="presentation.js?v=30"></script>
 </body>
 </html>

@@ -207,78 +207,35 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function renderJourneyStep() {
     const step = JOURNEY_STEPS[journeyStep];
-    const detail = document.getElementById('journeyDetail');
-    const stageDescriptions = [
-      `Policy starts · Pay for ${selectedSamplePpt} years`,
-      `Build during ${selectedSamplePpt}-year PPT`,
-      `₹30,000/year · Year ${selectedSamplePpt}+`,
-      `₹2,10,000 · Year ${BOOSTER_YEAR_BY_PPT[selectedSamplePpt]}`,
-      'Full Basic SA + accrued GA'
-    ];
-    journeyNodes.forEach((node, index) => {
-      node.classList.toggle('is-active', index === journeyStep);
-      node.classList.toggle('is-complete', journeyComplete || index < journeyStep);
-      node.setAttribute('aria-current', index === journeyStep ? 'step' : 'false');
-      node.setAttribute('aria-expanded', String(index === journeyStep));
-      const body = document.getElementById(`journeyStageBody${index}`);
-      body.textContent = stageDescriptions[index];
-      body.hidden = index !== journeyStep;
-    });
-    journeyPage.style.setProperty('--journey-progress', `${Math.max(0, journeyStep) * 25}%`);
-    updateJourneyPolicyTimeline();
-    journeyPage.dataset.visual = step?.visual || 'intro';
-    journeyPage.dataset.advisor = journeyStep >= 3 ? 'celebrate' : 'explain';
-    renderJourneyIllustration();
-    if (!step) { detail.innerHTML = '<p class="journey-detail-prompt">Your plan, in five clear steps.</p>'; updateJourneyControls(); return; }
-    const ppt = selectedSamplePpt;
-    const detailHtml = [
-      `<span class="journey-detail-title">Choose Your PPT</span><strong>${ppt} years of premium payments</strong><small>Age ${selectedSampleAge} · ₹3,00,000 Sum Assured · 30-year term</small>`,
-      `<span class="journey-detail-title">Guaranteed Additions Build</span><strong>Added during the ${ppt}-year PPT</strong><span class="journey-addition-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>`,
-      '<span class="journey-detail-title">Regular Income</span><strong class="journey-big-number">10% <em>of Basic Sum Assured</em></strong><b>₹30,000 / year</b><small>Starts at the end of PPT</small>',
-      `<span class="journey-detail-title">70% Booster</span><strong>₹2,10,000</strong><small>Policy Year ${BOOSTER_YEAR_BY_PPT[ppt]} · Can be deferred under plan terms</small>`,
-      '<span class="journey-detail-title">Maturity Benefit</span><strong>Basic Sum Assured +</strong><b>Accrued Guaranteed Additions</b><small>At the end of the 30-year policy term</small>'
-    ];
-    detail.innerHTML = detailHtml[journeyStep];
-    updateJourneyControls();
-  }
-  function updateJourneyPolicyTimeline() {
-    const ppt = selectedSamplePpt, age = selectedSampleAge;
-    const booster = BOOSTER_YEAR_BY_PPT[ppt];
-    document.getElementById('journeyPolicyStart').textContent = `Age ${age} · Year 0`;
-    document.getElementById('journeyPolicyIncome').textContent = `Age ${age + ppt} · Year ${ppt}`;
-    document.getElementById('journeyPolicyBooster').textContent = `Age ${age + booster} · Year ${booster}`;
-    document.getElementById('journeyPolicyMaturity').textContent = `Age ${age + 30} · Year 30`;
-    document.getElementById('journeyPolicyPay').textContent = `Pay for ${ppt} years`;
-    const milestone = journeyComplete ? 3 : [0, 1, 1, 2, 3][Math.max(0, journeyStep)];
-    const timeline = document.getElementById('journeyPolicyTimeline');
-    timeline.style.setProperty('--policy-progress', `${milestone / 3 * 100}%`);
-    timeline.dataset.stage = journeyStep < 0 ? 'intro' : JOURNEY_STEPS[journeyStep].id;
-    for (let index = 0; index < 4; index++) {
-      const point = document.getElementById(`journeyPolicyMilestone${index}`);
-      point.classList.toggle('is-reached', journeyStep >= 0 && index <= milestone);
-      point.classList.toggle('is-current', journeyStep >= 0 && index === milestone);
-    }
-  }
-  // Brochure pp.6–7: base GA rate is ₹70 per ₹1,000 of cumulative
-  // annualized premiums paid. ₹3 lakh BSA has no high-SA incentive (p.17).
-  // These examples exclude additional eligibility-based incentives.
-  function renderJourneyIllustration() {
-    const visual = document.getElementById('journeyIllustration');
     const ppt = selectedSamplePpt;
     const premium = getLicSamplePremium(selectedSampleAge, ppt);
-    const money = value => '₹' + Math.round(value).toLocaleString('en-IN');
-    const additions = premium * .07 * ppt * (ppt + 1) / 2;
-    const part = (content, index) => `<div class="journey-visual-part" style="--part:${index}">${content}</div>`;
-    const visuals = [
-      `<span class="journey-visual-label">Premium कितने साल?</span><div class="journey-ppt-comparison">${[7,10,12,15,18].map((years, i) => part(`<span class="journey-ppt-row ${years === ppt ? 'is-selected' : ''}"><b>${years}</b><i style="--term:${years / 18}"></i><small>years</small></span>`, i)).join('')}</div><strong>${money(premium)}<small> / year</small></strong><span class="journey-visual-note">Selected: ${ppt} years</span>`,
-      `<span class="journey-visual-label">Guaranteed Additions</span><strong>7% <small>base rate</small></strong><span class="journey-visual-note">Cumulative premiums paid पर<br>हर साल, PPT तक</span><div class="journey-ga-chart" aria-label="Accrued additions grow during premium payments">${[1,2,3,4,5].map((n, i) => part(`<i style="--bar:${n * (n + 1) / 30}"></i>`, i)).join('')}</div><span class="journey-visual-note">Year 1 → Year ${ppt} · फिर accrual बंद</span>`,
-      `<span class="journey-visual-label">हर साल Regular Income</span><strong>${money(30000)}</strong><span class="journey-visual-note">10% of ₹3,00,000</span><div class="journey-income-payments">${[ppt, ppt + 1, 29].map((year, i) => part(`<span>Year ${year}</span><b>↓ ${money(30000)}</b>`, i)).join('')}</div><span class="journey-visual-note">Year ${ppt} से Year 29 तक<br>बीच के हर साल भी</span>`,
-      `<span class="journey-visual-label">एक अतिरिक्त Booster</span>${part('<strong class="journey-booster-number">70%</strong>', 0)}${part(`<strong>${money(210000)}</strong>`, 1)}${part(`<span class="journey-booster-year">Policy Year ${BOOSTER_YEAR_BY_PPT[ppt]}</span>`, 2)}<span class="journey-visual-note">₹3,00,000 का 70%<br>Defer कर सकते हैं, plan terms अनुसार</span>`,
-      `<span class="journey-visual-label">Year 30 · Maturity</span>${part('<span class="journey-maturity-part">Basic SA <b>₹3,00,000</b></span>', 0)}${part(`<span class="journey-maturity-part">+ Accrued GA <b>${money(additions)}</b></span>`, 1)}${part(`<strong class="journey-maturity-total">${money(300000 + additions)}</strong>`, 2)}<span class="journey-visual-note">7% base GA · All premiums paid<br>Income / Booster अलग</span>`
+    const boosterYear = BOOSTER_YEAR_BY_PPT[ppt];
+    const descriptions = [
+      `Pay for ${ppt} years · ₹${premium?.toLocaleString('en-IN') ?? '—'}/year`,
+      `Guaranteed Additions accrue during the ${ppt}-year PPT`,
+      `₹30,000/year · from end of policy year ${ppt}`,
+      `₹2,10,000 · policy year ${boosterYear} (if taken then)`,
+      'Year 30 · Basic SA + accrued base Guaranteed Additions'
     ];
-    visual.innerHTML = journeyStep < 0 ? '' : visuals[journeyStep];
-    visual.hidden = journeyStep < 0;
-    journeyPage.dataset.paused = String(!journeyAutoplay || journeyComplete);
+    journeyNodes.forEach((node,index)=>{
+      node.classList.toggle('is-active',index===journeyStep);
+      node.classList.toggle('is-complete',journeyComplete || index<journeyStep);
+      node.setAttribute('aria-current',index===journeyStep?'step':'false');
+      node.setAttribute('aria-expanded',String(index===journeyStep));
+      const body=document.getElementById(`journeyStageBody${index}`);
+      body.textContent=descriptions[index];
+      body.hidden=index!==journeyStep;
+    });
+    journeyPage.style.setProperty('--journey-progress',`${Math.max(0,journeyStep)*25}%`);
+    journeyPage.dataset.visual=step?.visual || 'intro';
+    journeyPage.dataset.advisor=journeyStep>=3?'celebrate':'explain';
+    const root=document.getElementById('journeyFinancialGraph');
+    if(step) window.renderBimaFinancialJourney?.(root,{
+      step:journeyStep,ppt,premium,age:selectedSampleAge,boosterYear,
+      baseSA:300000,term:30
+    });
+    else if(root)root.textContent='Select a stage to explore the policy journey';
+    updateJourneyControls();
   }
   function completeJourney() {
     clearJourneyRun();
