@@ -14,7 +14,7 @@
   const bag = (x,y) => `<g transform="translate(${x} ${y})"><path d="M-13 -44L-21 -58Q0 -48 21 -58L13 -44Q48 -19 39 22Q30 46 0 46Q-30 46 -39 22Q-48 -19 -13 -44Z" fill="#d3a044" stroke="#ffe4a0" stroke-width="3"/><path d="M-15 -43H15" stroke="#7e531f" stroke-width="7"/><text text-anchor="middle" y="19" font-size="38" fill="#fff0bb" font-weight="700">₹</text></g>`;
   const txt = (x,y,value,size=18,color='#e8d9b4',anchor='middle') => `<text x="${x}" y="${y}" fill="${color}" font-size="${size}" font-family="system-ui,sans-serif" font-weight="600" text-anchor="${anchor}">${esc(value)}</text>`;
   const line = (x1,y1,x2,y2,color='#547a9a') => `<path d="M${x1} ${y1}L${x2} ${y2}" stroke="${color}" stroke-width="2" fill="none"/>`;
-  const targets = [[0,0,410,270],[0,0,480,270],[0,0,740,270],[0,0,900,270],[0,0,1050,270]];
+  const targets = [[0,0,580,270],[0,0,610,270],[0,0,760,270],[0,0,910,270],[0,0,1050,270]];
   let frame = 0, current = targets[0], svg = null;
   function view(target) {
     if (!svg) return;
@@ -50,7 +50,7 @@
       const x=65+(ppt+i)/30*900;
       return `<path d="M${x} 163v16l-5 -6m5 6l5 -6" fill="none" stroke="#e6c37a" stroke-width="2" opacity=".85"/>`;
     }).join('');
-    root.innerHTML=`<svg class="financial-journey-svg" viewBox="0 0 410 270" role="img" aria-label="Policy journey: premium payments, guaranteed additions during PPT, annual income, booster and maturity" xmlns="${NS}">
+    root.innerHTML=`<svg class="financial-journey-svg" viewBox="0 0 580 270" role="img" aria-label="Policy journey: premium payments, guaranteed additions during PPT, annual income, booster and maturity" xmlns="${NS}">
       <defs><filter id="goldGlow" x="-40%" y="-60%" width="180%" height="220%"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
       <path d="M65 215H965" stroke="#4e7898" stroke-width="3"/>
       ${bars}${curve}${ticks}
