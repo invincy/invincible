@@ -29,7 +29,7 @@ const STORY_SCENES = {
 const STORY_ADVISORS = { 2: 'assets/advisor-concerned-19292.jpg', 3: 'assets/advisor-reassuring-19294.jpg' };
 
 const JOURNEY_STEPS = [
-  { id:'ppt', title:'Choose Your PPT', visual:'pay', audio:'assets/audio/page6-step1.mp3', fallbackDuration:3600, script:'सबसे पहले आप चुनते हैं कि premium कितने साल pay करना है।' },
+  { id:'ppt', title:'Premium Paying Period', visual:'pay', audio:'assets/audio/page6-step1.mp3', fallbackDuration:3600, script:'सबसे पहले आप चुनते हैं कि premium कितने साल pay करना है।' },
   { id:'additions', title:'Guaranteed Additions', visual:'build', audio:'assets/audio/page6-step2.mp3', fallbackDuration:3600, script:'Premium paying period के दौरान Guaranteed Additions जुड़ते रहते हैं।' },
   { id:'income', title:'Regular Income', visual:'income', audio:'assets/audio/page6-step3.mp3', fallbackDuration:4300, script:'Premium period पूरा होने के बाद हर साल Basic Sum Assured का 10% Regular Income मिलता है।' },
   { id:'booster', title:'70% Booster', visual:'booster', audio:'assets/audio/page6-step4.mp3', fallbackDuration:3600, script:'इसके अलावा plan में 70% का Booster Income Benefit भी मिलता है।' },
@@ -125,6 +125,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const layerCheckboxes = document.querySelectorAll('.layer-toggle-input');
   let selectedSampleAge = 25;
   let selectedSamplePpt = 15;
+  const exampleSelection = document.getElementById('policyExampleSelection');
+  document.getElementById('policyExampleAge').addEventListener('change', event => {
+    const age = Number(event.target.value);
+    if (LIC_SAMPLE_PREMIUMS[age]) selectedSampleAge = age;
+  });
+  document.getElementById('policyExamplePpt').addEventListener('change', event => {
+    const ppt = Number(event.target.value);
+    if (BOOSTER_YEAR_BY_PPT[ppt]) selectedSamplePpt = ppt;
+  });
   let currentPage = 1;
   let automaticStory = true;
   let audioEvents = null;
@@ -146,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let journeyAutoplay = false;
   let journeyComplete = false;
   let journeyAudio = null;
+  let journeyEvents = null;
   let journeyTimer = null;
   let journeyLoadTimer = null;
   let journeyDeadline = 0;
@@ -155,6 +165,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function clearJourneyRun() {
     journeyGeneration++;
+    journeyEvents?.abort();
+    journeyEvents = null;
     clearTimeout(journeyTimer);
     clearTimeout(journeyLoadTimer);
     journeyTimer = journeyLoadTimer = null;
@@ -173,9 +185,9 @@ document.addEventListener('DOMContentLoaded', () => {
     journeyToggle.setAttribute('aria-label', journeyAutoplay ? 'Pause story' : 'Resume story');
     journeyToggle.setAttribute('aria-pressed', String(journeyAutoplay));
     journeyToggle.title = journeyAutoplay ? 'Pause story' : 'Resume story';
-    journeyReplay.hidden = !journeyComplete;
+    journeyReplay.hidden = true;
     document.getElementById('journeyProgress').textContent = journeyStep < 0 ? '0 of 5' : `${journeyStep + 1} of 5`;
-    if (currentPage === 5) document.getElementById('storyNextLabel').textContent = journeyComplete ? 'अब protection भी देखें' : 'Tap to reveal next benefit';
+    if (currentPage === 5) document.getElementById('storyNextLabel').textContent = journeyComplete ? 'Replay journey' : 'Tap to reveal next benefit';
     journeyNext.disabled = false;
   }
   function renderJourneyStep() {
@@ -185,10 +197,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const boosterYear = BOOSTER_YEAR_BY_PPT[ppt];
     const descriptions = [
       `Pay for ${ppt} years · ₹${premium?.toLocaleString('en-IN') ?? '—'}/year`,
-      `Guaranteed Additions accrue during the ${ppt}-year PPT`,
+      `₹${Math.round(premium * .07 * ppt * (ppt + 1) / 2).toLocaleString('en-IN')} base additions · during PPT`,
       `₹30,000/year · from end of policy year ${ppt}`,
-      `₹2,10,000 · policy year ${boosterYear} (if taken then)`,
-      'Year 30 · Basic SA + accrued base Guaranteed Additions'
+      `₹2,10,000 · end of year ${boosterYear}`,
+      `Year 30 · ₹${Math.round(300000 + premium * .07 * ppt * (ppt + 1) / 2).toLocaleString('en-IN')} with base additions`
     ];
     journeyNodes.forEach((node,index)=>{
       node.classList.toggle('is-active',index===journeyStep);
@@ -232,6 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function startJourneyStep(index, manual = false) {
     clearJourneyRun();
     journeyStep = index;
+    if (manual) journeyAutoplay = true;
     journeyPage.dataset.manual = String(manual);
     journeyComplete = false;
     renderJourneyStep();
@@ -243,16 +256,21 @@ document.addEventListener('DOMContentLoaded', () => {
       clearTimeout(journeyLoadTimer);
       if (journeyAudio) { journeyAudio.pause(); journeyAudio = null; }
       journeyMode = 'fallback';
+      journeyRemaining = step.fallbackDuration;
       scheduleJourneyFallback(step.fallbackDuration, generation);
     };
     journeyMode = 'loading';
-    const audio = new Audio(step.audio);
+    const audio = audioElement || new Audio();
+    audioElement = audio;
+    audio.src = step.audio;
     journeyAudio = audio;
-    audio.addEventListener('ended', () => { if (generation === journeyGeneration && journeyAutoplay) advanceJourney(); });
-    audio.addEventListener('error', fallback);
+    journeyEvents = new AbortController();
+    const options = {signal:journeyEvents.signal};
+    audio.addEventListener('ended', () => { if (generation === journeyGeneration && journeyAutoplay) advanceJourney(); }, options);
+    audio.addEventListener('error', fallback, options);
     journeyLoadTimer = setTimeout(fallback, 2200);
     audio.play().then(() => {
-      if (generation !== journeyGeneration) { audio.pause(); return; }
+      if (generation !== journeyGeneration) return;
       clearTimeout(journeyLoadTimer);
       journeyMode = 'audio';
       if (!journeyAutoplay && !manual) audio.pause();
@@ -406,6 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function showPage(page, focus = true, continuation = null) {
     if (!STORY_SCENES[page]) return;
+    const reusableAudio = continuation || audioElement;
     stopJourney();
     stopAllAudio();
     currentPage = page;
@@ -416,6 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     stageContainer.setAttribute('data-story-step', String(page));
     const isReveal = page === 4;
+    exampleSelection.hidden = !isReveal;
     const isJourney = page === 5;
     document.getElementById('productReveal').hidden = !isReveal;
     journeyPage.hidden = !isJourney;
@@ -462,6 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
       stagePreviewModal.scrollTop = 0;
       if (focus) previewDismissBtn.focus();
       if (isJourney) {
+        audioElement = reusableAudio;
         journeyAutoplay = true;
         startJourneyStep(0);
       } else journeyNext.disabled = false;
@@ -495,10 +516,10 @@ document.addEventListener('DOMContentLoaded', () => {
   journeyNext.addEventListener('click', () => {
     if (currentPage >= 2 && currentPage < 5) showPage(currentPage + 1);
     else if (currentPage === 5 && !journeyComplete) advanceJourney();
-    else if (currentPage === 5) { sceneThreeStatus.textContent = 'Protection page is coming next.'; sceneThreeStatus.hidden = false; }
+    else if (currentPage === 5) { journeyAutoplay = true; startJourneyStep(0); }
   });
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { stopAllAudio(); if (currentPage === 5) pauseJourney(); }
+    if (document.hidden) { if (currentPage === 5) pauseJourney(); else stopAllAudio(); }
   });
   window.addEventListener('pagehide', () => { stopAllAudio(); stopJourney(); });
   showPage(1, false);

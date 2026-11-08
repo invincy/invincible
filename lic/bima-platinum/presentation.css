@@ -1934,15 +1934,49 @@ body.dev-mode .desktop-tools-bar { display: flex; }
   #planJourneyPage .financial-journey-svg { scroll-behavior:auto; }
 }
 
-/* New Page 5 journey layout */
-[data-story-step="5"] .scene-two-visual { display:flex; flex:1 1 auto; min-height:0; margin:0; }
-[data-story-step="5"] #planJourneyPage { display:flex; flex-direction:column; width:100%; }
-[data-story-step="5"] #planJourneyPage[hidden] { display:none; }
-#planJourneyPage .journey-sample-controls { z-index:5; display:flex; flex-wrap:wrap; align-items:center; gap:4px; margin:4px 0 6px; color:#e4c477; font:600 9px var(--font-sans); }
-#planJourneyPage .journey-sample-options { display:flex; gap:2px; }
-#planJourneyPage .journey-sample-options button { padding:4px 5px; border:1px solid #3e6385; border-radius:5px; background:#0a2943; color:#c9d8e7; font:600 9px var(--font-sans); }
-#planJourneyPage .journey-sample-options button[aria-pressed="true"] { border-color:#ffe0a0; color:#ffe0a0; background:#29425b; }
-#planJourneyPage .journey-content { margin-top:auto; }
-
-/* The retired selector controls must not reserve space on Page 5. */
-#planJourneyPage .journey-sample-controls { display:none !important; }
+/* Page 5 reference composition: advisor + accordion, then one complete graph.
+   Short screens scroll naturally instead of shrinking text or clipping benefits. */
+#stageContainer[data-story-step="5"] .scene-two-visual { flex:1 0 auto; margin:0; min-height:0; }
+#stageContainer[data-story-step="5"] .scene-two-heading h2 { width:100%; max-width:280px; font-size:clamp(24px,6.5cqw,29px); line-height:1.16; }
+#stageContainer[data-story-step="5"] #planJourneyPage { height:auto; min-height:0; overflow:visible; padding:0 12px; gap:0; }
+.journey-upper { position:relative; flex:none; height:clamp(340px,44cqh,390px); isolation:isolate; }
+#planJourneyPage .journey-kicker { position:absolute; top:10px; left:3px; max-width:100%; margin:0; font-size:8px; letter-spacing:.18em; }
+#planJourneyPage .journey-advisor { top:14px; right:-14%; width:79%; height:100%; object-position:top right; mask-image:linear-gradient(#000 77%,transparent); }
+#planJourneyPage .journey-stages { position:absolute; top:70px; bottom:15px; left:0; width:56%; padding-left:17px; justify-content:center; gap:6px; }
+#planJourneyPage .journey-stage { min-height:38px; padding:9px 7px; border-radius:10px; }
+#planJourneyPage .journey-stage-text > b { font-size:11px; line-height:1.3; font-weight:500; }
+#planJourneyPage .journey-stage-body { font-size:10px; line-height:1.4; margin-top:5px; }
+#planJourneyPage .journey-stage-number { width:20px; height:20px; left:-19px; top:9px; font-size:10px; }
+#planJourneyPage .journey-stage.is-complete .journey-stage-number { background:#123552; border-color:#d7b969; color:#f1d383; }
+#planJourneyPage .journey-content { position:relative; inset:auto; flex:none; margin:0; width:100%; }
+#planJourneyPage .journey-financial-panel { height:auto; min-height:0; padding:12px 8px 9px; border:1px solid #e2be69; border-radius:18px; background:radial-gradient(ellipse at 50% 40%,#0e3957,#03162a 80%); box-shadow:0 0 18px #dfb84c12; }
+#planJourneyPage .journey-financial-graph { height:auto; overflow:visible; }
+.benefit-journey-heading { display:flex; align-items:baseline; gap:5px; padding-inline:3px; }
+.benefit-journey-heading h3 { margin:0; color:#fff0ce; font:600 clamp(13px,3.8cqw,17px)/1.4 var(--font-sans); }
+.benefit-journey-heading > span { color:#e3bd65; font:italic 9px var(--font-sans); }
+.benefit-journey-context { margin:4px 3px 10px; color:#b3cadc; font:400 9px/1.4 var(--font-sans); }
+#planJourneyPage .financial-journey-svg { width:100%; height:auto; overflow:visible; }
+.benefit-journey-legend { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); border-top:1px solid #4f789644; padding-top:8px; }
+.benefit-journey-legend > div { padding:2px 3px; text-align:center; border-right:1px solid #4f789677; color:#c5d6e4; font:400 9px/1.4 var(--font-sans); border-radius:4px; }
+.benefit-journey-legend > div:last-child { border:0; }
+.benefit-journey-legend b,.benefit-journey-legend span,.benefit-journey-legend strong { display:block; }
+.benefit-journey-legend b { min-height:26px; font-weight:500; color:#f5e7cb; }
+.benefit-journey-legend strong { margin-top:4px; color:#f6d77f; font-size:9px; font-weight:600; white-space:nowrap; }
+.benefit-journey-legend .is-current { background:#e6be571c; box-shadow:inset 0 -2px #ebca72; }
+.benefit-journey-note { margin:8px 3px 0; color:#aac3d7; font:400 8px/1.5 var(--font-sans); }
+.journey-path.is-current { stroke:#fff3b1; filter:drop-shadow(0 0 4px #f6cb5a); stroke-dasharray:300; animation:journey-trace .7s ease-out both; }
+.journey-money.is-current { animation:journey-stage-open .5s ease-out; filter:drop-shadow(0 0 4px #f6cb5a88); }
+@keyframes journey-trace { from { stroke-dashoffset:300; } to { stroke-dashoffset:0; } }
+#planJourneyPage[data-paused="true"] .journey-path,#planJourneyPage[data-paused="true"] .journey-money { animation-play-state:paused; }
+#stageContainer[data-story-step="5"] .scene-two-footer { margin-top:0; padding:14px 12px max(14px,env(safe-area-inset-bottom)); }
+#stageContainer[data-story-step="5"] .journey-controls { min-height:44px; }
+#stageContainer[data-story-step="5"] .scene-two-next { min-height:44px; height:auto; font-size:12px; }
+.policy-example-selection[hidden] { display:none; }
+.policy-example-selection { margin:0; padding:8px 10px; border:1px solid #d7b96977; border-radius:12px; color:#f2d48c; background:#061c32; font:500 11px var(--font-sans); }
+.policy-example-selection legend { padding:0 5px; }
+.policy-example-selection small { font-size:9px; color:#b7ccdd; }
+.policy-example-selection > div { display:flex; align-items:center; gap:8px; }
+.policy-example-selection select { min-height:44px; flex:1; min-width:0; border:1px solid #476a88; border-radius:7px; padding:6px; color:#fff0d2; background:#0c2944; font:500 12px var(--font-sans); }
+.policy-example-selection select:focus-visible { outline:2px solid #ffe3a3; outline-offset:2px; }
+@media (prefers-reduced-motion:reduce) { #planJourneyPage .journey-path,#planJourneyPage .journey-money { animation:none; } }
+.journey-upper { overflow:hidden; }
