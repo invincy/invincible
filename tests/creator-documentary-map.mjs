@@ -30,5 +30,17 @@ test('default reference imagery, persistent overlays and borders retain source s
 });
 test('Siliguri animates only the map and geographic labels',()=>{
  const p=JSON.parse(fs.readFileSync(new URL('../creator/imports/siliguri-corridor-portrait.animation.json',import.meta.url)));
- const r=compileAnimation({scenes:[]},p);assert.equal(r.summary.duration,70.58);assert.equal(p.basemap,'documentary');assert.ok(p.layers.every(l=>l.type==='label'));assert.equal(p.assets,undefined);assert.ok(p.camera.every(c=>c.pitch===0));
+ const r=compileAnimation({scenes:[]},p,{geometryReviewed:true});assert.equal(r.summary.duration,70.58);assert.equal(p.basemap,'documentary');assert.ok(p.layers.every(l=>['label','route','boundary'].includes(l.type)));assert.equal(p.assets,undefined);assert.ok(p.camera.every(c=>c.pitch===0));
+});
+
+test('transport animation uses the catalog geometry and a schematic double-headed width marker',()=>{
+ const p=JSON.parse(fs.readFileSync(new URL('../creator/imports/siliguri-corridor-portrait.animation.json',import.meta.url)));
+ const data=JSON.parse(fs.readFileSync(new URL('../creator/history-data/siliguri-transport.geojson',import.meta.url)));
+ const imported=compileAnimation({scenes:[]},p,{geometryReviewed:true});
+ const lines=p.layers.filter(l=>l.id.startsWith('transport-'));assert.equal(lines.length,data.features.length);
+ for(const line of lines){const item=data.features.find(f=>JSON.stringify(f.geometry)===JSON.stringify(line.geometry));assert.ok(item);assert.ok(item.properties.osmWayIds.length);assert.match(line.source.url,/openstreetmap.org/);assert.equal(line.semantic,'other');}
+ assert.deepEqual([...new Set(data.features.map(f=>f.properties.kind))].sort(),['NH27','NH327','rail']);
+ const arrows=p.layers.filter(l=>l.id.startsWith('width-arrow-'));assert.equal(arrows.length,2);assert.deepEqual(arrows[0].coordinates,[...arrows[1].coordinates].reverse());assert.ok(arrows.every(l=>l.arrowhead===true));assert.match(p.layers.find(l=>l.id==='width-note').name,/SCHEMATIC/);
+ const m=imported.project.historicalMap;assert.ok(m.visual.layers.filter(l=>l.kind==='feature').every(l=>l.arrowhead===false));
+ assert.ok(fs.statSync(new URL('../creator/imports/siliguri-map-only.animation.json',import.meta.url)).size<500000);
 });

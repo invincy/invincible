@@ -11,3 +11,7 @@ The animation now uses the documentary house map, matching India Border portrait
 The animation remains 70.58 seconds in 9:16. Narration synchronization remains provisional. The documentary preset requires the accompanying Map Editor update; the currently published editor does not yet recognize it. No saved Creator/Firebase project has been changed.
 
 For the currently published editor, use `../../siliguri-map-only.animation.json`. It packages the same satellite look, five geographic country-flag overlays and source-noted reference borders directly, so it needs no new preset support. Review the cited geometry in the existing import dialog. Its only images are the geographic country overlays, not the supplied truck/train/mountain/bridge artwork.
+
+## Width and transport revision
+
+A schematic double-headed width marker is shown at 10–21s. Selected mapped NH27/NH327 geometry is gold at 31–41s; existing main broad-gauge railway geometry is cyan/dashed at 51–62s. On-map OpenStreetMap credit accompanies transport segments. These are geographic overlays, not decorative vehicle artwork. Source catalog and precision limits: `../../siliguri-transport-sources.md`. Narration timing remains provisional.
