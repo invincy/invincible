@@ -20,6 +20,28 @@ permissions:
   contents: read
 
 jobs:
+  lic-presentation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: node --test tests/lic-presentation.mjs
+      - run: node tests/lic-opening-browser.cjs && node tests/lic-business-events-browser.cjs && node tests/lic-journey-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lic-presentation-evidence
+          path: .test-output/lic-*/*.png
+          if-no-files-found: ignore
+          include-hidden-files: true
   lic-agent-crm:
     runs-on: ubuntu-latest
     timeout-minutes: 12
