@@ -32,7 +32,9 @@ const server=http.createServer((req,res)=>{
    assert.equal(await page.locator('#policyExampleSelection').isVisible(),false);
    assert.equal(await page.locator('#planJourneyPage select, #planJourneyPage .journey-sample-options').count(),0);
    assert.equal(await page.locator('#journeyFinancialGraph svg').count(),1);
-   assert.match(await page.locator('.benefit-journey-context').innerText(),/Age 35 · 7-year PPT/);
+   assert.equal(await page.locator('#journeyFinancialGraph').getAttribute('data-ppt'),'7');
+   assert.equal(await page.locator('#journeyFinancialGraph').getAttribute('data-age'),'35');
+   assert.equal(await page.locator('.benefit-journey-heading,.benefit-journey-context,.benefit-journey-note').count(),0);
    await page.waitForFunction(()=>window.testAudios.at(-1).src.endsWith('page6-step1.mp3')&&Number.isFinite(window.testAudios.at(-1).duration));
    await page.evaluate(()=>window.testAudios.at(-1).playbackRate=.25);
    await page.click('#journeyPlayPause');
@@ -43,7 +45,14 @@ const server=http.createServer((req,res)=>{
     await page.waitForFunction(stage=>document.querySelector('#journeyFinancialGraph').dataset.stage===String(stage),stage);
     await page.waitForFunction(stage=>window.testAudios.at(-1).src.endsWith(`page6-step${stage+1}.mp3`)&&Number.isFinite(window.testAudios.at(-1).duration)&&!window.testAudios.at(-1).paused,stage);
     assert.equal(await page.locator('.journey-stage[aria-expanded="true"]').count(),1);
-    assert.equal(await page.locator('.journey-path').count(),stage+1,'Only reached path segments exist');
+    assert.equal(await page.locator('.journey-path').count(),[1,1,2,3,4][stage],'Additions use the premium phase');
+    assert.equal(await page.locator('.premium-in').count(),3);
+    assert.equal(await page.locator('.income-out').count(),stage>=2?3:0);
+    assert.ok(await page.locator('.journey-cash-arrow').evaluateAll(arrows=>arrows.every(el=>{
+     const from=el.getPointAtLength(0).y,to=el.getPointAtLength(el.getTotalLength()).y;
+     return el.classList.contains('premium-in')?to>from:to<from;
+    })),'Premium arrows point down; income arrows point up');
+    if(stage<=1) assert.equal(await page.locator('.journey-axis').getAttribute('d'),'M24 220H185');
     assert.equal(await page.locator('.journey-money').count(),stage+1,'Only reached money illustrations exist');
     assert.equal(await page.locator('.benefit-journey-legend > div').count(),stage+1,'No future amounts shown');
     assert.equal((await page.locator('#journeyFinancialGraph').innerText()).includes('Maturity'),stage===4);
@@ -60,6 +69,7 @@ const server=http.createServer((req,res)=>{
     assert.ok(bounds.svg.width>250&&bounds.svg.height>110,'Chart is prominent');
     assert.ok(bounds.scroll<=bounds.window,'No horizontal page overflow');
     assert.ok(bounds.chart.x>=bounds.shell.x-1&&bounds.chart.right<=bounds.shell.right+1,'Card within shell');
+    assert.ok(bounds.chart.width>=bounds.shell.width-26,'Chart fills the available mobile width');
     if([390,1440,320].includes(width)){await page.waitForTimeout(750);await page.locator('.journey-financial-panel').screenshot({path:`${out}/${width}x${height}-stage${stage+1}.png`});}
     if(stage===0&&[390,1440,320].includes(width)){await page.locator('#stagePreviewModal').evaluate(el=>el.scrollTop=0);await page.screenshot({path:`${out}/${width}x${height}-upper.png`});await page.locator('.journey-financial-panel').screenshot({path:`${out}/${width}x${height}-chart.png`});}
    }
@@ -72,9 +82,9 @@ const server=http.createServer((req,res)=>{
    assert.equal(await page.locator('.journey-path').count(),1,'Replay resets the extent');
    assert.ok(await page.locator('.journey-reveal').evaluate(el=>el.getBBox().width<=205),'Replay clears the completed extension');
    await page.click('[data-journey-step="3"]');
-   assert.equal(await page.locator('.journey-path').count(),4);
+   assert.equal(await page.locator('.journey-path').count(),3);
    await page.click('[data-journey-step="1"]');
-   assert.equal(await page.locator('.journey-path').count(),2,'Selecting an earlier stage retracts future benefits');
+   assert.equal(await page.locator('.journey-path').count(),1,'Selecting additions returns to the premium period');
    await page.click('#previewDismissBtn');
    assert.equal(await page.locator('#policyExampleAge').inputValue(),'35');assert.equal(await page.locator('#policyExamplePpt').inputValue(),'7');
    assert.equal(await page.evaluate(()=>window.testAudios.at(-1).paused),false,'Page 4 recording starts');
