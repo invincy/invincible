@@ -1,0 +1,1 @@
+Panipat commander assets. Historical artistic interpretations, not authenticated portraits. Facing direction: Babur right, Ibrahim Lodi left, Bairam Khan right, Hemu left, Abdali right, Sadashivrao Bhau left. Ahmad Shah Abdali PREVIEW is a lower-resolution extraction from a composite illustration and requires review/replacement before production.

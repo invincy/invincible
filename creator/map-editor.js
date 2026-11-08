@@ -6,6 +6,7 @@ import {createHistoryPlayer,downloadBlob,sizeMapFrame} from './history-player.js
 import {mapStyles,defaultTerrain} from './map-style-library.js';
 import {readAnimation,compileAnimation,animationBrief} from './map-animation-import.js';
 import {mapLibraryPanel,instructionPanel,mapExportPanel,handleMapExport} from './map-editor-panels.js';
+import {isPanipatStoryboard,adaptPanipatStoryboard} from './panipat-storyboard-adapter.js';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const button=(action,text)=>`<button type="button" data-edit="${action}">${text}</button>`;
 const number=(label,key,value,min,max,step='any')=>`<label>${label}<input type="number" data-prop="${key}" value="${esc(typeof value==='number'?Number(value.toFixed(6)):value)}" min="${min}" max="${max}" step="${step}"></label>`;
@@ -118,7 +119,19 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced}){
   if(action==='remove'){await edit(m=>{const l=m.visual.layers.find(l=>l.id===selected);if(!l)return;if(l.kind==='feature')m.features.features=m.features.features.filter(f=>f.properties.id!==l.ref);if(l.kind==='event')m.events=m.events.filter(e=>e.id!==l.ref);m.visual.layers=m.visual.layers.filter(l=>l.id!==selected);});return;}
   if(action==='export'){jsonDownload(validateMap(spec,project),'historical-map.json');return;}
   if(action==='scene-export'){const sid=anchor().sceneId,start=sceneTimeline(project).find(r=>r.sceneId===sid).start;jsonDownload(scenePackage(project,validateMap(spec,project),sid,mapFrame(project,spec,start).camera),'creator-map-scene.json');status('Reusable scene exported. Import it in any Creator project to append a fresh copy.');return;}
-  if(action==='apply'){await commit(visualMap(validateMap(JSON.parse(q('[data-json]').value),project)));return;}
+  if(action==='apply'){
+    const data=JSON.parse(q('[data-json]').value);
+    if(isPanipatStoryboard(data)){
+      const adapted=adaptPanipatStoryboard(data);
+      project.title=adapted.title;project.aspectRatio=adapted.aspectRatio;project.audio=adapted.audio;project.scenes=adapted.scenes;project.assets=adapted.assets;
+      undo.length=redo.length=0;await commit(adapted.historicalMap,{history:false});
+      q('[data-export-ratio]').value='9:16';sizeMapFrame(host,'9:16');q('[data-seek]').max=durationOf(project);
+      status('Panipat Historical Atlas V2 loaded. 13 scenes synchronized to 151.25s audio master.');
+      return;
+    }
+    await commit(visualMap(validateMap(data,project)));
+    return;
+  }
   if(action==='upload'){
    if(!pendingFile)throw Error('Choose a file or drop one onto the map first.');
    if(!project.id)throw Error('Save and open this project before uploading custom assets.');
@@ -147,7 +160,20 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced}){
   if(t.matches('[data-upload-file]')&&t.files[0]){pendingFile=t.files[0];pendingUploadId=uid();pendingPosition=null;q('[data-local-note]').textContent=pendingFile.name+' ready to upload at the camera center.';return;}
   if(t.matches('[data-library-import]')&&t.files[0]){if(t.files[0].size>240000)throw Error('Use an asset library under 240 KB.');await commit(importAssetLibrary(spec,JSON.parse(await t.files[0].text())));return;}
   if(t.matches('[data-geo-file]')&&t.files[0]){if(t.files[0].size>240000)throw Error('Simplify GeoJSON to under 240 KB.');q('[data-geo]').value=await t.files[0].text();return;}
-  if(t.matches('[data-import]')&&t.files[0]){if(t.files[0].size>500000)throw Error('Import is limited to 500 KB.');const data=JSON.parse(await t.files[0].text());if(data.format==='invincible-map-scene'){const p=appendScenePackage(project,data);validateMap(p.historicalMap,p);project.scenes=p.scenes;undo.length=redo.length=0;await commit(p.historicalMap,{history:false});q('[data-seek]').max=durationOf(project);status('Scene appended with new IDs. Existing scenes are unchanged.');}else await commit(visualMap(validateMap(data,project)));return;}
+  if(t.matches('[data-import]')&&t.files[0]){
+    if(t.files[0].size>500000)throw Error('Import is limited to 500 KB.');
+    const data=JSON.parse(await t.files[0].text());
+    if(isPanipatStoryboard(data)){
+      const adapted=adaptPanipatStoryboard(data);
+      project.title=adapted.title;project.aspectRatio=adapted.aspectRatio;project.audio=adapted.audio;project.scenes=adapted.scenes;project.assets=adapted.assets;
+      undo.length=redo.length=0;await commit(adapted.historicalMap,{history:false});
+      q('[data-export-ratio]').value='9:16';sizeMapFrame(host,'9:16');q('[data-seek]').max=durationOf(project);
+      status('Panipat Historical Atlas V2 loaded. 13 scenes synchronized to 151.25s audio master.');
+      return;
+    }
+    if(data.format==='invincible-map-scene'){const p=appendScenePackage(project,data);validateMap(p.historicalMap,p);project.scenes=p.scenes;undo.length=redo.length=0;await commit(p.historicalMap,{history:false});q('[data-seek]').max=durationOf(project);status('Scene appended with new IDs. Existing scenes are unchanged.');}else await commit(visualMap(validateMap(data,project)));
+    return;
+  }
   if(t.dataset.keyOffset!==undefined){await edit(m=>m.camera[Number(t.dataset.keyOffset)].offset=Number(t.value));return;}
   if(t.dataset.prop?.startsWith('camera')){const fields=Object.fromEntries([...q('[data-camera-fields]').querySelectorAll('[data-prop]')].map(i=>[i.dataset.prop,Number(i.value)])),camera={center:[fields.cameraLng,fields.cameraLat],zoom:fields.cameraZoom,bearing:fields.cameraBearing,pitch:fields.cameraPitch};validateMap({...spec,camera:[{...anchor(),...camera}]},project);player.setCamera(camera);return;}
   if(t.matches('[data-name],[data-color],[data-prop],[data-scene],[data-corners],[data-route-coordinates]'))await edit(m=>{const l=m.visual.layers.find(l=>l.id===selected);if(!l)return;if(t.matches('[data-name]'))l.name=t.value;else if(t.matches('[data-color]'))l.color=t.value;else if(t.matches('[data-scene]'))l.sceneId=t.value;else if(t.matches('[data-corners]'))l.corners=JSON.parse(t.value);else if(t.matches('[data-route-coordinates]'))l.coordinates=JSON.parse(t.value);else if(['lng','lat'].includes(t.dataset.prop)){const position=[...l.position];position[t.dataset.prop==='lng'?0:1]=Number(t.value);Object.assign(l,moveLayer(l,position));}else l[t.dataset.prop]=Number(t.value);});

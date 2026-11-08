@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1080, height=1920, initial-scale=1">
+  <title>Panipat Render Harness (9:16 Portrait)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #080c14;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      font-family: 'Noto Sans', 'Roboto', system-ui, -apple-system, sans-serif;
+    }
+    #stage {
+      position: relative;
+      width: 1080px;
+      height: 1920px;
+    }
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1080px;
+      height: 1920px;
+    }
+  </style>
+</head>
+<body>
+  <div id="stage">
+    <canvas id="mapCanvas" width="1080" height="1920"></canvas>
+    <canvas id="overlayCanvas" width="1080" height="1920"></canvas>
+  </div>
+
+  <script type="module">
+    import { adaptPanipatStoryboard } from './panipat-storyboard-adapter.js';
+    import { renderPanipatOverlay, PALETTE, BASE_VIEWPORT } from './panipat-visual-renderer.js';
+    import { mapFrame, durationOf, sceneTimeline, routeAt } from './history-model.js';
+
+    let project = null;
+    let spec = null;
+    let assetsLoaded = false;
+    const loadedImages = new Map();
+
+    const mapCanvas = document.getElementById('mapCanvas');
+    const mapCtx = mapCanvas.getContext('2d');
+    const overlayCanvas = document.getElementById('overlayCanvas');
+    const overlayCtx = overlayCanvas.getContext('2d');
+
+    // Preload image assets
+    async function preloadAssets(assetList) {
+      const promises = assetList.map(a => {
+        return new Promise(resolve => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            loadedImages.set(a.id, img);
+            resolve();
+          };
+          img.onerror = () => {
+            console.warn('Failed loading asset:', a.url);
+            resolve(); // Don't reject, allow fallback badge
+          };
+          img.src = a.url;
+        });
+      });
+      await Promise.all(promises);
+      assetsLoaded = true;
+    }
+
+    // Geographic Projection: Equirectangular / Web Mercator for Punjab-Delhi region
+    // Converts [lng, lat] to [x, y] on 1080x1920 canvas given camera {center: [lng, lat], zoom, pitch, bearing}
+    function projectCoord(coord, camera, width = 1080, height = 1920) {
+      const [lng, lat] = coord;
+      const [cLng, cLat] = camera.center;
+      // Mercator scaling: 256 * 2^zoom at 512 base tile size
+      const scale = Math.pow(2, camera.zoom) * 36;
+      const cosLat = Math.cos(cLat * Math.PI / 180);
+
+      const dx = (lng - cLng) * cosLat * scale;
+      const dy = -(lat - cLat) * scale; // Y is inverted
+
+      const cx = width / 2;
+      const cy = height * 0.52; // slightly biased towards center-down to clear top cards
+
+      return [cx + dx, cy + dy];
+    }
+
+    // Render geographic base map
+    function renderMapBackground(ctx, frame, time, width = 1080, height = 1920) {
+      const camera = frame.camera;
+
+      // Base gradient representing night terrain relief
+      const bg = ctx.createLinearGradient(0, 0, 0, height);
+      bg.addColorStop(0, '#0c1522');
+      bg.addColorStop(0.5, '#101e2b');
+      bg.addColorStop(1, '#0e1824');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, width, height);
+
+      // Subtle terrain relief contours / shading
+      ctx.save();
+      ctx.globalAlpha = 0.18;
+      ctx.strokeStyle = '#D9B76E';
+      ctx.lineWidth = 1;
+      for (let r = 200; r < 1800; r += 160) {
+        ctx.beginPath();
+        const p = projectCoord([76.97, 29.39], camera, width, height);
+        ctx.ellipse(p[0] + 40, p[1] - 80, r * 0.8, r * 0.45, 0.2, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // Render routes / features
+      for (const f of frame.features.features) {
+        if (f.geometry.type === 'LineString') {
+          const coords = f.geometry.coordinates;
+          if (coords.length < 2) continue;
+
+          ctx.save();
+          const isYamuna = f.properties.id === 'yamuna_river_line';
+          const isDistance = f.properties.id === 'panipat_delhi_distance_arc';
+          const strokeColor = isYamuna ? '#72B7C8' : isDistance ? '#D9B76E' : '#E5C178';
+          const lineWidth = isYamuna ? 4 : isDistance ? 3.5 : 5;
+
+          ctx.strokeStyle = strokeColor;
+          ctx.lineWidth = lineWidth;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+
+          if (isDistance) {
+            ctx.setLineDash([8, 6]);
+          } else if (!isYamuna) {
+            ctx.shadowColor = 'rgba(217, 183, 110, 0.45)';
+            ctx.shadowBlur = 12;
+          }
+
+          ctx.beginPath();
+          const p0 = projectCoord(coords[0], camera, width, height);
+          ctx.moveTo(p0[0], p0[1]);
+          for (let i = 1; i < coords.length; i++) {
+            const pi = projectCoord(coords[i], camera, width, height);
+            ctx.lineTo(pi[0], pi[1]);
+          }
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      // Render historical locators / city pins
+      for (const ev of frame.events) {
+        const p = projectCoord(ev.coordinates, camera, width, height);
+        if (p[0] < -50 || p[0] > width + 50 || p[1] < 100 || p[1] > height - 100) continue;
+
+        ctx.save();
+        // Pin glow
+        ctx.shadowColor = PALETTE.gold;
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = PALETTE.gold;
+        ctx.beginPath();
+        ctx.arc(p[0], p[1], 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pin ring
+        ctx.strokeStyle = PALETTE.white;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(p[0], p[1], 9, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Pin label tag
+        ctx.shadowColor = 'transparent';
+        ctx.font = 'bold 20px system-ui, sans-serif';
+        const tw = ctx.measureText(ev.label).width;
+        ctx.fillStyle = 'rgba(16, 27, 43, 0.88)';
+        ctx.strokeStyle = PALETTE.goldBorder;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(p[0] + 16, p[1] - 18, tw + 20, 36, 6);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = PALETTE.white;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(ev.label, p[0] + 26, p[1]);
+
+        ctx.restore();
+      }
+    }
+
+    // Initialize harness
+    window.initHarness = async function(specJson) {
+      project = adaptPanipatStoryboard(specJson);
+      spec = project.historicalMap;
+      await preloadAssets(spec.visual.assets);
+      return {
+        title: project.title,
+        duration: durationOf(project),
+        sceneCount: project.scenes.length,
+        aspectRatio: project.aspectRatio
+      };
+    };
+
+    // Render frame at specified timestamp
+    window.renderAt = function(timeSec) {
+      if (!project) throw new Error('Call initHarness first.');
+      const t = Math.max(0, Math.min(durationOf(project), timeSec));
+      const frame = mapFrame(project, spec, t);
+
+      // 1. Draw geographic map background
+      mapCtx.clearRect(0, 0, 1080, 1920);
+      renderMapBackground(mapCtx, frame, t, 1080, 1920);
+
+      // 2. Draw Panipat Atlas Cards & Visual Overlay
+      overlayCtx.clearRect(0, 0, 1080, 1920);
+      renderPanipatOverlay(overlayCtx, {
+        project,
+        spec,
+        time: t,
+        width: 1080,
+        height: 1920,
+        isPortrait: true
+      });
+
+      // Find active scene index
+      let at = 0;
+      let activeIdx = 0;
+      for (let i = 0; i < project.scenes.length; i++) {
+        const d = project.scenes[i].duration;
+        if (t >= at && t < at + d) {
+          activeIdx = i;
+          break;
+        }
+        at += d;
+      }
+
+      return {
+        time: t,
+        sceneIndex: activeIdx + 1,
+        sceneId: project.scenes[activeIdx]?.id,
+        narration: project.scenes[activeIdx]?.voiceover
+      };
+    };
+  </script>
+</body>
+</html>

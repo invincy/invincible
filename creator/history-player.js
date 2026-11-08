@@ -5,6 +5,7 @@ import {createVisualRenderer} from './map-editor-renderer.js';
 import {baseStyle,styleFor} from './map-style-library.js';
 import {layerAlpha} from './map-editor-model.js';
 import {exportDimensions,encodeMapVideo} from './map-video-export.js';
+import {renderPanipatOverlay} from './panipat-visual-renderer.js';
 export function downloadBlob(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 export function sizeMapFrame(host,ratio){const aspect=ratio==='9:16'?9/16:16/9;host.style.width=`min(100%, ${Math.floor(window.innerHeight*0.58*aspect)}px)`;host.style.aspectRatio=ratio==='9:16'?'9 / 16':'16 / 9';host.style.maxHeight='none';}
 export async function createHistoryPlayer(host,project,spec,{onTime=()=>{},onError=()=>{}}={}){
@@ -30,6 +31,8 @@ export async function createHistoryPlayer(host,project,spec,{onTime=()=>{},onErr
   }
   target.globalAlpha=1;for(const f of frame.features.features.filter(f=>f.geometry.type==='LineString')){const layer=spec.visual?.layers.find(l=>l.kind==='feature'&&l.ref===f.properties.id);if(layer?.visible===false||layer?.arrowhead===false)continue;const c=f.geometry.coordinates;if(!locationVisible(map,c.at(-1),spec.projection)||!locationVisible(map,c.at(-2),spec.projection))continue;const a=map.project(c.at(-2)),b=map.project(c.at(-1));target.save();target.globalAlpha=layer?layerAlpha(project,layer,time):1;target.translate(b.x,b.y);target.rotate(Math.atan2(b.y-a.y,b.x-a.x));target.fillStyle=layer?.color||'#ae4b33';target.beginPath();target.moveTo(0,0);target.lineTo(-12,-5);target.lineTo(-12,5);target.closePath();target.fill();target.restore();}
   visual.overlay(target,time);
+  const isPanipat=!!(spec.panipat||project.historicalMap?.panipat||project.panipat);
+  if(isPanipat){renderPanipatOverlay(target,{project,spec,time,width,height,isPortrait:project.aspectRatio==='9:16'});target.fillStyle='#102331cc';target.fillRect(0,height-28,width,28);target.font='10px system-ui';target.fillStyle='#b8c6d1';target.fillText('Panipat Historical Atlas · Sources: Haryana Govt Gazettes & ASI · 151.25s Master Audio',14,height-10,width-28);target.restore();return;}
   const active=frame.events.at(-1);target.globalAlpha=1;target.fillStyle=night?'#102331e8':'#eee4cde8';if(active){target.fillRect(0,0,width,45);target.fillStyle=night?'#eee4cd':'#312c25';target.font='600 15px system-ui';target.fillText(active.date,12,23,width-24);}target.fillStyle=night?'#102331e8':'#eee4cde8';target.fillRect(0,height-40,width,40);target.font='9px system-ui';target.fillStyle=night?'#eee4cd':'#312c25';target.fillText((styleFor(spec)?.credit||'Natural Earth')+' · Imported geography: see Sources',8,height-12,width-16);if(spec.visual?.terrain?.enabled)target.fillText(spec.visual.terrain.attribution,8,height-26,width-16);target.restore();
  }
  function draw(){if(disposed)return;ctx.clearRect(0,0,canvas.width,canvas.height);if(ready)overlay(ctx,canvas.width,canvas.height);if(recording){const {out,context}=recording;context.drawImage(map.getCanvas(),0,0,out.width,out.height);overlay(context,out.width,out.height);}}
