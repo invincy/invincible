@@ -66,8 +66,11 @@ const server=http.createServer((req,res)=>{
    await page.evaluate(()=>{const a=window.testAudios.at(-1);a.currentTime=a.duration-.05;});
    await page.waitForFunction(()=>document.querySelector('#planJourneyPage').dataset.complete==='true');
    assert.equal(await page.locator('#storyNextLabel').innerText(),'Replay journey');
+   assert.equal(await page.locator('.journey-reveal').evaluate(el=>el.getBBox().width),600,'Completion retains the entire revealed journey');
+   assert.equal(await page.locator('.journey-money.is-current').evaluate(el=>getComputedStyle(el).opacity),'1','Completed maturity illustration remains visible');
    await page.click('#sceneTwoNextBtn');await page.waitForFunction(()=>document.querySelector('#journeyFinancialGraph').dataset.stage==='0');
    assert.equal(await page.locator('.journey-path').count(),1,'Replay resets the extent');
+   assert.ok(await page.locator('.journey-reveal').evaluate(el=>el.getBBox().width<=205),'Replay clears the completed extension');
    await page.click('[data-journey-step="3"]');
    assert.equal(await page.locator('.journey-path').count(),4);
    await page.click('[data-journey-step="1"]');
