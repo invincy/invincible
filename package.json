@@ -18,7 +18,8 @@
     "vendor:map-video": "node scripts/vendor-map-video.mjs",
     "test:map-animation": "node --test tests/creator-map-animation.mjs && node tests/creator-map-animation-browser.cjs",
     "test:map-editor": "node --test tests/creator-map-editor.mjs && node tests/creator-map-editor-browser.cjs",
-    "vendor:creator-map": "node scripts/vendor-creator-map.mjs"
+    "vendor:creator-map": "node scripts/vendor-creator-map.mjs",
+    "test:map-appearance": "node --test tests/creator-map-presets.mjs && node tests/creator-map-appearance-browser.cjs"
   },
   "devDependencies": {
     "esbuild": "0.25.12",

@@ -1,5 +1,6 @@
 // Pure, additive production metadata. Master storyboard IDs and order remain canonical.
 import {validateVisual,layerActive} from './map-editor-model.js';
+import {validateAppearance,initialCamera,resolvePreset} from './map-presets.js';
 import {validateBasemap} from './map-style-library.js';
 export const productionId=()=>globalThis.crypto?.randomUUID?.()||'clip-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
 export const emptyMap=()=>({version:1,theme:'parchment',events:[],features:{type:'FeatureCollection',features:[]},camera:[]});
@@ -10,9 +11,10 @@ export const durationOf=project=>sceneTimeline(project).at(-1)?.end||0;
 export function timeOf(project,item){const row=sceneTimeline(project).find(row=>row.sceneId===item.sceneId);return row?row.start+(item.offset||0):Infinity;}
 function position(p){if(!Array.isArray(p)||p.length!==2||!finite(p[0],-180,180)||!finite(p[1],-85,85))throw Error('Coordinates must be [longitude, latitude] in valid map bounds.');}
 export function validateMap(map,project){
+ map=resolvePreset(map);
  if(!map||map.version!==1||!['parchment','night'].includes(map.theme))throw Error('Use map version 1 and parchment or night theme.');
  if(map.projection!==undefined&&!['mercator','globe'].includes(map.projection))throw Error('Projection must be mercator or globe.');
- validateBasemap(map);
+ validateBasemap(map);validateAppearance(map,project);
  if(new TextEncoder().encode(JSON.stringify(map)).length>240000)throw Error('Map metadata exceeds 240 KB; simplify geometry or split the project.');
  const ids=new Set((project.scenes||[]).map(s=>s.id)),seen=new Set();
  function anchor(item){if(!ids.has(item.sceneId))throw Error('An event, feature or camera refers to a missing scene.');const scene=project.scenes.find(s=>s.id===item.sceneId);if(!finite(item.offset??0,0,scene.duration))throw Error('Offset must be within the associated scene.');}
@@ -53,11 +55,11 @@ export function mapFrame(project,map,time){
  const active=(kind,id)=>{const l=map.visual?.layers.find(l=>l.kind===kind&&l.ref===id);return l?.visible!==false&&(!l?.sceneId||layerActive(project,l,time));};
  const events=map.events.filter(e=>timeOf(project,e)<=time&&active('event',e.id)).sort((a,b)=>timeOf(project,a)-timeOf(project,b)),features=map.features.features.filter(f=>timeOf(project,f.properties)<=time&&active('feature',f.properties.id)).map(f=>f.geometry.type==='LineString'?{...f,geometry:{...f.geometry,coordinates:routeAt(f.geometry.coordinates,(time-timeOf(project,f.properties))/f.properties.duration)}}:f);
  const frames=[...map.camera].sort((a,b)=>timeOf(project,a)-timeOf(project,b));
- let a={center:[80,23],zoom:3.2,bearing:0,pitch:0},b=a;
+ let a=map.mapPreset||map.initialCamera?{zoom:3.2,...initialCamera(map)}:{center:[80,23],zoom:3.2,bearing:0,pitch:0},b=a;
  for(const c of frames){if(timeOf(project,c)<=time)a=c;else {b=c;break;}b=c;}
  const start=timeOf(project,a),end=timeOf(project,b),t=end>start?Math.max(0,Math.min(1,(time-start)/(end-start))):0,u=a.easing==='hold'?(t===1?1:0):a.easing==='linear'?t:t*t*(3-2*t);
  const mix=(x,y)=>x+(y-x)*u,wrap=n=>((n+180)%360+360)%360-180,angle=(x,y)=>wrap(x+wrap(y-x)*u);
- return {events,features:{type:'FeatureCollection',features},camera:{center:a.center.map((n,i)=>i===0&&map.projection==='globe'?angle(n,b.center[i]):mix(n,b.center[i])),zoom:mix(a.zoom,b.zoom),bearing:angle(a.bearing||0,b.bearing||0),pitch:mix(a.pitch||0,b.pitch||0)}};
+ return {events,features:{type:'FeatureCollection',features},camera:{...(a.fitBounds?{fitBounds:a.fitBounds}:{}),center:a.center.map((n,i)=>i===0&&map.projection==='globe'?angle(n,b.center[i]):mix(n,b.center[i])),zoom:mix(a.zoom,b.zoom),bearing:angle(a.bearing||0,b.bearing||0),pitch:mix(a.pitch||0,b.pitch||0)}};
 }
 export function createClip(project,sceneIds,name){
  const rows=sceneTimeline(project).filter(row=>sceneIds.includes(row.sceneId));

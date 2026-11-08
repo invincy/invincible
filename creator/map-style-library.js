@@ -1,3 +1,4 @@
+import {mapPresets} from './map-presets.js';
 // Physical imagery and modern reference cartography are deliberately distinct.
 export const mapStyles = [
  {id:'physical',name:'Clean physical',description:'Simple coastline. Best for uncluttered historical overlays.',credit:'Natural Earth (public domain)',detail:'Generalized 1:110m coastline',preview:'physical.png'},
@@ -5,8 +6,8 @@ export const mapStyles = [
  {id:'satellite',name:'Natural Earth imagery',description:'Natural-colour global imagery for regional and country views.',credit:'NASA GIBS · Blue Marble',detail:'Global composite · up to zoom 8; not live imagery',preview:'satellite.png',raster:'BlueMarble_ShadedRelief_Bathymetry',level:8},
  {id:'atlas',name:'Detailed atlas',description:'Sharp vector roads and places. Modern reference cartography.',credit:'OpenFreeMap · © OpenMapTiles · © OpenStreetMap contributors',detail:'Modern vector tiles; labels and borders optional',preview:'atlas.png',styleUrl:'https://tiles.openfreemap.org/styles/liberty',modern:true}
 ];
-export const styleFor = spec => mapStyles.find(s=>s.id===(spec.basemap?.id||'physical'));
-export const defaultTerrain = () => ({enabled:true,tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],encoding:'terrarium',exaggeration:1.3,attribution:'Terrain: Mapzen / AWS · USGS SRTM/GMTED2010 · NOAA ETOPO1'});
+export const styleFor = spec => mapStyles.find(s=>s.id===(spec.basemap?.id||mapPresets[spec.mapPreset]?.basemap||'physical'));
+export {presetTerrain as defaultTerrain} from './map-presets.js';
 export function validateBasemap(map){
  if(map.basemap===undefined)return;
  const b=map.basemap;

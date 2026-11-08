@@ -12,7 +12,7 @@ export function createVisualRenderer(map,project,onError){
   spec=next;assetErrors=[];const rev=++revision;if(!native)return;if(disposed)return;clear();
   if(map.getLayer('map-relief'))map.removeLayer('map-relief');
   if(map.getTerrain())map.setTerrain(null);if(map.getSource('visual-dem'))map.removeSource('visual-dem');
-  const terrain=spec.visual?.terrain;if(terrain?.enabled){map.addSource('visual-dem',{type:'raster-dem',...(terrain.tiles?{tiles:terrain.tiles,minzoom:0,maxzoom:15}:{url:terrain.url}),encoding:terrain.encoding,attribution:terrain.attribution,tileSize:256});map.setTerrain({source:'visual-dem',exaggeration:terrain.exaggeration});map.addLayer({id:'map-relief',type:'hillshade',source:'visual-dem',paint:{'hillshade-illumination-anchor':'map','hillshade-exaggeration':0.45,'hillshade-shadow-color':'#273c58','hillshade-highlight-color':'#fff1ca','hillshade-accent-color':'#4e705b'}});}
+  const terrain=spec.visual?.terrain;if(terrain?.enabled){map.addSource('visual-dem',{type:'raster-dem',...(terrain.tiles?{tiles:terrain.tiles,minzoom:0,maxzoom:15}:{url:terrain.url}),encoding:terrain.encoding,attribution:terrain.attribution,tileSize:256});map.setTerrain({source:'visual-dem',exaggeration:terrain.exaggeration});map.addLayer({id:'map-relief',type:'hillshade',source:'visual-dem',paint:{'hillshade-illumination-anchor':'map','hillshade-exaggeration':0.45,'hillshade-shadow-color':'#273c58','hillshade-highlight-color':'#fff1ca','hillshade-accent-color':'#4e705b'}},map.getLayer('territory')?'territory':undefined);}
   for(const l of spec.visual?.layers||[]){
    if(l.kind==='event')continue;const key=id(l);owned.push(key);
    try{

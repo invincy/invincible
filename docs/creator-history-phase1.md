@@ -251,3 +251,61 @@ visually inspected. No deployment or historical-data additions were made.
 Add custom image/GLB assets under Images & 3D assets and give them clear names such as BSF or ITBP. Copy ChatGPT brief includes the current project's asset names, types and IDs. Generated instructions may declare `assets: [{id: "bsf-art", libraryName: "BSF"}]`, then refer to `bsf-art` from an image layer. This uses the existing uploaded/hosted image rather than the built-in BSF text symbol. Matching ignores case and outer whitespace only; missing/duplicate names stop import. For duplicate names, `libraryId` selects the exact entry listed in the brief. Image corners and layer timing still belong to the instruction. Upload names entered in Asset name are retained in project metadata. Direct private upload deployment prerequisites remain unchanged; hosted HTTPS assets remain supported.
 
 Animation instructions may include `basemapOptions: {saturation: 0.3, contrast: 0.1}` to reproduce raster colour settings in a fresh project. Existing project appearance takes precedence when appending. The automatic illustrative-artwork video annotation is removed; label halos improve satellite contrast and source attribution remains. Portrait Full HD exports are 1080x1920; landscape Full HD is 1920x1080.
+
+## India framing and Map Appearance — November 8, 2026
+
+New visual-editor maps opt into `india-satellite`, portrait 9:16. Existing
+`historicalMap` records and animation JSON without new fields retain their original
+style. Four centralized presets: `india-satellite` (85% fill), `india-political`
+(85%, differentiated country palette), `india-topographic` (25%), and `custom`.
+Preset selection/reset is an explicit draft edit. Camera keyframes are retained;
+these explicit camera instructions take precedence over the initial preset fit.
+
+Additive historicalMap fields:
+
+- `mapPreset`: one of the IDs above.
+- `initialCamera`: `{center:[lng,lat],zoom,bearing,pitch,aspectRatio,fitBounds}`.
+  The existing `camera` array is unchanged. Without an explicit initial center,
+  India fits [[68,6.5],[97.5,37.5]] to the actual viewport in Mercator. Explicit
+  centers disable the automatic fit unless explicit fitBounds is also supplied.
+- `overlays`: partial settings over preset defaults. `countryFill` has enabled,
+  opacity and color; `countryBorders` and `stateBorders` add width; `labels` has
+  enabled; `ashokaChakra` has enabled, longitude, latitude, opacity and color.
+  Country/state override maps use `countries:{IND:{color,opacity,enabled}}` and
+  `states:{"IN-GJ":{color,opacity,enabled}}`. Opacity is 0..1, width 0..20 CSS px,
+  colors six-digit hex. Borders, labels and terrain do not inherit fill opacity.
+- `overlayKeys`: existing scene-relative anchors `{sceneId,offset,easing,overlays}`.
+  Partial keys accumulate; opacity/numbers/colors interpolate, booleans step at
+  their key. Easing belongs to the outgoing key, as with camera keys. Static
+  overlays provide the initial values. Independent state fills default to zero.
+
+Animation version 1 accepts the same fields, with `{time,overlays,easing}` for
+`overlayKeys`. `camera:[]` (or omitted) uses the preset's automatic framing;
+explicit camera keys retain their existing format. Preset imports may omit
+basemap/aspectRatio. Example:
+
+```json
+{"format":"invincible-map-animation","version":1,"duration":10,
+ "mapPreset":"india-satellite","terrain":false,"camera":[],"layers":[],
+ "overlays":{"countryFill":{"opacity":0.6}},
+ "overlayKeys":[
+  {"time":0,"easing":"linear","overlays":{"countryFill":{"opacity":0.2}}},
+  {"time":10,"overlays":{"countryFill":{"opacity":0.85}}}
+ ]}
+```
+
+Append retains destination appearance and appends timed keys at the new scene
+anchors. Scene packages filter/remap overlay keys alongside cameras and lighting.
+The shared geographic compositor draws a 24-spoke Chakra at [78.5,23.5], separate
+from the viewport center. It cannot move an emblem baked into an uploaded image;
+remove that image/emblem explicitly to avoid a duplicate. No saved artwork is
+rewritten. All appearance rendering uses the existing storyboard clock and the
+same frame path for preview, WebM and MediaBunny MP4.
+
+Reference polygons are Natural Earth, with attribution/limits in
+`creator/history-data/README.md`; they are not India's official claim map. Country
+and state datasets have different generalization scales. Satellite detail is the
+existing NASA Blue Marble imagery, not new high-resolution satellite imagery.
+State labels use collision-aware placement; not every label fits at country scale.
+Geographic fills need WebGL2; the basic fallback can show labels/Chakra, but cannot
+export HD MP4. Existing image/GLB/historical geometry remains independently editable.
