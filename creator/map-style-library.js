@@ -1,5 +1,7 @@
+import {addDocumentaryReference} from './documentary-map.js';
 // Physical imagery and modern reference cartography are deliberately distinct.
 export const mapStyles = [
+ {id:'documentary',name:'Our default map',description:'Satellite map with country overlays, white reference borders and country names.',credit:'NASA GIBS · Blue Marble / Natural Earth',detail:'Modern regional reference · claims and administration differ',preview:'documentary.png',raster:'BlueMarble_ShadedRelief_Bathymetry',level:8,modern:true,documentary:true},
  {id:'physical',name:'Clean physical',description:'Simple coastline. Best for uncluttered historical overlays.',credit:'Natural Earth (public domain)',detail:'Generalized 1:110m coastline',preview:'physical.png'},
  {id:'terrain',name:'Vivid topography',description:'Detailed coloured elevation and mountain relief. No political borders.',credit:'NASA GIBS · ASTER GDEM / NASA–METI',detail:'ASTER relief tiles · up to zoom 12',preview:'terrain.png',raster:'ASTER_GDEM_Color_Shaded_Relief',level:12},
  {id:'satellite',name:'Natural Earth imagery',description:'Natural-colour global imagery for regional and country views.',credit:'NASA GIBS · Blue Marble',detail:'Global composite · up to zoom 8; not live imagery',preview:'satellite.png',raster:'BlueMarble_ShadedRelief_Bathymetry',level:8},
@@ -31,5 +33,5 @@ export async function baseStyle(spec){
   style.sources.land={type:'geojson',data:new URL('./history-data/land.geojson',import.meta.url).href,attribution:preset.credit};
   style.layers.push({id:'land',type:'fill',source:'land',paint:{'fill-color':legacy?(night?'#273f4e':'#a99f7f'):(night?'#487c86':'#9dcb8b')}});
  }
- return style;
+ return preset.documentary?addDocumentaryReference(style,spec.basemap):style;
 }

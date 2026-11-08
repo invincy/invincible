@@ -43,7 +43,7 @@ export function routeAt(coordinates,progress){
 }
 export function lightingFrame(project,map,time){
  const keys=[...(map.lighting||[])].sort((a,b)=>timeOf(project,a)-timeOf(project,b));
- let a={direction:315,intensity:0.45},b=a;
+ let a={direction:315,intensity:map.basemap?.id==='documentary'?0.1:0.45},b=a;
  for(const key of keys){if(timeOf(project,key)<=time)a=key;else {b=key;break;}b=key;}
  const start=timeOf(project,a),end=timeOf(project,b),t=end>start?Math.max(0,Math.min(1,(time-start)/(end-start))):0;
  const turn=((b.direction-a.direction+540)%360)-180;
@@ -53,7 +53,7 @@ export function mapFrame(project,map,time){
  const active=(kind,id)=>{const l=map.visual?.layers.find(l=>l.kind===kind&&l.ref===id);return l?.visible!==false&&(!l?.sceneId||layerActive(project,l,time));};
  const events=map.events.filter(e=>timeOf(project,e)<=time&&active('event',e.id)).sort((a,b)=>timeOf(project,a)-timeOf(project,b)),features=map.features.features.filter(f=>timeOf(project,f.properties)<=time&&active('feature',f.properties.id)).map(f=>f.geometry.type==='LineString'?{...f,geometry:{...f.geometry,coordinates:routeAt(f.geometry.coordinates,(time-timeOf(project,f.properties))/f.properties.duration)}}:f);
  const frames=[...map.camera].sort((a,b)=>timeOf(project,a)-timeOf(project,b));
- let a={center:[80,23],zoom:3.2,bearing:0,pitch:0},b=a;
+ let a=map.basemap?.id==='documentary'?{center:[82.3,23.5],zoom:2.85,bearing:0,pitch:0}:{center:[80,23],zoom:3.2,bearing:0,pitch:0},b=a;
  for(const c of frames){if(timeOf(project,c)<=time)a=c;else {b=c;break;}b=c;}
  const start=timeOf(project,a),end=timeOf(project,b),t=end>start?Math.max(0,Math.min(1,(time-start)/(end-start))):0,u=a.easing==='hold'?(t===1?1:0):a.easing==='linear'?t:t*t*(3-2*t);
  const mix=(x,y)=>x+(y-x)*u,wrap=n=>((n+180)%360+360)%360-180,angle=(x,y)=>wrap(x+wrap(y-x)*u);

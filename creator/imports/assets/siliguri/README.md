@@ -4,18 +4,10 @@ All five original PNG files supplied by the user are included without alteration
 
 `../../siliguri-assets.library.json` imports the five images into the existing Map Editor asset library. The portrait animation JSON includes the same five HTTPS asset references, so importing that animation also adds them to the library. URLs point to the immutable asset commit to keep references stable across later branch edits.
 
-## Draft scene placements
+## Map-only revision
 
-| Artwork | Visibility (seconds) |
-| --- | --- |
-| Mountain Illustration | 25–31 |
-| Northeast Supply Convoy | 32–36.5 |
-| Cargo Truck | 36.5–40 |
-| Freight Train | 51–56 |
-| Railway Bridge | 56–62 |
+The animation now uses the documentary house map, matching India Border portrait v4: Blue Marble satellite imagery, low relief lighting, persistent country overlays, white sourced reference borders, country names and flat camera motion. All truck, train, mountain and bridge placements and their captions have been removed. The five supplied files and separate library remain available for future explicit requests; they are not loaded by the map-only animation.
 
-These are illustrative placements, not surveyed infrastructure locations or a particular peak. Each image has an illustration caption and 0.35-second entrance/exit fades. Geographic corners respect the original PNG aspect ratio in Mercator coordinates. Road and rail camera holds keep the artwork in frame; regional labels are sized for portrait viewing.
+The animation remains 70.58 seconds in 9:16. Narration synchronization remains provisional. The documentary preset requires the accompanying Map Editor update; the currently published editor does not yet recognize it. No saved Creator/Firebase project has been changed.
 
-Narration alignment remains provisional. The full animation stays 70.58 seconds in 9:16. No saved Creator project or Firebase data was changed.
-
-Verification: original/copy SHA-256 equality; the real animation compiler accepts five assets and sixteen layers; library import preserves existing assets and deduplicates repeated imports; native MapLibre browser preview loads all five images without renderer errors and checks that each is inside the 540×960 portrait frame; five representative frames visually reviewed. Visibility boundaries are checked against the compiled layer timeline. This does not establish final narration synchronization or a full audiovisual review.
+For the currently published editor, use `../../siliguri-map-only.animation.json`. It packages the same satellite look, five geographic country-flag overlays and source-noted reference borders directly, so it needs no new preset support. Review the cited geometry in the existing import dialog. Its only images are the geographic country overlays, not the supplied truck/train/mountain/bridge artwork.

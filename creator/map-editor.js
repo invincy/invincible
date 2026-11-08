@@ -1,3 +1,4 @@
+import {defaultBasemap} from './documentary-map.js';
 import {cameraPreset,surfacePosition,locationVisible} from './map-globe.js';
 import {uploadMapAsset} from './map-assets-client.js';
 import {emptyMap,validateMap,sceneTimeline,durationOf,productionId,mapFrame} from './history-model.js';
@@ -12,7 +13,7 @@ const number=(label,key,value,min,max,step='any')=>`<label>${label}<input type="
 const jsonDownload=(value,name)=>downloadBlob(new Blob([JSON.stringify(value,null,2)],{type:'application/json'}),name);
 
 export function mountMapEditor(root,{getProject,onChange,onAdvanced}){
- const project=getProject();let spec=visualMap(project.historicalMap||{...emptyMap(),theme:'night',basemap:{id:'terrain',labels:false,borders:false},visual:{version:1,layers:[],assets:[],terrain:defaultTerrain()}}),player,disposed=false,selected='',armed='',route=[],drag=null,pendingPosition=null,localPreview=null,playing=false,working=false,editingAsset='';let pendingFile=null,pendingUploadId='';
+ const project=getProject();let spec=visualMap(project.historicalMap||{...emptyMap(),theme:'night',basemap:defaultBasemap(),visual:{version:1,layers:[],assets:[],terrain:defaultTerrain()}}),player,disposed=false,selected='',armed='',route=[],drag=null,pendingPosition=null,localPreview=null,playing=false,working=false,editingAsset='';let pendingFile=null,pendingUploadId='';
  const undo=[],redo=[];
  root.classList.add('history-workspace','visual-map-editor');
  root.innerHTML=`<div class="history-heading"><div><span class="eyebrow">CREATOR / MAPS</span><h2>Historical map editor</h2><p>Import timed animation, choose your map and render.</p></div><div class="history-controls">${button('open-instructions','Import animation')}${button('open-library','Map library')}${button('advanced','Advanced / recording')}</div></div>
@@ -46,7 +47,7 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced}){
   q('[data-layers]').innerHTML=[...spec.visual.layers].reverse().map(l=>`<div class="map-layer ${l.id===selected?'selected':''}"><button type="button" data-layer="${esc(l.id)}" aria-pressed="${l.id===selected}">${esc(l.name)}<small>${['feature','event'].includes(l.kind)?(l.kind==='feature'?'Source-reviewed geometry':'Sourced locator'):'Illustrative · '+l.kind}</small></button><button type="button" data-toggle="${esc(l.id)}" aria-label="${l.visible?'Hide':'Show'} ${esc(l.name)}">${l.visible?'●':'○'}</button></div>`).join('')||'<p>Drag an icon onto the map, or import sourced geography.</p>';
   renderAssets();
   q('[data-keyframes]').innerHTML=spec.camera.map((c,i)=>`<div class="map-keyframe"><button type="button" data-key="${i}">S${project.scenes.findIndex(s=>s.id===c.sceneId)+1} +${c.offset.toFixed(1)}s</button><label>Offset<input type="number" data-key-offset="${i}" value="${c.offset}" min="0" step="0.1"></label><button type="button" data-key-replace="${i}">Use view</button><button type="button" data-key-remove="${i}" aria-label="Delete keyframe ${i+1}">×</button></div>`).join('')||'<p>Pan or adjust the camera, then capture a keyframe at the playhead.</p>';
-  q('[data-sources]').innerHTML=[...spec.events,...spec.features.features.map(f=>f.properties)].map(e=>`<p><a href="${esc(e.sourceUrl)}" target="_blank" rel="noopener">${esc(e.label)} · ${esc(e.date)}</a><br>${esc(e.sourceNote)}</p>`).join('')+spec.visual.assets.map(a=>`<p>Illustrative asset: <a href="${esc(a.url||'#')}" target="_blank" rel="noopener">${esc(a.name)}</a><br>${esc(a.credit||'Credit / rights not supplied')}</p>`).join('');
+  q('[data-sources]').innerHTML=(preset.documentary?'<p>Default reference map: <a href="https://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-admin-0-boundary-lines/" target="_blank" rel="noopener">Natural Earth boundaries</a> · <a href="history-data/border-flags-v3/SOURCES.md" target="_blank" rel="noopener">Country overlays and credits</a>. The white mainland outline shows the Indian claim viewpoint; administration differs. LoC/LAC are generalized reference alignments.</p>':'')+[...spec.events,...spec.features.features.map(f=>f.properties)].map(e=>`<p><a href="${esc(e.sourceUrl)}" target="_blank" rel="noopener">${esc(e.label)} · ${esc(e.date)}</a><br>${esc(e.sourceNote)}</p>`).join('')+spec.visual.assets.map(a=>`<p>Illustrative asset: <a href="${esc(a.url||'#')}" target="_blank" rel="noopener">${esc(a.name)}</a><br>${esc(a.credit||'Credit / rights not supplied')}</p>`).join('');
   const t=spec.visual.terrain;if(t){q('[data-dem-url]').value=t.url;q('[data-dem-credit]').value=t.attribution;q('[data-dem-encoding]').value=t.encoding;q('[data-dem-scale]').value=t.exaggeration;q('[data-dem-enabled]').checked=t.enabled;}
   inspector();cameraFields();
  }
@@ -82,7 +83,7 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced}){
   if(b.dataset.edit==='animation-brief'){await navigator.clipboard.writeText(animationBrief(spec.visual.assets));status('ChatGPT brief copied. Add your narration and desired timing before sending it.');return;}
   requireReady();
   if(b.dataset.mapExport){working=true;try{await handleMapExport(root,player,b.dataset.mapExport);}finally{working=false;}return;}
-  if(b.dataset.mapStyle){const preset=mapStyles.find(s=>s.id===b.dataset.mapStyle);await edit(m=>{m.basemap={id:preset.id,labels:false,borders:false,saturation:0.15,contrast:0.05};if(preset.id==='terrain'||preset.id==='satellite')m.visual.terrain=defaultTerrain();else if(m.visual.terrain)m.visual.terrain.enabled=false;});return;}
+  if(b.dataset.mapStyle){const preset=mapStyles.find(s=>s.id===b.dataset.mapStyle);await edit(m=>{m.basemap=preset.documentary?defaultBasemap():{id:preset.id,labels:false,borders:false,saturation:0.15,contrast:0.05};if(preset.raster)m.visual.terrain=defaultTerrain();else if(m.visual.terrain)m.visual.terrain.enabled=false;});return;}
   if(b.dataset.edit==='animation-check'){
    q('[data-animation-reviewed]').checked=false;
    const plan=readAnimation(q('[data-animation-plan]').value),checked=compileAnimation(project,plan,{geometryReviewed:true}),geometry=plan.layers.filter(l=>['boundary','highlight'].includes(l.type));

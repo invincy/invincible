@@ -4,17 +4,17 @@
   "title": "Siliguri Corridor — India's Chicken's Neck",
   "duration": 70.58,
   "aspectRatio": "9:16",
-  "basemap": "terrain",
+  "basemap": "documentary",
   "terrain": true,
   "camera": [
     {
       "time": 0,
       "center": [
-        80.5,
+        82.3,
         23.5
       ],
-      "zoom": 3.5,
-      "pitch": 20,
+      "zoom": 2.85,
+      "pitch": 0,
       "bearing": 0
     },
     {
@@ -24,7 +24,7 @@
         26.6
       ],
       "zoom": 7.2,
-      "pitch": 30,
+      "pitch": 0,
       "bearing": 0
     },
     {
@@ -34,7 +34,7 @@
         26.55
       ],
       "zoom": 8.6,
-      "pitch": 30,
+      "pitch": 0,
       "bearing": 0
     },
     {
@@ -43,8 +43,18 @@
         88.2,
         26.6
       ],
-      "zoom": 7.2,
-      "pitch": 25,
+      "zoom": 6.8,
+      "pitch": 0,
+      "bearing": 0
+    },
+    {
+      "time": 30,
+      "center": [
+        88.2,
+        26.6
+      ],
+      "zoom": 6.8,
+      "pitch": 0,
       "bearing": 0
     },
     {
@@ -54,19 +64,8 @@
         26.6
       ],
       "zoom": 8,
-      "pitch": 40,
+      "pitch": 0,
       "bearing": 0
-    },
-    {
-      "time": 38,
-      "center": [
-        88.3,
-        26.6
-      ],
-      "zoom": 8,
-      "pitch": 30,
-      "bearing": 0,
-      "easing": "hold"
     },
     {
       "time": 41,
@@ -75,7 +74,7 @@
         27.3
       ],
       "zoom": 7,
-      "pitch": 45,
+      "pitch": 0,
       "bearing": 0
     },
     {
@@ -85,28 +84,17 @@
         26.6
       ],
       "zoom": 7.8,
-      "pitch": 25,
+      "pitch": 0,
       "bearing": 0
     },
     {
-      "time": 62,
-      "center": [
-        88.3,
-        26.6
-      ],
-      "zoom": 7.8,
-      "pitch": 25,
-      "bearing": 0,
-      "easing": "smooth"
-    },
-    {
-      "time": 64,
+      "time": 60,
       "center": [
         89,
         25.8
       ],
       "zoom": 5.8,
-      "pitch": 20,
+      "pitch": 0,
       "bearing": 0
     },
     {
@@ -116,7 +104,7 @@
         25
       ],
       "zoom": 3.6,
-      "pitch": 15,
+      "pitch": 0,
       "bearing": 0
     }
   ],
@@ -167,8 +155,8 @@
       "start": 24,
       "end": 32,
       "position": [
-        90.2,
-        27.4
+        89.25,
+        27.15
       ],
       "color": "#ffffff",
       "scale": 0.65
@@ -195,289 +183,19 @@
         83,
         24
       ],
-      "color": "#e6b75e"
-    },
-    {
-      "id": "mountain-illustration-artwork",
-      "type": "image",
-      "name": "Mountain Illustration (illustrative)",
-      "assetId": "siliguri-mountain-illustration",
-      "start": 25,
-      "end": 31,
-      "position": [
-        88.23,
-        26.7
-      ],
-      "corners": [
-        [
-          87.655,
-          27.042459
-        ],
-        [
-          88.805,
-          27.042459
-        ],
-        [
-          88.805,
-          26.357541
-        ],
-        [
-          87.655,
-          26.357541
-        ]
-      ],
-      "scale": 1,
-      "opacity": 1,
-      "fadeIn": 0.35,
-      "fadeOut": 0.35
-    },
-    {
-      "id": "mountain-illustration-caption",
-      "type": "label",
-      "name": "MOUNTAIN TERRAIN · ILLUSTRATION",
-      "start": 25,
-      "end": 31,
-      "position": [
-        88.23,
-        26.227541
-      ],
-      "color": "#ffffff",
-      "scale": 0.75,
-      "fadeIn": 0.35,
-      "fadeOut": 0.35
-    },
-    {
-      "id": "northeast-supply-convoy-artwork",
-      "type": "image",
-      "name": "Northeast Supply Convoy (illustrative)",
-      "assetId": "siliguri-northeast-supply-convoy",
-      "start": 32,
-      "end": 36.5,
-      "position": [
-        88.3,
-        26.55
-      ],
-      "corners": [
-        [
-          87.875,
-          26.740091
-        ],
-        [
-          88.725,
-          26.740091
-        ],
-        [
-          88.725,
-          26.359909
-        ],
-        [
-          87.875,
-          26.359909
-        ]
-      ],
-      "scale": 1,
-      "opacity": 1,
-      "fadeIn": 0.35,
-      "fadeOut": 0.35
-    },
-    {
-      "id": "northeast-supply-convoy-caption",
-      "type": "label",
-      "name": "ROAD SUPPLIES · ILLUSTRATION",
-      "start": 32,
-      "end": 36.5,
-      "position": [
-        88.3,
-        26.229909
-      ],
-      "color": "#ffffff",
-      "scale": 0.75,
-      "fadeIn": 0.35,
-      "fadeOut": 0.35
-    },
-    {
-      "id": "cargo-truck-artwork",
-      "type": "image",
-      "name": "Cargo Truck (illustrative)",
-      "assetId": "siliguri-cargo-truck",
-      "start": 36.5,
-      "end": 40,
-      "position": [
-        88.3,
-        26.55
-      ],
-      "corners": [
-        [
-          87.875,
-          26.803454
-        ],
-        [
-          88.725,
-          26.803454
-        ],
-        [
-          88.725,
-          26.296546
-        ],
-        [
-          87.875,
-          26.296546
-        ]
-      ],
-      "scale": 1,
-      "opacity": 1,
-      "fadeIn": 0.35,
-      "fadeOut": 0.35
-    },
-    {
-      "id": "cargo-truck-caption",
-      "type": "label",
-      "name": "CARGO TRANSPORT · ILLUSTRATION",
-      "start": 36.5,
-      "end": 40,
-      "position": [
-        88.3,
-        26.166546
-      ],
-      "color": "#ffffff",
-      "scale": 0.75,
-      "fadeIn": 0.35,
-      "fadeOut": 0.35
-    },
-    {
-      "id": "freight-train-artwork",
-      "type": "image",
-      "name": "Freight Train (illustrative)",
-      "assetId": "siliguri-freight-train",
-      "start": 51,
-      "end": 56,
-      "position": [
-        88.3,
-        26.55
-      ],
-      "corners": [
-        [
-          87.875,
-          26.803454
-        ],
-        [
-          88.725,
-          26.803454
-        ],
-        [
-          88.725,
-          26.296546
-        ],
-        [
-          87.875,
-          26.296546
-        ]
-      ],
-      "scale": 1,
-      "opacity": 1,
-      "fadeIn": 0.35,
-      "fadeOut": 0.35
-    },
-    {
-      "id": "freight-train-caption",
-      "type": "label",
-      "name": "FREIGHT RAIL · ILLUSTRATION",
-      "start": 51,
-      "end": 56,
-      "position": [
-        88.3,
-        26.166546
-      ],
-      "color": "#ffffff",
-      "scale": 0.75,
-      "fadeIn": 0.35,
-      "fadeOut": 0.35
-    },
-    {
-      "id": "railway-bridge-artwork",
-      "type": "image",
-      "name": "Railway Bridge (illustrative)",
-      "assetId": "siliguri-railway-bridge",
-      "start": 56,
-      "end": 62,
-      "position": [
-        88.3,
-        26.55
-      ],
-      "corners": [
-        [
-          87.825,
-          26.762454
-        ],
-        [
-          88.775,
-          26.762454
-        ],
-        [
-          88.775,
-          26.337546
-        ],
-        [
-          87.825,
-          26.337546
-        ]
-      ],
-      "scale": 1,
-      "opacity": 1,
-      "fadeIn": 0.35,
-      "fadeOut": 0.35
-    },
-    {
-      "id": "railway-bridge-caption",
-      "type": "label",
-      "name": "RAIL CONNECTION · ILLUSTRATION",
-      "start": 56,
-      "end": 62,
-      "position": [
-        88.3,
-        26.207546
-      ],
-      "color": "#ffffff",
-      "scale": 0.75,
-      "fadeIn": 0.35,
-      "fadeOut": 0.35
+      "color": "#e6b75e",
+      "scale": 0.7
     }
   ],
-  "assets": [
+  "basemapOptions": {
+    "saturation": 0.3,
+    "contrast": 0.12
+  },
+  "lighting": [
     {
-      "id": "siliguri-northeast-supply-convoy",
-      "name": "Northeast Supply Convoy",
-      "type": "image",
-      "url": "https://raw.githubusercontent.com/invincy/invincible/578ff50035978a017cd5016d8bb488bda4526109/creator/imports/assets/siliguri/northeast-supply-convoy.png",
-      "credit": "User-supplied artwork for the Siliguri project; illustrative."
-    },
-    {
-      "id": "siliguri-cargo-truck",
-      "name": "Cargo Truck",
-      "type": "image",
-      "url": "https://raw.githubusercontent.com/invincy/invincible/578ff50035978a017cd5016d8bb488bda4526109/creator/imports/assets/siliguri/cargo-truck.png",
-      "credit": "User-supplied artwork for the Siliguri project; illustrative."
-    },
-    {
-      "id": "siliguri-freight-train",
-      "name": "Freight Train",
-      "type": "image",
-      "url": "https://raw.githubusercontent.com/invincy/invincible/578ff50035978a017cd5016d8bb488bda4526109/creator/imports/assets/siliguri/freight-train.png",
-      "credit": "User-supplied artwork for the Siliguri project; illustrative."
-    },
-    {
-      "id": "siliguri-mountain-illustration",
-      "name": "Mountain Illustration",
-      "type": "image",
-      "url": "https://raw.githubusercontent.com/invincy/invincible/578ff50035978a017cd5016d8bb488bda4526109/creator/imports/assets/siliguri/mountain-illustration.png",
-      "credit": "User-supplied artwork for the Siliguri project; illustrative."
-    },
-    {
-      "id": "siliguri-railway-bridge",
-      "name": "Railway Bridge",
-      "type": "image",
-      "url": "https://raw.githubusercontent.com/invincy/invincible/578ff50035978a017cd5016d8bb488bda4526109/creator/imports/assets/siliguri/railway-bridge.png",
-      "credit": "User-supplied artwork for the Siliguri project; illustrative."
+      "time": 0,
+      "direction": 315,
+      "intensity": 0.1
     }
   ]
 }
