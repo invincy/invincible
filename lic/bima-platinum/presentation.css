@@ -1943,3 +1943,6 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 #planJourneyPage .journey-sample-options button { padding:4px 5px; border:1px solid #3e6385; border-radius:5px; background:#0a2943; color:#c9d8e7; font:600 9px var(--font-sans); }
 #planJourneyPage .journey-sample-options button[aria-pressed="true"] { border-color:#ffe0a0; color:#ffe0a0; background:#29425b; }
 #planJourneyPage .journey-content { margin-top:auto; }
+
+/* The retired selector controls must not reserve space on Page 5. */
+#planJourneyPage .journey-sample-controls { display:none !important; }

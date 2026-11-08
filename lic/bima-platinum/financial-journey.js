@@ -60,8 +60,8 @@
       ${txt(xPpt,102,'GA during PPT · 7% base',14,'#f9d27a')}
       ${stack(xPpt-28,110,3)}
       ${step>=2?incomeMarks:""}
-      ${step>=2?txt(xPpt+145,75,`${money(annualIncome)} / year`,19,'#ffe2a0')}
-      ${txt(xPpt+145,96,`From end of year ${ppt}`,13,'#b7d2e8'):''}
+      ${step>=2?txt(xPpt+145,75,`${money(annualIncome)} / year`,19,'#ffe2a0'):''}
+      ${step>=2?txt(xPpt+145,96,`From end of year ${ppt}`,13,'#b7d2e8'):''}
       ${step>=3?pile(xBoost,134):''}
       ${step>=3?txt(xBoost,65,'70% BOOSTER',17,'#ffe0a0'):''}
       ${step>=3?txt(xBoost,86,`${money(booster)} · Y${boosterYear}`,16,'#fff1d0'):''}

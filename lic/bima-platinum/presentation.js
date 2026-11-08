@@ -125,15 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const layerCheckboxes = document.querySelectorAll('.layer-toggle-input');
   let selectedSampleAge = 25;
   let selectedSamplePpt = 15;
-  const ageOptions = document.querySelectorAll('#incomeAgeOptions button');
-  const pptOptions = document.querySelectorAll('#incomePptOptions button');
-  function updateIncomeExample() {
-    ageOptions.forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.age)===selectedSampleAge)));
-    pptOptions.forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.ppt)===selectedSamplePpt)));
-    if(currentPage===5) renderJourneyStep();
-  }
-  ageOptions.forEach(button=>button.addEventListener('click',()=>{const age=Number(button.dataset.age);if(getLicSamplePremium(age,selectedSamplePpt)==null)return;selectedSampleAge=age;updateIncomeExample();}));
-  pptOptions.forEach(button=>button.addEventListener('click',()=>{const ppt=Number(button.dataset.ppt);if(getLicSamplePremium(selectedSampleAge,ppt)==null)return;selectedSamplePpt=ppt;updateIncomeExample();}));
   let currentPage = 1;
   let automaticStory = true;
   let audioEvents = null;
@@ -472,9 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (focus) previewDismissBtn.focus();
       if (isJourney) {
         journeyAutoplay = true;
-        renderJourneyStep();
-        const generation = journeyGeneration;
-        journeyTimer = setTimeout(() => { if (generation === journeyGeneration && currentPage === 5) startJourneyStep(0); }, 700);
+        startJourneyStep(0);
       } else journeyNext.disabled = false;
     }
     advisorAudioBtn.title = STORY_SCENES[1].script;
