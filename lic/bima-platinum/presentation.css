@@ -1980,3 +1980,19 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 .policy-example-selection select:focus-visible { outline:2px solid #ffe3a3; outline-offset:2px; }
 @media (prefers-reduced-motion:reduce) { #planJourneyPage .journey-path,#planJourneyPage .journey-money { animation:none; } }
 .journey-upper { overflow:hidden; }
+
+/* Page 4: the supplied availability date belongs beside the advisor, not in fine print. */
+.reveal-deadline{width:40cqw;max-width:164px;margin-top:clamp(22px,4cqh,35px);color:#f5d990;animation:reveal-copy .7s 1.05s ease-out both;text-shadow:0 2px 15px #020b1c}
+.reveal-deadline>span{display:block;margin-bottom:6px;font:500 11px/1.2 var(--font-hindi);letter-spacing:.08em;color:#d1bd8b}
+.reveal-deadline strong{display:block;font-family:var(--font-serif);font-weight:500;line-height:1.02;letter-spacing:-.035em}
+.reveal-deadline strong>span{display:block;white-space:nowrap;font-size:clamp(26px,7.5cqw,29px)}
+.reveal-deadline strong>span+span{margin-top:3px;font-size:clamp(40px,12cqw,48px)}
+.reveal-deadline em{font:500 .36em var(--font-hindi);font-style:normal;letter-spacing:0;vertical-align:middle}
+@container presentation (max-height:700px){.reveal-deadline{margin-top:22px}.reveal-deadline strong>span{font-size:29px}.reveal-deadline strong>span+span{font-size:46px}}
+@container presentation (max-height:600px){.reveal-deadline{margin-top:16px}.reveal-deadline>span{font-size:9px;margin-bottom:4px}.reveal-deadline strong>span{font-size:26px}.reveal-deadline strong>span+span{font-size:40px}.reveal-credentials{display:none}}
+@media(prefers-reduced-motion:reduce){.reveal-deadline{animation:none}}
+
+@container presentation (max-height:520px){
+  #revealProductName{font-size:34px}.reveal-brand{font-size:10px;margin-bottom:5px}.reveal-support{font-size:10px;line-height:1.45;margin-top:8px}
+  .reveal-deadline{margin-top:12px}.reveal-deadline>span{display:none}.reveal-deadline strong>span{font-size:24px}.reveal-deadline strong>span+span{font-size:36px}
+}

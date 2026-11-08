@@ -77,6 +77,10 @@
 #v2-region-dashboard .v2-page-point[data-page="reminders"]{--x:39%;--y:86%}
 #v2-region-dashboard .v2-page-point[data-page="portfolio"]{--x:63%;--y:85%}
 
+#v2-region-dashboard .v2-page-glow{width:54px;height:54px}
+#v2-region-dashboard .v2-page-glow svg{width:42px;height:42px}
+#v2-region-dashboard .v2-page-name{font-size:13px}
+
 @media(max-width:900px){
   #v2-region-dashboard{overflow-y:auto;padding-bottom:20px}
   .v2-dashboard-body{flex:none}
@@ -87,9 +91,9 @@
   .v2-guide-orb-anchor,.v2-constellation{position:relative;left:auto;top:auto;transform:none;grid-column:1/-1;grid-row:1;justify-self:center;align-self:start;width:var(--orb-size);aspect-ratio:1;margin:0}
   .v2-orb-pages{position:absolute;inset:0;display:block;pointer-events:none}
   #v2-region-dashboard .v2-page-point{width:88px;min-height:66px;gap:4px;padding:3px 2px;font-size:11px;line-height:1.15}
-  #v2-region-dashboard .v2-page-glow{width:36px;height:36px}
-  #v2-region-dashboard .v2-page-glow svg{width:28px;height:28px}
-  #v2-region-dashboard .v2-page-name{max-width:100%}
+  #v2-region-dashboard .v2-page-glow{width:44px;height:44px}
+  #v2-region-dashboard .v2-page-glow svg{width:34px;height:34px}
+  #v2-region-dashboard .v2-page-name{max-width:100%;font-size:11px}
   .v2-shell .v2-orb-task{display:none}
   .v2-orb.is-approaching{transform:none}
   .v2-guide-orb-label{position:absolute;top:4px;right:0;left:auto;bottom:auto;transform:none;margin:0}
@@ -102,8 +106,8 @@
   .v2-guide-scene{grid-template-columns:1fr;gap:14px;padding-top:8px}
   .v2-guide-orb-anchor,.v2-constellation{grid-column:1}
   #v2-region-dashboard .v2-page-point{width:64px;min-height:54px;gap:2px;font-size:10px;line-height:1.1;padding:1px}
-  #v2-region-dashboard .v2-page-glow{width:28px;height:28px}
-  #v2-region-dashboard .v2-page-glow svg{width:24px;height:24px}
+  #v2-region-dashboard .v2-page-glow{width:36px;height:36px}
+  #v2-region-dashboard .v2-page-glow svg{width:28px;height:28px}
   .v2-shell #v2-region-dashboard .v2-orb-plan{width:38%;min-height:68px;max-width:200px;gap:4px;padding:4px 0;font-size:clamp(16px,4.6vw,23px)}
   #v2-region-dashboard .v2-orb-plan strong{font-size:11px}
   #v2-region-dashboard .v2-orb-plan-preview{font-size:10px;line-height:1.25}

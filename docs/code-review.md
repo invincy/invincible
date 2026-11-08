@@ -749,3 +749,38 @@ Sources: [LIC product page](https://originlic.licindia.in/lic-s-bima-platinum2),
 Local verification: 19 focused presentation tests; full unit suite 179 passed, 2 existing skips; all 15 Functions tests; main build, V2 build/stage, generated V2 consistency, site references and whitespace checks pass. Existing presentation/browser fixtures were updated from the obsolete six/ten-page sequence and retired selection dialog. Real Chrome playback verifies opening-page auto progression, pause/seek/replay, Page 4→5, five journey recording endings, one expanded stage, carry-forward/Back, completion/replay, and zero page errors. Journey layouts pass at 320×480, 320×568, 360×640, 390×844, 430×932, 844×390 and 1440×900, including reduced motion and internal scrolling. Opening tests also exercise changing visual viewport height/offset; business-label synchronization passes. PNG evidence is under .test-output/lic-journey and lic-opening; CI uploads screenshots.
 
 Broader local browser checks passed Garage, navigation, Reminders, Orb, Task copy, Creator, Journal notebook, LIC follow-up, Workday and account menu. Full run stopped at Journal touch-capture dialog; separate runs found CRM waiting for addCustomer enabled and Cashier waiting for entryPanel (Loading). V2 browser suite timed out in the existing canvas scenario. Those modules were not modified. Firebase rules/emulator suite could not run locally because Java is absent. Physical-device Safari/iOS, production account permissions and a real issued-policy quote are unverified. Publication and CI outcomes are recorded in the PR.
+
+### Larger navigation icons and visual LIC entry points — November 8, 2026
+
+Dashboard destination glyphs increase from 34 to 42 CSS pixels on desktop and
+24 to 28 on phones; tablet glyphs are 34 pixels. Existing Orb positions,
+navigation targets and task interactions are unchanged. Generated main/V2 assets
+and their HTML loaders are rebuilt from source.
+
+The four existing LIC routes now use larger illustrated cards (two columns on
+phones, four on desktop), distinct accents and a subtle icon breathe. Reduced
+motion disables the animation. Agent Tools reuses the existing anniversary
+advisor and LIC logo for a Bima Platinum cover with Present/Calculate actions;
+redundant introductory paragraphs are removed. No new tools, fake counts,
+customer data, account changes or Firebase writes are introduced.
+
+On presentation Page 4, the unchanged user-supplied `31 March 2027 तक` deadline
+moves from bottom fine print into large date typography in the left-center copy
+beside the advisor. The old bottom date is removed. Short-height rules preserve
+room for the selector/footer; the duplicate anniversary caption is hidden on
+short screens where the advisor already holds the anniversary badge. Narration,
+selected age/PPT, plan values and Page 5 remain unchanged.
+
+Verification: 179 repository unit tests passed with two existing skips; all 15
+Functions tests and 18 V2 unit tests passed. Main and V2 builds/stage, site
+references and whitespace checks passed. Chromium V2 smoke passed. LIC CRM
+browser regression passed with the installed headless-shell executable (full
+Chromium cannot launch under the workspace's singleton-socket restriction).
+The existing real-audio journey browser test passed at 320×480, 320×568,
+360×640, 390×844, 430×932, 844×390 and 1440×900, including new date placement /
+no-bottom-duplicate checks and existing narration, selection, replay and Back
+checks. LIC hub, Agent Tools, Page 4 and desktop dashboard screenshots were
+visually inspected. External fonts were blocked in the local fixture, so these
+captures use fallback fonts; physical devices and live Firebase were not tested.
+Full repository browser coverage remains delegated to the PR's existing CI.
+No merge or publication performed for this change.
