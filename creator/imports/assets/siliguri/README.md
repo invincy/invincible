@@ -15,3 +15,7 @@ For the currently published editor, use `../../siliguri-map-only.animation.json`
 ## Width and transport revision
 
 A schematic double-headed width marker is shown at 10–21s. Selected mapped NH27/NH327 geometry is gold at 31–41s; existing main broad-gauge railway geometry is cyan/dashed at 51–62s. On-map OpenStreetMap credit accompanies transport segments. These are geographic overlays, not decorative vehicle artwork. Source catalog and precision limits: `../../siliguri-transport-sources.md`. Narration timing remains provisional.
+
+## Supplied voiceover timing
+
+The final user recording is now available locally. The animation is timed to its approximately 70.4784-second duration: width at 3.40–6.15s, first highway/railway introductions at 31.50/32.25s, repeated road/rail labels at 57.40/58.18s, then Bangladesh context and the closing national view. The original recording is not committed to the repository. The export preserves its speed and content. See the latest synchronization notes in the sources file.

@@ -30,7 +30,7 @@ test('default reference imagery, persistent overlays and borders retain source s
 });
 test('Siliguri animates only the map and geographic labels',()=>{
  const p=JSON.parse(fs.readFileSync(new URL('../creator/imports/siliguri-corridor-portrait.animation.json',import.meta.url)));
- const r=compileAnimation({scenes:[]},p,{geometryReviewed:true});assert.equal(r.summary.duration,70.58);assert.equal(p.basemap,'documentary');assert.ok(p.layers.every(l=>['label','route','boundary'].includes(l.type)));assert.equal(p.assets,undefined);assert.ok(p.camera.every(c=>c.pitch===0));
+ const r=compileAnimation({scenes:[]},p,{geometryReviewed:true});assert.equal(r.summary.duration,70.478375);assert.equal(p.basemap,'documentary');assert.ok(p.layers.every(l=>['label','route','boundary'].includes(l.type)));assert.equal(p.assets,undefined);assert.ok(p.camera.every(c=>c.pitch===0));
 });
 
 test('transport animation uses the catalog geometry and a schematic double-headed width marker',()=>{
