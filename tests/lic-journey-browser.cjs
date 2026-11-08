@@ -34,6 +34,7 @@ const server=http.createServer((req,res)=>{
    assert.equal(await page.locator('#journeyFinancialGraph svg').count(),1);
    assert.match(await page.locator('.benefit-journey-context').innerText(),/Age 35 · 7-year PPT/);
    await page.waitForFunction(()=>window.testAudios.at(-1).src.endsWith('page6-step1.mp3')&&Number.isFinite(window.testAudios.at(-1).duration));
+   await page.evaluate(()=>window.testAudios.at(-1).playbackRate=.25);
    await page.click('#journeyPlayPause');
    assert.equal(await page.evaluate(()=>window.testAudios.at(-1).paused),true);
    await page.click('#journeyPlayPause');

@@ -41,6 +41,6 @@
         ${[[100,175],[300,126],[425,93],[570,45]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="6" fill="#ffe99c" stroke="#dbac3f" stroke-width="2"/>`).join('')}
       </svg>
       <div class="benefit-journey-legend">${labels.map(([label,year],i)=>`<div class="${i===step?'is-current':''}"><b>${label}</b><span>${year}</span><strong>${amounts[i]}</strong></div>`).join('')}</div>
-      <p class="benefit-journey-note">In-force policy · Base GA; incentives excluded. Symbolic path, not account value.</p>`;
+      <p class="benefit-journey-note">In-force · Premium excludes tax · Base GA; no incentives/deferral · Symbolic, not account value.</p>`;
   };
 })();

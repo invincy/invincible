@@ -1939,7 +1939,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 #stageContainer[data-story-step="5"] .scene-two-visual { flex:1 0 auto; margin:0; min-height:0; }
 #stageContainer[data-story-step="5"] .scene-two-heading h2 { width:100%; max-width:280px; font-size:clamp(24px,6.5cqw,29px); line-height:1.16; }
 #stageContainer[data-story-step="5"] #planJourneyPage { height:auto; min-height:0; overflow:visible; padding:0 12px; gap:0; }
-.journey-upper { position:relative; flex:none; height:clamp(340px,44cqh,390px); isolation:isolate; }
+.journey-upper { position:relative; flex:none; height:clamp(340px,40cqh,360px); isolation:isolate; }
 #planJourneyPage .journey-kicker { position:absolute; top:10px; left:3px; max-width:100%; margin:0; font-size:8px; letter-spacing:.18em; }
 #planJourneyPage .journey-advisor { top:14px; right:-14%; width:79%; height:100%; object-position:top right; mask-image:linear-gradient(#000 77%,transparent); }
 #planJourneyPage .journey-stages { position:absolute; top:70px; bottom:15px; left:0; width:56%; padding-left:17px; justify-content:center; gap:6px; }
@@ -1968,7 +1968,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 .journey-money.is-current { animation:journey-stage-open .5s ease-out; filter:drop-shadow(0 0 4px #f6cb5a88); }
 @keyframes journey-trace { from { stroke-dashoffset:300; } to { stroke-dashoffset:0; } }
 #planJourneyPage[data-paused="true"] .journey-path,#planJourneyPage[data-paused="true"] .journey-money { animation-play-state:paused; }
-#stageContainer[data-story-step="5"] .scene-two-footer { margin-top:0; padding:14px 12px max(14px,env(safe-area-inset-bottom)); }
+#stageContainer[data-story-step="5"] .scene-two-footer { margin-top:0; padding:10px 12px max(10px,env(safe-area-inset-bottom)); }
 #stageContainer[data-story-step="5"] .journey-controls { min-height:44px; }
 #stageContainer[data-story-step="5"] .scene-two-next { min-height:44px; height:auto; font-size:12px; }
 .policy-example-selection[hidden] { display:none; }
