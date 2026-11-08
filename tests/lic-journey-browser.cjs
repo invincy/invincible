@@ -26,6 +26,14 @@ const server=http.createServer((req,res)=>{
    await page.goto(base+'/lic/bima-platinum/');
    await page.click('#storyModeToggleOne');
    await page.click('#ctaForwardBtn');await page.click('#sceneTwoNextBtn');await page.click('#sceneTwoNextBtn');
+   const deadline=page.locator('.reveal-deadline');await deadline.waitFor({state:'visible'});
+   assert.match(await deadline.innerText(),/31 March\s+2027/);assert.equal(await page.locator('.reveal-limited').count(),0);
+   // The availability date stays in the product copy above the selection/footer.
+   await page.waitForTimeout(1600); // Finish the date's entrance before measuring geometry.
+   const dateBounds=await deadline.boundingBox(),supportBounds=await page.locator('.reveal-support').boundingBox(),selectionBounds=await page.locator('#policyExampleSelection').boundingBox();
+   assert.ok(dateBounds.y>=supportBounds.y+supportBounds.height,`date overlaps benefit copy at ${width}x${height}`);
+   assert.ok(dateBounds.y+dateBounds.height<=selectionBounds.y,`date overlaps selector/footer at ${width}x${height}`);
+   if([320,390,1440].includes(width))await page.screenshot({path:`${out}/${width}x${height}-page4-deadline.png`});
    await page.selectOption('#policyExampleAge','35');await page.selectOption('#policyExamplePpt','7');
    await page.click('#sceneTwoNextBtn');
    assert.equal(await page.locator('#storyStageCounter').innerText(),'5 / 5');
