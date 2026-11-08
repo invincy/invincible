@@ -1,0 +1,3101 @@
+{
+  "sourceAudio": {
+    "file": "Panipat.MP3",
+    "sha256": "d55c5114f834bcdcce18588c3fcff486fd22434c9818b770fa37ece8e7a92a12",
+    "decodedDurationSeconds": 151.24897959183673,
+    "sampleRateHz": 44100,
+    "channels": 1,
+    "speed": 1
+  },
+  "method": "Reference-conditioned Whisper attention alignment against supplied script; 13 overlapping audio windows; no evenly divided word times",
+  "review": {
+    "listeningReview": "not_performed",
+    "accuracy": "Draft: alignment candidates require playback review; token probabilities are not calibrated timing confidence",
+    "captionPolicy": "Reference transcript is metadata only; no narration captions are generated"
+  },
+  "cues": [
+    {
+      "id": "opening_1526",
+      "spokenStart": 0,
+      "spokenEnd": 1.34,
+      "referenceToken": "1526...",
+      "action": "Top: Babur versus Ibrahim Lodi; First Battle of Panipat",
+      "animationStart": 0,
+      "animationSettles": 0,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.0244,
+      "reviewPriority": "high"
+    },
+    {
+      "id": "opening_1556",
+      "spokenStart": 1.34,
+      "spokenEnd": 2.72,
+      "referenceToken": "1556...",
+      "action": "Middle-left: Bairam Khan versus Hemu; Second Battle of Panipat",
+      "animationStart": 1.09,
+      "animationSettles": 1.34,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.2895,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "opening_1761",
+      "spokenStart": 3.14,
+      "spokenEnd": 3.86,
+      "referenceToken": "1761",
+      "action": "Bottom-right: Abdali versus Bhau; Third Battle of Panipat",
+      "animationStart": 2.89,
+      "animationSettles": 3.14,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.2822,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "panipat_intro",
+      "spokenStart": 9.08,
+      "spokenEnd": 9.68,
+      "referenceToken": "पानीपत",
+      "action": "Resolve commander compositions to Panipat location",
+      "animationStart": 8.48,
+      "animationSettles": 9.08,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.5751,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "kurukshetra",
+      "spokenStart": 17.26,
+      "spokenEnd": 17.92,
+      "referenceToken": "कुरुक्षेत्र",
+      "action": "Pull north and reveal Kurukshetra geographic label",
+      "animationStart": 16.66,
+      "animationSettles": 17.26,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.5139,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "northwest",
+      "spokenStart": 26.68,
+      "spokenEnd": 26.9,
+      "referenceToken": "North",
+      "action": "Widen toward northwest geography",
+      "animationStart": 26.08,
+      "animationSettles": 26.68,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.0245,
+      "reviewPriority": "high"
+    },
+    {
+      "id": "hindu_kush",
+      "spokenStart": 28.62,
+      "spokenEnd": 28.76,
+      "referenceToken": "Hindu",
+      "action": "Terrain relief and Hindu Kush label",
+      "animationStart": 28.02,
+      "animationSettles": 28.62,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0,
+      "reviewPriority": "high"
+    },
+    {
+      "id": "himalayas",
+      "spokenStart": 30.56,
+      "spokenEnd": 31.5,
+      "referenceToken": "Himalayas।",
+      "action": "Reveal Himalayas relief and label",
+      "animationStart": 29.96,
+      "animationSettles": 30.56,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.4432,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "khyber",
+      "spokenStart": 31.5,
+      "spokenEnd": 31.88,
+      "referenceToken": "Khyber",
+      "action": "Arrive at Khyber Pass; reveal pass and approach route",
+      "animationStart": 30.9,
+      "animationSettles": 31.5,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.4,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "afghanistan",
+      "spokenStart": 34.72,
+      "spokenEnd": 35.28,
+      "referenceToken": "Afghanistan",
+      "action": "Track the approach from Afghanistan",
+      "animationStart": 34.12,
+      "animationSettles": 34.72,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.0004,
+      "reviewPriority": "high"
+    },
+    {
+      "id": "punjab",
+      "spokenStart": 35.66,
+      "spokenEnd": 36.1,
+      "referenceToken": "Punjab",
+      "action": "Route reveal arrives in Punjab",
+      "animationStart": 35.06,
+      "animationSettles": 35.66,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.501,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "babur",
+      "spokenStart": 39.6,
+      "spokenEnd": 40,
+      "referenceToken": "Babur",
+      "action": "Reveal Babur miniature on approach route",
+      "animationStart": 39,
+      "animationSettles": 39.6,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.4376,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "abdali",
+      "spokenStart": 42.64,
+      "spokenEnd": 43.6,
+      "referenceToken": "Abdali।",
+      "action": "Reveal Abdali miniature on approach route",
+      "animationStart": 42.04,
+      "animationSettles": 42.64,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.3663,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "delhi_corridor",
+      "spokenStart": 44.62,
+      "spokenEnd": 44.82,
+      "referenceToken": "Delhi",
+      "action": "Prominent Delhi capital symbol and readable label",
+      "animationStart": 44.02,
+      "animationSettles": 44.62,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.0217,
+      "reviewPriority": "high"
+    },
+    {
+      "id": "haryana",
+      "spokenStart": 47.9,
+      "spokenEnd": 48.34,
+      "referenceToken": "Haryana",
+      "action": "Track southeast through Haryana",
+      "animationStart": 47.3,
+      "animationSettles": 47.9,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.4635,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "panipat_corridor",
+      "spokenStart": 52.16,
+      "spokenEnd": 52.8,
+      "referenceToken": "Panipat",
+      "action": "Emphasize Panipat on the corridor",
+      "animationStart": 51.56,
+      "animationSettles": 52.16,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.3686,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "yamuna",
+      "spokenStart": 53.52,
+      "spokenEnd": 53.9,
+      "referenceToken": "Yamuna",
+      "action": "Reveal blue geographic river line",
+      "animationStart": 52.92,
+      "animationSettles": 53.52,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.1542,
+      "reviewPriority": "high"
+    },
+    {
+      "id": "arid_southwest",
+      "spokenStart": 54.36,
+      "spokenEnd": 54.72,
+      "referenceToken": "दक्षिण",
+      "action": "Reveal translucent yellow southwest arid-region overlay",
+      "animationStart": 53.76,
+      "animationSettles": 54.36,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.2728,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "doab",
+      "spokenStart": 65.9,
+      "spokenEnd": 66.74,
+      "referenceToken": "दोआब",
+      "action": "Reveal Ganga–Yamuna Doab resource belt",
+      "animationStart": 65.3,
+      "animationSettles": 65.9,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.3049,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "gangetic",
+      "spokenStart": 68.08,
+      "spokenEnd": 68.5,
+      "referenceToken": "Gangetic",
+      "action": "Pan east to the Gangetic Plains",
+      "animationStart": 67.48,
+      "animationSettles": 68.08,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.0776,
+      "reviewPriority": "high"
+    },
+    {
+      "id": "food",
+      "spokenStart": 82.9,
+      "spokenEnd": 83.36,
+      "referenceToken": "Food",
+      "action": "Reveal agricultural/resource imagery without captions",
+      "animationStart": 82.3,
+      "animationSettles": 82.9,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0,
+      "reviewPriority": "high"
+    },
+    {
+      "id": "water",
+      "spokenStart": 83.62,
+      "spokenEnd": 83.96,
+      "referenceToken": "Water",
+      "action": "Emphasize water sources without captions",
+      "animationStart": 83.02,
+      "animationSettles": 83.62,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.963,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "cavalry",
+      "spokenStart": 99.96,
+      "spokenEnd": 100.46,
+      "referenceToken": "Cavalry",
+      "action": "Deploy cavalry miniatures deliberately",
+      "animationStart": 99.36,
+      "animationSettles": 99.96,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.6014,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "infantry",
+      "spokenStart": 100.64,
+      "spokenEnd": 101.14,
+      "referenceToken": "Infantry",
+      "action": "Settle infantry into a coherent line",
+      "animationStart": 100.04,
+      "animationSettles": 100.64,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.9167,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "artillery",
+      "spokenStart": 101.64,
+      "spokenEnd": 102.08,
+      "referenceToken": "Artillery",
+      "action": "Place artillery equipment separately from personnel",
+      "animationStart": 101.04,
+      "animationSettles": 101.64,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.2445,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "panipat_distance",
+      "spokenStart": 105.4,
+      "spokenEnd": 106.04,
+      "referenceToken": "Panipat",
+      "action": "Frame Panipat and Delhi together",
+      "animationStart": 104.8,
+      "animationSettles": 105.4,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.4834,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "delhi_distance",
+      "spokenStart": 106.24,
+      "spokenEnd": 106.46,
+      "referenceToken": "Delhi",
+      "action": "Emphasize the Delhi capital marker",
+      "animationStart": 105.64,
+      "animationSettles": 106.24,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.3337,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "distance",
+      "spokenStart": 107.08,
+      "spokenEnd": 107.34,
+      "referenceToken": "90",
+      "action": "Reveal distance relationship; do not invent a precise historic road",
+      "animationStart": 106.48,
+      "animationSettles": 107.08,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.0108,
+      "reviewPriority": "high"
+    },
+    {
+      "id": "repeat_1526",
+      "spokenStart": 119.38,
+      "spokenEnd": 120.08,
+      "referenceToken": "1526",
+      "action": "Recall first commander/army composition",
+      "animationStart": 118.78,
+      "animationSettles": 119.38,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.1158,
+      "reviewPriority": "high"
+    },
+    {
+      "id": "repeat_1556",
+      "spokenStart": 120.36,
+      "spokenEnd": 121.1,
+      "referenceToken": "1556",
+      "action": "Recall second composition; no full-army ratio claim",
+      "animationStart": 119.76,
+      "animationSettles": 120.36,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.4615,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "repeat_1761",
+      "spokenStart": 121.54,
+      "spokenEnd": 122.32,
+      "referenceToken": "1761",
+      "action": "Recall third composition; disputed estimates remain metadata",
+      "animationStart": 120.94,
+      "animationSettles": 121.54,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.1177,
+      "reviewPriority": "high"
+    },
+    {
+      "id": "control_delhi",
+      "spokenStart": 131.06,
+      "spokenEnd": 131.58,
+      "referenceToken": "Delhi",
+      "action": "Return attention to Delhi and northern India",
+      "animationStart": 130.46,
+      "animationSettles": 131.06,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.0038,
+      "reviewPriority": "high"
+    },
+    {
+      "id": "return_panipat",
+      "spokenStart": 134.92,
+      "spokenEnd": 135.4,
+      "referenceToken": "Panipat",
+      "action": "Resolve on Panipat and the strategic corridor",
+      "animationStart": 134.32,
+      "animationSettles": 134.92,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.3458,
+      "reviewPriority": "normal"
+    },
+    {
+      "id": "outro_geography",
+      "spokenStart": 143.9,
+      "spokenEnd": 144.24,
+      "referenceToken": "Geography",
+      "action": "Connect route, resources and terrain visually",
+      "animationStart": 143.3,
+      "animationSettles": 143.9,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.1071,
+      "reviewPriority": "high"
+    },
+    {
+      "id": "outro_history",
+      "spokenStart": 148.34,
+      "spokenEnd": 148.62,
+      "referenceToken": "History",
+      "action": "Concluding opposing army tableau",
+      "animationStart": 147.74,
+      "animationSettles": 148.34,
+      "timingStatus": "script-conditioned audio alignment; listening review pending",
+      "recognitionTokenProbability": 0.0152,
+      "reviewPriority": "high"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "panipat_01",
+      "text": "1526... 1556... और 1761! तीन बड़ी Battles... तीन अलग-अलग दौर... लेकिन Location एक ही — पानीपत!",
+      "clipStart": 0,
+      "clipEnd": 10,
+      "tokens": 70,
+      "words": [
+        {
+          "word": "1526...",
+          "start": 0,
+          "end": 1.34,
+          "probability": 0.0244
+        },
+        {
+          "word": " 1556...",
+          "start": 1.34,
+          "end": 2.72,
+          "probability": 0.2895
+        },
+        {
+          "word": " और",
+          "start": 2.72,
+          "end": 3.14,
+          "probability": 0.2844
+        },
+        {
+          "word": " 1761",
+          "start": 3.14,
+          "end": 3.86,
+          "probability": 0.2822
+        },
+        {
+          "word": "!",
+          "start": 3.86,
+          "end": 4.62,
+          "probability": 0.0001
+        },
+        {
+          "word": " तीन",
+          "start": 4.62,
+          "end": 5.02,
+          "probability": 0.442
+        },
+        {
+          "word": " बड़ी",
+          "start": 5.02,
+          "end": 5.28,
+          "probability": 0.3387
+        },
+        {
+          "word": " Battles...",
+          "start": 5.28,
+          "end": 6.04,
+          "probability": 0.323
+        },
+        {
+          "word": " तीन",
+          "start": 6.04,
+          "end": 6.36,
+          "probability": 0.7785
+        },
+        {
+          "word": " अलग",
+          "start": 6.36,
+          "end": 6.56,
+          "probability": 0.4791
+        },
+        {
+          "word": "-अलग",
+          "start": 6.56,
+          "end": 6.76,
+          "probability": 0.3768
+        },
+        {
+          "word": " दौर...",
+          "start": 6.76,
+          "end": 7.4,
+          "probability": 0.2904
+        },
+        {
+          "word": " लेकिन",
+          "start": 7.4,
+          "end": 7.66,
+          "probability": 0.2942
+        },
+        {
+          "word": " Location",
+          "start": 7.66,
+          "end": 8.14,
+          "probability": 0.4894
+        },
+        {
+          "word": " एक",
+          "start": 8.14,
+          "end": 8.54,
+          "probability": 0.2893
+        },
+        {
+          "word": " ही",
+          "start": 8.54,
+          "end": 8.72,
+          "probability": 0.681
+        },
+        {
+          "word": " —",
+          "start": 8.72,
+          "end": 9.08,
+          "probability": 0
+        },
+        {
+          "word": " पानीपत",
+          "start": 9.08,
+          "end": 9.68,
+          "probability": 0.5751
+        },
+        {
+          "word": "!",
+          "start": 9.68,
+          "end": 9.98,
+          "probability": 0.0727
+        }
+      ]
+    },
+    {
+      "id": "panipat_02",
+      "text": "आखिर ऐसा क्या था इस जगह में कि भारत की सत्ता का फैसला बार-बार यहीं हुआ? और दिलचस्प बात ये है कि पानीपत के पास ही है कुरुक्षेत्र, जहाँ महाभारत का युद्ध हुआ माना जाता है।",
+      "clipStart": 9.6,
+      "clipEnd": 21,
+      "tokens": 170,
+      "words": [
+        {
+          "word": "आखिर",
+          "start": 9.6,
+          "end": 10.28,
+          "probability": 0.1815
+        },
+        {
+          "word": " ऐसा",
+          "start": 10.28,
+          "end": 10.52,
+          "probability": 0.3321
+        },
+        {
+          "word": " क्या",
+          "start": 10.52,
+          "end": 10.74,
+          "probability": 0.6456
+        },
+        {
+          "word": " था",
+          "start": 10.74,
+          "end": 10.84,
+          "probability": 0.2433
+        },
+        {
+          "word": " इस",
+          "start": 10.84,
+          "end": 11,
+          "probability": 0.4531
+        },
+        {
+          "word": " जगह",
+          "start": 11,
+          "end": 11.28,
+          "probability": 0.242
+        },
+        {
+          "word": " में",
+          "start": 11.28,
+          "end": 11.5,
+          "probability": 0.6564
+        },
+        {
+          "word": " कि",
+          "start": 11.5,
+          "end": 11.82,
+          "probability": 0.5924
+        },
+        {
+          "word": " भारत",
+          "start": 11.82,
+          "end": 12.2,
+          "probability": 0.5555
+        },
+        {
+          "word": " की",
+          "start": 12.2,
+          "end": 12.34,
+          "probability": 0.6502
+        },
+        {
+          "word": " सत्ता",
+          "start": 12.34,
+          "end": 12.68,
+          "probability": 0.5279
+        },
+        {
+          "word": " का",
+          "start": 12.68,
+          "end": 12.84,
+          "probability": 0.6753
+        },
+        {
+          "word": " फैसला",
+          "start": 12.84,
+          "end": 13.2,
+          "probability": 0.4639
+        },
+        {
+          "word": " बार",
+          "start": 13.2,
+          "end": 13.58,
+          "probability": 0.7202
+        },
+        {
+          "word": "-बार",
+          "start": 13.58,
+          "end": 13.74,
+          "probability": 0.4447
+        },
+        {
+          "word": " यहीं",
+          "start": 13.74,
+          "end": 14.1,
+          "probability": 0.4574
+        },
+        {
+          "word": " हुआ",
+          "start": 14.1,
+          "end": 14.3,
+          "probability": 0.4443
+        },
+        {
+          "word": "?",
+          "start": 14.3,
+          "end": 14.52,
+          "probability": 0.0013
+        },
+        {
+          "word": " और",
+          "start": 14.52,
+          "end": 14.64,
+          "probability": 0.5366
+        },
+        {
+          "word": " दिलचस्प",
+          "start": 14.64,
+          "end": 15.2,
+          "probability": 0.418
+        },
+        {
+          "word": " बात",
+          "start": 15.2,
+          "end": 15.42,
+          "probability": 0.5277
+        },
+        {
+          "word": " ये",
+          "start": 15.42,
+          "end": 15.6,
+          "probability": 0.2624
+        },
+        {
+          "word": " है",
+          "start": 15.6,
+          "end": 15.8,
+          "probability": 0.7618
+        },
+        {
+          "word": " कि",
+          "start": 15.8,
+          "end": 16.14,
+          "probability": 0.475
+        },
+        {
+          "word": " पानीपत",
+          "start": 16.14,
+          "end": 16.6,
+          "probability": 0.6564
+        },
+        {
+          "word": " के",
+          "start": 16.6,
+          "end": 16.68,
+          "probability": 0.6195
+        },
+        {
+          "word": " पास",
+          "start": 16.68,
+          "end": 17.04,
+          "probability": 0.7618
+        },
+        {
+          "word": " ही",
+          "start": 17.04,
+          "end": 17.12,
+          "probability": 0.5738
+        },
+        {
+          "word": " है",
+          "start": 17.12,
+          "end": 17.26,
+          "probability": 0.8024
+        },
+        {
+          "word": " कुरुक्षेत्र",
+          "start": 17.26,
+          "end": 17.92,
+          "probability": 0.5139
+        },
+        {
+          "word": ",",
+          "start": 17.92,
+          "end": 18.28,
+          "probability": 0.057
+        },
+        {
+          "word": " जहाँ",
+          "start": 18.28,
+          "end": 18.46,
+          "probability": 0.4243
+        },
+        {
+          "word": " महाभारत",
+          "start": 18.46,
+          "end": 19.1,
+          "probability": 0.6418
+        },
+        {
+          "word": " का",
+          "start": 19.1,
+          "end": 19.22,
+          "probability": 0.7694
+        },
+        {
+          "word": " युद्ध",
+          "start": 19.22,
+          "end": 19.54,
+          "probability": 0.4087
+        },
+        {
+          "word": " हुआ",
+          "start": 19.54,
+          "end": 19.7,
+          "probability": 0.3727
+        },
+        {
+          "word": " माना",
+          "start": 19.7,
+          "end": 20.18,
+          "probability": 0.8196
+        },
+        {
+          "word": " जाता",
+          "start": 20.18,
+          "end": 20.5,
+          "probability": 0.7503
+        },
+        {
+          "word": " है।",
+          "start": 20.5,
+          "end": 20.98,
+          "probability": 0.4812
+        }
+      ]
+    },
+    {
+      "id": "panipat_03",
+      "text": "क्या ये सिर्फ Coincidence था? या इसका जवाब छिपा है भारत की Geography में? ज़रा भारत के North-West को समझिए।",
+      "clipStart": 20.3,
+      "clipEnd": 28.2,
+      "tokens": 83,
+      "words": [
+        {
+          "word": "क्या",
+          "start": 20.3,
+          "end": 21.2,
+          "probability": 0.2125
+        },
+        {
+          "word": " ये",
+          "start": 21.2,
+          "end": 21.32,
+          "probability": 0.1273
+        },
+        {
+          "word": " सिर्फ",
+          "start": 21.32,
+          "end": 21.58,
+          "probability": 0.3794
+        },
+        {
+          "word": " Coincidence",
+          "start": 21.58,
+          "end": 22.32,
+          "probability": 0.5811
+        },
+        {
+          "word": " था",
+          "start": 22.32,
+          "end": 22.62,
+          "probability": 0.2611
+        },
+        {
+          "word": "?",
+          "start": 22.62,
+          "end": 22.9,
+          "probability": 0.0053
+        },
+        {
+          "word": " या",
+          "start": 22.9,
+          "end": 23.04,
+          "probability": 0.2403
+        },
+        {
+          "word": " इसका",
+          "start": 23.04,
+          "end": 23.34,
+          "probability": 0.5666
+        },
+        {
+          "word": " जवाब",
+          "start": 23.34,
+          "end": 23.66,
+          "probability": 0.6023
+        },
+        {
+          "word": " छिपा",
+          "start": 23.66,
+          "end": 23.92,
+          "probability": 0.4957
+        },
+        {
+          "word": " है",
+          "start": 23.92,
+          "end": 24.04,
+          "probability": 0.5692
+        },
+        {
+          "word": " भारत",
+          "start": 24.04,
+          "end": 24.38,
+          "probability": 0.4515
+        },
+        {
+          "word": " की",
+          "start": 24.38,
+          "end": 24.48,
+          "probability": 0.5468
+        },
+        {
+          "word": " Geography",
+          "start": 24.48,
+          "end": 24.98,
+          "probability": 0.6444
+        },
+        {
+          "word": " में",
+          "start": 24.98,
+          "end": 25.62,
+          "probability": 0.605
+        },
+        {
+          "word": "?",
+          "start": 25.62,
+          "end": 25.62,
+          "probability": 0.3129
+        },
+        {
+          "word": " ज़रा",
+          "start": 25.62,
+          "end": 25.98,
+          "probability": 0.4024
+        },
+        {
+          "word": " भारत",
+          "start": 25.98,
+          "end": 26.58,
+          "probability": 0.7387
+        },
+        {
+          "word": " के",
+          "start": 26.58,
+          "end": 26.68,
+          "probability": 0.6366
+        },
+        {
+          "word": " North",
+          "start": 26.68,
+          "end": 26.9,
+          "probability": 0.0245
+        },
+        {
+          "word": "-West",
+          "start": 26.9,
+          "end": 27.24,
+          "probability": 0.6347
+        },
+        {
+          "word": " को",
+          "start": 27.24,
+          "end": 27.42,
+          "probability": 0.4289
+        },
+        {
+          "word": " समझिए।",
+          "start": 27.42,
+          "end": 27.98,
+          "probability": 0.3507
+        }
+      ]
+    },
+    {
+      "id": "panipat_04",
+      "text": "एक तरफ Hindu Kush Mountains, और दूसरी तरफ Himalayas। Khyber Pass जैसे Mountain Passes से होकर कई सेनाएँ Afghanistan से Punjab के मैदानों तक पहुँचीं।",
+      "clipStart": 27,
+      "clipEnd": 37.9,
+      "tokens": 92,
+      "words": [
+        {
+          "word": "एक",
+          "start": 27,
+          "end": 28.38,
+          "probability": 0.0638
+        },
+        {
+          "word": " तरफ",
+          "start": 28.38,
+          "end": 28.62,
+          "probability": 0.0675
+        },
+        {
+          "word": " Hindu",
+          "start": 28.62,
+          "end": 28.76,
+          "probability": 0
+        },
+        {
+          "word": " Kush",
+          "start": 28.76,
+          "end": 29.16,
+          "probability": 0.155
+        },
+        {
+          "word": " Mountains",
+          "start": 29.16,
+          "end": 29.46,
+          "probability": 0.7906
+        },
+        {
+          "word": ",",
+          "start": 29.46,
+          "end": 29.88,
+          "probability": 0.0765
+        },
+        {
+          "word": " और",
+          "start": 29.88,
+          "end": 29.92,
+          "probability": 0.3083
+        },
+        {
+          "word": " दूसरी",
+          "start": 29.92,
+          "end": 30.3,
+          "probability": 0.4427
+        },
+        {
+          "word": " तरफ",
+          "start": 30.3,
+          "end": 30.56,
+          "probability": 0.7231
+        },
+        {
+          "word": " Himalayas।",
+          "start": 30.56,
+          "end": 31.5,
+          "probability": 0.4432
+        },
+        {
+          "word": " Khyber",
+          "start": 31.5,
+          "end": 31.88,
+          "probability": 0.4
+        },
+        {
+          "word": " Pass",
+          "start": 31.88,
+          "end": 32.16,
+          "probability": 0.2954
+        },
+        {
+          "word": " जैसे",
+          "start": 32.16,
+          "end": 32.76,
+          "probability": 0.3759
+        },
+        {
+          "word": " Mountain",
+          "start": 32.76,
+          "end": 33.02,
+          "probability": 0.0709
+        },
+        {
+          "word": " Passes",
+          "start": 33.02,
+          "end": 33.54,
+          "probability": 0.5051
+        },
+        {
+          "word": " से",
+          "start": 33.54,
+          "end": 33.68,
+          "probability": 0.5046
+        },
+        {
+          "word": " होकर",
+          "start": 33.68,
+          "end": 33.94,
+          "probability": 0.6084
+        },
+        {
+          "word": " कई",
+          "start": 33.94,
+          "end": 34.08,
+          "probability": 0.2754
+        },
+        {
+          "word": " सेनाएँ",
+          "start": 34.08,
+          "end": 34.72,
+          "probability": 0.3253
+        },
+        {
+          "word": " Afghanistan",
+          "start": 34.72,
+          "end": 35.28,
+          "probability": 0.0004
+        },
+        {
+          "word": " से",
+          "start": 35.28,
+          "end": 35.66,
+          "probability": 0.6612
+        },
+        {
+          "word": " Punjab",
+          "start": 35.66,
+          "end": 36.1,
+          "probability": 0.501
+        },
+        {
+          "word": " के",
+          "start": 36.1,
+          "end": 36.28,
+          "probability": 0.4748
+        },
+        {
+          "word": " मैदानों",
+          "start": 36.28,
+          "end": 36.78,
+          "probability": 0.5122
+        },
+        {
+          "word": " तक",
+          "start": 36.78,
+          "end": 36.9,
+          "probability": 0.5542
+        },
+        {
+          "word": " पहुँचीं।",
+          "start": 36.9,
+          "end": 37.58,
+          "probability": 0.4177
+        }
+      ]
+    },
+    {
+      "id": "panipat_05",
+      "text": "चाहे 1526 में Babur हो, या 1761 में Ahmad Shah Abdali।",
+      "clipStart": 37,
+      "clipEnd": 43.8,
+      "tokens": 29,
+      "words": [
+        {
+          "word": "चाहे",
+          "start": 37,
+          "end": 37.94,
+          "probability": 0.3698
+        },
+        {
+          "word": " 1526",
+          "start": 37.94,
+          "end": 38.72,
+          "probability": 0.3893
+        },
+        {
+          "word": " में",
+          "start": 38.72,
+          "end": 39.6,
+          "probability": 0.3431
+        },
+        {
+          "word": " Babur",
+          "start": 39.6,
+          "end": 40,
+          "probability": 0.4376
+        },
+        {
+          "word": " हो",
+          "start": 40,
+          "end": 40.18,
+          "probability": 0.4041
+        },
+        {
+          "word": ",",
+          "start": 40.18,
+          "end": 40.44,
+          "probability": 0.1554
+        },
+        {
+          "word": " या",
+          "start": 40.44,
+          "end": 40.56,
+          "probability": 0.1851
+        },
+        {
+          "word": " 1761",
+          "start": 40.56,
+          "end": 41.22,
+          "probability": 0.0046
+        },
+        {
+          "word": " में",
+          "start": 41.22,
+          "end": 41.98,
+          "probability": 0.7843
+        },
+        {
+          "word": " Ahmad",
+          "start": 41.98,
+          "end": 42.3,
+          "probability": 0.0085
+        },
+        {
+          "word": " Shah",
+          "start": 42.3,
+          "end": 42.64,
+          "probability": 0.7723
+        },
+        {
+          "word": " Abdali।",
+          "start": 42.64,
+          "end": 43.6,
+          "probability": 0.3663
+        }
+      ]
+    },
+    {
+      "id": "panipat_06",
+      "text": "अब Punjab से Delhi जाने वाले सबसे Practical Routes में से कुछ Haryana के मैदानों से गुजरते थे। और इसी महत्वपूर्ण Corridor पर था — Panipat!",
+      "clipStart": 43.3,
+      "clipEnd": 53.4,
+      "tokens": 103,
+      "words": [
+        {
+          "word": "अब",
+          "start": 43.3,
+          "end": 43.98,
+          "probability": 0.1609
+        },
+        {
+          "word": " Punjab",
+          "start": 43.98,
+          "end": 44.46,
+          "probability": 0.4716
+        },
+        {
+          "word": " से",
+          "start": 44.46,
+          "end": 44.62,
+          "probability": 0.4561
+        },
+        {
+          "word": " Delhi",
+          "start": 44.62,
+          "end": 44.82,
+          "probability": 0.0217
+        },
+        {
+          "word": " जाने",
+          "start": 44.82,
+          "end": 45.26,
+          "probability": 0.5369
+        },
+        {
+          "word": " वाले",
+          "start": 45.26,
+          "end": 45.5,
+          "probability": 0.6401
+        },
+        {
+          "word": " सबसे",
+          "start": 45.5,
+          "end": 45.92,
+          "probability": 0.4971
+        },
+        {
+          "word": " Practical",
+          "start": 45.92,
+          "end": 46.68,
+          "probability": 0.5165
+        },
+        {
+          "word": " Routes",
+          "start": 46.68,
+          "end": 47.1,
+          "probability": 0.374
+        },
+        {
+          "word": " में",
+          "start": 47.1,
+          "end": 47.26,
+          "probability": 0.4967
+        },
+        {
+          "word": " से",
+          "start": 47.26,
+          "end": 47.4,
+          "probability": 0.7869
+        },
+        {
+          "word": " कुछ",
+          "start": 47.4,
+          "end": 47.9,
+          "probability": 0.5185
+        },
+        {
+          "word": " Haryana",
+          "start": 47.9,
+          "end": 48.34,
+          "probability": 0.4635
+        },
+        {
+          "word": " के",
+          "start": 48.34,
+          "end": 48.54,
+          "probability": 0.5
+        },
+        {
+          "word": " मैदानों",
+          "start": 48.54,
+          "end": 49,
+          "probability": 0.5042
+        },
+        {
+          "word": " से",
+          "start": 49,
+          "end": 49.14,
+          "probability": 0.8722
+        },
+        {
+          "word": " गुजरते",
+          "start": 49.14,
+          "end": 49.54,
+          "probability": 0.5247
+        },
+        {
+          "word": " थे।",
+          "start": 49.54,
+          "end": 49.98,
+          "probability": 0.2427
+        },
+        {
+          "word": " और",
+          "start": 49.98,
+          "end": 50.22,
+          "probability": 0.3685
+        },
+        {
+          "word": " इसी",
+          "start": 50.22,
+          "end": 50.46,
+          "probability": 0.4518
+        },
+        {
+          "word": " महत्वपूर्ण",
+          "start": 50.46,
+          "end": 51.02,
+          "probability": 0.2669
+        },
+        {
+          "word": " Corridor",
+          "start": 51.02,
+          "end": 51.4,
+          "probability": 0.5944
+        },
+        {
+          "word": " पर",
+          "start": 51.4,
+          "end": 51.62,
+          "probability": 0.6332
+        },
+        {
+          "word": " था",
+          "start": 51.62,
+          "end": 51.78,
+          "probability": 0.286
+        },
+        {
+          "word": " —",
+          "start": 51.78,
+          "end": 52.16,
+          "probability": 0
+        },
+        {
+          "word": " Panipat",
+          "start": 52.16,
+          "end": 52.8,
+          "probability": 0.3686
+        },
+        {
+          "word": "!",
+          "start": 52.8,
+          "end": 52.96,
+          "probability": 0.0018
+        }
+      ]
+    },
+    {
+      "id": "panipat_07",
+      "text": "पूर्व में Yamuna River और दक्षिण-पश्चिम के शुष्क इलाके, Armies के Routes और Logistics को प्रभावित करते थे। लेकिन इस Corridor की असली अहमियत सिर्फ Delhi नहीं थी।",
+      "clipStart": 52.5,
+      "clipEnd": 63.6,
+      "tokens": 130,
+      "words": [
+        {
+          "word": "पूर्व",
+          "start": 52.5,
+          "end": 53.4,
+          "probability": 0.4773
+        },
+        {
+          "word": " में",
+          "start": 53.4,
+          "end": 53.52,
+          "probability": 0.5715
+        },
+        {
+          "word": " Yamuna",
+          "start": 53.52,
+          "end": 53.9,
+          "probability": 0.1542
+        },
+        {
+          "word": " River",
+          "start": 53.9,
+          "end": 54.12,
+          "probability": 0.8398
+        },
+        {
+          "word": " और",
+          "start": 54.12,
+          "end": 54.36,
+          "probability": 0.294
+        },
+        {
+          "word": " दक्षिण",
+          "start": 54.36,
+          "end": 54.72,
+          "probability": 0.2728
+        },
+        {
+          "word": "-पश्चिम",
+          "start": 54.72,
+          "end": 55.06,
+          "probability": 0.3655
+        },
+        {
+          "word": " के",
+          "start": 55.06,
+          "end": 55.22,
+          "probability": 0.7362
+        },
+        {
+          "word": " शुष्क",
+          "start": 55.22,
+          "end": 55.64,
+          "probability": 0.3176
+        },
+        {
+          "word": " इलाके",
+          "start": 55.64,
+          "end": 56.18,
+          "probability": 0.5628
+        },
+        {
+          "word": ",",
+          "start": 56.18,
+          "end": 56.46,
+          "probability": 0.1326
+        },
+        {
+          "word": " Armies",
+          "start": 56.46,
+          "end": 56.82,
+          "probability": 0.2911
+        },
+        {
+          "word": " के",
+          "start": 56.82,
+          "end": 56.98,
+          "probability": 0.5484
+        },
+        {
+          "word": " Routes",
+          "start": 56.98,
+          "end": 57.38,
+          "probability": 0.3646
+        },
+        {
+          "word": " और",
+          "start": 57.38,
+          "end": 57.5,
+          "probability": 0.3928
+        },
+        {
+          "word": " Logistics",
+          "start": 57.5,
+          "end": 57.98,
+          "probability": 0.5154
+        },
+        {
+          "word": " को",
+          "start": 57.98,
+          "end": 58.3,
+          "probability": 0.5359
+        },
+        {
+          "word": " प्रभावित",
+          "start": 58.3,
+          "end": 58.82,
+          "probability": 0.5512
+        },
+        {
+          "word": " करते",
+          "start": 58.82,
+          "end": 59,
+          "probability": 0.6604
+        },
+        {
+          "word": " थे।",
+          "start": 59,
+          "end": 59.4,
+          "probability": 0.3236
+        },
+        {
+          "word": " लेकिन",
+          "start": 59.4,
+          "end": 59.84,
+          "probability": 0.3189
+        },
+        {
+          "word": " इस",
+          "start": 59.84,
+          "end": 59.92,
+          "probability": 0.3271
+        },
+        {
+          "word": " Corridor",
+          "start": 59.92,
+          "end": 60.36,
+          "probability": 0.4972
+        },
+        {
+          "word": " की",
+          "start": 60.36,
+          "end": 60.56,
+          "probability": 0.7493
+        },
+        {
+          "word": " असली",
+          "start": 60.56,
+          "end": 60.96,
+          "probability": 0.5268
+        },
+        {
+          "word": " अहमियत",
+          "start": 60.96,
+          "end": 61.5,
+          "probability": 0.3093
+        },
+        {
+          "word": " सिर्फ",
+          "start": 61.5,
+          "end": 62.1,
+          "probability": 0.3723
+        },
+        {
+          "word": " Delhi",
+          "start": 62.1,
+          "end": 62.38,
+          "probability": 0.0049
+        },
+        {
+          "word": " नहीं",
+          "start": 62.38,
+          "end": 62.74,
+          "probability": 0.4066
+        },
+        {
+          "word": " थी।",
+          "start": 62.74,
+          "end": 63.26,
+          "probability": 0.4234
+        }
+      ]
+    },
+    {
+      "id": "panipat_08",
+      "text": "Delhi के आगे फैला था समृद्ध गंगा-यमुना दोआब, और उससे आगे विशाल Gangetic Plains — जहाँ उपजाऊ ज़मीन, बड़ी आबादी और महत्वपूर्ण शहर मौजूद थे। और इन इलाकों तक पहुँचने के लिए Punjab–Haryana–Delhi Corridor एक बेहद महत्वपूर्ण रास्ता था।",
+      "clipStart": 62.7,
+      "clipEnd": 79.6,
+      "tokens": 226,
+      "words": [
+        {
+          "word": "Delhi",
+          "start": 62.7,
+          "end": 63.6,
+          "probability": 0.0626
+        },
+        {
+          "word": " के",
+          "start": 63.6,
+          "end": 63.74,
+          "probability": 0.0286
+        },
+        {
+          "word": " आगे",
+          "start": 63.74,
+          "end": 64.02,
+          "probability": 0.3436
+        },
+        {
+          "word": " फैला",
+          "start": 64.02,
+          "end": 64.3,
+          "probability": 0.5043
+        },
+        {
+          "word": " था",
+          "start": 64.3,
+          "end": 64.44,
+          "probability": 0.3823
+        },
+        {
+          "word": " समृद्ध",
+          "start": 64.44,
+          "end": 65.14,
+          "probability": 0.2487
+        },
+        {
+          "word": " गंगा",
+          "start": 65.14,
+          "end": 65.48,
+          "probability": 0.4493
+        },
+        {
+          "word": "-यमुना",
+          "start": 65.48,
+          "end": 65.9,
+          "probability": 0.4238
+        },
+        {
+          "word": " दोआब",
+          "start": 65.9,
+          "end": 66.74,
+          "probability": 0.3049
+        },
+        {
+          "word": ",",
+          "start": 66.74,
+          "end": 66.9,
+          "probability": 0.0583
+        },
+        {
+          "word": " और",
+          "start": 66.9,
+          "end": 67.02,
+          "probability": 0.5009
+        },
+        {
+          "word": " उससे",
+          "start": 67.02,
+          "end": 67.34,
+          "probability": 0.3873
+        },
+        {
+          "word": " आगे",
+          "start": 67.34,
+          "end": 67.6,
+          "probability": 0.7625
+        },
+        {
+          "word": " विशाल",
+          "start": 67.6,
+          "end": 68.08,
+          "probability": 0.6503
+        },
+        {
+          "word": " Gangetic",
+          "start": 68.08,
+          "end": 68.5,
+          "probability": 0.0776
+        },
+        {
+          "word": " Plains",
+          "start": 68.5,
+          "end": 68.96,
+          "probability": 0.7597
+        },
+        {
+          "word": " —",
+          "start": 68.96,
+          "end": 69.22,
+          "probability": 0
+        },
+        {
+          "word": " जहाँ",
+          "start": 69.22,
+          "end": 69.58,
+          "probability": 0.3759
+        },
+        {
+          "word": " उपजाऊ",
+          "start": 69.58,
+          "end": 69.94,
+          "probability": 0.3507
+        },
+        {
+          "word": " ज़मीन",
+          "start": 69.94,
+          "end": 70.32,
+          "probability": 0.2557
+        },
+        {
+          "word": ",",
+          "start": 70.32,
+          "end": 70.62,
+          "probability": 0.734
+        },
+        {
+          "word": " बड़ी",
+          "start": 70.62,
+          "end": 70.78,
+          "probability": 0.3628
+        },
+        {
+          "word": " आबादी",
+          "start": 70.78,
+          "end": 71.28,
+          "probability": 0.4894
+        },
+        {
+          "word": " और",
+          "start": 71.28,
+          "end": 71.46,
+          "probability": 0.5659
+        },
+        {
+          "word": " महत्वपूर्ण",
+          "start": 71.46,
+          "end": 72.1,
+          "probability": 0.3357
+        },
+        {
+          "word": " शहर",
+          "start": 72.1,
+          "end": 72.38,
+          "probability": 0.3577
+        },
+        {
+          "word": " मौजूद",
+          "start": 72.38,
+          "end": 72.78,
+          "probability": 0.3974
+        },
+        {
+          "word": " थे।",
+          "start": 72.78,
+          "end": 73.14,
+          "probability": 0.2184
+        },
+        {
+          "word": " और",
+          "start": 73.14,
+          "end": 73.38,
+          "probability": 0.4267
+        },
+        {
+          "word": " इन",
+          "start": 73.38,
+          "end": 73.66,
+          "probability": 0.455
+        },
+        {
+          "word": " इलाकों",
+          "start": 73.66,
+          "end": 74.22,
+          "probability": 0.4247
+        },
+        {
+          "word": " तक",
+          "start": 74.22,
+          "end": 74.3,
+          "probability": 0.4573
+        },
+        {
+          "word": " पहुँचने",
+          "start": 74.3,
+          "end": 74.66,
+          "probability": 0.4286
+        },
+        {
+          "word": " के",
+          "start": 74.66,
+          "end": 74.84,
+          "probability": 0.5032
+        },
+        {
+          "word": " लिए",
+          "start": 74.84,
+          "end": 74.96,
+          "probability": 0.3362
+        },
+        {
+          "word": " Punjab–Haryana–Delhi",
+          "start": 74.96,
+          "end": 76.42,
+          "probability": 0.4956
+        },
+        {
+          "word": " Corridor",
+          "start": 76.42,
+          "end": 76.94,
+          "probability": 0.6518
+        },
+        {
+          "word": " एक",
+          "start": 76.94,
+          "end": 77.42,
+          "probability": 0.2477
+        },
+        {
+          "word": " बेहद",
+          "start": 77.42,
+          "end": 77.84,
+          "probability": 0.3698
+        },
+        {
+          "word": " महत्वपूर्ण",
+          "start": 77.84,
+          "end": 78.44,
+          "probability": 0.6897
+        },
+        {
+          "word": " रास्ता",
+          "start": 78.44,
+          "end": 78.88,
+          "probability": 0.5017
+        },
+        {
+          "word": " था।",
+          "start": 78.88,
+          "end": 79.36,
+          "probability": 0.4504
+        }
+      ]
+    },
+    {
+      "id": "panipat_09",
+      "text": "लेकिन बड़ी Armies को सिर्फ रास्ता नहीं चाहिए था। उन्हें चाहिए था Food, Water, घोड़ों के लिए चारा और लगातार Supplies। इस Corridor के Agricultural Areas, बस्तियाँ और जलस्रोत इन ज़रूरतों को पूरा करने में मदद कर सकते थे।",
+      "clipStart": 78.8,
+      "clipEnd": 93.5,
+      "tokens": 182,
+      "words": [
+        {
+          "word": "लेकिन",
+          "start": 78.8,
+          "end": 79.64,
+          "probability": 0.0027
+        },
+        {
+          "word": " बड़ी",
+          "start": 79.64,
+          "end": 79.88,
+          "probability": 0.1044
+        },
+        {
+          "word": " Armies",
+          "start": 79.88,
+          "end": 80.28,
+          "probability": 0.0691
+        },
+        {
+          "word": " को",
+          "start": 80.28,
+          "end": 80.42,
+          "probability": 0.4472
+        },
+        {
+          "word": " सिर्फ",
+          "start": 80.42,
+          "end": 80.78,
+          "probability": 0.3842
+        },
+        {
+          "word": " रास्ता",
+          "start": 80.78,
+          "end": 81.1,
+          "probability": 0.4023
+        },
+        {
+          "word": " नहीं",
+          "start": 81.1,
+          "end": 81.32,
+          "probability": 0.5647
+        },
+        {
+          "word": " चाहिए",
+          "start": 81.32,
+          "end": 81.64,
+          "probability": 0.3184
+        },
+        {
+          "word": " था।",
+          "start": 81.64,
+          "end": 81.98,
+          "probability": 0.3117
+        },
+        {
+          "word": " उन्हें",
+          "start": 81.98,
+          "end": 82.5,
+          "probability": 0.4156
+        },
+        {
+          "word": " चाहिए",
+          "start": 82.5,
+          "end": 82.76,
+          "probability": 0.7232
+        },
+        {
+          "word": " था",
+          "start": 82.76,
+          "end": 82.9,
+          "probability": 0.6093
+        },
+        {
+          "word": " Food",
+          "start": 82.9,
+          "end": 83.36,
+          "probability": 0
+        },
+        {
+          "word": ",",
+          "start": 83.36,
+          "end": 83.62,
+          "probability": 0.8763
+        },
+        {
+          "word": " Water",
+          "start": 83.62,
+          "end": 83.96,
+          "probability": 0.963
+        },
+        {
+          "word": ",",
+          "start": 83.96,
+          "end": 84.16,
+          "probability": 0.8554
+        },
+        {
+          "word": " घोड़ों",
+          "start": 84.16,
+          "end": 84.64,
+          "probability": 0.1368
+        },
+        {
+          "word": " के",
+          "start": 84.64,
+          "end": 84.72,
+          "probability": 0.484
+        },
+        {
+          "word": " लिए",
+          "start": 84.72,
+          "end": 84.84,
+          "probability": 0.245
+        },
+        {
+          "word": " चारा",
+          "start": 84.84,
+          "end": 85.28,
+          "probability": 0.6943
+        },
+        {
+          "word": " और",
+          "start": 85.28,
+          "end": 85.62,
+          "probability": 0.4533
+        },
+        {
+          "word": " लगातार",
+          "start": 85.62,
+          "end": 86.18,
+          "probability": 0.6299
+        },
+        {
+          "word": " Supplies।",
+          "start": 86.18,
+          "end": 86.88,
+          "probability": 0.4515
+        },
+        {
+          "word": " इस",
+          "start": 86.88,
+          "end": 87.14,
+          "probability": 0.5029
+        },
+        {
+          "word": " Corridor",
+          "start": 87.14,
+          "end": 87.58,
+          "probability": 0.402
+        },
+        {
+          "word": " के",
+          "start": 87.58,
+          "end": 87.72,
+          "probability": 0.6217
+        },
+        {
+          "word": " Agricultural",
+          "start": 87.72,
+          "end": 88.34,
+          "probability": 0.5114
+        },
+        {
+          "word": " Areas",
+          "start": 88.34,
+          "end": 88.88,
+          "probability": 0.6097
+        },
+        {
+          "word": ",",
+          "start": 88.88,
+          "end": 89.06,
+          "probability": 0.7869
+        },
+        {
+          "word": " बस्तियाँ",
+          "start": 89.06,
+          "end": 89.52,
+          "probability": 0.4624
+        },
+        {
+          "word": " और",
+          "start": 89.52,
+          "end": 89.86,
+          "probability": 0.4644
+        },
+        {
+          "word": " जलस्रोत",
+          "start": 89.86,
+          "end": 90.34,
+          "probability": 0.5551
+        },
+        {
+          "word": " इन",
+          "start": 90.34,
+          "end": 90.52,
+          "probability": 0.3115
+        },
+        {
+          "word": " ज़रूरतों",
+          "start": 90.52,
+          "end": 91.14,
+          "probability": 0.3361
+        },
+        {
+          "word": " को",
+          "start": 91.14,
+          "end": 91.2,
+          "probability": 0.8631
+        },
+        {
+          "word": " पूरा",
+          "start": 91.2,
+          "end": 91.54,
+          "probability": 0.7235
+        },
+        {
+          "word": " करने",
+          "start": 91.54,
+          "end": 91.82,
+          "probability": 0.6737
+        },
+        {
+          "word": " में",
+          "start": 91.82,
+          "end": 91.98,
+          "probability": 0.8166
+        },
+        {
+          "word": " मदद",
+          "start": 91.98,
+          "end": 92.22,
+          "probability": 0.3729
+        },
+        {
+          "word": " कर",
+          "start": 92.22,
+          "end": 92.44,
+          "probability": 0.4235
+        },
+        {
+          "word": " सकते",
+          "start": 92.44,
+          "end": 92.7,
+          "probability": 0.6087
+        },
+        {
+          "word": " थे।",
+          "start": 92.7,
+          "end": 93.18,
+          "probability": 0.4365
+        }
+      ]
+    },
+    {
+      "id": "panipat_10",
+      "text": "इसके अलावा, Panipat के आसपास का Terrain अपेक्षाकृत Flat और Open था। जहाँ बड़ी Armies अपनी Cavalry, Infantry और Artillery को तैनात कर सकती थीं।",
+      "clipStart": 92.8,
+      "clipEnd": 103.8,
+      "tokens": 105,
+      "words": [
+        {
+          "word": "इसके",
+          "start": 92.8,
+          "end": 93.58,
+          "probability": 0.1501
+        },
+        {
+          "word": " अलावा",
+          "start": 93.58,
+          "end": 94,
+          "probability": 0.5996
+        },
+        {
+          "word": ",",
+          "start": 94,
+          "end": 94.22,
+          "probability": 0.319
+        },
+        {
+          "word": " Panipat",
+          "start": 94.22,
+          "end": 94.62,
+          "probability": 0.3752
+        },
+        {
+          "word": " के",
+          "start": 94.62,
+          "end": 94.84,
+          "probability": 0.4162
+        },
+        {
+          "word": " आसपास",
+          "start": 94.84,
+          "end": 95.36,
+          "probability": 0.4972
+        },
+        {
+          "word": " का",
+          "start": 95.36,
+          "end": 95.5,
+          "probability": 0.655
+        },
+        {
+          "word": " Terrain",
+          "start": 95.5,
+          "end": 95.96,
+          "probability": 0.0336
+        },
+        {
+          "word": " अपेक्षाकृत",
+          "start": 95.96,
+          "end": 96.88,
+          "probability": 0.3078
+        },
+        {
+          "word": " Flat",
+          "start": 96.88,
+          "end": 97.12,
+          "probability": 0.0024
+        },
+        {
+          "word": " और",
+          "start": 97.12,
+          "end": 97.5,
+          "probability": 0.3341
+        },
+        {
+          "word": " Open",
+          "start": 97.5,
+          "end": 97.76,
+          "probability": 0.0107
+        },
+        {
+          "word": " था।",
+          "start": 97.76,
+          "end": 98.3,
+          "probability": 0.2002
+        },
+        {
+          "word": " जहाँ",
+          "start": 98.3,
+          "end": 98.7,
+          "probability": 0.3824
+        },
+        {
+          "word": " बड़ी",
+          "start": 98.7,
+          "end": 99,
+          "probability": 0.2994
+        },
+        {
+          "word": " Armies",
+          "start": 99,
+          "end": 99.46,
+          "probability": 0.114
+        },
+        {
+          "word": " अपनी",
+          "start": 99.46,
+          "end": 99.96,
+          "probability": 0.5798
+        },
+        {
+          "word": " Cavalry",
+          "start": 99.96,
+          "end": 100.46,
+          "probability": 0.6014
+        },
+        {
+          "word": ",",
+          "start": 100.46,
+          "end": 100.64,
+          "probability": 0.7674
+        },
+        {
+          "word": " Infantry",
+          "start": 100.64,
+          "end": 101.14,
+          "probability": 0.9167
+        },
+        {
+          "word": " और",
+          "start": 101.14,
+          "end": 101.64,
+          "probability": 0.3585
+        },
+        {
+          "word": " Artillery",
+          "start": 101.64,
+          "end": 102.08,
+          "probability": 0.2445
+        },
+        {
+          "word": " को",
+          "start": 102.08,
+          "end": 102.32,
+          "probability": 0.5667
+        },
+        {
+          "word": " तैनात",
+          "start": 102.32,
+          "end": 102.7,
+          "probability": 0.4989
+        },
+        {
+          "word": " कर",
+          "start": 102.7,
+          "end": 102.82,
+          "probability": 0.7784
+        },
+        {
+          "word": " सकती",
+          "start": 102.82,
+          "end": 103.06,
+          "probability": 0.5579
+        },
+        {
+          "word": " थीं।",
+          "start": 103.06,
+          "end": 103.5,
+          "probability": 0.2707
+        }
+      ]
+    },
+    {
+      "id": "panipat_11",
+      "text": "और सबसे महत्वपूर्ण बात... Panipat, Delhi से लगभग 90 किलोमीटर उत्तर में था। यानी Delhi की ओर बढ़ने वाली Army के लिए एक महत्वपूर्ण Strategic Position। और विरोधी Army के लिए, उसे राजधानी पहुँचने से पहले रोकने का अवसर।",
+      "clipStart": 103,
+      "clipEnd": 118.6,
+      "tokens": 187,
+      "words": [
+        {
+          "word": "और",
+          "start": 103,
+          "end": 103.64,
+          "probability": 0.067
+        },
+        {
+          "word": " सबसे",
+          "start": 103.64,
+          "end": 104.08,
+          "probability": 0.352
+        },
+        {
+          "word": " महत्वपूर्ण",
+          "start": 104.08,
+          "end": 104.68,
+          "probability": 0.322
+        },
+        {
+          "word": " बात...",
+          "start": 104.68,
+          "end": 105.4,
+          "probability": 0.3568
+        },
+        {
+          "word": " Panipat",
+          "start": 105.4,
+          "end": 106.04,
+          "probability": 0.4834
+        },
+        {
+          "word": ",",
+          "start": 106.04,
+          "end": 106.24,
+          "probability": 0.2486
+        },
+        {
+          "word": " Delhi",
+          "start": 106.24,
+          "end": 106.46,
+          "probability": 0.3337
+        },
+        {
+          "word": " से",
+          "start": 106.46,
+          "end": 106.74,
+          "probability": 0.4945
+        },
+        {
+          "word": " लगभग",
+          "start": 106.74,
+          "end": 107.08,
+          "probability": 0.3433
+        },
+        {
+          "word": " 90",
+          "start": 107.08,
+          "end": 107.34,
+          "probability": 0.0108
+        },
+        {
+          "word": " किलोमीटर",
+          "start": 107.34,
+          "end": 107.92,
+          "probability": 0.3207
+        },
+        {
+          "word": " उत्तर",
+          "start": 107.92,
+          "end": 108.22,
+          "probability": 0.4201
+        },
+        {
+          "word": " में",
+          "start": 108.22,
+          "end": 108.36,
+          "probability": 0.4426
+        },
+        {
+          "word": " था।",
+          "start": 108.36,
+          "end": 108.68,
+          "probability": 0.2802
+        },
+        {
+          "word": " यानी",
+          "start": 108.68,
+          "end": 109.06,
+          "probability": 0.3844
+        },
+        {
+          "word": " Delhi",
+          "start": 109.06,
+          "end": 109.34,
+          "probability": 0.0485
+        },
+        {
+          "word": " की",
+          "start": 109.34,
+          "end": 109.58,
+          "probability": 0.3854
+        },
+        {
+          "word": " ओर",
+          "start": 109.58,
+          "end": 109.72,
+          "probability": 0.5252
+        },
+        {
+          "word": " बढ़ने",
+          "start": 109.72,
+          "end": 110.08,
+          "probability": 0.4718
+        },
+        {
+          "word": " वाली",
+          "start": 110.08,
+          "end": 110.34,
+          "probability": 0.6241
+        },
+        {
+          "word": " Army",
+          "start": 110.34,
+          "end": 110.64,
+          "probability": 0.0025
+        },
+        {
+          "word": " के",
+          "start": 110.64,
+          "end": 110.88,
+          "probability": 0.4986
+        },
+        {
+          "word": " लिए",
+          "start": 110.88,
+          "end": 111.1,
+          "probability": 0.295
+        },
+        {
+          "word": " एक",
+          "start": 111.1,
+          "end": 111.56,
+          "probability": 0.2715
+        },
+        {
+          "word": " महत्वपूर्ण",
+          "start": 111.56,
+          "end": 112.18,
+          "probability": 0.8598
+        },
+        {
+          "word": " Strategic",
+          "start": 112.18,
+          "end": 112.72,
+          "probability": 0.0021
+        },
+        {
+          "word": " Position।",
+          "start": 112.72,
+          "end": 113.44,
+          "probability": 0.5085
+        },
+        {
+          "word": " और",
+          "start": 113.44,
+          "end": 113.72,
+          "probability": 0.4542
+        },
+        {
+          "word": " विरोधी",
+          "start": 113.72,
+          "end": 114.06,
+          "probability": 0.6082
+        },
+        {
+          "word": " Army",
+          "start": 114.06,
+          "end": 114.32,
+          "probability": 0.5919
+        },
+        {
+          "word": " के",
+          "start": 114.32,
+          "end": 114.56,
+          "probability": 0.7184
+        },
+        {
+          "word": " लिए",
+          "start": 114.56,
+          "end": 114.76,
+          "probability": 0.7997
+        },
+        {
+          "word": ",",
+          "start": 114.76,
+          "end": 114.9,
+          "probability": 0.1524
+        },
+        {
+          "word": " उसे",
+          "start": 114.9,
+          "end": 115.24,
+          "probability": 0.5814
+        },
+        {
+          "word": " राजधानी",
+          "start": 115.24,
+          "end": 115.82,
+          "probability": 0.5194
+        },
+        {
+          "word": " पहुँचने",
+          "start": 115.82,
+          "end": 116.22,
+          "probability": 0.5179
+        },
+        {
+          "word": " से",
+          "start": 116.22,
+          "end": 116.38,
+          "probability": 0.8586
+        },
+        {
+          "word": " पहले",
+          "start": 116.38,
+          "end": 116.72,
+          "probability": 0.6932
+        },
+        {
+          "word": " रोकने",
+          "start": 116.72,
+          "end": 117.38,
+          "probability": 0.5156
+        },
+        {
+          "word": " का",
+          "start": 117.38,
+          "end": 117.52,
+          "probability": 0.8683
+        },
+        {
+          "word": " अवसर।",
+          "start": 117.52,
+          "end": 118.22,
+          "probability": 0.451
+        }
+      ]
+    },
+    {
+      "id": "panipat_12",
+      "text": "अब गौर कीजिए... 1526, 1556 और 1761 की Battles में Rulers अलग थे, Armies अलग थीं, और Political परिस्थितियाँ भी अलग थीं। लेकिन इन तीनों Battles के केंद्र में एक बड़ा सवाल था — Delhi और उत्तर भारत की सत्ता पर Control किसका होगा?",
+      "clipStart": 117.7,
+      "clipEnd": 135.2,
+      "tokens": 176,
+      "words": [
+        {
+          "word": "अब",
+          "start": 117.7,
+          "end": 118.56,
+          "probability": 0.1407
+        },
+        {
+          "word": " गौर",
+          "start": 118.56,
+          "end": 118.8,
+          "probability": 0.2704
+        },
+        {
+          "word": " कीजिए...",
+          "start": 118.8,
+          "end": 119.38,
+          "probability": 0.3581
+        },
+        {
+          "word": " 1526",
+          "start": 119.38,
+          "end": 120.08,
+          "probability": 0.1158
+        },
+        {
+          "word": ",",
+          "start": 120.08,
+          "end": 120.36,
+          "probability": 0.2429
+        },
+        {
+          "word": " 1556",
+          "start": 120.36,
+          "end": 121.1,
+          "probability": 0.4615
+        },
+        {
+          "word": " और",
+          "start": 121.1,
+          "end": 121.54,
+          "probability": 0.2406
+        },
+        {
+          "word": " 1761",
+          "start": 121.54,
+          "end": 122.32,
+          "probability": 0.1177
+        },
+        {
+          "word": " की",
+          "start": 122.32,
+          "end": 122.84,
+          "probability": 0.3822
+        },
+        {
+          "word": " Battles",
+          "start": 122.84,
+          "end": 123.36,
+          "probability": 0.4785
+        },
+        {
+          "word": " में",
+          "start": 123.36,
+          "end": 123.48,
+          "probability": 0.5122
+        },
+        {
+          "word": " Rulers",
+          "start": 123.48,
+          "end": 123.84,
+          "probability": 0.3857
+        },
+        {
+          "word": " अलग",
+          "start": 123.84,
+          "end": 124.14,
+          "probability": 0.373
+        },
+        {
+          "word": " थे",
+          "start": 124.14,
+          "end": 124.28,
+          "probability": 0.3272
+        },
+        {
+          "word": ",",
+          "start": 124.28,
+          "end": 124.46,
+          "probability": 0.5468
+        },
+        {
+          "word": " Armies",
+          "start": 124.46,
+          "end": 124.78,
+          "probability": 0.3861
+        },
+        {
+          "word": " अलग",
+          "start": 124.78,
+          "end": 125,
+          "probability": 0.7222
+        },
+        {
+          "word": " थीं",
+          "start": 125,
+          "end": 125.46,
+          "probability": 0.3133
+        },
+        {
+          "word": ",",
+          "start": 125.46,
+          "end": 125.46,
+          "probability": 0.1368
+        },
+        {
+          "word": " और",
+          "start": 125.46,
+          "end": 125.58,
+          "probability": 0.5883
+        },
+        {
+          "word": " Political",
+          "start": 125.58,
+          "end": 125.96,
+          "probability": 0.0042
+        },
+        {
+          "word": " परिस्थितियाँ",
+          "start": 125.96,
+          "end": 126.7,
+          "probability": 0.339
+        },
+        {
+          "word": " भी",
+          "start": 126.7,
+          "end": 126.84,
+          "probability": 0.3976
+        },
+        {
+          "word": " अलग",
+          "start": 126.84,
+          "end": 127.22,
+          "probability": 0.6942
+        },
+        {
+          "word": " थीं।",
+          "start": 127.22,
+          "end": 127.62,
+          "probability": 0.5548
+        },
+        {
+          "word": " लेकिन",
+          "start": 127.62,
+          "end": 128.08,
+          "probability": 0.2969
+        },
+        {
+          "word": " इन",
+          "start": 128.08,
+          "end": 128.18,
+          "probability": 0.3351
+        },
+        {
+          "word": " तीनों",
+          "start": 128.18,
+          "end": 128.66,
+          "probability": 0.4463
+        },
+        {
+          "word": " Battles",
+          "start": 128.66,
+          "end": 128.94,
+          "probability": 0.6888
+        },
+        {
+          "word": " के",
+          "start": 128.94,
+          "end": 129.08,
+          "probability": 0.6547
+        },
+        {
+          "word": " केंद्र",
+          "start": 129.08,
+          "end": 129.4,
+          "probability": 0.4325
+        },
+        {
+          "word": " में",
+          "start": 129.4,
+          "end": 129.54,
+          "probability": 0.8399
+        },
+        {
+          "word": " एक",
+          "start": 129.54,
+          "end": 129.72,
+          "probability": 0.4093
+        },
+        {
+          "word": " बड़ा",
+          "start": 129.72,
+          "end": 130.04,
+          "probability": 0.5048
+        },
+        {
+          "word": " सवाल",
+          "start": 130.04,
+          "end": 130.4,
+          "probability": 0.6411
+        },
+        {
+          "word": " था",
+          "start": 130.4,
+          "end": 130.56,
+          "probability": 0.4376
+        },
+        {
+          "word": " —",
+          "start": 130.56,
+          "end": 131.06,
+          "probability": 0
+        },
+        {
+          "word": " Delhi",
+          "start": 131.06,
+          "end": 131.58,
+          "probability": 0.0038
+        },
+        {
+          "word": " और",
+          "start": 131.58,
+          "end": 131.94,
+          "probability": 0.4737
+        },
+        {
+          "word": " उत्तर",
+          "start": 131.94,
+          "end": 132.28,
+          "probability": 0.3677
+        },
+        {
+          "word": " भारत",
+          "start": 132.28,
+          "end": 132.56,
+          "probability": 0.5746
+        },
+        {
+          "word": " की",
+          "start": 132.56,
+          "end": 132.66,
+          "probability": 0.7814
+        },
+        {
+          "word": " सत्ता",
+          "start": 132.66,
+          "end": 133.1,
+          "probability": 0.4369
+        },
+        {
+          "word": " पर",
+          "start": 133.1,
+          "end": 133.24,
+          "probability": 0.8277
+        },
+        {
+          "word": " Control",
+          "start": 133.24,
+          "end": 133.6,
+          "probability": 0.0248
+        },
+        {
+          "word": " किसका",
+          "start": 133.6,
+          "end": 134.02,
+          "probability": 0.6535
+        },
+        {
+          "word": " होगा",
+          "start": 134.02,
+          "end": 134.28,
+          "probability": 0.7686
+        },
+        {
+          "word": "?",
+          "start": 134.28,
+          "end": 134.52,
+          "probability": 0.0017
+        }
+      ]
+    },
+    {
+      "id": "panipat_13",
+      "text": "तो आखिर Panipat ही क्यों? क्योंकि यह North-West से Delhi और समृद्ध Gangetic Plains की ओर जाने वाले महत्वपूर्ण Strategic Corridor पर स्थित था। जहाँ Geography ने Armies को रास्ता, Resources और Battlefield दिया... और History ने बार-बार उन्हें आमने-सामने ला खड़ा किया।",
+      "clipStart": 133.7,
+      "clipEnd": 151.248938,
+      "tokens": 182,
+      "words": [
+        {
+          "word": "तो",
+          "start": 133.7,
+          "end": 134.02,
+          "probability": 0.0003
+        },
+        {
+          "word": " आखिर",
+          "start": 134.02,
+          "end": 134.92,
+          "probability": 0.2169
+        },
+        {
+          "word": " Panipat",
+          "start": 134.92,
+          "end": 135.4,
+          "probability": 0.3458
+        },
+        {
+          "word": " ही",
+          "start": 135.4,
+          "end": 135.5,
+          "probability": 0.2879
+        },
+        {
+          "word": " क्यों",
+          "start": 135.5,
+          "end": 135.8,
+          "probability": 0.4229
+        },
+        {
+          "word": "?",
+          "start": 135.8,
+          "end": 135.94,
+          "probability": 0.0096
+        },
+        {
+          "word": " क्योंकि",
+          "start": 135.94,
+          "end": 136.22,
+          "probability": 0.357
+        },
+        {
+          "word": " यह",
+          "start": 136.22,
+          "end": 136.38,
+          "probability": 0.2555
+        },
+        {
+          "word": " North",
+          "start": 136.38,
+          "end": 136.62,
+          "probability": 0.0221
+        },
+        {
+          "word": "-West",
+          "start": 136.62,
+          "end": 137,
+          "probability": 0.5561
+        },
+        {
+          "word": " से",
+          "start": 137,
+          "end": 137.22,
+          "probability": 0.4935
+        },
+        {
+          "word": " Delhi",
+          "start": 137.22,
+          "end": 137.58,
+          "probability": 0.0135
+        },
+        {
+          "word": " और",
+          "start": 137.58,
+          "end": 137.9,
+          "probability": 0.4693
+        },
+        {
+          "word": " समृद्ध",
+          "start": 137.9,
+          "end": 138.4,
+          "probability": 0.2903
+        },
+        {
+          "word": " Gangetic",
+          "start": 138.4,
+          "end": 138.76,
+          "probability": 0.0882
+        },
+        {
+          "word": " Plains",
+          "start": 138.76,
+          "end": 139.18,
+          "probability": 0.6871
+        },
+        {
+          "word": " की",
+          "start": 139.18,
+          "end": 139.32,
+          "probability": 0.6711
+        },
+        {
+          "word": " ओर",
+          "start": 139.32,
+          "end": 139.56,
+          "probability": 0.5154
+        },
+        {
+          "word": " जाने",
+          "start": 139.56,
+          "end": 139.86,
+          "probability": 0.7636
+        },
+        {
+          "word": " वाले",
+          "start": 139.86,
+          "end": 140.12,
+          "probability": 0.6848
+        },
+        {
+          "word": " महत्वपूर्ण",
+          "start": 140.12,
+          "end": 140.94,
+          "probability": 0.3113
+        },
+        {
+          "word": " Strategic",
+          "start": 140.94,
+          "end": 141.68,
+          "probability": 0.001
+        },
+        {
+          "word": " Corridor",
+          "start": 141.68,
+          "end": 142.26,
+          "probability": 0.7257
+        },
+        {
+          "word": " पर",
+          "start": 142.26,
+          "end": 142.58,
+          "probability": 0.6784
+        },
+        {
+          "word": " स्थित",
+          "start": 142.58,
+          "end": 142.92,
+          "probability": 0.282
+        },
+        {
+          "word": " था।",
+          "start": 142.92,
+          "end": 143.44,
+          "probability": 0.1247
+        },
+        {
+          "word": " जहाँ",
+          "start": 143.44,
+          "end": 143.9,
+          "probability": 0.4045
+        },
+        {
+          "word": " Geography",
+          "start": 143.9,
+          "end": 144.24,
+          "probability": 0.1071
+        },
+        {
+          "word": " ने",
+          "start": 144.24,
+          "end": 144.44,
+          "probability": 0.294
+        },
+        {
+          "word": " Armies",
+          "start": 144.44,
+          "end": 144.94,
+          "probability": 0.379
+        },
+        {
+          "word": " को",
+          "start": 144.94,
+          "end": 145.1,
+          "probability": 0.0816
+        },
+        {
+          "word": " रास्ता",
+          "start": 145.1,
+          "end": 145.52,
+          "probability": 0.4858
+        },
+        {
+          "word": ",",
+          "start": 145.52,
+          "end": 145.82,
+          "probability": 0.2436
+        },
+        {
+          "word": " Resources",
+          "start": 145.82,
+          "end": 146.26,
+          "probability": 0.4823
+        },
+        {
+          "word": " और",
+          "start": 146.26,
+          "end": 146.78,
+          "probability": 0.3819
+        },
+        {
+          "word": " Battlefield",
+          "start": 146.78,
+          "end": 147.28,
+          "probability": 0.0718
+        },
+        {
+          "word": " दिया...",
+          "start": 147.28,
+          "end": 148.2,
+          "probability": 0.4767
+        },
+        {
+          "word": " और",
+          "start": 148.2,
+          "end": 148.34,
+          "probability": 0.5524
+        },
+        {
+          "word": " History",
+          "start": 148.34,
+          "end": 148.62,
+          "probability": 0.0152
+        },
+        {
+          "word": " ने",
+          "start": 148.62,
+          "end": 148.84,
+          "probability": 0.499
+        },
+        {
+          "word": " बार",
+          "start": 148.84,
+          "end": 149.42,
+          "probability": 0.7139
+        },
+        {
+          "word": "-बार",
+          "start": 149.42,
+          "end": 149.6,
+          "probability": 0.4709
+        },
+        {
+          "word": " उन्हें",
+          "start": 149.6,
+          "end": 149.94,
+          "probability": 0.3614
+        },
+        {
+          "word": " आमने",
+          "start": 149.94,
+          "end": 150.12,
+          "probability": 0.4549
+        },
+        {
+          "word": "-सामने",
+          "start": 150.12,
+          "end": 150.42,
+          "probability": 0.5311
+        },
+        {
+          "word": " ला",
+          "start": 150.42,
+          "end": 150.58,
+          "probability": 0.4405
+        },
+        {
+          "word": " खड़ा",
+          "start": 150.58,
+          "end": 150.8,
+          "probability": 0.1924
+        },
+        {
+          "word": " किया।",
+          "start": 150.8,
+          "end": 151.18,
+          "probability": 0.5086
+        }
+      ]
+    }
+  ]
+}

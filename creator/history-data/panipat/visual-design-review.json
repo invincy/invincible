@@ -1,0 +1,131 @@
+{
+  "version": 3,
+  "sourceAudio": {
+    "file": "Panipat.MP3",
+    "durationSeconds": 151.24897959183673,
+    "sampleRateHz": 44100,
+    "channels": 1,
+    "speed": 1
+  },
+  "textPolicy": {
+    "narrativeCaptions": false,
+    "openingTitles": true,
+    "geographicLabels": true
+  },
+  "opening": {
+    "layout": "staggered three opposing commander pairs",
+    "positions": [
+      {
+        "year": 1526,
+        "region": "top",
+        "commanders": [
+          "babur",
+          "ibrahim_lodi"
+        ]
+      },
+      {
+        "year": 1556,
+        "region": "middle-left",
+        "commanders": [
+          "bairam_khan",
+          "hemu"
+        ]
+      },
+      {
+        "year": 1761,
+        "region": "bottom-right",
+        "commanders": [
+          "ahmad_shah_abdali",
+          "sadashivrao_bhau"
+        ]
+      }
+    ],
+    "entranceSeconds": 0.65,
+    "exitSeconds": 0.5
+  },
+  "mapDesign": {
+    "labels": {
+      "primaryFontPixelsAt1080": 48,
+      "secondaryFontPixelsAt1080": 40,
+      "background": "rounded translucent navy",
+      "accent": "muted gold"
+    },
+    "river": {
+      "color": "#65B7E6",
+      "style": "georeferenced animated line"
+    },
+    "desert": {
+      "name": "Thar Desert",
+      "color": "#E2B75D",
+      "opacity": 0.24,
+      "geometry": "reviewed generalized regional footprint, not exact historical boundary"
+    },
+    "relief": {
+      "style": "real terrain with subdued shading",
+      "avoid": "invented decorative terrain contours"
+    },
+    "capital": {
+      "location": "Delhi",
+      "symbol": "large architectural capital marker",
+      "label": "Delhi"
+    },
+    "passes": {
+      "camera": "zoom to the named pass when spoken",
+      "paths": "schematic approach route, not a surveyed historical track"
+    }
+  },
+  "military": {
+    "comparison": "separate schematic composition; left/right does not encode geographic deployment",
+    "geographic": "north-up; source-supported sectors and movement",
+    "personnel": "common scale per battle; equipment separate; uncertainty retained",
+    "proportions": {
+      "1526": {
+        "workingPersonnel": [
+          15000,
+          35000
+        ],
+        "mainUnits": [
+          6,
+          14
+        ]
+      },
+      "1556": {
+        "scope": "vanguard/cavalry only, not full armies",
+        "workingPersonnel": [
+          10000,
+          30000
+        ],
+        "mainUnits": [
+          4,
+          12
+        ]
+      },
+      "1761": {
+        "scope": "provisional reconstruction, disputed",
+        "workingPersonnel": [
+          60000,
+          45000
+        ],
+        "mainUnits": [
+          12,
+          9
+        ]
+      }
+    }
+  },
+  "assetIssues": [
+    {
+      "id": "commander_ahmad_shah_abdali",
+      "status": "repaired sibling asset included in opening review",
+      "file": "Abdali-commander-v2.png",
+      "originalPreserved": true
+    }
+  ],
+  "review": {
+    "listening": "not performed",
+    "speechAlignment": "35 script-conditioned audio cue candidates saved; listening review pending",
+    "fullVideo": "not rendered",
+    "publication": "not authorized in this pass",
+    "opening": "299-frame 720x1280 motion preview rendered and fully decoded"
+  }
+}

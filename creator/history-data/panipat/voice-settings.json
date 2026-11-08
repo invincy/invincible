@@ -1,0 +1,12 @@
+{
+  "provider": "ElevenLabs",
+  "model": "Eleven Turbo v2.5",
+  "speed": 1.1309183,
+  "stabilityPercent": 26,
+  "similarityBoostPercent": 50,
+  "stylePercent": 83,
+  "speakerBoost": true,
+  "applyAdditionalSpeedChange": false,
+  "masterAudio": "Panipat.MP3",
+  "masterAudioSeconds": 151.248938
+}

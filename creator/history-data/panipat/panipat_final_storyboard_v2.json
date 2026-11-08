@@ -1,0 +1,1078 @@
+{
+  "documentType": "invincible.mapEditor.panipatStoryboard",
+  "version": "2.0",
+  "status": "DESIGN_SPEC_NOT_VERIFIED_NATIVE_MAP_EDITOR_SESSION",
+  "audio": {
+    "file": "Panipat.MP3",
+    "durationSec": 151.249,
+    "syncMode": "audio-master",
+    "timings": "estimated-from-user-supplied-transcript-not-word-aligned",
+    "noTimeStretch": true
+  },
+  "output": {
+    "aspectRatio": "9:16",
+    "orientation": "portrait",
+    "fps": 30,
+    "design": "premium historical atlas, dark navy/gold, restrained labels"
+  },
+  "historicalCaveats": [
+    "Panipat was an important strategic corridor, not a compulsory chokepoint.",
+    "Kurukshetra Mahabharata association is traditional, not an established historical battle date.",
+    "1761 Maratha objectives cannot be reduced to defending Delhi.",
+    "Do not depict exact historical formations without evidence.",
+    "Do not treat combatant and cavalry-only estimates as equivalent."
+  ],
+  "cameraPresets": {
+    "panipat_close": {
+      "center": {
+        "lat": 29.39,
+        "lon": 76.97
+      },
+      "zoomIntent": "city-region"
+    },
+    "haryana_close": {
+      "center": {
+        "lat": 29.55,
+        "lon": 76.85
+      },
+      "zoomIntent": "regional"
+    },
+    "northwest_wide": {
+      "center": {
+        "lat": 31.0,
+        "lon": 72.0
+      },
+      "zoomIntent": "northwest-subcontinent"
+    },
+    "passes_wide": {
+      "center": {
+        "lat": 33.7,
+        "lon": 70.0
+      },
+      "zoomIntent": "mountain-approaches"
+    },
+    "punjab_wide": {
+      "center": {
+        "lat": 31.1,
+        "lon": 74.5
+      },
+      "zoomIntent": "punjab-region"
+    },
+    "corridor": {
+      "center": {
+        "lat": 30.2,
+        "lon": 75.8
+      },
+      "zoomIntent": "punjab-to-delhi"
+    },
+    "gangetic_wide": {
+      "center": {
+        "lat": 27.1,
+        "lon": 80.6
+      },
+      "zoomIntent": "upper-gangetic-basin"
+    },
+    "delhi_panipat": {
+      "center": {
+        "lat": 28.99,
+        "lon": 77.07
+      },
+      "zoomIntent": "delhi-panipat"
+    }
+  },
+  "routeIntent": {
+    "sequence": [
+      "Khyber Pass",
+      "Punjab",
+      "Haryana",
+      "Panipat",
+      "Delhi",
+      "Ganga-Yamuna Doab",
+      "Gangetic Plain"
+    ],
+    "geometrySource": "Use verified existing geographic layers or sourced route geometries; never draw a fabricated exact historical route",
+    "routeStyle": "thin muted gold, animated reveal"
+  },
+  "assets": {
+    "troopIcons": {
+      "infantry_sword": "Historical_Army_Assets/Infantry/infantry_sword.png",
+      "infantry_shield": "Historical_Army_Assets/Infantry/infantry_shield.png",
+      "infantry_spear": "Historical_Army_Assets/Infantry/infantry_spear.png",
+      "archer": "Historical_Army_Assets/Infantry/archer.png",
+      "matchlock": "Historical_Army_Assets/Infantry/matchlock.png",
+      "cavalry_sword": "Historical_Army_Assets/Cavalry/cavalry_sword.png",
+      "cavalry_lancer": "Historical_Army_Assets/Cavalry/cavalry_lancer.png",
+      "cavalry_archer": "Historical_Army_Assets/Cavalry/cavalry_archer.png",
+      "war_elephant": "Historical_Army_Assets/Elephants/war_elephant.png",
+      "command_elephant": "Historical_Army_Assets/Elephants/command_elephant.png",
+      "field_cannon": "Historical_Army_Assets/Artillery/field_cannon.png",
+      "heavy_cannon": "Historical_Army_Assets/Artillery/heavy_cannon.png",
+      "camel_zamburak": "Historical_Army_Assets/Artillery/camel_zamburak.png"
+    },
+    "commanders": {
+      "babur": {
+        "file": "Panipat_Commanders/1526_Babur.png",
+        "year": 1526,
+        "facing": "right"
+      },
+      "ibrahim_lodi": {
+        "file": "Panipat_Commanders/1526_Ibrahim_Lodi.png",
+        "year": 1526,
+        "facing": "left"
+      },
+      "bairam_khan": {
+        "file": "Panipat_Commanders/1556_Bairam_Khan.png",
+        "year": 1556,
+        "facing": "right"
+      },
+      "hemu": {
+        "file": "Panipat_Commanders/1556_Hemu.png",
+        "year": 1556,
+        "facing": "left",
+        "mount": "elephant"
+      },
+      "ahmad_shah_abdali": {
+        "file": "Panipat_Commanders/1761_Ahmad_Shah_Abdali_PREVIEW.png",
+        "year": 1761,
+        "facing": "right",
+        "quality": "preview-replace-before-final"
+      },
+      "sadashivrao_bhau": {
+        "file": "Panipat_Commanders/1761_Sadashivrao_Bhau.png",
+        "year": 1761,
+        "facing": "left"
+      }
+    },
+    "assetRoot": "Imported pack roots; resolve paths against extracted ZIPs"
+  },
+  "formationRules": {
+    "subUnit": {
+      "icons": 4
+    },
+    "mainUnit": {
+      "subUnits": 4,
+      "icons": 16
+    },
+    "presets": {
+      "square": {
+        "rows": 4,
+        "columns": 4
+      },
+      "line": {
+        "rows": 2,
+        "columns": 8
+      }
+    },
+    "proportionality": "Represented combatant strength must scale by total unit count or partial-unit fill, never icon size alone",
+    "equipmentCounting": "elephants and guns tracked separately from combatant headcounts",
+    "armyFacing": "commander direction is configurable; do not infer historical position from facing"
+  },
+  "battleData": [
+    {
+      "year": 1526,
+      "sides": [
+        {
+          "name": "Babur",
+          "commander": "babur",
+          "strength": {
+            "min": 12000,
+            "max": 15000,
+            "kind": "estimated_combatants"
+          }
+        },
+        {
+          "name": "Ibrahim Lodi",
+          "commander": "ibrahim_lodi",
+          "strength": {
+            "min": 30000,
+            "max": 40000,
+            "kind": "estimated_combatants"
+          }
+        }
+      ],
+      "equipment": [
+        "field_cannon",
+        "war_elephant"
+      ],
+      "visualization": "schematic-not-historical-deployment"
+    },
+    {
+      "year": 1556,
+      "sides": [
+        {
+          "name": "Mughal cavalry",
+          "commander": "bairam_khan",
+          "strength": {
+            "min": 10000,
+            "max": 10000,
+            "kind": "cavalry_only_estimate"
+          }
+        },
+        {
+          "name": "Hemu cavalry",
+          "commander": "hemu",
+          "strength": {
+            "min": 30000,
+            "max": 30000,
+            "kind": "cavalry_only_estimate"
+          }
+        }
+      ],
+      "equipment": [
+        "war_elephant"
+      ],
+      "visualization": "cavalry-only-comparison-not-total-armies"
+    },
+    {
+      "year": 1761,
+      "sides": [
+        {
+          "name": "Maratha coalition",
+          "commander": "sadashivrao_bhau",
+          "strength": {
+            "min": 45000,
+            "max": 60000,
+            "kind": "disputed_combatant_estimate"
+          }
+        },
+        {
+          "name": "Durrani coalition",
+          "commander": "ahmad_shah_abdali",
+          "strength": {
+            "min": 60000,
+            "max": 60000,
+            "kind": "one-reconstruction-not-consensus"
+          }
+        }
+      ],
+      "equipment": [
+        "field_cannon",
+        "camel_zamburak"
+      ],
+      "visualization": "estimated-combatants-not-exact-formation"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "panipat_01_hook",
+      "startSec": 0,
+      "endSec": 10,
+      "timingStatus": "approximate-editor-must-align-to-MP3",
+      "narrationCue": "1526, 1556, 1761 — three battles, one location",
+      "visualIntent": "Panipat and three date markers",
+      "cameraPreset": "panipat_close",
+      "layers": [
+        "terrain",
+        "political_borders",
+        "historical_routes"
+      ],
+      "transition": "ease-in-out",
+      "annotations": [
+        "1526",
+        "1556",
+        "1761"
+      ],
+      "commanderRefs": [],
+      "unitFormationOverlay": false,
+      "designId": "opening",
+      "cameraAction": "close Panipat, 1526/1556/1761 year pills sequentially",
+      "cardPreset": "year_triptych",
+      "battlePresets": [],
+      "visualMode": "geographic",
+      "animationLayers": [
+        "map_relief",
+        "routes_or_terrain",
+        "cards",
+        "commander_or_units_if_cued"
+      ],
+      "timeAlignment": "approximate; snap to actual audio phrase boundaries",
+      "cameraTransition": {
+        "easing": "easeInOutCubic",
+        "durationSec": 2.0,
+        "avoidAbruptCut": true
+      }
+    },
+    {
+      "id": "panipat_02_question",
+      "startSec": 10,
+      "endSec": 23,
+      "timingStatus": "approximate-editor-must-align-to-MP3",
+      "narrationCue": "Why was power repeatedly contested at Panipat? Kurukshetra nearby",
+      "visualIntent": "Panipat–Kurukshetra context",
+      "cameraPreset": "haryana_close",
+      "layers": [
+        "terrain",
+        "political_borders",
+        "historical_routes"
+      ],
+      "transition": "ease-in-out",
+      "annotations": [],
+      "commanderRefs": [],
+      "unitFormationOverlay": false,
+      "designId": "kurukshetra",
+      "cameraAction": "pull back north to Kurukshetra, tradition label",
+      "cardPreset": "location_pair",
+      "battlePresets": [],
+      "visualMode": "geographic",
+      "animationLayers": [
+        "map_relief",
+        "routes_or_terrain",
+        "cards",
+        "commander_or_units_if_cued"
+      ],
+      "timeAlignment": "approximate; snap to actual audio phrase boundaries",
+      "cameraTransition": {
+        "easing": "easeInOutCubic",
+        "durationSec": 2.0,
+        "avoidAbruptCut": true
+      }
+    },
+    {
+      "id": "panipat_03_geography",
+      "startSec": 23,
+      "endSec": 33,
+      "timingStatus": "approximate-editor-must-align-to-MP3",
+      "narrationCue": "Coincidence or geography? Look at northwest India",
+      "visualIntent": "Northwestern subcontinent terrain",
+      "cameraPreset": "northwest_wide",
+      "layers": [
+        "terrain",
+        "political_borders",
+        "historical_routes"
+      ],
+      "transition": "ease-in-out",
+      "annotations": [],
+      "commanderRefs": [],
+      "unitFormationOverlay": false,
+      "designId": "northwest",
+      "cameraAction": "widen to northwest physical relief, not flat political map",
+      "cardPreset": "geography_title",
+      "battlePresets": [],
+      "visualMode": "geographic",
+      "animationLayers": [
+        "map_relief",
+        "routes_or_terrain",
+        "cards",
+        "commander_or_units_if_cued"
+      ],
+      "timeAlignment": "approximate; snap to actual audio phrase boundaries",
+      "cameraTransition": {
+        "easing": "easeInOutCubic",
+        "durationSec": 2.0,
+        "avoidAbruptCut": true
+      }
+    },
+    {
+      "id": "panipat_04_mountains",
+      "startSec": 33,
+      "endSec": 46,
+      "timingStatus": "approximate-editor-must-align-to-MP3",
+      "narrationCue": "Hindu Kush, Himalayas and Khyber Pass routes",
+      "visualIntent": "Hindu Kush/Himalayas shaded relief, Khyber route",
+      "cameraPreset": "passes_wide",
+      "layers": [
+        "terrain",
+        "political_borders",
+        "historical_routes"
+      ],
+      "transition": "ease-in-out",
+      "annotations": [],
+      "commanderRefs": [],
+      "unitFormationOverlay": false,
+      "designId": "mountain_pass",
+      "cameraAction": "Hindu Kush/Himalaya relief, Khyber pin, route ribbon",
+      "cardPreset": "mountain_labels",
+      "battlePresets": [],
+      "visualMode": "geographic",
+      "animationLayers": [
+        "map_relief",
+        "routes_or_terrain",
+        "cards",
+        "commander_or_units_if_cued"
+      ],
+      "timeAlignment": "approximate; snap to actual audio phrase boundaries",
+      "cameraTransition": {
+        "easing": "easeInOutCubic",
+        "durationSec": 2.0,
+        "avoidAbruptCut": true
+      }
+    },
+    {
+      "id": "panipat_05_commanders",
+      "startSec": 46,
+      "endSec": 55,
+      "timingStatus": "approximate-editor-must-align-to-MP3",
+      "narrationCue": "Babur in 1526 and Ahmad Shah Abdali in 1761",
+      "visualIntent": "Commander miniatures as brief historical examples",
+      "cameraPreset": "punjab_wide",
+      "layers": [
+        "terrain",
+        "political_borders",
+        "historical_routes"
+      ],
+      "transition": "ease-in-out",
+      "annotations": [],
+      "commanderRefs": [
+        "babur",
+        "ahmad_shah_abdali"
+      ],
+      "unitFormationOverlay": false,
+      "designId": "commander_intro",
+      "cameraAction": "Babur and Abdali miniatures appear one after another, no opposing battle reconstruction",
+      "cardPreset": "commander_mini",
+      "battlePresets": [],
+      "visualMode": "geographic",
+      "animationLayers": [
+        "map_relief",
+        "routes_or_terrain",
+        "cards",
+        "commander_or_units_if_cued"
+      ],
+      "timeAlignment": "approximate; snap to actual audio phrase boundaries",
+      "cameraTransition": {
+        "easing": "easeInOutCubic",
+        "durationSec": 2.0,
+        "avoidAbruptCut": true
+      }
+    },
+    {
+      "id": "panipat_06_corridor",
+      "startSec": 55,
+      "endSec": 65,
+      "timingStatus": "approximate-editor-must-align-to-MP3",
+      "narrationCue": "Punjab to Delhi routes through Haryana and Panipat",
+      "visualIntent": "Punjab–Haryana–Delhi corridor glow",
+      "cameraPreset": "corridor",
+      "layers": [
+        "terrain",
+        "political_borders",
+        "historical_routes"
+      ],
+      "transition": "ease-in-out",
+      "annotations": [],
+      "commanderRefs": [],
+      "unitFormationOverlay": false,
+      "designId": "corridor",
+      "cameraAction": "follow gold route corridor from Punjab via Haryana/Panipat to Delhi",
+      "cardPreset": "route_card",
+      "battlePresets": [],
+      "visualMode": "geographic",
+      "animationLayers": [
+        "map_relief",
+        "routes_or_terrain",
+        "cards",
+        "commander_or_units_if_cued"
+      ],
+      "timeAlignment": "approximate; snap to actual audio phrase boundaries",
+      "cameraTransition": {
+        "easing": "easeInOutCubic",
+        "durationSec": 2.0,
+        "avoidAbruptCut": true
+      }
+    },
+    {
+      "id": "panipat_07_constraints",
+      "startSec": 65,
+      "endSec": 76,
+      "timingStatus": "approximate-editor-must-align-to-MP3",
+      "narrationCue": "Yamuna and southwest arid terrain affected routes and logistics",
+      "visualIntent": "Yamuna, dry regions, no compulsory chokepoint",
+      "cameraPreset": "corridor",
+      "layers": [
+        "terrain",
+        "political_borders",
+        "historical_routes",
+        "river_yamuna"
+      ],
+      "transition": "ease-in-out",
+      "annotations": [],
+      "commanderRefs": [],
+      "unitFormationOverlay": false,
+      "designId": "yamuna",
+      "cameraAction": "highlight Yamuna and southwest dry regions, no choke-point funnel",
+      "cardPreset": "river_card",
+      "battlePresets": [],
+      "visualMode": "geographic",
+      "animationLayers": [
+        "map_relief",
+        "routes_or_terrain",
+        "cards",
+        "commander_or_units_if_cued"
+      ],
+      "timeAlignment": "approximate; snap to actual audio phrase boundaries",
+      "cameraTransition": {
+        "easing": "easeInOutCubic",
+        "durationSec": 2.0,
+        "avoidAbruptCut": true
+      }
+    },
+    {
+      "id": "panipat_08_gangetic",
+      "startSec": 76,
+      "endSec": 91,
+      "timingStatus": "approximate-editor-must-align-to-MP3",
+      "narrationCue": "Beyond Delhi: Ganga–Yamuna Doab and Gangetic Plains",
+      "visualIntent": "Doab and eastward Gangetic basin highlight",
+      "cameraPreset": "gangetic_wide",
+      "layers": [
+        "terrain",
+        "political_borders",
+        "historical_routes",
+        "river_yamuna"
+      ],
+      "transition": "ease-in-out",
+      "annotations": [],
+      "commanderRefs": [],
+      "unitFormationOverlay": false,
+      "designId": "doab",
+      "cameraAction": "eastward pullback Delhi→Doab→Gangetic plain, fertile overlay",
+      "cardPreset": "fertile_card",
+      "battlePresets": [],
+      "visualMode": "geographic",
+      "animationLayers": [
+        "map_relief",
+        "routes_or_terrain",
+        "cards",
+        "commander_or_units_if_cued"
+      ],
+      "timeAlignment": "approximate; snap to actual audio phrase boundaries",
+      "cameraTransition": {
+        "easing": "easeInOutCubic",
+        "durationSec": 2.0,
+        "avoidAbruptCut": true
+      }
+    },
+    {
+      "id": "panipat_09_logistics",
+      "startSec": 91,
+      "endSec": 104,
+      "timingStatus": "approximate-editor-must-align-to-MP3",
+      "narrationCue": "Large armies needed food, water, fodder, supplies",
+      "visualIntent": "Agricultural settlements and water markers",
+      "cameraPreset": "corridor",
+      "layers": [
+        "terrain",
+        "political_borders",
+        "historical_routes",
+        "river_yamuna"
+      ],
+      "transition": "ease-in-out",
+      "annotations": [],
+      "commanderRefs": [],
+      "unitFormationOverlay": false,
+      "designId": "supplies",
+      "cameraAction": "return corridor, small food/water/fodder pictograms and settlement pins",
+      "cardPreset": "logistics_card",
+      "battlePresets": [],
+      "visualMode": "geographic",
+      "animationLayers": [
+        "map_relief",
+        "routes_or_terrain",
+        "cards",
+        "commander_or_units_if_cued"
+      ],
+      "timeAlignment": "approximate; snap to actual audio phrase boundaries",
+      "cameraTransition": {
+        "easing": "easeInOutCubic",
+        "durationSec": 2.0,
+        "avoidAbruptCut": true
+      }
+    },
+    {
+      "id": "panipat_10_terrain",
+      "startSec": 104,
+      "endSec": 115,
+      "timingStatus": "approximate-editor-must-align-to-MP3",
+      "narrationCue": "Open terrain suitable for cavalry infantry artillery",
+      "visualIntent": "Panipat terrain close-up and schematic unit formations",
+      "cameraPreset": "panipat_close",
+      "layers": [
+        "terrain",
+        "political_borders",
+        "historical_routes"
+      ],
+      "transition": "ease-in-out",
+      "annotations": [],
+      "commanderRefs": [],
+      "unitFormationOverlay": true,
+      "designId": "terrain",
+      "cameraAction": "Panipat close; small 2D cavalry/infantry/cannon unit demonstration; 4x4→8x2",
+      "cardPreset": "unit_types",
+      "battlePresets": [],
+      "visualMode": "geographic",
+      "animationLayers": [
+        "map_relief",
+        "routes_or_terrain",
+        "cards",
+        "commander_or_units_if_cued"
+      ],
+      "timeAlignment": "approximate; snap to actual audio phrase boundaries",
+      "cameraTransition": {
+        "easing": "easeInOutCubic",
+        "durationSec": 2.0,
+        "avoidAbruptCut": true
+      }
+    },
+    {
+      "id": "panipat_11_delhi",
+      "startSec": 115,
+      "endSec": 126,
+      "timingStatus": "approximate-editor-must-align-to-MP3",
+      "narrationCue": "Panipat about 90 km north of Delhi; strategic position",
+      "visualIntent": "Delhi and Panipat connected, defensive approach",
+      "cameraPreset": "delhi_panipat",
+      "layers": [
+        "terrain",
+        "political_borders",
+        "historical_routes"
+      ],
+      "transition": "ease-in-out",
+      "annotations": [],
+      "commanderRefs": [],
+      "unitFormationOverlay": false,
+      "designId": "delhi",
+      "cameraAction": "Panipat–Delhi distance arc, no fake exact historic march path",
+      "cardPreset": "distance_card",
+      "battlePresets": [],
+      "visualMode": "geographic",
+      "animationLayers": [
+        "map_relief",
+        "routes_or_terrain",
+        "cards",
+        "commander_or_units_if_cued"
+      ],
+      "timeAlignment": "approximate; snap to actual audio phrase boundaries",
+      "cameraTransition": {
+        "easing": "easeInOutCubic",
+        "durationSec": 2.0,
+        "avoidAbruptCut": true
+      }
+    },
+    {
+      "id": "panipat_12_three_battles",
+      "startSec": 126,
+      "endSec": 140,
+      "timingStatus": "approximate-editor-must-align-to-MP3",
+      "narrationCue": "Different rulers, armies and politics; Delhi and North India",
+      "visualIntent": "Three battle year cards with paired commanders and abstract proportional unit cards",
+      "cameraPreset": "panipat_close",
+      "layers": [
+        "terrain",
+        "political_borders",
+        "historical_routes"
+      ],
+      "transition": "ease-in-out",
+      "annotations": [
+        "1526",
+        "1556",
+        "1761"
+      ],
+      "commanderRefs": [
+        "babur",
+        "ibrahim_lodi",
+        "bairam_khan",
+        "hemu",
+        "ahmad_shah_abdali",
+        "sadashivrao_bhau"
+      ],
+      "unitFormationOverlay": true,
+      "designId": "three_battles",
+      "cameraAction": "three fast comparison cards 1526, 1556, 1761 with paired commanders and proportional units; not historical geographic map",
+      "cardPreset": "battle_comparison",
+      "battlePresets": [
+        1526,
+        1556,
+        1761
+      ],
+      "visualMode": "comparison",
+      "animationLayers": [
+        "map_relief",
+        "routes_or_terrain",
+        "cards",
+        "commander_or_units_if_cued"
+      ],
+      "timeAlignment": "approximate; snap to actual audio phrase boundaries",
+      "cameraTransition": {
+        "easing": "easeInOutCubic",
+        "durationSec": 2.0,
+        "avoidAbruptCut": true
+      }
+    },
+    {
+      "id": "panipat_13_conclusion",
+      "startSec": 140,
+      "endSec": 151.249,
+      "timingStatus": "approximate-editor-must-align-to-MP3",
+      "narrationCue": "Strategic corridor, geography and history brought armies together",
+      "visualIntent": "Zoom out to northwest corridor; resolve on Panipat",
+      "cameraPreset": "corridor",
+      "layers": [
+        "terrain",
+        "political_borders",
+        "historical_routes"
+      ],
+      "transition": "ease-in-out",
+      "annotations": [],
+      "commanderRefs": [],
+      "unitFormationOverlay": false,
+      "designId": "outro",
+      "cameraAction": "return to northwest→Delhi corridor, then center Panipat; clean loop",
+      "cardPreset": "conclusion_card",
+      "battlePresets": [],
+      "visualMode": "geographic",
+      "animationLayers": [
+        "map_relief",
+        "routes_or_terrain",
+        "cards",
+        "commander_or_units_if_cued"
+      ],
+      "timeAlignment": "approximate; snap to actual audio phrase boundaries",
+      "cameraTransition": {
+        "easing": "easeInOutCubic",
+        "durationSec": 2.0,
+        "avoidAbruptCut": true
+      }
+    }
+  ],
+  "validation": {
+    "sceneCoverageSec": 151.249,
+    "mustPreserveExistingMapEditor": true,
+    "mustResolveAudioCuesBeforeFinalRender": true,
+    "mustVerifyAssets": true,
+    "mustNotInventExactTroopTypeBreakdown": true
+  },
+  "productionNotes": {
+    "scope": "Geography-first historical atlas video, not a battle reenactment",
+    "audioSync": "Scene timestamps are planning estimates. Must align each cue to MP3 waveform in editor before final export.",
+    "historicalDeployment": "Reconstructed, approximate; no precise geolocated soldier positions",
+    "commanderLikenesses": "Artistic interpretations, not authenticated portraits",
+    "mapProjection": "North up in geographic scenes; side-by-side comparison is non-geographic"
+  },
+  "visualSystem": {
+    "palette": {
+      "navy": "#101B2B",
+      "navyCard": "#17293B",
+      "gold": "#D9B76E",
+      "white": "#F7F5F0",
+      "muted": "#B8C6D1",
+      "attacker": "#679DBB",
+      "opponent": "#D6A26E",
+      "river": "#72B7C8",
+      "fertile": "#6F9977",
+      "arid": "#B79568"
+    },
+    "card": {
+      "background": "rgba(16,27,43,0.86)",
+      "radiusPx": 16,
+      "stroke": "rgba(217,183,110,0.28)",
+      "strokeWidthPx": 1,
+      "paddingPx": {
+        "horizontal": 18,
+        "vertical": 12
+      },
+      "shadow": "soft 0 8 24 rgba(0,0,0,0.24)",
+      "backdropBlurPx": 8,
+      "fallback": "opaque #17293B when blur unsupported",
+      "maxWidthFraction": 0.78,
+      "safeAreaPx": {
+        "top": 92,
+        "bottom": 160,
+        "horizontal": 28
+      },
+      "maxConcurrent": 2,
+      "avoidMapAnchors": true
+    },
+    "typography": {
+      "latin": "Noto Sans or installed equivalent",
+      "devanagari": "Noto Sans Devanagari or installed equivalent",
+      "titlePxAt1080": 54,
+      "locationPxAt1080": 42,
+      "bodyPxAt1080": 30,
+      "eyebrowPxAt1080": 23,
+      "yearPxAt1080": 50,
+      "minLegiblePxAt1080": 25,
+      "weight": {
+        "title": 700,
+        "body": 500
+      },
+      "contrast": "WCAG AA where feasible"
+    },
+    "animation": {
+      "cameraEasing": "smoothstep/ease-in-out",
+      "cameraMoveDurationSec": [
+        1.2,
+        3.2
+      ],
+      "cardEnterMs": 300,
+      "cardExitMs": 220,
+      "commanderEnterMs": 350,
+      "formationMorphMs": 600,
+      "routeReveal": "progressive path drawing, never fabricated single compulsory route",
+      "terrainPulse": "subtle, 1 pulse per relevant cue"
+    },
+    "map": {
+      "base": "existing relief/terrain with restrained political boundaries",
+      "countryLabels": "small rounded anchored label cards; no full-width opaque strips",
+      "keepNorthUp": true,
+      "portraitCrop": "preserve geographical anchors and title-safe region",
+      "historicalRoutes": "illustrative corridors, not precise 16th/18th century road alignments"
+    },
+    "hierarchy": [
+      "spoken geography focus",
+      "active route or terrain",
+      "one information card",
+      "small historical commander or army overlay",
+      "quiet background boundaries"
+    ]
+  },
+  "militaryVisualModes": {
+    "comparison": {
+      "geographic": false,
+      "layout": "WEST/LEFT vs EAST/RIGHT, two-panel schematic",
+      "leftRole": "designated attacking/northwest side when applicable",
+      "rightRole": "opponent",
+      "label": "SCHEMATIC COMPARISON · NOT GEOGRAPHIC DEPLOYMENT",
+      "direction": "commanders face each other; left faces right, right faces left",
+      "strengthScaling": "common soldiers-per-main-unit per battle; proportional count/partial fill; not icon size"
+    },
+    "historical": {
+      "geographic": true,
+      "orientation": "north-up",
+      "positions": "broad reconstructed sectors only, do not invent exact lat/lon",
+      "label": "APPROXIMATE HISTORICAL DEPLOYMENT",
+      "1761": "Maratha camp north near Panipat, Durrani camp south; Marathas advanced south Jan 14, 1761",
+      "1526": "Babur cart-and-gun barrier at front, cavalry wings/flanking detachments; Lodi opposite, elephant-heavy",
+      "1556": "Hemu elephant-led center; Mughal cavalry wings; artillery capture separate prior event",
+      "priority": "Use sourced historical directions over west/east comparison orientation"
+    }
+  },
+  "unitRendering": {
+    "visualStyle": "2D painted miniature, elevated top-right view, no 3D and no UI glyphs",
+    "subUnit": {
+      "icons": 4
+    },
+    "mainUnit": {
+      "subUnits": 4,
+      "icons": 16
+    },
+    "formationLayouts": {
+      "square": {
+        "rows": 4,
+        "columns": 4
+      },
+      "line": {
+        "rows": 2,
+        "columns": 8
+      }
+    },
+    "countSemantics": {
+      "personnel": "1 main unit represents adjustable N soldiers; all troop blocks in same comparison share N",
+      "equipment": "elephants and cannons counted separately and never mixed into personnel ratio",
+      "unknownSplit": "show neutral strength blocks plus illustrative known types; do not fabricate ratios",
+      "partialBlocks": "fractional fill/segmented strength badge, do not round misleadingly"
+    },
+    "armyPresentation": {
+      "commander": "small cutout in front of own formation, scale independent of troop numbers",
+      "labels": "rounded compact army card with commander, role, strength qualifier",
+      "motion": "march-in, hold, restrained flank movement only when source-backed",
+      "density": "at most 12 visible main units per side in overview; aggregation maintains true represented count"
+    }
+  },
+  "battlePresets": [
+    {
+      "year": 1526,
+      "battle": "First Battle of Panipat",
+      "mode": "comparison",
+      "left": {
+        "army": "Babur",
+        "commander": "babur",
+        "strength": 15000,
+        "strengthType": "estimated combatants",
+        "range": [
+          12000,
+          15000
+        ],
+        "unitBreakdown": {
+          "cavalry": "prominent, exact count unknown",
+          "matchlock": "present, exact count unknown",
+          "fieldArtilleryPieces": [
+            20,
+            24
+          ]
+        },
+        "formations": [
+          "araba linked carts and protected guns",
+          "center",
+          "left cavalry wing",
+          "right cavalry wing",
+          "flanking detachments"
+        ]
+      },
+      "right": {
+        "army": "Ibrahim Lodi",
+        "commander": "ibrahim_lodi",
+        "strength": 35000,
+        "strengthType": "estimated combatants",
+        "range": [
+          30000,
+          40000
+        ],
+        "unitBreakdown": {
+          "infantry": "present, count unknown",
+          "cavalry": "present, count unknown",
+          "warElephants": "about 1000 reported"
+        },
+        "formations": [
+          "large central mass",
+          "war elephants",
+          "cavalry/infantry not reliably quantified"
+        ]
+      },
+      "commonPersonnelPerMainUnit": 2500,
+      "displayMainUnits": {
+        "left": 6,
+        "right": 14
+      },
+      "ratio": "15:35",
+      "sourceUrls": [
+        "https://panipat.gov.in/first-battle/"
+      ]
+    },
+    {
+      "year": 1556,
+      "battle": "Second Battle of Panipat",
+      "mode": "comparison",
+      "left": {
+        "army": "Mughal vanguard",
+        "commander": "bairam_khan",
+        "strength": 10000,
+        "strengthType": "reported vanguard cavalry only; not entire Mughal army",
+        "unitBreakdown": {
+          "cavalry": 10000,
+          "artillery": "Hemu guns captured prior to main engagement; do not count as Mughal troop strength"
+        },
+        "formations": [
+          "center",
+          "left wing",
+          "right wing",
+          "vanguard"
+        ]
+      },
+      "right": {
+        "army": "Hemu",
+        "commander": "hemu",
+        "strength": 30000,
+        "strengthType": "reported cavalry only; other combatants excluded",
+        "unitBreakdown": {
+          "cavalry": 30000,
+          "elephantsRange": [
+            500,
+            1500
+          ],
+          "elephantCountDisputed": true
+        },
+        "formations": [
+          "elephant-led center",
+          "cavalry wings"
+        ]
+      },
+      "commonPersonnelPerMainUnit": 2500,
+      "displayMainUnits": {
+        "left": 4,
+        "right": 12
+      },
+      "ratio": "10:30 cavalry/vanguard-only, NOT total army",
+      "sourceUrls": [
+        "https://panipat.gov.in/second-battle/",
+        "https://ignca.gov.in/Asi_data/41118.pdf"
+      ]
+    },
+    {
+      "year": 1761,
+      "battle": "Third Battle of Panipat",
+      "mode": "comparison",
+      "left": {
+        "army": "Durrani coalition",
+        "commander": "ahmad_shah_abdali",
+        "strength": 60000,
+        "strengthType": "illustrative reconstruction, disputed",
+        "unitBreakdown": {
+          "cavalry": "prominent",
+          "rohillaTroops": "present",
+          "zamburak": "present",
+          "artillery": "present"
+        },
+        "formations": [
+          "Shah Wali Khan",
+          "Rohilla and Awadh allies",
+          "reserves"
+        ]
+      },
+      "right": {
+        "army": "Maratha coalition",
+        "commander": "sadashivrao_bhau",
+        "strength": 45000,
+        "strengthType": "illustrative lower-end estimate, range 45–60k",
+        "range": [
+          45000,
+          60000
+        ],
+        "unitBreakdown": {
+          "cavalry": "present",
+          "GardiInfantry": "present",
+          "artillery": "present"
+        },
+        "formations": [
+          "Ibrahim Khan Gardi",
+          "Bhau center",
+          "Scindia",
+          "Holkar",
+          "Gaikwad"
+        ]
+      },
+      "commonPersonnelPerMainUnit": 5000,
+      "displayMainUnits": {
+        "left": 12,
+        "right": 9
+      },
+      "ratio": "60:45 illustrative, not settled fact",
+      "geographicNote": "In historical map mode Maratha camp north and Durrani south, not west/east",
+      "sourceUrls": [
+        "https://panipat.gov.in/third-battle/",
+        "https://ignca.gov.in/Asi_data/38167.pdf"
+      ]
+    }
+  ],
+  "historicalSourceNotes": [
+    {
+      "url": "https://panipat.gov.in/first-battle/",
+      "supports": "1526 estimated combatants, artillery and tulughma/araba"
+    },
+    {
+      "url": "https://panipat.gov.in/second-battle/",
+      "supports": "1556 cavalry figures, Hemu elephants and commander details; some figures disputed"
+    },
+    {
+      "url": "https://panipat.gov.in/third-battle/",
+      "supports": "1761 camps, southward Maratha movement, estimates and supplies"
+    },
+    {
+      "url": "https://ignca.gov.in/Asi_data/38167.pdf",
+      "supports": "1761 reconstructed commander positions; broad sectors only"
+    }
+  ],
+  "validationV2": [
+    "MP3 exact duration read from ffprobe 151.248938 s; never time-stretch",
+    "All 13 source scenes retained",
+    "Audio cues must be aligned manually/automatically then reviewed; current cue times are NOT word-level verified",
+    "No asset referenced unless file resolves; missing transparent alpha flagged",
+    "1526 6 vs 14 main units for illustrative 15k vs 35k",
+    "1556 4 vs 12 main units for reported cavalry/vanguard only; NOT full-army comparison",
+    "1761 12 vs 9 main units for illustrative 60k vs 45k; mark contested",
+    "Equipment icons separate from personnel",
+    "Geographic map north-up and 1761 north-south deployment; schematic west-east separate",
+    "No hardcoded 1761 troop percentages or exact geocoordinates",
+    "Rounded cards legible on 9:16 safe area and avoid map anchor",
+    "Old Map Editor JSON import/export and MP4 export regression tests"
+  ]
+}
