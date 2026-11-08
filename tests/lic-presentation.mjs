@@ -36,9 +36,9 @@ function setup(play, {automatic=false, selection=false, clock=null}={}) {
   if(!automatic) el('storyModeToggleOne').events.click();
   const click = id => {
     el(id).events.click({stopPropagation(){}});
-    if (!selection && el('stageContainer').attrs['data-story-step'] === '5' && !el('incomeSelectionPrompt').hidden) el('incomeSelectionContinue').events.click();
+
   };
-  return {el,doc,audios,windowEvents,premium:context.getLicSamplePremium,click};
+  return {el,doc,audios,windowEvents,premium:context.getLicSamplePremium,click,change:(id,value)=>el(id).events.change({target:{value}})};
 }
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 const focus=s=>s.el('storyChart').attrs['data-focus'];
@@ -57,10 +57,9 @@ test('Auto continues through reveal to Page 5 using one audio element',async()=>
   }
   audio.ended=true;audio.events.ended();await flush();
   assert.equal(s.el('stageContainer').attrs['data-story-step'],'5','Reveal continues to the example');
-  assert.equal(s.el('incomeSelectionPrompt').hidden,false);
-  s.click('incomeSelectionContinue');await flush();
-  audio.ended=true;audio.events.ended();await flush();
-  assert.equal(s.el('stageContainer').attrs['data-story-step'],'6','Confirmed example continues to journey');
+  assert.equal(s.el('planJourneyPage').hidden,false);
+  assert.match(audio.src,/page6-step1.mp3$/);
+  assert.equal(s.audios.length,1,'Journey reuses the unlocked player');
   s.windowEvents.pagehide();
 });
 
@@ -88,7 +87,7 @@ test('one original chart moves through pages 1 → 2 → 3 and back without clon
   assert.equal(s.el('stagePreviewModal').inert,false);
   s.click('sceneTwoNextBtn');
   assert.equal(chart.attrs['data-step'],'3');
-  assert.equal(s.el('storyStageCounter').textContent,'3 / 10');
+  assert.equal(s.el('storyStageCounter').textContent,'3 / 5');
   assert.equal(s.el('sceneTwoNextBtn').hidden,false);
   assert.equal(s.el('presenterChartHost').children.length,1);
   s.click('previewDismissBtn');
@@ -218,258 +217,58 @@ test('all supplied page and journey voice recordings are installed',()=>{
 });
 
 
-test('Page 3 opens the reveal, Page 5 leads to the journey, and Back restores the chart',()=>{
-  const s=setup(); s.click('ctaForwardBtn'); s.click('sceneTwoNextBtn');
-  assert.equal(s.el('storyNextLabel').textContent,'Stability का अगला कदम');
-  s.click('sceneTwoNextBtn');
-  assert.equal(s.el('stageContainer').attrs['data-story-step'],'4');
-  assert.equal(s.el('productReveal').hidden,false);
-  assert.equal(s.el('storyChart').hidden,true);
-  assert.equal(s.el('revealCtaIntro').hidden,false);
-  assert.equal(s.el('storyNextLabel').textContent,'Plan समझें');
-  assert.equal(s.el('storyStageCounter').textContent,'4 / 10');
-  s.click('sceneTwoNextBtn');
-  assert.equal(s.el('storyStageCounter').textContent,'5 / 10');
-  assert.equal(s.el('planDetailsPage').hidden,false);
-  assert.equal(s.el('sceneTwoNextBtn').hidden,false);
-  s.click('sceneTwoNextBtn');
-  assert.equal(s.el('storyStageCounter').textContent,'6 / 10');
+
+function enterJourney(s) {s.click('ctaForwardBtn');s.click('sceneTwoNextBtn');s.click('sceneTwoNextBtn');s.click('sceneTwoNextBtn');}
+test('Page 4 offers the only selectors; Page 5 opens its chart and Back preserves choices',()=>{
+  const s=setup();s.click('ctaForwardBtn');s.click('sceneTwoNextBtn');s.click('sceneTwoNextBtn');
+  assert.equal(s.el('policyExampleSelection').hidden,false);
+  s.change('policyExampleAge','35');s.change('policyExamplePpt','7');s.click('sceneTwoNextBtn');
+  assert.equal(s.el('policyExampleSelection').hidden,true);
   assert.equal(s.el('planJourneyPage').hidden,false);
-  assert.equal(s.el('storyNextLabel').textContent,'Tap to reveal next benefit');
-  const html=readFileSync(new URL('../lic/bima-platinum/index.html',import.meta.url),'utf8');
-  assert.doesNotMatch(html,/LIC sample • Offline|Income during payout period|moreBenefitsPage|planDetailsFrame/);
-  s.click('previewDismissBtn');
-  assert.equal(s.el('planDetailsPage').hidden,false);
-  s.click('previewDismissBtn');
-  assert.equal(s.el('productReveal').hidden,false);
-  s.click('previewDismissBtn');
-  assert.equal(s.el('storyChart').hidden,false);
-  assert.equal(s.el('productReveal').hidden,true);
-  assert.equal(s.el('storyChart').attrs['data-step'],'3');
-});
-
-test('Page 4 shares recording controls, exact script and missing-file handling',async()=>{
-  const s=setup(); s.click('ctaForwardBtn'); s.click('sceneTwoNextBtn'); s.click('sceneTwoNextBtn');
-  await flush();
-  const audio=s.audios.at(-1);
-  assert.equal(audio.src,'assets/audio/page4.mp3');
-  assert.equal(s.el('sceneTwoAudioLabel').textContent,'Pause audio');
-  assert.equal(focus(s),'');
-  audio.currentTime=2; s.click('sceneTwoDialogueBtn');
-  assert.equal(s.el('sceneTwoAudioLabel').textContent,'Resume audio');
-  s.click('sceneTwoDialogueBtn'); await flush();
-  s.click('sceneTwoNextBtn');
-  assert.equal(audio.paused,true); assert.equal(audio.currentTime,0);
-  audio.events.playing();
-  assert.equal(s.el('sceneTwoAudioLabel').textContent,'Pause audio');
-  assert.match(source,/यहीं Bima Platinum आपकी financial journey में stability जोड़ता है। यह आपके portfolio के एक हिस्से को guaranteed और predictable structure देने के लिए बनाया गया है।/);
-  const missing=setup(()=>Promise.reject(new Error('missing')));
-  missing.click('ctaForwardBtn'); missing.click('sceneTwoNextBtn'); missing.click('sceneTwoNextBtn');
-  missing.click('sceneTwoDialogueBtn'); await flush();
-  assert.match(missing.el('sceneTwoAudioStatus').textContent,/नई recording/);
-});
-
-
-test('all 20 official samples use fixed lookup premiums and update timing',()=>{
-  const s=setup(); s.click('ctaForwardBtn'); for(let i=0;i<3;i++) s.click('sceneTwoNextBtn');
-  const fixtures={15:[81810,54735,43020,32145,24990],25:[83145,55275,43290,32220,25005],35:[87495,57015,44160,32445,25005],45:[100365,62025,46770,33465,25425]};
-  const ppts=[7,10,12,15,18];
-  for(const [age,premiums] of Object.entries(fixtures)) {
-    s.click('sampleAge'+age);
-    for(let i=0;i<ppts.length;i++) {
-      const ppt=ppts[i]; s.click('samplePpt'+ppt);
-      assert.equal(s.premium(age,ppt),premiums[i]);
-      assert.equal(s.el('incomeAnnualPremium').textContent,'₹'+premiums[i].toLocaleString('en-IN'));
-      assert.equal(s.el('incomePptEnd').textContent,'Year '+ppt);
-      assert.equal(s.el('incomePayoutStart').textContent,'End of Year '+ppt);
-      assert.equal(s.el('incomeLaterYears').textContent,'Years '+(ppt+5)+' / 30');
-      assert.equal(s.el('sampleAge'+age).attrs['aria-pressed'],'true');
-      assert.equal(s.el('samplePpt'+ppt).attrs['aria-pressed'],'true');
-    }
-  }
-  for(const [age,ppt] of [[34,7],[25,8],[60,15],[null,15]]) assert.equal(s.premium(age,ppt),null);
-});
-
-test('income defaults and selections persist when navigating back to Page 4',()=>{
-  const s=setup();
-  assert.equal(s.el('incomeAnnualPremium').textContent,'₹32,220');
-  s.click('ctaForwardBtn'); for(let i=0;i<3;i++) s.click('sceneTwoNextBtn');
-  s.click('sampleAge35'); s.click('samplePpt7');
-  assert.equal(s.el('incomeAnnualPremium').textContent,'₹87,495');
-  s.click('previewDismissBtn'); s.click('sceneTwoNextBtn');
-  assert.equal(s.el('incomeAnnualPremium').textContent,'₹87,495');
-  assert.equal(s.el('samplePpt7').attrs['aria-pressed'],'true');
-  const html=readFileSync(new URL('../lic/bima-platinum/index.html',import.meta.url),'utf8');
-  assert.match(html,/Sum Assured<\/dt><dd>₹3,00,000/);
-  assert.match(html,/Policy Term<\/dt><dd>30 years/);
-  assert.match(html,/income-amount">₹30,000/);
-  assert.doesNotMatch(html,/Choose an official LIC example/);
-});
-
-test('Page 5 advisor control uses shared audio lifecycle and stops on Back',async()=>{
-  const s=setup(); s.click('ctaForwardBtn'); for(let i=0;i<3;i++) s.click('sceneTwoNextBtn');
-  await flush();
-  const audio=s.audios.at(-1);
-  assert.equal(audio.src,'assets/audio/page5.mp3');
-  audio.currentTime=2;
-  s.click('sceneTwoDialogueBtn'); assert.equal(s.el('sceneTwoAudioLabel').textContent,'Resume audio');
-  s.click('sceneTwoDialogueBtn'); await flush();
-  s.click('previewDismissBtn'); assert.equal(audio.paused,true); assert.equal(audio.currentTime,0);
-});
-
-test('Page 6 carries selected PPT, maps booster year, and finishes with a replayable story',()=>{
-  const s=setup(); s.click('ctaForwardBtn'); for(let i=0;i<3;i++) s.click('sceneTwoNextBtn');
-  s.click('samplePpt7'); s.click('sceneTwoNextBtn');
-  s.click('journey3');
-  assert.match(s.el('journeyDetail').innerHTML,/Policy Year 12/);
-  assert.match(s.audios.at(-1).src,/page6-step4\.mp3$/);
-  s.click('journey4'); s.click('sceneTwoNextBtn');
-  assert.equal(s.el('journeyReplay').hidden,false);
-  assert.equal(s.el('storyNextLabel').textContent,'अब protection भी देखें');
-  assert.equal(s.el('journey0').classList.contains('is-complete'),true);
-  s.click('journeyReplay');
-  assert.equal(s.el('journeyProgress').textContent,'1 of 5');
-  assert.equal(s.el('journeyReplay').hidden,true);
-  const journeyAudio=s.audios.at(-1);
-  s.click('previewDismissBtn');
-  assert.equal(s.el('storyStageCounter').textContent,'5 / 10');
-  assert.equal(journeyAudio.paused,true);
-});
-
-
-test('Manual Page 4 holds after narration and switching Auto advances exactly once', async()=>{
-  const s=setup();s.click('ctaForwardBtn');s.click('sceneTwoNextBtn');s.click('sceneTwoNextBtn');await flush();
-  const audio=s.audios.at(-1), ended=audio.events.ended;
-  audio.ended=true;ended();await flush();
-  assert.equal(s.el('stageContainer').attrs['data-story-step'],'4');
-  s.click('storyModeToggle');await flush();
-  assert.equal(s.el('stageContainer').attrs['data-story-step'],'5');
-  s.click('incomeSelectionContinue');
-  ended();
-  assert.equal(s.el('stageContainer').attrs['data-story-step'],'5');
-});
-
-test('stage illustrations follow selected example and base GA, never change the selection',()=>{
-  const s=setup();s.click('ctaForwardBtn');for(let i=0;i<3;i++)s.click('sceneTwoNextBtn');
-  s.click('sampleAge35');s.click('samplePpt7');s.click('sceneTwoNextBtn');
-  s.click('journey0');
-  assert.match(s.el('journeyIllustration').innerHTML,/₹87,495/);
-  assert.match(s.el('journeyIllustration').innerHTML,/Selected: 7 years/);
-  assert.doesNotMatch(s.el('journeyIllustration').innerHTML,/<button/);
-  s.click('journey1');assert.match(s.el('journeyIllustration').innerHTML,/7%/);
-  s.click('journey2');assert.match(s.el('journeyIllustration').innerHTML,/Year 7 से Year 29/);
-  s.click('journey3');assert.match(s.el('journeyIllustration').innerHTML,/Policy Year 12/);
-  s.click('journey4');
-  // 87,495 × .07 × (1+2+...+7) = 171,490.20; plus 300,000 BSA.
-  assert.match(s.el('journeyIllustration').innerHTML,/₹1,71,490/);
-  assert.match(s.el('journeyIllustration').innerHTML,/₹4,71,490/);
-  s.click('journeyPlayPause');assert.equal(s.el('planJourneyPage').dataset.paused,'true');
-  s.click('previewDismissBtn');assert.equal(s.el('incomeAnnualPremium').textContent,'₹87,495');
-});
-
-function selectionClock() {
-  let now=0, nextId=0;
-  const timers=new Map();
-  return {
-    setTimeout(fn,delay) { const id=++nextId;timers.set(id,{fn,at:now+delay});return id; },
-    clearTimeout(id) { timers.delete(id); },
-    advance(ms) {
-      const end=now+ms;
-      for(;;) {
-        const due=[...timers].filter(([,t])=>t.at<=end).sort((a,b)=>a[1].at-b[1].at)[0];
-        if(!due)break;
-        now=due[1].at;timers.delete(due[0]);due[1].fn();
-      }
-      now=end;
-    }
-  };
-}
-function enterSelection(s) {s.click('ctaForwardBtn');for(let i=0;i<3;i++)s.click('sceneTwoNextBtn');}
-
-test('Page 5 prompts before narration and resumes default example after exactly ten seconds',async()=>{
-  const clock=selectionClock(),s=setup(undefined,{automatic:true,selection:true,clock});
-  enterSelection(s);await flush();
-  assert.equal(s.el('incomeSelectionPrompt').hidden,false);
-  assert.equal(s.el('planDetailsPage').inert,true);
-  assert.match(s.el('incomeSelectionSummary').textContent,/Age 25 · PPT 15/);
-  assert.doesNotMatch(s.audios.at(-1).src,/page5/);
-  clock.advance(9000);assert.match(s.el('incomeSelectionCountdown').textContent,/^1 second/);
-  assert.equal(s.el('incomeSelectionPrompt').hidden,false);
-  clock.advance(1000);await flush();
-  assert.equal(s.el('incomeSelectionPrompt').hidden,true);
-  assert.equal(s.el('planDetailsPage').inert,false);
-  assert.match(s.audios.at(-1).src,/page5.mp3$/);
-  assert.equal(s.el('incomeAnnualPremium').textContent,'₹32,220');
-  s.audios.at(-1).events.ended();await flush();
-  assert.equal(s.el('stageContainer').attrs['data-story-step'],'6');
+  assert.match(s.el('journeyStageBody0').textContent,/7 years.*87,495/);
+  s.click('journey3');assert.match(s.el('journeyStageBody3').textContent,/2,10,000.*12/);
+  s.click('previewDismissBtn');s.click('sceneTwoNextBtn');
+  assert.match(s.el('journeyStageBody0').textContent,/7 years.*87,495/);
   s.windowEvents.pagehide();
 });
-
-test('changing age or PPT resets inactivity countdown and Continue preserves the chosen example',async()=>{
-  const clock=selectionClock(),s=setup(undefined,{automatic:true,selection:true,clock});
-  enterSelection(s);clock.advance(7000);s.click('sampleAge35');s.click('samplePpt7');
-  assert.match(s.el('incomeSelectionSummary').textContent,/Age 35 · PPT 7/);
-  assert.match(s.el('incomeSelectionCountdown').textContent,/^10 seconds/);
-  clock.advance(9000);assert.equal(s.el('incomeSelectionPrompt').hidden,false);
-  s.click('incomeSelectionContinue');await flush();
-  assert.equal(s.el('incomeAnnualPremium').textContent,'₹87,495');
-  s.audios.at(-1).events.ended();await flush();s.click('journey0');
-  assert.match(s.el('journeyIllustration').innerHTML,/Selected: 7 years/);
-  s.windowEvents.pagehide();clock.advance(30000);
-  assert.equal(s.el('incomeSelectionPrompt').hidden,true);
+test('all 20 fixed premiums remain exact and unsupported samples return null',()=>{
+  const s=setup();const fixtures={15:[81810,54735,43020,32145,24990],25:[83145,55275,43290,32220,25005],35:[87495,57015,44160,32445,25005],45:[100365,62025,46770,33465,25425]};
+  for(const [age,premiums] of Object.entries(fixtures)) [7,10,12,15,18].forEach((ppt,i)=>assert.equal(s.premium(age,ppt),premiums[i]));
+  assert.equal(s.premium(34,7),null);assert.equal(s.premium(25,8),null);s.windowEvents.pagehide();
 });
-
-test('selection timer can pause and resume without leaving the prompt',async()=>{
-  const clock=selectionClock(),s=setup(undefined,{selection:true,clock});
-  enterSelection(s);clock.advance(3000);s.click('incomeSelectionPause');clock.advance(20000);
-  assert.equal(s.el('incomeSelectionPrompt').hidden,false);
-  assert.match(s.el('incomeSelectionCountdown').textContent,/Timer paused/);
-  s.click('samplePpt10');s.click('incomeSelectionPause');clock.advance(10000);await flush();
-  assert.equal(s.el('incomeSelectionPrompt').hidden,true);
-  s.audios.at(-1).events.ended();
-  assert.equal(s.el('stageContainer').attrs['data-story-step'],'5','Manual narration holds after confirmation');
-  s.windowEvents.pagehide();
-});
-
-test('Back and tab hiding cancel stale selection timers and restore visible controls',()=>{
-  const clock=selectionClock(),s=setup(undefined,{selection:true,clock});
-  enterSelection(s);clock.advance(3000);s.doc.hidden=true;s.doc.events.visibilitychange();
-  clock.advance(20000);assert.equal(s.el('incomeSelectionPrompt').hidden,false);
-  s.doc.hidden=false;s.doc.events.visibilitychange();clock.advance(6000);
-  assert.equal(s.el('incomeSelectionPrompt').hidden,false);
-  s.click('previewDismissBtn');clock.advance(30000);
-  assert.equal(s.el('stageContainer').attrs['data-story-step'],'4');
-  assert.equal(s.el('incomeSelectionPrompt').hidden,true);
-  assert.equal(s.el('planDetailsPage').inert,false);
-  s.windowEvents.pagehide();
-});
-
-test('only the current side stage expands and the policy timeline follows the same stage',()=>{
-  const s=setup();enterSelection(s);s.click('sceneTwoNextBtn');
+test('narration advances one expanded accordion stage, completes and replays on Page 5',async()=>{
+  const s=setup();enterJourney(s);await flush();const audio=s.audios.at(-1);
   for(let stage=0;stage<5;stage++) {
-    s.click('journey'+stage);
-    for(let index=0;index<5;index++) {
-      assert.equal(s.el('journey'+index).attrs['aria-expanded'],String(index===stage));
-      assert.equal(s.el('journeyStageBody'+index).hidden,index!==stage);
-    }
-    assert.equal(s.el('journeyPolicyTimeline').dataset.stage,['ppt','additions','income','booster','maturity'][stage]);
-    const milestone=[0,1,1,2,3][stage];
-    assert.equal(s.el('journeyPolicyMilestone'+milestone).classList.contains('is-current'),true);
+    assert.match(audio.src,new RegExp(`page6-step${stage+1}.mp3$`));
+    for(let i=0;i<5;i++)assert.equal(s.el('journey'+i).attrs['aria-expanded'],String(stage===i));
+    audio.events.ended();await flush();
   }
-  s.click('sceneTwoNextBtn');
-  assert.equal(s.el('journey4').attrs['aria-expanded'],'true','Keep the final stage readable at completion');
-  s.click('journeyReplay');
-  assert.equal(s.el('journey0').attrs['aria-expanded'],'true');
-  assert.equal(s.el('journey4').attrs['aria-expanded'],'false');
-  s.windowEvents.pagehide();
+  assert.equal(s.el('planJourneyPage').dataset.complete,'true');
+  assert.equal(s.el('storyNextLabel').textContent,'Replay journey');
+  s.click('sceneTwoNextBtn');assert.equal(s.el('journey0').attrs['aria-expanded'],'true');s.windowEvents.pagehide();
+});
+test('pause, resume, manual stage selection and Back cancel stale journey audio',async()=>{
+  const s=setup();enterJourney(s);await flush();const audio=s.audios.at(-1),oldEnded=audio.events.ended;
+  s.click('journeyPlayPause');assert.equal(audio.paused,true);assert.equal(s.el('planJourneyPage').dataset.paused,'true');
+  s.click('journeyPlayPause');await flush();assert.equal(audio.paused,false);
+  s.click('journey3');await flush();oldEnded();assert.equal(s.el('journey3').attrs['aria-expanded'],'true');
+  const ended=audio.events.ended;s.click('previewDismissBtn');ended();
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'4');assert.equal(audio.paused,true);s.windowEvents.pagehide();
+});
+test('every stage renders the complete chart with base GA and correct payout years',()=>{
+  const ctx={window:{}};vm.runInNewContext(readFileSync(new URL('../lic/bima-platinum/financial-journey.js',import.meta.url),'utf8'),ctx);
+  const root={dataset:{}};
+  for(let step=0;step<5;step++) {
+    ctx.window.renderBimaFinancialJourney(root,{step,ppt:7,premium:87495,age:35,boosterYear:12,term:30,baseSA:300000});
+    assert.match(root.innerHTML,/₹1,71,490/);assert.match(root.innerHTML,/₹4,71,490/);
+    assert.match(root.innerHTML,/Years 7–29/);assert.match(root.innerHTML,/Year 12/);assert.match(root.innerHTML,/Year 30/);
+    assert.match(root.innerHTML,/Maturity/);assert.doesNotMatch(root.innerHTML,/<button|7% base|7Y|10Y/);
+    assert.equal(root.dataset.stage,String(step));
+  }
 });
 
-test('policy milestone ages and years use the selected age and PPT, not reference-image amounts',()=>{
-  const s=setup();enterSelection(s);s.click('sampleAge35');s.click('samplePpt7');s.click('sceneTwoNextBtn');s.click('journey3');
-  assert.equal(s.el('journeyPolicyStart').textContent,'Age 35 · Year 0');
-  assert.equal(s.el('journeyPolicyIncome').textContent,'Age 42 · Year 7');
-  assert.equal(s.el('journeyPolicyBooster').textContent,'Age 47 · Year 12');
-  assert.equal(s.el('journeyPolicyMaturity').textContent,'Age 65 · Year 30');
-  assert.match(s.el('journeyStageBody3').textContent,/₹2,10,000.*12/);
-  s.windowEvents.pagehide();
+test('hiding the journey pauses at its current media position',async()=>{
+  const s=setup();enterJourney(s);await flush();const audio=s.audios.at(-1);audio.currentTime=2;
+  s.doc.hidden=true;s.doc.events.visibilitychange();assert.equal(audio.paused,true);assert.equal(audio.currentTime,2);
+  s.doc.hidden=false;s.click('journeyPlayPause');await flush();assert.equal(audio.paused,false);assert.equal(audio.currentTime,2);s.windowEvents.pagehide();
 });

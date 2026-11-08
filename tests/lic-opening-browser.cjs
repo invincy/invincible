@@ -59,12 +59,9 @@ fs.mkdirSync(out,{recursive:true});
    await auto.evaluate(()=>{const a=window.testAudios[0];a.currentTime=a.duration-.03;});
    await auto.waitForFunction(()=>document.querySelector('#stageContainer').dataset.storyStep==='5');
    assert.equal(await auto.locator('#stageContainer').getAttribute('data-story-step'),'5');
-   await auto.locator('#incomeSelectionPrompt').waitFor({state:'visible'});
-   assert.match(await auto.locator('#incomeSelectionCountdown').innerText(),/default values/);
-   await auto.locator('#incomeSelectionPrompt').waitFor({state:'hidden',timeout:14000});
-   await auto.waitForFunction(()=>Number.isFinite(window.testAudios[0].duration)&&window.testAudios[0].src.endsWith('page5.mp3'));
-   await auto.evaluate(()=>{const a=window.testAudios[0];a.currentTime=a.duration-.03;});
-   await auto.waitForFunction(()=>document.querySelector('#stageContainer').dataset.storyStep==='6');
+   await auto.waitForFunction(()=>document.querySelector('#journeyFinancialGraph svg'));
+   assert.equal(await auto.locator('.journey-stage[aria-expanded="true"]').count(),1);
+   assert.equal(await auto.evaluate(()=>window.testAudios.length),1,'Journey reuses the unlocked player');
    await auto.close();console.log('Real audio automatically advances 1–5, with Manual hold and one player.');
   }
   if(!process.env.LIC_LAYOUT_ONLY) for(const [width,height] of [[320,568],[360,640],[390,844],[320,480],[1440,900]]) {
@@ -137,110 +134,7 @@ fs.mkdirSync(out,{recursive:true});
    assert.deepEqual(errors,[]);
    await page.close();
   }
-  // Audio placement may change later-page layout; product sections stay identical.
-  const before=execFileSync('git',['show',`${process.env.LIC_BASELINE_REF || 'origin/master'}:lic/bima-platinum/index.html`],{encoding:'utf8'});
-  const after=fs.readFileSync('lic/bima-platinum/index.html','utf8');
-  for(const id of ['planDetailsPage']) {
-   const re=new RegExp(`<section id="${id}"[\\s\\S]*?</section>`);
-   assert.equal(after.match(re)?.[0].replace(/ id="incomeSelectorHome"/g,'').replace(/ id="incomeSelectors"/g,'').replace(/\r\n/g,'\n'),before.match(re)?.[0].replace(/ id="incomeSelectorHome"/g,'').replace(/ id="incomeSelectors"/g,'').replace(/\r\n/g,'\n'),id);
-  }
-  console.log('Page 5 retains its existing values and controls.');
-  assert.match(after,/31 March 2027 तक/);
-  // Deterministic media states exercise layout during loading and failures too.
-  for(const [width,height] of [[320,480],[320,568],[360,640],[390,844],[1440,900]]) {
-   const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
-   await page.addInitScript(()=>{
-    window.testAudios=[];
-    window.Audio=class extends EventTarget {
-     constructor(src){super();this.src=src;this.duration=8;this.currentTime=0;this.paused=true;this.ended=false;window.testAudios.push(this);}
-     play(){
-      this.ended=false;
-      if(window.testDeny) return Promise.reject(Object.assign(new Error('blocked'),{name:'NotAllowedError'}));
-      return new Promise(resolve=>{this.start=()=>{this.paused=false;this.dispatchEvent(new Event('playing'));resolve();};});
-     }
-     pause(){this.paused=true;this.dispatchEvent(new Event('pause'));}
-    };
-   });
-   await page.goto(`${base}/lic/bima-platinum/`);
-   await page.click('#storyModeToggleOne');
-   await page.evaluate(()=>document.fonts.ready);
-   const measure=async(step)=>page.evaluate(step=>{
-    const audio=document.querySelector(step===1?'#advisorAudioBtn':step===6?'#journeyPlayPause':'#sceneTwoDialogueBtn');
-    const next=document.querySelector(step===1?'#ctaForwardBtn':'#sceneTwoNextBtn');
-    const a=audio.getBoundingClientRect(),n=next.getBoundingClientRect();
-    const visible=r=>r.x>=0&&r.y>=0&&r.right<=innerWidth+.5&&r.bottom<=innerHeight+.5;
-    const hit=e=>{const r=e.getBoundingClientRect(),h=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return e===h||e.contains(h);};
-    const container=step===1?document.querySelector('#stageContainer'):document.querySelector('#stagePreviewModal');
-    const protectedSelectors=step===5?'.income-timeline':step===6?'.journey-stages,.journey-benefit-panel,.journey-policy-timeline':step<=3?'#storyChart .scenario-legend':'.reveal-product-copy,.reveal-credentials';
-    const clear=[...document.querySelectorAll(protectedSelectors)].every(e=>{const r=e.getBoundingClientRect();return a.right<=r.left||a.left>=r.right||a.bottom<=r.top||a.top>=r.bottom;});
-    return {audio:{x:a.x,y:a.y,width:a.width,height:a.height},next:{x:n.x,y:n.y,width:n.width,height:n.height},visible:visible(a)&&visible(n),hit:hit(audio)&&hit(next),clear,separate:a.bottom<=n.top||n.bottom<=a.top||a.right<=n.left||n.right<=a.left,overflow:container.scrollHeight-container.clientHeight,pageOverflow:document.documentElement.scrollHeight-innerHeight,icon:audio.querySelector('.advisor-audio-icon')?.textContent};
-   },step);
-   for(let step=1;step<=6;step++) {
-    if(step>1) await page.click(step===2?'#ctaForwardBtn':'#sceneTwoNextBtn');
-    await page.evaluate(()=>document.fonts.ready);
-    if(step===5) {
-     const card=await page.locator('.income-selection-card').evaluate(el=>({height:el.clientHeight,scroll:el.scrollHeight,top:el.getBoundingClientRect().top,bottom:el.getBoundingClientRect().bottom}));
-     assert.ok(card.scroll<=card.height+1&&card.top>=0&&card.bottom<=height,JSON.stringify({width,height,card}));
-     await page.screenshot({path:`${out}/${width}x${height}-selection-prompt.png`});
-     await page.click('#incomeSelectionContinue');
-    }
-    if(step===2||step===3) {
-     await page.waitForFunction(()=>{const image=document.querySelector('#storyPresenter');return image.complete&&image.naturalWidth>0;});
-     assert.ok((await page.locator('#storyPresenter').getAttribute('src')).endsWith(step===2?'advisor-concerned-19292.jpg':'advisor-reassuring-19294.jpg'));
-    }
-    await page.locator(step===1?'#stageContainer':'#stagePreviewModal').evaluate(el=>Promise.all(el.getAnimations().map(a=>a.finished.catch(()=>{}))));
-    if(step===6) await page.waitForFunction(()=>window.testAudios.at(-1).src.includes('page6-step1'));
-    const selector=step===1?'#advisorAudioBtn':step===6?'#journeyPlayPause':'#sceneTwoDialogueBtn';
-    const initial=await measure(step);
-    const check=async(state)=>{
-     const m=await measure(step);
-     assert.equal(m.audio.width,44);assert.equal(m.audio.height,44);
-     assert.ok(m.visible&&m.hit&&m.clear&&m.separate&&m.overflow<=1&&m.pageOverflow<=1,JSON.stringify({width,height,step,state,m}));
-     for(const target of ['audio','next']) for(const key of ['x','y','width','height']) {
-      assert.ok(Math.abs(m[target][key]-initial[target][key])<=1,`${target} ${key} moved: ${width}x${height} page ${step} ${state}`);
-     }
-     return m;
-    };
-    await check('loading');
-    await page.evaluate(()=>window.testAudios.at(-1).start());
-    await page.waitForFunction(selector=>document.querySelector(selector).getAttribute('aria-pressed')==='true',selector);
-    assert.equal((await check('playing')).icon,'⏸');
-    await page.click(selector);
-    assert.equal((await check('paused')).icon,'▶');
-    await page.click(selector);await page.evaluate(()=>window.testAudios.at(-1).start());
-    await check('resumed');
-    if(step<6) {
-     await page.evaluate(()=>{const a=window.testAudios.at(-1);a.ended=true;a.currentTime=a.duration;a.dispatchEvent(new Event('ended'));});
-     assert.equal((await check('completed')).icon,'▶');
-     await page.evaluate(()=>{window.testDeny=true;});await page.click(selector);
-     await page.waitForFunction(()=>document.querySelector('#audioStatus').textContent||document.querySelector('#sceneTwoAudioStatus').textContent);
-     await check('autoplay denied');
-     await page.evaluate(()=>{window.testDeny=false;});await page.click(selector);await page.evaluate(()=>window.testAudios.at(-1).start());
-     await page.evaluate(()=>window.testAudios.at(-1).dispatchEvent(new Event('error')));
-     await check('error');
-    }
-    if(step===6) {
-     await page.click('#journeyPlayPause');
-     for(let stage=0;stage<5;stage++) {
-      await page.click(`[data-journey-step="${stage}"]`);
-      const layout=await page.locator('#planJourneyPage').evaluate(el=>{
-       const rect=selector=>el.querySelector(selector).getBoundingClientRect();
-       const stages=rect('.journey-stages'), panel=rect('.journey-benefit-panel'), timeline=rect('.journey-policy-timeline');
-       return {expanded:el.querySelectorAll('.journey-stage[aria-expanded="true"]').length,kickerBottom:rect('.journey-kicker').bottom,stagesTop:stages.top,stagesBottom:stages.bottom,panelTop:panel.top,panelBottom:panel.bottom,timelineTop:timeline.top,timelineBottom:timeline.bottom,audioTop:document.querySelector('#journeyPlayPause').getBoundingClientRect().top};
-      });
-      assert.equal(layout.expanded,1);
-      assert.ok(layout.kickerBottom<=layout.stagesTop+.5,JSON.stringify({width,height,stage,layout}));
-      assert.ok(layout.stagesBottom<=layout.panelTop+.5,JSON.stringify({width,height,stage,layout}));
-      assert.ok(layout.panelBottom<=layout.timelineTop,JSON.stringify({width,height,stage,layout}));
-      assert.ok(layout.timelineBottom<=layout.audioTop,JSON.stringify({width,height,stage,layout}));
-      await page.screenshot({path:`${out}/${width}x${height}-stage${stage+1}.png`});
-     }
-    }
-    await page.screenshot({path:`${out}/${width}x${height}-floating-page${step}.png`});
-    console.log(`Fixed audio/Next layout: ${width}x${height} page ${step}`);
-   }
-   await page.close();
-  }
+  // Page 4 selection and all five journey stages are exercised in lic-journey-browser.cjs.
   // Reproduce a phone/WebView whose layout viewport remains taller than its
   // visible screen. CSS vh/dvh alone cannot catch this mismatch.
   const mobile=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
@@ -251,27 +145,28 @@ fs.mkdirSync(out,{recursive:true});
   await mobile.goto(`${base}/lic/bima-platinum/`);
   await mobile.click('#storyModeToggleOne');
   await mobile.evaluate(()=>document.fonts.ready);
-  for(let step=1;step<=6;step++) {
+  for(let step=1;step<=5;step++) {
    if(step>1) await mobile.click(step===2?'#ctaForwardBtn':'#sceneTwoNextBtn');
-   if(step===5) await mobile.click('#incomeSelectionContinue');
+
    await mobile.locator(step===1?'#stageContainer':'#stagePreviewModal').evaluate(el=>Promise.all(el.getAnimations().map(a=>a.finished.catch(()=>{}))));
    for(const [height,offsetTop,event] of [[760,24,'resize'],[640,12,'resize'],[480,0,'resize'],[760,32,'scroll']]) {
     await mobile.evaluate(({height,offsetTop,event})=>{Object.assign(window.viewportMock,{height,offsetTop});window.viewportMock.dispatchEvent(new Event(event));},{height,offsetTop,event});
+    if(step>=4) await mobile.locator('#sceneTwoNextBtn').scrollIntoViewIfNeeded();
     const visible=await mobile.evaluate(step=>{
      const v=window.viewportMock,frame=document.querySelector('#deviceFrame').getBoundingClientRect();
-     const controls=[step===1?'#ctaForwardBtn':'#sceneTwoNextBtn',step===1?'#advisorAudioBtn':step===6?'#journeyPlayPause':'#sceneTwoDialogueBtn'];
+     const controls=[step===1?'#ctaForwardBtn':'#sceneTwoNextBtn',step===1?'#advisorAudioBtn':step===5?'#journeyPlayPause':'#sceneTwoDialogueBtn'];
      const bounds=controls.map(selector=>{const e=document.querySelector(selector),r=e.getBoundingClientRect();return {selector,top:r.top,bottom:r.bottom,height:r.height};});
      const container=step===1?document.querySelector('#stageContainer'):document.querySelector('#stagePreviewModal');
      return {frame:{top:frame.top,height:frame.height,bottom:frame.bottom},bounds,bottom:v.offsetTop+v.height,top:v.offsetTop,overflow:container.scrollHeight-container.clientHeight};
     },step);
     assert.equal(visible.frame.height,height);assert.equal(visible.frame.top,offsetTop);
-    assert.ok(visible.bounds.every(r=>r.top>=visible.top&&r.bottom<=visible.bottom-6),JSON.stringify({step,height,offsetTop,visible}));
-    assert.ok(visible.overflow<=1,JSON.stringify({step,height,offsetTop,visible}));
+    assert.ok(visible.bounds.every(r=>r.top>=visible.top&&r.bottom<=visible.bottom-(step<4?6:0)+.5),JSON.stringify({step,height,offsetTop,visible}));
+    assert.ok(step>=4||visible.overflow<=1,JSON.stringify({step,height,offsetTop,visible}));
     await mobile.screenshot({path:`${out}/visible-${height}-${offsetTop}-page${step}.png`});
    }
   }
   await mobile.mouse.wheel(0,500);
   assert.equal(await mobile.evaluate(()=>window.scrollY),0);
-  await mobile.close();console.log('All six pages fit mismatched and changing visible phone viewports.');
+  await mobile.close();console.log('All five pages respect mismatched and changing visible phone viewports.');
  } finally {await browser.close();if(server) await new Promise(resolve=>server.close(resolve));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

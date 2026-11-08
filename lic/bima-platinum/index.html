@@ -20,7 +20,7 @@
 
   <link rel="preload" as="image" href="assets/advisor-concerned-19292.jpg">
   <link rel="preload" as="image" href="assets/advisor-reassuring-19294.jpg">
-  <link rel="stylesheet" href="presentation.css?v=32">
+  <link rel="stylesheet" href="presentation.css?v=33">
   <link rel="stylesheet" href="../../shared/app-theme.css?v=1">
 </head>
 <body>
@@ -235,7 +235,7 @@
             </div>
           </section>
           <section id="planJourneyPage" class="plan-journey-page" aria-label="How Bima Platinum works in five steps" hidden>
-            <p class="journey-kicker">A SYSTEMATIC JOURNEY</p>
+            <div class="journey-upper"><p class="journey-kicker">A SYSTEMATIC JOURNEY</p>
             <img id="journeyAdvisorExplain" class="journey-advisor" src="assets/advisor-presenter.webp" alt="LIC advisor explaining the plan" width="760" height="950" loading="lazy" decoding="async">
             <img id="journeyAdvisorCelebrate" class="journey-advisor journey-advisor-celebrate" src="assets/advisor-anniversary.webp" alt="" width="760" height="759" loading="lazy" decoding="async">
             <div class="journey-stages" role="group" aria-label="Five plan stages">
@@ -245,6 +245,7 @@
               <button type="button" class="journey-stage" data-journey-step="3" aria-expanded="false" aria-controls="journeyStageBody3"><span class="journey-stage-number" aria-hidden="true">4</span><span class="journey-stage-text"><b>70% Booster</b><span id="journeyStageBody3" class="journey-stage-body" hidden></span></span></button>
               <button type="button" class="journey-stage" data-journey-step="4" aria-expanded="false" aria-controls="journeyStageBody4"><span class="journey-stage-number" aria-hidden="true">5</span><span class="journey-stage-text"><b>Maturity</b><span id="journeyStageBody4" class="journey-stage-body" hidden></span></span></button>
             </div>
+            </div><!-- /.journey-upper -->
             <div class="journey-content">
               <div class="journey-benefit-panel journey-financial-panel">
                 <div id="journeyFinancialGraph" class="journey-financial-graph" aria-live="polite"></div>
@@ -312,6 +313,11 @@
             <span id="journeyProgress" class="journey-progress" aria-live="polite">1 of 5</span>
             <button id="journeyReplay" type="button" class="journey-replay" aria-label="Replay story" hidden>↻ Replay</button>
           </div>
+          <fieldset id="policyExampleSelection" class="policy-example-selection" hidden>
+            <legend>Your example <small>₹3 lakh BSA · 30 years · Offline</small></legend>
+            <div><label for="policyExampleAge">Age</label><select id="policyExampleAge"><option>15</option><option selected>25</option><option>35</option><option>45</option></select>
+            <label for="policyExamplePpt">Pay for</label><select id="policyExamplePpt"><option value="7">7 years</option><option value="10">10 years</option><option value="12">12 years</option><option value="15" selected>15 years</option><option value="18">18 years</option></select></div>
+          </fieldset>
           <p id="revealCtaIntro" class="reveal-cta-intro" hidden>अब देखें Bima Platinum कैसे काम करता है</p>
           <button id="sceneTwoNextBtn" class="scene-two-next" type="button" aria-controls="stagePreviewModal"><span id="storyNextLabel">अब Stability कैसे मिलेगी?</span> <span aria-hidden="true">→</span></button>
           <p id="sceneThreeStatus" class="scene-three-status" role="status" hidden>आगे Bima Platinum को समझेंगे।</p>
@@ -343,7 +349,7 @@
 
 </div><!-- /.app-viewport-wrapper -->
 
-<script src="financial-journey.js?v=2"></script>
-<script src="presentation.js?v=32"></script>
+<script src="financial-journey.js?v=3"></script>
+<script src="presentation.js?v=33"></script>
 </body>
 </html>
