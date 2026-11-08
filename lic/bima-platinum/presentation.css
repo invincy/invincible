@@ -2006,3 +2006,7 @@ body.dev-mode .desktop-tools-bar { display: flex; }
 .benefit-journey-legend { min-height:44px; }
 .benefit-journey-legend b { min-height:14px; font-size:8px; }
 .benefit-journey-legend strong { margin-top:3px; }
+
+/* A translucent gold callout emphasizes the existing availability date. */
+.reveal-deadline { position:relative; isolation:isolate; }
+.reveal-deadline::before { content:''; position:absolute; inset:-6px -10px -4px; z-index:-1; border:1px solid #edc66b99; border-radius:14px; background:linear-gradient(130deg,#ffd66a3d,#d99b2014); box-shadow:inset 0 1px 0 #fff0bb26,0 5px 22px #d9a44114; }
