@@ -1,3 +1,4 @@
+import {compactControls} from './compact-controls.js';
 import {mountVideoStudio} from './video-studio/workspace.js';
 import {mountHistoryWorkspace} from './history-workspace.js';
 import {makeScene} from './storyboard-model.js?v=3';
@@ -9,16 +10,18 @@ Object.assign(ICONS,{
  voiceover:'<rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/>',
  map:'<path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2zM9 3v16M15 5v16"/>',
  clips:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="m10 8 6 4-6 4zM3 8h3m-3 8h3m12-8h3m-3 8h3"/>',
+ studio:'<path d="M3 6h18v15H3zM3 6l3-4m3 4 3-4m3 4 3-4m-8 8 6 3-6 4z"/>',
  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
  reference:'<path d="M5 3h9l5 5v13H5zM14 3v6h5"/>'
 });
+Object.assign(ICONS,{'Animated Maps':ICONS.map,'Voiceover':ICONS.voiceover,'3D Civilizations':'<path d="M3 21h18M4 10h16L12 3zM6 10v11m6-11v11m6-11v11"/>','Canva':'<path d="M16 5a8 8 0 1 0 0 14M3 21l6-2"/>'});
 const icon=name=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(ICONS[name]||ICONS.assets)+'</svg>';
 const action=(name,label,glyph,extra='')=>'<button type="button" class="wb-icon" data-action="'+name+'" title="'+esc(label)+'" aria-label="'+esc(label)+'" '+extra+'>'+icon(glyph)+'</button>';
 export function createProductionWorkbench(root,{getProject,onChange,onFocus,copyText,onCopyBrief,onSplitScript,getAccountId,enableVideoStudio=false}){
  let historyWorkspace=null,videoWorkspace=null,videoSession={};
  let tab='Storyboard',workspace='All',groupBy='project',assetFilter='All',completionFilter='All',searchQuery='',active='',pending=[],mapping=[],importTable=null,scriptChanges=null,dragId='',activeAsset='',expandAll=false,viewMode='focused',expandedScene='',sidebarCollapsed=false,editorPane='plan',filtersVisible=false,promptKey='blenderPrompt',messageTimer;
  root.classList.add('production-workbench');
- root.innerHTML='<div class="wb-commandbar"><nav class="wb-tabs" aria-label="Project areas">'+['Storyboard','Production','Assets','Overview','Maps','Clips',...(enableVideoStudio?['Video Studio']:[])].map((name,index)=>'<button type="button" data-tab="'+name+'" title="'+name+'" aria-label="'+name+'">'+icon(['board','production','assets','overview','map','clips','production'][index])+'<span>'+name+'</span></button>').join('')+'</nav><div data-command-actions></div></div><div class="wb-status" role="status" aria-live="polite"></div><div data-workbench></div>';
+ root.innerHTML='<div class="wb-commandbar"><nav class="wb-tabs" aria-label="Project areas">'+['Storyboard','Production','Assets','Overview','Maps','Clips',...(enableVideoStudio?['Video Studio']:[])].map((name,index)=>'<button type="button" data-tab="'+name+'" title="'+name+'" aria-label="'+name+'">'+icon(['board','production','assets','overview','map','clips','studio'][index])+'<span>'+name+'</span></button>').join('')+'</nav><div data-command-actions></div></div><div class="wb-status" role="status" aria-live="polite"></div><div data-workbench></div>';
  const panel=root.querySelector('[data-workbench]'),message=text=>{clearTimeout(messageTimer);const node=root.querySelector('.wb-status');node.textContent=text;if(/copied|appended|applied|Filled blank|Preview only/.test(text))messageTimer=setTimeout(()=>node.textContent='',3000);};
  const project=()=>getProject();
  const scenes=()=>project()?.scenes||[];
@@ -104,7 +107,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  }
  function sceneWorkspace(){
   const queue=visibleScenes(),scene=currentScene();
-  if(!queue.length)return '<div class="wb-empty">No scenes match.</div>';
+  if(!queue.length)return '<div class="wb-empty">'+(scenes().length?'No scenes match.':'Add a scene or import a storyboard.')+'</div>';
   if(viewMode==='all')return '<div class="wb-all-scenes">'+(tab==='Production'?queueBuckets(queue).map(bucket=>'<section class="wb-queue-group"><h3>'+esc(bucket.label)+'</h3>'+bucket.scenes.map(item=>sceneRow(item,scenes().indexOf(item))).join('')+'</section>').join(''):queue.map(item=>sceneRow(item,scenes().indexOf(item))).join(''))+'</div>';
   return '<div class="wb-focus-layout '+(sidebarCollapsed?'is-collapsed':'')+(filtersVisible?' filters-open':'')+'"><aside class="wb-navigator" aria-label="Scene navigator"><div class="wb-nav-heading"><strong>Scenes</strong>'+(sidebarCollapsed?'':action('toggle-sidebar','Hide scene navigator','close','aria-expanded="true"'))+'</div>'+filterBar()+
    '<div class="wb-nav-list">'+(tab==='Production'?queueBuckets(queue).map(bucket=>'<div class="wb-nav-group" title="'+esc(bucket.label)+'"><h3>'+esc(bucket.label)+'</h3>'+bucket.scenes.map(navigatorEntry).join('')+'</div>').join(''):queue.map(navigatorEntry).join(''))+'</div></aside>'+
@@ -121,7 +124,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    (viewMode==='all'?action('expand-all',expandAll?'Collapse all scenes':'Expand all filtered scenes','expand','aria-pressed="'+expandAll+'"'):action('toggle-filters','Scene filters','search','aria-expanded="'+filtersVisible+'"'));
  }
  function storyboard(){
-  return '<div class="wb-toolbar"><details class="wb-import" '+(!scenes().length?'open':'')+'><summary>'+icon('import')+'<span>Import</span></summary><div class="wb-import-body"><textarea aria-label="Paste storyboard" data-paste rows="3" title="Paste TSV or Markdown with an optional final Timestamp column" placeholder="Voiceover&#9;Visual / Animation&#9;Assets Required&#9;Timeline&#9;Timestamp"></textarea><button type="button" data-action="preview">Preview</button><div data-import-preview></div></div></details>'+modeControls()+action('add','Add scene','add')+'</div>'+
+  return '<div class="wb-toolbar"><details class="wb-import"><summary title="Import storyboard" aria-label="Import storyboard">'+icon('import')+'<span>Import</span></summary><div class="wb-import-body"><textarea aria-label="Paste storyboard" data-paste rows="3" title="Paste TSV or Markdown with an optional final Timestamp column" placeholder="Voiceover&#9;Visual / Animation&#9;Assets Required&#9;Timeline&#9;Timestamp"></textarea><button type="button" data-action="preview">Preview</button><div data-import-preview></div></div></details>'+modeControls()+action('add','Add scene','add')+'</div>'+
    (viewMode==='all'||!visibleScenes().length?filterBar():'')+sceneWorkspace();
  }
  function groupEditor(group){
@@ -176,6 +179,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   if(['Maps','Clips'].includes(tab))historyWorkspace=mountHistoryWorkspace(panel.querySelector('[data-history-mount]'),{getProject,onChange:()=>changed(false),copyText,onRefresh:render,area:tab});
   const tools=root.querySelector('[data-command-actions]');tools.replaceChildren();
   const toolbar=panel.querySelector('.wb-toolbar');if(toolbar)tools.append(toolbar);
+  compactControls(root);
   document.body.classList.toggle('creator-focus-mode',document.body.classList.contains('project-page')&&!!root.querySelector('.wb-focus-layout'));
   pending=[];scriptChanges=null;sizeEditors();
   const list=root.querySelector('.wb-nav-list'),selected=list?.querySelector('[aria-current=true]');
@@ -185,7 +189,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   try{
    importTable=inspectImport(root.querySelector('[data-paste]').value);mapping=[...importTable.mapping];
    const box=root.querySelector('[data-import-preview]');
-   box.innerHTML='<p>'+importTable.format+' · '+importTable.rows.length+' rows. Map columns, then review every scene.</p><div class="wb-mapping">'+importTable.headers.map((header,index)=>'<label>'+esc(header)+'<select data-map="'+index+'"><option value="">Ignore column</option>'+IMPORT_FIELDS.map(key=>'<option value="'+key+'" '+(mapping[index]===key?'selected':'')+'>'+(key==='voiceoverTimestamp'?'Voiceover timestamp':key)+'</option>').join('')+'</select></label>').join('')+'</div><button type="button" data-action="map-preview">Review scenes</button><div data-mapped-preview></div>';
+   box.innerHTML='<p>'+importTable.format+' · '+importTable.rows.length+' rows. Map columns, then review every scene.</p><div class="wb-mapping">'+importTable.headers.map((header,index)=>'<label>'+esc(header)+'<select data-map="'+index+'"><option value="">Ignore column</option>'+IMPORT_FIELDS.map(key=>'<option value="'+key+'" '+(mapping[index]===key?'selected':'')+'>'+(key==='voiceoverTimestamp'?'Voiceover timestamp':key)+'</option>').join('')+'</select></label>').join('')+'</div><div data-mapped-preview></div>';
    mappedPreview();
   }catch(error){message(error.message);}
  }
@@ -195,7 +199,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    const parsed=parseProductionImport(root.querySelector('[data-paste]').value,mapping);
    const unique=uniqueScenes(scenes(),parsed);pending=unique.scenes;
    root.querySelector('[data-mapped-preview]').innerHTML='<p>'+pending.length+' new scenes · '+unique.duplicates+' duplicates skipped. Existing scenes stay in place.</p><div class="wb-preview">'+parsed.map((scene,index)=>'<article><strong>Scene '+(index+1)+' · '+esc(scene.timeline||scene.duration+' sec')+'</strong>'+(scene.voiceoverTimestamp?'<p class="wb-timestamp-preview">Timestamp · '+esc(scene.voiceoverTimestamp)+'</p>':'')+'<p>'+esc(scene.voiceover)+'</p><p>'+esc(scene.visual)+'</p><p>'+esc(scene.assets)+'</p><p>'+esc(methodsOf(scene).join(', '))+'</p><p>'+esc(scene.blenderPrompt||scene.videoPrompt||'')+'</p>'+(scene.importedStatus?'<p>Imported status: '+esc(scene.importedStatus)+' (completion requires review)</p>':'')+'</article>').join('')+'</div><button type="button" data-action="import" '+(!pending.length?'disabled':'')+'>Append reviewed scenes</button>';
-   message('Preview only. No scenes changed.');
+   compactControls(root);message('Preview only. No scenes changed.');
   }catch(error){message(error.message);}
  }
  root.addEventListener('input',event=>{
@@ -288,7 +292,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    }
    if(action==='expand-all'){expandAll=!expandAll;expandedScene='';render();return;}
    if(action==='clear-filters'){workspace='All';assetFilter='All';completionFilter='All';searchQuery='';render();return;}
-   if(action==='preview'){preview();return;}if(action==='map-preview'){mappedPreview();return;}
+   if(action==='preview'){preview();return;}
    if(action==='import'){
     if(!pending.length)return;
     const fresh=uniqueScenes(scenes(),pending).scenes;

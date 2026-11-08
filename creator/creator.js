@@ -1,9 +1,13 @@
+import {controlIcon} from './compact-controls.js';
 import {attachImportedGroups} from './production-model.js?v=5';
-import{createProductionWorkbench}from'./production-workbench.js?v=14';
+import{createProductionWorkbench}from'./production-workbench.js?v=15';
 import{db,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,serverTimestamp,setDoc,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const $=id=>document.getElementById(id);
+for(const [id,label,glyph] of [['testProject','Demo project','spark'],['addContent','New project','add']]){
+ const button=$(id);button.classList.add('studio-icon');button.title=label;button.setAttribute('aria-label',label);button.innerHTML=controlIcon(glyph);
+}
 const stages=["Ideas","Research","Script","Record","Edit","Scheduled","Published"];
 let subscriptions=[],authGeneration=0;
 let user=null,state={items:[]},ownedItems=new Map(),sharedItems=new Map(),editingId="",filter="All",queryText="",mobileStage="Ideas",metricFilter="";
@@ -46,7 +50,7 @@ function moveButton(item,direction){const index=stages.indexOf(item.stage),next=
 
 function card(item){
   const overdue=item.publishDate&&item.publishDate<today()&&item.stage!=="Published",sceneCount=item.scenes?.length||0,completeCount=item.scenes?.filter(scene=>scene.completed).length||0,shared=!isOwner(item),editorCount=item.editorEmails?.length||0,accessLabel=shared?"Shared with you":editorCount?"Shared · "+editorCount:"Private";
-  return '<article class="content-card" draggable="true" data-id="'+item.id+'" tabindex="0" aria-label="Open '+attr(item.title)+'"><div class="card-top"><span class="format">'+esc(item.format)+'</span><span class="due '+(overdue?'overdue':'')+'">'+(item.publishDate?dateLabel(item.publishDate):"No date")+'</span></div><h3>'+esc(item.title)+'</h3>'+(item.hook?'<p class="hook">'+esc(item.hook)+'</p>':'')+'<div class="project-meta"><span>'+sceneCount+' scene'+(sceneCount===1?'':'s')+(sceneCount?' · '+completeCount+' ready':'')+'</span><span class="access-tag '+(shared?'shared':'')+'">'+accessLabel+'</span></div><button class="open-project" data-open="'+item.id+'">Open Project <span>→</span></button><div class="card-bottom"><span class="series">'+esc(item.series||"General")+'</span><div class="card-actions"><button data-edit="'+item.id+'">Edit</button>'+moveButton(item,-1)+moveButton(item,1)+'</div></div></article>';
+  return '<article class="content-card" draggable="true" data-id="'+item.id+'" tabindex="0" aria-label="Open '+attr(item.title)+'"><div class="card-top"><span class="format">'+esc(item.format)+'</span><span class="due '+(overdue?'overdue':'')+'">'+(item.publishDate?dateLabel(item.publishDate):"No date")+'</span></div><h3>'+esc(item.title)+'</h3>'+(item.hook?'<p class="hook">'+esc(item.hook)+'</p>':'')+'<div class="project-meta"><span>'+sceneCount+' scene'+(sceneCount===1?'':'s')+(sceneCount?' · '+completeCount+' ready':'')+'</span><span class="access-tag '+(shared?'shared':'')+'">'+accessLabel+'</span></div><div class="card-bottom"><span class="series">'+esc(item.series||"General")+'</span><div class="card-actions"><button class="studio-icon" title="Edit project" aria-label="Edit project" data-edit="'+item.id+'">'+controlIcon('edit')+'</button>'+moveButton(item,-1)+moveButton(item,1)+'</div></div></article>';
 }
 
 function renderMetrics(){
@@ -135,7 +139,6 @@ $("board").onclick=async event=>{
   const move=event.target.closest("[data-move]");
   if(move){event.stopPropagation();const item=state.items.find(row=>row.id===move.dataset.id),next=stages.indexOf(item.stage)+Number(move.dataset.move);if(stages[next]){item.stage=stages[next];mobileStage=item.stage;render();await saveItem(item);}return;}
   const edit=event.target.closest("[data-edit]");if(edit){event.stopPropagation();openDialog(state.items.find(row=>row.id===edit.dataset.edit));return;}
-  const open=event.target.closest("[data-open]");if(open){event.stopPropagation();window.location.href="project.html?id="+encodeURIComponent(open.dataset.open);return;}
   const cardElement=event.target.closest(".content-card");if(cardElement)window.location.href="project.html?id="+encodeURIComponent(cardElement.dataset.id);
 };
 

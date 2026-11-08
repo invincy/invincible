@@ -1,0 +1,11 @@
+/* Shared action sizing. Native labels and data hooks stay on the original controls. */
+button.studio-icon,
+.production-workbench button.studio-icon,
+.history-workspace button.studio-icon,
+.video-studio button.studio-icon{display:inline-flex;align-items:center;justify-content:center;width:44px;min-width:44px;height:44px;min-height:44px;padding:10px;flex:none;border-radius:12px;line-height:1;vertical-align:middle}
+button.studio-icon svg,
+.production-workbench button.studio-icon svg,
+.history-workspace button.studio-icon svg,
+.video-studio button.studio-icon svg{width:24px;height:24px;flex:none;pointer-events:none}
+button.studio-icon:focus-visible{outline:2px solid #6be5f5;outline-offset:3px}
+button.studio-icon:disabled{opacity:.4;cursor:default}

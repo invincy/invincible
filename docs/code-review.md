@@ -801,3 +801,44 @@ Page 5 now uses blue downward premium-payment arrows and gold upward regular-inc
 Removed the visible chart heading, Illustrative tag, age/PPT/BSA summary, long assumption footnote and redundant upper subtitle. The lower legend keeps only short benefit names and amounts; years remain on the relevant graph milestones. Financial assumptions and arrow semantics remain in the SVG accessible description. The chart now explicitly fills the available width and the advisor section uses its allocated space, avoiding the gap left after removing the text.
 
 Validation: 21 focused tests; full unit suite 181 passed / 2 existing skips; Functions 15 passed. Seven-size real-audio browser checks verify premium-down/income-up path geometry, no income arrows before stage 3, identical premium/Additions time extent, hidden future benefits, completion/replay/manual backward selection, carried selections, Back and graph/footer clearance. All five updated 390×844 stage screenshots and the whole phone layout were visually inspected. Main and V2 builds/stage, generated V2 consistency, site references, opening playback/changing visual viewport and business-label checks pass. Screenshots are uploaded in lic-presentation-evidence. CI/publication/live outcomes are recorded in the PR; physical iOS/Safari is unverified.
+
+### Creator Studio minimal controls — November 8, 2026
+
+Replaced editor action captions with 24px icons in 44px controls, preserving the
+original elements, event hooks, disabled/pressed states, accessible names and
+native tooltips. All seven project areas remain available through a consistent
+icon rail; the Video Studio icon is distinct from Production. Added missing
+method icons so Maps, 3D, Canva and Voiceover no longer share a folder glyph.
+The rail fits 320px screens. Field labels, status/error messages and source
+review requirements retain their meaning.
+
+Storyboard and Video Studio imports start collapsed. Removed the redundant
+storyboard review button (mapping changes already rebuild the preview), the
+map import/library launcher duplicates (their original panels remain), and the
+project-card Open button (card click and keyboard opening remain). Video setup
+uses short Brand/Import/Media sections, numbered timeline entries with full
+names/timecodes in tooltips, and collapsed export documentation. Voiceover is
+still optional. Existing map/video schemas, explicit import application, local
+video/original-media storage, Firebase project saves, clip grouping, renderers,
+encoders, account access and record formats are unchanged.
+
+Validation: 181 repository tests passed with two existing skips; 15 Functions
+tests passed. Main build, site references and whitespace checks passed. Creator
+browser coverage passes new-project creation, 16-scene imports, duplicate
+rejection, queues, shared production tasks, independent completion, script
+review, assets, reload/draft recovery and 320–1440px layouts. Map editor,
+animation-import and legacy history browser suites passed. Video Studio UI
+checks pass reviewed imports, playback, original-byte persistence, account
+isolation, branding, tab re-entry, seeking and responsive layouts. Reviewed
+phone/desktop screenshots for the editor and Video Studio.
+
+Local encoding verification is limited: installed Chromium lacks H.264 encoding;
+the map test exercised its explicit unavailable path. The default Video Studio
+media test timed out awaiting its MP4 download; rerunning its existing explicit
+STUDIO_SKIP_ENCODING=1 mode passed UI checks but skipped MP4 encoding/decoding
+and cancellation. Full repository browser checks passed Garage, navigation,
+Reminders, Orb, Task Copy and Creator, then stopped in unchanged Journal
+`page.addStyleTag` at tests/journal-tools-browser.cjs:56 (also reproduced alone).
+Later full-suite cases were not reached. CI with its configured Chrome remains
+necessary for complete media verification. No real signed-in production writes,
+merge, backend deployment or publication were performed.
