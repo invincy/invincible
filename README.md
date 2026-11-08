@@ -228,3 +228,14 @@ Cashier uses short labels without instructional paragraphs. The explicit +1 butt
 Creator's existing workbench now includes **Maps** and **Clips**. Maps supports sourced events/GeoJSON, scene-linked camera/timing, local voiceover preview and real-time WebM export. Clips groups adjacent storyboard scene IDs and retains prompts, keyframe references and versioned manual video assets. The unsaved demonstration is `creator/history-demo.html`; existing projects can explicitly append its British India scenes. React, Firebase auth, existing paths and import columns remain unchanged.
 
 [Architecture, official Kling feasibility and remaining work](docs/creator-history-phase1.md) distinguishes implemented behavior from unfinished territorial geometry, live OAuth/account verification, paid generation, full sequence export and P4 integrations. No production deployment or billed generation is included. Run `node --test tests/creator*.mjs`, `npm --prefix functions test` and `node tests/creator-history-browser.cjs` (Playwright Chromium required). MapLibre's pinned local files regenerate with `npm run vendor:creator-map`.
+
+## Unified Video Studio (Phase 1 review branch)
+
+Open a saved Creator project and choose **Video Studio** for a separate, opt-in
+video draft. Import reviewed structured JSON, reuse image assets, configure brand
+intro/outro templates, upload original MP3/WAV narration, scrub the common timeline
+and export 1080p portrait/landscape MP4 with feature-detected audio encoding.
+Existing Creator projects, Map Editor and LIC pages retain their own behavior.
+Drafts/presets/media are account-scoped **on this device**, with explicit save;
+JSON carries references rather than media bytes. No automatic cloud migration.
+See [workflow, schema and verification limits](docs/unified-video-studio-phase1.md).

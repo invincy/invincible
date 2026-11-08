@@ -704,3 +704,33 @@ Validation: 171 repository tests passed (two existing skips), all 15 Functions t
 ### Border-film flag textures — November 8, 2026
 
 Adds five sourced national-flag SVG originals and transparent PNG map textures, with vector clipping sources, geographic corners and license metadata. India uses the requested Indian territorial-claim extent; foreign textures exclude that extent. Country silhouettes/claim geometry are generalized Natural Earth, with Survey of India political-map presentation used as reference. Administration remains a separate green/red shading layer and internal LoC/LAC patterns remain distinct in the production JSON. Flag fields extend into the masks while emblem proportions are preserved; textures are editorial artwork, not boundary evidence. No renderer/schema, auth, backend or rules changes. Site references, SVG/PNG decoding, geographic containment checks and model validation pass; film-specific live previews follow before export.
+
+### Opt-in Unified Video Studio — November 8, 2026 (review branch only)
+
+Saved Creator projects gain an independent Video Studio tab with strict reviewed
+JSON imports, a shared timeline, local original media, configurable brand slots,
+voiceover timing, graphics/LIC/map adapters and deterministic audio/video MP4
+encoding. New-content dialogs, existing storyboard/map schemas, LIC pages,
+Firebase paths/auth/rules and deployment are preserved. The history player only
+exposes its existing frame-readiness guard for adapter reuse. The original Map
+Editor MP4 command remains silent. AAC is preferred in Video Studio, with an
+Opus MP4 fallback where available; other players may not support Opus MP4.
+
+Local feature-branch checks: 16 focused unit tests pass; repository 187 passed,
+two existing skips; Functions 15 passed. Production build/site references pass.
+The strict Chrome CI media job passed: real H.264 + Opus MP4, exact portrait and
+landscape sizes, audible decoded energy and under-10-ms onset error against a
+visual cue, all adapters, branding, cancellation and original-byte persistence.
+FFprobe/FFmpeg independently verified the downloaded six-second portrait sample:
+180 H.264 frames at 30 fps, an Opus track and no decoding errors. AAC is still
+feature-detected but unverified here. Uploaded PNG overlay/profile reuse checks also pass on the final implementation
+commit `ab5ebb0` (Chrome run 42440360556). Creator/map, Journal and LIC CRM CI jobs passed.
+
+Full CI is not green: its repository unit stage fails five unchanged LIC Page 6
+tests, reproduced on unchanged master `7bca110` as well (selectors removed by
+PR #153). Later broad checks in that CI job were skipped. Local broad V1 passed
+Garage/navigation/reminders/Orb/Task Copy/Creator, then stopped at unchanged
+Journal test line 56 (`page.addStyleTag`); separate Journal CI passed. No LIC
+source or old LIC test was edited to mask those failures. Keep PR #154 as draft
+until those upstream failures are resolved. Full details and changed files are in
+unified-video-studio-phase1.md. Nothing merged, deployed or published.

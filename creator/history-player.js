@@ -82,7 +82,7 @@ export async function createHistoryPlayer(host,project,spec,{onTime=()=>{},onErr
  }
  map.on('render',draw);map.on('move',draw);
  const hidden=()=>{if(document.hidden)stop();};document.addEventListener('visibilitychange',hidden);
- return {loaded,seek,play,pause:stop,setAudio,record,renderVideo,cancelRender(){exportController?.abort(new DOMException('Render cancelled','AbortError'));recordController?.abort(new DOMException('Recording cancelled','AbortError'));if(recording)stop();},map,get providerError(){return providerError;},get isNative(){return visual.native;},async setSpec(next){
+ return {loaded,seek,play,settleFrame:settledFrame,pause:stop,setAudio,record,renderVideo,cancelRender(){exportController?.abort(new DOMException('Render cancelled','AbortError'));recordController?.abort(new DOMException('Recording cancelled','AbortError'));if(recording)stop();},map,get providerError(){return providerError;},get isNative(){return visual.native;},async setSpec(next){
   stop();renderError='';const key=JSON.stringify([next.theme,next.basemap]);
   if(visual.native&&key!==baseKey){const style=await baseStyle(next);ready=false;renderError='';await new Promise((resolve,reject)=>{const timer=setTimeout(()=>{map.off('style.load',done);reject(Error('Map style loading timed out.'));},30000);const done=()=>{clearTimeout(timer);historyLayers();resolve();};map.once('style.load',done);map.setStyle(style);});baseKey=key;providerError='';ready=true;}
   spec=next;night=spec.theme==='night';if(visual.native)map.setProjection({type:spec.projection||'mercator'});else {map.night=night;if(next.basemap?.id&&next.basemap.id!=='physical')onError('Detailed map-library styles need WebGL2; this is the basic 2D fallback.');}
