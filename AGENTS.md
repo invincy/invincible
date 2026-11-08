@@ -2,6 +2,11 @@
 
 Read README.md first. Use docs/firebase-storage.md for persistence paths and docs/code-review.md for the outstanding review findings.
 
+## Map Editor — permanent standard for every film
+
+For **any** Map Editor or map-video task, read and follow [docs/map-editor-production-standard.md](docs/map-editor-production-standard.md) before planning, editing, importing, previewing or exporting. This applies to every project and future video, not only Panipat. It defines the existing NASA imagery/country-overlay reference, source accuracy, large typography and rounded cards, intentional camera/layer animation, audio timing, preservation of editor features and actual-video acceptance checks. Current user instructions override style defaults. Keep film-specific content in its own brief.
+
+
 - Main React source is in react/src; react-dist is generated and checked in for GitHub Pages. Rebuild using npm run build; it refreshes every active HTML loader with content-hashed JS/CSS names. Keep the entry URL identical to lazy imports; do not add a query alias. Dashboard layout belongs only in dashboard.css.
 - Native pages still exist. Keep shared/navigation.js as the single page/tab configuration and load site-nav.js as an ES module. Do not paste navigation lists into HTML.
 - Firebase config lives in shared/firebase-config.js. React and CDN auth adapters must use the same project, default app, and persistence policy. Restore auth before protected reads; stop stale account listeners on account changes.

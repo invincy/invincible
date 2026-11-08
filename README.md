@@ -223,6 +223,10 @@ Cashier uses short labels without instructional paragraphs. The explicit +1 butt
 
 **Entries** opens the selected counter's saved records as collapsed rows showing Entry # and amount. Expand a row to see its date, component amounts/references and cash breakdown. Only nonzero denominations and miscellaneous amounts appear; an unused change section is omitted. Review is read-only and preserves the current draft. The working layout uses the full viewport height, with more breathing room around the amount, compact rounded note buttons, and cash-direction tabs sized to their labels.
 
+## Map Editor production standard — every video
+
+All agents and contributors must read the [permanent Map Editor production standard](docs/map-editor-production-standard.md) before map work. It applies to every topic: NASA imagery, sourced country/flag/border overlays, readable geographic labels and rounded cards, deliberate camera/routes/terrain animation, audio-derived timing and genuine frame-by-frame exports. It preserves the existing Map Editor and distinguishes project drafts from verified final video. The repository's Antigravity rule is always-on; project-specific briefs remain separate.
+
 ## Historical Creator production — Phase 1 draft
 
 Creator's existing workbench now includes **Maps** and **Clips**. Maps supports sourced events/GeoJSON, scene-linked camera/timing, local voiceover preview and real-time WebM export. Clips groups adjacent storyboard scene IDs and retains prompts, keyframe references and versioned manual video assets. The unsaved demonstration is `creator/history-demo.html`; existing projects can explicitly append its British India scenes. React, Firebase auth, existing paths and import columns remain unchanged.
