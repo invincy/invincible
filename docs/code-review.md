@@ -723,8 +723,8 @@ landscape sizes, audible decoded energy and under-10-ms onset error against a
 visual cue, all adapters, branding, cancellation and original-byte persistence.
 FFprobe/FFmpeg independently verified the downloaded six-second portrait sample:
 180 H.264 frames at 30 fps, an Opus track and no decoding errors. AAC is still
-feature-detected but unverified here. Additional PNG/profile reuse checks rerun
-on the final PR head. Creator/map, Journal and LIC CRM CI jobs passed.
+feature-detected but unverified here. Uploaded PNG overlay/profile reuse checks also pass on the final implementation
+commit `ab5ebb0` (Chrome run 42440360556). Creator/map, Journal and LIC CRM CI jobs passed.
 
 Full CI is not green: its repository unit stage fails five unchanged LIC Page 6
 tests, reproduced on unchanged master `7bca110` as well (selectors removed by

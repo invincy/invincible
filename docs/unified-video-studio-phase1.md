@@ -1,13 +1,13 @@
 # Unified Video Studio — Phase 1 implementation contract
 
-Status: architecture and safety specification; not yet implemented.
+Status: Phase 1 implemented on the review branch; not merged or deployed.
 
 ## Verified baseline
 - Creator Studio is a native JavaScript app with separate project and production workbench modules.
 - Map Editor already imports animation JSON, supports timeline/keyframes and image assets.
 - `creator/map-video-export.js` encodes **silent** H.264 MP4 from a canvas with MediaBunny/WebCodecs, at 30 fps, maximum 600 seconds.
 - Portrait export is supported via `exportDimensions('9:16','1080p')` (1080 × 1920).
-- Current encoder does **not** mux voiceover audio. Do not advertise an audio-inclusive MP4 until implemented and tested.
+- The legacy Map Editor encoder does **not** mux voiceover audio. Do not advertise an audio-inclusive MP4 until implemented and tested.
 
 ## Safety invariants
 1. Do not modify the existing Map Editor's rendering behavior or existing LIC pages in Phase 1.
@@ -125,18 +125,18 @@ an explicit review flag and source provenance. Financial scenes use
   profile reuse in a second video, byte-identical WAV persistence and account isolation.
 - Feature branch local repository tests: 187 passed, two existing skips;
   15 Functions tests passed. Production build, V2 build/stage, Chromium V2 browser coverage and site-reference checks passed.
-- GitHub Chrome media acceptance passed on commit `fb6033d` in run
-  https://github.com/invincy/invincible/actions/runs/42439770958 . Actual encoded
+- GitHub Chrome media acceptance passed on final implementation commit `ab5ebb0` in run
+  https://github.com/invincy/invincible/actions/runs/42440360556 . Actual encoded
   files were decoded, not mocked. Portrait is 1080 × 1920 and landscape
   1920 × 1080. Both used H.264 + Opus. Measured tone onset was 0.79179s for an
   expected 0.80000s cue; the branded UI export measured 2.29018s versus 2.30000s.
   Error is under 10 ms, below one 30-fps frame. Branding, financial graphics,
   native Map adapter/framebuffer, cancellation and original bytes all passed.
-  Subsequent asset/profile coverage reruns on the final PR head.
+  The final run also passed uploaded PNG overlays and saved logo reuse in another video.
 - Downloaded CI output was independently inspected with FFprobe/FFmpeg:
   180 decoded H.264 frames, 1080 × 1920, 30/1 fps, six seconds of video,
   an Opus track (6.0135s including codec padding), and no decode errors.
-  Evidence: https://github.com/invincy/invincible/actions/runs/42439770958/artifacts/13601022568 .
+  Evidence: https://github.com/invincy/invincible/actions/runs/42440360556/artifacts/13601346484 .
 - Existing Creator storyboard, history, native map editor and animation browser
   regressions passed locally and in CI. Journal and LIC CRM CI jobs passed.
 - The broader CI job fails five **pre-existing master** LIC Page 6 unit tests
