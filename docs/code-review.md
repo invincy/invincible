@@ -704,3 +704,23 @@ Validation: 171 repository tests passed (two existing skips), all 15 Functions t
 ### Border-film flag textures — November 8, 2026
 
 Adds five sourced national-flag SVG originals and transparent PNG map textures, with vector clipping sources, geographic corners and license metadata. India uses the requested Indian territorial-claim extent; foreign textures exclude that extent. Country silhouettes/claim geometry are generalized Natural Earth, with Survey of India political-map presentation used as reference. Administration remains a separate green/red shading layer and internal LoC/LAC patterns remain distinct in the production JSON. Flag fields extend into the masks while emblem proportions are preserved; textures are editorial artwork, not boundary evidence. No renderer/schema, auth, backend or rules changes. Site references, SVG/PNG decoding, geographic containment checks and model validation pass; film-specific live previews follow before export.
+
+### Opt-in Unified Video Studio — November 8, 2026 (review branch only)
+
+Saved Creator projects gain an independent Video Studio tab with strict reviewed
+JSON imports, a shared timeline, local original media, configurable brand slots,
+voiceover timing, graphics/LIC/map adapters and deterministic audio/video MP4
+encoding. New-content dialogs, existing storyboard/map schemas, LIC pages,
+Firebase paths/auth/rules and deployment are preserved. The history player only
+exposes its existing frame-readiness guard for adapter reuse. The original Map
+Editor MP4 command remains silent. AAC is preferred in Video Studio, with an
+Opus MP4 fallback where available; other players may not support Opus MP4.
+
+Local checks: 15 new unit tests pass. Repository tests: 186 passed, two existing
+skips; Functions: 15 passed. Production build and site-reference checks pass.
+Local browser UI checks establish safe imports, playback, account isolation and
+byte-identical voiceover persistence. Native map editor regression passes.
+Full media acceptance must pass the strict GitHub Chrome job before calling
+export audio-verified; local Chromium has no H.264 encoder, full Chrome cannot
+launch under socket restrictions, and managed HTTP preview lacks WebCodecs.
+See unified-video-studio-phase1.md and the PR for final results and limitations.

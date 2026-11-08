@@ -1,5 +1,5 @@
 import{makeScene}from'./storyboard-model.js?v=3';
-import{createProductionWorkbench}from'./production-workbench.js?v=13';
+import{createProductionWorkbench}from'./production-workbench.js?v=14';
 import{projectProgress,canonicalScript}from'./production-model.js?v=5';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{doc,getDoc,onSnapshot,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -21,6 +21,8 @@ function status(message,type=""){
 
 const storyboard=createProductionWorkbench($("projectStoryboard"),{
  getProject:()=>project,
+ getAccountId:()=>user?.uid,
+ enableVideoStudio:true,
  onChange:()=>{queueSave();renderSceneWorkspace();},
  copyText,
  onCopyBrief:async()=>{

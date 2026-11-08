@@ -1,3 +1,4 @@
+import {mountVideoStudio} from './video-studio/workspace.js';
 import {mountHistoryWorkspace} from './history-workspace.js';
 import {makeScene} from './storyboard-model.js?v=3';
 import {METHODS,IMPORT_FIELDS,uid,methodsOf,inspectImport,parseProductionImport,uniqueScenes,groupFor,taskFor,setTask,animationStage,requirements,sceneState,projectProgress,queueScenes,canonicalScript,scriptReview,filterScenes,productionReadiness} from './production-model.js?v=5';
@@ -13,11 +14,11 @@ Object.assign(ICONS,{
 });
 const icon=name=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(ICONS[name]||ICONS.assets)+'</svg>';
 const action=(name,label,glyph,extra='')=>'<button type="button" class="wb-icon" data-action="'+name+'" title="'+esc(label)+'" aria-label="'+esc(label)+'" '+extra+'>'+icon(glyph)+'</button>';
-export function createProductionWorkbench(root,{getProject,onChange,onFocus,copyText,onCopyBrief,onSplitScript}){
- let historyWorkspace=null;
+export function createProductionWorkbench(root,{getProject,onChange,onFocus,copyText,onCopyBrief,onSplitScript,getAccountId,enableVideoStudio=false}){
+ let historyWorkspace=null,videoWorkspace=null,videoSession={};
  let tab='Storyboard',workspace='All',groupBy='project',assetFilter='All',completionFilter='All',searchQuery='',active='',pending=[],mapping=[],importTable=null,scriptChanges=null,dragId='',activeAsset='',expandAll=false,viewMode='focused',expandedScene='',sidebarCollapsed=false,editorPane='plan',filtersVisible=false,promptKey='blenderPrompt',messageTimer;
  root.classList.add('production-workbench');
- root.innerHTML='<div class="wb-commandbar"><nav class="wb-tabs" aria-label="Project areas">'+['Storyboard','Production','Assets','Overview','Maps','Clips'].map((name,index)=>'<button type="button" data-tab="'+name+'" title="'+name+'" aria-label="'+name+'">'+icon(['board','production','assets','overview','map','clips'][index])+'<span>'+name+'</span></button>').join('')+'</nav><div data-command-actions></div></div><div class="wb-status" role="status" aria-live="polite"></div><div data-workbench></div>';
+ root.innerHTML='<div class="wb-commandbar"><nav class="wb-tabs" aria-label="Project areas">'+['Storyboard','Production','Assets','Overview','Maps','Clips',...(enableVideoStudio?['Video Studio']:[])].map((name,index)=>'<button type="button" data-tab="'+name+'" title="'+name+'" aria-label="'+name+'">'+icon(['board','production','assets','overview','map','clips','production'][index])+'<span>'+name+'</span></button>').join('')+'</nav><div data-command-actions></div></div><div class="wb-status" role="status" aria-live="polite"></div><div data-workbench></div>';
  const panel=root.querySelector('[data-workbench]'),message=text=>{clearTimeout(messageTimer);const node=root.querySelector('.wb-status');node.textContent=text;if(/copied|appended|applied|Filled blank|Preview only/.test(text))messageTimer=setTimeout(()=>node.textContent='',3000);};
  const project=()=>getProject();
  const scenes=()=>project()?.scenes||[];
@@ -166,11 +167,12 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  editorObserver.observe(root);
  function render(){
   if(!project())return;
-  historyWorkspace?.destroy();historyWorkspace=null;
+  historyWorkspace?.destroy();historyWorkspace=null;videoWorkspace?.destroy();videoWorkspace=null;
   const navScroll=root.querySelector('.wb-nav-list')?.scrollTop||0;
   if(!active&&scenes().length)active=scenes()[0].id;
   root.querySelectorAll('[data-tab]').forEach(button=>button.setAttribute('aria-current',button.dataset.tab===tab?'page':'false'));
-  panel.innerHTML=['Maps','Clips'].includes(tab)?'<section data-history-mount></section>':tab==='Storyboard'?storyboard():tab==='Production'?production():tab==='Assets'?assets():overview();
+  panel.innerHTML=tab==='Video Studio'?'<section data-video-mount></section>':['Maps','Clips'].includes(tab)?'<section data-history-mount></section>':tab==='Storyboard'?storyboard():tab==='Production'?production():tab==='Assets'?assets():overview();
+  if(tab==='Video Studio')videoWorkspace=mountVideoStudio(panel.querySelector('[data-video-mount]'),{getProject,getAccountId,session:videoSession});
   if(['Maps','Clips'].includes(tab))historyWorkspace=mountHistoryWorkspace(panel.querySelector('[data-history-mount]'),{getProject,onChange:()=>changed(false),copyText,onRefresh:render,area:tab});
   const tools=root.querySelector('[data-command-actions]');tools.replaceChildren();
   const toolbar=panel.querySelector('.wb-toolbar');if(toolbar)tools.append(toolbar);
@@ -197,7 +199,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   }catch(error){message(error.message);}
  }
  root.addEventListener('input',event=>{
-  if(event.target.closest('.history-workspace'))return;
+  if(event.target.closest('.history-workspace,.video-studio'))return;
   if(event.target.matches('.wb-scene.is-open textarea'))sizeEditors();
   const target=event.target,scene=findScene(target.closest('[data-scene]')?.dataset.scene);
   if(target.matches('[data-filter-search]')){
@@ -228,7 +230,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   changed(false);
  });
  root.addEventListener('change',event=>{
-  if(event.target.closest('.history-workspace'))return;
+  if(event.target.closest('.history-workspace,.video-studio'))return;
   const target=event.target,scene=findScene(target.closest('[data-scene]')?.dataset.scene);
   if(target.matches('[data-filter-method]')){workspace=target.value;render();return;}
   if(target.matches('[data-filter-assets]')){assetFilter=target.value;render();return;}
@@ -254,7 +256,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   }
  });
  root.addEventListener('click',async event=>{
-  if(event.target.closest('.history-workspace'))return;
+  if(event.target.closest('.history-workspace,.video-studio'))return;
   const button=event.target.closest('button');if(!button)return;
   try{
    if(button.dataset.overviewFilter){
@@ -349,5 +351,5 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  root.addEventListener('dragover',event=>{if(dragId&&event.target.closest('[data-scene],[data-nav-scene]'))event.preventDefault();});
  root.addEventListener('drop',event=>{event.preventDefault();dragId=event.dataTransfer?.getData('text/plain')||dragId;const target=event.target.closest('[data-scene],[data-nav-scene]'),id=target?.dataset.scene||target?.dataset.navScene;if(!dragId||!id||id===dragId)return;const from=scenes().findIndex(scene=>scene.id===dragId),to=scenes().findIndex(scene=>scene.id===id);if(from<0||to<0)return;const [item]=project().scenes.splice(from,1);project().scenes.splice(to,0,item);dragId='';changed();});
  root.addEventListener('dragend',()=>dragId='');
- return {render,suspend(){historyWorkspace?.destroy();historyWorkspace=null;},open({area='Production',method,sceneId}={}){tab=area;viewMode='focused';expandAll=false;if(method)workspace=method;active=sceneId||'';render();if(active)root.querySelector('[data-scene="'+CSS.escape(active)+'"]')?.scrollIntoView({block:'nearest'});},reset(){tab="Storyboard";workspace="All";assetFilter="All";completionFilter="All";searchQuery="";groupBy="project";active="";activeAsset="";expandAll=false;viewMode="focused";expandedScene="";editorPane="plan";promptKey="blenderPrompt";message("");render();}};
+ return {render,suspend(){historyWorkspace?.destroy();historyWorkspace=null;videoWorkspace?.destroy();videoWorkspace=null;},open({area='Production',method,sceneId}={}){tab=area;viewMode='focused';expandAll=false;if(method)workspace=method;active=sceneId||'';render();if(active)root.querySelector('[data-scene="'+CSS.escape(active)+'"]')?.scrollIntoView({block:'nearest'});},reset(){videoSession={};tab="Storyboard";workspace="All";assetFilter="All";completionFilter="All";searchQuery="";groupBy="project";active="";activeAsset="";expandAll=false;viewMode="focused";expandedScene="";editorPane="plan";promptKey="blenderPrompt";message("");render();}};
 }

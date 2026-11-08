@@ -54,6 +54,29 @@ jobs:
           path: .test-output/journal/*.png
           if-no-files-found: ignore
           include-hidden-files: true
+  video-studio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chrome
+      - run: npm run test:video-studio
+        env:
+          CHROMIUM_EXECUTABLE: /usr/bin/google-chrome
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: video-studio-media-evidence
+          path: |
+            .test-output/creator-studio*.mp4
+            .test-output/creator-video-studio.png
+          if-no-files-found: ignore
+          include-hidden-files: true
   creator:
     runs-on: ubuntu-latest
     timeout-minutes: 8

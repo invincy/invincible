@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "title": "My educational short",
+  "aspectRatio": "9:16",
+  "fps": 30,
+  "brandPresetId": "adichimp",
+  "introEnabled": false,
+  "outroEnabled": false,
+  "assets": [],
+  "audio": null,
+  "scenes": [
+    {
+      "id": "opening",
+      "startSeconds": 0,
+      "durationSeconds": 5,
+      "engineType": "graphic",
+      "engineData": {},
+      "transition": {"type": "fade", "durationSeconds": 0.3},
+      "overlays": [
+        {
+          "id": "headline",
+          "type": "text",
+          "text": "Your next story",
+          "fontSize": 72,
+          "keyframes": [
+            {"timeSeconds": 0, "y": 0.65, "opacity": 0, "easing": "smooth"},
+            {"timeSeconds": 1, "y": 0.5, "opacity": 1}
+          ]
+        }
+      ]
+    }
+  ]
+}

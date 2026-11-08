@@ -41,3 +41,102 @@ F. Optional saved brand library and cloud asset persistence.
 - Uploaded voiceover is audible in exported MP4 and sync stays within one video frame for a test fixture.
 - Brand intro/outro render only when explicitly enabled.
 - No change to existing LIC presentation rendering or saved data.
+
+## Phase 1 implementation — 8 November 2026
+
+Video Studio is opt-in on a **saved project's** workbench (`Video Studio` tab).
+The creation/edit dialog keeps its existing six areas. It is still native JS.
+No existing storyboard, map or LIC page is rebuilt or migrated.
+
+### Data and workflow
+
+- Video manifests use schemaVersion 1, 30 fps, 9:16 by default (1080 × 1920),
+  or 16:9 (1920 × 1080). Imports are strict, bounded, reviewed and applied to a
+  separate video draft. Unknown fields, invalid times, overlapping scenes,
+  dangling assets and malformed keyframes reject before state changes.
+- Timeline rows and scrubber share seconds with preview and deterministic export.
+  Scenes are ordered; gaps render the brand background. Per-layer keyframes
+  interpolate x/y (fractions of frame), opacity, scale and rotation (degrees).
+  Easing is linear, smooth or hold. Fade transitions fade through the brand
+  background rather than overlapping adjacent engines. Text uses explicit newlines.
+- Asset references accept exactly one of `fileId` (original local upload),
+  HTTPS `url` (requires CORS), or `libraryId` (existing map image). Uploads accept
+  PNG/JPEG/WebP; the existing private map resolver retains its authorization checks.
+  Map engineData can also reference existing map library assets by name or ID
+  through the original map instruction importer.
+- Voiceover accepts MP3/WAV. Its original bytes are retained, independent of the
+  decoded/resampled export stream. `audio.startSeconds` is relative to content;
+  an enabled brand intro shifts both content and audio. Full audio can extend
+  the video, with background after the last scene. Outro begins after content
+  AND audio end. The full result must fit ten minutes; no silent trimming.
+- AdiChimp, LIC and Custom presets contain colors and configurable font/logo/
+  graphic intro/outro slots. No official logo or advisor artwork is bundled.
+  Enable intro/outro explicitly; adding templates alone does not apply them.
+  Brand profile JSON can create another ID. Image overlays/keyframes animate
+  uploaded advisor poses without changing existing LIC presentation code.
+- Explicit Save stores original Blobs, manifests and presets in separate
+  IndexedDB `invincible-video-studio-v1` records prefixed by authenticated UID.
+  Manifest saves create immutable versions and then update a project-scoped
+  pointer. In-memory state survives tab changes. There are no automatic cloud
+  writes, migrations, rule changes or auth changes. JSON download transfers
+  instructions/references only; media must be supplied on the receiving device.
+  Local storage can be cleared by the browser and does not establish cross-device
+  Firebase persistence. Shared-project editors have their own local video drafts.
+
+### Adapters and export
+
+- `creator/video-studio/adapters.js` composes independent graphics, LIC and map
+  adapters into the common canvas. The map adapter compiles instructions into
+  an isolated project and uses the existing `createHistoryPlayer`. Its sole API
+  extension exposes the already-existing `settledFrame` guard as `settleFrame`;
+  rendering, camera, controls and the legacy silent exporter are unchanged.
+  The adapter waits for native tiles, terrain, assets and custom models through
+  that existing guard. HD maps require WebGL2 and working provider/CORS access.
+- LIC graphs consume **explicit supplied milestones**, with a mandatory
+  illustration source. They display premium, addition, income, booster and
+  maturity values without calculating benefits or extrapolating premiums.
+  The adapter does not certify an imported source/figure as official; reconcile
+  actual sales illustrations before use. Existing Bima Platinum examples and
+  narration are untouched. No policy amounts from earlier chat memories were used.
+- `export.js` uses the pinned MediaBunny 1.65.2 library in a separate vendor
+  bundle. It encodes H.264 at exact 30-fps timestamps and interleaves encoded
+  audio samples with video. AAC is preferred; Opus-in-MP4 is the feature-detected
+  fallback (requires a compatible playback application). Missing audio encoding
+  rejects rather than falling back to a silent file. Chunking bounds temporary
+  PCM memory; final MP4 bytes and decoded voiceover still occupy browser memory.
+  Cancellation discards partial output and releases sample/renderer resources.
+- Source-only work; no publishing, deployment, merge or Firebase writes.
+
+### Reusable example
+
+Start with **Load example**, or import `creator/video-studio/example.json`.
+Replace timing with actual narration timestamps; asset IDs refer to the library
+shown in the workspace. Map scenes use `engineData.animation` with the existing
+`invincible-map-animation` version 1 schema. Geographic geometry still requires
+an explicit review flag and source provenance. Financial scenes use
+`engineType: "lic"` and `engineData: {title, source, points}`; each point contains
+`timeSeconds`, `year`, `label` and optional nonnegative `premium`, `addition`,
+`income`, `booster`, `maturity`. Their time is scene-local, like overlay keyframes.
+
+### Verification commands and current evidence
+
+- `node --test tests/creator-video-studio.mjs`: 15 focused tests passed.
+- `npm test`: 186 repository tests passed, two existing skips; 15 Functions
+  tests passed. Production build and site-reference check passed.
+- Local headless Chromium: new UI import/playback, original-byte save/reload,
+  account isolation and brand-template checks passed. Native map-editor browser
+  regression passed. Its H.264 encoder is absent: MP4 assertions were not run
+  in that browser. The full Chrome executable cannot start in this workspace
+  because its process-singleton socket is blocked. The managed HTTP preview
+  lacks WebCodecs; it cannot establish encoded A/V behavior.
+- `npm run test:video-studio` is a strict real-media test, not a mock encoder test.
+  The dedicated GitHub Chrome job encodes/decodes portrait and landscape MP4,
+  measures audible energy and onset against a visual change within one video
+  frame, exercises graphics/LIC/Map adapters, verifies original bytes, brands,
+  cancellation and existing-data isolation, and uploads evidence. No claim of
+  audible export is established until that job passes.
+- `tests/fixtures/video-studio-verification.html` runs the same media verification
+  interactively when served from localhost or HTTPS with H.264/WebCodecs support.
+  It uses only synthetic WAV/graph/map fixtures and never production Firebase.
+
+Final CI outcomes and any regression limitations are recorded in the PR.
