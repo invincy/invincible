@@ -58,6 +58,17 @@
       "bearing": 0
     },
     {
+      "time": 38,
+      "center": [
+        88.3,
+        26.6
+      ],
+      "zoom": 8,
+      "pitch": 30,
+      "bearing": 0,
+      "easing": "hold"
+    },
+    {
       "time": 41,
       "center": [
         89,
@@ -78,7 +89,18 @@
       "bearing": 0
     },
     {
-      "time": 60,
+      "time": 62,
+      "center": [
+        88.3,
+        26.6
+      ],
+      "zoom": 7.8,
+      "pitch": 25,
+      "bearing": 0,
+      "easing": "smooth"
+    },
+    {
+      "time": 64,
       "center": [
         89,
         25.8
@@ -122,7 +144,8 @@
         87.6,
         27.2
       ],
-      "color": "#ffffff"
+      "color": "#ffffff",
+      "scale": 0.65
     },
     {
       "id": "bangladesh-label",
@@ -131,10 +154,11 @@
       "start": 21,
       "end": 31,
       "position": [
-        89.2,
-        25.7
+        88.65,
+        26.15
       ],
-      "color": "#ffffff"
+      "color": "#ffffff",
+      "scale": 0.65
     },
     {
       "id": "bhutan-label",
@@ -146,7 +170,8 @@
         90.2,
         27.4
       ],
-      "color": "#ffffff"
+      "color": "#ffffff",
+      "scale": 0.65
     },
     {
       "id": "doklam-label",
@@ -171,6 +196,251 @@
         24
       ],
       "color": "#e6b75e"
+    },
+    {
+      "id": "mountain-illustration-artwork",
+      "type": "image",
+      "name": "Mountain Illustration (illustrative)",
+      "assetId": "siliguri-mountain-illustration",
+      "start": 25,
+      "end": 31,
+      "position": [
+        88.23,
+        26.7
+      ],
+      "corners": [
+        [
+          87.655,
+          27.042459
+        ],
+        [
+          88.805,
+          27.042459
+        ],
+        [
+          88.805,
+          26.357541
+        ],
+        [
+          87.655,
+          26.357541
+        ]
+      ],
+      "scale": 1,
+      "opacity": 1,
+      "fadeIn": 0.35,
+      "fadeOut": 0.35
+    },
+    {
+      "id": "mountain-illustration-caption",
+      "type": "label",
+      "name": "MOUNTAIN TERRAIN · ILLUSTRATION",
+      "start": 25,
+      "end": 31,
+      "position": [
+        88.23,
+        26.227541
+      ],
+      "color": "#ffffff",
+      "scale": 0.75,
+      "fadeIn": 0.35,
+      "fadeOut": 0.35
+    },
+    {
+      "id": "northeast-supply-convoy-artwork",
+      "type": "image",
+      "name": "Northeast Supply Convoy (illustrative)",
+      "assetId": "siliguri-northeast-supply-convoy",
+      "start": 32,
+      "end": 36.5,
+      "position": [
+        88.3,
+        26.55
+      ],
+      "corners": [
+        [
+          87.875,
+          26.740091
+        ],
+        [
+          88.725,
+          26.740091
+        ],
+        [
+          88.725,
+          26.359909
+        ],
+        [
+          87.875,
+          26.359909
+        ]
+      ],
+      "scale": 1,
+      "opacity": 1,
+      "fadeIn": 0.35,
+      "fadeOut": 0.35
+    },
+    {
+      "id": "northeast-supply-convoy-caption",
+      "type": "label",
+      "name": "ROAD SUPPLIES · ILLUSTRATION",
+      "start": 32,
+      "end": 36.5,
+      "position": [
+        88.3,
+        26.229909
+      ],
+      "color": "#ffffff",
+      "scale": 0.75,
+      "fadeIn": 0.35,
+      "fadeOut": 0.35
+    },
+    {
+      "id": "cargo-truck-artwork",
+      "type": "image",
+      "name": "Cargo Truck (illustrative)",
+      "assetId": "siliguri-cargo-truck",
+      "start": 36.5,
+      "end": 40,
+      "position": [
+        88.3,
+        26.55
+      ],
+      "corners": [
+        [
+          87.875,
+          26.803454
+        ],
+        [
+          88.725,
+          26.803454
+        ],
+        [
+          88.725,
+          26.296546
+        ],
+        [
+          87.875,
+          26.296546
+        ]
+      ],
+      "scale": 1,
+      "opacity": 1,
+      "fadeIn": 0.35,
+      "fadeOut": 0.35
+    },
+    {
+      "id": "cargo-truck-caption",
+      "type": "label",
+      "name": "CARGO TRANSPORT · ILLUSTRATION",
+      "start": 36.5,
+      "end": 40,
+      "position": [
+        88.3,
+        26.166546
+      ],
+      "color": "#ffffff",
+      "scale": 0.75,
+      "fadeIn": 0.35,
+      "fadeOut": 0.35
+    },
+    {
+      "id": "freight-train-artwork",
+      "type": "image",
+      "name": "Freight Train (illustrative)",
+      "assetId": "siliguri-freight-train",
+      "start": 51,
+      "end": 56,
+      "position": [
+        88.3,
+        26.55
+      ],
+      "corners": [
+        [
+          87.875,
+          26.803454
+        ],
+        [
+          88.725,
+          26.803454
+        ],
+        [
+          88.725,
+          26.296546
+        ],
+        [
+          87.875,
+          26.296546
+        ]
+      ],
+      "scale": 1,
+      "opacity": 1,
+      "fadeIn": 0.35,
+      "fadeOut": 0.35
+    },
+    {
+      "id": "freight-train-caption",
+      "type": "label",
+      "name": "FREIGHT RAIL · ILLUSTRATION",
+      "start": 51,
+      "end": 56,
+      "position": [
+        88.3,
+        26.166546
+      ],
+      "color": "#ffffff",
+      "scale": 0.75,
+      "fadeIn": 0.35,
+      "fadeOut": 0.35
+    },
+    {
+      "id": "railway-bridge-artwork",
+      "type": "image",
+      "name": "Railway Bridge (illustrative)",
+      "assetId": "siliguri-railway-bridge",
+      "start": 56,
+      "end": 62,
+      "position": [
+        88.3,
+        26.55
+      ],
+      "corners": [
+        [
+          87.825,
+          26.762454
+        ],
+        [
+          88.775,
+          26.762454
+        ],
+        [
+          88.775,
+          26.337546
+        ],
+        [
+          87.825,
+          26.337546
+        ]
+      ],
+      "scale": 1,
+      "opacity": 1,
+      "fadeIn": 0.35,
+      "fadeOut": 0.35
+    },
+    {
+      "id": "railway-bridge-caption",
+      "type": "label",
+      "name": "RAIL CONNECTION · ILLUSTRATION",
+      "start": 56,
+      "end": 62,
+      "position": [
+        88.3,
+        26.207546
+      ],
+      "color": "#ffffff",
+      "scale": 0.75,
+      "fadeIn": 0.35,
+      "fadeOut": 0.35
     }
   ],
   "assets": [
