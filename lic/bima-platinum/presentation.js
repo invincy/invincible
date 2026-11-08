@@ -1,6 +1,6 @@
 /** LIC Bima Platinum: existing chart story and a focused product reveal. */
 // Pages 1–3 use the supplied filenames and media-duration progress in syncChart.
-// Page 5 prompts for sample selections, then resumes narration and the story.
+// Page 5 is the five-stage journey; the previous selection page was removed.
 const STORY_SCENES = {
   1: {
     src: 'assets/audio/newpage1.mp3',
@@ -562,7 +562,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Secret triple-click on stage indicator (1 / 10) to toggle dev mode
+  // Secret triple-click on stage indicator (1 / 5) to toggle dev mode
   let clickCount = 0;
   const stageBadge = document.querySelector('.nav-stage-badge');
   if (stageBadge) {
