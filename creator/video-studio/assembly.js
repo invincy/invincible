@@ -1,3 +1,4 @@
+import {createDefaultMap} from '../map-defaults.js';
 import {appendProjectMaps,arrangeScenes,upgradeVideo,resizeScene} from './composition.js';
 import {emptyBattlefield} from './battlefield.js';
 import {decodeVoiceover} from './audio.js';
@@ -45,7 +46,7 @@ export function mountAssembly(root,api){
    if(action==='edit'){await openEditor();return;}const m=await upgrade(),s=m.scenes.find(s=>s.id===selected),i=m.scenes.indexOf(s);
    if(action==='panipat'){const url=new URL('../asset-libraries/historical-army-commanders-v1.json',import.meta.url),response=await fetch(url);if(!response.ok)throw Error('Army library could not load.');const library=await response.json();for(const asset of library.assets)if(!m.assets.some(a=>a.url===asset.url))m.assets.push({id:m.assets.some(a=>a.id===asset.id)?crypto.randomUUID():asset.id,name:asset.name,url:asset.url,credit:asset.credit||'See Historical Army & Commanders v1 provenance manifest.'});await apply(m);return;}
    if(action==='maps'){const next=appendProjectMaps(m,getProject());review(next,`Append ${next.scenes.length-m.scenes.length} map scenes as independent copies?`);return;}
-   if(action==='add'){const kind=root.querySelector('[data-add-kind]').value;const data=kind==='battlefield'?emptyBattlefield():kind==='map'?{animation:{format:'invincible-map-animation',version:1,duration:5,aspectRatio:m.aspectRatio,basemap:'terrain',terrain:true,camera:[{time:0,center:[76.97,29.39],zoom:7,pitch:0,bearing:0}],layers:[]}}:{};const row={id:crypto.randomUUID(),name:kind==='battlefield'?'Battlefield':kind==='map'?'Map':'Title',startSeconds:0,durationSeconds:5,engineType:kind,engineData:data,overlays:kind==='graphic'?[{id:crypto.randomUUID(),type:'text',text:'Your story',fontSize:64}]:[]};selected=row.id;await apply(arrangeScenes(m,[...m.scenes,row],{mapAssets:mapAssets()}));return;}
+   if(action==='add'){const kind=root.querySelector('[data-add-kind]').value;const data=kind==='battlefield'?emptyBattlefield():kind==='map'?{project:{scenes:[{id:crypto.randomUUID(),duration:5}],historicalMap:createDefaultMap()},sourceStart:0}:{};const row={id:crypto.randomUUID(),name:kind==='battlefield'?'Battlefield':kind==='map'?'Map':'Title',startSeconds:0,durationSeconds:5,engineType:kind,engineData:data,overlays:kind==='graphic'?[{id:crypto.randomUUID(),type:'text',text:'Your story',fontSize:64}]:[]};selected=row.id;await apply(arrangeScenes(m,[...m.scenes,row],{mapAssets:mapAssets()}));return;}
    if(action==='remove-audio-clip'){m.audioClips=m.audioClips.filter(a=>a.id!==audioSelected);audioSelected='';review(m,'Remove this recording from the timeline?');return;}
    if(!s)return;
    if(action==='up'&&i>0)[m.scenes[i-1],m.scenes[i]]=[m.scenes[i],m.scenes[i-1]];

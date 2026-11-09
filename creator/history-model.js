@@ -1,5 +1,6 @@
 // Pure, additive production metadata. Master storyboard IDs and order remain canonical.
 import {validateVisual,layerActive} from './map-editor-model.js';
+import {validatePresentation} from './map-defaults.js';
 import {validateBasemap} from './map-style-library.js';
 export const productionId=()=>globalThis.crypto?.randomUUID?.()||'clip-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
 export const emptyMap=()=>({version:1,theme:'parchment',events:[],features:{type:'FeatureCollection',features:[]},camera:[]});
@@ -12,7 +13,7 @@ function position(p){if(!Array.isArray(p)||p.length!==2||!finite(p[0],-180,180)|
 export function validateMap(map,project){
  if(!map||map.version!==1||!['parchment','night'].includes(map.theme))throw Error('Use map version 1 and parchment or night theme.');
  if(map.projection!==undefined&&!['mercator','globe'].includes(map.projection))throw Error('Projection must be mercator or globe.');
- validateBasemap(map);
+ validateBasemap(map);validatePresentation(map.presentation);
  if(new TextEncoder().encode(JSON.stringify(map)).length>240000)throw Error('Map metadata exceeds 240 KB; simplify geometry or split the project.');
  const ids=new Set((project.scenes||[]).map(s=>s.id)),seen=new Set();
  function anchor(item){if(!ids.has(item.sceneId))throw Error('An event, feature or camera refers to a missing scene.');const scene=project.scenes.find(s=>s.id===item.sceneId);if(!finite(item.offset??0,0,scene.duration))throw Error('Offset must be within the associated scene.');}
@@ -31,6 +32,7 @@ export function validateMap(map,project){
  }
  if(!Array.isArray(map.camera)||map.camera.length>150)throw Error('Use at most 150 camera keyframes.');
  for(const c of map.camera){if(c.easing!==undefined&&!['smooth','linear','hold'].includes(c.easing))throw Error('Camera easing must be smooth, linear or hold.');anchor(c);position(c.center);if(!finite(c.zoom,0,12)||!finite(c.bearing??0,-180,180)||!finite(c.pitch??0,0,60))throw Error('Invalid camera zoom, bearing or pitch.');}
+ if(map.presentation&&map.cameraDefaults){const c=map.cameraDefaults;position(c.center);if(!finite(c.zoom,0,12)||!finite(c.bearing,-180,180)||!finite(c.pitch,0,60)||!['smooth','linear','hold'].includes(c.easing))throw Error('Invalid default camera.');}
  if(map.lighting!==undefined){if(!Array.isArray(map.lighting)||map.lighting.length>150)throw Error('Use up to 150 relief-light keys.');for(const c of map.lighting){anchor(c);if(!finite(c.direction,0,360)||!finite(c.intensity,0,1))throw Error('Relief lighting needs direction 0–360 and intensity 0–1.');}}
  validateVisual(map,project);
  return structuredClone(map);
@@ -52,8 +54,8 @@ export function lightingFrame(project,map,time){
 export function mapFrame(project,map,time){
  const active=(kind,id)=>{const l=map.visual?.layers.find(l=>l.kind===kind&&l.ref===id);return l?.visible!==false&&(!l?.sceneId||layerActive(project,l,time));};
  const events=map.events.filter(e=>timeOf(project,e)<=time&&active('event',e.id)).sort((a,b)=>timeOf(project,a)-timeOf(project,b)),features=map.features.features.filter(f=>timeOf(project,f.properties)<=time&&active('feature',f.properties.id)).map(f=>f.geometry.type==='LineString'?{...f,geometry:{...f.geometry,coordinates:routeAt(f.geometry.coordinates,(time-timeOf(project,f.properties))/f.properties.duration)}}:f);
- const frames=[...map.camera].sort((a,b)=>timeOf(project,a)-timeOf(project,b));
- let a={center:[80,23],zoom:3.2,bearing:0,pitch:0},b=a;
+ const frames=map.camera.map(c=>({...map.presentation&&map.cameraDefaults,...c})).sort((a,b)=>timeOf(project,a)-timeOf(project,b));
+ let a={center:[80,23],zoom:3.2,bearing:0,pitch:0,...map.presentation&&map.cameraDefaults},b=a;
  for(const c of frames){if(timeOf(project,c)<=time)a=c;else {b=c;break;}b=c;}
  const start=timeOf(project,a),end=timeOf(project,b),t=end>start?Math.max(0,Math.min(1,(time-start)/(end-start))):0,u=a.easing==='hold'?(t===1?1:0):a.easing==='linear'?t:t*t*(3-2*t);
  const mix=(x,y)=>x+(y-x)*u,wrap=n=>((n+180)%360+360)%360-180,angle=(x,y)=>wrap(x+wrap(y-x)*u);

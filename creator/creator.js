@@ -1,3 +1,4 @@
+import {initializeMapProject} from './map-defaults.js';
 import {attachImportedGroups} from './production-model.js?v=5';
 import{createProductionWorkbench}from'./production-workbench.js?v=14';
 import{db,observeAuth,storageError}from'../shared/firebase-client.js';
@@ -95,6 +96,7 @@ function openDialog(item=null){
   editingId=item?.id||"";dialogId=editingId||newId();
   const clone=value=>JSON.parse(JSON.stringify(value));
   dialogProject={...(item||{}),title:item?.title||"",script:item?.script||"",hook:item?.hook||"",notes:item?.notes||"",historicalMap:item?.historicalMap?clone(item.historicalMap):null,productionClips:clone(item?.productionClips||[]),scenes:clone(item?.scenes||[]),animationGroups:clone(item?.animationGroups||[]),assets:clone(item?.assets||[])};
+  if(!item)initializeMapProject(dialogProject);
   dialogScenes=dialogProject.scenes;
   $("contentSaveError").textContent="";
   const form=$("contentForm");form.reset();

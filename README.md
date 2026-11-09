@@ -22,6 +22,10 @@ This document is the starting point for understanding what runs today, where to 
 
 The main React app chooses and lazily loads its page in `react/src/App.jsx`. Its HTML entry points load the same generated JS/CSS assets. Garage, Creator, Journal, and LIC have their own entry points; they are not silently redirected through React.
 
+## Creator Map Editor defaults
+
+New Creator projects automatically save NASA imagery, attributed terrain, readable navy/gold label cards and portrait framing. The main Map Editor’s Style controls support project overrides; existing maps retain their saved appearance. See [the production standard](docs/map-editor-production-standard.md#built-in-creator-studio-defaults). No repeated style prompt or demo page is required.
+
 ## Creator voiceover
 
 Creator Studio → **Voiceover** opens the Google TTS workspace: paste narration, choose language/voice, adjust delivery, preview, generate and download an MP3. The page uses authenticated backend Functions; production activation and limits are documented in [Creator voiceover](docs/creator-tts.md). Private Google credentials never belong in the browser or repository.
