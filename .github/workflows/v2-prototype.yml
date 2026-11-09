@@ -97,6 +97,7 @@ jobs:
           path: |
             .test-output/creator-studio*.mp4
             .test-output/creator-video-studio.png
+            .test-output/creator-studio-clean.png
           if-no-files-found: ignore
           include-hidden-files: true
   creator:

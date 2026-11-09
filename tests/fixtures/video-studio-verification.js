@@ -15,7 +15,7 @@ export async function inspectVideo(blob,times=[]){
  try{
   await new Promise((r,j)=>{video.onloadedmetadata=r;video.onerror=()=>j(Error('MP4 did not decode.'));});
   const canvas=document.createElement('canvas');canvas.width=canvas.height=1;const ctx=canvas.getContext('2d'),pixels=[];
-  for(const t of times){video.currentTime=t;await new Promise(r=>video.onseeked=r);ctx.drawImage(video,0,0,1,1);pixels.push(ctx.getImageData(0,0,1,1).data[0]);}
+  const {Input,BlobSource,ALL_FORMATS,CanvasSink}=await import('/creator/vendor/studio-video.mjs');const input=new Input({source:new BlobSource(blob),formats:ALL_FORMATS}),sink=new CanvasSink(await input.getPrimaryVideoTrack());try{for(const t of times){const frame=await sink.getCanvas(t);ctx.drawImage(frame.canvas,0,0,1,1);pixels.push(ctx.getImageData(0,0,1,1).data[0]);}}finally{input.dispose();}
   const context=new AudioContext();let audio;try{audio=await context.decodeAudioData(await blob.arrayBuffer());}finally{await context.close();}
   const samples=audio.getChannelData(0),rate=audio.sampleRate,step=Math.round(rate*.005);let onset=-1,energy=0;
   for(let i=0;i<samples.length;i+=step){let power=0;for(let n=i;n<Math.min(samples.length,i+step);n++)power+=samples[n]*samples[n];if(onset<0&&Math.sqrt(power/step)>.05)onset=i/rate;energy+=power;}
