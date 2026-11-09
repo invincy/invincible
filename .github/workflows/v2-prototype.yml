@@ -10,6 +10,8 @@ on:
       - 'tests/**'
       - 'scripts/**'
       - 'functions/**'
+      - 'functions-tts/**'
+      - 'firebase.json'
       - 'firestore.rules'
       - 'firebase.crm-test.json'
       - 'package*.json'
@@ -215,7 +217,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm ci --prefix functions
+      - run: npm ci --prefix functions-tts
       - run: npx playwright install --with-deps chromium
       - run: npm run test:tts
       - uses: actions/upload-artifact@v4

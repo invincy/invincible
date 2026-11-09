@@ -30,7 +30,7 @@ The server uses its runtime Application Default Credentials. The existing privat
 service-account JSON remains outside the public repository and browser.
 
 1. Use an administrator's Firebase CLI login for the existing project.
-2. Set `CREATOR_TTS_ACCOUNT_UID` in the Functions environment to the Firebase Auth
+2. Set `CREATOR_TTS_ACCOUNT_UID` in the functions-tts environment to the Firebase Auth
    UID of the intended Invincible account. An empty value disables both endpoints;
    a different signed-in account is denied. The UID can be read under Firebase
    Console → Authentication → Users. Do not use an email address in place of UID.
@@ -40,11 +40,11 @@ service-account JSON remains outside the public repository and browser.
 4. Install Functions dependencies and deploy only the two new endpoints:
 
 ```sh
-npm ci --prefix functions
-firebase deploy --only functions:creatorTtsVoices,functions:creatorTtsGenerate --project life-by-adichimp
+npm ci --prefix functions-tts
+firebase deploy --only functions:creator-tts --project life-by-adichimp
 ```
 
-The existing AI/Kling/asset Functions and their secrets do not need redeployment.
+TTS has its own functions-tts package and creator-tts codebase, so the existing AI/Kling/asset Functions and their secrets do not need redeployment.
 No new OpenAI credential is used by this feature. Publish the static page using the
 repository's usual GitHub Pages workflow after the backend is ready.
 

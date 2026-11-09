@@ -43,6 +43,3 @@ exports.invincibleAiChat=onCall({region:'asia-south1',secrets:[openAiApiKey],tim
 
 Object.assign(exports,require('./creator/callables'));
 Object.assign(exports,require('./creator/map-asset-callables'));
-
-const {creatorTtsVoices,creatorTtsGenerate}=require('./creator/tts-callables');
-Object.assign(exports,{creatorTtsVoices,creatorTtsGenerate});

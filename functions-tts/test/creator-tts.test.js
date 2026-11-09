@@ -1,8 +1,8 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const {DOMParser}=require('@xmldom/xmldom');
-const {capabilities,normalizeVoices,parseInput,splitText,splitSsml,prepareRequests,readWav,makeWav,CHUNK_BYTES}=require('../src/creator/tts-model');
-const {generate,encodeMp3,GoogleTtsError,googleRequest}=require('../src/creator/tts-service');
-const {assertAccount}=require('../src/creator/tts-callables');
+const {capabilities,normalizeVoices,parseInput,splitText,splitSsml,prepareRequests,readWav,makeWav,CHUNK_BYTES}=require('../src/tts-model');
+const {generate,encodeMp3,GoogleTtsError,googleRequest}=require('../src/tts-service');
+const {assertAccount}=require('../src/tts-callables');
 const voice=normalizeVoices([{name:'hi-IN-Neural2-B',languageCodes:['hi-IN'],ssmlGender:'MALE'}])[0];
 const input={text:'पानीपत की कहानी। Military Strategy!',voiceName:voice.name,languageCode:'hi-IN'};
 test('requires authentication and the configured account',()=>{

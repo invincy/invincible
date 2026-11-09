@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),http=require('node:http'),fs=require('node:fs'),path=require('node:path');
 const {chromium}=require('playwright');
 const root=path.resolve(__dirname,'..'),out=path.join(root,'.test-output/tts');
-const {normalizeVoices,makeWav}=require('../functions/src/creator/tts-model'),{encodeMp3}=require('../functions/src/creator/tts-service');
+const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encodeMp3}=require('../functions-tts/src/tts-service');
 (async()=>{
  fs.mkdirSync(out,{recursive:true});
  const mp3=await encodeMp3(makeWav([Buffer.alloc(48000)]));

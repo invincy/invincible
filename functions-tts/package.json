@@ -1,0 +1,19 @@
+{
+  "name": "invincible-creator-tts",
+  "private": true,
+  "version": "0.1.0",
+  "main": "src/index.js",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "check": "node --check src/index.js && node --check src/tts-callables.js"
+  },
+  "dependencies": {
+    "@xmldom/xmldom": "0.9.12",
+    "ffmpeg-static": "5.3.0",
+    "firebase-admin": "14.5.0",
+    "firebase-functions": "7.4.0"
+  }
+}

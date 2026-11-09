@@ -8,7 +8,7 @@ New owner-allowlisted Firebase callables use runtime Google credentials, strict 
 
 Validation: ten focused backend tests and the browser settings/preview/full-download/failure/draft/account-isolation suite passed, including 320–1280px layouts with shared navigation. A live male Hindi-English Google recording generated and decoded successfully (3.88 sec); Google returned 2,066 voices. Full unit/Functions tests, main production build, Functions syntax and site references passed. The broader V1 browser run passed Garage, navigation, dashboard/reminders, Orb, Task copy, Creator, Journal and LIC follow-up scenarios, then timed out waiting for #addCustomer:enabled in unchanged tests/lic-crm-browser.cjs. The first Orb attempt required fetching the historical baseline object missing from the shallow clone; the subsequent Orb run passed. No unrelated CRM fixes were made.
 
-Production activation is pending administrator reauthentication: the saved Firebase login returned HTTP 400/401 and the local TTS-only service-account key has no deployment/IAM administration permissions. The production account allowlist, runtime permissions and real signed-in callable flow must be verified after activation.
+Administrator reauthentication was completed. TTS deploys as the independent creator-tts codebase from functions-tts, avoiding the default codebase’s unprovisioned Kling secret and preserving the existing AI function. The owner UID is configured in an ignored environment file. Production permission and signed-in callable verification are in progress. Additional existing browser checks passed Workday cases and account settings; the unchanged LIC cashier test also timed out waiting for its entry panel.
 
 
 ## LIC Follow-up Manager — October 26, 2026
