@@ -1,5 +1,11 @@
 # Cleanup review — 2026-10-03
 
+## Creator Studio publication and native module refresh — November 9, 2026
+
+PR #168 passed all eight remote check groups and published the universal editor through the main GitHub Pages route. A signed-in live check then exposed cached native module URLs: an existing browser could retain old creation/editor code. Native entry points and the changed modules' importer graph now use a consistent release query version, with the updated project stylesheet version. This changes loading URLs, not project data or rendering semantics. Unit/Functions, site-reference, default creation/export and architecture browser checks passed again locally. The publication follow-up repeats remote verification.
+
+The live Firestore ruleset predates the repository's LIC rules. The Creator release package is therefore built from the saved live ruleset plus the reviewed Creator block and its local email helper; unrelated rules remain byte-for-byte unchanged. The scoped package passed actual emulator permissions tests and cloud compilation. Production rule activation and final signed-in results are recorded in the release handoff.
+
 ## Universal Creator Studio consolidation — November 9, 2026
 
 Integrated the universal-map handoff with the main editor's versioned default presentation in an isolated checkout. Shared code has no Panipat title/branch conditions. Demo/artwork catalogs are data, optional overlays use isolated trusted factories, missing plugins fail visibly, and scene packages exclude undeclared project-wide metadata. Plugin scenes require the full project or a dedicated scene exporter. Binding preserves existing narration/timing and rejects nonadjacent selections.

@@ -1,12 +1,12 @@
-import {drawDefaultLabels,drawDefaultCredits} from './map-labels.js';
+import {drawDefaultLabels,drawDefaultCredits} from './map-labels.js?v=2026110901';
 import {locationVisible} from './map-globe.js';
 import {CanvasHistoricalMap} from './history-canvas.js';
-import {mapFrame,durationOf,sceneTimeline} from './history-model.js';
-import {createVisualRenderer} from './map-editor-renderer.js';
+import {mapFrame,durationOf,sceneTimeline} from './history-model.js?v=2026110901';
+import {createVisualRenderer} from './map-editor-renderer.js?v=2026110901';
 import {baseStyle,styleFor} from './map-style-library.js';
-import {layerAlpha} from './map-editor-model.js';
+import {layerAlpha} from './map-editor-model.js?v=2026110901';
 import {exportDimensions,encodeMapVideo} from './map-video-export.js';
-import {resolveOverlayPolicy} from './map-overlay-presets.js';
+import {resolveOverlayPolicy} from './map-overlay-presets.js?v=2026110901';
 
 const overlayPlugins=new Map();
 export function registerMapOverlayPlugin(id,pluginOrFactory){

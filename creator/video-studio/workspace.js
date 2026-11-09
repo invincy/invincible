@@ -1,7 +1,7 @@
-import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js';
-import {createStudioRenderer} from './adapters.js';
+import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026110901';
+import {createStudioRenderer} from './adapters.js?v=2026110901';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js';
-import {mountAssembly} from './assembly.js';
+import {mountAssembly} from './assembly.js?v=2026110901';
 import {encodeStudioVideo} from './export.js';
 import {openStudioStore} from './storage.js';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

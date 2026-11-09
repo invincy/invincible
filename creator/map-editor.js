@@ -1,12 +1,12 @@
-import {initializeMapProject,imagePlacementCorners} from './map-defaults.js';
+import {initializeMapProject,imagePlacementCorners} from './map-defaults.js?v=2026110901';
 import {resolveMapAsset,uploadMapAsset} from './map-assets-client.js';
 import {cameraPreset,surfacePosition,locationVisible} from './map-globe.js';
-import {validateMap,sceneTimeline,durationOf,productionId,mapFrame} from './history-model.js';
-import {visualMap,icons,uid,imageCorners,moveLayer,scenePackage,appendScenePackage,assetLibrary,importAssetLibrary} from './map-editor-model.js';
-import {createHistoryPlayer,downloadBlob,sizeMapFrame} from './history-player.js';
+import {validateMap,sceneTimeline,durationOf,productionId,mapFrame} from './history-model.js?v=2026110901';
+import {visualMap,icons,uid,imageCorners,moveLayer,scenePackage,appendScenePackage,assetLibrary,importAssetLibrary} from './map-editor-model.js?v=2026110901';
+import {createHistoryPlayer,downloadBlob,sizeMapFrame} from './history-player.js?v=2026110901';
 import {mapStyles,defaultTerrain} from './map-style-library.js';
-import {readAnimation,compileAnimation,animationBrief} from './map-animation-import.js';
-import {mapLibraryPanel,instructionPanel,mapExportPanel,handleMapExport} from './map-editor-panels.js';
+import {readAnimation,compileAnimation,animationBrief} from './map-animation-import.js?v=2026110901';
+import {mapLibraryPanel,instructionPanel,mapExportPanel,handleMapExport} from './map-editor-panels.js?v=2026110901';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const button=(action,text)=>`<button type="button" data-edit="${action}">${text}</button>`;
 const number=(label,key,value,min,max,step='any')=>`<label>${label}<input type="number" data-prop="${key}" value="${esc(typeof value==='number'?Number(value.toFixed(6)):value)}" min="${min}" max="${max}" step="${step}"></label>`;

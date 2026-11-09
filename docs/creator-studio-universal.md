@@ -22,7 +22,9 @@ Rules enforce revision progression, writer timestamps and immutable ownership. V
 
 ## Deployment boundary
 
-This branch is local and undeployed. Client updates can be reviewed under existing rules first; strict revision rules require a coordinated separate deployment approval and real signed-in owner/editor checks. Older open clients without revision-aware writes will be denied by the stricter rules and must reload while preserving their draft. No cloud billing service, Gemini call, secret provisioning or paid generation is enabled by this refactor.
+GitHub Pages publishes the main editor from master; it does not deploy Firebase rules. Coordinate the frontend and strict revision rules and perform real signed-in acceptance checks. The repository also contains LIC rules not present in the live ruleset: release the reviewed Creator block against a fresh live snapshot, preserving all unrelated live rules, rather than activating the full repository rules file as a side effect. Older open clients without revision-aware writes will be denied by the stricter rules and must reload while preserving their draft. No cloud billing service, Gemini call, secret provisioning or paid generation is enabled by this refactor.
+
+Native editor entry points and changed module dependencies use one consistent release query version. Bump the changed modules and their importing parents together so existing browsers do not combine old and new editor files during the HTTP cache lifetime. Shared modules must resolve to the same URL from each importer.
 
 Gemini orchestration, audio alignment, immutable production-package approvals and scene regeneration remain subsequent work. The new foundation is generic; it does not certify production throughput for 100 rendered videos.
 

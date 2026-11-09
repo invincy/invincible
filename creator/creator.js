@@ -1,6 +1,6 @@
-import {initializeMapProject} from './map-defaults.js';
+import {initializeMapProject} from './map-defaults.js?v=2026110901';
 import {attachImportedGroups} from './production-model.js?v=5';
-import{createProductionWorkbench}from'./production-workbench.js?v=14';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026110901';
 import{db,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
