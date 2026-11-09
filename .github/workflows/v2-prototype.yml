@@ -11,6 +11,7 @@ on:
       - 'scripts/**'
       - 'functions/**'
       - 'functions-tts/**'
+      - 'functions-media/**'
       - 'firebase.json'
       - 'firestore.rules'
       - 'firebase.crm-test.json'
@@ -160,6 +161,8 @@ jobs:
       - name: Install Functions dependencies
         if: steps.scope.outputs.level == 'full'
         run: npm ci --prefix functions
+      - name: Install media service dependencies
+        run: npm ci --prefix functions-media
       - name: Install Chromium
         if: steps.scope.outputs.level == 'cosmetic'
         run: npx playwright install --with-deps chromium

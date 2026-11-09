@@ -1,6 +1,6 @@
 import {createDefaultMap,DEFAULT_MAP_SETTINGS} from './map-defaults.js?v=2026110903';
-import {validateMap,sceneTimeline,productionId} from './history-model.js?v=2026110903';
-import {visualMap,icons} from './map-editor-model.js?v=2026110903';
+import {validateMap,sceneTimeline,productionId} from './history-model.js?v=2026111002';
+import {visualMap,icons} from './map-editor-model.js?v=2026111002';
 import {mapStyles,defaultTerrain,validateBasemap} from './map-style-library.js';
 import {validateOverlayConfig} from './map-overlay-presets.js?v=2026110903';
 

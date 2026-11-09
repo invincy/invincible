@@ -7,6 +7,10 @@
     {
       "source": "functions-tts",
       "codebase": "creator-tts"
+    },
+    {
+      "source": "functions-media",
+      "codebase": "creator-media"
     }
   ],
   "firestore": {

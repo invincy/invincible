@@ -1,15 +1,18 @@
-import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026110903';
-import {createStudioRenderer} from './adapters.js?v=2026110903';
+import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=2026111002';
+import {studioBrief} from './handoff.js?v=2026111002';
+import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111002';
+import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111002';
+import {createStudioRenderer} from './adapters.js?v=2026111002';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js';
-import {mountAssembly} from './assembly.js?v=2026111001';
+import {mountAssembly} from './assembly.js?v=2026111002';
 import {encodeStudioVideo} from './export.js';
 import {openStudioStore} from './storage.js';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>crypto.randomUUID();
 const template=(name,text)=>({id:name,startSeconds:0,durationSeconds:2,engineType:'graphic',engineData:{},transition:{type:'fade',durationSeconds:.3},overlays:[{id:'title',type:'text',text,x:.5,y:.5,fontSize:64}]});
-export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session={}}){
+export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session={},mediaService=null}){
  root.className='video-studio';
- root.innerHTML=`<div class="vs-layout"><div><strong>Video Studio · Phase 1</strong><p class="vs-help">Separate video draft. Existing storyboard, map and LIC pages are preserved. Saves and uploaded originals stay on this device for your account; use JSON to transfer instructions.</p>
+ root.innerHTML=`<div class="vs-layout"><div><strong>Video Studio · Phase 1</strong><p class="vs-help">Separate video draft. Existing storyboard, map and LIC pages are preserved. Use the shared uploader above for cloud media. The owner can Save the complete video draft to sync it across devices.</p>
  <div class="vs-actions"><button data-vs="save">Save video draft</button><button data-vs="download">Download JSON</button><button data-vs="example">Load example</button></div>
  <label>Video title<input data-vs-title maxlength="200"></label><div class="vs-grid"><label>Frame<select data-vs-ratio><option value="9:16">Portrait · 1080 × 1920</option><option value="16:9">Landscape · 1920 × 1080</option></select></label><label>Brand<select data-vs-brand></select></label></div>
  <div class="vs-actions"><label><input type="checkbox" data-vs-intro>Apply intro</label><label><input type="checkbox" data-vs-outro>Apply outro</label></div>
@@ -21,7 +24,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  const $=q=>root.querySelector(q),canvas=$('canvas'),mapAssets=()=>getProject()?.historicalMap?.visual?.assets||[];
  // Keep the original controls available under Advanced; make visual assembly the opening view.
  const legacy=$('.vs-layout > div'),advanced=document.createElement('details'),assemblyRoot=document.createElement('section'),header=document.createElement('header');
- advanced.className='vs-advanced';advanced.innerHTML='<summary>Advanced · branding, original imports & JSON</summary>';legacy.before(advanced);advanced.append(legacy);legacy.querySelector('strong').textContent='Project settings';
+ advanced.className='vs-advanced';advanced.innerHTML='<summary>Advanced · brand & project settings</summary>';legacy.before(advanced);advanced.append(legacy);legacy.querySelector('strong').textContent='Project settings';
  assemblyRoot.dataset.assembly='';assemblyRoot.className='vs-assembly';$('.vs-layout').prepend(assemblyRoot);
  header.className='vs-studio-header';header.innerHTML='<div><span class="vs-eyebrow">CREATOR</span><h2>Studio</h2></div><div class="vs-actions" data-studio-actions></div>';root.prepend(header);const mobile=document.createElement('nav');mobile.className='vs-mobile-tabs';mobile.setAttribute('aria-label','Studio panels');mobile.innerHTML='<button data-mobile-panel=preview aria-pressed=true>Preview</button><button data-mobile-panel=scenes aria-pressed=false>Scenes & audio</button>';header.after(mobile);root.dataset.mobilePanel='preview';mobile.onclick=e=>{const b=e.target.closest('[data-mobile-panel]');if(!b)return;root.dataset.mobilePanel=b.dataset.mobilePanel;mobile.querySelectorAll('button').forEach(n=>n.setAttribute('aria-pressed',String(n===b)));};
  for(const key of ['save','export'])header.querySelector('[data-studio-actions]').append($(`[data-vs=${key}]`));
@@ -29,12 +32,24 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  $('.vs-preview .vs-help').textContent='Full HD · 30 fps. Your scenes and audio export together.';
  $('[data-vs=save]').textContent='Save';$('[data-vs=export]').textContent='Export MP4';
  const account=getAccountId(),projectId=getProject()?.id;const store=account?openStudioStore(account):null;
- const state=session;if(state.account!==account||state.projectId!==projectId){for(const key of Object.keys(state))delete state[key];state.account=account;state.projectId=projectId;}state.manifest??=emptyVideo();state.brands??=structuredClone(PRESETS);state.files??=new Map();state.brandAssets??=[];
+ const state=session;if(state.account!==account||state.projectId!==projectId){for(const key of Object.keys(state))delete state[key];state.account=account;state.projectId=projectId;}state.manifest??=emptyVideo();state.brands??=structuredClone(PRESETS);state.files??=new Map();state.brandAssets??=[];state.cloudRevision??=0;
+ const media=mediaService||createMediaClient(account);let catalogue=[],pendingCloud=null;
+ const setup=document.createElement('section');setup.className='vs-flow';setup.innerHTML=`<section class="vs-step"><h3>1 · Add assets & voiceover</h3><p class="vs-help">Upload once to your private library. Reuse the originals across videos and devices.</p><label class="vs-drop">Choose files or drop them here<input data-media-upload type="file" multiple accept="image/png,image/jpeg,image/webp,video/mp4,video/webm,.mp3,.wav,.glb"></label><div class="vs-actions"><button data-vs="library-refresh">Refresh library</button><label>Find an asset<input data-media-search type="search" placeholder="Search your library"></label></div><div data-media-library class="vs-media-library"></div><p class="vs-help" data-media-status>Loading your shared library…</p></section><section class="vs-step" data-flow-json><h3>2 · Import your complete video</h3><p class="vs-help">Copy the brief to ChatGPT with your script and exact voiceover cues. Import one JSON for maps, battles, overlays and audio.</p><div class="vs-actions"><button data-vs="copy-brief">Copy ChatGPT brief</button><button data-vs="cloud-review">Review cloud draft</button></div></section>`;
+ header.after(setup);const jsonPanel=$('[data-vs-json]').closest('details');jsonPanel.open=true;setup.querySelector('[data-flow-json]').append(jsonPanel);setup.querySelector('[data-flow-json]').append($('[data-vs=download]'));
+ $('.vs-layout').before(Object.assign(document.createElement('h3'),{textContent:'3 · Review scenes & audio',className:'vs-review-heading'}));
+ const exportNote=document.createElement('p');exportNote.className='vs-help';exportNote.textContent='4 · Export your complete MP4 with audio';$('.vs-preview').prepend(exportNote);
+ setup.ondragover=e=>{e.preventDefault();};setup.ondrop=e=>{e.preventDefault();if(e.dataTransfer.files.length)run(()=>uploadFiles([...e.dataTransfer.files]));};
  const lifecycle=new AbortController();
  let drawing=null;
  let renderer=null,timeline=null,audioBuffer=null,audioTracks=[],stopTracks=null,assembly=null,playing=false,raf=0,time=state.time||0,context=null,source=null,gainNode=null,clock=0,clockTime=0,disposed=false,busy=false,pending=null,controller=null,drawBusy=false,preparing=null;
  const status=text=>{if(!disposed)$('[data-vs-status]').textContent=text;};
- const getFile=async fileId=>state.files.get(fileId)||await store?.get('file:'+fileId);
+ const getFile=async fileId=>{let file=state.files.get(fileId)||await store?.get('file:'+fileId);if(!file&&isCloudFile(fileId)){file=await media.file(fileId);if(disposed||getAccountId()!==account)throw Error('Project closed or account changed.');state.files.set(fileId,file);}return file;};
+ function renderLibrary(){const query=$('[data-media-search]').value.trim().toLowerCase();$('[data-media-library]').innerHTML=catalogue.filter(a=>a.name.toLowerCase().includes(query)).map(a=>`<article><strong>${esc(a.name)}</strong><small>${esc(a.kind)}${a.width?' · '+a.width+' × '+a.height:''}${a.duration?' · '+a.duration.toFixed(2)+'s':''}</small><div class="vs-actions"><button data-vs="media-use" data-media-id="${esc(a.id)}">${a.kind==='audio'?'Add voiceover':'Use in video'}</button>${a.kind==='audio'?`<button data-vs="media-music" data-media-id="${esc(a.id)}">Music</button><button data-vs="media-effect" data-media-id="${esc(a.id)}">Sound effect</button>`:''}${['image','video'].includes(a.kind)?`<button data-vs="media-scene" data-media-id="${esc(a.id)}">Add as scene</button>`:''}</div></article>`).join('')||'<p class="vs-help">No matching assets. Add files above.</p>';};
+ async function refreshLibrary(){catalogue=await media.list();if(disposed)return;renderLibrary();$('[data-media-status]').textContent=catalogue.length+' assets in your private cloud library.';}
+ async function upgraded(){const original=state.manifest.audio&&await getFile(state.manifest.audio.fileId);return upgradeVideo(state.manifest,original?(await decodeVoiceover(original)).duration:0);}
+ async function useMedia(a,{scene=false,role='voiceover'}={}){const next=await upgraded();if(a.kind==='audio'){next.audioClips.push({id:uid(),fileId:a.id,name:a.name,role,startSeconds:0,trimStart:0,durationSeconds:a.duration,gain:1,fadeIn:0,fadeOut:0});}else if(a.kind==='glb'){throw Error('GLB models are available from the shared library inside Edit map scene.');}else {if(!next.assets.some(x=>x.fileId===a.id))next.assets.push({id:a.id,name:a.name,fileId:a.id});if(scene){const row={id:uid(),name:a.name,startSeconds:0,durationSeconds:a.duration||5,engineType:a.kind,engineData:{assetId:next.assets.find(x=>x.fileId===a.id).id,fit:'contain',...(a.kind==='video'?{trimStart:0}:{})},overlays:[]};Object.assign(next,arrangeScenes(next,[...next.scenes,row],{mapAssets:mapAssets()}));}}await applyManifest(next);}
+ async function uploadFiles(files,{addScenes=false,role=null}={}){for(const file of files){status('Uploading '+file.name+'…');const info=await inspectMedia(file),a=await media.upload(file,info);if(disposed||getAccountId()!==account)return;state.files.set(a.id,file);await store?.put('file:'+a.id,file);if(!catalogue.some(x=>x.id===a.id))catalogue.unshift(a);renderLibrary();if(a.kind!=='glb')await useMedia(a,{scene:addScenes&&['image','video'].includes(a.kind),role:role||'voiceover'});}status('Files saved to your cloud library. Save your video draft after making changes.');$('[data-media-status]').textContent=catalogue.length+' assets in your private cloud library.';}
+
  const brand=()=>state.brands.find(b=>b.id===state.manifest.brandPresetId)||state.brands[0];
  function stop(){playing=false;cancelAnimationFrame(raf);stopTracks?.();stopTracks=null;if(source){try{source.stop();}catch{}source.disconnect();source=null;}gainNode?.disconnect();gainNode=null;}
  function invalidate(){stop();renderer?.destroy();renderer=null;audioBuffer=null;audioTracks=[];pending=null;$('[data-vs=apply]').disabled=true;}
@@ -43,7 +58,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   $('[data-vs-brand]').innerHTML=state.brands.map(b=>`<option value="${esc(b.id)}">${esc(b.name)}</option>`).join('');$('[data-vs-brand]').value=brand().id;
   $('[data-vs-intro]').checked=!!m.introEnabled;$('[data-vs-outro]').checked=!!m.outroEnabled;
   $('[data-vs-brand-json]').value=JSON.stringify(brand(),null,2);
-  $('[data-vs-audio-name]').textContent=m.audio?.name||(m.audioClips?.length?m.audioClips.length+' recordings in the Audio timeline':'No voiceover selected');$('[data-vs-audio-start]').value=m.audio?.startSeconds??0;$('[data-vs-gain]').value=m.audio?.gain??1;
+  $('[data-vs-audio-name]').textContent=m.audio?.name||(m.audioClips?.length?m.audioClips.length+' recordings in the Audio timeline':'No voiceover selected');$('[data-vs-audio-start]').value=m.audio?.startSeconds??m.audioClips?.find(a=>a.role==='voiceover')?.startSeconds??0;$('[data-vs-gain]').value=m.audio?.gain??m.audioClips?.find(a=>a.role==='voiceover')?.gain??1;
   $('[data-vs-assets]').innerHTML=m.assets.map(a=>`<div>${esc(a.name)} · <code>${esc(a.id)}</code></div>`).join('');
   $('[data-vs-library]').innerHTML='<option value="">Choose existing map image</option>'+mapAssets().filter(a=>a.type==='image').map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
   assembly?.sync();
@@ -97,12 +112,13 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  }
  async function save(){
   if(!store||!projectId)throw Error('Save and open the Creator project before saving its local video draft.');
+  if(getProject()?.ownerUid===account||mediaService){const next=structuredClone(state.manifest),refs=[...next.assets,...(next.audioClips||[]),...(next.audio?[next.audio]:[])],converted=new Map();for(const ref of refs){if(!ref.fileId||isCloudFile(ref.fileId))continue;const old=ref.fileId;if(!converted.has(old)){const file=await getFile(old);if(!file)throw Error('Missing original: '+ref.name);const named=new File([file],ref.name,{type:file.type});const a=await media.upload(named,await inspectMedia(named));converted.set(old,a.id);state.files.set(a.id,file);}ref.fileId=converted.get(old);}await applyManifest(next);}
   validateManifest(state.manifest,{mapAssets:mapAssets()});const assets=new Set([...state.brandAssets,...state.manifest.assets].map(a=>a.id));state.brands.forEach(b=>validateBrand(b,assets));
   // Preserve byte-identical originals. A failed quota write never updates the draft pointer.
   for(const [id,file] of state.files)await store.put('file:'+id,file);
   state.brandAssets=[...new Map([...state.brandAssets,...state.manifest.assets].map(a=>[a.id,a])).values()];await store.put('brands',{brands:state.brands,assets:state.brandAssets});
   const version=uid();await store.put('version:'+projectId+':'+version,structuredClone(state.manifest));await store.put('draft:'+projectId,version);
-  status('Video draft and original uploads saved on this device. JSON contains references, not media bytes.');
+  if(getProject()?.ownerUid===account||mediaService){const result=await media.saveDraft(projectId,state.manifest,state.brands,state.cloudRevision);state.cloudRevision=result.revision;await store.put('cloudRevision:'+projectId,state.cloudRevision);status('Saved to your account. Your video and cloud assets are available on your other devices.');}else status('Local video draft saved. Cloud draft sync is available to the project owner.');
  }
  function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
  function lock(value){busy=value;root.querySelectorAll('button,input,textarea,select').forEach(n=>n.disabled=value);$('[data-vs=cancel]').disabled=!value;$('[data-vs=apply]').disabled=value||!pending;}
@@ -118,12 +134,16 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   run(async()=>{
    if(action==='save')await save();
    if(action==='download')download(new Blob([JSON.stringify(state.manifest,null,2)],{type:'application/json'}),'video-studio.json');
-   if(action==='validate'){
+   if(action==='library-refresh')await refreshLibrary();
+   if(action==='copy-brief'){const text=studioBrief(await upgraded(),catalogue);await navigator.clipboard.writeText(text);status('Complete-video brief copied, including asset IDs and current JSON. Add your script and exact voiceover cues.');}
+   if(action==='cloud-review'){const draft=await media.loadDraft(projectId);if(!draft)throw Error('No cloud draft has been saved for this video yet.');pending=validateManifest(draft.manifest,{mapAssets:mapAssets()});pendingCloud=draft;$('[data-vs-review]').textContent='Review cloud version '+draft.revision+': '+pending.scenes.length+' scenes. Applying replaces this local video draft; originals are retained.';status('Cloud draft ready for review. Apply reviewed import to load it.');}
+   if(action.startsWith('media-')){const a=catalogue.find(x=>x.id===button.dataset.mediaId);if(!a)throw Error('Choose an asset from your library.');await useMedia(a,{scene:action==='media-scene',role:action==='media-music'?'music':action==='media-effect'?'effect':'voiceover'});}
+   if(action==='validate'){pendingCloud=null;
     pending=null;const next=validateManifest($('[data-vs-json]').value,{mapAssets:mapAssets()});if(!state.brands.some(b=>b.id===next.brandPresetId))throw Error('Choose or create the referenced brand profile first.');
     validateBrand(state.brands.find(b=>b.id===next.brandPresetId),new Set(next.assets.map(a=>a.id)));pending=next;
-    $('[data-vs-review]').textContent=`${next.scenes.length} scenes · ${next.aspectRatio} · ${next.audio?.name||'no voiceover'} · applies only to the separate video draft.`;status('Import reviewed. Apply when ready.');
+    $('[data-vs-review]').textContent=`${next.scenes.length} scenes · ${next.aspectRatio} · ${next.audio?.name||(next.audioClips?.length?next.audioClips.length+' audio tracks':'no audio')} · applies only to the separate video draft.`;status('Import reviewed. Apply when ready.');
    }
-   if(action==='apply'&&pending){const next=pending;await applyManifest(next);status('Video instructions applied. Existing Creator data is preserved.');}
+   if(action==='apply'&&pending){const next=pending,cloud=pendingCloud;await applyManifest(next,{brands:cloud?.brands});if(cloud){state.cloudRevision=cloud.revision;pendingCloud=null;}status('Complete video applied. Preview your scenes and audio, then Save and Export MP4.');}
    if(action==='example'){
     const next=emptyVideo();next.title='My first video';next.assets=state.manifest.assets;next.scenes=[{id:'explain',startSeconds:0,durationSeconds:5,engineType:'graphic',engineData:{},transition:{type:'fade',durationSeconds:.3},overlays:[{id:'heading',type:'text',text:'Your next story',fontSize:72,keyframes:[{timeSeconds:0,y:.65,opacity:0,easing:'smooth'},{timeSeconds:1,y:.5,opacity:1}]}]}];await applyManifest(next);$('[data-vs-json]').value=JSON.stringify(next,null,2);status('Example loaded in the video draft.');
    }
@@ -142,14 +162,17 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   });
  });
  root.addEventListener('input',event=>{
-  if(event.target.matches('[data-vs-json]')){pending=null;$('[data-vs=apply]').disabled=true;$('[data-vs-review]').textContent='';}
+  if(event.target.matches('[data-media-search]'))renderLibrary();
+  if(event.target.matches('[data-vs-json]')){pendingCloud=null;pending=null;$('[data-vs=apply]').disabled=true;$('[data-vs-review]').textContent='';}
   if(event.target.matches('[data-vs-seek]')&&!busy){stop();time=Number(event.target.value);if(!drawBusy){drawBusy=true;draw().catch(e=>status(e.message)).finally(()=>drawBusy=false);}}
  });
  root.addEventListener('change',event=>{
   if(event.target.closest('[data-assembly]'))return;
   const target=event.target;if(target.matches('[data-vs-seek]'))return;
   run(async()=>{
+   if(target.matches('[data-media-upload]')){await uploadFiles([...target.files]);target.value='';return;}
    if(target.matches('[data-vs-json-file]')){const file=target.files[0];if(file){if(file.size>1000000)throw Error('Use JSON under 1 MB.');$('[data-vs-json]').value=await file.text();pending=null;status('File loaded. Review it before applying.');}return;}
+   if(target.matches('[data-vs-images],[data-vs-audio]')){await uploadFiles([...target.files]);target.value='';return;}
    if(target.matches('[data-vs-images]')){
     const files=[...target.files];
     if(state.manifest.assets.length+files.length>200)throw Error('Use up to 200 images.');
@@ -172,15 +195,16 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    else if(target.matches('[data-vs-brand]')){next.brandPresetId=target.value;const b=state.brands.find(b=>b.id===target.value);next.assets=assetsForBrand(b,next.assets,state.brandAssets);}
    else if(target.matches('[data-vs-intro]')){if(target.checked&&!brand().intro)throw Error('Add an intro template in Brand profile first.');next.introEnabled=target.checked;}
    else if(target.matches('[data-vs-outro]')){if(target.checked&&!brand().outro)throw Error('Add an outro template in Brand profile first.');next.outroEnabled=target.checked;}
-   else if(target.matches('[data-vs-audio-start],[data-vs-gain]')){if(!next.audio)throw Error('Upload voiceover first.');next.audio.startSeconds=Number($('[data-vs-audio-start]').value);next.audio.gain=Number($('[data-vs-gain]').value);}
+   else if(target.matches('[data-vs-audio-start],[data-vs-gain]')){const recording=next.audio||next.audioClips?.find(a=>a.role==='voiceover');if(!recording)throw Error('Upload voiceover first.');recording.startSeconds=Number($('[data-vs-audio-start]').value);recording.gain=Number($('[data-vs-gain]').value);}
    else return;
    validateManifest(next,{mapAssets:mapAssets()});await applyManifest(next);
   });
  });
- assembly=mountAssembly(assemblyRoot,{session:state,getManifest:()=>state.manifest,getProject,getFile,putFile:(id,file)=>state.files.set(id,file),deleteFile:id=>state.files.delete(id),run,status,getTime:()=>time,setTime:value=>{time=value;state.time=value;},releaseRenderer:async()=>{stop();if(drawing)await drawing.catch(()=>{});invalidate();},setManifest:applyManifest,previewManifest:async next=>{if(next===state.manifest){invalidate();await draw();return;}invalidate();try{const b=brand(),t=compileTimeline(next,b);audioTracks=await loadAudioTracks(next,getFile);const lead=t.audioClips[0]&&next.audioClips?.[0]?t.audioClips[0].startSeconds-next.audioClips[0].startSeconds:0;audioTracks=audioTracks.map(a=>({...a,startSeconds:a.startSeconds+lead}));const nextRenderer=await createStudioRenderer(canvas,next,t,b,{getFile,mapAssets:mapAssets(),signal:lifecycle.signal});if(disposed){nextRenderer.destroy();return;}renderer=nextRenderer;timeline=t;await renderer.draw(time);}catch(error){invalidate();try{await draw();}catch{}throw error;}}});
+ assembly=mountAssembly(assemblyRoot,{session:state,getManifest:()=>state.manifest,getProject,getFile,importFiles:uploadFiles,putFile:(id,file)=>state.files.set(id,file),deleteFile:id=>state.files.delete(id),run,status,getTime:()=>time,setTime:value=>{time=value;state.time=value;},releaseRenderer:async()=>{stop();if(drawing)await drawing.catch(()=>{});invalidate();},setManifest:applyManifest,previewManifest:async next=>{if(next===state.manifest){invalidate();await draw();return;}invalidate();try{const b=brand(),t=compileTimeline(next,b);audioTracks=await loadAudioTracks(next,getFile);const lead=t.audioClips[0]&&next.audioClips?.[0]?t.audioClips[0].startSeconds-next.audioClips[0].startSeconds:0;audioTracks=audioTracks.map(a=>({...a,startSeconds:a.startSeconds+lead}));const nextRenderer=await createStudioRenderer(canvas,next,t,b,{getFile,mapAssets:mapAssets(),signal:lifecycle.signal});if(disposed){nextRenderer.destroy();return;}renderer=nextRenderer;timeline=t;await renderer.draw(time);}catch(error){invalidate();try{await draw();}catch{}throw error;}}});
  const ready=run(async()=>{
   if(!state.loaded){if(store){const library=await store.get('brands');if(library){state.brands=library.brands;state.brandAssets=library.assets;}if(projectId){const version=await store.get('draft:'+projectId);if(version){const saved=await store.get('version:'+projectId+':'+version);if(saved)state.manifest=validateManifest(saved,{mapAssets:mapAssets()});}}}state.manifest.assets=assetsForBrand(brand(),state.manifest.assets,state.brandAssets);state.loaded=true;}
-  sync();await draw();status('Your draft stays on this device. Save to keep uploaded originals.');
+  if(getProject()?.ownerUid===account||mediaService){try{state.cloudRevision=await store?.get('cloudRevision:'+projectId)||0;const cloud=await media.loadDraft(projectId);if(cloud&&!await store?.get('draft:'+projectId)){state.manifest=validateManifest(cloud.manifest,{mapAssets:mapAssets()});state.brands=cloud.brands;state.cloudRevision=cloud.revision;}else if(cloud&&cloud.revision!==state.cloudRevision)status('Another device has a newer cloud draft. Use Review cloud draft before saving.');}catch(e){status('Cloud draft unavailable: '+e.message);}}
+  sync();await draw();refreshLibrary().catch(e=>{if(!disposed)$('[data-media-status]').textContent='Cloud library unavailable: '+e.message;});
  });
  const hidden=()=>{if(document.hidden)stop();};document.addEventListener('visibilitychange',hidden);
  return {ready,get manifest(){return state.manifest;},destroy(){disposed=true;state.time=time;assembly?.destroy();stop();lifecycle.abort(new DOMException('Workspace closed','AbortError'));controller?.abort(new DOMException('Workspace closed','AbortError'));renderer?.destroy();context?.close();store?.close();document.removeEventListener('visibilitychange',hidden);}};

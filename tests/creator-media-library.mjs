@@ -1,0 +1,7 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';
+import {studioBrief} from '../creator/video-studio/handoff.js';
+import {mapAssetFromMedia,isCloudFile} from '../creator/media-library.js';
+import {visualMap,validateVisual,assetLibrary,importAssetLibrary} from '../creator/map-editor-model.js';
+const id='cloud-'+'a'.repeat(64);
+test('Shared cloud artwork references survive map library export and reuse without signed links',()=>{const a=mapAssetFromMedia({id,name:'Army',kind:'image',credit:'Artist'}),map=visualMap({version:1,events:[],features:{type:'FeatureCollection',features:[]},camera:[]});map.visual.assets=[a];validateVisual(map,{scenes:[]});const pkg=assetLibrary(map),out=importAssetLibrary(map,pkg);assert.equal(out.visual.assets.length,1);assert.equal(out.visual.assets[0].cloudAssetId,id);assert.ok(!JSON.stringify(pkg).includes('https:'));assert.throws(()=>validateVisual({...map,visual:{...map.visual,assets:[{...a,url:'https://example.com/army.png'}]}},{scenes:[]}));assert.equal(isCloudFile(id),true);assert.equal(isCloudFile('cloud-../../other'),false);});
+test('Complete-video handoff includes IDs, actual metadata and timing instructions without temporary URLs',()=>{const brief=studioBrief({schemaVersion:2,assets:[{id,fileId:id,name:'Army'}],audioClips:[],scenes:[]},[{id,name:'Army',kind:'image',width:512,height:768,url:'https://example.com/signed-secret'}]);assert.ok(brief.includes(id));assert.ok(brief.includes('512'));assert.ok(brief.includes('exact supplied voiceover cues'));assert.ok(!brief.includes('signed-secret'));});

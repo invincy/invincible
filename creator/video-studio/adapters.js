@@ -1,9 +1,9 @@
-import {compileAnimation} from '../map-animation-import.js?v=2026110903';
-import {createHistoryPlayer} from '../history-player.js?v=2026110903';
-import {layerFrame,sceneAt,referencedMapAssets} from './model.js?v=2026110903';
-import {resolveMapAsset} from '../map-assets-client.js';
+import {compileAnimation} from '../map-animation-import.js?v=2026111002';
+import {createHistoryPlayer} from '../history-player.js?v=2026111002';
+import {layerFrame,sceneAt,referencedMapAssets} from './model.js?v=2026111002';
+import {resolveMapAsset} from '../map-assets-client.js?v=2026111002';
 import {drawBattlefield} from './battlefield.js';
-import {fitMedia} from './composition.js?v=2026110903';
+import {fitMedia} from './composition.js?v=2026111002';
 export function mapDraft(animation,geometryReviewed,mapAssets=[]){
  return compileAnimation({scenes:[],historicalMap:{version:1,theme:'night',events:[],features:{type:'FeatureCollection',features:[]},camera:[],visual:{version:1,assets:referencedMapAssets(mapAssets,animation),layers:[]}}},animation,{geometryReviewed}).project;
 }

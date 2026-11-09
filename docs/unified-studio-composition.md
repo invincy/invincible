@@ -1,5 +1,7 @@
 # Unified Studio composition — November 9, 2026
 
+Current workflow: [one video flow and shared cloud library](creator-single-flow.md). The historical local-only/undeployed-upload notes below describe earlier implementations and are superseded for shared uploads and owner draft sync.
+
 Review branch: `codex/unified-studio-battlefield`. No merge, deployment, Firebase write, security-rule change or automatic migration.
 
 ## Project experience
