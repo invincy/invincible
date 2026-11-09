@@ -3,7 +3,7 @@ import {studioBrief} from './handoff.js?v=2026111002';
 import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111002';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111002';
 import {createStudioRenderer} from './adapters.js?v=2026111002';
-import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js';
+import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111002';
 import {mountAssembly} from './assembly.js?v=2026111002';
 import {encodeStudioVideo} from './export.js';
 import {openStudioStore} from './storage.js';
