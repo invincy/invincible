@@ -1,5 +1,11 @@
 # Cleanup review — 2026-10-03
 
+## Creator Studio red interface — November 10, 2026
+
+Applied a YouTube-inspired red/charcoal interface to Studio and the Creator project list: readable Roboto/Hindi typography, clear step headings, quieter cards, improved upload/file controls, red focus/selection/timeline accents and a prominent export action. CSS is scoped to Creator/Studio controls; film presentation presets and saved data are not changed. Advanced controls, scene editors and phone menus remain available. Studio CSS references advance to v=2026111003 for existing sessions.
+
+Validation: existing complete-video/cloud-fixture/export and full Creator navigation/responsive browser checks, root/Functions/media unit suites and site references; visual inspection of the actual redesigned workspace. Final remote regression/publication results are recorded in this chat release report.
+
 ## One Creator Studio flow — November 10, 2026
 
 Promoted one shared upload/library area and complete-video JSON handoff into the opening Studio screen, retaining focused map/battlefield editors and audio MP4 export. Studio, map and production-clip uploads share account-owned immutable cloud originals; named metadata and stable IDs are reused across projects/devices. Owner video drafts and brand profiles sync with revision conflict protection, keeping local recovery. Added dedicated creator-media backend and private media bucket; existing AI/TTS functions, Firestore rules and user project records are preserved. Historical local-only notes are superseded by docs/creator-single-flow.md.
