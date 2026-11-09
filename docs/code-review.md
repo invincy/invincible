@@ -1,5 +1,12 @@
 # Cleanup review — 2026-10-03
 
+## Ready-made TTS voice samples — November 9, 2026
+
+A round play/stop button immediately before the Google voice selector plays the exact selected voice’s existing public Google demo without narration. An allowlist of 2,002 observed catalogue sample names prevents guessing URLs for voices with no demo. Missing samples are disabled; failed playback shows a retry message and never falls back to synthesis. Samples retain Google’s original settings. Changing voice/account, starting generation or playing a generated recording stops the sample, including stale play promises.
+
+Focused browser checks cover empty-script playback, exact male/female source matching, stop/toggle, selection changes, missing samples, HTTP errors, sign-out and existing preview/export flows at 320–1280px. A real signed-in browser played Google’s public hi-IN-Neural2-A/B WAVs with an empty script and zero synthesis calls. Full local unit/Functions tests, the production build and site-reference check passed. No backend deployment, authentication configuration, credentials, project data or billing settings changed.
+
+
 ## Creator Google voiceover — November 9, 2026
 
 Creator Studio now links to a reusable TTS page for pasted text/SSML, live Google voice filters, supported speed/pitch/volume/paragraph-pause controls, plain-text opening previews, playback and MP3 download. Delivery presets are numerical starting points, not promised emotions. Scripts/settings are account-scoped local drafts; generated audio clears on account changes and stale responses are discarded.
