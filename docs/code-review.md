@@ -895,3 +895,39 @@ Animation instructions may omit aspect ratio and basemap; those values resolve f
 Verification: 198 repository unit cases (196 passed, two existing skips), 15 Functions tests, the production build and site-reference check passed. Browser coverage passed for main-page creation, Studio Map creation, default snapshots, overrides/reload, 320/390/820/1440 layouts, native Map Editor tools, animation imports, history playback, Video Studio and mixed composition. A two-second 1080×1920 30-fps native NASA-map MP4 was exported with a 64-pixel label override verified in the export compositor. FFmpeg decoded the output and existing mixed-editor proof files. Exported imagery/cards and a phone-size frame were visually inspected; this synthetic sample does not certify a film's geography or narration alignment.
 
 The broader browser run passed storage, navigation, reminders, focus orb, task copying, Creator storyboard, Journal notebook, LIC follow-ups, Workday and account-menu scenarios. Journal tools, personal LIC CRM and LIC cashier timed out; the same three failures reproduced against an untouched master archive in this environment. CRM emulator command output did not establish completed rule/browser checks and is not counted as verification. Tests used Node 24 and desktop Chrome; production Node 22, live signed-in Firebase, mobile hardware/Safari and maximum-length rendering remain unverified.
+
+
+## Creator Gemini voice direction — November 10, 2026 (review branch)
+
+Added Gemini 2.5 Flash/Pro TTS to the existing authenticated Google synthesis path.
+The server supplies a separate performance prompt for Natural/Sales/Energetic/
+Documentary/Dramatic/Calm, custom direction and approximate pace; classic voices
+retain their existing SSML/rate/pitch behavior. Gemini uses an allowlist of models,
+speakers and locales, with Unicode-safe 4,000-byte text chunks. Per-hour accounting
+includes repeated prompts. No new credentials, authentication policy, database paths
+or client Firestore access are introduced.
+
+The navy/gold voiceover page adds engine and direction controls, hides unsupported
+Gemini controls, preserves style when speed changes, and groups fine adjustments.
+Old drafts retain classic voices; settings remain per-account and stale generation
+results are discarded. The old backend disables the new engine rather than silently
+substituting a voice. Gemini speed is explicitly approximate, not an exact post-render
+speed effect. No sentence selection editing or word-level timeline is implemented.
+
+Validation: 12 TTS backend tests passed, including separate prompt/model/voice request
+contracts, every-chunk directions, Hindi/emoji preservation, validation before any
+upstream call and real MP3 encode/decode. Controlled Chromium browser checks passed
+for classic samples/SSML/preview/download, Gemini directions/Pro selection/style+speed,
+draft recovery and account isolation, with responsive checks and inspected phone and
+desktop screenshots. These fixtures use generated silent audio, not real Gemini speech.
+Full repository units: 215 passed, 2 existing skips; Functions: 15 passed. Production
+build and site references passed. Broader browser chain passed Garage, navigation,
+reminders, Orb, Task Copy and Creator, then failed at Journal addStyleTag line 56.
+The same failure reproduced in an untouched master bf8fd1c worktree.
+
+Activation remains unverified: no Firebase CLI login or Google ADC is present here.
+No paid Gemini request, IAM edit, Functions deployment or production publication was
+performed. Deploy TTS first and verify the runtime account's model permission, then
+publish the page and perform a short approved real listening comparison. See
+[Creator voiceover](creator-tts.md#activation). Node 22, physical phones and Safari
+remain unverified; checks used Node 24 and desktop Chromium.

@@ -1,4 +1,5 @@
 const {DOMParser,XMLSerializer}=require('@xmldom/xmldom');
+const {parseGemini,geminiPrompt}=require('./tts-gemini');
 const MAX_INPUT_BYTES=30000,CHUNK_BYTES=4400,SAMPLE_RATE=24000;
 const bytes=value=>Buffer.byteLength(value,'utf8');
 const escapeXml=value=>value.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
@@ -24,6 +25,10 @@ function parseInput(data,voice){
  if(!data||typeof data!=='object'||typeof data.text!=='string'||!data.text.trim())throw Error('Paste narration first.');
  if(bytes(data.text)>MAX_INPUT_BYTES)throw Error('Narration exceeds 30,000 UTF-8 bytes. Split it into separate recordings.');
  if(!voice?.capabilities?.supported)throw Error('This voice family is not supported in this workspace yet.');
+ const expressive=voice.family==='Gemini';
+ if(expressive&&/^\s*<speak[\s>]/i.test(data.text))throw Error('Gemini needs plain narration. Use a classic voice for this SSML script.');
+ if(data.engine&&data.engine!==(expressive?'gemini':'classic'))throw Error('Choose a voice for the selected speech engine.');
+ if(!expressive&&(data.direction||data.modelName||data.delivery))throw Error('Voice directions require a Gemini voice.');
  if(typeof data.languageCode!=='string'||!voice.languageCodes.includes(data.languageCode))throw Error('Choose a language supported by this voice.');
  const mode=data.mode||'text';
  if(!['text','ssml'].includes(mode))throw Error('Choose plain text or SSML.');
@@ -36,7 +41,7 @@ function parseInput(data,voice){
  if(pause&&!voice.capabilities.ssml)throw Error('Paragraph pauses are unavailable for this voice.');
  const title=typeof data.title==='string'?data.title:'voiceover';
  const filename=(title.normalize('NFKC').replace(/[\u0000-\u001f<>:"/\\|?*]/g,'').trim().slice(0,100)||'voiceover')+'.mp3';
- return {text:data.text,mode,speed,pitch,volume,pause,filename,languageCode:data.languageCode,voiceName:voice.name};
+ return {text:data.text,mode,speed,pitch,volume,pause,filename,languageCode:data.languageCode,voiceName:voice.name,...(expressive?parseGemini(data):{})};
 }
 function splitText(text,limit=CHUNK_BYTES){
  // Keep whitespace and every Unicode code point. Prefer punctuation/word boundaries.
@@ -105,6 +110,10 @@ function splitSsml(source,voice){
  return chunks;
 }
 function prepareRequests(input,voice){
+ if(voice.family==='Gemini'){
+  const prompt=geminiPrompt(input);
+  return splitText(input.text,4000).map(text=>({text,prompt}));
+ }
  if(input.mode==='ssml')return splitSsml(input.text,voice);
  if(input.pause){
   const ssml='<speak>'+input.text.split(/(\n\s*\n)/).map(part=>/^\n\s*\n$/.test(part)?'<break time="'+input.pause+'ms"/>':escapeXml(part)).join('')+'</speak>';

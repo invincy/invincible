@@ -1,8 +1,61 @@
 # Creator Studio voiceover
 
 Open **Creator Studio → Voiceover** (`creator/tts.html`). Paste Hindi, English,
-or another supported language, select a Google voice, preview the opening, then
+or another supported language, select a speech engine and voice, preview the opening, then
 generate and download an MP3. This is reusable across videos, not Panipat-specific.
+
+## Gemini expressive delivery (review branch; not activated)
+
+The voiceover page can use Gemini 2.5 Flash TTS or Gemini 2.5 Pro TTS through the
+existing Cloud Text-to-Speech REST API and Firebase runtime credentials. The
+server sends the narration as `input.text`, delivery/direction/pace as the separate
+`input.prompt`, and the allowlisted model and speaker in `voice`. Instructions are
+not prepended to the narration. Speech quality and adherence require a real listening
+check; local tests do not establish either.
+
+- Six initial speakers: Charon, Fenrir, Puck, Kore, Aoede and Leda.
+- Hindi, Indian English and US English; Gujarati is explicitly labelled Preview.
+- Natural, Sales, Energetic, Documentary, Dramatic and Calm delivery; optional
+  custom direction up to 2,000 UTF-8 bytes.
+- Speed 0.25–2× directs Gemini's speaking pace through the prompt. It is approximate,
+  not measured time stretching or a guaranteed recording duration. Editing speed
+  does not replace the selected emotion/delivery.
+- Gemini accepts plain narration here. SSML, pitch and exact paragraph pauses remain
+  available only for compatible classic Google voices. Existing SSML scripts are
+  rejected for Gemini rather than reading markup as narration.
+- Gemini text is split at 4,000 UTF-8 bytes and repeats the performance prompt on
+  every chunk. Lossless PCM joining and one verified MP3 encode are unchanged.
+  Independent chunks can vary in delivery; preview the actual script.
+- Hourly byte accounting includes each repeated prompt and synthesized text/SSML.
+- Drafts retain engine/model/direction per account on the device. Old drafts retain
+  their classic voice; a backend without Gemini catalogue entries disables Gemini.
+- The navy/gold layout keeps the script and voice controls beside one another on
+  desktop and stacked on phones. Model, volume and compatible classic controls are
+  under Fine adjustments. Existing public voice demos do not generate paid audio;
+  Gemini uses the explicit paid opening preview.
+
+### Activation
+
+This change requires deployment of the `creator-tts` Functions codebase **before**
+publishing the static page. No new API key belongs in the browser. Keep the existing
+`CREATOR_TTS_ACCOUNT_UID` value and account restrictions.
+
+The Functions runtime service account also needs `aiplatform.endpoints.predict`;
+Google documents `roles/aiplatform.user` (Vertex AI User) as a role containing that
+permission. Verify this on the actual runtime account, with billing and Cloud
+Text-to-Speech enabled. A catalogue entry does not prove model permission/quota.
+
+From an authorized Firebase CLI session, deploy only the TTS codebase using the
+command below. Then verify a short, user-approved Hindi-English passage with
+neutral, excited and sales delivery on the signed-in site before using full scripts.
+This workspace has no Firebase deployment login or Google ADC; no real Gemini audio
+was generated and no backend deployment or IAM change was performed.
+
+```sh
+firebase deploy --only functions:creator-tts --project life-by-adichimp
+```
+
+Reference: [Google Gemini-TTS API, limits and permissions](https://docs.cloud.google.com/text-to-speech/docs/gemini-tts).
 
 ## What the page supports
 
@@ -10,6 +63,7 @@ generate and download an MP3. This is reusable across videos, not Panipat-specif
 - A round play/stop button before the voice selector plays Google’s existing public sample without narration or a synthesis request. The catalogue captured on November 9, 2026 contains 2,002 exact voice/sample matches. Missing samples are disabled; playback failures do not trigger paid generation. Samples use Google’s original delivery settings.
 - Neural2, WaveNet, Standard, News, Studio and Chirp 3 HD voice families.
   Other returned families are explicitly unavailable rather than silently substituted.
+  Gemini speakers are curated separately and require the model permission above.
 - Speed 0.25–2.0x, pitch -20–20 semitones where supported, volume -12–6 dB.
 - Paragraph pauses, plain text or validated SSML, and delivery starting points.
   These presets change numerical controls; they do not promise a particular emotion.
