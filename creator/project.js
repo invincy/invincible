@@ -2,12 +2,13 @@ import{makeScene}from'./storyboard-model.js?v=3';
 import{createProductionWorkbench}from'./production-workbench.js?v=14';
 import{projectProgress,canonicalScript}from'./production-model.js?v=5';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
-import{doc,getDoc,onSnapshot,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import{doc,getDoc,onSnapshot,runTransaction,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{splitVoiceoverScript}from"./scene-tools.js?v=2";
 
 const $=id=>document.getElementById(id),projectId=new URLSearchParams(location.search).get("id");
-let saveChain=Promise.resolve(),editVersion=0,cloudVersion=0;
-let user=null,project=null,projectRef=null,saveTimer=null,localDirty=false;
+const tabId=(()=>{try{let id=sessionStorage.getItem("invincible.creatorTabId");if(!id){id=Math.random().toString(36).slice(2)+Date.now().toString(36);sessionStorage.setItem("invincible.creatorTabId",id);}return id;}catch{return "default";}})();
+let saveChain=Promise.resolve(),editVersion=0,cloudVersion=0,baseRevision=0;
+let user=null,project=null,projectRef=null,saveTimer=null,localDirty=false,pendingConflict=null,recoveredLegacyDraft=false;
 
 function esc(value){const node=document.createElement("div");node.textContent=value??"";return node.innerHTML;}
 function attr(value){return esc(value).replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
@@ -17,6 +18,23 @@ function status(message,type=""){
  node.className="sync-status "+type;node.hidden=type!=="error";
  icon.title=message;icon.setAttribute("aria-label",message);
  icon.dataset.state=type==="error"?"error":type==="ok"?"ok":"pending";
+}
+function onConflict(conflict){
+ pendingConflict=conflict||null;
+ const banner=$("conflictBanner"),msg=$("conflictMessage");
+ if(!banner)return;
+ if(!conflict){banner.hidden=true;return;}
+ $('conflictKeepOverwrite').disabled=!!conflict.serverDeleted;
+ if(conflict.source==='stale-draft'){
+  const draftRev=conflict.draft?.baseRevision??'?';
+  msg.textContent=`An unsaved local draft from revision ${draftRev} is on this device, while Firebase is now at revision ${conflict.serverRevision}. Discard the old draft to keep the cloud version, or restore and overwrite Firebase.`;
+ }else if(conflict.serverDeleted){
+  msg.textContent='This project was deleted or became unavailable in Firebase while you had unsaved changes.';
+ }else{
+  const revNote=Number.isInteger(conflict.serverRevision)?` (cloud r${conflict.serverRevision}, local base r${baseRevision})`:'';
+  msg.textContent=`Another session updated this project in Firebase${revNote}. Reload the latest cloud copy or explicitly overwrite it with your local changes.`;
+ }
+ banner.hidden=false;
 }
 
 const storyboard=createProductionWorkbench($("projectStoryboard"),{
@@ -71,18 +89,63 @@ function updateStats(){
 }
 
 function copyProject(value){if(Array.isArray(value))return value.map(copyProject);if(value&&Object.getPrototypeOf(value)===Object.prototype)return Object.fromEntries(Object.entries(value).map(([key,item])=>[key,copyProject(item)]));return value}
-function draftKey(){return 'invincible.creatorDraft.'+user.uid+'.'+projectId}
-function keepDraft(){try{localStorage.setItem(draftKey(),JSON.stringify({project,baseUpdatedAt:cloudVersion}))}catch(error){status("Could not keep a local draft: "+error.message,"error")}}
-async function save(){
+function legacyDraftKey(){return 'invincible.creatorDraft.'+user.uid+'.'+projectId}
+function draftKey(){const id=typeof tabId==='string'?tabId:'default';return legacyDraftKey()+'.'+id}
+function clearLocalDraft(){try{localStorage.removeItem(draftKey());if(typeof recoveredLegacyDraft!=='undefined'&&recoveredLegacyDraft){localStorage.removeItem(legacyDraftKey());recoveredLegacyDraft=false;}}catch{}}
+function keepDraft(){const id=typeof tabId==='string'?tabId:'default';try{localStorage.setItem(draftKey(),JSON.stringify({project,baseUpdatedAt:cloudVersion,baseRevision,tabId:id}))}catch(error){status("Could not keep a local draft: "+error.message,"error")}}
+function buildProjectWrite(payload,server,nextRev,{isCreate=false}={}){
+ const {createdAt:_c,updatedAt:_u,writtenAt:_w,writtenBy:_wb,writeRevision:_r,...clean}=payload;
+ if(isCreate){
+  return {...clean,id:projectId,ownerUid:clean.ownerUid||user.uid,ownerEmail:clean.ownerEmail||(user.email||"").toLowerCase(),editorEmails:clean.editorEmails||[],writeRevision:nextRev,writtenBy:user.uid,writtenAt:serverTimestamp(),createdAt:serverTimestamp(),updatedAt:serverTimestamp()};
+ }
+ const isOwner=(server.ownerUid||clean.ownerUid)===user.uid;
+ const out={...clean,id:projectId,ownerUid:server.ownerUid||clean.ownerUid||user.uid,writeRevision:nextRev,writtenBy:user.uid,writtenAt:serverTimestamp(),updatedAt:serverTimestamp()};
+ if(server.ownerEmail!==undefined)out.ownerEmail=server.ownerEmail;
+ else if(isOwner)out.ownerEmail=clean.ownerEmail||(user.email||"").toLowerCase();
+ if(isOwner)out.editorEmails=clean.editorEmails??server.editorEmails??[];
+ else if(server.editorEmails!==undefined)out.editorEmails=server.editorEmails;
+ if(server.createdAt!==undefined)out.createdAt=server.createdAt;
+ return out;
+}
+async function save(options={}){
  if(!user||!project||!projectRef)return false;
+ const force=!!options?.force,writerUid=user.uid;
  clearTimeout(saveTimer);saveTimer=null;localDirty=true;const version=++editVersion,payload=copyProject(project),ref=projectRef;
  keepDraft();status("Saving…");
  const result=saveChain.then(async()=>{
+  const expectedBase=baseRevision;
   try{
-   await setDoc(ref,{...payload,updatedAt:serverTimestamp()},{merge:true});
-   if(version===editVersion){localDirty=false;localStorage.removeItem(draftKey());status("Saved to Firebase","ok")}
+   const txResult=await runTransaction(db,async tx=>{
+    const snap=await tx.get(ref);if(user?.uid!==writerUid||ref!==projectRef)throw Object.assign(Error('Account changed during save.'),{code:'cancelled'});
+    if(snap.exists()){
+     const server=snap.data()||{};
+     const serverRev=Number.isInteger(server.writeRevision)?server.writeRevision:0;
+     if(!force&&serverRev!==expectedBase){
+      const err=new Error('A newer cloud version exists (revision '+serverRev+', local base '+expectedBase+').');
+      err.code='revision-conflict';err.serverData=server;err.serverRevision=serverRev;
+      throw err;
+     }
+     const nextRev=serverRev+1;
+     tx.set(ref,buildProjectWrite(payload,server,nextRev));
+     return {nextRev};
+    }
+    const err=new Error('This project was deleted or is no longer available in Firebase.');
+    err.code='revision-conflict';err.serverDeleted=true;throw err;
+   });
+   if(user?.uid!==writerUid||ref!==projectRef)return false;
+   baseRevision=txResult.nextRev;
+   if(project)project.writeRevision=txResult.nextRev;
+   if(typeof onConflict==='function')onConflict(null);
+   if(version===editVersion){localDirty=false;clearLocalDraft();status("Saved to Firebase","ok")}
+   else{keepDraft();}
    return true;
-  }catch(error){status(storageError(error)+" Your draft is kept on this device.","error");return false}
+  }catch(error){
+   if(error?.code==='revision-conflict'||error?.code==='aborted'){
+    if(typeof onConflict==='function')onConflict({source:'save',error,serverData:error.serverData||null,serverRevision:error.serverRevision,serverDeleted:!!error.serverDeleted});
+   }
+   status(storageError(error)+" Your draft is kept on this device.","error");
+   return false;
+  }
  });saveChain=result;return result;
 }
 function queueSave(){
@@ -185,8 +248,10 @@ $("addEditor").onclick=async()=>{
   const email=$("shareEmail").value.trim().toLowerCase(),ownerEmail=(project.ownerEmail||user.email||"").toLowerCase();
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return $("shareFeedback").textContent="Enter a valid Google-account email.";
   if(email===ownerEmail)return $("shareFeedback").textContent="You already own this project.";
-  project.editorEmails=[...new Set([...(project.editorEmails||[]),email])];
-  if(!await save())return;$("shareEmail").value="";$("shareFeedback").textContent="Editor added. They will see this project after signing in.";renderEditors();render();
+  const prevEditors=[...(project.editorEmails||[])];
+  project.editorEmails=[...new Set([...prevEditors,email])];
+  if(!await save()){project.editorEmails=prevEditors;$("shareFeedback").textContent=$("status").textContent||"Could not update editors.";return;}
+  $("shareEmail").value="";$("shareFeedback").textContent="Editor added. They will see this project after signing in.";renderEditors();render();
 };
 
 $("editorList").onclick=async event=>{
@@ -194,13 +259,64 @@ $("editorList").onclick=async event=>{
   if(!button)return;
   const email=button.dataset.removeEditor;
   if(!confirm("Remove "+email+" from this project?"))return;
-  project.editorEmails=(project.editorEmails||[]).filter(item=>item!==email);
-  if(!await save())return;$("shareFeedback").textContent="Editor removed.";renderEditors();render();
+  const prevEditors=[...(project.editorEmails||[])];
+  project.editorEmails=prevEditors.filter(item=>item!==email);
+  if(!await save()){project.editorEmails=prevEditors;$("shareFeedback").textContent=$("status").textContent||"Could not update editors.";return;}
+  $("shareFeedback").textContent="Editor removed.";renderEditors();render();
 };
 
 $("copyProjectLink").onclick=async()=>{
   try{await copyText(location.href);$("shareFeedback").textContent="Project link copied. Access still requires an email listed above.";}
   catch(error){$("shareFeedback").textContent=error.message;}
+};
+
+function applyIncomingProject(data){
+  const incoming={...data,id:projectId};
+  incoming.editorEmails=(incoming.editorEmails||[]).map(email=>email.toLowerCase());
+  incoming.scenes=(incoming.scenes||[]).map(makeScene);
+  cloudVersion=data?.updatedAt?.toMillis?.()||cloudVersion||0;
+  baseRevision=Number.isInteger(data?.writeRevision)?data.writeRevision:0;
+  project=incoming;
+  onConflict(null);
+  render();
+}
+
+$("conflictReload").onclick=async()=>{
+  clearTimeout(saveTimer);saveTimer=null;
+  editVersion++;
+  await saveChain.catch(()=>false);
+  localDirty=false;
+  clearLocalDraft();
+  try{
+    const latest=await getDoc(projectRef);
+    if(!latest.exists()){
+      onConflict(null);
+      status("This shared project is no longer available.","error");
+      return;
+    }
+    applyIncomingProject(latest.data());
+    status("Reloaded latest version from Firebase","ok");
+  }catch(error){
+    status("Could not reload project: "+error.message,"error");
+  }
+};
+
+$("conflictKeepOverwrite").onclick=async()=>{
+  if(pendingConflict?.source==='stale-draft'&&pendingConflict.draft?.project){
+    const draftProj=pendingConflict.draft.project;
+    project={
+      ...draftProj,
+      id:projectId,
+      ownerUid:project.ownerUid,
+      ownerEmail:project.ownerEmail,
+      editorEmails:(draftProj.editorEmails||project.editorEmails||[]).map(email=>email.toLowerCase()),
+      scenes:(draftProj.scenes||[]).map(makeScene)
+    };
+    if(project.createdAt===undefined)delete project.createdAt;
+    delete project.updatedAt;
+    render();
+  }
+  await save({force:true});
 };
 
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&saveTimer)save();});
@@ -216,27 +332,75 @@ async function load(){
       const legacy=await getDoc(doc(db,"users",user.uid,"creator","main"));
       const legacyProject=(legacy.data()?.items||[]).find(item=>item.id===projectId);
       if(!legacyProject)throw error;
-      project={...legacyProject,ownerUid:user.uid,ownerEmail:(user.email||"").toLowerCase(),editorEmails:[]};
-      await setDoc(projectRef,{...project,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+      project=await runTransaction(db,async tx=>{
+        const existing=await tx.get(projectRef);
+        if(existing.exists())return existing.data();
+        const {createdAt:_c,updatedAt:_u,writtenAt:_w,writtenBy:_wb,writeRevision:_r,...clean}=legacyProject;
+        tx.set(projectRef,{...clean,id:projectId,ownerUid:user.uid,ownerEmail:(user.email||"").toLowerCase(),editorEmails:[],writeRevision:1,writtenBy:user.uid,writtenAt:serverTimestamp(),createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+        return {...clean,id:projectId,ownerUid:user.uid,ownerEmail:(user.email||"").toLowerCase(),editorEmails:[],writeRevision:1};
+      });
     }
     if(snapshot?.exists())project=snapshot.data();
     else if(!project){status("This project was not found or has not been shared with your account.","error");return;}
     cloudVersion=project.updatedAt?.toMillis?.()||0;
-    try{const draft=JSON.parse(localStorage.getItem(draftKey())||'null');if(draft?.project&&draft.baseUpdatedAt===cloudVersion){project={...draft.project,ownerUid:project.ownerUid,ownerEmail:project.ownerEmail};if(snapshot?.data()?.createdAt)project.createdAt=snapshot.data().createdAt;else delete project.createdAt;delete project.updatedAt;localDirty=true;setTimeout(save,0)}}catch{}
+    baseRevision=Number.isInteger(project.writeRevision)?project.writeRevision:0;
+    let recoveredStaleDraft=null;
+    recoveredLegacyDraft=false;
+    try{
+      let rawDraft=localStorage.getItem(draftKey()),fromLegacy=false;
+      if(!rawDraft){rawDraft=localStorage.getItem(legacyDraftKey());fromLegacy=!!rawDraft;}
+      const draft=JSON.parse(rawDraft||'null');
+      if(draft?.project){
+        const revisionMatches=typeof draft.baseRevision==='number'?draft.baseRevision===baseRevision:true;
+        recoveredLegacyDraft=fromLegacy;
+        if(revisionMatches&&draft.baseUpdatedAt===cloudVersion){
+          project={...draft.project,ownerUid:project.ownerUid,ownerEmail:project.ownerEmail};
+          if(snapshot?.data()?.createdAt)project.createdAt=snapshot.data().createdAt;else delete project.createdAt;
+          delete project.updatedAt;
+          localDirty=true;
+          setTimeout(()=>save(),0);
+        }else{
+          recoveredStaleDraft=draft;
+        }
+      }
+    }catch{}
     project.id=projectId;
     project.editorEmails=(project.editorEmails||[]).map(email=>email.toLowerCase());
     project.scenes=(project.scenes||[]).map(makeScene);
     render();$("app").hidden=false;status("Synced","ok");
+    if(recoveredStaleDraft){
+      onConflict({source:'stale-draft',draft:recoveredStaleDraft,serverData:project,serverRevision:baseRevision,serverUpdatedAt:cloudVersion});
+      status(storageError({code:'revision-conflict'})+" An earlier local draft is waiting for your decision.","error");
+    }
     if(project.productionState?.open)storyboard.open({area:"Production",sceneId:project.productionState.sceneId});
     onSnapshot(projectRef,{includeMetadataChanges:true},live=>{
       if(live.metadata.hasPendingWrites)return;
-      cloudVersion=live.data()?.updatedAt?.toMillis?.()||cloudVersion;
-      if(!live.exists()){status("This shared project is no longer available.","error");return;}
-      if(localDirty)return;
-      const incoming={...live.data(),id:projectId};
-      incoming.editorEmails=(incoming.editorEmails||[]).map(email=>email.toLowerCase());
-      incoming.scenes=(incoming.scenes||[]).map(makeScene);
-      project=incoming;render();
+      if(!live.exists()){
+        if(localDirty||pendingConflict?.source==='stale-draft'){
+          onConflict({source:'snapshot',serverDeleted:true});
+          status("This shared project is no longer available. Your draft is kept on this device.","error");
+        }else{
+          status("This shared project is no longer available.","error");
+        }
+        return;
+      }
+      const data=live.data()||{};
+      const remoteRev=Number.isInteger(data.writeRevision)?data.writeRevision:0;
+      const remoteUpdatedAt=data.updatedAt?.toMillis?.()||0;
+      if(localDirty||pendingConflict?.source==='stale-draft'){
+        if(remoteRev>baseRevision||(remoteRev===0&&baseRevision===0&&remoteUpdatedAt>cloudVersion)){
+          if(pendingConflict?.source==='stale-draft'){
+            baseRevision=remoteRev;cloudVersion=remoteUpdatedAt||cloudVersion;
+            onConflict({...pendingConflict,serverData:data,serverRevision:remoteRev,serverUpdatedAt:remoteUpdatedAt});
+          }else{
+            onConflict({source:'snapshot',serverData:data,serverRevision:remoteRev,serverUpdatedAt:remoteUpdatedAt});
+            status(storageError({code:'revision-conflict'})+" Your draft is kept on this device.","error");
+          }
+        }
+        return;
+      }
+      cloudVersion=remoteUpdatedAt||cloudVersion;
+      applyIncomingProject(data);
       status("Synced","ok");
     },error=>status("Collaboration access changed: "+error.message,"error"));
   }catch(error){status("Could not load project: "+error.message,"error");}
@@ -244,6 +408,6 @@ async function load(){
 
 load();
 let observedUid;
-observeAuth(current=>{const uid=current?.uid||'';if(observedUid===undefined){observedUid=uid;return}if(uid!==observedUid)location.reload()});
+observeAuth(current=>{const uid=current?.uid||'';if(observedUid===undefined){observedUid=uid;return}if(uid!==observedUid){user=null;projectRef=null;clearTimeout(saveTimer);location.reload();}});
 window.addEventListener('pagehide',()=>{if(localDirty&&project&&user)keepDraft()});
 window.addEventListener('online',()=>{if(localDirty)save()});

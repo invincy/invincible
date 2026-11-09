@@ -1,0 +1,12 @@
+{
+  "format": "invincible-asset-library-catalog",
+  "version": 1,
+  "libraries": [
+    {
+      "id": "historical-army-commanders-v1",
+      "title": "Historical Army & Commanders (v1)",
+      "description": "19 existing commander and military images, with their source and rights notes.",
+      "path": "./historical-army-commanders-v1.json"
+    }
+  ]
+}

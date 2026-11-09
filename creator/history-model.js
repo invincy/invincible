@@ -2,6 +2,7 @@
 import {validateVisual,layerActive} from './map-editor-model.js';
 import {validatePresentation} from './map-defaults.js';
 import {validateBasemap} from './map-style-library.js';
+import {validateOverlayConfig} from './map-overlay-presets.js';
 export const productionId=()=>globalThis.crypto?.randomUUID?.()||'clip-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
 export const emptyMap=()=>({version:1,theme:'parchment',events:[],features:{type:'FeatureCollection',features:[]},camera:[]});
 const finite=(n,min,max)=>typeof n==='number'&&Number.isFinite(n)&&n>=min&&n<=max;
@@ -13,7 +14,7 @@ function position(p){if(!Array.isArray(p)||p.length!==2||!finite(p[0],-180,180)|
 export function validateMap(map,project){
  if(!map||map.version!==1||!['parchment','night'].includes(map.theme))throw Error('Use map version 1 and parchment or night theme.');
  if(map.projection!==undefined&&!['mercator','globe'].includes(map.projection))throw Error('Projection must be mercator or globe.');
- validateBasemap(map);validatePresentation(map.presentation);
+ validateBasemap(map);validatePresentation(map.presentation);validateOverlayConfig(map);
  if(new TextEncoder().encode(JSON.stringify(map)).length>240000)throw Error('Map metadata exceeds 240 KB; simplify geometry or split the project.');
  const ids=new Set((project.scenes||[]).map(s=>s.id)),seen=new Set();
  function anchor(item){if(!ids.has(item.sceneId))throw Error('An event, feature or camera refers to a missing scene.');const scene=project.scenes.find(s=>s.id===item.sceneId);if(!finite(item.offset??0,0,scene.duration))throw Error('Offset must be within the associated scene.');}

@@ -1,5 +1,16 @@
 # Cleanup review — 2026-10-03
 
+## Universal Creator Studio consolidation — November 9, 2026
+
+Integrated the universal-map handoff with the main editor's versioned default presentation in an isolated checkout. Shared code has no Panipat title/branch conditions. Demo/artwork catalogs are data, optional overlays use isolated trusted factories, missing plugins fail visibly, and scene packages exclude undeclared project-wide metadata. Plugin scenes require the full project or a dedicated scene exporter. Binding preserves existing narration/timing and rejects nonadjacent selections.
+
+Revision-aware transactions, explicit conflict recovery, account-switch guards and deleted-record protection are covered. Central NASA/terrain attribution, portrait output, readable cards and per-project overrides remain consistent through the shared preview/export path. Existing legacy map JSON retains its compatibility rendering. See [the architecture contract](creator-studio-universal.md).
+
+Validation: 211 root cases (209 pass, two existing skips), 15 Functions cases, actual Creator Firestore emulator rules tests, production build and 460-file site check passed. Focused architecture/default-style, Map Editor, map animation, history, storyboard and mixed-composition browser checks passed; real portrait MP4 and mixed exports fully decoded. Isolation coverage constructs 100 independent records; it is not a 100-video throughput claim. The broad browser suite remains non-green: Journal tools, LIC personal CRM and LIC cashier timeouts also occurred on unchanged master in the prior baseline comparison. The CRM rules/Web SDK checks pass; the separate Agent CRM browser timeout was also reproduced on unchanged master. No source was changed to suppress unrelated failures.
+
+Original Antigravity worktrees were left untouched. No push, merge, cloud rules deployment, Gemini generation or paid service activation occurred. Strict rules require a coordinated client/rules release and real signed-in validation before production use.
+
+
 ## Ready-made TTS voice samples — November 9, 2026
 
 A round play/stop button immediately before the Google voice selector plays the exact selected voice’s existing public Google demo without narration. An allowlist of 2,002 observed catalogue sample names prevents guessing URLs for voices with no demo. Missing samples are disabled; failed playback shows a retry message and never falls back to synthesis. Samples retain Google’s original settings. Changing voice/account, starting generation or playing a generated recording stops the sample, including stale play promises.

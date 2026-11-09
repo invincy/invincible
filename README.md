@@ -22,6 +22,10 @@ This document is the starting point for understanding what runs today, where to 
 
 The main React app chooses and lazily loads its page in `react/src/App.jsx`. Its HTML entry points load the same generated JS/CSS assets. Garage, Creator, Journal, and LIC have their own entry points; they are not silently redirected through React.
 
+## Universal Creator Studio
+
+Creator Studio is a shared production workspace for independent videos. Film content stays in each project’s JSON, assets, voiceover and timing; the shared Map Editor never selects rendering by a film title or ID. Optional overlays use explicitly registered, versioned plugin factories. New projects share the saved default style, while older projects retain their appearance.
+
 ## Creator Map Editor defaults
 
 New Creator projects automatically save NASA imagery, attributed terrain, readable navy/gold label cards and portrait framing. The main Map Editor’s Style controls support project overrides; existing maps retain their saved appearance. See [the production standard](docs/map-editor-production-standard.md#built-in-creator-studio-defaults). No repeated style prompt or demo page is required.

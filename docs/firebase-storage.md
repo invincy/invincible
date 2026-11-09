@@ -1,5 +1,11 @@
 # Invincible storage and migration audit
 
+## Creator revision writes — November 9, 2026
+
+The universal-studio branch uses transactional writeRevision progression, server timestamps and writer identity for creatorProjects. Stale writes offer reload, draft download or explicit overwrite; missing records are never recreated by a save. Account changes invalidate pending writes and legacy imports. Rules retain owner access and verified invited editors, protect ownership/ACL fields and validate changed bounded fields without blocking unchanged legacy oversized fields. Actual demo-project Firestore emulator tests pass.
+
+These rules are not deployed. Coordinate the frontend and strict-rule release: old cached clients without revision-aware writes will be denied and must reload while retaining drafts. No production migration, credential change or cloud service activation was performed. See [the universal-studio contract](creator-studio-universal.md).
+
 All internal pages use the Firebase project `life-by-adichimp`, the default Firebase app, and the same persisted Google account on `invincy.github.io`. React and native modules prefer browser local persistence, with IndexedDB as a migration/fallback store. Auth restoration finishes before protected data loads. Separate origins (including the external Apps Script Portfolio) cannot inherit this session.
 
 | Page | Runtime | Personal data path |
