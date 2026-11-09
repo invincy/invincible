@@ -208,9 +208,9 @@ const denied=fn=>assert.rejects(fn,err=>err?.code==='permission-denied');
 
   // 8. Owner can delete.
   await sdk.deleteDoc(owner.ref('p1'));
-  await denied(()=>sdk.getDoc(outsider.ref('p1')));
+  assert.equal((await sdk.getDoc(outsider.ref('p1'))).exists(),false,'Authenticated missing-document checks return no content');
 
-  console.log('Creator Project Firestore Rules passed: create/update/delete auth, writeRevision monotonicity, collaborator ACL lock, legacy upgrade, and bounds enforced.');
+  console.log('Creator Project Firestore Rules passed: transactional creation, create/update/delete auth, writeRevision monotonicity, collaborator ACL lock, legacy upgrade, and bounds enforced.');
  }finally{
   await setRules(fullRules).catch(()=>{});
   for(const c of clients)await c.close().catch(()=>{});
