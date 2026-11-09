@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   lic-presentation:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
@@ -45,7 +45,7 @@ jobs:
           if-no-files-found: ignore
           include-hidden-files: true
   lic-agent-crm:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
@@ -59,7 +59,7 @@ jobs:
       - run: node --test tests/lic-agent-crm.mjs tests/lic-crm-service.mjs
       - run: node tests/lic-crm-browser.cjs && npm run test:crm:browser
   journal:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
@@ -79,7 +79,7 @@ jobs:
           if-no-files-found: ignore
           include-hidden-files: true
   video-studio:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
@@ -103,7 +103,7 @@ jobs:
           if-no-files-found: ignore
           include-hidden-files: true
   creator:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
@@ -123,7 +123,7 @@ jobs:
           if-no-files-found: ignore
           include-hidden-files: true
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -208,7 +208,7 @@ jobs:
           include-hidden-files: true
 
   creator-tts:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
