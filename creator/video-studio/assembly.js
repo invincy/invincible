@@ -1,11 +1,11 @@
-import {createDefaultMap} from '../map-defaults.js';
-import {appendProjectMaps,arrangeScenes,upgradeVideo,resizeScene} from './composition.js';
+import {createDefaultMap} from '../map-defaults.js?v=2026110901';
+import {appendProjectMaps,arrangeScenes,upgradeVideo,resizeScene} from './composition.js?v=2026110901';
 import {emptyBattlefield} from './battlefield.js';
 import {decodeVoiceover} from './audio.js';
-import {validateManifest} from './model.js';
-import {mapDraft} from './adapters.js';
-import {mountMapEditor} from '../map-editor.js';
-import {safeRelativeAssetPath} from '../map-editor-model.js';
+import {validateManifest} from './model.js?v=2026110901';
+import {mapDraft} from './adapters.js?v=2026110901';
+import {mountMapEditor} from '../map-editor.js?v=2026110901';
+import {safeRelativeAssetPath} from '../map-editor-model.js?v=2026110901';
 import {mountBattlefieldEditor} from './battlefield-editor.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const number=(name,key,value,min=0,max=600,step=.1)=>`<label>${name}<input type="number" data-assembly-prop="${key}" value="${value}" min="${min}" max="${max}" step="${step}"></label>`;

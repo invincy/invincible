@@ -1,5 +1,5 @@
 import{makeScene}from'./storyboard-model.js?v=3';
-import{createProductionWorkbench}from'./production-workbench.js?v=14';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026110901';
 import{projectProgress,canonicalScript}from'./production-model.js?v=5';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{doc,getDoc,onSnapshot,runTransaction,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -387,6 +387,12 @@ async function load(){
       const data=live.data()||{};
       const remoteRev=Number.isInteger(data.writeRevision)?data.writeRevision:0;
       const remoteUpdatedAt=data.updatedAt?.toMillis?.()||0;
+      // Repeated metadata/own-write acknowledgements must not remount an active editor.
+      if(remoteRev>0&&remoteRev===baseRevision&&pendingConflict?.source!=='stale-draft'){
+        cloudVersion=remoteUpdatedAt||cloudVersion;
+        if(localDirty)keepDraft();
+        return;
+      }
       if(localDirty||pendingConflict?.source==='stale-draft'){
         if(remoteRev>baseRevision||(remoteRev===0&&baseRevision===0&&remoteUpdatedAt>cloudVersion)){
           if(pendingConflict?.source==='stale-draft'){

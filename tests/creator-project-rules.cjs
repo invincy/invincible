@@ -90,6 +90,17 @@ const denied=fn=>assert.rejects(fn,err=>err?.code==='permission-denied');
   await denied(()=>sdk.setDoc(owner.ref('p-many-scenes'),baseDoc('p-many-scenes',{scenes:Array.from({length:501},(_,i)=>({id:'s'+i}))})));
   await denied(()=>sdk.setDoc(owner.ref('p-bad-map'),baseDoc('p-bad-map',{historicalMap:'invalid'})));
 
+  // The real Creator client reads a new ID in a transaction before its initial write.
+  await denied(()=>sdk.getDoc(anon.ref('transaction-create')));
+  await sdk.runTransaction(owner.db,async tx=>{
+   const ref=owner.ref('transaction-create'),snap=await tx.get(ref);
+   assert.equal(snap.exists(),false);
+   tx.set(ref,baseDoc('transaction-create'));
+  });
+  assert.equal((await sdk.getDoc(owner.ref('transaction-create'))).data().writeRevision,1);
+  await denied(()=>sdk.getDoc(outsider.ref('transaction-create')));
+  await denied(()=>sdk.getDocs(sdk.collection(outsider.db,'creatorProjects')));
+
   // 3. Valid owner create succeeds (preserving custom metadata & uppercase email normalization).
   await sdk.setDoc(owner.ref('p1'),baseDoc('p1'));
   assert.equal((await sdk.getDoc(owner.ref('p1'))).data().writeRevision,1);
@@ -197,9 +208,9 @@ const denied=fn=>assert.rejects(fn,err=>err?.code==='permission-denied');
 
   // 8. Owner can delete.
   await sdk.deleteDoc(owner.ref('p1'));
-  await denied(()=>sdk.getDoc(outsider.ref('p1')));
+  assert.equal((await sdk.getDoc(outsider.ref('p1'))).exists(),false,'Authenticated missing-document checks return no content');
 
-  console.log('Creator Project Firestore Rules passed: create/update/delete auth, writeRevision monotonicity, collaborator ACL lock, legacy upgrade, and bounds enforced.');
+  console.log('Creator Project Firestore Rules passed: transactional creation, create/update/delete auth, writeRevision monotonicity, collaborator ACL lock, legacy upgrade, and bounds enforced.');
  }finally{
   await setRules(fullRules).catch(()=>{});
   for(const c of clients)await c.close().catch(()=>{});

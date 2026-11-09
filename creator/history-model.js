@@ -1,8 +1,8 @@
 // Pure, additive production metadata. Master storyboard IDs and order remain canonical.
-import {validateVisual,layerActive} from './map-editor-model.js';
-import {validatePresentation} from './map-defaults.js';
+import {validateVisual,layerActive} from './map-editor-model.js?v=2026110901';
+import {validatePresentation} from './map-defaults.js?v=2026110901';
 import {validateBasemap} from './map-style-library.js';
-import {validateOverlayConfig} from './map-overlay-presets.js';
+import {validateOverlayConfig} from './map-overlay-presets.js?v=2026110901';
 export const productionId=()=>globalThis.crypto?.randomUUID?.()||'clip-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
 export const emptyMap=()=>({version:1,theme:'parchment',events:[],features:{type:'FeatureCollection',features:[]},camera:[]});
 const finite=(n,min,max)=>typeof n==='number'&&Number.isFinite(n)&&n>=min&&n<=max;

@@ -1,8 +1,8 @@
-import {createDefaultMap,DEFAULT_MAP_SETTINGS} from './map-defaults.js';
-import {validateMap,sceneTimeline,productionId} from './history-model.js';
-import {visualMap,icons} from './map-editor-model.js';
+import {createDefaultMap,DEFAULT_MAP_SETTINGS} from './map-defaults.js?v=2026110901';
+import {validateMap,sceneTimeline,productionId} from './history-model.js?v=2026110901';
+import {visualMap,icons} from './map-editor-model.js?v=2026110901';
 import {mapStyles,defaultTerrain,validateBasemap} from './map-style-library.js';
-import {validateOverlayConfig} from './map-overlay-presets.js';
+import {validateOverlayConfig} from './map-overlay-presets.js?v=2026110901';
 
 export function readAnimation(input){
  let plan;

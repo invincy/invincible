@@ -119,7 +119,11 @@ service cloud.firestore {
           );
       }
 
-      allow read: if owns(resource.data) || verifiedCreatorEditor(resource.data);
+      // A transaction must be able to check a fresh random project ID before creating it.
+      // Existing documents and collection queries still require owner/editor access.
+      allow get: if (signedIn() && !exists(/databases/$(database)/documents/creatorProjects/$(projectId)))
+        || owns(resource.data) || verifiedCreatorEditor(resource.data);
+      allow list: if owns(resource.data) || verifiedCreatorEditor(resource.data);
 
       allow create: if creatorProjectCreateValid(request.resource.data);
 

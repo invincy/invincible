@@ -1,8 +1,8 @@
 import {locationVisible} from './map-globe.js';
 import {resolveMapAsset} from './map-assets-client.js';
-import {icons,layerActive,layerStart,layerAlpha,transformedCorners} from './map-editor-model.js';
-import {routeAt,timeOf,lightingFrame} from './history-model.js';
-import {resolveOverlayPolicy} from './map-overlay-presets.js';
+import {icons,layerActive,layerStart,layerAlpha,transformedCorners} from './map-editor-model.js?v=2026110901';
+import {routeAt,timeOf,lightingFrame} from './history-model.js?v=2026110901';
+import {resolveOverlayPolicy} from './map-overlay-presets.js?v=2026110901';
 // Each geographic object gets its own style layer, in the saved bottom-to-top order.
 export function createVisualRenderer(map,project,onError,initialPolicy=null){
  let spec=null,policy=resolveOverlayPolicy(project,null,initialPolicy),revision=0,owned=[],images=[],disposed=false,assetErrors=[];const models=new Map();

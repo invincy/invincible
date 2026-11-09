@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const {chromium}=require('playwright'),root=path.resolve(__dirname,'..');
 const fixture=[
 "export const db={},auth={currentUser:{uid:'owner',email:'owner@example.com'}},authReady=Promise.resolve();export async function observeAuth(callback){queueMicrotask(()=>callback(auth.currentUser));return()=>{}}export const storageError=error=>error?.code==='revision-conflict'||error?.code==='failed-precondition'||error?.code==='aborted'?'This project was updated in another session or tab. Reload the latest cloud copy before overwriting.':'Save failed.';",
-"let listeners=[];const read=()=>JSON.parse(localStorage.getItem('test.creator')||'{}');",
+"let listeners=[];window.emitCreatorSnapshot=()=>listeners.forEach(fn=>fn());const read=()=>JSON.parse(localStorage.getItem('test.creator')||'{}');",
 "export const doc=(db,...parts)=>parts.join('/');export const collection=(db,name)=>name;export const where=(...args)=>args;export const query=(collection,...filters)=>({collection,filters});export const serverTimestamp=()=>1;",
 "function snapshot(ref){const data=read();if(typeof ref==='string')return {exists:()=>!!data[ref],data:()=>data[ref],metadata:{hasPendingWrites:false,fromCache:false}};return {docs:Object.entries(data).filter(([key,value])=>key.startsWith('creatorProjects/')&&ref.filters.every(([field,op,wanted])=>op==='=='?value[field]===wanted:value[field]?.includes(wanted))).map(([key,value])=>({id:key.split('/')[1],data:()=>value}))}}",
 "export async function getDoc(ref){return snapshot(ref)}export async function getDocs(ref){return snapshot(ref)}",
@@ -37,6 +37,10 @@ const server=http.createServer((req,res)=>{
  await page.locator('[data-edit="label"]').click();await page.locator('[data-map]').click();await page.locator('[data-name]').fill('Location label');await page.locator('[data-name]').dispatchEvent('change');await page.waitForFunction(()=>document.querySelector('[data-json]').value.includes('Location label'));
  await page.locator('[data-style-key="labelSize"]').evaluate(n=>n.closest('details').open=true);await page.locator('[data-style-key="labelSize"]').fill('64');await page.locator('[data-style-key="labelSize"]').dispatchEvent('change');await page.locator('[data-seek]').fill('1');await page.locator('[data-seek]').dispatchEvent('input');
  await page.waitForFunction(()=>document.querySelector('[data-json]').value.includes('"labelSize": 64'));await page.waitForFunction(()=>JSON.parse(localStorage.getItem('test.creator')||'{}')[Object.keys(JSON.parse(localStorage.getItem('test.creator')||'{}')).find(k=>k.startsWith('creatorProjects/'))]?.historicalMap?.presentation?.labelSize===64);
+ await page.waitForFunction(()=>document.querySelector('#syncIndicator')?.getAttribute('aria-label')==='Saved to Firebase');
+ await page.evaluate(()=>window.emitCreatorSnapshot());
+ assert.equal(await page.locator('[data-style-key="labelSize"]').count(),1,'Acknowledging this revision keeps the visual editor mounted');
+ assert.equal(await page.locator('[data-style-key="labelSize"]').inputValue(),'64');
  assert.ok((await page.evaluate(()=>labelCalls)).some(c=>c.font.includes('64px')));await page.reload();await openMap();assert.equal(await page.locator('[data-style-key="labelSize"]').inputValue(),'64');
  await page.locator('[data-seek]').fill('1');await page.locator('[data-seek]').dispatchEvent('input');fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});await page.locator('[data-map]').screenshot({path:path.join(root,'.test-output/default-style-preview.png')});
  const downloadPromise=page.waitForEvent('download',{timeout:180000});await page.locator('[data-map-export="mp4"]').click();const download=await downloadPromise;await download.saveAs(path.join(root,'.test-output/default-style-portrait.mp4'));await page.waitForFunction(()=>document.querySelector('[data-export-status]').textContent.startsWith('Silent MP4 rendered'));
