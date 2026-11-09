@@ -1,9 +1,11 @@
 import {observeAuth} from '../shared/firebase-client.js';
 import {loadVoices,generateVoiceover} from './tts-api.js';
+import {createVoiceDemoPlayer} from './tts-voice-demo-player.js';
 const $=id=>document.getElementById(id),fields=['title','script','mode','language','gender','family','voice','preset','speed','pitch','volume','pause'];
 let user=null,voices=[],busy=false,loading=false,epoch=0,voiceEpoch=0,audioUrl=null,saveTimer;
 const controls=['sample','title','script','mode','reloadVoices','preview','generate'];
 const encoder=new TextEncoder();
+const voiceDemo=createVoiceDemoPlayer({button:$('voiceDemo'),audio:$('voiceDemoAudio'),message:$('voiceDemoStatus'),recording:$('player'),getVoice:()=>$('voice').value,canPlay:()=>!!user&&!busy&&!loading});
 function status(message,error=false){$('generationStatus').textContent=message;$('generationStatus').classList.toggle('error',error);}
 function setOptions(select,options,value){select.replaceChildren(...options.map(o=>{const el=document.createElement('option');el.value=o.value;el.textContent=o.label;return el;}));if(options.some(o=>o.value===value))select.value=value;}
 function selectedVoice(){return voices.find(v=>v.name===$('voice').value);}
@@ -11,6 +13,7 @@ function refreshAvailability(){
  const voice=selectedVoice(),ready=!!user&&!busy&&!loading&&!!voice?.capabilities.supported;
  for(const id of controls)$(id).disabled=busy||loading||!user;
  $('reloadVoices').disabled=busy||loading||!user;
+ $('voiceDemo').disabled=busy||loading||!user||!voiceDemo.available();
  $('voiceFields').disabled=busy||loading||!user||!voices.length;
  $('generate').disabled=!ready||!$('script').value.trim();
  $('preview').disabled=!ready||!$('script').value.trim()||$('mode').value==='ssml';
@@ -28,6 +31,7 @@ function meters(){
  refreshAvailability();
 }
 function voiceDetails(){
+ voiceDemo.refresh();
  const voice=selectedVoice();
  if(!voice){$('voiceHelp').textContent='No voices match these filters.';refreshAvailability();return;}
  const cap=voice.capabilities;
@@ -100,6 +104,7 @@ async function record(preview){
  if(encoder.encode(data.text).length>30000){status('The script is too long. Split it into recordings of at most 30,000 UTF-8 bytes.',true);return;}
  if(data.mode==='ssml'){const parsed=new DOMParser().parseFromString(data.text,'application/xml');if(parsed.querySelector('parsererror')||parsed.documentElement.nodeName!=='speak'){status('Check the SSML: it needs valid XML with a speak root.',true);return;}}
  const current=epoch,owner=user.uid;
+ voiceDemo.stop();
  busy=true;refreshAvailability();status(preview?'Generating an opening preview…':'Generating your MP3… Long scripts can take a few minutes.');
  try{
   const result=await generateVoiceover(data);
@@ -133,7 +138,7 @@ $('sample').addEventListener('click',()=>{
  meters();remember();
 });
 observeAuth(next=>{
- epoch++;voiceEpoch++;clearTimeout(saveTimer);busy=false;loading=false;voices=[];clearAudio();user=next;
+ epoch++;voiceEpoch++;clearTimeout(saveTimer);voiceDemo.stop();busy=false;loading=false;voices=[];clearAudio();user=next;
  $('workspace').hidden=!next;$('signedOut').hidden=!!next;
  $('script').value='';$('title').value='My voiceover';
  for(const id of ['language','family','voice'])$(id).replaceChildren();
@@ -144,4 +149,4 @@ observeAuth(next=>{
  try{const draft=JSON.parse(localStorage.getItem(key())||'{}');$('script').value=draft.script||'';$('title').value=draft.title||'My voiceover';}catch{}
  meters();fetchVoices({initial:true});
 });
-window.addEventListener('beforeunload',()=>{if(audioUrl)URL.revokeObjectURL(audioUrl);});
+window.addEventListener('beforeunload',()=>{voiceDemo.stop();if(audioUrl)URL.revokeObjectURL(audioUrl);});

@@ -7,6 +7,7 @@ generate and download an MP3. This is reusable across videos, not Panipat-specif
 ## What the page supports
 
 - The live Google voices catalogue, with language, gender and family filters.
+- A round play/stop button before the voice selector plays Google’s existing public sample without narration or a synthesis request. The catalogue captured on November 9, 2026 contains 2,002 exact voice/sample matches. Missing samples are disabled; playback failures do not trigger paid generation. Samples use Google’s original delivery settings.
 - Neural2, WaveNet, Standard, News, Studio and Chirp 3 HD voice families.
   Other returned families are explicitly unavailable rather than silently substituted.
 - Speed 0.25–2.0x, pitch -20–20 semitones where supported, volume -12–6 dB.
