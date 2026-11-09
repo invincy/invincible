@@ -157,7 +157,11 @@ All original engines, voices, delivery presets, SSML, direction, model, speed,
 pitch, volume, paragraph pauses, samples, refresh and download remain available.
 
 `studio-ui.css` defines scoped navy surfaces, muted teal controls, focus treatment,
-touch targets and a static, soft river background (`studio-flow.svg`). Creator's
+touch targets and translucent, slowly drifting water ribbons (`studio-flow.svg`).
+The background animates only its transform (28 seconds, 36 on phones), sits behind
+all controls, ignores pointer input and stays still with reduced motion enabled.
+Lightly translucent panels reveal the water while script fields remain opaque.
+Creator's
 project list, production workbench, video/audio controls and project page share it.
 Film artwork, map presentation presets, exported imagery and saved data do not
 consume these UI styles. No sidebar or additional product features were added.

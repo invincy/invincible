@@ -2,6 +2,14 @@
 
 ## Minimal responsive Creator UI — November 10, 2026
 
+Follow-up: replaced the static river glow with three translucent water ribbons,
+slowly drifting behind lightly translucent panels. The layer uses a single SVG
+and CSS transform animation, no canvas or per-frame JavaScript, and cannot capture
+input. Reduced motion disables the drift. Desktop/mobile Voiceover and complete
+Studio import/export browser checks and site references passed again; a browser
+probe confirmed the active animation and reduced-motion fallback. Existing broad
+regression limitations below remain unchanged.
+
 Rebuilt Voiceover's layout around a wide script editor, compact independently
 scrollable settings and a common generation/playback/export transport. Portrait
 uses an initially collapsed voice-settings disclosure above narration and a

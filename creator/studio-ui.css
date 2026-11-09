@@ -1,15 +1,25 @@
 /* Shared Creator UI, independent of film artwork and export presentation. */
 body.studio-ui{
- --studio-canvas:#080f1b;--studio-surface:#0e1927;--studio-raised:#132332;
+ --studio-canvas:#080f1b;--studio-surface:#0e1927b8;--studio-raised:#132332e0;
  --studio-line:#243646;--studio-accent:#75d9d0;--studio-muted:#9bafbd;
  --bg:var(--studio-canvas);--panel:var(--studio-surface);--panel2:var(--studio-raised);
  --panel-2:var(--studio-raised);--surface:var(--studio-surface);
  --line:var(--studio-line);--line-strong:#478e93;--hot:var(--studio-accent);--pink:#70bcd3;
  --text:#e7eff5;--muted:var(--studio-muted);--app-canvas:var(--studio-canvas);
  --app-surface:var(--studio-surface);--app-surface-raised:var(--studio-raised);
- color:var(--text);background:url("./studio-flow.svg") center top / 100% 100dvh no-repeat fixed,var(--studio-canvas)!important;
+ isolation:isolate;color:var(--text);background:var(--studio-canvas)!important;
  font-family:Roboto,"Noto Sans Devanagari",system-ui,sans-serif;
  scrollbar-color:#345c6b var(--studio-canvas);scrollbar-width:thin;
+}
+/* A composited water layer: no canvas, input handlers or per-frame script. */
+.studio-ui::before{
+ content:"";position:fixed;inset:-12%;z-index:-1;pointer-events:none;
+ background:url("./studio-flow.svg") center / cover no-repeat;
+ transform-origin:60% 45%;animation:studio-water-drift 28s ease-in-out infinite alternate;
+}
+@keyframes studio-water-drift{
+ from{transform:translate3d(-2%,-1%,0) rotate(-2deg) scale(1.02)}
+ to{transform:translate3d(2%,2%,0) rotate(2deg) scale(1.06)}
 }
 .studio-ui::after{display:none}
 .studio-ui *{box-sizing:border-box}
@@ -69,4 +79,8 @@ body.studio-ui{
  .studio-ui .vs-flow{gap:12px}
  .studio-ui :where(input:not([type=range]),select,textarea){font-size:16px}
 }
-@media(prefers-reduced-motion:reduce){.studio-ui *{scroll-behavior:auto!important;transition:none!important}}
+@media(max-width:700px){.studio-ui::before{animation-duration:36s;background-size:auto 100%}}
+@media(prefers-reduced-motion:reduce){
+ .studio-ui::before{animation:none;transform:none}
+ .studio-ui *{scroll-behavior:auto!important;transition:none!important}
+}
