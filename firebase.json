@@ -1,7 +1,14 @@
 {
-  "functions": {
-    "source": "functions"
-  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default"
+    },
+    {
+      "source": "functions-tts",
+      "codebase": "creator-tts"
+    }
+  ],
   "firestore": {
     "rules": "firestore.rules"
   }

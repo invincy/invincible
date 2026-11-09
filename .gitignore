@@ -7,3 +7,10 @@ layout-check.js
 layout-check.css
 layout-check.html
 v2-dist/
+
+# Private Google credentials and local voiceover exports
+google_key.json
+*service-account*.json
+*credentials*.json
+secrets/
+.tts-local/
