@@ -5,6 +5,8 @@ const SPEAKERS=[['Charon','MALE'],['Fenrir','MALE'],['Puck','MALE'],['Kore','FEM
 const DELIVERY={
  natural:'Speak naturally, conversationally and clearly.',
  sales:'Use a warm, confident, persuasive sales presentation delivery. Sound trustworthy and engaging.',
+ social:'Use a lively, relatable social media delivery with an engaging opening, conversational rhythm and crisp emphasis. Keep it authentic rather than shouting.',
+ empathetic:'Use a warm, empathetic and understanding delivery. Sound attentive and compassionate, with gentle emphasis and supportive pauses, without sounding pitying.',
  energetic:'Sound excited, enthusiastic and lively, with expressive intonation.',
  documentary:'Use a clear, measured documentary narration with authority and curiosity.',
  dramatic:'Use a dramatic storytelling delivery with suspense and deliberate emphasis.',

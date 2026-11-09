@@ -82,7 +82,16 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   assert.equal(await page.locator('#direction').inputValue(),'Warm and confident.');assert.equal(await page.locator('#preset').inputValue(),'sales');
   await page.setViewportSize({width:393,height:852});await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:path.join(out,'gemini-mobile.png'),fullPage:true});
   await page.setViewportSize({width:1280,height:1000});await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:path.join(out,'gemini-desktop.png'),fullPage:true});
+  for(const delivery of ['social','empathetic']){
+   await page.locator('#preset').selectOption(delivery);
+   await page.locator('#generate').click();await page.locator('#generationStatus').filter({hasText:'MP3 ready'}).waitFor();
+   assert.equal(await page.evaluate(()=>window.lastTtsRequest.delivery),delivery);
+   await page.waitForTimeout(350);await page.reload();await page.locator('#accountStatus').filter({hasText:'voices available'}).waitFor();
+   assert.equal(await page.locator('#preset').inputValue(),delivery);
+  }
   await page.locator('#engine').selectOption('classic');await page.locator('#family').selectOption('Neural2');
+  assert.equal(await page.locator('#preset').inputValue(),'natural');
+  for(const delivery of ['social','empathetic'])assert.equal(await page.locator('#preset option[value='+delivery+']').evaluate(el=>el.disabled),true);
   await page.evaluate(()=>{window.failGenerate=false;window.generationDelay=250;});await page.locator('#generate').click();
   await page.evaluate(()=>window.setTtsUser({uid:'other'}));await page.waitForTimeout(400);
   assert.equal(await page.locator('#direction').inputValue(),'');
