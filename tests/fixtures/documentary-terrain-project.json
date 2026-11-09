@@ -22,7 +22,7 @@
       "voiceover": "",
       "mapPresentation": {
         "accentColor": "#D6BD52",
-        "secondaryLabelSize": 38
+        "secondaryLabelSize": 52
       }
     },
     {
@@ -142,19 +142,19 @@
       "presetVersion": 2,
       "fontFamily": "\"Invincible Sans\", \"Invincible Hindi\", sans-serif",
       "labelSize": 56,
-      "secondaryLabelSize": 36,
+      "secondaryLabelSize": 48,
       "textColor": "#F7F9FA",
-      "cardColor": "#14201F",
+      "cardColor": "#102027",
       "accentColor": "#E1C65B",
-      "cardOpacity": 0.76,
+      "cardOpacity": 0.86,
       "cardRadius": 16,
       "padding": 14,
       "safeMargin": 64,
       "assetSize": 220,
       "fadeSeconds": 0.35,
       "showDates": false,
-      "regionalLabelSize": 30,
-      "infoLabelSize": 24,
+      "regionalLabelSize": 34,
+      "infoLabelSize": 26,
       "numberSize": 80,
       "safeTop": 120,
       "safeRight": 172,
@@ -166,7 +166,7 @@
       "markerRadius": 7,
       "pulseSeconds": 0.65,
       "haloWidth": 3.5,
-      "labelStyle": "halo",
+      "labelStyle": "card",
       "uppercase": true,
       "captionsEnabled": true,
       "autoCamera": true,
