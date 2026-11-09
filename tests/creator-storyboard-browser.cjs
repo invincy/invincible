@@ -31,6 +31,7 @@ const server=http.createServer((req,res)=>{
   page.on('pageerror',error=>errors.push(error.message));await page.route('https://**/*',route=>route.abort());
   page.on('dialog',dialog=>dialog.accept());
   await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.copied=text}}}));
+  const openArea=async name=>{const more=page.locator('.wb-more');if(await more.count())await more.evaluate(n=>n.open=true);await page.locator('[data-tab="'+name+'"]').click();};
   const stored=()=>page.evaluate(()=>Object.values(JSON.parse(localStorage.getItem('test.creator')||'{}')).find(item=>item.title==='Gaganyaan production'));
   // New Content opens the shared workbench; draft interactions never submit the form.
   await page.goto(base);await page.locator('#addContent:enabled').click();
@@ -102,10 +103,10 @@ const server=http.createServer((req,res)=>{
   }
   await page.setViewportSize({width:1440,height:1000});
   await dialog.locator('#saveContent').click();await page.waitForURL(/project.html\?id=/);
-  await page.locator('#projectTitle').filter({hasText:'Draft production'}).waitFor();
+  await page.locator('#projectTitle').filter({hasText:'Draft production'}).waitFor();assert.equal(await page.locator('[data-tab="Video Studio"]').getAttribute('aria-current'),'page');await page.screenshot({path:path.join(root,'.test-output/creator-project-studio.png'),fullPage:true});for(const w of [320,390]){await page.setViewportSize({width:w,height:852});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Project Studio mobile overflow');}await page.setViewportSize({width:1440,height:1000});await openArea('Storyboard');
   assert.equal(await page.locator('.wb-scene').count(),1);
   assert.equal(await page.locator('[data-field=voiceoverTimestamp]').inputValue(),'00:00.125–00:04.875');
-  await page.reload();await page.locator('.wb-scene').waitFor();
+  await page.reload();await openArea('Storyboard');await page.locator('.wb-scene').waitFor();
   assert.equal(await page.locator('[data-field=voiceoverTimestamp]').inputValue(),'00:00.125–00:04.875');
   assert.equal(await page.locator('.wb-nav-timestamp').first().textContent(),'VO · 00:00.125–00:04.875');
   assert.equal(await page.locator('#projectMeta,#accessLabel').count(),0);
@@ -117,7 +118,7 @@ const server=http.createServer((req,res)=>{
   assert.equal(await page.locator('#shareDialog').evaluate(el=>el.open),true);
   await page.locator('#shareDialog [aria-label="Close sharing"]').click();
   fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});await page.screenshot({path:path.join(root,'.test-output/creator-project-current.png')});
-  await page.locator('[data-tab=Production]').click();await page.locator('[data-filter-method]').selectOption('Blender');assert.equal(await page.locator('.wb-production-card').count(),1);
+  await openArea('Production');await page.locator('[data-filter-method]').selectOption('Blender');assert.equal(await page.locator('.wb-production-card').count(),1);
   await page.locator('[data-tab=Assets]').click();assert.equal(await page.locator('[data-asset-field=path]').inputValue(),'E:\\3D\\draft.blend');
   await page.goto(base);await page.locator('.content-card').filter({hasText:'Draft production'}).locator('[data-edit]').click();
   assert.equal(await dialog.locator('[data-tab=Storyboard]').getAttribute('aria-current'),'page');
@@ -142,7 +143,7 @@ const server=http.createServer((req,res)=>{
   await page.locator('#contentSaveError').filter({hasText:'Save failed'}).waitFor();
   assert.equal(await page.locator('#contentDialog').evaluate(node=>node.open),true);
   await page.evaluate(()=>window.failSave=false);await page.locator('#saveContent').click();await page.waitForURL(/project.html\?id=/);
-  await page.locator('#projectTitle').filter({hasText:'Gaganyaan production'}).waitFor();
+  await page.locator('#projectTitle').filter({hasText:'Gaganyaan production'}).waitFor();await openArea('Storyboard');
   const projectId=new URL(page.url()).searchParams.get('id');
   const stamp=seconds=>String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');
   const table='Voiceover\tVisual / Animation\tAssets Required\tTimeline\tTimestamp\n'+Array.from({length:16},(_,i)=>'भारत का मिशन '+(i+1)+'!\t'+(i===0?'Gaganyaan upper assembly को orbit में दिखाएं. Start with a wide view of the complete spacecraft, then move the camera slowly around the Crew Module and Service Module. Preserve realistic proportions and show the protective structure clearly. Keep the background dark, use soft cyan rim lighting, and finish with a stable three-quarter view. Do not show liftoff or add new objects.':'Camera '+(i+1))+'\tLVM3 model\t'+(i*4)+'–'+(i*4+4)+'s\t'+stamp(i*4)+'.125–'+stamp(i*4+4)+'.875').join('\n');
@@ -191,7 +192,7 @@ const server=http.createServer((req,res)=>{
   assert.equal(await page.locator('.wb-column-head,.wb-row').count(),0);
   await page.locator('[data-field=voiceoverTimestamp]').fill('00:00.250–00:04.900');
   await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes?.[0]?.voiceoverTimestamp==='00:00.250–00:04.900',projectId);
-  await page.reload();await page.locator('.wb-scene').waitFor();
+  await page.reload();await openArea('Storyboard');await page.locator('.wb-scene').waitFor();
   assert.equal(await page.locator('[data-field=voiceoverTimestamp]').inputValue(),'00:00.250–00:04.900');
   assert.equal(await page.locator('[data-field=timing]').inputValue(),'0–4s');
   const firstIdBefore=await page.locator('.wb-scene').getAttribute('data-scene');
@@ -214,7 +215,7 @@ const server=http.createServer((req,res)=>{
   assert.equal(await scene(0).locator('[data-field=voiceover]').inputValue(),'भारत का मिशन 1!');
   assert.equal(await scene(15).locator('[data-field=timing]').inputValue(),'60–64s');
   assert.equal(await page.locator('.setup-stack,.importer,#fullScript').count(),0);
-  await page.locator('[data-tab=Overview]').click();
+  await openArea('Overview');
   await page.locator('.wb-script summary').click();
   assert.equal(await page.locator('[data-script-draft]').inputValue(),'Existing manual draft');
   await page.locator('.wb-visual-settings summary').click();
@@ -269,7 +270,7 @@ const server=http.createServer((req,res)=>{
   await scene(0).locator('[data-action=expand]').click();
   await scene(0).locator('[data-field=blenderPrompt]').fill('Animate the rocket for four seconds.');
   await scene(0).locator('[data-action=copy]').click();assert.equal(await page.evaluate(()=>window.copied),'Animate the rocket for four seconds.');
-  await page.locator('[data-tab=Production]').click();assert.equal(await page.locator('#focusEditor').count(),0);await page.locator('[data-filter-method]').selectOption('Blender');assert.equal(await page.locator('.wb-production-card').count(),3);
+  await openArea('Production');assert.equal(await page.locator('#focusEditor').count(),0);await page.locator('[data-filter-method]').selectOption('Blender');assert.equal(await page.locator('.wb-production-card').count(),3);
   await page.locator('.wb-group-create summary').click();await page.locator('[data-new-group]').fill('Gaganyaan upper assembly');
   await page.locator('[data-action=add-group]').click();await page.locator('.wb-group-create summary').click();
   await page.locator('[data-group-field=blenderFile]').fill('E:\\3D\\MY\\Gaganyaan\\upper.blend');
@@ -298,13 +299,13 @@ const server=http.createServer((req,res)=>{
   await mixed.locator('[data-field=sceneState]').count().then(count=>assert.equal(count,1)); // completion is now editable directly in the production table
   await page.locator('[data-tab=Storyboard]').click();await scene(0).locator('[data-field=sceneState]').selectOption('Completed');
   await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes[0].completed,projectId);
-  await page.reload();await page.locator('.wb-scene').first().waitFor();assert.equal(await scene(0).locator('[data-field=sceneState]').inputValue(),'Completed');
+  await page.reload();await openArea('Storyboard');await page.locator('.wb-scene').first().waitFor();assert.equal(await scene(0).locator('[data-field=sceneState]').inputValue(),'Completed');
   assert.equal(await page.locator('.wb-nav-entry [data-select-scene]').first().getAttribute('data-scene-status'),'completed');
   await page.screenshot({path:path.join(root,'.test-output/creator-status-rail.png')});
   await page.locator('[data-action=view-mode]').click();
-  await page.locator('[data-tab=Production]').click();assert.equal(await page.locator('#focusEditor').count(),0);await page.locator('[data-filter-method]').selectOption('Blender');assert.equal(await page.locator('.wb-production-card').count(),3);
+  await openArea('Production');assert.equal(await page.locator('#focusEditor').count(),0);await page.locator('[data-filter-method]').selectOption('Blender');assert.equal(await page.locator('.wb-production-card').count(),3);
   await page.locator('[data-filter-method]').selectOption('Editing');assert.equal(await page.locator('.wb-production-card').count(),16);
-  await page.locator('[data-tab=Overview]').click();await page.locator('.wb-script summary').click();
+  await openArea('Overview');await page.locator('.wb-script summary').click();
   const original=await page.locator('[data-canonical-script]').textContent();
   const updated=original.replace('भारत का मिशन 1!','Changed narration');
   await page.locator('[data-script-draft]').fill(updated);await page.locator('[data-action=review-script]').click();
@@ -318,7 +319,7 @@ const server=http.createServer((req,res)=>{
   assert.equal(await page.locator('.wb-asset a').count(),0);await page.locator('[data-copy-path]').click();
   assert.equal(await page.evaluate(()=>window.copied),'E:\\3D\\MY\\Gaganyaan\\crew.blend');
   await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.assets?.[0]?.status==='Ready',projectId);
-  await page.reload();await page.locator('[data-tab=Assets]').click();assert.equal(await page.locator('[data-asset-field=name]').inputValue(),'Crew Module');
+  await page.reload();await openArea('Storyboard');await page.locator('[data-tab=Assets]').click();assert.equal(await page.locator('[data-asset-field=name]').inputValue(),'Crew Module');
   // Markdown, mapping, voiceover only, inline edits, reorder, duplication and insertion.
   await page.locator('[data-tab=Storyboard]').click();
   if(await page.locator('.wb-focus-layout').count())await page.locator('[data-action=view-mode]').click();
@@ -344,18 +345,18 @@ const server=http.createServer((req,res)=>{
   if(await scene(1).locator('[data-action=expand]').getAttribute('aria-expanded')!=='true')await scene(1).locator('[data-action=expand]').click();
   await scene(1).locator('[data-field=visual]').fill('Recovered camera direction');
   await page.locator('#status').filter({hasText:'draft is kept'}).waitFor();
-  assert.equal(await page.locator('#syncIndicator').getAttribute('data-state'),'error');await page.reload();
+  assert.equal(await page.locator('#syncIndicator').getAttribute('data-state'),'error');await page.reload();await openArea('Storyboard');
   await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes[1].visual==='Recovered camera direction',projectId);
   // Explicit scene completion bypasses optional bookkeeping and persists through the normal save flow.
   const direct={id:'direct-completion',title:'Direct completion',ownerUid:'owner',ownerEmail:'owner@example.com',editorEmails:[],animationGroups:[{id:'shared',name:'Shared animation',production:{}}],assets:[{id:'pending-asset',name:'Unregistered render',status:'Not Started',sceneIds:['direct-1'],groupIds:['shared']}],scenes:[1,2].map(n=>({id:'direct-'+n,duration:5,voiceover:'Scene '+n,visual:'Finished outside the app',assets:'Local files',productionMethods:['Blender','AI Video'],animationGroupId:'shared',sceneState:'Planned',completed:false,voiceoverReady:false,editingDone:false,production:{},checklist:[{id:'task-'+n,text:'Optional task',done:false}]}))};
   await page.evaluate(item=>{const data=JSON.parse(localStorage.getItem('test.creator'));data['creatorProjects/'+item.id]=item;localStorage.setItem('test.creator',JSON.stringify(data));},direct);
-  await page.goto(base+'project.html?id=direct-completion');await page.locator('.wb-scene').waitFor();
+  await page.goto(base+'project.html?id=direct-completion');await openArea('Storyboard');await page.locator('.wb-scene').waitFor();
   const directSaved=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/direct-completion']);
   await page.locator('[data-field=sceneState]').selectOption('Completed');
   await page.waitForFunction(()=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/direct-completion'].scenes[0].completed);
   assert.equal(await page.locator('[data-action=complete-scene]').textContent(),'Completed');
   assert.equal(await page.locator('.wb-nav-entry [data-select-scene]').first().getAttribute('data-scene-status'),'completed');
-  await page.reload();await page.getByRole('button',{name:'Reopen scene',exact:true}).waitFor();
+  await page.reload();await openArea('Storyboard');await page.getByRole('button',{name:'Reopen scene',exact:true}).waitFor();
   await page.getByRole('button',{name:'Reopen scene',exact:true}).click();
   assert.equal(await page.locator('[data-field=sceneState]').inputValue(),'Planned');
   await page.getByRole('button',{name:'Complete scene',exact:true}).click();
@@ -372,7 +373,7 @@ const server=http.createServer((req,res)=>{
   await page.getByRole('button',{name:'Complete scene',exact:true}).click();
   assert.equal(await page.locator('[data-field=sceneState]').inputValue(),'Completed');
   await page.locator('#status').filter({hasText:'draft is kept'}).waitFor();
-  await page.reload();await page.locator('.wb-scene').waitFor();
+  await page.reload();await openArea('Storyboard');await page.locator('.wb-scene').waitFor();
   await page.waitForFunction(()=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/direct-completion'].scenes.every(s=>s.completed));
   assert.equal(await page.locator('#sceneProgress').textContent(),'100%');
   const finished=await directSaved();
@@ -390,16 +391,16 @@ const server=http.createServer((req,res)=>{
   // Untouched legacy records retain completed state, prompts, metadata and script.
   const legacy={id:'legacy',title:'Legacy',ownerUid:'owner',ownerEmail:'owner@example.com',editorEmails:[],notes:'Keep notes',hook:'Keep hook',script:'Keep draft',custom:{keep:true},scenes:[{id:'old',duration:8,voiceover:'Legacy narration',completed:true,imageDone:true,imagePrompt:'Original prompt',imageAssetUrl:'https://example.com/image',custom:'keep'}]};
   await page.evaluate(item=>{const data=JSON.parse(localStorage.getItem('test.creator'));data['creatorProjects/legacy']=item;localStorage.setItem('test.creator',JSON.stringify(data));},legacy);
-  await page.goto(base+'project.html?id=legacy');await page.locator('.wb-scene').waitFor();assert.equal(await scene(0).locator('[data-field=sceneState]').inputValue(),'Completed');
+  await page.goto(base+'project.html?id=legacy');await openArea('Storyboard');await page.locator('.wb-scene').waitFor();assert.equal(await scene(0).locator('[data-field=sceneState]').inputValue(),'Completed');
   assert.equal(await scene(0).locator('[data-field=imagePrompt]').inputValue(),'Original prompt');
-  await page.locator('[data-tab=Overview]').click();await page.locator('.wb-script summary').click();
+  await openArea('Overview');await page.locator('.wb-script summary').click();
   assert.equal(await page.locator('[data-script-draft]').inputValue(),'Keep draft');
   await page.locator('[data-tab=Storyboard]').click();
   for(const width of [320,393,768,1280,1920]){
    await page.setViewportSize({width,height:900});
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'No horizontal overflow at '+width);
    assert.equal(await page.locator('.wb-scene').evaluate(el=>el.scrollWidth<=el.clientWidth+1),true);
-   await page.locator('[data-tab=Production]').click();
+   await openArea('Production');
    if(width<701&&!await page.locator('[data-filter-method]').isVisible())await page.locator('[data-action=toggle-filters]').click();
    await page.locator('[data-filter-method]').selectOption('All');
    if(width<701){await page.locator('[data-action=toggle-filters]').click();assert.equal(await page.locator('[data-field=sceneState]').isVisible(),true);}

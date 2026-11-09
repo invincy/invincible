@@ -23,6 +23,7 @@ const storyboard=createProductionWorkbench($("projectStoryboard"),{
  getProject:()=>project,
  getAccountId:()=>user?.uid,
  enableVideoStudio:true,
+ defaultArea:'Video Studio',
  onChange:()=>{queueSave();renderSceneWorkspace();},
  copyText,
  onCopyBrief:async()=>{

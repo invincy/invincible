@@ -19,7 +19,7 @@
     "test:map-animation": "node --test tests/creator-map-animation.mjs && node tests/creator-map-animation-browser.cjs",
     "test:map-editor": "node --test tests/creator-map-editor.mjs && node tests/creator-map-editor-browser.cjs",
     "vendor:creator-map": "node scripts/vendor-creator-map.mjs",
-    "test:video-studio": "node --test tests/creator-video-studio.mjs && node tests/creator-video-studio-browser.cjs",
+    "test:video-studio": "node --test tests/creator-video-studio.mjs tests/creator-studio-composition.mjs && node tests/creator-video-studio-browser.cjs && node tests/creator-studio-composition-browser.cjs",
     "vendor:video-studio": "node scripts/vendor-studio-video.mjs"
   },
   "devDependencies": {

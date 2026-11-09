@@ -219,3 +219,7 @@ saved to Firestore. Local audio remains session-only. Existing collaboration and
 document-size limits remain. No account, collection, rule or backend changes.
 
 Named animation asset references (November 6, 2026) resolve to existing asset IDs during atomic import; private descriptors and binary storage locations are unchanged. The copied ChatGPT brief shares asset names, types and IDs only, without signed URLs or storage paths. No new collections, backend deployment, rules or migrations. Direct private file upload enablement remains a separate prerequisite.
+
+## Unified Studio composition — November 9, 2026
+
+Version 2 video manifests and original voice/music/effect/video/image Blobs use the existing account-scoped `invincible-video-studio-v1` IndexedDB records, immutable versions and explicit draft pointer. Native map snapshots are copies inside the separate video manifest; source `creatorProjects` and existing map save/recovery remain untouched. JSON contains references rather than media bytes. No cloud upload, new collection, authentication change, migration or security-rule change occurs. See [Studio composition](unified-studio-composition.md).

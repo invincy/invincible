@@ -14,12 +14,18 @@ Object.assign(ICONS,{
 });
 const icon=name=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(ICONS[name]||ICONS.assets)+'</svg>';
 const action=(name,label,glyph,extra='')=>'<button type="button" class="wb-icon" data-action="'+name+'" title="'+esc(label)+'" aria-label="'+esc(label)+'" '+extra+'>'+icon(glyph)+'</button>';
-export function createProductionWorkbench(root,{getProject,onChange,onFocus,copyText,onCopyBrief,onSplitScript,getAccountId,enableVideoStudio=false}){
+export function createProductionWorkbench(root,{getProject,onChange,onFocus,copyText,onCopyBrief,onSplitScript,getAccountId,enableVideoStudio=false,defaultArea='Storyboard'}){
  let historyWorkspace=null,videoWorkspace=null,videoSession={};
- let tab='Storyboard',workspace='All',groupBy='project',assetFilter='All',completionFilter='All',searchQuery='',active='',pending=[],mapping=[],importTable=null,scriptChanges=null,dragId='',activeAsset='',expandAll=false,viewMode='focused',expandedScene='',sidebarCollapsed=false,editorPane='plan',filtersVisible=false,promptKey='blenderPrompt',messageTimer;
+ let tab=defaultArea,workspace='All',groupBy='project',assetFilter='All',completionFilter='All',searchQuery='',active='',pending=[],mapping=[],importTable=null,scriptChanges=null,dragId='',activeAsset='',expandAll=false,viewMode='focused',expandedScene='',sidebarCollapsed=false,editorPane='plan',filtersVisible=false,promptKey='blenderPrompt',messageTimer;
  root.classList.add('production-workbench');
+ root.classList.toggle('wb-studio-home',enableVideoStudio&&defaultArea==='Video Studio');
  root.innerHTML='<div class="wb-commandbar"><nav class="wb-tabs" aria-label="Project areas">'+['Storyboard','Production','Assets','Overview','Maps','Clips',...(enableVideoStudio?['Video Studio']:[])].map((name,index)=>'<button type="button" data-tab="'+name+'" title="'+name+'" aria-label="'+name+'">'+icon(['board','production','assets','overview','map','clips','production'][index])+'<span>'+name+'</span></button>').join('')+'</nav><div data-command-actions></div></div><div class="wb-status" role="status" aria-live="polite"></div><div data-workbench></div>';
  const panel=root.querySelector('[data-workbench]'),message=text=>{clearTimeout(messageTimer);const node=root.querySelector('.wb-status');node.textContent=text;if(/copied|appended|applied|Filled blank|Preview only/.test(text))messageTimer=setTimeout(()=>node.textContent='',3000);};
+ if(enableVideoStudio&&defaultArea==='Video Studio'){
+ const nav=root.querySelector('.wb-tabs'),more=document.createElement('details');more.className='wb-more';more.innerHTML='<summary>More</summary><div></div>';
+ for(const name of ['Video Studio','Storyboard','Assets']){const b=nav.querySelector('[data-tab="'+name+'"]');if(b){b.querySelector('span').textContent=name==='Video Studio'?'Studio':name==='Storyboard'?'Script':name;nav.append(b);}}
+ for(const name of ['Production','Overview','Maps','Clips'])more.querySelector('div').append(nav.querySelector('[data-tab="'+name+'"]'));nav.append(more);
+ }
  const project=()=>getProject();
  const scenes=()=>project()?.scenes||[];
  const changed=(rerender=true)=>{onChange();if(rerender)render();};
@@ -166,6 +172,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  const editorObserver=new ResizeObserver(()=>{if(root.clientWidth!==lastWidth){lastWidth=root.clientWidth;sizeEditors();}});
  editorObserver.observe(root);
  function render(){
+  root.classList.toggle('wb-studio-view',enableVideoStudio&&tab==='Video Studio'&&defaultArea==='Video Studio');
   if(!project())return;
   historyWorkspace?.destroy();historyWorkspace=null;videoWorkspace?.destroy();videoWorkspace=null;
   const navScroll=root.querySelector('.wb-nav-list')?.scrollTop||0;
@@ -265,7 +272,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    if(button.dataset.openScene){viewMode='focused';expandAll=false;tab='Production';workspace='All';assetFilter='All';completionFilter='All';searchQuery='';active=button.dataset.openScene;render();return;}
    if(button.dataset.editorPane){editorPane=button.dataset.editorPane;render();return;}
    if(button.dataset.selectScene){active=button.dataset.selectScene;viewMode='focused';expandAll=false;render();return;}
-   if(button.dataset.tab){tab=button.dataset.tab;message('');render();return;}
+   if(button.dataset.tab){const more=root.querySelector('.wb-more');if(more)more.open=false;tab=button.dataset.tab;message('');render();return;}
    if(button.dataset.workspace){workspace=button.dataset.workspace;active='';render();return;}
    const scene=findScene(button.closest('[data-scene]')?.dataset.scene),index=scenes().indexOf(scene),action=button.dataset.action;
    const asset=(project().assets||[]).find(item=>item.id===button.closest('[data-asset]')?.dataset.asset);
@@ -351,5 +358,5 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  root.addEventListener('dragover',event=>{if(dragId&&event.target.closest('[data-scene],[data-nav-scene]'))event.preventDefault();});
  root.addEventListener('drop',event=>{event.preventDefault();dragId=event.dataTransfer?.getData('text/plain')||dragId;const target=event.target.closest('[data-scene],[data-nav-scene]'),id=target?.dataset.scene||target?.dataset.navScene;if(!dragId||!id||id===dragId)return;const from=scenes().findIndex(scene=>scene.id===dragId),to=scenes().findIndex(scene=>scene.id===id);if(from<0||to<0)return;const [item]=project().scenes.splice(from,1);project().scenes.splice(to,0,item);dragId='';changed();});
  root.addEventListener('dragend',()=>dragId='');
- return {render,suspend(){historyWorkspace?.destroy();historyWorkspace=null;videoWorkspace?.destroy();videoWorkspace=null;},open({area='Production',method,sceneId}={}){tab=area;viewMode='focused';expandAll=false;if(method)workspace=method;active=sceneId||'';render();if(active)root.querySelector('[data-scene="'+CSS.escape(active)+'"]')?.scrollIntoView({block:'nearest'});},reset(){videoSession={};tab="Storyboard";workspace="All";assetFilter="All";completionFilter="All";searchQuery="";groupBy="project";active="";activeAsset="";expandAll=false;viewMode="focused";expandedScene="";editorPane="plan";promptKey="blenderPrompt";message("");render();}};
+ return {render,suspend(){historyWorkspace?.destroy();historyWorkspace=null;videoWorkspace?.destroy();videoWorkspace=null;},open({area='Production',method,sceneId}={}){tab=area;viewMode='focused';expandAll=false;if(method)workspace=method;active=sceneId||'';render();if(active)root.querySelector('[data-scene="'+CSS.escape(active)+'"]')?.scrollIntoView({block:'nearest'});},reset(){videoSession={};tab=defaultArea;workspace="All";assetFilter="All";completionFilter="All";searchQuery="";groupBy="project";active="";activeAsset="";expandAll=false;viewMode="focused";expandedScene="";editorPane="plan";promptKey="blenderPrompt";message("");render();}};
 }

@@ -247,3 +247,10 @@ See [workflow, schema and verification limits](docs/unified-video-studio-phase1.
 ## Reusable Map Editor artwork
 
 See [creator/asset-libraries/README.md](creator/asset-libraries/README.md) for named, importable collections. Historical Army & Commanders v1 includes 19 commander, infantry, cavalry, elephant and artillery PNG references for reuse across projects.
+
+## Clean unified Studio composition
+
+Saved Creator projects now open in Studio, with Script and Assets one click away.
+The review branch adds map/battlefield/image/video assembly, focused scene editing,
+multiple voice/music/effect tracks and deterministic portrait MP4 composition.
+See [workflow, compatibility and actual export evidence](docs/unified-studio-composition.md).
