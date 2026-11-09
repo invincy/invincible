@@ -14,3 +14,5 @@
 .video-studio [data-vs-status]{overflow-wrap:anywhere;word-break:break-word}
 
 @media(min-width:1100px){.project-page .wb-studio-home:not(.wb-studio-view) .wb-more>div{position:fixed;top:90px;left:300px;right:auto;z-index:13000}}
+
+@media(max-width:1099px){.project-page .wb-studio-home .wb-more>div{position:fixed;top:100px;left:12px;right:12px;min-width:0;max-height:calc(100dvh - 120px);overflow:auto;z-index:13000}}
