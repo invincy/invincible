@@ -387,6 +387,12 @@ async function load(){
       const data=live.data()||{};
       const remoteRev=Number.isInteger(data.writeRevision)?data.writeRevision:0;
       const remoteUpdatedAt=data.updatedAt?.toMillis?.()||0;
+      // Repeated metadata/own-write acknowledgements must not remount an active editor.
+      if(remoteRev>0&&remoteRev===baseRevision&&pendingConflict?.source!=='stale-draft'){
+        cloudVersion=remoteUpdatedAt||cloudVersion;
+        if(localDirty)keepDraft();
+        return;
+      }
       if(localDirty||pendingConflict?.source==='stale-draft'){
         if(remoteRev>baseRevision||(remoteRev===0&&baseRevision===0&&remoteUpdatedAt>cloudVersion)){
           if(pendingConflict?.source==='stale-draft'){
