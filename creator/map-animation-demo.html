@@ -1,8 +1,0 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Map animation preview — Invincible</title><link rel="stylesheet" href="history-workspace.css?v=2026110903"><style>body{margin:0;background:#0c1722;color:#e8edf2;font-family:system-ui}main{max-width:1440px;margin:auto}.history-workspace{max-height:none}.demo-note{padding:16px 28px;margin:0;background:#152d38;font-size:14px}</style></head><body><p class="demo-note">Unsaved map-animation preview. The yellow dotted connection is illustrative; it is not a road or border. Public map tiles load from their providers. Nothing is saved to an account.</p><main id="editor"></main><script type="module">
-import {mountMapEditor} from './map-editor.js?v=2026110903';
-import {compileAnimation} from './map-animation-import.js?v=2026110903';
-const response=await fetch('./map-animation-example.json');if(!response.ok)throw Error('Example instructions could not load.');
-const {project}=compileAnimation({scenes:[]},await response.json());
-window.mapDemo=mountMapEditor(document.querySelector('#editor'),{getProject:()=>project,onChange:()=>{},onAdvanced:()=>{}});
-</script></body></html>

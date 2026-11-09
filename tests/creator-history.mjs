@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {britishIndiaDemo} from '../creator/history-demo.js';
+import {britishIndiaDemo} from './fixtures/history-project.js';
 import {validateMap,mapFrame,timeOf,routeAt,createClip,clipTiming,exportManifest,safeUrl} from '../creator/history-model.js';
 import {methodsOf,queueScenes,parseProductionImport} from '../creator/production-model.js';
 const demo=()=>britishIndiaDemo();

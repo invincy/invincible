@@ -1,6 +1,6 @@
 import {initializeMapProject} from './map-defaults.js?v=2026110903';
 import {attachImportedGroups} from './production-model.js?v=5';
-import{createProductionWorkbench}from'./production-workbench.js?v=2026110903';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026111001';
 import{db,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
@@ -162,18 +162,6 @@ function bindDrag(){
 }
 
 $("stageSelect").innerHTML=stages.map(stage=>'<option>'+stage+'</option>').join("");
-$("testProject").onclick=async()=>{
-  let item=state.items.find(row=>row.isTestProject&&isOwner(row));
-  if(!item){
-    const scene=(duration,voiceover,imagePrompt,videoPrompt)=>({id:newId(),duration,voiceover,characterPrompt:"",imagePrompt,videoPrompt,imageDone:false,videoDone:false,completed:false,skipped:false});
-    item={id:newId(),isTestProject:true,title:"Test Run · What is Nomination?",format:"Short",stage:"Script",series:"Concepts, Clearly",publishDate:"",hook:"Nomination is not the same thing as ownership.",script:"Nomination is not the same thing as ownership. A nominee is the person authorised to receive the policy money after the policyholder's death. The insurer pays the nominee so the claim can be settled smoothly. Keeping nomination updated prevents avoidable delay for your family.",notes:"Built-in test project for checking the complete scene workflow.",visualStyle:"Cinematic realistic Indian family, premium insurance explainer, warm blue and gold lighting",aspectRatio:"9:16",language:"Gujarati + English",characterBible:"The same modern Indian family, with stable faces, clothing and ages across every scene.",continuityNotes:"Keep the same Indian family, clothing and modern home across all scenes. No logos, captions or watermarks.",scenes:[scene(6,"Nomination is not the same thing as ownership.","Vertical cinematic close-up of an Indian policyholder reviewing a life-insurance document at a modern desk, thoughtful expression, warm blue and gold lighting, realistic photography, no visible text or logos.","Slow push-in toward the policyholder and document, subtle hand movement and natural breathing, warm practical light flicker, preserve face and composition, no morphing."),scene(9,"A nominee is the person authorised to receive the policy money after the policyholder's death.","The same Indian family in their living room, policyholder gently indicating a trusted family member, respectful emotional tone, consistent clothes and lighting, cinematic realism, no text.","Gentle left-to-right camera slide, natural eye contact and small hand gesture, soft curtain movement, preserve identities, clothes and room layout."),scene(8,"The insurer pays the nominee so the claim can be settled smoothly.","Same nominee seated with an insurance representative across a clean desk, document handover suggesting smooth claim settlement, blue and gold palette, realistic Indian setting, no logos or text.","Controlled overhead-to-medium camera move, representative passes a document, nominee receives it naturally, subtle ambient office movement, maintain exact characters."),scene(8,"Keeping nomination updated prevents avoidable delay for your family.","Same family together in the warm living room, calm relieved expressions, policyholder updating details on a phone, hopeful final frame, cinematic 9:16, no text or watermark.","Slow pull-back revealing the family together, subtle smiles and natural movement, soft sunlight shifts through the room, stable faces and clothing, clean ending hold.")],ownerUid:user.uid,ownerEmail:(user.email||"").toLowerCase(),editorEmails:[]};
-    state.items.push(item);render();
-    try{await saveItem(item);}
-    catch{state.items=state.items.filter(row=>row!==item);render();return;}
-  }
-  window.location.href="project.html?id="+encodeURIComponent(item.id);
-};
-
 $("addContent").onclick=()=>openDialog();
 document.querySelectorAll("dialog .close").forEach(button=>button.onclick=()=>$("contentDialog").close());
 $("stageTabs").onclick=event=>{const button=event.target.closest("[data-stage]");if(!button)return;mobileStage=button.dataset.stage;render();};
@@ -218,7 +206,7 @@ $("deleteContent").onclick=async()=>{
 
 observeAuth(async current=>{
  const generation=++authGeneration;subscriptions.forEach(stop=>stop());subscriptions=[];
- user=current;ownedItems.clear();sharedItems.clear();state.items=[];render();$("app").hidden=true;$("addContent").disabled=!current;$("testProject").disabled=!current;
+ user=current;ownedItems.clear();sharedItems.clear();state.items=[];render();$("app").hidden=true;$("addContent").disabled=!current;
  if($("contentDialog").open)$("contentDialog").close();
  if(!current){status("Sign in once on Dashboard to use Creator Studio.","error");$("status").insertAdjacentHTML("beforeend",' <a href="/invincible/">Open Dashboard</a>');return}
  subscribeProjects();

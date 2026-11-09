@@ -5,7 +5,7 @@ import {OVERLAY_PRESETS,resolveOverlayPolicy,validateOverlayConfig} from '../cre
 import {emptyMap,validateMap,mapFrame,timeOf} from '../creator/history-model.js';
 import {safeRelativeAssetPath,safeAssetUrl} from '../creator/map-editor-model.js';
 import {compileAnimation} from '../creator/map-animation-import.js';
-import {britishIndiaDemo} from '../creator/history-demo.js';
+import {britishIndiaDemo} from './fixtures/history-project.js';
 import {referencedMapAssets,validateManifest} from '../creator/video-studio/model.js';
 import {makeScene} from '../creator/storyboard-model.js';
 
@@ -26,10 +26,7 @@ test('shared map/studio modules and catalogs contain no Panipat hardcoding',asyn
   'creator/video-studio/workspace.js',
   'creator/map-overlay-presets.js',
   'creator/map-editor-renderer.js',
-  'creator/history-demo.js',
-  'creator/history-demo.html',
   'creator/video-studio/assembly.js',
-  'creator/history-data/demos.json',
   'creator/asset-libraries/index.json'
  ];
  for(const rel of sharedFiles){
@@ -38,12 +35,7 @@ test('shared map/studio modules and catalogs contain no Panipat hardcoding',asyn
  }
 });
 
-test('data-driven demo and asset library catalogs are valid and point to existing files',async()=>{
- const demoCatalog=JSON.parse(await fs.readFile(repoUrl('creator/history-data/demos.json'),'utf8'));
- assert.equal(demoCatalog.format,'invincible-map-demos');
- assert.equal(demoCatalog.version,1);
- assert.ok(demoCatalog.demos.some(d=>d.id==='british-india'&&d.builtIn===true));
-
+test('reusable asset library catalog is valid and point to existing files',async()=>{
  const assetCatalog=JSON.parse(await fs.readFile(repoUrl('creator/asset-libraries/index.json'),'utf8'));
  assert.equal(assetCatalog.format,'invincible-asset-library-catalog');
  assert.equal(assetCatalog.version,1);
