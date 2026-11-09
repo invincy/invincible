@@ -1,5 +1,5 @@
-import {mountVideoStudio} from './video-studio/workspace.js?v=2026110901';
-import {mountHistoryWorkspace} from './history-workspace.js?v=2026110901';
+import {mountVideoStudio} from './video-studio/workspace.js?v=2026110903';
+import {mountHistoryWorkspace} from './history-workspace.js?v=2026110903';
 import {makeScene} from './storyboard-model.js?v=3';
 import {METHODS,IMPORT_FIELDS,uid,methodsOf,inspectImport,parseProductionImport,uniqueScenes,groupFor,taskFor,setTask,animationStage,requirements,sceneState,projectProgress,queueScenes,canonicalScript,scriptReview,filterScenes,productionReadiness} from './production-model.js?v=5';
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));

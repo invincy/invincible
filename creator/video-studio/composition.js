@@ -1,5 +1,5 @@
-import {emptyVideo,validateManifest} from './model.js?v=2026110901';
-import {sceneTimeline,validateMap} from '../history-model.js?v=2026110901';
+import {emptyVideo,validateManifest} from './model.js?v=2026110903';
+import {sceneTimeline,validateMap} from '../history-model.js?v=2026110903';
 export function upgradeVideo(manifest,audioDuration=0){
  const out=structuredClone(manifest);if(out.schemaVersion===2)return out;
  out.schemaVersion=2;out.audioClips=[];

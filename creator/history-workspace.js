@@ -1,9 +1,9 @@
-import {initializeMapProject} from './map-defaults.js?v=2026110901';
-import {productionId,emptyMap,validateMap,sceneTimeline,durationOf,createClip,clipTiming,exportManifest,safeUrl,timeOf} from './history-model.js?v=2026110901';
-import {britishIndiaDemo,archiveSource} from './history-demo.js?v=2026110901';
-import {createHistoryPlayer,downloadBlob,sizeMapFrame} from './history-player.js?v=2026110901';
-import {mountMapEditor} from './map-editor.js?v=2026110901';
-import {mapExportPanel,handleMapExport} from './map-editor-panels.js?v=2026110901';
+import {initializeMapProject} from './map-defaults.js?v=2026110903';
+import {productionId,emptyMap,validateMap,sceneTimeline,durationOf,createClip,clipTiming,exportManifest,safeUrl,timeOf} from './history-model.js?v=2026110903';
+import {britishIndiaDemo,archiveSource} from './history-demo.js?v=2026110903';
+import {createHistoryPlayer,downloadBlob,sizeMapFrame} from './history-player.js?v=2026110903';
+import {mountMapEditor} from './map-editor.js?v=2026110903';
+import {mapExportPanel,handleMapExport} from './map-editor-panels.js?v=2026110903';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const button=(id,label)=>`<button type="button" data-history="${id}">${label}</button>`;
 const opts=(project)=>sceneTimeline(project).map((r,i)=>`<option value="${esc(r.sceneId)}">Scene ${i+1} · ${r.start}–${r.end}s</option>`).join('');

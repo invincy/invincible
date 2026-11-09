@@ -1,0 +1,18 @@
+{
+  "license": "SIL Open Font License 1.1; accompanying OFL files",
+  "retrieved": "2026-11-09",
+  "fonts": [
+    {
+      "family": "Noto Sans",
+      "url": "https://fonts.gstatic.com/s/notosans/v42/o-0mIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjcz6L1SoM-jCpoiyAjBN9d.ttf",
+      "file": "noto-sans-600.ttf",
+      "sha256": "d28e6da8972668eff5b2faacb865cab11195aba6b0683aee040d20a04928817b"
+    },
+    {
+      "family": "Noto Sans Devanagari",
+      "url": "https://fonts.gstatic.com/s/notosansdevanagari/v33/TuGoUUFzXI5FBtUq5a8bjKYTZjtRU6Sgv3NaV_SNmI0b8QQCQmHn6B2OHjbL_08Alaoiy-A.ttf",
+      "file": "noto-devanagari-600.ttf",
+      "sha256": "fbbd906c4cd036164b314a5ee9efbdba3e1fc95fd3c2c5ffc0620861afae4bb7"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import {makeScene} from './storyboard-model.js?v=3';
-import {emptyMap} from './history-model.js?v=2026110901';
-import {safeRelativeAssetPath} from './map-editor-model.js?v=2026110901';
-import {registerMapOverlayPlugin} from './history-player.js?v=2026110901';
+import {emptyMap} from './history-model.js?v=2026110903';
+import {safeRelativeAssetPath} from './map-editor-model.js?v=2026110903';
+import {registerMapOverlayPlugin} from './history-player.js?v=2026110903';
 
 export const archiveSource='https://commons.wikimedia.org/wiki/File:India1765and1805b.jpg';
 const exportIdentifierPattern=/^[a-zA-Z_$][a-zA-Z0-9_$]*$/;
