@@ -1,5 +1,32 @@
 # Cleanup review — 2026-10-03
 
+## Voiceover script/settings history — November 10, 2026
+
+Successful full TTS generations now save an account-owned recipe in
+`users/{uid}/voiceoverHistory/{recordingId}`. The existing page adds paged history,
+expandable scripts/settings, restore without synthesis, JSON recipe export and
+confirmed deletion. Previews/failures do not create records; repeated downloads
+do not duplicate them. Original request and form values are captured before the
+generation call. Pending saves have an account-scoped local retry copy and stable
+IDs. Errors retain retry/export options; account changes reject stale UI responses.
+Historical voice unavailability blocks silent substitution. Audio remains a local
+download/in-memory player; no new audio storage, paid call, auth change, migration,
+Firestore rule or backend deployment is introduced.
+
+Validation: 218 root tests passed, two existing skips; all 15 Functions, five media
+and 12 TTS backend tests passed. The extended real-Chrome TTS browser suite passes
+history request snapshots, preview exclusion, download/recipe export, classic and
+Gemini setting restoration, fresh-context history, reload/retry, 25-item pagination,
+delete failure/success and account isolation, plus existing generation/draft/sample
+checks and 320–1280px layouts. Mobile output was visually inspected. Production
+build and site references pass; generated React content is unchanged. Broad browser
+checks passed Garage, navigation, Reminders, Orb, Task copy and Creator, then stopped
+at the Journal `Save journal idea` dialog timeout in `tests/journal-tools-browser.cjs:54`,
+already documented as a baseline limitation. Later checks did not run. Java is not
+installed, so emulator rules checks are unavailable; no rules were edited. Live
+signed-in history permissions, production speech and physical devices remain
+unverified. No commit, push or publication performed.
+
 ## Creator Studio red interface — November 10, 2026
 
 Applied a YouTube-inspired red/charcoal interface to Studio and the Creator project list: readable Roboto/Hindi typography, clear step headings, quieter cards, improved upload/file controls, red focus/selection/timeline accents and a prominent export action. CSS is scoped to Creator/Studio controls; film presentation presets and saved data are not changed. Advanced controls, scene editors and phone menus remain available. Studio CSS references advance to v=2026111003 for existing sessions.

@@ -78,10 +78,51 @@ Reference: [Google Gemini-TTS API, limits and permissions](https://docs.cloud.go
   These presets change numerical controls; they do not promise a particular emotion.
 - A short paid opening preview for plain text, full MP3 generation, audio playback
   and download. SSML previews are disabled so the opening is not cut inside markup.
-- Per-account draft/settings recovery on this device. Audio is held in memory;
+- Per-account draft/settings recovery on this device. Completed full recordings
+  also retain their script and settings in account-owned history (see below). Audio is held in memory;
   sign-out/account changes clear the player, and stale in-flight replies are discarded.
-- No script history or audio is uploaded to Firestore/Storage. The backend stores
+- Voiceover history stores script/settings metadata in Firestore; audio is not
+  uploaded to Firestore/Storage by the voiceover page. The synthesis backend stores
   only per-account usage counts and an active-generation lock.
+
+## Voiceover history — November 10, 2026
+
+Each successful full generation adds one history entry, so its downloaded MP3 has
+an associated recipe. Opening previews and failed generations do not add entries;
+downloading the same recording again does not duplicate it. Existing downloads
+made before this feature cannot be reconstructed from the old in-memory player.
+
+History retains the recording name, date, script/input mode, exact synthesis request,
+voice/language/engine, model, delivery/direction, speed, pitch, volume, paragraph
+pause, filename and returned duration. **Script & settings** expands the saved
+details. **Use again** loads the saved controls and script without generating or
+spending quota; confirm before replacing a different current script. Unavailable
+historical voices disable generation until a new voice is selected rather than
+silently substituting a narrator. The user still presses Generate MP3 explicitly;
+regeneration uses paid quota and expressive output need not be byte-identical.
+
+Records live at `users/{uid}/voiceoverHistory/{recordingId}` under the existing
+owner-only personal-data rules. History loads in pages of 25; Load more retrieves
+older records. Refresh/fresh browser sessions use the account's Firestore records,
+not the draft on one device. No new rule, backend deployment or audio upload is
+required. Production access still needs a signed-in check against the live rules.
+
+**Export settings** downloads a JSON recipe with the script and request, independent
+of the audio. **Delete** removes the selected account history record after confirmation;
+it cannot erase a downloaded MP3 from the computer. No audio bytes are stored in history.
+
+Pending/failed saves keep an account-scoped local retry copy while browser storage
+permits it. Retry save uses the same record ID, so an uncertain response does not
+duplicate history. Export/restore remain usable during a pending save; no paid
+generation retry runs automatically. Save/delete failures remain visible, and failed
+deletions retain their records. Account switches clear the displayed history and
+discard stale UI responses. Local retry data is removed after a successful save or delete.
+
+Validation: the actual history client is exercised against a controlled Firestore
+adapter in `tests/creator-tts-browser.cjs`: exact settings snapshots, preview exclusion,
+recipe download, restore without synthesis, reload/fresh-context retrieval, pending
+save retry, pagination, deletion failure/success, account isolation and phone layouts.
+Fixtures do not establish deployed Firestore permissions or real speech quality.
 
 The browser's download settings choose the destination folder. The site cannot
 silently choose a drive on the user's computer.
