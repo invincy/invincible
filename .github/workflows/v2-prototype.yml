@@ -204,3 +204,23 @@ jobs:
           path: .test-output/**/*.png
           if-no-files-found: ignore
           include-hidden-files: true
+
+  creator-tts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm ci --prefix functions
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:tts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: creator-tts-evidence
+          path: .test-output/tts/*.png
+          include-hidden-files: true

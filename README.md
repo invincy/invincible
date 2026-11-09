@@ -22,6 +22,10 @@ This document is the starting point for understanding what runs today, where to 
 
 The main React app chooses and lazily loads its page in `react/src/App.jsx`. Its HTML entry points load the same generated JS/CSS assets. Garage, Creator, Journal, and LIC have their own entry points; they are not silently redirected through React.
 
+## Creator voiceover
+
+Creator Studio → **Voiceover** opens the Google TTS workspace: paste narration, choose language/voice, adjust delivery, preview, generate and download an MP3. The page uses authenticated backend Functions; production activation and limits are documented in [Creator voiceover](docs/creator-tts.md). Private Google credentials never belong in the browser or repository.
+
 ## Shared code and ownership
 
 - `shared/navigation.js` owns page links, route matching, mobile-tab defaults, and preference validation. React's `AppShell.jsx` and native `site-nav.js` render that same data. Native HTML contains only a navigation mount and a Dashboard fallback link.

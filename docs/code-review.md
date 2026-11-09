@@ -1,5 +1,16 @@
 # Cleanup review — 2026-10-03
 
+## Creator Google voiceover — November 9, 2026
+
+Creator Studio now links to a reusable TTS page for pasted text/SSML, live Google voice filters, supported speed/pitch/volume/paragraph-pause controls, plain-text opening previews, playback and MP3 download. Delivery presets are numerical starting points, not promised emotions. Scripts/settings are account-scoped local drafts; generated audio clears on account changes and stale responses are discarded.
+
+New owner-allowlisted Firebase callables use runtime Google credentials, strict input/capability validation, server-only hourly usage counters and a single-generation lock. Lossless Google chunks are validated and joined before one FFmpeg MP3 encode and full decode check. No Google key is embedded, uploaded or committed, and existing Firestore rules and project data paths are unchanged.
+
+Validation: ten focused backend tests and the browser settings/preview/full-download/failure/draft/account-isolation suite passed, including 320–1280px layouts with shared navigation. A live male Hindi-English Google recording generated and decoded successfully (3.88 sec); Google returned 2,066 voices. Full unit/Functions tests, main production build, Functions syntax and site references passed. The broader V1 browser run passed Garage, navigation, dashboard/reminders, Orb, Task copy, Creator, Journal and LIC follow-up scenarios, then timed out waiting for #addCustomer:enabled in unchanged tests/lic-crm-browser.cjs. The first Orb attempt required fetching the historical baseline object missing from the shallow clone; the subsequent Orb run passed. No unrelated CRM fixes were made.
+
+Production activation is pending administrator reauthentication: the saved Firebase login returned HTTP 400/401 and the local TTS-only service-account key has no deployment/IAM administration permissions. The production account allowlist, runtime permissions and real signed-in callable flow must be verified after activation.
+
+
 ## LIC Follow-up Manager — October 26, 2026
 
 Publication follow-up adds reversible case removal, automatic archiving on completion, archive/all-saved views and explicit restoration. Replacement CSV import is the default, with a visible removal count and an add/update-only alternative. Incoming rows must all save before missing cases are archived; imports preserve earlier remarks/history and reactivate only cases previously removed due to CSV absence. Ten focused model/sample tests and the expanded browser suite pass, including completion/removal/restore, reimport of archived cases, uncertain archive acknowledgements and retries after both row-import and archive-phase failures. Publication and the initial private sample import were explicitly requested; the CSV remains outside Git.

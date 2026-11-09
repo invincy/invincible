@@ -223,3 +223,7 @@ Named animation asset references (November 6, 2026) resolve to existing asset ID
 ## Unified Studio composition — November 9, 2026
 
 Version 2 video manifests and original voice/music/effect/video/image Blobs use the existing account-scoped `invincible-video-studio-v1` IndexedDB records, immutable versions and explicit draft pointer. Native map snapshots are copies inside the separate video manifest; source `creatorProjects` and existing map save/recovery remain untouched. JSON contains references rather than media bytes. No cloud upload, new collection, authentication change, migration or security-rule change occurs. See [Studio composition](unified-studio-composition.md).
+
+## Creator voiceover — November 9, 2026
+
+The new TTS endpoints use existing Firebase authentication plus an explicit CREATOR_TTS_ACCOUNT_UID allowlist. Scripts/settings stay in account-scoped local browser drafts; generated audio is returned directly and held in memory for playback/download. Server-only _creatorTtsUsage/{uid} records hold hourly counts, byte totals and a short-lived generation lock. No customer/project data migration, Storage bucket or Firestore rule change is introduced. Runtime Google TTS permission and production account access require deployment and signed-in verification.
