@@ -145,6 +145,33 @@ The page disables unavailable controls and the backend validates them again.
 
 ## Verification
 
+### Responsive river UI — November 10, 2026
+
+Voiceover now uses a full-width desktop workspace: a flexible script editor,
+an independently scrolling voice-settings panel and a persistent transport row.
+Phones use a single column, a compact settings disclosure above narration and a
+sticky preview/generate/playback/download area. The same settings form, input IDs,
+authenticated API adapter and per-account draft storage serve both compositions.
+The existing assistant launcher sits above the transport instead of covering it.
+All original engines, voices, delivery presets, SSML, direction, model, speed,
+pitch, volume, paragraph pauses, samples, refresh and download remain available.
+
+`studio-ui.css` defines scoped navy surfaces, muted teal controls, focus treatment,
+touch targets and a static, soft river background (`studio-flow.svg`). Creator's
+project list, production workbench, video/audio controls and project page share it.
+Film artwork, map presentation presets, exported imagery and saved data do not
+consume these UI styles. No sidebar or additional product features were added.
+
+Browser fixtures verify Classic and Gemini requests, voice demos, SSML constraints,
+preview/full generation, MP3 download, errors, draft recovery, account changes,
+keyboard disclosure and responsive layouts from 320 to 1920 px. The matrix includes
+1920×1080, 1440×810, 1280×720, 1024×768, 820×1180, 393×852, 360×640 and 320×568.
+Generate, player and download are checked for visibility and overlap with the real
+navigation/assistant frame. These tests use synthetic account/audio responses,
+not paid synthesis or live Firebase permissions. Physical-device Safari and mobile
+keyboard behaviour still need a real-device check. See code-review.md for broader
+regression results and unrelated suite limitations.
+
 - `npm run test:tts`: backend validation/chunking/auth tests, real MP3 encode/decode,
   and browser paste/settings/preview/full export/download/error/draft/account checks.
 - Browser layouts at 320, 393, 768 and 1280 px with the real shared navigation.

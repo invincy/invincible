@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" fill="none" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="water" x1="0" y1="800" x2="1600" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#367b8e" stop-opacity="0"/>
+      <stop offset=".55" stop-color="#368e98" stop-opacity=".12"/>
+      <stop offset="1" stop-color="#56b6a6" stop-opacity=".04"/>
+    </linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="35"/></filter>
+  </defs>
+  <path d="M-150 850C300 1050 380 280 850 360S1230 30 1750 100" stroke="url(#water)" stroke-width="160" filter="url(#soft)"/>
+</svg>

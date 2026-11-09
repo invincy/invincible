@@ -5,6 +5,14 @@ const $=id=>document.getElementById(id),fields=['title','script','mode','engine'
 let user=null,voices=[],busy=false,loading=false,epoch=0,voiceEpoch=0,audioUrl=null,saveTimer;
 const controls=['sample','title','script','mode','reloadVoices','preview','generate'];
 const encoder=new TextEncoder();
+// One settings form and one transport across layouts. Remember the phone's
+// disclosure choice when rotating or moving back from a desktop-sized window.
+const desktopLayout=matchMedia('(min-width:901px)'),voiceSettings=$('voiceSettings');
+let mobileSettingsOpen=false;
+function arrangeSettings(){voiceSettings.open=desktopLayout.matches||mobileSettingsOpen;}
+voiceSettings.addEventListener('toggle',()=>{if(!desktopLayout.matches)mobileSettingsOpen=voiceSettings.open;});
+desktopLayout.addEventListener('change',arrangeSettings);
+arrangeSettings();
 const voiceDemo=createVoiceDemoPlayer({button:$('voiceDemo'),audio:$('voiceDemoAudio'),message:$('voiceDemoStatus'),recording:$('player'),getVoice:()=>$('voice').value,canPlay:()=>!!user&&!busy&&!loading});
 function status(message,error=false){$('generationStatus').textContent=message;$('generationStatus').classList.toggle('error',error);}
 function setOptions(select,options,value){select.replaceChildren(...options.map(o=>{const el=document.createElement('option');el.value=o.value;el.textContent=o.label;return el;}));if(options.some(o=>o.value===value))select.value=value;}

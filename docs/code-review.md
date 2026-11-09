@@ -1,5 +1,40 @@
 # Cleanup review — 2026-10-03
 
+## Minimal responsive Creator UI — November 10, 2026
+
+Rebuilt Voiceover's layout around a wide script editor, compact independently
+scrollable settings and a common generation/playback/export transport. Portrait
+uses an initially collapsed voice-settings disclosure above narration and a
+sticky transport with 44 px actions. Resizing retains one set of input values and
+the existing phone disclosure preference. The assistant launcher clears the
+transport. Removed duplicated gold-era Voiceover CSS, numbered section ornaments
+and the redundant brand badge. Shared scoped Studio tokens, quiet surfaces, teal
+selection/focus controls and a static blurred river background now also apply to
+the project list, project workbench and video/audio controls. Existing navigation,
+auth, API requests, project data, map art/export presets and workflow features are
+preserved. Original screenshot was recovered from the reference chat; the later
+concept image was unavailable, so styling follows the user's written direction.
+
+Verification on Windows / Chrome / Node 24: production build and site references
+passed; root suite 218 passed / two existing skips, Functions 15 passed, media
+Functions five passed and TTS 13 passed. Voiceover's actual-page browser suite
+passed Classic/Gemini settings, sample playback, preview/full MP3 download, XML
+and quota errors, draft recovery and account isolation. Added eight viewport
+checks (320–1920 px, landscape and portrait), keyboard disclosure and unobscured
+Generate/player/download assertions. Creator creation/storyboard/recovery and
+complete-video/upload/import/audio-MP4/conflict/account-isolation checks passed
+with the shared stylesheet enabled, and generated screenshots were inspected.
+
+The full browser run passed Garage, navigation, dashboard/reminders, Orb, Task
+copy and Creator before timing out in unchanged journal-tools-browser.cjs at the
+Save journal idea dialog (also reproduced separately). Continuation checks passed
+Journal notebook, LIC follow-up, Workday cases and account settings. Unchanged
+LIC CRM timed out at #addCustomer:enabled; LIC cashier timed out at #entryPanel.
+CRM emulator tests were not run because Java is unavailable on this host.
+These are verification limits, not a claim that the broad browser suite is green.
+No live paid generation or production Firebase permissions were exercised by this
+UI-only change. Physical-device keyboard/Safari verification remains outstanding.
+
 ## Creator Studio red interface — November 10, 2026
 
 Applied a YouTube-inspired red/charcoal interface to Studio and the Creator project list: readable Roboto/Hindi typography, clear step headings, quieter cards, improved upload/file controls, red focus/selection/timeline accents and a prominent export action. CSS is scoped to Creator/Studio controls; film presentation presets and saved data are not changed. Advanced controls, scene editors and phone menus remain available. Studio CSS references advance to v=2026111003 for existing sessions.
