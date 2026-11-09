@@ -20,8 +20,37 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - id: upload
+        uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
       - id: deployment
-        uses: actions/deploy-pages@v5
+        name: Publish uploaded site
+        uses: actions/github-script@v8
+        env:
+          PAGES_ARTIFACT_ID: ${{ steps.upload.outputs.artifact_id }}
+        with:
+          script: |
+            const owner = context.repo.owner, repo = context.repo.repo;
+            const artifact = Number(process.env.PAGES_ARTIFACT_ID);
+            if (!Number.isSafeInteger(artifact) || artifact <= 0) throw new Error("Site upload did not return an artifact ID");
+            const oidc = await core.getIDToken();
+            let deployment;
+            for (let attempt = 0; attempt < 8; attempt++) {
+              try {
+                deployment = (await github.request("POST /repos/{owner}/{repo}/pages/deployments", {owner, repo, artifact_id: artifact, pages_build_version: context.sha, oidc_token: oidc})).data;
+                break;
+              } catch (error) {
+                if (![404, 422, 500, 502, 503].includes(error.status) || attempt === 7) throw new Error("Publishing request failed: HTTP " + error.status);
+                await new Promise(resolve => setTimeout(resolve, 5000));
+              }
+            }
+            core.setOutput("page_url", deployment.page_url);
+            for (let attempt = 0; attempt < 100; attempt++) {
+              const result = (await github.request("GET /repos/{owner}/{repo}/pages/deployments/{deployment_id}", {owner, repo, deployment_id: deployment.id || context.sha})).data;
+              core.info("Publication: " + result.status);
+              if (result.status === "succeed") return;
+              if (/failed|cancelled|content_failed|finalization_error/.test(result.status)) throw new Error("Publication stopped: " + result.status);
+              await new Promise(resolve => setTimeout(resolve, 5000));
+            }
+            throw new Error("Publication status timed out");
