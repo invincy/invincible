@@ -17,7 +17,7 @@ export function createMediaClient(accountId){
  };
 }
 export async function inspectMedia(file){
- const mimeType=file.type==='audio/x-wav'?'audio/wav':file.type||(/\.glb$/i.test(file.name)?'model/gltf-binary':'');
+ const mimeType=/\.glb$/i.test(file.name)?'model/gltf-binary':['audio/x-wav','audio/wave','audio/vnd.wave'].includes(file.type)?'audio/wav':file.type;
  const kind=mimeType.startsWith('image/')?'image':mimeType.startsWith('video/')?'video':mimeType.startsWith('audio/')?'audio':mimeType==='model/gltf-binary'?'glb':null;
  if(!kind||!['image/png','image/jpeg','image/webp','video/mp4','video/webm','audio/mpeg','audio/wav','model/gltf-binary'].includes(mimeType)||file.size>100*1024*1024)throw Error('Use PNG/JPEG/WebP, MP4/WebM, MP3/WAV or GLB up to 100 MB.');
  const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',await file.arrayBuffer()))).map(v=>v.toString(16).padStart(2,'0')).join('');

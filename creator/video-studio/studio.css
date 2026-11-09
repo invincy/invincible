@@ -8,3 +8,9 @@
 /* One production flow: shared uploads, complete JSON, timeline and export. */
 .vs-flow{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:0 0 20px}.vs-step{min-width:0;border:1px solid #34434c;border-radius:12px;padding:16px;background:#142027}.vs-step>h3{margin-top:0}.vs-drop{padding:20px;border:1px dashed #72cbd6;border-radius:10px;background:#1a3039}.vs-media-library{display:grid;gap:8px;max-height:270px;overflow:auto}.vs-media-library article{padding:10px;border-radius:8px;background:#10191f;overflow-wrap:anywhere}.vs-media-library strong,.vs-media-library small{display:block}.vs-media-library small{color:#a0b6c1;margin:5px 0}.vs-flow details{border:0;margin:0;padding:0}.vs-flow details>summary{display:none}.vs-flow textarea{min-height:160px}.vs-review-heading{margin-bottom:14px}.vs-focusing .vs-flow,.vs-focusing .vs-review-heading{display:none}.vs-step button{font-size:12px}.vs-step input{min-width:0}
 @media(max-width:820px){.vs-flow{grid-template-columns:1fr}.vs-step{padding:12px}.vs-media-library{max-height:220px}}
+
+.vs-step .vs-actions>label{min-width:0;max-width:100%;flex-wrap:wrap}.vs-step .vs-actions>label input{min-width:0;flex:1 1 120px}.vs-studio-header{flex-wrap:wrap}
+
+.video-studio [data-vs-status]{overflow-wrap:anywhere;word-break:break-word}
+
+@media(min-width:1100px){.project-page .wb-studio-home:not(.wb-studio-view) .wb-more>div{position:fixed;top:90px;left:300px;right:auto;z-index:13000}}
