@@ -11,7 +11,7 @@ export async function handleMapExport(root,player,action){
  try{
   status.textContent=action==='mp4'?'Preparing detailed map tiles and artwork…':'Recording in real time. Keep this tab visible.';
   const blob=action==='mp4'?await player.renderVideo(ratio,resolution,({frame,frames})=>{status.textContent=`Rendering ${frame} / ${frames} frames · ${Math.round(frame/frames*100)}%`;}):await player.record(ratio,resolution);
-  const {downloadBlob}=await import('./history-player.js?v=2026110901');downloadBlob(blob,'map-animation-'+resolution+'.'+(action==='mp4'?'mp4':'webm'));
+  const {downloadBlob}=await import('./history-player.js?v=2026110903');downloadBlob(blob,'map-animation-'+resolution+'.'+(action==='mp4'?'mp4':'webm'));
   status.textContent=action==='mp4'?'Silent MP4 rendered at '+resolution+'.':'WebM recording saved. Pausing or hiding the tab can produce a partial recording.';
  }catch(error){status.textContent=error.name==='AbortError'?'Export cancelled. Your animation is retained.':error.message;}
  finally{for(const [el,disabled] of controls)if(el.isConnected)el.disabled=disabled;cancel.disabled=true;}

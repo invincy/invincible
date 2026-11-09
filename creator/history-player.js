@@ -1,12 +1,14 @@
-import {drawDefaultLabels,drawDefaultCredits} from './map-labels.js?v=2026110901';
+import {drawDocumentary,presentationAt} from './map-documentary.js?v=2026110903';
+import {ensureDocumentaryFonts} from './map-fonts.js?v=2026110903';
+import {drawDefaultLabels,drawDefaultCredits} from './map-labels.js?v=2026110903';
 import {locationVisible} from './map-globe.js';
 import {CanvasHistoricalMap} from './history-canvas.js';
-import {mapFrame,durationOf,sceneTimeline} from './history-model.js?v=2026110901';
-import {createVisualRenderer} from './map-editor-renderer.js?v=2026110901';
+import {mapFrame,durationOf,sceneTimeline} from './history-model.js?v=2026110903';
+import {createVisualRenderer} from './map-editor-renderer.js?v=2026110903';
 import {baseStyle,styleFor} from './map-style-library.js';
-import {layerAlpha} from './map-editor-model.js?v=2026110901';
+import {layerAlpha} from './map-editor-model.js?v=2026110903';
 import {exportDimensions,encodeMapVideo} from './map-video-export.js';
-import {resolveOverlayPolicy} from './map-overlay-presets.js?v=2026110901';
+import {resolveOverlayPolicy} from './map-overlay-presets.js?v=2026110903';
 
 const overlayPlugins=new Map();
 export function registerMapOverlayPlugin(id,pluginOrFactory){
@@ -43,10 +45,12 @@ export function downloadBlob(blob,name){const url=URL.createObjectURL(blob),a=do
 export function sizeMapFrame(host,ratio){const aspect=ratio==='9:16'?9/16:16/9;host.style.width=`min(100%, ${Math.floor(window.innerHeight*0.58*aspect)}px)`;host.style.aspectRatio=ratio==='9:16'?'9 / 16':'16 / 9';host.style.maxHeight='none';}
 export async function createHistoryPlayer(host,project,spec,{onTime=()=>{},onError=()=>{},overlayPlugin=null}={}){
  const {Map,NavigationControl}=await import('./vendor/maplibre-gl.mjs');
+ const needsFonts=map=>map.presentation?.presetVersion===2||project.scenes?.some(s=>s.mapPresentation?.presetVersion===2);if(needsFonts(spec))await ensureDocumentaryFonts();
  let activePlugin=instantiatePlugin(project,spec,overlayPlugin),pluginKey=overlayPlugin?'__explicit__':pluginIdentity(project,spec);
  let policy=resolveOverlayPolicy(project,spec,activePlugin?.policy);
  let night=spec.theme==='night';const background=night?'#101e2b':'#d8caaa',land=night?'#273f4e':'#a99f7f';
  let initialStyle,providerError='';try{initialStyle=await baseStyle(spec);}catch(error){providerError=error.message;initialStyle=await baseStyle({...spec,basemap:undefined});onError(providerError+' Showing the basic physical map; change the library style to retry.');}
+ let lastHistoryData='';
  let baseKey=providerError?'':JSON.stringify([spec.theme,spec.basemap]);
  let map;try{map=new Map({container:host,center:[80,23],zoom:3.2,fadeDuration:0,canvasContextAttributes:{preserveDrawingBuffer:true},style:initialStyle,attributionControl:false});}catch{host.replaceChildren();map=new CanvasHistoricalMap(host,{night});onError('WebGL2 unavailable: using the 2D physical-map preview.');}
  if(map.addControl)map.addControl(new NavigationControl({showCompass:true}),'top-right');
@@ -54,13 +58,14 @@ export async function createHistoryPlayer(host,project,spec,{onTime=()=>{},onErr
  const canvas=document.createElement('canvas');canvas.className='history-overlay';canvas.setAttribute('aria-label','Historical events and date markers');host.append(canvas);
  const ctx=canvas.getContext('2d');let ready=false,disposed=false,raf=0,tickTimer=0,time=0,playing=false,last=0,recording=null,seeking=false,renderedDuringSeek=false,audio=null,audioContext=null,audioSource=null,exportController=null,recordController=null,renderError='';
  const resize=new ResizeObserver(()=>{canvas.width=Math.max(1,Math.round(host.clientWidth*devicePixelRatio));canvas.height=Math.max(1,Math.round(host.clientHeight*devicePixelRatio));map.resize();draw();});resize.observe(host);
- function historyLayers(){map.addSource('history',{type:'geojson',data:{type:'FeatureCollection',features:[]}});map.addLayer({id:'territory',source:'history',type:'fill',filter:['in',['geometry-type'],['literal',['Polygon','MultiPolygon']]],paint:{'fill-color':'#b26b4a','fill-opacity':0.5}});map.addLayer({id:'routes',source:'history',type:'line',filter:['==',['geometry-type'],'LineString'],paint:{'line-color':'#ae4b33','line-width':3}});}
+ function historyLayers(){lastHistoryData='';map.addSource('history',{type:'geojson',data:{type:'FeatureCollection',features:[]}});map.addLayer({id:'territory',source:'history',type:'fill',filter:['in',['geometry-type'],['literal',['Polygon','MultiPolygon']]],paint:{'fill-color':'#b26b4a','fill-opacity':0.5}});map.addLayer({id:'routes',source:'history',type:'line',filter:['==',['geometry-type'],'LineString'],paint:{'line-color':'#ae4b33','line-width':3}});}
  const loaded=new Promise((resolve,reject)=>{map.once('load',async()=>{ready=true;historyLayers();try{await visual.setSpec(spec,policy);await activePlugin?.preload?.(project,spec);if(disposed)return;seek(0);resolve();}catch(e){reject(e);}});map.on('error',e=>{renderError='Map: '+(e.error?.message||'render error');onError(renderError);if(!ready)reject(e.error||Error('Map failed to load.'));});});
  function overlay(target,w,h,frame=mapFrame(project,spec,time)){
   const sx=w/host.clientWidth,sy=h/host.clientHeight;target.save();target.scale(sx,sy);const width=host.clientWidth,height=host.clientHeight;
   target.globalAlpha=1;for(const f of frame.features.features.filter(f=>f.geometry.type==='LineString')){const layer=spec.visual?.layers.find(l=>l.kind==='feature'&&l.ref===f.properties.id);if(layer?.visible===false||layer?.arrowhead===false)continue;const c=f.geometry.coordinates;if(c.length<2)continue;const alpha=layer?layerAlpha(project,layer,time):1;if(alpha<=0.01)continue;if(!locationVisible(map,c.at(-1),spec.projection)||!locationVisible(map,c.at(-2),spec.projection))continue;const a=map.project(c.at(-2)),b=map.project(c.at(-1));target.save();target.globalAlpha=alpha;target.translate(b.x,b.y);target.rotate(Math.atan2(b.y-a.y,b.x-a.x));target.fillStyle=layer?.color||'#ae4b33';target.beginPath();target.moveTo(0,0);target.lineTo(-12,-5);target.lineTo(-12,5);target.closePath();target.fill();target.restore();}
-  visual.overlay(target,time);
-  if(spec.presentation){if(policy.events.visible!==false)drawDefaultLabels(target,{map,project,spec,time,width,height});activePlugin?.render?.(target,{project,spec,map,time,width,height,isPortrait:h>w,night,policy});drawDefaultCredits(target,{spec,width,height,credit:[styleFor(spec)?.credit||'Natural Earth',policy.attribution.sourceCredit].filter(Boolean).join(' · '),date:frame.events.at(-1)?.date});target.restore();return;}
+  visual.overlay(target,time,{width,height});
+  const presentation=presentationAt(project,spec,time),paintSpec=presentation?{...spec,presentation}:spec;
+  if(presentation){if(policy.events.visible!==false){if(presentation.presetVersion===2)drawDocumentary(target,{map,project,spec:paintSpec,time,width,height,events:frame.events});else drawDefaultLabels(target,{map,project,spec:paintSpec,time,width,height});}activePlugin?.render?.(target,{project,spec,map,time,width,height,isPortrait:h>w,night,policy});drawDefaultCredits(target,{spec:paintSpec,width,height,credit:[styleFor(spec)?.credit||'Natural Earth',policy.attribution.sourceCredit].filter(Boolean).join(' · '),date:frame.events.at(-1)?.date});target.restore();return;}
   const virtualScale=policy.scaling==='shortEdge1080'?Math.max(0.05,Math.min(width,height)/1080):1;
   const vw=width/virtualScale,vh=height/virtualScale;
   target.save();if(virtualScale!==1)target.scale(virtualScale,virtualScale);
@@ -113,7 +118,7 @@ export async function createHistoryPlayer(host,project,spec,{onTime=()=>{},onErr
   target.restore();
  }
  function draw(captureRecording=true,frame=null){if(disposed)return;const f=frame||(ready?mapFrame(project,spec,time):null);ctx.clearRect(0,0,canvas.width,canvas.height);if(ready)overlay(ctx,canvas.width,canvas.height,f);if(captureRecording&&recording){const {out,context}=recording;context.drawImage(map.getCanvas(),0,0,out.width,out.height);overlay(context,out.width,out.height,f);}}
- function seek(value){time=Math.max(0,Math.min(durationOf(project),Number(value)||0));let f=null;seeking=true;renderedDuringSeek=false;try{if(ready){f=mapFrame(project,spec,time);map.jumpTo(f.camera);const managed=new Set((spec.visual?.layers||[]).filter(l=>l.kind==='feature').map(l=>l.ref));map.getSource('history').setData({...f.features,features:f.features.features.filter(g=>{const l=spec.visual?.layers.find(l=>l.kind==='feature'&&l.ref===g.properties.id);return l?.visible!==false&&(!visual.native||!managed.has(g.properties.id));})});visual.frame(time);}}finally{seeking=false;}if(audio&&Math.abs(audio.currentTime-time)>0.3)audio.currentTime=Math.min(time,Number.isFinite(audio.duration)?audio.duration:time);onTime(time);draw(!recording||renderedDuringSeek,f);}
+ function seek(value){time=Math.max(0,Math.min(durationOf(project),Number(value)||0));let f=null;seeking=true;renderedDuringSeek=false;try{if(ready){f=mapFrame(project,spec,time);map.jumpTo(f.camera);const managed=new Set((spec.visual?.layers||[]).filter(l=>l.kind==='feature').map(l=>l.ref));const historyData={...f.features,features:f.features.features.filter(g=>{const l=spec.visual?.layers.find(l=>l.kind==='feature'&&l.ref===g.properties.id);return l?.visible!==false&&(!visual.native||!managed.has(g.properties.id));})},historyKey=JSON.stringify(historyData);if(historyKey!==lastHistoryData){lastHistoryData=historyKey;map.getSource('history').setData(historyData);}visual.frame(time);}}finally{seeking=false;}if(audio&&Math.abs(audio.currentTime-time)>0.3)audio.currentTime=Math.min(time,Number.isFinite(audio.duration)?audio.duration:time);onTime(time);draw(!recording||renderedDuringSeek,f);}
  function stop(){playing=false;clearTimeout(tickTimer);tickTimer=0;cancelAnimationFrame(raf);audio?.pause();if(recording?.recorder.state==='recording')recording.recorder.stop();}
  function tick(now){if(!playing||disposed)return;const dt=(now-last)/1000;last=now;seek(audio&&!audio.paused&&!audio.ended?audio.currentTime:time+dt);if(time>=durationOf(project)){stop();return;}if(recording){tickTimer=setTimeout(()=>{tickTimer=0;if(playing&&!disposed)raf=requestAnimationFrame(tick);},dt>0.04?20:0);}else raf=requestAnimationFrame(tick);}
  async function play(){await loaded;if(disposed)return;if(time>=durationOf(project))seek(0);if(audio){await audioContext?.resume();await audio.play();}playing=true;last=performance.now();raf=requestAnimationFrame(tick);}
@@ -186,6 +191,7 @@ export async function createHistoryPlayer(host,project,spec,{onTime=()=>{},onErr
   try{
    let nextStyle=null;
    if(visual.native&&key!==baseKey){nextStyle=await baseStyle(next);}
+   if(needsFonts(next))await ensureDocumentaryFonts();
    await nextPlugin?.preload?.(project,next);
    if(nextStyle){
     ready=false;renderError='';

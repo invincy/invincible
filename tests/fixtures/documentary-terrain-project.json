@@ -1,0 +1,372 @@
+{
+  "id": "documentary-render-test",
+  "title": "Documentary Terrain rendering check",
+  "aspectRatio": "9:16",
+  "scenes": [
+    {
+      "id": "shot-0",
+      "duration": 3,
+      "name": "Overview",
+      "voiceover": ""
+    },
+    {
+      "id": "shot-1",
+      "duration": 3,
+      "name": "Location focus",
+      "voiceover": ""
+    },
+    {
+      "id": "shot-2",
+      "duration": 3,
+      "name": "Connection",
+      "voiceover": "",
+      "mapPresentation": {
+        "accentColor": "#D6BD52",
+        "secondaryLabelSize": 38
+      }
+    },
+    {
+      "id": "shot-3",
+      "duration": 3,
+      "name": "Year change",
+      "voiceover": ""
+    }
+  ],
+  "historicalMap": {
+    "version": 1,
+    "theme": "night",
+    "projection": "mercator",
+    "events": [],
+    "features": {
+      "type": "FeatureCollection",
+      "features": []
+    },
+    "camera": [
+      {
+        "sceneId": "shot-0",
+        "offset": 0,
+        "center": [
+          77.1,
+          30
+        ],
+        "zoom": 5.8,
+        "pitch": 20,
+        "bearing": 0,
+        "easing": "hold"
+      },
+      {
+        "sceneId": "shot-0",
+        "offset": 1.2,
+        "center": [
+          77.1,
+          30
+        ],
+        "zoom": 5.8,
+        "pitch": 20,
+        "bearing": 0,
+        "easing": "smooth"
+      },
+      {
+        "sceneId": "shot-1",
+        "offset": 0.7,
+        "center": [
+          76.97,
+          29.39
+        ],
+        "zoom": 7.5,
+        "pitch": 35,
+        "bearing": 0,
+        "easing": "hold"
+      },
+      {
+        "sceneId": "shot-1",
+        "offset": 2.1,
+        "center": [
+          76.97,
+          29.39
+        ],
+        "zoom": 7.5,
+        "pitch": 35,
+        "bearing": 0,
+        "easing": "smooth"
+      },
+      {
+        "sceneId": "shot-2",
+        "offset": 1.2,
+        "center": [
+          77.05,
+          29.05
+        ],
+        "zoom": 7.3,
+        "pitch": 40,
+        "bearing": 8,
+        "easing": "hold"
+      },
+      {
+        "sceneId": "shot-3",
+        "offset": 0,
+        "center": [
+          77.05,
+          29.05
+        ],
+        "zoom": 7.3,
+        "pitch": 40,
+        "bearing": 8,
+        "easing": "smooth"
+      },
+      {
+        "sceneId": "shot-3",
+        "offset": 2,
+        "center": [
+          77.05,
+          29.05
+        ],
+        "zoom": 7.2,
+        "pitch": 20,
+        "bearing": 0,
+        "easing": "hold"
+      }
+    ],
+    "cameraDefaults": {
+      "center": [
+        80,
+        23
+      ],
+      "zoom": 3.2,
+      "bearing": 0,
+      "pitch": 0,
+      "easing": "smooth"
+    },
+    "presentation": {
+      "presetId": "documentary-terrain",
+      "presetVersion": 2,
+      "fontFamily": "\"Invincible Sans\", \"Invincible Hindi\", sans-serif",
+      "labelSize": 56,
+      "secondaryLabelSize": 36,
+      "textColor": "#F7F9FA",
+      "cardColor": "#14201F",
+      "accentColor": "#E1C65B",
+      "cardOpacity": 0.76,
+      "cardRadius": 16,
+      "padding": 14,
+      "safeMargin": 64,
+      "assetSize": 220,
+      "fadeSeconds": 0.35,
+      "showDates": false,
+      "regionalLabelSize": 30,
+      "infoLabelSize": 24,
+      "numberSize": 80,
+      "safeTop": 120,
+      "safeRight": 172,
+      "safeBottom": 330,
+      "slidePixels": 8,
+      "letterSpacing": 1.2,
+      "routeWidth": 3.5,
+      "routeSeconds": 1.8,
+      "markerRadius": 7,
+      "pulseSeconds": 0.65,
+      "haloWidth": 3.5,
+      "labelStyle": "halo",
+      "uppercase": true,
+      "captionsEnabled": true,
+      "autoCamera": true,
+      "reliefShadow": "#1B2A29",
+      "reliefHighlight": "#D6D8C1",
+      "reliefAccent": "#69774C",
+      "reliefStrength": 0.35
+    },
+    "basemap": {
+      "id": "satellite",
+      "labels": false,
+      "borders": false,
+      "saturation": -0.32,
+      "contrast": 0.1
+    },
+    "visual": {
+      "version": 1,
+      "assets": [],
+      "layers": [
+        {
+          "visible": true,
+          "classification": "illustrative",
+          "opacity": 1,
+          "scale": 1,
+          "rotation": 0,
+          "altitude": 0,
+          "inheritTextColor": true,
+          "color": "#F7F9FA",
+          "offset": 0,
+          "id": "panipat",
+          "kind": "label",
+          "name": "Panipat",
+          "sceneId": "shot-0",
+          "position": [
+            76.97,
+            29.39
+          ],
+          "duration": 12,
+          "role": "primary",
+          "priority": 90
+        },
+        {
+          "visible": true,
+          "classification": "illustrative",
+          "opacity": 1,
+          "scale": 1,
+          "rotation": 0,
+          "altitude": 0,
+          "inheritTextColor": true,
+          "color": "#F7F9FA",
+          "offset": 0,
+          "id": "delhi",
+          "kind": "label",
+          "name": "Delhi",
+          "sceneId": "shot-0",
+          "position": [
+            77.1323165071,
+            28.6566562885
+          ],
+          "duration": 12,
+          "role": "secondary",
+          "priority": 80
+        },
+        {
+          "visible": true,
+          "classification": "illustrative",
+          "opacity": 1,
+          "scale": 1,
+          "rotation": 0,
+          "altitude": 0,
+          "inheritTextColor": true,
+          "color": "#F7F9FA",
+          "offset": 0,
+          "id": "hindi",
+          "kind": "label",
+          "name": "दिल्ली",
+          "sceneId": "shot-2",
+          "position": [
+            77.1323165071,
+            28.6566562885
+          ],
+          "duration": 6,
+          "role": "secondary",
+          "priority": 75
+        },
+        {
+          "visible": true,
+          "classification": "illustrative",
+          "opacity": 1,
+          "scale": 1,
+          "rotation": 0,
+          "altitude": 0,
+          "inheritTextColor": true,
+          "color": "#F7F9FA",
+          "offset": 0,
+          "id": "region",
+          "kind": "label",
+          "name": "NORTHERN INDIA",
+          "sceneId": "shot-0",
+          "position": [
+            77.9,
+            30
+          ],
+          "duration": 3,
+          "role": "regional",
+          "alignment": "terrain",
+          "priority": 40
+        },
+        {
+          "id": "connection",
+          "kind": "route",
+          "name": "Illustrative connection — not a historical route",
+          "classification": "illustrative",
+          "sceneId": "shot-1",
+          "offset": 0.2,
+          "duration": 8.5,
+          "visible": true,
+          "opacity": 1,
+          "color": "#E1C65B",
+          "coordinates": [
+            [
+              76.97,
+              29.39
+            ],
+            [
+              77.1323165071,
+              28.6566562885
+            ]
+          ],
+          "lineWidth": 3.5,
+          "revealDuration": 2,
+          "arrowhead": false,
+          "fadeIn": 0.35,
+          "fadeOut": 0.35,
+          "inheritRouteColor": true,
+          "inheritRouteWidth": true
+        }
+      ],
+      "terrain": {
+        "enabled": true,
+        "tiles": [
+          "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
+        ],
+        "encoding": "terrarium",
+        "exaggeration": 1.3,
+        "attribution": "Terrain: Mapzen / AWS · USGS SRTM/GMTED2010 · NOAA ETOPO1"
+      },
+      "overlays": [
+        {
+          "id": "year-a",
+          "type": "number",
+          "heading": "YEAR",
+          "startValue": 1526,
+          "endValue": 1526,
+          "sceneId": "shot-0",
+          "offset": 0,
+          "duration": 9
+        },
+        {
+          "id": "year-b",
+          "type": "number",
+          "heading": "YEAR",
+          "startValue": 1527,
+          "endValue": 1527,
+          "sceneId": "shot-3",
+          "offset": 0,
+          "duration": 3
+        },
+        {
+          "id": "caption",
+          "type": "caption",
+          "text": "Illustrative connection",
+          "highlight": "connection",
+          "sceneId": "shot-1",
+          "offset": 0.2,
+          "duration": 8.5
+        }
+      ]
+    },
+    "demoProvenance": {
+      "locations": [
+        {
+          "label": "Panipat",
+          "coordinates": [
+            76.97,
+            29.39
+          ],
+          "url": "https://panipat.gov.in/geographical-status/"
+        },
+        {
+          "label": "Delhi metropolitan locator (UN New Delhi point)",
+          "coordinates": [
+            77.1323165071,
+            28.6566562885
+          ],
+          "url": "https://ungegn.un.org/dashboard/cities/details?id=100"
+        }
+      ],
+      "route": "Straight illustrative connection between verified modern city locators; not a sourced historical itinerary.",
+      "years": "Type animation test only; no historical event assertion."
+    }
+  }
+}

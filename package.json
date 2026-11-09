@@ -19,6 +19,7 @@
     "test:map-animation": "node --test tests/creator-map-animation.mjs && node tests/creator-map-animation-browser.cjs",
     "test:universal-map": "node --test tests/universal-map-architecture.mjs tests/creator-studio-project-isolation.mjs && node tests/universal-map-architecture-browser.cjs",
     "test:creator:rules": "npx --yes firebase-tools@13.24.1 emulators:exec --only firestore --project demo-invincible-creator-rules --config firebase.creator-test.json \"node tests/creator-project-rules.cjs\"",
+    "test:documentary": "node --test tests/creator-documentary-terrain.mjs && node tests/creator-documentary-terrain-browser.cjs",
     "test:map-defaults": "node --test tests/creator-map-defaults.mjs && node tests/creator-map-defaults-browser.cjs",
     "test:map-editor": "node --test tests/creator-map-editor.mjs && node tests/creator-map-editor-browser.cjs",
     "vendor:creator-map": "node scripts/vendor-creator-map.mjs",

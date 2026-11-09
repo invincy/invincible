@@ -1,8 +1,9 @@
 // Pure, additive production metadata. Master storyboard IDs and order remain canonical.
-import {validateVisual,layerActive} from './map-editor-model.js?v=2026110901';
-import {validatePresentation} from './map-defaults.js?v=2026110901';
+import {automaticCamera,validateDocumentary} from './map-documentary.js?v=2026110903';
+import {validateVisual,layerActive} from './map-editor-model.js?v=2026110903';
+import {validatePresentation} from './map-defaults.js?v=2026110903';
 import {validateBasemap} from './map-style-library.js';
-import {validateOverlayConfig} from './map-overlay-presets.js?v=2026110901';
+import {validateOverlayConfig} from './map-overlay-presets.js?v=2026110903';
 export const productionId=()=>globalThis.crypto?.randomUUID?.()||'clip-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
 export const emptyMap=()=>({version:1,theme:'parchment',events:[],features:{type:'FeatureCollection',features:[]},camera:[]});
 const finite=(n,min,max)=>typeof n==='number'&&Number.isFinite(n)&&n>=min&&n<=max;
@@ -35,7 +36,7 @@ export function validateMap(map,project){
  for(const c of map.camera){if(c.easing!==undefined&&!['smooth','linear','hold'].includes(c.easing))throw Error('Camera easing must be smooth, linear or hold.');anchor(c);position(c.center);if(!finite(c.zoom,0,12)||!finite(c.bearing??0,-180,180)||!finite(c.pitch??0,0,60))throw Error('Invalid camera zoom, bearing or pitch.');}
  if(map.presentation&&map.cameraDefaults){const c=map.cameraDefaults;position(c.center);if(!finite(c.zoom,0,12)||!finite(c.bearing,-180,180)||!finite(c.pitch,0,60)||!['smooth','linear','hold'].includes(c.easing))throw Error('Invalid default camera.');}
  if(map.lighting!==undefined){if(!Array.isArray(map.lighting)||map.lighting.length>150)throw Error('Use up to 150 relief-light keys.');for(const c of map.lighting){anchor(c);if(!finite(c.direction,0,360)||!finite(c.intensity,0,1))throw Error('Relief lighting needs direction 0–360 and intensity 0–1.');}}
- validateVisual(map,project);
+ validateVisual(map,project);validateDocumentary(map,project);
  return structuredClone(map);
 }
 export function routeAt(coordinates,progress){
@@ -60,7 +61,7 @@ export function mapFrame(project,map,time){
  for(const c of frames){if(timeOf(project,c)<=time)a=c;else {b=c;break;}b=c;}
  const start=timeOf(project,a),end=timeOf(project,b),t=end>start?Math.max(0,Math.min(1,(time-start)/(end-start))):0,u=a.easing==='hold'?(t===1?1:0):a.easing==='linear'?t:t*t*(3-2*t);
  const mix=(x,y)=>x+(y-x)*u,wrap=n=>((n+180)%360+360)%360-180,angle=(x,y)=>wrap(x+wrap(y-x)*u);
- return {events,features:{type:'FeatureCollection',features},camera:{center:a.center.map((n,i)=>i===0&&map.projection==='globe'?angle(n,b.center[i]):mix(n,b.center[i])),zoom:mix(a.zoom,b.zoom),bearing:angle(a.bearing||0,b.bearing||0),pitch:mix(a.pitch||0,b.pitch||0)}};
+ return {events,features:{type:'FeatureCollection',features},camera:automaticCamera(project,map,time)||{center:a.center.map((n,i)=>i===0&&map.projection==='globe'?angle(n,b.center[i]):mix(n,b.center[i])),zoom:mix(a.zoom,b.zoom),bearing:angle(a.bearing||0,b.bearing||0),pitch:mix(a.pitch||0,b.pitch||0)}};
 }
 export function createClip(project,sceneIds,name){
  const rows=sceneTimeline(project).filter(row=>sceneIds.includes(row.sceneId));

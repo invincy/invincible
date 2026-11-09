@@ -28,7 +28,7 @@ Creator Studio is a shared production workspace for independent videos. Film con
 
 ## Creator Map Editor defaults
 
-New Creator projects automatically save NASA imagery, attributed terrain, readable navy/gold label cards and portrait framing. The main Map Editor’s Style controls support project overrides; existing maps retain their saved appearance. See [the production standard](docs/map-editor-production-standard.md#built-in-creator-studio-defaults). No repeated style prompt or demo page is required.
+New Creator projects automatically save the Documentary Terrain style: NASA imagery, attributed terrain, readable typography, restrained gold routes, safe portrait framing and timeline-driven motion. The main Map Editor’s Style controls support project overrides; existing maps retain their saved appearance. See [the production standard](docs/map-editor-production-standard.md#built-in-creator-studio-defaults). No repeated style prompt or demo page is required. See [Documentary Terrain](docs/documentary-terrain.md) for hierarchy, optional information graphics, scene overrides and imagery limits.
 
 ## Creator voiceover
 

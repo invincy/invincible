@@ -1,6 +1,6 @@
-import {compileAnimation} from '../map-animation-import.js?v=2026110901';
-import {safeAssetUrl} from '../map-editor-model.js?v=2026110901';
-import {validateMap,durationOf} from '../history-model.js?v=2026110901';
+import {compileAnimation} from '../map-animation-import.js?v=2026110903';
+import {safeAssetUrl} from '../map-editor-model.js?v=2026110903';
+import {validateMap,durationOf} from '../history-model.js?v=2026110903';
 import {validateBattlefield} from './battlefield.js';
 import {exportDimensions} from '../map-video-export.js';
 export {exportDimensions};
