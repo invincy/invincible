@@ -141,6 +141,10 @@ For every film, keep a project-specific production brief beside its assets under
 
 Commit authorized project materials or provide durable artifact references so another agent can continue. Do not leave the only copy in a chat, temporary sandbox link, one machine's absolute path or an unnamed local draft. Project plans and review prototypes are not finished native editor sessions. Keep this universal guide separate from each film's content.
 
+## Reusable asset library
+
+Before generating new military or commander artwork, read [the reusable asset catalog](../creator/asset-libraries/README.md). The Historical Army & Commanders v1 library contains 19 named PNG references from the Panipat project. Import its native library JSON through Images & 3D assets → Import asset library; preserve source/rights notes. Keep new reusable collections and manifests in that directory so future films can discover them.
+
 ## Discovery and maintenance
 
 The root `AGENTS.md`, README and `.agents/rules/map-editor-production.md` route future agents here. Keep the detailed standard in this one file; update project-specific briefs separately.

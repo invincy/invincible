@@ -243,3 +243,7 @@ Existing Creator projects, Map Editor and LIC pages retain their own behavior.
 Drafts/presets/media are account-scoped **on this device**, with explicit save;
 JSON carries references rather than media bytes. No automatic cloud migration.
 See [workflow, schema and verification limits](docs/unified-video-studio-phase1.md).
+
+## Reusable Map Editor artwork
+
+See [creator/asset-libraries/README.md](creator/asset-libraries/README.md) for named, importable collections. Historical Army & Commanders v1 includes 19 commander, infantry, cavalry, elephant and artillery PNG references for reuse across projects.

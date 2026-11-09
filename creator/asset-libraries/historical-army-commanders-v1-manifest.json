@@ -1,0 +1,249 @@
+{
+  "name": "Invincible · Historical Army & Commanders · v1",
+  "sourceCommit": "eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536",
+  "assets": [
+    {
+      "id": "commander_babur",
+      "name": "Commander · Babur · 1526",
+      "category": "Commander",
+      "repositoryPath": "creator/history-data/panipat/Panipat_Commanders/1526_Babur.png",
+      "immutableUrl": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Panipat_Commanders/1526_Babur.png",
+      "bytes": 1763716,
+      "sha256": "1a2737fe07f5cee2ad46d80bacfeda202ee655d7f3540c0c036a692e9bcf1a4e",
+      "crop": null,
+      "notes": "Artistic historical interpretation, not a verified portrait likeness.",
+      "rights": "Rights documentation not independently established; preserve original asset provenance."
+    },
+    {
+      "id": "commander_ibrahim_lodi",
+      "name": "Commander · Ibrahim Lodi · 1526",
+      "category": "Commander",
+      "repositoryPath": "creator/history-data/panipat/Panipat_Commanders/1526_Ibrahim_Lodi.png",
+      "immutableUrl": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Panipat_Commanders/1526_Ibrahim_Lodi.png",
+      "bytes": 1945796,
+      "sha256": "7dac41546fd41beabfe07b415b91735f4501c607ee86965c7b2535d123b4a029",
+      "crop": null,
+      "notes": "Artistic historical interpretation, not a verified portrait likeness.",
+      "rights": "Rights documentation not independently established; preserve original asset provenance."
+    },
+    {
+      "id": "commander_bairam_khan",
+      "name": "Commander · Bairam Khan · 1556",
+      "category": "Commander",
+      "repositoryPath": "creator/history-data/panipat/Panipat_Commanders/1556_Bairam_Khan.png",
+      "immutableUrl": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Panipat_Commanders/1556_Bairam_Khan.png",
+      "bytes": 1959232,
+      "sha256": "dbadd77286b738b876574fb608e614f5a52a3c53f204d5e7d096ff49b5ae7002",
+      "crop": null,
+      "notes": "Artistic historical interpretation, not a verified portrait likeness.",
+      "rights": "Rights documentation not independently established; preserve original asset provenance."
+    },
+    {
+      "id": "commander_hemu",
+      "name": "Commander · Hemu · 1556",
+      "category": "Commander",
+      "repositoryPath": "creator/history-data/panipat/Panipat_Commanders/1556_Hemu.png",
+      "immutableUrl": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Panipat_Commanders/1556_Hemu.png",
+      "bytes": 2638729,
+      "sha256": "31184778f70df7734595c9a6eaca8c44cc1d1a0ddca8bc2c8bc97d56639fad95",
+      "crop": null,
+      "notes": "Artistic historical interpretation, not a verified portrait likeness.",
+      "rights": "Rights documentation not independently established; preserve original asset provenance."
+    },
+    {
+      "id": "commander_ahmad_shah_abdali",
+      "name": "Commander · Ahmad Shah Abdali · 1761 · Clean cutout",
+      "category": "Commander",
+      "repositoryPath": "creator/history-data/panipat/Panipat_Commanders/1761_Ahmad_Shah_Abdali_v2.png",
+      "immutableUrl": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Panipat_Commanders/1761_Ahmad_Shah_Abdali_v2.png",
+      "bytes": 1957013,
+      "sha256": "1218235cb6156929f50d2d884ff06450eafb9a16dc6941c80f4e20961ea02068",
+      "crop": null,
+      "notes": "Artistic historical interpretation, not a verified portrait likeness.",
+      "rights": "Rights documentation not independently established; preserve original asset provenance."
+    },
+    {
+      "id": "commander_sadashivrao_bhau",
+      "name": "Commander · Sadashivrao Bhau · 1761",
+      "category": "Commander",
+      "repositoryPath": "creator/history-data/panipat/Panipat_Commanders/1761_Sadashivrao_Bhau.png",
+      "immutableUrl": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Panipat_Commanders/1761_Sadashivrao_Bhau.png",
+      "bytes": 1990957,
+      "sha256": "34c5cf147c198ae6282cbf8dae9cb8e42b6ab97201f0d812edae7f7003f64b88",
+      "crop": null,
+      "notes": "Artistic historical interpretation, not a verified portrait likeness.",
+      "rights": "Rights documentation not independently established; preserve original asset provenance."
+    },
+    {
+      "id": "troop_infantry_sword",
+      "name": "Infantry · Swordsman",
+      "category": "Infantry",
+      "repositoryPath": "creator/history-data/panipat/Historical_Army_Assets/Infantry/infantry_sword.png",
+      "immutableUrl": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Historical_Army_Assets/Infantry/infantry_sword.png",
+      "bytes": 71837,
+      "sha256": "5ef6fa2b2057dcfdcf11178a7055ef0d2302b1962d8b84f58bfb5dc0f5ab3033",
+      "crop": null,
+      "notes": "Illustrative military miniature; icon counts do not establish historical troop-type totals.",
+      "rights": "Rights documentation not independently established; preserve original asset provenance."
+    },
+    {
+      "id": "troop_infantry_shield",
+      "name": "Infantry · Shield bearer",
+      "category": "Infantry",
+      "repositoryPath": "creator/history-data/panipat/Historical_Army_Assets/Infantry/infantry_shield.png",
+      "immutableUrl": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Historical_Army_Assets/Infantry/infantry_shield.png",
+      "bytes": 81130,
+      "sha256": "558402865b8fac1d7d206d0c26bc2bed6f24c75e124a0575288e14e04567b6c3",
+      "crop": [
+        160,
+        120,
+        195,
+        270
+      ],
+      "notes": "Illustrative military miniature; icon counts do not establish historical troop-type totals.",
+      "rights": "Rights documentation not independently established; preserve original asset provenance."
+    },
+    {
+      "id": "troop_infantry_spear",
+      "name": "Infantry · Spearman",
+      "category": "Infantry",
+      "repositoryPath": "creator/history-data/panipat/Historical_Army_Assets/Infantry/infantry_spear.png",
+      "immutableUrl": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Historical_Army_Assets/Infantry/infantry_spear.png",
+      "bytes": 65352,
+      "sha256": "1e2d123270a7036731815fe79813ce6a918015e3bddcd58f1a992a27caa9b002",
+      "crop": null,
+      "notes": "Illustrative military miniature; icon counts do not establish historical troop-type totals.",
+      "rights": "Rights documentation not independently established; preserve original asset provenance."
+    },
+    {
+      "id": "troop_archer",
+      "name": "Infantry · Archer",
+      "category": "Infantry",
+      "repositoryPath": "creator/history-data/panipat/Historical_Army_Assets/Infantry/archer.png",
+      "immutableUrl": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Historical_Army_Assets/Infantry/archer.png",
+      "bytes": 75195,
+      "sha256": "5603bfaf662c9e675340078131b3bf4f300593a90e1ffdc89cd11622d5b931cd",
+      "crop": null,
+      "notes": "Illustrative military miniature; icon counts do not establish historical troop-type totals.",
+      "rights": "Rights documentation not independently established; preserve original asset provenance."
+    },
+    {
+      "id": "troop_matchlock",
+      "name": "Infantry · Matchlock musketeer",
+      "category": "Infantry",
+      "repositoryPath": "creator/history-data/panipat/Historical_Army_Assets/Infantry/matchlock.png",
+      "immutableUrl": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Historical_Army_Assets/Infantry/matchlock.png",
+      "bytes": 73959,
+      "sha256": "8cb56dc8547aad820f2e55f0b972cfe5efae7840195d74e5c53d7c20d1ff1a39",
+      "crop": null,
+      "notes": "Illustrative military miniature; icon counts do not establish historical troop-type totals.",
+      "rights": "Rights documentation not independently established; preserve original asset provenance."
+    },
+    {
+      "id": "troop_cavalry_sword",
+      "name": "Cavalry · Swordsman",
+      "category": "Cavalry",
+      "repositoryPath": "creator/history-data/panipat/Historical_Army_Assets/Cavalry/cavalry_sword.png",
+      "immutableUrl": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Historical_Army_Assets/Cavalry/cavalry_sword.png",
+      "bytes": 109844,
+      "sha256": "61603af3e7002393ec2e1e9a0d749cc2adf0ab334439aa923ed870847b1abd18",
+      "crop": null,
+      "notes": "Illustrative military miniature; icon counts do not establish historical troop-type totals.",
+      "rights": "Rights documentation not independently established; preserve original asset provenance."
+    },
+    {
+      "id": "troop_cavalry_lancer",
+      "name": "Cavalry · Lancer",
+      "category": "Cavalry",
+      "repositoryPath": "creator/history-data/panipat/Historical_Army_Assets/Cavalry/cavalry_lancer.png",
+      "immutableUrl": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Historical_Army_Assets/Cavalry/cavalry_lancer.png",
+      "bytes": 114741,
+      "sha256": "22d0922c7970e1e59232d295f214f4890dc566f36ba50752101b46b63f61c760",
+      "crop": [
+        120,
+        120,
+        250,
+        270
+      ],
+      "notes": "Illustrative military miniature; icon counts do not establish historical troop-type totals.",
+      "rights": "Rights documentation not independently established; preserve original asset provenance."
+    },
+    {
+      "id": "troop_cavalry_archer",
+      "name": "Cavalry · Horse archer",
+      "category": "Cavalry",
+      "repositoryPath": "creator/history-data/panipat/Historical_Army_Assets/Cavalry/cavalry_archer.png",
+      "immutableUrl": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Historical_Army_Assets/Cavalry/cavalry_archer.png",
+      "bytes": 103204,
+      "sha256": "64d9c00ca488f0c3ad88622ac02acd779d5a688854ee3932afa367c44def308a",
+      "crop": null,
+      "notes": "Illustrative military miniature; icon counts do not establish historical troop-type totals.",
+      "rights": "Rights documentation not independently established; preserve original asset provenance."
+    },
+    {
+      "id": "troop_war_elephant",
+      "name": "Elephant · War elephant",
+      "category": "Elephant",
+      "repositoryPath": "creator/history-data/panipat/Historical_Army_Assets/Elephants/war_elephant.png",
+      "immutableUrl": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Historical_Army_Assets/Elephants/war_elephant.png",
+      "bytes": 125237,
+      "sha256": "5c0583cd6d5091f6101cce539504727a2a21672ff83e6344ba389fd271ae05ce",
+      "crop": null,
+      "notes": "Illustrative military miniature; icon counts do not establish historical troop-type totals.",
+      "rights": "Rights documentation not independently established; preserve original asset provenance."
+    },
+    {
+      "id": "troop_command_elephant",
+      "name": "Elephant · Command elephant",
+      "category": "Elephant",
+      "repositoryPath": "creator/history-data/panipat/Historical_Army_Assets/Elephants/command_elephant.png",
+      "immutableUrl": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Historical_Army_Assets/Elephants/command_elephant.png",
+      "bytes": 132998,
+      "sha256": "3994d9ea847e7caf6df4374ad56b9e650eb5921710f33a162476dd1ceaf6fb9c",
+      "crop": null,
+      "notes": "Illustrative military miniature; icon counts do not establish historical troop-type totals.",
+      "rights": "Rights documentation not independently established; preserve original asset provenance."
+    },
+    {
+      "id": "troop_field_cannon",
+      "name": "Artillery · Field cannon",
+      "category": "Artillery",
+      "repositoryPath": "creator/history-data/panipat/Historical_Army_Assets/Artillery/field_cannon.png",
+      "immutableUrl": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Historical_Army_Assets/Artillery/field_cannon.png",
+      "bytes": 107421,
+      "sha256": "1f61e80fcb4fd27965b35c8c084cbc1fa382179b49d3dc1d183ae2525c87a4c7",
+      "crop": [
+        128,
+        200,
+        215,
+        190
+      ],
+      "notes": "Illustrative military miniature; icon counts do not establish historical troop-type totals.",
+      "rights": "Rights documentation not independently established; preserve original asset provenance."
+    },
+    {
+      "id": "troop_heavy_cannon",
+      "name": "Artillery · Heavy cannon",
+      "category": "Artillery",
+      "repositoryPath": "creator/history-data/panipat/Historical_Army_Assets/Artillery/heavy_cannon.png",
+      "immutableUrl": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Historical_Army_Assets/Artillery/heavy_cannon.png",
+      "bytes": 117318,
+      "sha256": "18eeeebd27f0f4a0afe0935164322dfadcd67f8837b46463da56741abc2d499e",
+      "crop": null,
+      "notes": "Illustrative military miniature; icon counts do not establish historical troop-type totals.",
+      "rights": "Rights documentation not independently established; preserve original asset provenance."
+    },
+    {
+      "id": "troop_camel_zamburak",
+      "name": "Artillery · Camel-mounted zamburak",
+      "category": "Artillery",
+      "repositoryPath": "creator/history-data/panipat/Historical_Army_Assets/Artillery/camel_zamburak.png",
+      "immutableUrl": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Historical_Army_Assets/Artillery/camel_zamburak.png",
+      "bytes": 93959,
+      "sha256": "8d6cce9e7fbd11135cf33a66329b0d8ac4328db9cdcf0bc8477dc1e497caff8d",
+      "crop": null,
+      "notes": "Illustrative military miniature; icon counts do not establish historical troop-type totals.",
+      "rights": "Rights documentation not independently established; preserve original asset provenance."
+    }
+  ]
+}
