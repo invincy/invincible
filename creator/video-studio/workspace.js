@@ -66,6 +66,23 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   if(drawing)await drawing.catch(()=>{});
   const task=(async()=>{await prepare();if(disposed||!renderer)return;await renderer.draw(time);state.time=time;$('[data-vs-seek]').value=time;$('[data-vs-time]').textContent=`${time.toFixed(2)} / ${timeline.duration.toFixed(2)}s`;})();drawing=task;try{await task;}finally{if(drawing===task)drawing=null;}
  }
+ async function applyManifest(next,{brands:nextBrands=null}={}){
+  const prevManifest=state.manifest,prevBrands=state.brands,prevTime=time,prevPending=pending;
+  stop();renderer?.destroy();renderer=null;audioBuffer=null;audioTracks=[];
+  state.manifest=next;
+  if(nextBrands)state.brands=nextBrands;
+  try{
+   await draw();
+   pending=null;$('[data-vs=apply]').disabled=true;
+   sync();
+  }catch(error){
+   stop();renderer?.destroy();renderer=null;audioBuffer=null;audioTracks=[];
+   state.manifest=prevManifest;state.brands=prevBrands;time=prevTime;state.time=prevTime;pending=prevPending;
+   sync();
+   try{await draw();}catch{}
+   throw error;
+  }
+ }
  async function tick(){
   if(!playing||disposed)return;time=Math.min(timeline.duration,clockTime+context.currentTime-clock);
   if(!drawBusy){drawBusy=true;try{await draw();}catch(e){stop();status(e.message);}finally{drawBusy=false;}}
@@ -106,16 +123,20 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
     validateBrand(state.brands.find(b=>b.id===next.brandPresetId),new Set(next.assets.map(a=>a.id)));pending=next;
     $('[data-vs-review]').textContent=`${next.scenes.length} scenes · ${next.aspectRatio} · ${next.audio?.name||'no voiceover'} · applies only to the separate video draft.`;status('Import reviewed. Apply when ready.');
    }
-   if(action==='apply'&&pending){const next=pending;invalidate();state.manifest=next;sync();await draw();status('Video instructions applied. Existing Creator data is preserved.');}
+   if(action==='apply'&&pending){const next=pending;await applyManifest(next);status('Video instructions applied. Existing Creator data is preserved.');}
    if(action==='example'){
-    const next=emptyVideo();next.title='My first video';next.assets=state.manifest.assets;next.scenes=[{id:'explain',startSeconds:0,durationSeconds:5,engineType:'graphic',engineData:{},transition:{type:'fade',durationSeconds:.3},overlays:[{id:'heading',type:'text',text:'Your next story',fontSize:72,keyframes:[{timeSeconds:0,y:.65,opacity:0,easing:'smooth'},{timeSeconds:1,y:.5,opacity:1}]}]}];invalidate();state.manifest=next;sync();$('[data-vs-json]').value=JSON.stringify(next,null,2);await draw();status('Example loaded in the video draft.');
+    const next=emptyVideo();next.title='My first video';next.assets=state.manifest.assets;next.scenes=[{id:'explain',startSeconds:0,durationSeconds:5,engineType:'graphic',engineData:{},transition:{type:'fade',durationSeconds:.3},overlays:[{id:'heading',type:'text',text:'Your next story',fontSize:72,keyframes:[{timeSeconds:0,y:.65,opacity:0,easing:'smooth'},{timeSeconds:1,y:.5,opacity:1}]}]}];await applyManifest(next);$('[data-vs-json]').value=JSON.stringify(next,null,2);status('Example loaded in the video draft.');
    }
    if(action==='brand-apply'){
-    const b=validateBrand(JSON.parse($('[data-vs-brand-json]').value),new Set(state.manifest.assets.map(a=>a.id)));invalidate();const i=state.brands.findIndex(x=>x.id===b.id);if(i<0){if(state.brands.length>=20)throw Error('Use up to 20 profiles.');state.brands.push(b);}else state.brands[i]=b;state.manifest.brandPresetId=b.id;sync();await draw();status('Brand profile applied. Save to reuse it on this device.');
+    const b=validateBrand(JSON.parse($('[data-vs-brand-json]').value),new Set(state.manifest.assets.map(a=>a.id)));
+    const nextBrands=structuredClone(state.brands),i=nextBrands.findIndex(x=>x.id===b.id);
+    if(i<0){if(nextBrands.length>=20)throw Error('Use up to 20 profiles.');nextBrands.push(b);}else nextBrands[i]=b;
+    const nextManifest={...structuredClone(state.manifest),brandPresetId:b.id};
+    await applyManifest(nextManifest,{brands:nextBrands});status('Brand profile applied. Save to reuse it on this device.');
    }
    if(action==='brand-templates'){invalidate();brand().intro=template('intro',brand().name);brand().outro=template('outro','Thank you');sync();status('Title templates added. Enable intro/outro to apply them.');}
    if(action==='reuse'){const a=mapAssets().find(a=>a.id===$('[data-vs-library]').value);if(!a)throw Error('Choose a map image first.');invalidate();if(!state.manifest.assets.some(x=>x.libraryId===a.id))state.manifest.assets.push({id:uid(),name:a.name,libraryId:a.id});sync();}
-   if(action==='remove-audio'){invalidate();state.manifest.audio=null;if(state.manifest.audioClips)state.manifest.audioClips=state.manifest.audioClips.filter(a=>a.role!=='voiceover');sync();await draw();}
+   if(action==='remove-audio'){const next=structuredClone(state.manifest);next.audio=null;if(next.audioClips)next.audioClips=next.audioClips.filter(a=>a.role!=='voiceover');await applyManifest(next);}
    if(action==='play')await play();if(action==='pause'){stop();await draw();}
    if(action==='export')await renderExport();
   });
@@ -129,8 +150,22 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   const target=event.target;if(target.matches('[data-vs-seek]'))return;
   run(async()=>{
    if(target.matches('[data-vs-json-file]')){const file=target.files[0];if(file){if(file.size>1000000)throw Error('Use JSON under 1 MB.');$('[data-vs-json]').value=await file.text();pending=null;status('File loaded. Review it before applying.');}return;}
-   if(target.matches('[data-vs-images]')){for(const file of target.files){if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>25*1024*1024)throw Error('Use PNG/JPEG/WebP up to 25 MB.');if(state.manifest.assets.length>=200)throw Error('Use up to 200 images.');const fileId=uid();state.files.set(fileId,file);state.manifest.assets.push({id:uid(),name:file.name,fileId});}invalidate();sync();return;}
-   if(target.matches('[data-vs-audio]')){const file=target.files[0];if(!file)return;if(!/\.(mp3|wav)$/i.test(file.name))throw Error('Choose an MP3 or WAV.');const decoded=await decodeVoiceover(file),fileId=uid();invalidate();state.files.set(fileId,file);if(state.manifest.schemaVersion===2)state.manifest.audioClips.push({id:uid(),fileId,name:file.name,role:'voiceover',startSeconds:0,trimStart:0,durationSeconds:decoded.duration,gain:1,fadeIn:0,fadeOut:0});else {state.manifest.audio={fileId,name:file.name,startSeconds:0,gain:1};audioBuffer=decoded;}sync();await draw();status('Voiceover loaded. Full recording will be included in export.');return;}
+   if(target.matches('[data-vs-images]')){
+    const files=[...target.files];
+    if(state.manifest.assets.length+files.length>200)throw Error('Use up to 200 images.');
+    for(const file of files)if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>25*1024*1024)throw Error('Use PNG/JPEG/WebP up to 25 MB.');
+    for(const file of files){const fileId=uid();state.files.set(fileId,file);state.manifest.assets.push({id:uid(),name:file.name,fileId});}
+    invalidate();sync();return;
+   }
+   if(target.matches('[data-vs-audio]')){
+    const file=target.files[0];if(!file)return;if(!/\.(mp3|wav)$/i.test(file.name))throw Error('Choose an MP3 or WAV.');
+    const decoded=await decodeVoiceover(file),fileId=uid(),next=structuredClone(state.manifest);
+    state.files.set(fileId,file);
+    if(next.schemaVersion===2)next.audioClips.push({id:uid(),fileId,name:file.name,role:'voiceover',startSeconds:0,trimStart:0,durationSeconds:decoded.duration,gain:1,fadeIn:0,fadeOut:0});
+    else next.audio={fileId,name:file.name,startSeconds:0,gain:1};
+    try{await applyManifest(next);}catch(error){state.files.delete(fileId);throw error;}
+    status('Voiceover loaded. Full recording will be included in export.');return;
+   }
    const next=structuredClone(state.manifest);
    if(target.matches('[data-vs-title]'))next.title=target.value;
    else if(target.matches('[data-vs-ratio]'))next.aspectRatio=target.value;
@@ -139,10 +174,10 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    else if(target.matches('[data-vs-outro]')){if(target.checked&&!brand().outro)throw Error('Add an outro template in Brand profile first.');next.outroEnabled=target.checked;}
    else if(target.matches('[data-vs-audio-start],[data-vs-gain]')){if(!next.audio)throw Error('Upload voiceover first.');next.audio.startSeconds=Number($('[data-vs-audio-start]').value);next.audio.gain=Number($('[data-vs-gain]').value);}
    else return;
-   validateManifest(next,{mapAssets:mapAssets()});invalidate();state.manifest=next;sync();await draw();
+   validateManifest(next,{mapAssets:mapAssets()});await applyManifest(next);
   });
  });
- assembly=mountAssembly(assemblyRoot,{session:state,getManifest:()=>state.manifest,getProject,getFile,putFile:(id,file)=>state.files.set(id,file),run,status,getTime:()=>time,setTime:value=>{time=value;state.time=value;},releaseRenderer:async()=>{stop();if(drawing)await drawing.catch(()=>{});invalidate();},setManifest:async next=>{invalidate();state.manifest=next;sync();await draw();},previewManifest:async next=>{invalidate();if(next===state.manifest){await draw();return;}const b=brand(),t=compileTimeline(next,b);audioTracks=await loadAudioTracks(next,getFile);const lead=t.audioClips[0]&&next.audioClips?.[0]?t.audioClips[0].startSeconds-next.audioClips[0].startSeconds:0;audioTracks=audioTracks.map(a=>({...a,startSeconds:a.startSeconds+lead}));renderer=await createStudioRenderer(canvas,next,t,b,{getFile,mapAssets:mapAssets(),signal:lifecycle.signal});timeline=t;await renderer.draw(time);}});
+ assembly=mountAssembly(assemblyRoot,{session:state,getManifest:()=>state.manifest,getProject,getFile,putFile:(id,file)=>state.files.set(id,file),deleteFile:id=>state.files.delete(id),run,status,getTime:()=>time,setTime:value=>{time=value;state.time=value;},releaseRenderer:async()=>{stop();if(drawing)await drawing.catch(()=>{});invalidate();},setManifest:applyManifest,previewManifest:async next=>{if(next===state.manifest){invalidate();await draw();return;}invalidate();try{const b=brand(),t=compileTimeline(next,b);audioTracks=await loadAudioTracks(next,getFile);const lead=t.audioClips[0]&&next.audioClips?.[0]?t.audioClips[0].startSeconds-next.audioClips[0].startSeconds:0;audioTracks=audioTracks.map(a=>({...a,startSeconds:a.startSeconds+lead}));const nextRenderer=await createStudioRenderer(canvas,next,t,b,{getFile,mapAssets:mapAssets(),signal:lifecycle.signal});if(disposed){nextRenderer.destroy();return;}renderer=nextRenderer;timeline=t;await renderer.draw(time);}catch(error){invalidate();try{await draw();}catch{}throw error;}}});
  const ready=run(async()=>{
   if(!state.loaded){if(store){const library=await store.get('brands');if(library){state.brands=library.brands;state.brandAssets=library.assets;}if(projectId){const version=await store.get('draft:'+projectId);if(version){const saved=await store.get('version:'+projectId+':'+version);if(saved)state.manifest=validateManifest(saved,{mapAssets:mapAssets()});}}}state.manifest.assets=assetsForBrand(brand(),state.manifest.assets,state.brandAssets);state.loaded=true;}
   sync();await draw();status('Your draft stays on this device. Save to keep uploaded originals.');

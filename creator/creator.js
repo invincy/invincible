@@ -1,7 +1,8 @@
+import {initializeMapProject} from './map-defaults.js';
 import {attachImportedGroups} from './production-model.js?v=5';
 import{createProductionWorkbench}from'./production-workbench.js?v=14';
 import{db,observeAuth,storageError}from'../shared/firebase-client.js';
-import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,serverTimestamp,setDoc,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const $=id=>document.getElementById(id);
 const stages=["Ideas","Research","Script","Record","Edit","Scheduled","Published"];
@@ -72,16 +73,63 @@ async function saveItem(item){
   attachImportedGroups(item,item.scenes||[]);
   if(!user)throw Error("Restore your Google session on Dashboard before saving.");
   status("Saving…");
-  const payload={...item,id:item.id,ownerUid:item.ownerUid||user.uid,ownerEmail:item.ownerEmail||(user.email||"").toLowerCase(),editorEmails:item.editorEmails||[],updatedAt:serverTimestamp()};
-  if(!item.createdAt)payload.createdAt=serverTimestamp();
-  try{await setDoc(doc(db,"creatorProjects",item.id),payload,{merge:true});status("Synced to Firebase","ok");}
-  catch(error){status(storageError(error),"error");throw error;}
+  const mustExist=arguments[1]?.mustExist===true,writerUid=user.uid;
+  const expectedRevision=Number.isInteger(item.writeRevision)?item.writeRevision:0;
+  const {createdAt:_c,updatedAt:_u,writtenAt:_w,writtenBy:_wb,writeRevision:_r,...clean}=item;
+  try{
+    const result=await runTransaction(db,async tx=>{
+      const ref=doc(db,"creatorProjects",item.id);
+      const snap=await tx.get(ref);if(user?.uid!==writerUid)throw Object.assign(Error('Account changed during save.'),{code:'cancelled'});
+      if(!snap.exists()){
+        if(expectedRevision>0||mustExist){
+          const err=new Error("This project no longer exists in Firebase.");
+          err.code="revision-conflict";
+          throw err;
+        }
+        tx.set(ref,{...clean,id:item.id,ownerUid:clean.ownerUid||user.uid,ownerEmail:clean.ownerEmail||(user.email||"").toLowerCase(),editorEmails:clean.editorEmails||[],writeRevision:1,writtenBy:user.uid,writtenAt:serverTimestamp(),createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+        return {writeRevision:1};
+      }
+      const remote=snap.data()||{};
+      const serverRev=Number.isInteger(remote.writeRevision)?remote.writeRevision:0;
+      if(serverRev!==expectedRevision){
+        const err=new Error("This project was updated in another session or tab.");
+        err.code="revision-conflict";
+        throw err;
+      }
+      const isRemoteOwner=remote.ownerUid===user.uid;
+      const nextRev=serverRev+1;
+      const payload={...clean,id:item.id,ownerUid:remote.ownerUid,writeRevision:nextRev,writtenBy:user.uid,writtenAt:serverTimestamp(),updatedAt:serverTimestamp()};
+      if(remote.ownerEmail!==undefined)payload.ownerEmail=remote.ownerEmail;
+      else if(isRemoteOwner)payload.ownerEmail=clean.ownerEmail||(user.email||"").toLowerCase();
+      if(isRemoteOwner)payload.editorEmails=clean.editorEmails??remote.editorEmails??[];
+      else if(remote.editorEmails!==undefined)payload.editorEmails=remote.editorEmails;
+      if(remote.createdAt!==undefined)payload.createdAt=remote.createdAt;
+      tx.set(ref,payload);
+      return {writeRevision:nextRev};
+    });
+    if(user?.uid!==writerUid)return result;
+    item.writeRevision=result.writeRevision;
+    status("Synced to Firebase","ok");
+    return result;
+  }catch(error){
+    status(storageError(error),"error");
+    throw error;
+  }
 }
 
 async function migrateLegacyProjects(){
-  const snapshot=await getDoc(doc(db,"users",user.uid,"creator","main")),items=snapshot.data()?.items||[],existing=await getDocs(query(collection(db,"creatorProjects"),where("ownerUid","==",user.uid))),existingIds=new Set(existing.docs.map(row=>row.id));
+  const migrationUser=user,migrationGeneration=authGeneration,active=()=>user?.uid===migrationUser.uid&&authGeneration===migrationGeneration;
+  const snapshot=await getDoc(doc(db,"users",migrationUser.uid,"creator","main")),items=snapshot.data()?.items||[],existing=await getDocs(query(collection(db,"creatorProjects"),where("ownerUid","==",migrationUser.uid))),existingIds=new Set(existing.docs.map(row=>row.id));
+  if(!active())return;
   for(const item of items){
-    if(!existingIds.has(item.id))await setDoc(doc(db,"creatorProjects",item.id),{...item,id:item.id,ownerUid:user.uid,ownerEmail:(user.email||"").toLowerCase(),editorEmails:[],createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+    if(!existingIds.has(item.id)){
+      const {createdAt:_c,updatedAt:_u,writtenAt:_w,writtenBy:_wb,writeRevision:_r,...clean}=item;
+      await runTransaction(db,async tx=>{
+        const ref=doc(db,"creatorProjects",item.id);
+        const existing=await tx.get(ref);if(!active())throw Object.assign(Error('Account changed during migration.'),{code:'cancelled'});if(existing.exists())return;
+        tx.set(ref,{...clean,id:item.id,ownerUid:migrationUser.uid,ownerEmail:(migrationUser.email||"").toLowerCase(),editorEmails:[],writeRevision:1,writtenBy:migrationUser.uid,writtenAt:serverTimestamp(),createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+      });
+    }
   }
 }
 
@@ -95,6 +143,7 @@ function openDialog(item=null){
   editingId=item?.id||"";dialogId=editingId||newId();
   const clone=value=>JSON.parse(JSON.stringify(value));
   dialogProject={...(item||{}),title:item?.title||"",script:item?.script||"",hook:item?.hook||"",notes:item?.notes||"",historicalMap:item?.historicalMap?clone(item.historicalMap):null,productionClips:clone(item?.productionClips||[]),scenes:clone(item?.scenes||[]),animationGroups:clone(item?.animationGroups||[]),assets:clone(item?.assets||[])};
+  if(!item)initializeMapProject(dialogProject);
   dialogScenes=dialogProject.scenes;
   $("contentSaveError").textContent="";
   const form=$("contentForm");form.reset();
@@ -109,7 +158,7 @@ function openDialog(item=null){
 
 function bindDrag(){
   document.querySelectorAll(".content-card").forEach(card=>{card.ondragstart=event=>{card.classList.add("dragging");event.dataTransfer.setData("text/plain",card.dataset.id);};card.ondragend=()=>card.classList.remove("dragging");});
-  document.querySelectorAll(".column").forEach(column=>{column.ondragover=event=>{event.preventDefault();column.classList.add("drag-over");};column.ondragleave=()=>column.classList.remove("drag-over");column.ondrop=async event=>{event.preventDefault();column.classList.remove("drag-over");const item=state.items.find(row=>row.id===event.dataTransfer.getData("text/plain"));if(item&&item.stage!==column.dataset.stage){item.stage=column.dataset.stage;render();await saveItem(item);}};});
+  document.querySelectorAll(".column").forEach(column=>{column.ondragover=event=>{event.preventDefault();column.classList.add("drag-over");};column.ondragleave=()=>column.classList.remove("drag-over");column.ondrop=async event=>{event.preventDefault();column.classList.remove("drag-over");const item=state.items.find(row=>row.id===event.dataTransfer.getData("text/plain"));if(item&&item.stage!==column.dataset.stage){const prevStage=item.stage;item.stage=column.dataset.stage;render();try{await saveItem(item,{mustExist:true});}catch{item.stage=prevStage;render();}}};});
 }
 
 $("stageSelect").innerHTML=stages.map(stage=>'<option>'+stage+'</option>').join("");
@@ -118,7 +167,9 @@ $("testProject").onclick=async()=>{
   if(!item){
     const scene=(duration,voiceover,imagePrompt,videoPrompt)=>({id:newId(),duration,voiceover,characterPrompt:"",imagePrompt,videoPrompt,imageDone:false,videoDone:false,completed:false,skipped:false});
     item={id:newId(),isTestProject:true,title:"Test Run · What is Nomination?",format:"Short",stage:"Script",series:"Concepts, Clearly",publishDate:"",hook:"Nomination is not the same thing as ownership.",script:"Nomination is not the same thing as ownership. A nominee is the person authorised to receive the policy money after the policyholder's death. The insurer pays the nominee so the claim can be settled smoothly. Keeping nomination updated prevents avoidable delay for your family.",notes:"Built-in test project for checking the complete scene workflow.",visualStyle:"Cinematic realistic Indian family, premium insurance explainer, warm blue and gold lighting",aspectRatio:"9:16",language:"Gujarati + English",characterBible:"The same modern Indian family, with stable faces, clothing and ages across every scene.",continuityNotes:"Keep the same Indian family, clothing and modern home across all scenes. No logos, captions or watermarks.",scenes:[scene(6,"Nomination is not the same thing as ownership.","Vertical cinematic close-up of an Indian policyholder reviewing a life-insurance document at a modern desk, thoughtful expression, warm blue and gold lighting, realistic photography, no visible text or logos.","Slow push-in toward the policyholder and document, subtle hand movement and natural breathing, warm practical light flicker, preserve face and composition, no morphing."),scene(9,"A nominee is the person authorised to receive the policy money after the policyholder's death.","The same Indian family in their living room, policyholder gently indicating a trusted family member, respectful emotional tone, consistent clothes and lighting, cinematic realism, no text.","Gentle left-to-right camera slide, natural eye contact and small hand gesture, soft curtain movement, preserve identities, clothes and room layout."),scene(8,"The insurer pays the nominee so the claim can be settled smoothly.","Same nominee seated with an insurance representative across a clean desk, document handover suggesting smooth claim settlement, blue and gold palette, realistic Indian setting, no logos or text.","Controlled overhead-to-medium camera move, representative passes a document, nominee receives it naturally, subtle ambient office movement, maintain exact characters."),scene(8,"Keeping nomination updated prevents avoidable delay for your family.","Same family together in the warm living room, calm relieved expressions, policyholder updating details on a phone, hopeful final frame, cinematic 9:16, no text or watermark.","Slow pull-back revealing the family together, subtle smiles and natural movement, soft sunlight shifts through the room, stable faces and clothing, clean ending hold.")],ownerUid:user.uid,ownerEmail:(user.email||"").toLowerCase(),editorEmails:[]};
-    state.items.push(item);render();await saveItem(item);
+    state.items.push(item);render();
+    try{await saveItem(item);}
+    catch{state.items=state.items.filter(row=>row!==item);render();return;}
   }
   window.location.href="project.html?id="+encodeURIComponent(item.id);
 };
@@ -133,7 +184,7 @@ $("searchInput").oninput=event=>{queryText=event.target.value.trim().toLowerCase
 
 $("board").onclick=async event=>{
   const move=event.target.closest("[data-move]");
-  if(move){event.stopPropagation();const item=state.items.find(row=>row.id===move.dataset.id),next=stages.indexOf(item.stage)+Number(move.dataset.move);if(stages[next]){item.stage=stages[next];mobileStage=item.stage;render();await saveItem(item);}return;}
+  if(move){event.stopPropagation();const item=state.items.find(row=>row.id===move.dataset.id),next=stages.indexOf(item.stage)+Number(move.dataset.move);if(stages[next]){const prevStage=item.stage,prevMobile=mobileStage;item.stage=stages[next];mobileStage=item.stage;render();try{await saveItem(item,{mustExist:true});}catch{item.stage=prevStage;mobileStage=prevMobile;render();}}return;}
   const edit=event.target.closest("[data-edit]");if(edit){event.stopPropagation();openDialog(state.items.find(row=>row.id===edit.dataset.edit));return;}
   const open=event.target.closest("[data-open]");if(open){event.stopPropagation();window.location.href="project.html?id="+encodeURIComponent(open.dataset.open);return;}
   const cardElement=event.target.closest(".content-card");if(cardElement)window.location.href="project.html?id="+encodeURIComponent(cardElement.dataset.id);
@@ -150,7 +201,7 @@ $("contentForm").onsubmit=async event=>{
   const controls=[...form.querySelectorAll("button,input,select,textarea")],disabled=controls.map(control=>control.disabled);
   controls.forEach(control=>control.disabled=true);$("saveContent").textContent="Saving…";
   try{
-    await saveItem(item);if(generation!==authGeneration)return;
+    await saveItem(item,{mustExist:!!editingId});if(generation!==authGeneration)return;
     const index=state.items.findIndex(row=>row.id===item.id);if(index>=0)state.items[index]=item;else state.items.push(item);
     mobileStage=item.stage;render();$("contentDialog").close();if(!existing)window.location.href="project.html?id="+encodeURIComponent(item.id);
   }catch(error){if(generation===authGeneration)$("contentSaveError").textContent=storageError(error)+" Your input is still here. Try saving again.";}

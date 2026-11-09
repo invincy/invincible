@@ -1,5 +1,16 @@
 # Cleanup review — 2026-10-03
 
+## Universal Creator Studio consolidation — November 9, 2026
+
+Integrated the universal-map handoff with the main editor's versioned default presentation in an isolated checkout. Shared code has no Panipat title/branch conditions. Demo/artwork catalogs are data, optional overlays use isolated trusted factories, missing plugins fail visibly, and scene packages exclude undeclared project-wide metadata. Plugin scenes require the full project or a dedicated scene exporter. Binding preserves existing narration/timing and rejects nonadjacent selections.
+
+Revision-aware transactions, explicit conflict recovery, account-switch guards and deleted-record protection are covered. Central NASA/terrain attribution, portrait output, readable cards and per-project overrides remain consistent through the shared preview/export path. Existing legacy map JSON retains its compatibility rendering. See [the architecture contract](creator-studio-universal.md).
+
+Validation: 211 root cases (209 pass, two existing skips), 15 Functions cases, actual Creator Firestore emulator rules tests, production build and 460-file site check passed. Focused architecture/default-style, Map Editor, map animation, history, storyboard and mixed-composition browser checks passed; real portrait MP4 and mixed exports fully decoded. Isolation coverage constructs 100 independent records; it is not a 100-video throughput claim. The broad browser suite remains non-green: Journal tools, LIC personal CRM and LIC cashier timeouts also occurred on unchanged master in the prior baseline comparison. The CRM rules/Web SDK checks pass; the separate Agent CRM browser timeout was also reproduced on unchanged master. No source was changed to suppress unrelated failures.
+
+Original Antigravity worktrees were left untouched. No push, merge, cloud rules deployment, Gemini generation or paid service activation occurred. Strict rules require a coordinated client/rules release and real signed-in validation before production use.
+
+
 ## Ready-made TTS voice samples — November 9, 2026
 
 A round play/stop button immediately before the Google voice selector plays the exact selected voice’s existing public Google demo without narration. An allowlist of 2,002 observed catalogue sample names prevents guessing URLs for voices with no demo. Missing samples are disabled; failed playback shows a retry message and never falls back to synthesis. Samples retain Google’s original settings. Changing voice/account, starting generation or playing a generated recording stops the sample, including stale play promises.
@@ -850,3 +861,14 @@ Verification: repository unit/Functions tests, Creator unit coverage, production
 The broader V1 browser chain passes Garage, navigation, reminders, Orb, Task Copy and Creator, then stops at the Journal Save journal idea dialog timeout (`tests/journal-tools-browser.cjs:54`). This exact failure was reproduced in a separate unchanged master worktree at `b2c3c34f3fb24a8f151c3ccca6f59f84a78ed189`; later chain scenarios were not reached. An initial V2 run timed out in the existing reduced-motion canvas scenario under concurrent browser load; both Chromium and Firefox pass in the unchanged baseline. Final feature-branch rerun is recorded below. No Journal/dashboard runtime files are modified.
 
 Final feature-branch V2 rerun passed the complete Chromium and Firefox scenarios, including reduced motion, plan import/edit/recovery, navigation, account isolation and production auth gate. Full repository unit run: 189 passed, two existing skips; Functions: 15 passed.
+
+
+## Creator Studio default map style — November 9, 2026
+
+Implemented on an isolated checkout of master ae1e806; the active Antigravity Panipat branch and working tree were not modified. New main-page Creator projects and new Studio Map scenes use one central default configuration in creator/map-defaults.js. Each map saves a complete versioned presentation snapshot and default camera; legacy maps retain their prior rendering. Main-editor Style controls and per-label font sizes override saved values. The same canvas label compositor serves preview and export, with rounded navy/gold cards, reference-resolution typography, safe margins and label deconfliction. Dates remain opt-in. NASA Blue Marble and attributed terrain initialize new maps. Newly placed images preserve their original proportions; supplied geographic image corners and authored GLB scale remain unchanged.
+
+Animation instructions may omit aspect ratio and basemap; those values resolve from the current project before the central defaults. Import preserves saved color adjustments and an explicitly disabled terrain. No Gemini integration, Firebase permission changes, deployment or film-specific rendering was added.
+
+Verification: 198 repository unit cases (196 passed, two existing skips), 15 Functions tests, the production build and site-reference check passed. Browser coverage passed for main-page creation, Studio Map creation, default snapshots, overrides/reload, 320/390/820/1440 layouts, native Map Editor tools, animation imports, history playback, Video Studio and mixed composition. A two-second 1080×1920 30-fps native NASA-map MP4 was exported with a 64-pixel label override verified in the export compositor. FFmpeg decoded the output and existing mixed-editor proof files. Exported imagery/cards and a phone-size frame were visually inspected; this synthetic sample does not certify a film's geography or narration alignment.
+
+The broader browser run passed storage, navigation, reminders, focus orb, task copying, Creator storyboard, Journal notebook, LIC follow-ups, Workday and account-menu scenarios. Journal tools, personal LIC CRM and LIC cashier timed out; the same three failures reproduced against an untouched master archive in this environment. CRM emulator command output did not establish completed rule/browser checks and is not counted as verification. Tests used Node 24 and desktop Chrome; production Node 22, live signed-in Firebase, mobile hardware/Safari and maximum-length rendering remain unverified.

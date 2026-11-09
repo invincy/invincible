@@ -1,24 +1,53 @@
+import {createDefaultMap} from '../map-defaults.js';
 import {appendProjectMaps,arrangeScenes,upgradeVideo,resizeScene} from './composition.js';
 import {emptyBattlefield} from './battlefield.js';
 import {decodeVoiceover} from './audio.js';
 import {validateManifest} from './model.js';
 import {mapDraft} from './adapters.js';
 import {mountMapEditor} from '../map-editor.js';
+import {safeRelativeAssetPath} from '../map-editor-model.js';
 import {mountBattlefieldEditor} from './battlefield-editor.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const number=(name,key,value,min=0,max=600,step=.1)=>`<label>${name}<input type="number" data-assembly-prop="${key}" value="${value}" min="${min}" max="${max}" step="${step}"></label>`;
+const catalogUrl=new URL('../asset-libraries/index.json',import.meta.url);
+let libraryCatalogPromise=null;
+export async function loadAssetLibraryCatalog(url=catalogUrl){
+ const response=await fetch(url);
+ if(!response.ok)throw Error('Asset library catalog could not load.');
+ const data=await response.json();
+ if(data?.format!=='invincible-asset-library-catalog'||data.version!==1||!Array.isArray(data.libraries))throw Error('Invalid asset library catalog.');
+ return data.libraries;
+}
 export function mountAssembly(root,api){
- const {getManifest,setManifest,getProject,getFile,putFile,run,status,getTime,setTime,releaseRenderer,previewManifest}=api;
- let selected=api.session.selected||'',audioSelected='',pending=null,focused=null,editor=null,focusScene=null,returnTime=0,closed=false;
+ const {getManifest,setManifest,getProject,getFile,putFile,deleteFile,run,status,getTime,setTime,releaseRenderer,previewManifest}=api;
+ let selected=api.session.selected||'',audioSelected='',pending=null,focused=null,editor=null,focusScene=null,returnTime=0,closed=false,catalog=null;
  const lockNavigation=value=>root.closest('.production-workbench')?.querySelectorAll('[data-tab]').forEach(b=>b.disabled=value);
  const mapAssets=()=>getProject()?.historicalMap?.visual?.assets||[];
  const upgrade=async()=>{const m=getManifest();if(m.schemaVersion===2)return structuredClone(m);const file=m.audio&&await getFile(m.audio.fileId),duration=file?(await decodeVoiceover(file)).duration:0;return upgradeVideo(m,duration);};
  const scene=()=>getManifest().scenes.find(s=>s.id===selected);
+ async function ensureCatalog(){
+  if(catalog)return catalog;
+  libraryCatalogPromise??=loadAssetLibraryCatalog().catch(err=>{libraryCatalogPromise=null;throw err;});
+  catalog=await libraryCatalogPromise;
+  return catalog;
+ }
+ function populateLibrarySelect(){
+  if(!catalog||closed)return;
+  const select=root.querySelector('[data-asset-library]'),note=root.querySelector('[data-asset-library-note]');
+  if(!select)return;
+  const current=select.value;
+  select.innerHTML=catalog.map(lib=>`<option value="${esc(lib.id)}">${esc(lib.title)}</option>`).join('')||'<option value="">No libraries registered</option>';
+  if(current&&catalog.some(l=>l.id===current))select.value=current;
+  const active=catalog.find(l=>l.id===select.value)||catalog[0];
+  if(note)note.textContent=active?`${active.description} Choose artwork inside Edit scene.`:'No reusable artwork libraries configured.';
+ }
  function render(){if(closed||focused)return;const openDetails=new Set([...root.querySelectorAll('details[open]')].map(n=>n.querySelector('summary')?.textContent));const m=getManifest(),s=scene(),a=m.audioClips?.find(a=>a.id===audioSelected);api.session.selected=selected;
   root.innerHTML=`<div class="vs-assembly-header"><strong>Scenes</strong><label>Add scene<select data-add-kind><option value="graphic">Title / graphic</option><option value="map">Map</option><option value="battlefield">Battlefield</option></select></label><button data-compose="add">Add scene</button></div><div class="vs-actions"><button data-compose="maps">Use project maps</button><label class="vs-upload">Add image / video<input data-compose-media type="file" accept="image/png,image/jpeg,image/webp,video/mp4,video/webm"></label></div><div class="vs-scene-list">${m.scenes.map((s,i)=>`<button data-compose-select="${esc(s.id)}" aria-pressed="${selected===s.id}"><span>${i+1}. ${esc(s.name||s.engineType)}</span><small>${s.startSeconds.toFixed(1)}–${(s.startSeconds+s.durationSeconds).toFixed(1)}s · ${esc(s.engineType)}</small></button>`).join('')||'<p class="vs-help">Add a scene or copy maps from this project to begin.</p>'}</div>
   ${s?`<section class="vs-inspector"><h3>Selected scene</h3><label>Name<input data-assembly-prop="name" value="${esc(s.name||s.engineType)}" maxlength="200"></label><div class="vs-actions"><button data-compose="up">Move up</button><button data-compose="down">Move down</button><button data-compose="duplicate">Duplicate</button><button data-compose="remove">Remove</button></div><div class="vs-grid">${number('Duration (seconds)','duration',s.durationSeconds,1/30)}<label>Transition<select data-assembly-prop="transition"><option value="cut" ${s.transition?.type!=='fade'?'selected':''}>Cut</option><option value="fade" ${s.transition?.type==='fade'?'selected':''}>Fade through background</option></select></label>${number('Fade seconds','fade',s.transition?.durationSeconds||0,0,s.durationSeconds/2)}${s.engineType==='video'?number('Source trim start','trim',s.engineData.trimStart):''}${s.engineData.project||s.engineData.sourceId?number('Map source start','sourceStart',s.engineData.sourceStart):''}${['image','video'].includes(s.engineType)?`<label>Framing<select data-assembly-prop="fit"><option ${s.engineData.fit==='contain'?'selected':''}>contain</option><option ${s.engineData.fit==='cover'?'selected':''}>cover</option></select></label>`:''}</div>${s.engineType==='graphic'?`<label>Title text<textarea data-assembly-prop="text">${esc(s.overlays.find(o=>o.type==='text')?.text||'')}</textarea></label>`:''}${['map','battlefield'].includes(s.engineType)?'<button data-compose="edit">Edit scene</button>':''}<p class="vs-help">Timing changes are reviewed below before applying. Recordings keep their current positions.</p></section>`:''}
-  <details><summary>Audio</summary><div class="vs-grid"><label>Type<select data-audio-role><option value="voiceover">Voice</option><option value="music">Music</option><option value="effect">Sound effect</option></select></label><label class="vs-upload">Add recording<input data-compose-audio type="file" accept=".mp3,.wav,audio/mpeg,audio/wav" multiple></label></div><div class="vs-audio-list">${(m.audioClips||[]).map(a=>`<button data-compose-audio-select="${esc(a.id)}" aria-pressed="${a.id===audioSelected}">${esc(a.name)}<small>${esc(a.role)} · ${a.startSeconds.toFixed(1)}–${(a.startSeconds+a.durationSeconds).toFixed(1)}s</small></button>`).join('')}${m.audio?'<p class="vs-help">An existing voiceover is loaded. Adding audio retains it as the first voice track.</p>':''}</div>${a?`<h4>${esc(a.name)}</h4><div class="vs-grid">${number('Timeline start','audio.startSeconds',a.startSeconds)}${number('Source trim start','audio.trimStart',a.trimStart)}${number('Duration','audio.durationSeconds',a.durationSeconds,1/48000)}${number('Volume','audio.gain',a.gain,0,2,.05)}${number('Fade in','audio.fadeIn',a.fadeIn)}${number('Fade out','audio.fadeOut',a.fadeOut)}</div><button data-compose="remove-audio-clip">Remove recording</button>`:''}</details><details><summary>Reusable artwork</summary><button data-compose="panipat">Load Panipat army library</button><p class="vs-help">19 existing commander and military images, with their source and rights notes. Choose formation artwork inside Edit scene.</p></details><div data-compose-review></div>`;
+  <details><summary>Audio</summary><div class="vs-grid"><label>Type<select data-audio-role><option value="voiceover">Voice</option><option value="music">Music</option><option value="effect">Sound effect</option></select></label><label class="vs-upload">Add recording<input data-compose-audio type="file" accept=".mp3,.wav,audio/mpeg,audio/wav" multiple></label></div><div class="vs-audio-list">${(m.audioClips||[]).map(a=>`<button data-compose-audio-select="${esc(a.id)}" aria-pressed="${a.id===audioSelected}">${esc(a.name)}<small>${esc(a.role)} · ${a.startSeconds.toFixed(1)}–${(a.startSeconds+a.durationSeconds).toFixed(1)}s</small></button>`).join('')}${m.audio?'<p class="vs-help">An existing voiceover is loaded. Adding audio retains it as the first voice track.</p>':''}</div>${a?`<h4>${esc(a.name)}</h4><div class="vs-grid">${number('Timeline start','audio.startSeconds',a.startSeconds)}${number('Source trim start','audio.trimStart',a.trimStart)}${number('Duration','audio.durationSeconds',a.durationSeconds,1/48000)}${number('Volume','audio.gain',a.gain,0,2,.05)}${number('Fade in','audio.fadeIn',a.fadeIn)}${number('Fade out','audio.fadeOut',a.fadeOut)}</div><button data-compose="remove-audio-clip">Remove recording</button>`:''}</details><details><summary>Reusable artwork</summary><div class="vs-actions"><select data-asset-library aria-label="Reusable artwork library"><option value="">Loading libraries…</option></select><button data-compose="load-asset-library">Load artwork library</button></div><p class="vs-help" data-asset-library-note>Choose a reusable artwork library, with source and rights notes. Choose formation artwork inside Edit scene.</p></details><div data-compose-review></div>`;
   for(const details of root.querySelectorAll('details'))if(openDetails.has(details.querySelector('summary')?.textContent))details.open=true;
+  if(catalog)populateLibrarySelect();
+  else ensureCatalog().then(populateLibrarySelect).catch(()=>{});
  }
  function review(next,label){
   validateManifest(next,{mapAssets:mapAssets()});const current=getManifest(),changes=[];
@@ -43,27 +72,43 @@ export function mountAssembly(root,api){
    if(action==='finish-edit'||action==='cancel-edit'){await closeEditor(action==='finish-edit');return;}
    if(pending)throw Error('Apply or discard the pending change first.');
    if(action==='edit'){await openEditor();return;}const m=await upgrade(),s=m.scenes.find(s=>s.id===selected),i=m.scenes.indexOf(s);
-   if(action==='panipat'){const url=new URL('../asset-libraries/historical-army-commanders-v1.json',import.meta.url),response=await fetch(url);if(!response.ok)throw Error('Army library could not load.');const library=await response.json();for(const asset of library.assets)if(!m.assets.some(a=>a.url===asset.url))m.assets.push({id:m.assets.some(a=>a.id===asset.id)?crypto.randomUUID():asset.id,name:asset.name,url:asset.url,credit:asset.credit||'See Historical Army & Commanders v1 provenance manifest.'});await apply(m);return;}
+   if(action==='load-asset-library'){
+    const libraries=await ensureCatalog(),chosenId=root.querySelector('[data-asset-library]')?.value||libraries[0]?.id;
+    const entry=libraries.find(l=>l.id===chosenId);if(!entry||!safeRelativeAssetPath(entry.path))throw Error('Choose a valid reusable artwork library.');
+    const response=await fetch(new URL(entry.path,catalogUrl));if(!response.ok)throw Error(`Asset library ${entry.title||entry.id} could not load.`);
+    const library=await response.json();if(library?.format!=='invincible-map-assets'||!Array.isArray(library.assets))throw Error('Invalid asset library file format.');
+    for(const asset of library.assets)if(!m.assets.some(a=>a.url===asset.url))m.assets.push({id:m.assets.some(a=>a.id===asset.id)?crypto.randomUUID():asset.id,name:asset.name,url:asset.url,credit:asset.credit||entry.title||'Reusable artwork library.'});
+    await apply(m);return;
+   }
    if(action==='maps'){const next=appendProjectMaps(m,getProject());review(next,`Append ${next.scenes.length-m.scenes.length} map scenes as independent copies?`);return;}
-   if(action==='add'){const kind=root.querySelector('[data-add-kind]').value;const data=kind==='battlefield'?emptyBattlefield():kind==='map'?{animation:{format:'invincible-map-animation',version:1,duration:5,aspectRatio:m.aspectRatio,basemap:'terrain',terrain:true,camera:[{time:0,center:[76.97,29.39],zoom:7,pitch:0,bearing:0}],layers:[]}}:{};const row={id:crypto.randomUUID(),name:kind==='battlefield'?'Battlefield':kind==='map'?'Map':'Title',startSeconds:0,durationSeconds:5,engineType:kind,engineData:data,overlays:kind==='graphic'?[{id:crypto.randomUUID(),type:'text',text:'Your story',fontSize:64}]:[]};selected=row.id;await apply(arrangeScenes(m,[...m.scenes,row],{mapAssets:mapAssets()}));return;}
+   if(action==='add'){const kind=root.querySelector('[data-add-kind]').value;const data=kind==='battlefield'?emptyBattlefield():kind==='map'?{project:{scenes:[{id:crypto.randomUUID(),duration:5}],historicalMap:createDefaultMap()},sourceStart:0}:{};const row={id:crypto.randomUUID(),name:kind==='battlefield'?'Battlefield':kind==='map'?'Map':'Title',startSeconds:0,durationSeconds:5,engineType:kind,engineData:data,overlays:kind==='graphic'?[{id:crypto.randomUUID(),type:'text',text:'Your story',fontSize:64}]:[]};selected=row.id;await apply(arrangeScenes(m,[...m.scenes,row],{mapAssets:mapAssets()}));return;}
    if(action==='remove-audio-clip'){m.audioClips=m.audioClips.filter(a=>a.id!==audioSelected);audioSelected='';review(m,'Remove this recording from the timeline?');return;}
    if(!s)return;
    if(action==='up'&&i>0)[m.scenes[i-1],m.scenes[i]]=[m.scenes[i],m.scenes[i-1]];
    if(action==='down'&&i<m.scenes.length-1)[m.scenes[i+1],m.scenes[i]]=[m.scenes[i],m.scenes[i+1]];
-   if(action==='duplicate'){const copy=structuredClone(s);copy.id=crypto.randomUUID();copy.name=(copy.name||copy.engineType)+' copy';m.scenes.splice(i+1,0,copy);}
+   if(action==='duplicate'){const copy=structuredClone(s);copy.id=crypto.randomUUID();copy.name=(copy.name||s.engineType)+' copy';m.scenes.splice(i+1,0,copy);}
    if(action==='remove')m.scenes.splice(i,1);
    if(['up','down','duplicate','remove'].includes(action))review(arrangeScenes(m,m.scenes,{mapAssets:mapAssets()}),'Update scene order and timing?');
   });
  });
  root.addEventListener('change',e=>{if(e.target.closest('[data-focused-editor]'))return;const target=e.target,key=target.dataset.assemblyProp;
+  if(target.matches('[data-asset-library]')){populateLibrarySelect();return;}
   // A programmatic change followed by blur must not cancel the user's Apply click.
   if(key?.startsWith('audio.')&&pending?.audioClips?.find(a=>a.id===audioSelected)?.[key.slice(6)]===Number(target.value))return;
   if(!key&&!target.matches('[data-compose-audio],[data-compose-media]'))return;run(async()=>{
    if(pending)throw Error('Apply or discard the pending change first.');const m=await upgrade(),s=m.scenes.find(s=>s.id===selected);
-   if(target.matches('[data-compose-audio]')){const role=root.querySelector('[data-audio-role]').value;const additions=[];for(const file of target.files){const buffer=await decodeVoiceover(file),id=crypto.randomUUID();additions.push({id,fileId:id,name:file.name,role,startSeconds:getTime(),trimStart:0,durationSeconds:buffer.duration,gain:1,fadeIn:0,fadeOut:0});putFile(id,file);}m.audioClips.push(...additions);await apply(m);status('Recording added. Save keeps original media on this device.');return;}
+   if(target.matches('[data-compose-audio]')){
+    const role=root.querySelector('[data-audio-role]').value,files=[...target.files],decoded=[],addedIds=[];
+    for(const file of files)decoded.push({file,buffer:await decodeVoiceover(file),id:crypto.randomUUID()});
+    try{
+     for(const item of decoded){addedIds.push(item.id);m.audioClips.push({id:item.id,fileId:item.id,name:item.file.name,role,startSeconds:getTime(),trimStart:0,durationSeconds:item.buffer.duration,gain:1,fadeIn:0,fadeOut:0});putFile(item.id,item.file);}
+     await apply(m);status('Recording added. Save keeps original media on this device.');
+    }catch(error){for(const fid of addedIds)deleteFile?.(fid);throw error;}
+    return;
+   }
    if(target.matches('[data-compose-media]')){const file=target.files[0];if(!file)return;if(file.size>100*1024*1024||!['image/png','image/jpeg','image/webp','video/mp4','video/webm'].includes(file.type))throw Error('Choose PNG/JPEG/WebP or MP4/WebM, up to 100 MB.');const id=crypto.randomUUID(),video=file.type.startsWith('video/');let duration=5;
     if(video){const v=document.createElement('video'),url=URL.createObjectURL(file);try{v.preload='metadata';await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Clip metadata timed out.')),15000);v.onloadedmetadata=()=>{clearTimeout(timer);resolve();};v.onerror=()=>{clearTimeout(timer);reject(Error('Cannot decode this clip.'));};v.src=url;});duration=v.duration;if(!Number.isFinite(duration)||duration<=0)throw Error('Invalid clip duration.');}finally{v.removeAttribute('src');v.load();URL.revokeObjectURL(url);}}
-    m.assets.push({id,name:file.name,fileId:id});const row={id:crypto.randomUUID(),name:file.name,startSeconds:0,durationSeconds:duration,engineType:video?'video':'image',engineData:{assetId:id,fit:'contain',...(video?{trimStart:0}:{})},overlays:[]};selected=row.id;const next=arrangeScenes(m,[...m.scenes,row],{mapAssets:mapAssets()});putFile(id,file);await apply(next);status(video?'Clip added. Its original audio is muted; add a recording in Audio.':'Image added.');return;
+    const prevSelected=selected;m.assets.push({id,name:file.name,fileId:id});const row={id:crypto.randomUUID(),name:file.name,startSeconds:0,durationSeconds:duration,engineType:video?'video':'image',engineData:{assetId:id,fit:'contain',...(video?{trimStart:0}:{})},overlays:[]};selected=row.id;const next=arrangeScenes(m,[...m.scenes,row],{mapAssets:mapAssets()});putFile(id,file);try{await apply(next);}catch(error){selected=prevSelected;deleteFile?.(id);throw error;}status(video?'Clip added. Its original audio is muted; add a recording in Audio.':'Image added.');return;
    }
    if(key.startsWith('audio.')){const a=m.audioClips.find(a=>a.id===audioSelected);a[key.slice(6)]=Number(target.value);review(m,'Change recording timing or volume?');return;}if(!s)return;
    if(key==='name')s.name=target.value;else if(key==='duration')Object.assign(s,resizeScene(s,Number(target.value)));else if(key==='transition')s.transition={type:target.value,durationSeconds:target.value==='fade'?Math.min(.3,s.durationSeconds/2):0};else if(key==='fade')s.transition={type:'fade',durationSeconds:Number(target.value)};else if(key==='trim')s.engineData.trimStart=Number(target.value);else if(key==='sourceStart')s.engineData.sourceStart=Number(target.value);else if(key==='fit')s.engineData.fit=target.value;else if(key==='text'){const title=s.overlays.find(o=>o.type==='text');if(title)title.text=target.value;else s.overlays.push({id:crypto.randomUUID(),type:'text',text:target.value,fontSize:64});}
