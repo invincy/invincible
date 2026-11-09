@@ -19,3 +19,6 @@ body{background:radial-gradient(ellipse at 80% 0,rgba(36,67,101,.25),transparent
 @media(max-width:850px){.script-panel textarea{height:36vh;min-height:240px}.heading{margin-bottom:12px}.heading h1{font-size:34px}.panel{padding:20px}.script-label{margin-top:16px}}
 
 .voice-picker:has(#voiceDemo[hidden]){grid-template-columns:minmax(0,1fr)}
+
+.history-panel{grid-column:1/-1}.history-panel .panel-heading{margin-bottom:10px}.history-entry{border-top:1px solid var(--line);padding:18px 0;min-width:0}.history-entry h3{margin:0;font-size:16px;overflow-wrap:anywhere}.history-entry .help{margin:5px 0}.history-excerpt{font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--muted);margin:8px 0}.history-actions{display:flex;gap:8px;flex-wrap:wrap}.history-actions button{border-color:var(--line);font-size:12px}.history-actions [data-action=delete]{color:#ffab9f}
+.history-entry summary{cursor:pointer;font-size:12px;min-height:36px;display:flex;align-items:center}.history-script{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.8}.history-entry details .help{overflow-wrap:anywhere}.history-actions{margin-top:8px}

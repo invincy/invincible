@@ -5,7 +5,7 @@
 <title>Voiceover · Invincible</title>
 <link rel="icon" href="/invincible/favicon.ico" sizes="any">
 <link rel="stylesheet" href="../site-nav.css?v=18">
-<link rel="stylesheet" href="tts.css?v=3">
+<link rel="stylesheet" href="tts.css?v=2026111004">
 <meta name="theme-color" content="#090b10">
 </head>
 <body>
@@ -45,7 +45,13 @@
 <p class="help">Preview and generation use paid Google TTS quota.</p>
 </section>
 <section class="panel result-panel" aria-labelledby="resultHeading"><div><h2 id="resultHeading">03 <span>Listen &amp; export</span></h2><p id="generationStatus" role="status" aria-live="polite">Your recording will appear here.</p></div><div id="recording" hidden><audio id="player" controls preload="metadata" aria-label="Generated voiceover"></audio><div class="download-row"><span id="recordingInfo"></span><a id="download" class="primary" download>Download MP3 ↓</a></div></div></section>
+<section class="panel history-panel" aria-labelledby="historyHeading">
+<div class="panel-heading"><h2 id="historyHeading">04 <span>Voiceover history</span></h2><button id="historyRefresh" type="button" class="quiet">Refresh history</button></div>
+<p id="historyStatus" class="help" role="status" aria-live="polite"></p>
+<p id="historyEmpty" class="help">Completed voiceovers appear here with their scripts and settings. Opening previews are not saved.</p>
+<div id="historyList"></div><button id="historyMore" type="button" class="secondary" hidden>Load more</button>
+</section>
 </div>
 </main>
-<script type="module" src="tts.js?v=4"></script>
+<script type="module" src="tts.js?v=2026111004"></script>
 </body></html>

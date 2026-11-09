@@ -18,6 +18,7 @@ All internal pages use the Firebase project `life-by-adichimp`, the default Fire
 | Invincible AI | Main React app | Existing authenticated Functions tools and private user data |
 | Garage | Native JavaScript | `users/{uid}/garage/main` |
 | Creator Studio | Native JavaScript | Owned/invited `creatorProjects`; legacy `users/{uid}/creator/main` import |
+| Creator voiceover history | Native JavaScript | `users/{uid}/voiceoverHistory/{recordingId}`; script/settings metadata only, no audio |
 | Journal | Separate React bundle | `users/{uid}/journals/{date}/strokes/{id}` |
 | LIC Customer CRM | Native JavaScript | `users/{uid}/licCustomers/{customerId}` |
 | LIC Follow-up Manager | Native JavaScript | `users/{uid}/licFollowups/{policyId}` and `history/{eventId}` beneath each policy |
