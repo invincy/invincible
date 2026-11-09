@@ -5,6 +5,8 @@ description: "Permanent production-quality requirements for every Invincible Map
 
 # Map Editor: every project
 
+Read the root `AGENTS.md` for shared Codex/Antigravity execution rules and context routing. For creative or film work, also read `CREATIVE_BIBLE.md`, `MAP_EDITOR.md` and `VIDEO_PRODUCTION.md` as relevant. Keep these project rules in the repository rather than global settings.
+
 Whenever the task involves Map Editor, map-video planning/import/export, imagery, terrain, geographic labels, country/flag overlays, borders, routes, camera movement or military map visuals, read and follow `docs/map-editor-production-standard.md` **before planning or changing the work**. This applies to all current and future films, not just Panipat.
 
 Use that file as the single detailed standard. Preserve existing editor features and project data. Reuse the existing NASA imagery and sourced/georeferenced overlay system. Require large output-scaled geographic labels, polished rounded cards when appropriate, intentional audio-timed camera/layer motion and genuine frame-by-frame export. Do not add narration captions without the user's instruction. Verify the actual encoded video and record unfinished checks.
