@@ -28,7 +28,7 @@ function guarded(fn){return async request=>{
  catch(error){
   if(error instanceof HttpsError)throw error;
   if(error instanceof GoogleTtsError){
-   if(error.status===401||error.status===403)throw new HttpsError('failed-precondition','Google TTS is not available to this backend. Check its TTS permission, API activation and billing.');
+   if(error.status===401||error.status===403)throw new HttpsError('failed-precondition','Google TTS is not available to this backend. Check API activation, billing and permissions. Gemini additionally needs aiplatform.endpoints.predict (Vertex AI User).');
    if(error.status===429)throw new HttpsError('resource-exhausted','Google TTS quota is busy or exhausted. Try again later.');
    if(error.status===400)throw new HttpsError('invalid-argument','Google rejected this voice/input combination. Check SSML and the selected voice controls.');
   }
@@ -38,10 +38,10 @@ function guarded(fn){return async request=>{
 };}
 exports.creatorTtsVoices=onCall({...options,timeoutSeconds:120},guarded(async()=>({voices:await listVoices()})));
 exports.creatorTtsGenerate=onCall(options,guarded(async request=>{
- const voices=await listVoices();
- try{const voice=voices.find(v=>v.name===request.data?.voiceName);prepareRequests(parseInput(request.data,voice),voice);}
+ const voices=await listVoices();let charge;
+ try{const voice=voices.find(v=>v.name===request.data?.voiceName);const parts=prepareRequests(parseInput(request.data,voice),voice);charge=parts.reduce((sum,part)=>sum+Buffer.byteLength(part.text||part.ssml,'utf8')+Buffer.byteLength(part.prompt||'','utf8'),0);}
  catch(error){throw new HttpsError('invalid-argument',error.message);}
- const release=await reserveUsage(request.auth.uid,Buffer.byteLength(request.data.text,'utf8'));
+ const release=await reserveUsage(request.auth.uid,charge);
  try{return await generate(request.data,{voices});}
  finally{try{await release();}catch{logger.warn('Creator TTS usage lock release failed');}}
 }));

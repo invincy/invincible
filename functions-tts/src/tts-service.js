@@ -2,6 +2,7 @@ const {mkdtemp,writeFile,readFile,rm}=require('node:fs/promises');
 const path=require('node:path'),os=require('node:os'),{execFile}=require('node:child_process'),{promisify}=require('node:util');
 const {getApp}=require('firebase-admin/app');
 const {normalizeVoices,parseInput,prepareRequests,readWav,makeWav,SAMPLE_RATE}=require('./tts-model');
+const {geminiVoices}=require('./tts-gemini');
 const execute=promisify(execFile);
 class GoogleTtsError extends Error{constructor(status){super('Google Text-to-Speech request failed.');this.status=status;}}
 async function googleRequest(route,body,{fetcher=fetch,credential=getApp().options.credential}={}){
@@ -16,7 +17,7 @@ async function googleRequest(route,body,{fetcher=fetch,credential=getApp().optio
 let cachedVoices=null,voicesAt=0;
 async function listVoices(request=googleRequest){
  if(request===googleRequest&&cachedVoices&&Date.now()-voicesAt<300000)return cachedVoices;
- const voices=normalizeVoices((await request('voices')).voices||[]);
+ const voices=[...normalizeVoices((await request('voices')).voices||[]),...geminiVoices()];
  if(request===googleRequest){cachedVoices=voices;voicesAt=Date.now();}
  return voices;
 }
@@ -39,9 +40,9 @@ async function generate(data,{voices,request=googleRequest,encoder=encodeMp3}={}
  const chunks=[];let pcmBytes=0;
  for(const part of requests){
   const audioConfig={audioEncoding:'LINEAR16',sampleRateHertz:SAMPLE_RATE,volumeGainDb:input.volume};
-  if(voice.capabilities.speed)audioConfig.speakingRate=input.speed;
+  if(voice.capabilities.speed&&voice.family!=='Gemini')audioConfig.speakingRate=input.speed;
   if(voice.capabilities.pitch)audioConfig.pitch=input.pitch;
-  const response=await request('text:synthesize',{input:part,voice:{languageCode:input.languageCode,name:voice.name},audioConfig});
+  const response=await request('text:synthesize',{input:part,voice:{languageCode:input.languageCode,name:voice.speaker||voice.name,...(input.modelName?{modelName:input.modelName}:{})},audioConfig});
   if(typeof response.audioContent!=='string')throw Error('Google returned no audio.');
   const pcm=readWav(Buffer.from(response.audioContent,'base64'));
   pcmBytes+=pcm.length;
