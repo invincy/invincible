@@ -1,3 +1,7 @@
+# Current navigation
+
+As of 10 November 2026, Creator Studio → Maps opens the universal Map Editor directly. Recording, local audio and source controls remain under **Advanced / recording**. The standalone demo pages and append-demo actions described in the historical implementation notes below have been retired; reusable JSON and source references remain.
+
 # Creator historical production — Phase 1 draft
 
 ## Inspection and implementation plan

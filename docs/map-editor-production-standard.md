@@ -22,7 +22,7 @@ Start with [the repository README](../README.md), [Creator map architecture](cre
 - `creator/map-animation-import.js`: accepted instruction schema and copied brief.
 - `creator/map-editor-model.js`, `creator/map-editor-renderer.js`: normalization, layers and artwork rendering.
 - `creator/history-model.js`, `creator/history-player.js`, `creator/map-video-export.js`: timeline, camera, preview and export.
-- `creator/map-animation-example.json`, `creator/map-animation-demo.html`: working declarative example, not a final visual-quality benchmark.
+- `creator/map-animation-example.json`: reusable declarative reference for the main Map Editor, not a final visual-quality benchmark.
 - `creator/history-data/border-flags-v3/manifest.json` and `SOURCES.md`: the existing sourced flag-map treatment the user wants to build on. Read each texture's corners, regional coverage and source notes.
 
 The earlier border/country-overlay work is a visual reference for real NASA imagery, georeferenced artwork, separate boundaries and deliberate camera movement. Do not copy one film's territorial claims, country list, timing or colours into every other film. Some flag textures cover only regional clips, not entire countries. Use their recorded geographic corners and never stretch a regional clip across a whole country.

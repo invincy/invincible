@@ -36,23 +36,6 @@ export const testPluginFactory = (project, spec, options) => ({
 });
 `;
 
-const customDemoCatalog=JSON.stringify({
- format:'invincible-map-demos',
- version:1,
- demos:[
-  {id:'british-india',title:'British India · Map engine demo',description:'Built-in standalone demo.',builtIn:true},
-  {id:'custom-doc',title:'Custom Modular Demo',description:'Loaded cleanly via data catalog + adapter + optional plugin.',projectUrl:'./history-data/__test_project.json',adapterModule:'./history-data/__test_adapter.mjs',adapterExport:'adaptCustomDemo',pluginModule:'./history-data/__test_plugin.mjs',pluginExport:'customPluginFactory',pluginId:'custom-doc-plugin'}
- ]
-});
-const customPluginSource=`export const customPluginFactory = () => ({ policy:{ scaling:'shortEdge1080', attribution:{ sourceCredit:'Custom Catalog Source' } }, render(){ window.__customDemoPluginRendered = (window.__customDemoPluginRendered || 0) + 1; } });`;
-const customAdapterSource=`export function adaptCustomDemo(raw, entry){ return { ...raw, title: entry.title }; }`;
-const customProjectJson=JSON.stringify({
- scenes:[{id:'cs1',duration:5,voiceover:'Custom modular narration',visual:'Custom map view',productionMethods:['Animated Maps'],completed:false}],
- historicalMap:{version:1,theme:'night',basemap:{id:'physical',labels:false,borders:false},overlayPreset:'documentary',overlayPlugin:'custom-doc-plugin',events:[{id:'ev1',sceneId:'cs1',offset:0,label:'Custom Marker',date:'2026',coordinates:[78,22],sourceUrl:'https://example.org/src',sourceNote:'Synthetic catalog test marker.'}],features:{type:'FeatureCollection',features:[]},camera:[{sceneId:'cs1',offset:0,center:[78,22],zoom:4,bearing:0,pitch:0}]},
- productionClips:[],
- assets:[]
-});
-
 function wav(seconds=1){
  const rate=48000,frames=Math.round(rate*seconds),b=Buffer.alloc(44+frames*2);
  b.write('RIFF');b.writeUInt32LE(b.length-8,4);b.write('WAVEfmt ',8);b.writeUInt32LE(16,16);b.writeUInt16LE(1,20);b.writeUInt16LE(1,22);b.writeUInt32LE(rate,24);b.writeUInt32LE(rate*2,28);b.writeUInt16LE(2,32);b.writeUInt16LE(16,34);b.write('data',36);b.writeUInt32LE(frames*2,40);
@@ -65,10 +48,6 @@ const server=http.createServer((req,res)=>{
   if(pathname==='/player-fixture'){res.setHeader('Content-Type','text/html; charset=utf-8');res.end(playerPageFixture);return;}
   if(pathname==='/map-editor-fixture'){res.setHeader('Content-Type','text/html; charset=utf-8');res.end(mapEditorFixture);return;}
   if(pathname==='/studio-fixture'){res.setHeader('Content-Type','text/html; charset=utf-8');res.end(studioFixture);return;}
-  if(pathname==='/invincible/creator/history-data/__test_demos.json'){res.setHeader('Content-Type','application/json; charset=utf-8');res.end(customDemoCatalog);return;}
-  if(pathname==='/invincible/creator/history-data/__test_plugin.mjs'){res.setHeader('Content-Type','text/javascript; charset=utf-8');res.end(customPluginSource);return;}
-  if(pathname==='/invincible/creator/history-data/__test_adapter.mjs'){res.setHeader('Content-Type','text/javascript; charset=utf-8');res.end(customAdapterSource);return;}
-  if(pathname==='/invincible/creator/history-data/__test_project.json'){res.setHeader('Content-Type','application/json; charset=utf-8');res.end(customProjectJson);return;}
   if(pathname==='/test-assets/ok.png'){res.setHeader('Content-Type','image/png');res.end(Buffer.from(tinyPngBase64,'base64'));return;}
   if(pathname==='/test-assets/fail.png'){res.statusCode=404;res.end('Missing');return;}
   if(pathname==='/fixture.mjs'||pathname==='/invincible/shared/firebase-client.js'){res.setHeader('Content-Type','text/javascript; charset=utf-8');res.end(firebaseFixture);return;}
@@ -203,29 +182,6 @@ const server=http.createServer((req,res)=>{
    assert.ok(result.pixelGreen>200,'Plugin render painted onto history overlay');
    assert.equal(result.gotPlugin,true);
    assert.equal(result.removed,true);
-   await ctx.close();
-  }
-
-  // 2. Data-driven history-demo.html + custom catalog loading with no Panipat hardcoding.
-  {
-   const ctx=await browser.newContext({viewport:{width:1200,height:900}});
-   const page=await ctx.newPage();
-   page.on('pageerror',e=>errors.push('demo:'+e.message));
-   await page.route('https://**/*',r=>r.abort());
-   await page.goto(base+'/invincible/creator/history-demo.html');
-   await page.waitForFunction(()=>[...document.querySelectorAll('#demoSelect option')].some(o=>o.value==='british-india'));
-   assert.match(await page.title(),/British India/);
-   assert.equal(await page.evaluate(async()=>{
-    const {loadDemoProject}=await import('/invincible/creator/history-demo.js');
-    const loaded=await loadDemoProject('custom-doc',{catalogUrl:'/invincible/creator/history-data/__test_demos.json'});
-    return loaded.project.title+':'+loaded.project.historicalMap.overlayPlugin;
-   }),'Custom Modular Demo:custom-doc-plugin');
-   await page.route('**/invincible/creator/history-data/demos.json',async route=>{
-    const response=await route.fetch({url:base+'/invincible/creator/history-data/__test_demos.json'});
-    await route.fulfill({response});
-   });
-   await page.goto(base+'/invincible/creator/history-demo.html?project=custom-doc');
-   await page.waitForFunction(()=>document.title.includes('Custom Modular Demo')&&window.__customDemoPluginRendered>0);
    await ctx.close();
   }
 
@@ -450,6 +406,6 @@ const server=http.createServer((req,res)=>{
   }
 
   assert.deepEqual(errors,[]);
-  console.log('Universal map architecture browser checks passed: presets, shortEdge1080, plugins, catalogs, scene-binding, rollbacks and multi-tab revision protection.');
+  console.log('Universal map architecture browser checks passed: presets, shortEdge1080, plugins, scene-binding, rollbacks and multi-tab revision protection.');
  }finally{await browser?.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

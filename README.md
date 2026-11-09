@@ -241,7 +241,7 @@ All agents and contributors must read the [permanent Map Editor production stand
 
 ## Historical Creator production — Phase 1 draft
 
-Creator's existing workbench now includes **Maps** and **Clips**. Maps supports sourced events/GeoJSON, scene-linked camera/timing, local voiceover preview and real-time WebM export. Clips groups adjacent storyboard scene IDs and retains prompts, keyframe references and versioned manual video assets. The unsaved demonstration is `creator/history-demo.html`; existing projects can explicitly append its British India scenes. React, Firebase auth, existing paths and import columns remain unchanged.
+Creator's existing workbench now includes **Maps** and **Clips**. Maps supports sourced events/GeoJSON, scene-linked camera/timing, local voiceover preview and real-time WebM export. Clips groups adjacent storyboard scene IDs and retains prompts, keyframe references and versioned manual video assets. Map projects use the main visual editor; obsolete standalone demos and sample-project buttons have been retired. React, Firebase auth, existing paths and import columns remain unchanged.
 
 [Architecture, official Kling feasibility and remaining work](docs/creator-history-phase1.md) distinguishes implemented behavior from unfinished territorial geometry, live OAuth/account verification, paid generation, full sequence export and P4 integrations. No production deployment or billed generation is included. Run `node --test tests/creator*.mjs`, `npm --prefix functions test` and `node tests/creator-history-browser.cjs` (Playwright Chromium required). MapLibre's pinned local files regenerate with `npm run vendor:creator-map`.
 
