@@ -1,12 +1,12 @@
-import {drawDocumentary,presentationAt} from './map-documentary.js?v=2026110903';
+import {drawDocumentary,presentationAt} from './map-documentary.js?v=2026111002';
 import {ensureDocumentaryFonts} from './map-fonts.js?v=2026110903';
-import {drawDefaultLabels,drawDefaultCredits} from './map-labels.js?v=2026110903';
+import {drawDefaultLabels,drawDefaultCredits} from './map-labels.js?v=2026111002';
 import {locationVisible} from './map-globe.js';
 import {CanvasHistoricalMap} from './history-canvas.js';
-import {mapFrame,durationOf,sceneTimeline} from './history-model.js?v=2026110903';
-import {createVisualRenderer} from './map-editor-renderer.js?v=2026110903';
+import {mapFrame,durationOf,sceneTimeline} from './history-model.js?v=2026111002';
+import {createVisualRenderer} from './map-editor-renderer.js?v=2026111002';
 import {baseStyle,styleFor} from './map-style-library.js';
-import {layerAlpha} from './map-editor-model.js?v=2026110903';
+import {layerAlpha} from './map-editor-model.js?v=2026111002';
 import {exportDimensions,encodeMapVideo} from './map-video-export.js';
 import {resolveOverlayPolicy} from './map-overlay-presets.js?v=2026110903';
 

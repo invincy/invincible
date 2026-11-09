@@ -1,4 +1,4 @@
-import {audioChunk,mixAudioChunk} from './audio.js';
+import {audioChunk,mixAudioChunk} from './audio.js?v=2026111002';
 // Dedicated audio-inclusive path; the existing Map Editor exporter stays unchanged.
 export async function encodeStudioVideo({canvas,timeline,drawFrame,audioBuffer,audioTracks=[],audioGain=1,onProgress=()=>{},onAudioCodec=()=>{},signal}){
  if(!globalThis.VideoEncoder)throw Error('MP4 export needs WebCodecs in current Chrome or Edge.');

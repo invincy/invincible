@@ -1,5 +1,5 @@
 import {validatePresentation} from './map-defaults.js?v=2026110903';
-import {layerActive,layerAlpha,layerStart} from './map-editor-model.js?v=2026110903';
+import {layerActive,layerAlpha,layerStart} from './map-editor-model.js?v=2026111002';
 import {locationVisible} from './map-globe.js';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),smooth=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
 const rows=p=>{let at=0;return(p.scenes||[]).map(scene=>{const start=at;at+=Number(scene.duration)||0;return{scene,start,end:at};});};

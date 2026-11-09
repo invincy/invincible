@@ -1,6 +1,6 @@
 export async function decodeVoiceover(file){
  if(!file||file.size>100*1024*1024)throw Error('Choose an MP3 or WAV up to 100 MB.');
- const context=new AudioContext();
+ const context=new AudioContext({sampleRate:48000});
  try{const buffer=await context.decodeAudioData(await file.arrayBuffer());if(buffer.numberOfChannels>2)throw Error('Use a mono or stereo voiceover; multichannel audio is not downmixed automatically.');if(buffer.duration>600)throw Error('Voiceover must be at most ten minutes.');return buffer;}finally{await context.close();}
 }
 // Chunking bounds extra memory and preserves all original samples, with leading silence.
@@ -21,9 +21,10 @@ export function mixAudioChunk(tracks,at,length,rate=48000){
  }}}
  for(let i=0;i<data.length;i++)data[i]=Math.max(-1,Math.min(1,data[i]));return {data,channels};
 }
+export function audioTrimWithinSource(clip,buffer){return clip.trimStart+clip.durationSeconds<=buffer.duration+1/Math.min(48000,buffer.sampleRate)+Number.EPSILON;}
 export async function loadAudioTracks(manifest,getFile){
  const clips=manifest.audioClips||[],buffers=new Map(),tracks=[];
- for(const clip of clips){let buffer=buffers.get(clip.fileId);if(!buffer){const file=await getFile(clip.fileId);if(!file)throw Error('Missing recording on this device: '+clip.name);buffer=await decodeVoiceover(file);buffers.set(clip.fileId,buffer);}if(clip.trimStart+clip.durationSeconds>buffer.duration+1/48000)throw Error('Audio trim exceeds original recording: '+clip.name);tracks.push({...clip,buffer});}return tracks;
+ for(const clip of clips){let buffer=buffers.get(clip.fileId);if(!buffer){const file=await getFile(clip.fileId);if(!file)throw Error('Missing recording on this device: '+clip.name);buffer=await decodeVoiceover(file);buffers.set(clip.fileId,buffer);}if(!audioTrimWithinSource(clip,buffer))throw Error('Audio trim exceeds original recording: '+clip.name);tracks.push({...clip,buffer});}return tracks;
 }
 // Piecewise-linear envelopes match audioGainAt, including playback from the middle of a fade.
 export function scheduleAudioTracks(context,tracks,time){

@@ -1,6 +1,6 @@
 import{makeScene}from'./storyboard-model.js?v=3';
-import{createProductionWorkbench}from'./production-workbench.js?v=2026111001';
-import{projectProgress,canonicalScript}from'./production-model.js?v=5';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026111002';
+import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{doc,getDoc,onSnapshot,runTransaction,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{splitVoiceoverScript}from"./scene-tools.js?v=2";

@@ -1,5 +1,7 @@
 # Current navigation
 
+Current workflow: [one video flow and shared cloud library](creator-single-flow.md). The historical local-only/undeployed-upload notes below describe earlier implementations and are superseded for shared uploads and owner draft sync.
+
 As of 10 November 2026, Creator Studio → Maps opens the universal Map Editor directly. Recording, local audio and source controls remain under **Advanced / recording**. The standalone demo pages and append-demo actions described in the historical implementation notes below have been retired; reusable JSON and source references remain.
 
 # Creator historical production — Phase 1 draft

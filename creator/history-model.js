@@ -1,6 +1,6 @@
 // Pure, additive production metadata. Master storyboard IDs and order remain canonical.
-import {automaticCamera,validateDocumentary} from './map-documentary.js?v=2026110903';
-import {validateVisual,layerActive} from './map-editor-model.js?v=2026110903';
+import {automaticCamera,validateDocumentary} from './map-documentary.js?v=2026111002';
+import {validateVisual,layerActive} from './map-editor-model.js?v=2026111002';
 import {validatePresentation} from './map-defaults.js?v=2026110903';
 import {validateBasemap} from './map-style-library.js';
 import {validateOverlayConfig} from './map-overlay-presets.js?v=2026110903';

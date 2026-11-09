@@ -1,6 +1,6 @@
 import {locationVisible} from './map-globe.js';
-import {icons,layerActive,layerAlpha,layerStart} from './map-editor-model.js?v=2026110903';
-import {mapFrame,timeOf} from './history-model.js?v=2026110903';
+import {icons,layerActive,layerAlpha,layerStart} from './map-editor-model.js?v=2026111002';
+import {mapFrame,timeOf} from './history-model.js?v=2026111002';
 // Reference units are pixels at a 1080-pixel short edge. Preview and export share this compositor.
 function wrap(ctx,text,maxWidth){
  const lines=[];let line='';const graphemes=new Intl.Segmenter(undefined,{granularity:'grapheme'});

@@ -233,3 +233,7 @@ Version 2 video manifests and original voice/music/effect/video/image Blobs use 
 ## Creator voiceover — November 9, 2026
 
 The new TTS endpoints use existing Firebase authentication plus an explicit CREATOR_TTS_ACCOUNT_UID allowlist. Scripts/settings stay in account-scoped local browser drafts; generated audio is returned directly and held in memory for playback/download. Server-only _creatorTtsUsage/{uid} records hold hourly counts, byte totals and a short-lived generation lock. No customer/project data migration, Storage bucket or Firestore rule change is introduced. Runtime Google TTS permission and production account access require deployment and signed-in verification.
+
+## Creator shared media — November 10, 2026
+
+See [one Creator flow](creator-single-flow.md) for the account-owned private bucket, backend-only _creatorMedia metadata/drafts, stable cloud file IDs and owner draft revisions. Shared uploads replace the older undeployed map upload path; old saved references remain supported. Local IndexedDB remains a recovery/cache store. No Firestore client permission is broadened.

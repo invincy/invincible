@@ -4,7 +4,7 @@
   "scripts": {
     "build": "node scripts/clean-react-assets.mjs && npm --prefix react run build && node scripts/sync-react-assets.mjs",
     "check": "node scripts/check-site.mjs",
-    "test": "node --test tests/*.mjs && npm --prefix functions test",
+    "test": "node --test tests/*.mjs && npm --prefix functions test && npm --prefix functions-media test",
     "test:browser": "node tests/storage-browser.cjs && node tests/navigation-browser.cjs && node tests/dashboard-reminders-browser.cjs && node tests/focus-orb-browser.cjs && node tests/task-copy-browser.cjs && node tests/creator-storyboard-browser.cjs && node tests/journal-tools-browser.cjs && node tests/journal-notebook-browser.cjs && node tests/lic-follow-up-browser.cjs && node tests/lic-crm-browser.cjs && node tests/lic-cashier-browser.cjs && npm run test:crm:browser && node tests/workday-cases-browser.cjs && node tests/account-menu-browser.cjs",
     "dev:v2": "npm --prefix react run dev:v2",
     "build:v2": "npm --prefix react run build:v2",
@@ -23,7 +23,7 @@
     "test:map-defaults": "node --test tests/creator-map-defaults.mjs && node tests/creator-map-defaults-browser.cjs",
     "test:map-editor": "node --test tests/creator-map-editor.mjs && node tests/creator-map-editor-browser.cjs",
     "vendor:creator-map": "node scripts/vendor-creator-map.mjs",
-    "test:video-studio": "node --test tests/creator-video-studio.mjs tests/creator-studio-composition.mjs && node tests/creator-video-studio-browser.cjs && node tests/creator-studio-composition-browser.cjs",
+    "test:video-studio": "node --test tests/creator-video-studio.mjs tests/creator-studio-composition.mjs && node tests/creator-video-studio-browser.cjs && node tests/creator-studio-composition-browser.cjs && node tests/creator-single-flow-browser.cjs",
     "vendor:video-studio": "node scripts/vendor-studio-video.mjs",
     "test:tts": "npm --prefix functions-tts test && node tests/creator-tts-browser.cjs"
   },

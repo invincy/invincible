@@ -1,5 +1,6 @@
 // End-to-end Chromium checks for universal Map Editor architecture, plugins, rollback and multi-tab revision protection.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
+const {handler:mediaHandler}=require('./fixtures/creator-media-service.cjs');
 const {chromium}=require('playwright'),root=path.resolve(__dirname,'..');
 
 const tinyPngBase64='iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAEklEQVR42mNk+M9Qz0AEYBxVSF8AxQEJ+Qf5AAAAAElFTkSuQmCC';
@@ -19,7 +20,7 @@ const firebaseFixture=[
 
 const playerPageFixture=`<!doctype html><meta charset="utf-8"><style>body{margin:0;background:#09111a}.stage{position:relative;width:480px;height:854px}</style><div class="stage" id="host"></div>`;
 const mapEditorFixture=`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/invincible/creator/history-workspace.css"><style>body{margin:0;background:#0c1722;font-family:system-ui}.history-workspace{max-height:none}</style><div id="editor"></div><script type="module">import {mountMapEditor} from '/invincible/creator/map-editor.js';import {emptyMap} from '/invincible/creator/history-model.js';window.project={id:'p-edit',scenes:[{id:'s1',duration:4,voiceover:'Line one',voiceoverTimestamp:'00:00.000–00:04.000',visual:'Opening',productionMethods:['Voice'],completed:true},{id:'s2',duration:6,voiceover:'Line two',voiceoverTimestamp:'00:04.000–00:10.000',visual:'Body',productionMethods:['Voice'],completed:true}],historicalMap:{...emptyMap(),theme:'parchment',basemap:{id:'physical',labels:false,borders:false},overlayPreset:'legacy',overlayPolicy:{dateBanner:{height:52}}},custom:{keep:true}};window.changes=0;window.editor=mountMapEditor(document.querySelector('#editor'),{getProject:()=>project,onChange:()=>changes++,onAdvanced:()=>{}});</script>`;
-const studioFixture=`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/invincible/creator/production-workbench.css"><link rel="stylesheet" href="/invincible/creator/video-studio/studio.css"><style>body{margin:0;background:#071426;font-family:system-ui}*{box-sizing:border-box}</style><div id="root"></div><script type="module">import {createProductionWorkbench} from '/invincible/creator/production-workbench.js';window.project={id:'studio-rollback',title:'Rollback Check',scenes:[],historicalMap:{version:1,theme:'night',events:[],features:{type:'FeatureCollection',features:[]},camera:[]}};window.workbench=createProductionWorkbench(document.querySelector('#root'),{getProject:()=>project,enableVideoStudio:true,getAccountId:()=>'owner',onChange:()=>{},copyText:async()=>{}});workbench.render();</script>`;
+const studioFixture=`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/invincible/creator/production-workbench.css"><link rel="stylesheet" href="/invincible/creator/video-studio/studio.css"><style>body{margin:0;background:#071426;font-family:system-ui}*{box-sizing:border-box}</style><div id="root"></div><script type="module">import {createProductionWorkbench} from '/invincible/creator/production-workbench.js';window.project={id:'studio-rollback',title:'Rollback Check',scenes:[],historicalMap:{version:1,theme:'night',events:[],features:{type:'FeatureCollection',features:[]},camera:[]}};const mediaService=(await import('/test-media-client.js')).testMedia(new URLSearchParams(location.search).get('account')||'owner');window.workbench=createProductionWorkbench(document.querySelector('#root'),{mediaService,getProject:()=>project,enableVideoStudio:true,getAccountId:()=>'owner',onChange:()=>{},copyText:async()=>{}});workbench.render();</script>`;
 
 const testPluginSource=`
 export const testPluginFactory = (project, spec, options) => ({
@@ -43,6 +44,7 @@ function wav(seconds=1){
 }
 
 const server=http.createServer((req,res)=>{
+ if(mediaHandler(req,res))return;
  try{
   const pathname=new URL(req.url,'http://localhost').pathname;
   if(pathname==='/player-fixture'){res.setHeader('Content-Type','text/html; charset=utf-8');res.end(playerPageFixture);return;}

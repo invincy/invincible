@@ -1,5 +1,11 @@
 # Cleanup review — 2026-10-03
 
+## One Creator Studio flow — November 10, 2026
+
+Promoted one shared upload/library area and complete-video JSON handoff into the opening Studio screen, retaining focused map/battlefield editors and audio MP4 export. Studio, map and production-clip uploads share account-owned immutable cloud originals; named metadata and stable IDs are reused across projects/devices. Owner video drafts and brand profiles sync with revision conflict protection, keeping local recovery. Added dedicated creator-media backend and private media bucket; existing AI/TTS functions, Firestore rules and user project records are preserved. Historical local-only notes are superseded by docs/creator-single-flow.md.
+
+Validation includes full root/Functions/media tests, actual handler account-denial tests, original-byte validation, independent-context media/draft retrieval, one-JSON map+army-overlay+voice export, stale-device protection, existing Studio/map/default/universal browser acceptance, production build and site checks. Real signed-in production upload acceptance remains separate and must be recorded in the release report.
+
 ## Creator Studio product cleanup — November 10, 2026
 
 Maps now opens the shared visual Map Editor directly; Advanced / recording retains the local audio, source and capture controls, and Production Clips remains available. Removed the canned cloud Demo action, two standalone map demo pages/catalog/loader, the unused predecessor storyboard editor, a one-off local checker, and the optional Panipat film export fixture. Historical geography and animation JSON remain as references; the Hindi fonts, map engine, MP4 encoder, reusable asset catalog, defaults and project data are preserved. Internal regression fixtures live under tests and are excluded from the public site together with development/server source. Native importer versions were bumped together.

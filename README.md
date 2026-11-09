@@ -22,6 +22,10 @@ This document is the starting point for understanding what runs today, where to 
 
 The main React app chooses and lazily loads its page in `react/src/App.jsx`. Its HTML entry points load the same generated JS/CSS assets. Garage, Creator, Journal, and LIC have their own entry points; they are not silently redirected through React.
 
+## Creator Studio: one video flow
+
+Studio now opens with shared cloud uploads, one complete-video JSON import, the scene/audio timeline and MP4 export on the same screen. Assets uploaded through Studio, Maps or production clips use the same private account library; owners can sync complete video drafts across devices. Existing projects and detailed editors remain available. See [the workflow and storage contract](docs/creator-single-flow.md).
+
 ## Universal Creator Studio
 
 Creator Studio is a shared production workspace for independent videos. Film content stays in each project’s JSON, assets, voiceover and timing; the shared Map Editor never selects rendering by a film title or ID. Optional overlays use explicitly registered, versioned plugin factories. New projects share the saved default style, while older projects retain their appearance.
