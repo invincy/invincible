@@ -24,6 +24,9 @@ silently choose a drive on the user's computer.
 
 ## Secure backend activation
 
+The creator-tts backend was deployed successfully on November 9, 2026. The configured owner account completed a real browser paste → live voice catalogue → male Hindi generation → MP3 download check. The catalogue returned 2,066 voices and the downloaded recording was approximately 3.5 seconds. No local Python process or uploaded key is needed for normal site use.
+
+
 The page calls `creatorTtsVoices` and `creatorTtsGenerate` in asia-south1 on the
 existing Firebase app/project (`life-by-adichimp`). It never requests a key upload.
 The server uses its runtime Application Default Credentials. The existing private
@@ -48,8 +51,8 @@ TTS has its own functions-tts package and creator-tts codebase, so the existing 
 No new OpenAI credential is used by this feature. Publish the static page using the
 repository's usual GitHub Pages workflow after the backend is ready.
 
-A production sign-in is required to confirm the exact account and runtime permissions.
-Local fixtures cannot establish either. The local service-account key can synthesize
+A signed-in production-backend check confirmed the configured account and runtime access.
+Local fixtures alone cannot establish either. The local service-account key can synthesize
 speech but returned no deployment/IAM administration permissions in a read-only check.
 
 ## Audio processing and limits
