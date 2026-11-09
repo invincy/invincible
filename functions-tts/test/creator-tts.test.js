@@ -94,3 +94,11 @@ test('real MP3 encoder produces a nonempty, fully decodable recording',async()=>
  const pcm=Buffer.alloc(48000);for(let i=0;i<24000;i++)pcm.writeInt16LE(Math.round(3000*Math.sin(2*Math.PI*440*i/24000)),i*2);
  const result=await encodeMp3(makeWav([pcm]));assert.ok(result.length>10000);
 });
+
+test('social and empathetic delivery preserve narration and carry distinct performance prompts',async()=>{
+ for(const [delivery,expected] of [['social',/social media delivery/],['empathetic',/empathetic and understanding/]]){
+  const text='आज एक नई शुरुआत करते हैं। Let’s make this happen!';let seen;
+  await generate({...input,text,voiceName:gemini.name,engine:'gemini',delivery,direction:'Keep the language switch clear.'},{voices:[gemini],request:async(route,body)=>{seen=body;return {audioContent:makeWav([Buffer.alloc(4800)]).toString('base64')};},encoder:async()=>Buffer.from('fixture')});
+  assert.equal(seen.input.text,text);assert.match(seen.input.prompt,expected);assert.match(seen.input.prompt,/Keep the language switch clear/);assert.equal(seen.audioConfig.speakingRate,undefined);
+ }
+});

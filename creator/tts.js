@@ -33,7 +33,7 @@ function refreshAvailability(){
  $('ssmlGuide').hidden=expressive();
  $('deliveryHelp').textContent=expressive()?'Style and voice direction are sent to Gemini as performance instructions.':'These presets adjust speed and pitch only.';
  $('speedHelp').textContent=expressive()?'Directed speaking pace. The resulting timing can vary.':'Changes the voice’s synthesis speed.';
- for(const value of ['sales','calm'])$('preset').querySelector('[value='+value+']').disabled=!expressive();
+ for(const value of ['sales','social','empathetic','calm'])$('preset').querySelector('[value='+value+']').disabled=!expressive();
  $('preset').querySelector('[value=custom]').disabled=expressive();
 }
 function meters(){
@@ -53,7 +53,7 @@ function voiceDetails(){
  if(!cap.speed)$('speed').value=1;
  if(!cap.ssml&&$('mode').value==='ssml')$('mode').value='text';
  if(!cap.ssml||$('mode').value==='ssml')$('pause').value='0';
- if(!expressive()&&['sales','calm'].includes($('preset').value))$('preset').value='natural';
+ if(!expressive()&&['sales','social','empathetic','calm'].includes($('preset').value))$('preset').value='natural';
  if(expressive()&&$('preset').value==='custom')$('preset').value='natural';
  $('voiceHelp').textContent=cap.direction?'Use Preview opening to hear this voice with your directions.':cap.supported
   ?[cap.speed?'Speed':'',cap.pitch?'pitch':'',cap.ssml?'SSML':'',cap.emphasis?'emphasis':''].filter(Boolean).join(' · ')+(cap.pitch?'':' · Direct pitch control unavailable.')

@@ -4,7 +4,7 @@ Open **Creator Studio → Voiceover** (`creator/tts.html`). Paste Hindi, English
 or another supported language, select a speech engine and voice, preview the opening, then
 generate and download an MP3. This is reusable across videos, not Panipat-specific.
 
-## Gemini expressive delivery (review branch; not activated)
+## Gemini expressive delivery
 
 The voiceover page can use Gemini 2.5 Flash TTS or Gemini 2.5 Pro TTS through the
 existing Cloud Text-to-Speech REST API and Firebase runtime credentials. The
@@ -15,7 +15,7 @@ check; local tests do not establish either.
 
 - Six initial speakers: Charon, Fenrir, Puck, Kore, Aoede and Leda.
 - Hindi, Indian English and US English; Gujarati is explicitly labelled Preview.
-- Natural, Sales, Energetic, Documentary, Dramatic and Calm delivery; optional
+- Natural, Sales, Social media, Empathetic, Excited, Documentary, Dramatic and Calm delivery; optional
   custom direction up to 2,000 UTF-8 bytes.
 - Speed 0.25–2× directs Gemini's speaking pace through the prompt. It is approximate,
   not measured time stretching or a guaranteed recording duration. Editing speed
@@ -48,8 +48,17 @@ Text-to-Speech enabled. A catalogue entry does not prove model permission/quota.
 From an authorized Firebase CLI session, deploy only the TTS codebase using the
 command below. Then verify a short, user-approved Hindi-English passage with
 neutral, excited and sales delivery on the signed-in site before using full scripts.
-This workspace has no Firebase deployment login or Google ADC; no real Gemini audio
-was generated and no backend deployment or IAM change was performed.
+Activation on November 10, 2026 used the existing authorized Windows Firebase login.
+Both TTS endpoints were deployed on Node 22 with their original restricted owner UID.
+Billing and Cloud Text-to-Speech were enabled; the actual runtime account already
+had the prediction permission through its existing role. Enabling the previously
+disabled Vertex AI API resolved the initial access failure without an IAM grant.
+A signed-in Gemini Flash/Kore excited test of the approved short Hindi-English
+narration generated and downloaded a 4.9-second MP3, which fully decoded. The failed
+neutral attempt was not retried. A complete neutral/sales comparison, Pro synthesis,
+classic production SSML and subjective listening quality remain unverified.
+The Social media and Empathetic presets have focused request-contract and browser
+coverage; no additional paid generation was used to validate their delivery quality.
 
 ```sh
 firebase deploy --only functions:creator-tts --project life-by-adichimp

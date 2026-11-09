@@ -32,7 +32,7 @@
 <div class="two"><div><label for="language">Language</label><select id="language"></select></div><div><label for="gender">Voice gender</label><select id="gender"><option value="">All voices</option><option value="MALE">Male</option><option value="FEMALE">Female</option><option value="NEUTRAL">Neutral</option></select></div></div>
 <div id="familyRow"><label for="family">Voice family</label><select id="family"></select></div>
 <label for="voice">Google voice</label><div class="voice-picker"><button id="voiceDemo" class="voice-demo-button" type="button" aria-label="Play Google voice sample" aria-pressed="false" disabled><span data-demo-icon aria-hidden="true">▶</span></button><select id="voice"></select></div><audio id="voiceDemoAudio" preload="none" hidden></audio><p id="voiceDemoStatus" class="help" role="status" aria-live="polite">Listen to Google’s original sample. No narration needed.</p><p id="voiceHelp" class="help"></p>
-<label for="preset">Delivery</label><select id="preset"><option value="natural">Natural</option><option value="sales">Sales · persuasive</option><option value="calm">Calm · reassuring</option><option value="documentary">Documentary · steady</option><option value="energetic">Energetic · brisk</option><option value="dramatic">Dramatic · deliberate</option><option value="custom">Custom</option></select>
+<label for="preset">Delivery</label><select id="preset"><option value="natural">Natural</option><option value="sales">Sales · persuasive</option><option value="social">Social media · engaging</option><option value="empathetic">Empathetic · warm</option><option value="calm">Calm · reassuring</option><option value="documentary">Documentary · steady</option><option value="energetic">Excited · energetic</option><option value="dramatic">Dramatic · deliberate</option><option value="custom">Custom</option></select>
 <p id="deliveryHelp" class="help">These presets adjust speed and pitch only.</p>
 <div id="expressiveControls" hidden><label for="direction">Voice direction <span class="optional">optional</span></label><textarea id="direction" rows="3" maxlength="2000" placeholder="Describe the tone, emphasis or pronunciation you want…"></textarea><p class="help">Tone, emphasis and pronunciation · up to 2,000 bytes.</p></div>
 <label class="range-label" for="speed">Speed <output id="speedValue" for="speed">1.00×</output></label><input id="speed" type="range" min="0.25" max="2" step="0.05" value="1">
@@ -47,5 +47,5 @@
 <section class="panel result-panel" aria-labelledby="resultHeading"><div><h2 id="resultHeading">03 <span>Listen &amp; export</span></h2><p id="generationStatus" role="status" aria-live="polite">Your recording will appear here.</p></div><div id="recording" hidden><audio id="player" controls preload="metadata" aria-label="Generated voiceover"></audio><div class="download-row"><span id="recordingInfo"></span><a id="download" class="primary" download>Download MP3 ↓</a></div></div></section>
 </div>
 </main>
-<script type="module" src="tts.js?v=3"></script>
+<script type="module" src="tts.js?v=4"></script>
 </body></html>
