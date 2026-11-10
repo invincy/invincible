@@ -2,17 +2,18 @@ import {locationVisible} from './map-globe.js';
 import {resolveMapAsset} from './map-assets-client.js';
 import {icons,layerActive,layerStart,layerAlpha,transformedCorners} from './map-editor-model.js';
 import {routeAt,timeOf,lightingFrame} from './history-model.js';
+import {resolveOverlayPolicy} from './map-overlay-presets.js';
 // Each geographic object gets its own style layer, in the saved bottom-to-top order.
-export function createVisualRenderer(map,project,onError){
- let spec=null,revision=0,owned=[],images=[],disposed=false,assetErrors=[];const models=new Map();
+export function createVisualRenderer(map,project,onError,initialPolicy=null){
+ let spec=null,policy=resolveOverlayPolicy(project,null,initialPolicy),revision=0,owned=[],images=[],disposed=false,assetErrors=[];const models=new Map();
  const native=!!map.removeLayer;
  const id=l=>'visual-'+l.id;
  function clear(){for(const key of [...owned].reverse()){if(map.getLayer(key))map.removeLayer(key);if(map.getSource(key))map.removeSource(key);}for(const key of images)if(map.hasImage(key))map.removeImage(key);owned=[];images=[];models.clear();}
- async function setSpec(next){
-  spec=next;assetErrors=[];const rev=++revision;if(!native)return;if(disposed)return;clear();
+ async function setSpec(next,nextPolicy=null){
+  spec=next;policy=resolveOverlayPolicy(project,next,nextPolicy??initialPolicy);assetErrors=[];const rev=++revision;if(!native)return;if(disposed)return;clear();
   if(map.getLayer('map-relief'))map.removeLayer('map-relief');
   if(map.getTerrain())map.setTerrain(null);if(map.getSource('visual-dem'))map.removeSource('visual-dem');
-  const terrain=spec.visual?.terrain;if(terrain?.enabled){map.addSource('visual-dem',{type:'raster-dem',...(terrain.tiles?{tiles:terrain.tiles,minzoom:0,maxzoom:15}:{url:terrain.url}),encoding:terrain.encoding,attribution:terrain.attribution,tileSize:256});map.setTerrain({source:'visual-dem',exaggeration:terrain.exaggeration});map.addLayer({id:'map-relief',type:'hillshade',source:'visual-dem',paint:{'hillshade-illumination-anchor':'map','hillshade-exaggeration':0.45,'hillshade-shadow-color':'#273c58','hillshade-highlight-color':'#fff1ca','hillshade-accent-color':'#4e705b'}});}
+  const terrain=spec.visual?.terrain,relief=policy.renderer.relief,sym=policy.renderer.symbol;if(terrain?.enabled){map.addSource('visual-dem',{type:'raster-dem',...(terrain.tiles?{tiles:terrain.tiles,minzoom:0,maxzoom:15}:{url:terrain.url}),encoding:terrain.encoding,attribution:terrain.attribution,tileSize:256});map.setTerrain({source:'visual-dem',exaggeration:terrain.exaggeration});map.addLayer({id:'map-relief',type:'hillshade',source:'visual-dem',paint:{'hillshade-illumination-anchor':'map','hillshade-exaggeration':relief.exaggeration,'hillshade-shadow-color':relief.shadowColor,'hillshade-highlight-color':relief.highlightColor,'hillshade-accent-color':relief.accentColor}});}
   for(const l of spec.visual?.layers||[]){
    if(l.kind==='event')continue;const key=id(l);owned.push(key);
    try{
@@ -27,7 +28,7 @@ export function createVisualRenderer(map,project,onError){
      const f=spec.features.features.find(f=>f.properties.id===l.ref),line=l.kind==='route'||f?.geometry.type==='LineString';
      map.addLayer({id:key,type:line?'line':'fill',source:key,paint:line?{'line-color':l.color,'line-width':l.lineWidth??3,'line-opacity':l.opacity,'line-dasharray':l.dash?.length?l.dash:[1,0],'line-opacity-transition':{duration:0}}:{'fill-color':l.color,'fill-opacity':l.opacity,'fill-opacity-transition':{duration:0}}});
     }else{
-     const c=document.createElement('canvas');c.width=512;c.height=96;const ctx=c.getContext('2d');ctx.font='600 42px system-ui';ctx.fillStyle=l.color;ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.lineWidth=5;ctx.strokeStyle='#071923';ctx.strokeText(l.kind==='icon'?icons[l.icon]:l.name,256,48,500);ctx.fillText(l.kind==='icon'?icons[l.icon]:l.name,256,48,500);
+     const c=document.createElement('canvas');c.width=512;c.height=96;const ctx=c.getContext('2d');ctx.font=sym.font;ctx.fillStyle=l.color;ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.lineWidth=sym.lineWidth;ctx.strokeStyle=sym.strokeColor;ctx.strokeText(l.kind==='icon'?icons[l.icon]:l.name,256,48,500);ctx.fillText(l.kind==='icon'?icons[l.icon]:l.name,256,48,500);
      map.addImage(key,ctx.getImageData(0,0,c.width,c.height));images.push(key);
      map.addLayer({id:key,type:'symbol',source:key,layout:{'icon-image':key,'icon-size':Math.min(l.scale,10)*0.5,'icon-rotate':l.rotation,'icon-allow-overlap':true},paint:{'icon-opacity':l.opacity,'icon-opacity-transition':{duration:0}}});
     }
@@ -36,7 +37,7 @@ export function createVisualRenderer(map,project,onError){
  }
  function frame(time){
   if(!spec)return;
-  if(native&&map.getLayer('map-relief')){const light=lightingFrame(project,spec,time);map.setPaintProperty('map-relief','hillshade-illumination-direction',light.direction);map.setPaintProperty('map-relief','hillshade-exaggeration',light.intensity);}
+  if(native&&map.getLayer('map-relief')){const light=lightingFrame(project,spec,time);map.setPaintProperty('map-relief','hillshade-illumination-direction',light.direction);map.setPaintProperty('map-relief','hillshade-exaggeration',spec.lighting?.length?light.intensity:policy.renderer.relief.exaggeration);}
   for(const l of spec.visual?.layers||[]){
    const key=id(l);if(l.kind==='event')continue;
    const historical=spec.features.features.find(f=>f.properties.id===l.ref),alpha=layerAlpha(project,l,time),active=l.kind==='feature'?l.visible&&timeOf(project,historical?.properties||{})<=time&&(l.sceneId===undefined||layerActive(project,l,time)):layerActive(project,l,time);
@@ -53,10 +54,11 @@ export function createVisualRenderer(map,project,onError){
  }
  function overlay(ctx,time){
   if(!spec)return;
+  const sym=policy.renderer.symbol;
   for(const l of spec.visual?.layers||[]){
    if(!layerActive(project,l,time))continue;
-   if(l.kind==='route'){const points=routeAt(l.coordinates,(time-layerStart(project,l))/(l.revealDuration??l.duration));if(!locationVisible(map,points.at(-1),spec.projection)||!locationVisible(map,points.at(-2),spec.projection))continue;const a=map.project(points.at(-2)),b=map.project(points.at(-1));ctx.save();ctx.globalAlpha=layerAlpha(project,l,time);ctx.fillStyle=l.color;if(!native){ctx.strokeStyle=l.color;ctx.lineWidth=l.lineWidth??3;ctx.setLineDash((l.dash||[]).map(n=>n*ctx.lineWidth));ctx.beginPath();points.forEach((c,i)=>{const p=map.project(c);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);});ctx.stroke();}if(l.arrowhead!==false){ctx.translate(b.x,b.y);ctx.rotate(Math.atan2(b.y-a.y,b.x-a.x));ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-12,-5);ctx.lineTo(-12,5);ctx.fill();}ctx.restore();}
-   if(!native&&['icon','label'].includes(l.kind)){const p=map.project(l.position);ctx.save();ctx.globalAlpha=layerAlpha(project,l,time);ctx.fillStyle=l.color;ctx.font=`${24*Math.min(l.scale,10)}px system-ui`;ctx.fillText(l.kind==='icon'?icons[l.icon]:l.name,p.x,p.y);ctx.restore();}
+   if(l.kind==='route'){const points=routeAt(l.coordinates,(time-layerStart(project,l))/(l.revealDuration??l.duration)),alpha=layerAlpha(project,l,time);if(points.length<2||alpha<=0.01)continue;if(!locationVisible(map,points.at(-1),spec.projection)||!locationVisible(map,points.at(-2),spec.projection))continue;const a=map.project(points.at(-2)),b=map.project(points.at(-1));ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=l.color;if(!native){ctx.strokeStyle=l.color;ctx.lineWidth=l.lineWidth??3;ctx.setLineDash((l.dash||[]).map(n=>n*ctx.lineWidth));ctx.beginPath();points.forEach((c,i)=>{const p=map.project(c);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);});ctx.stroke();}if(l.arrowhead!==false){ctx.translate(b.x,b.y);ctx.rotate(Math.atan2(b.y-a.y,b.x-a.x));ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-12,-5);ctx.lineTo(-12,5);ctx.fill();}ctx.restore();}
+   if(!native&&['icon','label'].includes(l.kind)){const p=map.project(l.position);ctx.save();ctx.globalAlpha=layerAlpha(project,l,time);ctx.fillStyle=l.color;ctx.font=`${(sym.fallbackBasePx||24)*Math.min(l.scale,10)}px ${sym.fallbackFontFamily||'system-ui'}`;ctx.fillText(l.kind==='icon'?icons[l.icon]:l.name,p.x,p.y);ctx.restore();}
   }
  }
  return {setSpec,frame,overlay,native,get assetErrors(){return [...assetErrors];},get assetsReady(){return [...models.values()].every(m=>m.loaded);},destroy(){disposed=true;revision++;if(native){clear();map.setTerrain(null);if(map.getLayer('map-relief'))map.removeLayer('map-relief');if(map.getSource('visual-dem'))map.removeSource('visual-dem');}}};

@@ -1,8 +1,30 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>British India · Map engine demo</title><link rel="stylesheet" href="history-workspace.css"><style>body{margin:0;background:#0c1720;color:#dbe6ee;font-family:system-ui}main{max-width:1300px;margin:auto}header{padding:16px 26px;color:#ceac72;font-size:13px}.history-workspace{max-height:none}button,a{touch-action:manipulation}</style></head><body><main><header>INVINCIBLE / CREATOR STUDIO · Unsaved local demonstration · No account or paid AI needed</header><nav style="padding:0 26px"><button id="maps">Animated Maps</button> <button id="clips">Production Clips</button></nav><div id="demo"></div></main><script type="module">
-import {britishIndiaDemo} from './history-demo.js';
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>British India · Map engine demo</title><link rel="stylesheet" href="history-workspace.css"><style>body{margin:0;background:#0c1720;color:#dbe6ee;font-family:system-ui}main{max-width:1300px;margin:auto}header{padding:16px 26px;color:#ceac72;font-size:13px}.history-workspace{max-height:none}button,a,select{touch-action:manipulation}.demo-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:0 26px}.demo-status{margin:6px 26px 0;color:#ceac72;font-size:13px}</style></head><body><main><header>INVINCIBLE / CREATOR STUDIO · Unsaved local demonstration · No account or paid AI needed</header><nav class="demo-bar"><button id="maps">Animated Maps</button> <button id="clips">Production Clips</button> <label>Demo <select id="demoSelect"><option value="british-india">British India · Map engine demo</option></select></label></nav><p id="demoStatus" class="demo-status" role="status" aria-live="polite" hidden></p><div id="demo"></div></main><script type="module">
+import {britishIndiaDemo,loadDemoCatalog,loadDemoProject} from './history-demo.js';
 import {mountHistoryWorkspace} from './history-workspace.js';
-const project=britishIndiaDemo(),root=document.querySelector('#demo');let view,area='Maps';
+let project=britishIndiaDemo(),view,area='Maps';
+const root=document.querySelector('#demo'),select=document.querySelector('#demoSelect'),statusEl=document.querySelector('#demoStatus');
+const requested=new URLSearchParams(location.search).get('project');
 function render(){view?.destroy();view=mountHistoryWorkspace(root,{getProject:()=>project,onChange:()=>{},onRefresh:render,area,copyText:text=>navigator.clipboard.writeText(text)});}
-document.querySelector('#maps').onclick=()=>{area='Maps';render();};document.querySelector('#clips').onclick=()=>{area='Clips';render();};
-render();
+async function selectDemo(id){
+ statusEl.hidden=true;statusEl.textContent='';
+ try{
+  const loaded=await loadDemoProject(id);
+  project=loaded.project;
+  document.title=loaded.entry.title||project.title||'Map engine demo';
+  if([...select.options].some(o=>o.value===id))select.value=id;
+  render();
+ }catch(error){
+  statusEl.hidden=false;statusEl.textContent=error.message||'Unable to load demo project.';
+ }
+}
+document.querySelector('#maps').onclick=()=>{area='Maps';render();};
+document.querySelector('#clips').onclick=()=>{area='Clips';render();};
+select.onchange=()=>{if(select.value)selectDemo(select.value);};
+if(!requested){render();}
+loadDemoCatalog().then(async demos=>{
+ select.replaceChildren(...demos.map(d=>{const opt=document.createElement('option');opt.value=d.id;opt.textContent=d.title;return opt;}));
+ if(requested)await selectDemo(requested);
+}).catch(error=>{
+ if(requested){statusEl.hidden=false;statusEl.textContent=error.message||'Unable to load demo catalog.';}
+});
 </script></body></html>

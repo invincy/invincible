@@ -1,4 +1,5 @@
 import {compileAnimation} from '../map-animation-import.js';
+import {safeAssetUrl} from '../map-editor-model.js';
 import {validateMap,durationOf} from '../history-model.js';
 import {validateBattlefield} from './battlefield.js';
 import {exportDimensions} from '../map-video-export.js';
@@ -8,6 +9,17 @@ export const PRESETS = Object.freeze([
  {id:'lic',name:'LIC',background:'#071b39',foreground:'#ffffff',accent:'#ffce45',font:'system-ui',logoAssetId:'',intro:null,outro:null},
  {id:'custom',name:'Custom',background:'#111827',foreground:'#ffffff',accent:'#61d6d1',font:'system-ui',logoAssetId:'',intro:null,outro:null}
 ]);
+export function referencedMapAssets(mapAssets=[],animation){
+ const refs=Array.isArray(animation?.assets)?animation.assets:[];
+ if(!refs.length||!Array.isArray(mapAssets)||!mapAssets.length)return [];
+ const ids=new Set(),names=new Set();
+ for(const a of refs){
+  if(typeof a?.libraryId==='string'&&a.libraryId.trim())ids.add(a.libraryId);
+  if(typeof a?.libraryName==='string'&&a.libraryName.trim())names.add(a.libraryName.trim().toLowerCase());
+ }
+ if(!ids.size&&!names.size)return [];
+ return mapAssets.filter(item=>(typeof item?.id==='string'&&ids.has(item.id))||(typeof item?.name==='string'&&names.has(item.name.trim().toLowerCase())));
+}
 const fail = message=>{throw Error(message);};
 const obj = x=>!!x&&typeof x==='object'&&!Array.isArray(x);
 const keys = (x,allowed,label)=>{if(!obj(x))fail(`${label} must be an object.`);for(const key of Object.keys(x))if(!allowed.includes(key))fail(`Unsupported ${label} field: ${key}`);};
@@ -51,7 +63,7 @@ function validateScene(scene,assets,mapAssets,{template=false,version=1,mapSourc
    if(data.animation)fail('Choose native map or animation instructions, not both.');
    validateNativeProject(nativeProject);num(data.sourceStart,0,600,'map source start');if(data.sourceStart+scene.durationSeconds>durationOf(nativeProject)+1e-6)fail('Native map trim exceeds its source.');
   }else{
-  const compiled=compileAnimation({scenes:[],historicalMap:{version:1,theme:'night',events:[],features:{type:'FeatureCollection',features:[]},camera:[],visual:{version:1,layers:[],assets:mapAssets}}},data.animation,{geometryReviewed:data.geometryReviewed===true});
+  const compiled=compileAnimation({scenes:[],historicalMap:{version:1,theme:'night',events:[],features:{type:'FeatureCollection',features:[]},camera:[],visual:{version:1,layers:[],assets:referencedMapAssets(mapAssets,data.animation)}}},data.animation,{geometryReviewed:data.geometryReviewed===true});
   if(Math.abs(compiled.summary.duration-scene.durationSeconds)>1e-6)fail('Map duration must match its scene.');
   }
  }else if(scene.engineType==='battlefield')validateBattlefield(data,scene.durationSeconds,assets);
@@ -75,7 +87,7 @@ export function validateManifest(input,{mapAssets=[]}={}){
  if(!Array.isArray(m.assets)||m.assets.length>200)fail('Use up to 200 asset references.');const assets=new Set();
  for(const a of m.assets){keys(a,['id','name','fileId','url','libraryId',...(m.schemaVersion===2?['credit']:[])],'asset');id(a.id);str(a.name,200,'asset name');if(a.credit!==undefined)str(a.credit,2000,'asset credit');if(assets.has(a.id))fail('Duplicate asset ID.');assets.add(a.id);
   if(['fileId','url','libraryId'].filter(k=>a[k]!==undefined).length!==1)fail('Assets need exactly one fileId, HTTPS url or libraryId.');
-  if(a.url!==undefined){let u;try{u=new URL(a.url);}catch{fail('Invalid asset URL.');}if(u.protocol!=='https:'||u.username||u.password)fail('Assets require HTTPS without credentials.');}
+  if(a.url!==undefined&&!safeAssetUrl(a.url))fail('Assets require HTTPS without credentials or a safe project-relative path.');
   if(a.fileId!==undefined)id(a.fileId);if(a.libraryId!==undefined&&!mapAssets.some(item=>item.id===a.libraryId&&item.type==='image'))fail('Missing image in existing map library: '+a.libraryId);
  }
  if(m.mapSources!==undefined){if(!Array.isArray(m.mapSources)||m.mapSources.length>100)fail('Use up to 100 native map sources.');const ids=new Set();for(const source of m.mapSources){keys(source,['id','project'],'map source');id(source.id);if(ids.has(source.id))fail('Duplicate map source.');ids.add(source.id);if(!source.project)fail('Missing source project.');validateNativeProject(source.project);}}

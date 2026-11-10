@@ -14,5 +14,6 @@ export function storageError(error){
  if(error?.code==='permission-denied')return 'Firebase denied access for this account. Your change was not saved. Check the deployed Firestore rules.';
  if(error?.code==='unauthenticated')return 'Your Google session expired. Open Dashboard to restore it; your change was not saved.';
  if(error?.code==='unavailable')return 'Firebase is unreachable. Your change was not saved. Check your connection and retry.';
+ if(error?.code==='failed-precondition'||error?.code==='aborted'||error?.code==='revision-conflict')return 'This project was updated in another session or tab. Reload the latest cloud copy before overwriting.';
  return 'Could not save to Firebase. '+(error?.message||'Please retry.');
 }

@@ -9,13 +9,13 @@ export function importAssetLibrary(map,pkg){
  return out;
 }
 const finite=(v,a,b)=>typeof v==='number'&&Number.isFinite(v)&&v>=a&&v<=b;
-const https=v=>{try{const u=new URL(v);return u.protocol==='https:'&&!u.username&&!u.password;}catch{return false;}};
+const https=v=>{try{const u=new URL(v);return u.protocol==='https:'&&!u.username&&!u.password;}catch{return false;}};export const safeRelativeAssetPath=v=>{if(typeof v!=='string'||!v||v.trim()!==v)return false;if(/[\x00-\x1f\x7f\\:]|^\/\/|\/\//.test(v))return false;const clean=v.split(/[?#]/)[0];if(!(clean.startsWith('./')||clean.startsWith('/creator/')||clean.startsWith('/invincible/creator/')))return false;const segments=clean.split('/');if(segments.length<2||!segments.at(-1))return false;return segments.every((segment,index)=>{try{const decoded=decodeURIComponent(segment);if(decoded==='..'||(index>0&&(decoded==='.'||decoded.includes('/')||decoded.includes('\\'))))return false;return !decoded.includes('..');}catch{return false;}});};export const safeAssetUrl=v=>https(v)||safeRelativeAssetPath(v);
 const point=p=>Array.isArray(p)&&p.length===2&&finite(p[0],-180,180)&&finite(p[1],-85,85);
 export function validateVisual(map,project){
  const v=map.visual;if(v===undefined)return;
  if(v.version!==1||!Array.isArray(v.layers)||v.layers.length>100||!Array.isArray(v.assets)||v.assets.length>50)throw Error('Visual map requires version 1, up to 100 layers and 50 assets.');
  const ids=new Set(),assets=new Map();
- for(const a of v.assets){if(!a.id||assets.has(a.id)||!['image','glb'].includes(a.type)||!((https(a.url)&&!a.storagePath&&!a.storageProjectId)||(!a.url&&typeof a.storageProjectId==='string'&&/^[a-zA-Z0-9_-]{1,100}$/.test(a.storageProjectId)&&typeof a.storagePath==='string'&&new RegExp('^creatorProjects/'+a.storageProjectId+'/mapAssets/[a-zA-Z0-9_-]{1,100}$').test(a.storagePath)))||!String(a.name||'').trim())throw Error('Assets need unique IDs, a name, image/GLB type and a durable HTTPS URL or a valid private storage reference.');assets.set(a.id,a);}
+ for(const a of v.assets){if(!a.id||assets.has(a.id)||!['image','glb'].includes(a.type)||!((safeAssetUrl(a.url)&&!a.storagePath&&!a.storageProjectId)||(!a.url&&typeof a.storageProjectId==='string'&&/^[a-zA-Z0-9_-]{1,100}$/.test(a.storageProjectId)&&typeof a.storagePath==='string'&&new RegExp('^creatorProjects/'+a.storageProjectId+'/mapAssets/[a-zA-Z0-9_-]{1,100}$').test(a.storagePath)))||!String(a.name||'').trim())throw Error('Assets need unique IDs, a name, image/GLB type and a durable HTTPS URL or a valid private storage reference.');assets.set(a.id,a);}
  for(const l of v.layers){
   if(!l.id||ids.has(l.id)||!String(l.name||'').trim()||!['feature','event','icon','image','glb','label','route'].includes(l.kind))throw Error('Layer IDs must be unique, with a name and supported type.');ids.add(l.id);
   if(typeof l.visible!=='boolean'||!finite(l.opacity,0,1)||!/^#[0-9a-f]{6}$/i.test(l.color))throw Error('Invalid visibility, opacity or layer color.');

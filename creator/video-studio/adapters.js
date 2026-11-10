@@ -1,11 +1,11 @@
 import {compileAnimation} from '../map-animation-import.js';
 import {createHistoryPlayer} from '../history-player.js';
-import {layerFrame,sceneAt} from './model.js';
+import {layerFrame,sceneAt,referencedMapAssets} from './model.js';
 import {resolveMapAsset} from '../map-assets-client.js';
 import {drawBattlefield} from './battlefield.js';
 import {fitMedia} from './composition.js';
 export function mapDraft(animation,geometryReviewed,mapAssets=[]){
- return compileAnimation({scenes:[],historicalMap:{version:1,theme:'night',events:[],features:{type:'FeatureCollection',features:[]},camera:[],visual:{version:1,assets:mapAssets,layers:[]}}},animation,{geometryReviewed}).project;
+ return compileAnimation({scenes:[],historicalMap:{version:1,theme:'night',events:[],features:{type:'FeatureCollection',features:[]},camera:[],visual:{version:1,assets:referencedMapAssets(mapAssets,animation),layers:[]}}},animation,{geometryReviewed}).project;
 }
 export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFile,mapAssets=[],signal}={}){
  const ctx=canvas.getContext('2d'),images=new Map(),maps=new Map(),videos=new Map();let disposed=false;
@@ -18,7 +18,7 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
   for(const asset of manifest.assets.filter(asset=>required.has(asset.id))){
    signal?.throwIfAborted();let url=asset.url;
    if(asset.fileId){const file=await getFile(asset.fileId);if(!file)throw Error(`Upload missing image again: ${asset.name}`);url=URL.createObjectURL(file);ownedUrls.push(url);}
-   if(asset.libraryId)url=await resolveMapAsset(mapAssets.find(a=>a.id===asset.libraryId));
+   if(asset.libraryId){const ref=mapAssets.find(a=>a.id===asset.libraryId);if(!ref)throw Error('Missing image in existing map library: '+asset.libraryId);url=await resolveMapAsset(ref);}
    if(videoIds.has(asset.id)){
     const {Input,BlobSource,UrlSource,ALL_FORMATS,CanvasSink}=await import('../vendor/studio-video.mjs');
     const input=new Input({source:asset.fileId?new BlobSource(await getFile(asset.fileId)):new UrlSource(url),formats:ALL_FORMATS});videos.set(asset.id,{input});const track=await input.getPrimaryVideoTrack();if(!track||!await track.canDecode())throw Error('Cannot decode clip: '+asset.name);const duration=await track.computeDuration();
