@@ -162,3 +162,10 @@ Before generating new military or commander artwork, read [the reusable asset ca
 The root `AGENTS.md`, README and `.agents/rules/map-editor-production.md` route future agents here. Keep the detailed standard in this one file; update project-specific briefs separately.
 
 Antigravity rule discovery/activation format was checked against its [official Rules documentation](https://antigravity.google/docs/rules/). Repository rules are available after the agent opens an up-to-date checkout; stale checkouts/older branches need the latest rules brought forward. A configured rule is guidance, not a guarantee that an agent's output passed the acceptance checks above.
+
+
+## History films: kingdom and polity overlays
+
+Every future history film must include date-appropriate kingdom/polity overlays for the powers relevant to the narration. Plan their reveal, terrain transparency, boundary treatment and camera framing as part of the map sequence. Use sourced historical extents with dates and precision notes; label schematic influence/extent in metadata and never present it as a surveyed frontier. Do not substitute modern borders or invent exact boundaries. Current user instructions remain authoritative.
+
+The current Panipat geography v7 revision is explicitly unchanged in this respect: the user asked to save this rule for future videos, not add kingdom overlays to that export.
