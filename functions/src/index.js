@@ -6,7 +6,6 @@ const {logger}=require('firebase-functions');
 const {createAiProvider}=require('./ai/openai-provider');
 const {InvincibleRepository}=require('./data/invincible-repository');
 const {definitions,executeInvincibleTool}=require('./tools/invincible-tools');
-const {detectIntent}=require('./local-ai/intent-router');
 
 initializeApp();
 const db=getFirestore(),openAiApiKey=defineSecret('OPENAI_API_KEY'),aiModel=defineString('OPENAI_MODEL',{default:'gpt-5.6'}),aiProvider=defineString('AI_PROVIDER',{default:'openai'});
@@ -32,7 +31,7 @@ exports.invincibleAiChat=onCall({region:'asia-south1',secrets:[openAiApiKey],tim
   const [history,context]=await Promise.all([recentMessages(uid,conversationId),repository.contextSnapshot()]);
   await saveMessage(uid,conversationId,'user',message);
   const provider=createAiProvider({provider:aiProvider.value(),apiKey:openAiApiKey.value(),model:aiModel.value()});
-  const intent=detectIntent(message),output=await provider.run({messages:[...history,{role:'user',content:message}],context,tools:definitions,mode:intent.mode,executeTool:(name,args)=>executeInvincibleTool(repository,name,args)});
+  const output=await provider.run({messages:[...history,{role:'user',content:message}],context,tools:definitions,executeTool:(name,args)=>executeInvincibleTool(repository,name,args)});
   await saveMessage(uid,conversationId,'assistant',output.text,{actions:output.actions});
   return output;
  }catch(error){
