@@ -129,5 +129,7 @@ export function validateCreatorStudioDraft(result) {
 export function toCreatorStudioImport(result, title = 'Voiceover analysis draft') {
   const validation = validateCreatorStudioDraft(result);
   if (!validation.valid) throw new Error(`Draft is not importable: ${validation.errors.join(' ')}`);
-  return { schemaVersion: 1, title, aspectRatio: '9:16', assets: [], audio: null, scenes: result.scenes.map(scene => ({ id: scene.id, startSeconds: scene.startSeconds, durationSeconds: scene.durationSeconds, voiceover: scene.voiceover, voiceoverTimestamp: scene.voiceoverTimestamp, visual: scene.visual, animation: scene.animation, assets: scene.assets, assetReferences: scene.assetReferences })) };
+  // `animation` is kept in technicalNotes because Creator Studio's importer
+  // aliases both `animation` and `visual` to the same field.
+  return { schemaVersion: 1, title, aspectRatio: '9:16', assets: [], audio: null, scenes: result.scenes.map(scene => ({ id: scene.id, timeline: `${scene.startSeconds.toFixed(3)}-${scene.endSeconds.toFixed(3)}s`, voiceover: scene.voiceover, voiceoverTimestamp: scene.voiceoverTimestamp, visual: scene.visual, assets: scene.assets, assetReferences: scene.assetReferences, technicalNotes: scene.animation ? `Suggested animation: ${scene.animation}` : '' })) };
 }
