@@ -7,7 +7,7 @@ export function createLocalImageClient({ origin = window.__INVINCIBLE_LOCAL_AI_O
   async function request(route, body, { binary = false } = {}) {
     const account = getAccountId(), token = sessionStorage.getItem(key);
     if (requireAccount && !account) throw Error('Sign in before using the local image worker.');
-    if (!token) throw Error('Connect to your local worker in Advanced settings.');
+    if (!token) throw Object.assign(Error('Connect this laptop to generate images.'), {status:401,code:'LOCAL_PAIRING_REQUIRED',definitive:true});
     let response;
     try { response = await fetch(origin + route, { method: body === undefined ? 'GET' : 'POST', headers: { Authorization: 'Bearer ' + token, ...(account ? { 'X-Invincible-Account': account } : {}), ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal: AbortSignal.timeout(route === '/api/command' ? 120000 : 15000), redirect: 'error', targetAddressSpace: 'loopback' }); }
     catch { throw Error('Cannot reach this laptop. Start Image Studio and allow the browser’s local connection, then retry the same request.'); }

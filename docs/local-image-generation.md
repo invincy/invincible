@@ -157,3 +157,20 @@ asset upload flow. Keyboard arrow/Home/End navigation works in both tool selecto
 A Qwen image notification reveals the Creator image view. Advanced image controls
 remain collapsed and accessible. No video or production project is needed for
 personal generation, and this UI change does not write production project data.
+
+## Creator entry and connection correction
+
+Creator Studio's top header now links Image generator immediately beside its
+existing Voiceover button. The Creator images.html page and Voiceover screen
+provide matching Voiceover / Image generator links. The Creator image page reuses
+the existing image panel and authenticated owner-scoped worker; it needs no project.
+Invincible AI's Images tab remains available. No new rendering implementation,
+model or production asset path was introduced.
+
+Connect this laptop now appears above the prompt, outside Advanced settings.
+Generate is disabled until a session verifies both the owner and writable workspace.
+Missing or expired pairing shows the connection action instead of directing the
+user to Advanced settings. An expired session clears the previous preview and
+never submits GPU work. Repeated pairing clicks are guarded. The existing popup
+origin/source/nonce checks, server bearer authentication and workspace checks
+remain in force. Manual pairing remains an advanced fallback.
