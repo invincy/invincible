@@ -32,6 +32,8 @@ let browser;try{
  await window.nativeStudio.ready;
  </script>`}));
  await page.goto(service.origin+'/creator/index.html');await page.getByRole('tab',{name:'Create image',exact:true}).click();await page.waitForSelector('[data-image-prompt]');
+ assert.equal(await page.locator('[data-image-generate]').isEnabled(),false,'Video Studio must not unlock an unpaired generator');
+ await page.getByText('Advanced settings',{exact:true}).click();await page.getByText('Manual pairing',{exact:true}).click();await page.locator('[data-image-token]').fill(service.token);await page.locator('[data-image-connect]').click();await page.waitForSelector('[data-image-status]:has-text("Connected")');
  await page.locator('[data-image-prompt]').fill('Native Studio fixture fortress');await page.locator('[data-image-generate]').click();await page.waitForSelector('[data-image-status]:has-text("Completed")');
  await page.locator('[data-image-attach]').click();await page.waitForSelector('[data-image-status]:has-text("Attached")');
  assert.equal(await page.evaluate(()=>window.testSession.manifest.assets.length),1,'Native project uses existing uploadFiles/useMedia path');

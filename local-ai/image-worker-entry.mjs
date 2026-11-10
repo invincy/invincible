@@ -9,7 +9,10 @@ await fs.writeFile(log, `Worker identity: ${os.hostname()}\\${username}; adminis
 try {
   let config = {};
   try { config = JSON.parse(await fs.readFile('E:/Invincible/ImageGen/worker-config.json', 'utf8')); } catch (error) { if (error.code !== 'ENOENT') throw error; }
-  const service = await createLocalAgentServer({ ownerUid: config.ownerUid || process.env.INVINCIBLE_LOCAL_OWNER_UID || 'local-imagegen-test', port: Number(config.port || process.env.INVINCIBLE_LOCAL_AI_PORT || 8788), appOrigin: config.appOrigin || process.env.INVINCIBLE_APP_ORIGIN || null });
+  const token = process.env.INVINCIBLE_IMAGE_WORKER_TOKEN;
+  delete process.env.INVINCIBLE_IMAGE_WORKER_TOKEN;
+  if (token && !/^[A-Za-z0-9_-]{32,100}$/.test(token)) throw Error('The saved image worker connection is invalid.');
+  const service = await createLocalAgentServer({ token, ownerUid: config.ownerUid || process.env.INVINCIBLE_LOCAL_OWNER_UID || 'local-imagegen-test', port: Number(config.port || process.env.INVINCIBLE_LOCAL_AI_PORT || 8788), appOrigin: config.appOrigin || process.env.INVINCIBLE_APP_ORIGIN || null });
   if (!service.images.storage().available) throw Error(service.images.storage().error);
   await service.listen();
   await fs.appendFile(log, `Invincible Local AI: ${service.origin}\nOpen locally to pair: ${service.origin}/#pair=${service.token}\n`);
