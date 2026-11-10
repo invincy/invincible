@@ -1,5 +1,9 @@
 # Universal Invincible Agent API — security boundary
 
+## Image-generation addition — 11 November 2026
+
+The new local worker registers fixed-workflow generate_image, requires local pairing authentication and owner matching, and stores verified output in the existing restricted workspace. Its GPU queue covers Qwen and ComfyUI. The user authorized a worker-only password reset. Its credential is Windows-encrypted for the laptop owner; Node runs directly under the existing restricted account. No folder ACL, group membership, PowerShell policy or logon right was changed. The unsuccessful test scheduled task was removed. The older feasibility observations below are historical; the current scoped workspace ACL is documented in SECURITY-SANDBOX-PLAN.md. See [implementation and verification](../docs/local-image-generation.md).
+
 ## Provider-independent execution
 
 Providers produce a candidate `{tool, arguments}` request. `functions/src/local-ai/universal-agent-api.js` performs authorization, strict schema validation, idempotency, timeout/cancellation checks, execution and activity logging. It does not import Ollama, OpenAI, Firebase client SDKs or Tailscale. The existing `create_project` executor is injected behind that boundary.
@@ -11,7 +15,8 @@ Providers produce a candidate `{tool, arguments}` request. `functions/src/local-
 | `create_project` | Registered; create permission; no extra approval required for the current user-authorized test flow |
 | Read project data | Not registered in this API |
 | Edit/delete project data | Not registered |
-| Rendering/media tools | Extension points only; not registered |
+| Image generation | Registered fixed SD 1.5 workflow; no arbitrary graph or output path |
+| Other rendering/media tools | Not registered |
 | Shell, PowerShell, Python, process launch | Never registered |
 | Credential/browser/profile access | Never registered |
 

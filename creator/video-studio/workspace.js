@@ -1,3 +1,5 @@
+import {mountImageGenerator} from '../image-generator.js';
+import {createLocalImageClient} from '../../local-ai/image-client.js';
 import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=2026111002';
 import {studioBrief} from './handoff.js?v=2026111014';
 import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111014';
@@ -49,6 +51,9 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  async function upgraded(){const original=state.manifest.audio&&await getFile(state.manifest.audio.fileId);return upgradeVideo(state.manifest,original?(await decodeVoiceover(original)).duration:0);}
  async function useMedia(a,{scene=false,role='voiceover'}={}){const next=await upgraded();if(a.kind==='audio'){next.audioClips.push({id:uid(),fileId:a.id,name:a.name,role,startSeconds:0,trimStart:0,durationSeconds:a.duration,gain:1,fadeIn:0,fadeOut:0});}else if(a.kind==='glb'){throw Error('GLB models are available from the shared library inside Edit map scene.');}else {if(!next.assets.some(x=>x.fileId===a.id))next.assets.push({id:a.id,name:a.name,fileId:a.id});if(scene){const row={id:uid(),name:a.name,startSeconds:0,durationSeconds:a.duration||5,engineType:a.kind,engineData:{assetId:next.assets.find(x=>x.fileId===a.id).id,fit:'contain',...(a.kind==='video'?{trimStart:0}:{})},overlays:[]};Object.assign(next,arrangeScenes(next,[...next.scenes,row],{mapAssets:mapAssets()}));}}await applyManifest(next);}
  async function uploadFiles(files,{addScenes=false,role=null}={}){for(const file of files){status('Uploading '+file.name+'…');const info=await inspectMedia(file),a=await media.upload(file,info);if(disposed||getAccountId()!==account)return;state.files.set(a.id,file);await store?.put('file:'+a.id,file);if(!catalogue.some(x=>x.id===a.id))catalogue.unshift(a);renderLibrary();if(a.kind!=='glb')await useMedia(a,{scene:addScenes&&['image','video'].includes(a.kind),role:role||'voiceover'});}status('Files saved to your cloud library. Save your video draft after making changes.');$('[data-media-status]').textContent=catalogue.length+' assets in your private cloud library.';}
+
+ const imageRoot=document.createElement('section');setup.querySelector('.vs-step').append(imageRoot);
+ const images=mountImageGenerator(imageRoot,{client:createLocalImageClient({getAccountId,requireAccount:true}),getAccountId,getProjectId:()=>getProject()?.id,onAttach:async file=>{if(disposed||getAccountId()!==account||getProject()?.id!==projectId||getProject()?.ownerUid!==account)throw Error('Only the current project owner can attach generated artwork.');await uploadFiles([file]);}});
 
  const brand=()=>state.brands.find(b=>b.id===state.manifest.brandPresetId)||state.brands[0];
  function stop(){playing=false;cancelAnimationFrame(raf);stopTracks?.();stopTracks=null;if(source){try{source.stop();}catch{}source.disconnect();source=null;}gainNode?.disconnect();gainNode=null;}
@@ -207,5 +212,5 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   sync();await draw();refreshLibrary().catch(e=>{if(!disposed)$('[data-media-status]').textContent='Cloud library unavailable. Check your connection, then choose Refresh library.';});
  });
  const hidden=()=>{if(document.hidden)stop();};document.addEventListener('visibilitychange',hidden);
- return {ready,get manifest(){return state.manifest;},destroy(){disposed=true;state.time=time;assembly?.destroy();stop();lifecycle.abort(new DOMException('Workspace closed','AbortError'));controller?.abort(new DOMException('Workspace closed','AbortError'));renderer?.destroy();context?.close();store?.close();document.removeEventListener('visibilitychange',hidden);}};
+ return {ready,get manifest(){return state.manifest;},destroy(){images.destroy();disposed=true;state.time=time;assembly?.destroy();stop();lifecycle.abort(new DOMException('Workspace closed','AbortError'));controller?.abort(new DOMException('Workspace closed','AbortError'));renderer?.destroy();context?.close();store?.close();document.removeEventListener('visibilitychange',hidden);}};
 }
