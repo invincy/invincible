@@ -70,10 +70,22 @@ async function resolveAgentToken({ db, token, now }) {
   const value = String(token || '').trim();
   if (value.length < 32) throw new Error('A valid agent token is required.');
   const timestamp = nowMs(now), hash = hashAgentToken(value), snapshot = await agentTokenCollection(db).doc(hash).get();
-  if (!snapshot.exists) throw new Error('Agent token is invalid.');
-  const data = snapshot.data();
-  if (data.revoked || Number(data.expiresAtMs || 0) <= timestamp) throw new Error('Agent token is expired or revoked.');
-  return { uid: data.uid, agentId: data.agentId };
+  if (snapshot.exists) {
+    const data = snapshot.data();
+    if (data.revoked || Number(data.expiresAtMs || 0) <= timestamp) throw new Error('Agent token is expired or revoked.');
+    if (data.uid) return { uid: data.uid, agentId: data.agentId };
+  }
+  const users = await db.collection('users').get();
+  for (const user of users.docs) {
+    const agents = await agentCollection(db, user.id).where('tokenHash', '==', hash).limit(1).get();
+    if (!agents.empty) {
+      const data = agents.docs[0].data();
+      if (data.revoked || Number(data.expiresAtMs || 0) <= timestamp) throw new Error('Agent token is expired or revoked.');
+      await agentTokenCollection(db).doc(hash).set({ uid: user.id, agentId: data.agentId, expiresAtMs: data.expiresAtMs, revoked: false }, { merge: true });
+      return { uid: user.id, agentId: data.agentId };
+    }
+  }
+  throw new Error('Agent token is invalid.');
 }
 
 async function claimNextTask({ db, uid, agentId, leaseMs = 120000, now }) {
