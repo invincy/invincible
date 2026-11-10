@@ -1,0 +1,30 @@
+{
+  "id": "local-test-panipat",
+  "title": "Panipat",
+  "description": "",
+  "status": "Not Started",
+  "currentStage": "Planning",
+  "steps": [
+    {
+      "id": "stage-1",
+      "title": "Planning",
+      "done": false
+    },
+    {
+      "id": "stage-2",
+      "title": "Development",
+      "done": false
+    },
+    {
+      "id": "stage-3",
+      "title": "Testing",
+      "done": false
+    },
+    {
+      "id": "stage-4",
+      "title": "Deployment",
+      "done": false
+    }
+  ],
+  "environment": "isolated-local-ai-test"
+}
