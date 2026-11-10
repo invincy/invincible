@@ -24,6 +24,28 @@ export async function inspectAudio(filePath, options = {}) {
   return { path: resolved, filename: path.basename(resolved), extension: path.extname(resolved).slice(1).toLowerCase(), bytes: stat.size };
 }
 
+export async function loadCreatorAssetCatalog(repoRoot) {
+  const root = path.resolve(repoRoot);
+  const readJson = async relative => JSON.parse(await fs.readFile(path.join(root, relative), 'utf8'));
+  const army = await readJson('creator/asset-libraries/historical-army-commanders-v1.json');
+  const flags = await readJson('creator/history-data/border-flags-v3/manifest.json');
+  const assets = [
+    ...(Array.isArray(army.assets) ? army.assets : []),
+    ...(Array.isArray(flags) ? flags : [])
+  ].map(asset => ({ id: String(asset.id), name: String(asset.name ?? ''), type: String(asset.type ?? 'map-overlay'), description: String(asset.description ?? asset.credit ?? ''), path: asset.path || asset.url || asset.file || '' }));
+  return {
+    version: 1,
+    assets,
+    animationPresets: [
+      { id: 'documentary', description: 'Documentary map overlay and typography preset.' },
+      { id: 'legacy', description: 'Legacy map overlay preset.' },
+      { id: 'fade', description: 'Short scene fade transition.' },
+      { id: 'slow-pan', description: 'Slow camera pan.' },
+      { id: 'slow-zoom', description: 'Slow camera zoom.' }
+    ]
+  };
+}
+
 export async function transcribeWithWhisper(audio, { endpoint = process.env.INVINCIBLE_WHISPER_URL } = {}) {
   if (!endpoint) throw new Error('Local Whisper is not configured. Set INVINCIBLE_WHISPER_URL to a private local Whisper service.');
   const url = new URL(endpoint);
@@ -69,17 +91,21 @@ export function normalizeTranscript(input) {
 
 export function buildQwenPrompt(transcript, assetCatalog = []) {
   const normalized = normalizeTranscript(transcript);
-  const assets = assetCatalog.map(asset => ({ id: String(asset.id), name: String(asset.name ?? ''), type: String(asset.type ?? ''), description: String(asset.description ?? asset.notes ?? '') }));
+  const catalog = Array.isArray(assetCatalog) ? { assets: assetCatalog, animationPresets: [] } : assetCatalog;
+  const assets = (catalog.assets || []).map(asset => ({ id: String(asset.id), name: String(asset.name ?? ''), type: String(asset.type ?? ''), description: String(asset.description ?? asset.notes ?? '') }));
   return [
     'You are Invincible Voiceover Analysis. Return JSON only.',
     'Create a draft scene plan from the supplied transcript.',
     'Do not create timestamps: use only sourceSegmentIds. Do not invent asset IDs; choose only IDs from the supplied catalog. If no asset fits, return an empty assetIds array and add a missingInfo item.',
     'Required JSON shape: {"scenes":[{"id":"scene-1","sourceSegmentIds":["segment-1"],"visual":"...","animation":"...","assetIds":[],"missingInfo":[]}]}',
-    JSON.stringify({ transcript: normalized, assetCatalog: assets })
+    JSON.stringify({ transcript: normalized, assetCatalog: assets, animationPresets: catalog.animationPresets || [] })
   ].join('\n');
 }
 
-function catalogMap(assetCatalog) { return new Map(assetCatalog.map(asset => [String(asset.id), asset])); }
+function catalogMap(assetCatalog) {
+  const assets = Array.isArray(assetCatalog) ? assetCatalog : (assetCatalog?.assets || []);
+  return new Map(assets.map(asset => [String(asset.id), asset]));
+}
 
 export function assembleSceneDraft(transcript, qwenDraft, assetCatalog = []) {
   const normalized = normalizeTranscript(transcript);

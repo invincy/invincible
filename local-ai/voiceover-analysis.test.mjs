@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assembleSceneDraft, analyzeVoiceover, buildQwenPrompt, normalizeTranscript, toCreatorStudioImport } from './voiceover-analysis.mjs';
+import { assembleSceneDraft, analyzeVoiceover, buildQwenPrompt, loadCreatorAssetCatalog, normalizeTranscript, toCreatorStudioImport } from './voiceover-analysis.mjs';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -20,6 +20,13 @@ test('builds a constrained Qwen prompt', () => {
   const prompt = buildQwenPrompt(transcript, [{ id: 'commander_babur', name: 'Babur', type: 'image' }]);
   assert.match(prompt, /Do not invent asset IDs/);
   assert.match(prompt, /commander_babur/);
+});
+
+test('loads real Creator Studio assets and animation presets', async () => {
+  const catalog = await loadCreatorAssetCatalog(new URL('..', import.meta.url).pathname.replace(/^\/(\w:)/, '$1'));
+  assert.ok(catalog.assets.some(asset => asset.id === 'commander_babur'));
+  assert.ok(catalog.assets.some(asset => asset.id === 'india-flag-map'));
+  assert.ok(catalog.animationPresets.some(preset => preset.id === 'documentary'));
 });
 
 test('uses transcript timing as source of truth and accepts catalog assets', () => {
