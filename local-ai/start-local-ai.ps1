@@ -13,7 +13,7 @@ if (-not $FirebaseAgentToken) {
   try { $FirebaseAgentToken = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr) } finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr) }
 }
 $connectorCommand = "Set-Location -LiteralPath '$Root'; `$env:INVINCIBLE_FIREBASE_AGENT_TOKEN='$FirebaseAgentToken'; node local-ai/firebase-task-connector.mjs"
-Start-Process powershell.exe -WindowStyle Normal -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-Command',"Set-Location -LiteralPath '$Root'; node local-ai/agent-service.mjs"
-Start-Process powershell.exe -WindowStyle Normal -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-Command',$connectorCommand
+Start-Process powershell.exe -WindowStyle Normal -ArgumentList '-NoProfile','-NoExit','-ExecutionPolicy','Bypass','-Command',"Set-Location -LiteralPath '$Root'; node local-ai/agent-service.mjs"
+Start-Process powershell.exe -WindowStyle Normal -ArgumentList '-NoProfile','-NoExit','-ExecutionPolicy','Bypass','-Command',$connectorCommand
 Write-Output 'Started the local agent and Firebase connector in separate PowerShell windows.'
 Write-Output 'Close those windows or press Ctrl+C in each one to stop them.'
