@@ -7,7 +7,7 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const target=process.argv[2]&&path.resolve(process.argv[2]);
 if(!target||target===root||target.startsWith(root+path.sep))throw Error('Choose a separate empty staging directory.');
 await mkdir(target,{recursive:false});
-const excluded=new Set(['.agents','.github','tests','scripts','react','functions','functions-tts','functions-media']);
+const excluded=new Set(['.agents','.github','tests','scripts','react','functions','functions-tts','functions-media','functions-local-ai','local-ai']);
 const files=execFileSync('git',['ls-files','--cached','-z'],{cwd:root,encoding:'utf8'}).split('\0').filter(Boolean);
 let count=0;
 for(const file of files){

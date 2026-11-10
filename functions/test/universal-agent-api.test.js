@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const path = require('node:path');
+const os = require('node:os');
 const { AgentError, assertSafeWorkspacePath, createUniversalAgent } = require('../src/local-ai/universal-agent-api');
 
 function repository() {
@@ -31,9 +33,10 @@ test('rejects invalid parameters, duplicate commands and untrusted extra JSON fi
 });
 
 test('canonical path policy rejects traversal, protected roots and workspace escapes', () => {
-  const root = 'E:\\Invincible\\AgentWorkspace';
-  assert.equal(assertSafeWorkspacePath('E:\\Invincible\\AgentWorkspace\\renders\\draft.png', root), 'E:\\Invincible\\AgentWorkspace\\renders\\draft.png');
-  assert.throws(() => assertSafeWorkspacePath('E:\\Invincible\\AgentWorkspace\\..\\Projects\\Invincible\\invincible\\package.json', root), /dedicated agent workspace|protected/i);
+  const root = process.platform === 'win32' ? 'E:\\Invincible\\AgentWorkspace' : path.join(os.tmpdir(), 'invincible-agent-policy');
+  const output = path.join(root, 'renders', 'draft.png');
+  assert.equal(assertSafeWorkspacePath(output, root), output);
+  assert.throws(() => assertSafeWorkspacePath(path.resolve(root, '..', 'outside', 'package.json'), root), /dedicated agent workspace|protected/i);
   assert.throws(() => assertSafeWorkspacePath('C:\\Users\\vaibh\\.codex\\config.toml', root), /dedicated agent workspace|protected/i);
 });
 

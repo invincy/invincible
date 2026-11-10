@@ -18,7 +18,7 @@ export async function createLocalAgentServer({ ownerUid, token = crypto.randomBy
   if (!/^[A-Za-z0-9_-]{3,120}$/.test(ownerUid || '')) throw Error('Configure the local owner UID before starting the worker.');
   if (token.length < 32) throw Error('Local pairing token is too short.');
   const origin = `http://127.0.0.1:${port}`;
-  if (appOrigin) { const u = new URL(appOrigin); if (!['127.0.0.1','localhost'].includes(u.hostname) || u.protocol !== 'http:' || u.origin !== appOrigin) throw Error('App origin must be an exact loopback HTTP origin.'); }
+  if (appOrigin) { const u = new URL(appOrigin); const local = ['127.0.0.1','localhost'].includes(u.hostname) && u.protocol === 'http:'; if ((!local && appOrigin !== 'https://invincy.github.io') || u.origin !== appOrigin) throw Error('App origin must be the Invincible website or an exact loopback origin.'); }
   const gpu = createGpuCoordinator();
   const images = createImageWorker({ ownerUid, gpu, workspaceRoot, fetchImpl, ...workerOptions });
   await images.init();
@@ -62,9 +62,17 @@ export async function createLocalAgentServer({ ownerUid, token = crypto.randomBy
       if (request.headers.host !== new URL(origin).host) return send(response, 403, { error: 'Invalid local host.' });
       const from = request.headers.origin;
       if (from && from !== origin && from !== appOrigin) return send(response, 403, { error: 'Origin is not allowed.' });
-      if (appOrigin && from === appOrigin) { response.setHeader('Access-Control-Allow-Origin', appOrigin); response.setHeader('Vary', 'Origin'); response.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Invincible-Account'); response.setHeader('Access-Control-Allow-Methods', 'GET, POST'); }
+      if (appOrigin && from === appOrigin) { response.setHeader('Access-Control-Allow-Origin', appOrigin); response.setHeader('Vary', 'Origin'); response.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Invincible-Account'); response.setHeader('Access-Control-Allow-Methods', 'GET, POST'); response.setHeader('Access-Control-Allow-Private-Network', 'true'); }
       if (request.method === 'OPTIONS') return send(response, 204, '', 'text/plain');
       const url = new URL(request.url, origin);
+      if (request.method === 'GET' && url.pathname === '/connect') {
+        const destination = url.searchParams.get('origin'), nonce = url.searchParams.get('nonce'), uid = url.searchParams.get('uid');
+        if (!appOrigin || destination !== appOrigin || uid !== ownerUid) return send(response, 403, { error: 'This worker is paired to a different Invincible account.' });
+        if (!/^[A-Za-z0-9-]{16,80}$/.test(nonce || '') || (request.headers['sec-fetch-dest'] && request.headers['sec-fetch-dest'] !== 'document')) return send(response, 400, { error: 'Open this connection from Invincible.' });
+        const scriptNonce = crypto.randomBytes(16).toString('base64');
+        response.setHeader('Content-Security-Policy', `default-src 'none'; script-src 'nonce-${scriptNonce}'; style-src 'nonce-${scriptNonce}'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`);
+        return send(response, 200, `<!doctype html><meta name="viewport" content="width=device-width"><title>Connect Invincible</title><style nonce="${scriptNonce}">body{background:#07171d;color:#e7f5f5;font:16px/1.6 system-ui;padding:40px;max-width:500px;margin:auto}button{background:#8ce4e9;color:#052029;border:0;border-radius:10px;padding:14px;font:600 16px system-ui;cursor:pointer}</style><h1>Connect this laptop</h1><p>Allow your signed-in Invincible account to generate images on this laptop. ComfyUI stays private.</p><button id="connect">Connect Invincible</button><p id="status"></p><script nonce="${scriptNonce}">const message=${JSON.stringify({ type: 'invincible-local-pair', nonce, uid: ownerUid, token })};document.querySelector('#connect').onclick=()=>{if(!window.opener){document.querySelector('#status').textContent='Open Connect this laptop from Invincible.';return;}window.opener.postMessage(message,${JSON.stringify(appOrigin)});window.close();};</script>`, 'text/html');
+      }
       if (url.pathname.startsWith('/api/')) {
         const actor = authenticate(request);
         if (request.method === 'GET' && url.pathname === '/api/session') return send(response, 200, { uid: ownerUid, workspaceId: ownerUid, storage: images.storage(), presets: IMAGE_PRESETS });

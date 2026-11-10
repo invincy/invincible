@@ -8,7 +8,7 @@ import { fakeGpu } from '../tests/fixtures/imagegen-service.mjs';
 const TOKEN='fixture-only-local-worker-pairing-token-12345';
 async function setup(t, options={}) {
   const directory=await fs.mkdtemp(path.join(process.env.INVINCIBLE_IMAGE_TEST_ROOT||os.tmpdir(),'invincible-http-fixture-'));
-  const backend=fakeGpu(options),service=await createLocalAgentServer({ownerUid:'test-owner',token:TOKEN,port:18889,workspaceRoot:directory,fetchImpl:backend.fetchImpl,workerOptions:{pollMs:1},ask:async()=>({kind:'tool',tool:'generate_image',arguments:{prompt:'Fixture fortress illustration',preset:'square',seed:42}})});
+  const backend=fakeGpu(options),service=await createLocalAgentServer({ownerUid:'test-owner',token:TOKEN,port:18889,workspaceRoot:directory,fetchImpl:backend.fetchImpl,appOrigin:'https://invincy.github.io',workerOptions:{pollMs:1},ask:async()=>({kind:'tool',tool:'generate_image',arguments:{prompt:'Fixture fortress illustration',preset:'square',seed:42}})});
   await service.listen();t.after(async()=>{await service.close();await fs.rm(directory,{recursive:true,force:true,maxRetries:3});});
   const call=async(route,body,headers={})=>fetch(service.origin+route,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json',...headers},...(body?{body:JSON.stringify(body)}:{})});
   return{service,backend,call};
@@ -39,4 +39,15 @@ test('failed ComfyUI jobs never have a successful image or attachment route',asy
  const{service,call}=await setup(t,{failed:true});
  const queued=await(await call('/api/generations',{arguments:{prompt:'Fixture',preset:'square'},idempotencyKey:'failure-http-001'})).json();await service.images.drain();
  const done=await(await call('/api/generations/'+queued.job.id)).json();assert.equal(done.verified,false);assert.equal(done.job.status,'failed');assert.equal((await call('/api/generations/'+queued.job.id+'/image')).status,400);
+});
+test('published-site pairing requires the configured origin, owner and explicit popup confirmation',async t=>{
+ const{service,call}=await setup(t);
+ const preflight=await fetch(service.origin+'/api/session',{method:'OPTIONS',headers:{Origin:'https://invincy.github.io','Access-Control-Request-Method':'GET','Access-Control-Request-Headers':'authorization,x-invincible-account','Access-Control-Request-Private-Network':'true'}});
+ assert.equal(preflight.status,204);assert.equal(preflight.headers.get('Access-Control-Allow-Origin'),'https://invincy.github.io');assert.equal(preflight.headers.get('Access-Control-Allow-Private-Network'),'true');
+ assert.equal((await call('/api/session',null,{Origin:'https://invincy.github.io'})).status,200);
+ const query=new URLSearchParams({origin:'https://invincy.github.io',uid:'test-owner',nonce:'12345678-1234-1234-1234-123456789012'});
+ const page=await fetch(service.origin+'/connect?'+query,{headers:{'Sec-Fetch-Dest':'document'}});assert.equal(page.status,200);const html=await page.text();
+ assert.match(html,/Connect Invincible/);assert.match(html,/postMessage/);assert.ok(page.headers.get('Content-Security-Policy').includes("frame-ancestors 'none'"));
+ query.set('uid','other-owner');assert.equal((await fetch(service.origin+'/connect?'+query)).status,403);query.set('uid','test-owner');query.set('origin','https://evil.example');assert.equal((await fetch(service.origin+'/connect?'+query)).status,403);
+ assert.equal((await fetch(service.origin+'/api/session',{headers:{Origin:'https://invincy.github.io'}})).status,401,'CORS never substitutes for authentication');
 });

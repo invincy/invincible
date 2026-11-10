@@ -5,6 +5,7 @@ $root = Split-Path $PSScriptRoot -Parent
 $origin = 'http://127.0.0.1:8788'
 $log = 'E:\Invincible\AgentWorkspace\imagegen-test-worker.log'
 $credentialFile = 'E:\Invincible\ImageGen\worker-login.dpapi'
+$config = if (Test-Path -LiteralPath 'E:\Invincible\ImageGen\worker-config.json') { Get-Content -LiteralPath 'E:\Invincible\ImageGen\worker-config.json' -Raw | ConvertFrom-Json } else { @{ownerUid='local-imagegen-test'} }
 $running = $false
 try { $running = (Invoke-WebRequest $origin -UseBasicParsing -TimeoutSec 2).StatusCode -eq 200 } catch [System.Net.WebException] {}
 if (-not $running) {
@@ -24,7 +25,7 @@ for ($i=0; $i -lt 40; $i++) {
         $match = [regex]::Match($text, 'http://127\.0\.0\.1:8788/#pair=([A-Za-z0-9_-]+)')
         if ($match.Success) {
             $session = Invoke-RestMethod "$origin/api/session" -Headers @{Authorization=('Bearer '+$match.Groups[1].Value)} -TimeoutSec 2
-            if ($session.uid -ne 'local-imagegen-test' -or -not $session.storage.available) { throw 'The worker owner or workspace does not match this local test launcher.' }
+            if ($session.uid -ne $config.ownerUid -or -not $session.storage.available) { throw 'The worker owner or workspace does not match this local test launcher.' }
             $ready = $true
             if (-not $NoBrowser) { Start-Process $match.Value }
             break

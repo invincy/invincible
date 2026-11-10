@@ -1,8 +1,10 @@
 # Local image generation
 
-Development checkout: `E:\Development\Worktrees\invincible-local-imagegen`, branch
-`codex/invincible-local-imagegen`, based on `2cf9b15`. Existing checkouts and running
-services were preserved. Nothing was committed, merged, deployed or published.
+Release checkout: `E:\Development\Worktrees\invincible-imagegen-release`, branch
+`codex/invincible-imagegen-release`, based on public master `aadaf936`. Only the
+image-generation change was cherry-picked from the development checkout; its
+unpublished voiceover ancestors are excluded. Existing worktrees are preserved.
+The user subsequently authorized merging and publishing after verification.
 
 ## Interface and executor
 
@@ -52,16 +54,23 @@ No production account record was changed during verification.
 ## Local authentication and startup
 
 The new worker binds to `127.0.0.1` only. All APIs require a fresh bearer pairing
-token. Host and Origin checks reject untrusted websites; an optional additional
-app Origin must be an exact loopback origin. The server configures the owner UID;
+token. Host and Origin checks reject untrusted websites; the optional app Origin
+is restricted to an exact loopback origin or `https://invincy.github.io`.
+The server configures the owner UID;
 request bodies cannot select a principal or workspace. Creator and React clients
 also require their current Firebase user to match that owner and stop on account
 changes. This local pairing credential is separate from Firebase agent tokens.
 
-Run `local-ai/start-image-studio.cmd` as the normal laptop owner. It uses the Windows-encrypted credential to launch the existing non-administrator worker. Default isolated owner is `local-imagegen-test`, port 8788.
-For a real signed-in Creator project, configure OwnerUid to that account's UID.
-Use the printed local pairing link or enter its code under Advanced → Local
-connection. Keep ComfyUI running using its existing E: installation launcher.
+Run the Invincible Image Studio shortcut as the normal laptop owner. It uses the
+Windows-encrypted credential to launch the existing non-administrator worker.
+`E:\Invincible\ImageGen\worker-config.json` supplies ownerUid, appOrigin and port
+(8788); the configured owner must match the signed-in Firebase account.
+In Creator's Add assets panel or Invincible AI with Local selected, choose
+Connect this laptop, then confirm Connect Invincible in the local popup.
+The handoff validates the exact popup source, origin, account and nonce; the
+token stays in session storage. Chrome may ask permission to connect locally.
+The private local pairing link remains available for the isolated local UI.
+Keep ComfyUI running using its existing E: installation launcher.
 The new worker does not install or start models, launch shells from tools, or
 modify Windows permissions. The existing service on 8787 was not replaced.
 
@@ -77,10 +86,11 @@ membership were preserved.
 
 Use the Invincible Image Studio shortcut or local-ai/start-image-studio.cmd.
 The shortcut reuses a running worker and opens the private local pairing link.
-ComfyUI must also be running using its existing E: launcher. The default is the
-isolated local-imagegen-test owner on 8788; a real signed-in Creator account must
-be configured as the worker owner before its existing authenticated cloud asset
-flow is used. No production account write was tested here.
+ComfyUI must also be running using its existing E: launcher. No router port,
+public listener or remote tunnel is required. This connection operates on the
+laptop running both services. No production account write was tested here.
+GitHub Pages staging includes the public shared client and excludes local worker
+and Firebase server source. The static publication does not deploy Functions.
 
 ## Verification, 11 November 2026
 
@@ -98,7 +108,7 @@ flow is used. No production account write was tested here.
 - Actual duplicate submissions reused the same job; conflicting payloads returned
   409, unauthenticated requests 401, cross-owner requests 403, and unapproved
   workflow/size arguments 400. No failed request was reported as a generated image.
-- 38 focused unit/API tests and the actual-page browser fixture passed. They
+- 39 focused unit/API tests and the actual-page browser fixtures passed. They
   cover unavailable ComfyUI, execution failure, corrupt/mismatched output,
   ownership, in-flight duplicates, offline Ollama, queue safety and failed-preview
   clearing. The native Studio attachment and React local chat paths were exercised
@@ -111,10 +121,15 @@ flow is used. No production account write was tested here.
   baseline status was not independently established. These failures do not count
   as passes for this change.
 - Normal-credential worker startup and launcher reuse with -NoBrowser passed.
-  An extra stop/restart test was rejected by automatic approval review (blocked
-  by policy); the successfully tested worker was left running.
-- No new models, cloud generation API, merge, deployment or production-data
-  changes. The remote Firebase bridge was not enabled for image generation.
+  Automatic approval review blocked stopping the old worker. The user stopped
+  that exact PID in Task Manager. Windows then rejected the stale saved login;
+  an approved administrator repair restored the existing encrypted credential.
+  The updated restricted worker restarted successfully with the real account
+  owner and the exact production website origin.
+- HTTPS-origin browser verification covers the confirmation popup, forged
+  handoff rejection, local-network permission, authenticated CORS and preview.
+- No new models, cloud generation API or production-data changes. The remote
+  Firebase bridge was not enabled for image generation.
 
 To rerun fixtures on this Windows machine, set INVINCIBLE_IMAGE_TEST_ROOT to a
 temporary directory under the Codex task's work folder, then run npm run test:imagegen.

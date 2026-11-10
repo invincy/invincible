@@ -42,7 +42,7 @@ let browser;try{
  .replace(/import\{httpsCallable\}from'firebase\/functions';/,"const httpsCallable=()=>async()=>{throw Error('Cloud call is prohibited in this fixture');};")
  .replace(/import\{doc,onSnapshot\}from'firebase\/firestore';/,"const doc=()=>{},onSnapshot=()=>{throw Error('No cloud subscriptions in fixture');};")
  .replace(/import\{auth,db,functions\}from'\.\.\/\.\.\/\.\.\/firebase';/,"const auth={currentUser:{uid:'test-owner'}},db={},functions={};")
- .replace("'../../../../../local-ai/image-client.js'","'/local-ai/image-client.js'");
+ .replace("'../../../../../shared/local-image-client.js'","'/shared/local-image-client.js'");
  await page.route(service.origin+'/test-ai-service.js',route=>route.fulfill({contentType:'text/javascript',body:aiSource}));
  const result=await page.evaluate(async()=>{const service=await import('/test-ai-service.js');return service.sendInvincibleAiMessage({message:'Generate another square fortress image',provider:service.PROVIDERS.local});});
  assert.equal(result.actions[0].tool,'generate_image');assert.equal(result.actions[0].status,'completed');assert.equal(backend.loads,5);
@@ -54,4 +54,3 @@ let browser;try{
  assert.equal(await page.locator('[data-image-preview]').isVisible(),false,'Failed render clears the earlier preview');
  assert.deepEqual(errors,[]);console.log('PASS: actual local AI page with simulated GPU: queued/running/completed, 512px preview, PNG download, isolated attachment, Qwen route, 320–1440px layout.');
 }finally{await browser?.close();await service.close();await fs.rm(directory,{recursive:true,force:true,maxRetries:3});}
-

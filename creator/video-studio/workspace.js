@@ -1,5 +1,5 @@
 import {mountImageGenerator} from '../image-generator.js';
-import {createLocalImageClient} from '../../local-ai/image-client.js';
+import {createLocalImageClient} from '../../shared/local-image-client.js';
 import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=2026111002';
 import {studioBrief} from './handoff.js?v=2026111014';
 import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111014';
