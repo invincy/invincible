@@ -13,7 +13,11 @@ if (-not $FirebaseAgentToken) {
   try { $FirebaseAgentToken = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr) } finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr) }
 }
 $connectorCommand = "Set-Location -LiteralPath '$Root'; `$env:INVINCIBLE_FIREBASE_AGENT_TOKEN='$FirebaseAgentToken'; node local-ai/firebase-task-connector.mjs"
-Start-Process powershell.exe -WindowStyle Normal -ArgumentList '-NoProfile','-NoExit','-ExecutionPolicy','Bypass','-Command',"Set-Location -LiteralPath '$Root'; node local-ai/agent-service.mjs"
+$agentCommand = "Set-Location -LiteralPath '$Root'; `$env:INVINCIBLE_WHISPER_URL='http://127.0.0.1:8790/transcribe'; node local-ai/agent-service.mjs"
+$whisperCommand = "`$env:INVINCIBLE_AGENT_WORKSPACE='E:\\Invincible\\AgentWorkspace'; `$env:INVINCIBLE_WHISPER_MODEL_DIR='E:\\AI\\Whisper\\models'; `$env:INVINCIBLE_WHISPER_DEVICE='cpu'; `$env:INVINCIBLE_WHISPER_COMPUTE='int8'; & 'E:\\AI\\Whisper\\venv\\Scripts\\python.exe' '$Root\\local-ai\\whisper-service.py'"
+Start-Process powershell.exe -WindowStyle Normal -ArgumentList '-NoProfile','-NoExit','-ExecutionPolicy','Bypass','-Command',$agentCommand
+Start-Process powershell.exe -WindowStyle Normal -ArgumentList '-NoProfile','-NoExit','-ExecutionPolicy','Bypass','-Command',$whisperCommand
 Start-Process powershell.exe -WindowStyle Normal -ArgumentList '-NoProfile','-NoExit','-ExecutionPolicy','Bypass','-Command',$connectorCommand
-Write-Output 'Started the local agent and Firebase connector in separate PowerShell windows.'
+Write-Output 'Started the local agent, Whisper service and Firebase connector in separate PowerShell windows.'
+Write-Output 'For the hardened workspace, run this launcher under MSI\InvincibleAgent.'
 Write-Output 'Close those windows or press Ctrl+C in each one to stop them.'
