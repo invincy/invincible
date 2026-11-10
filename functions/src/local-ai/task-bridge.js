@@ -78,7 +78,7 @@ async function resolveAgentToken({ db, token, now }) {
   // Compatibility fallback for tokens created before the global index stored uid.
   const users = await db.collection('users').get();
   for (const user of users.docs) {
-    const agents = await agentCollection(db, user.id).where('tokenHash', '==', hash).limit(1).get();
+    const agents = await agentCollection(db, user.id).where('tokenHash', '==', hash).get();
     if (!agents.empty) {
       const data = agents.docs[0].data();
       if (data.revoked || Number(data.expiresAtMs || 0) <= timestamp) throw new Error('Agent token is expired or revoked.');
