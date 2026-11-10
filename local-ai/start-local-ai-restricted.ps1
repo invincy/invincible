@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param([string]$Root = 'E:\Projects\Invincible\invincible')
 $ErrorActionPreference = 'Stop'
+Import-Module Microsoft.PowerShell.Security -ErrorAction Stop
 if (-not (Test-Path -LiteralPath (Join-Path $Root 'local-ai\agent-service.mjs'))) { throw "Invincible root not found: $Root" }
 $credential = Get-Credential -UserName 'MSI\InvincibleAgent' -Message 'Enter the existing InvincibleAgent Windows password. It is used only to launch these two local processes and is not saved.'
 $agentCommand = "Set-Location -LiteralPath '$Root'; `$env:INVINCIBLE_WHISPER_URL='http://127.0.0.1:8790/transcribe'; node local-ai/agent-service.mjs"
