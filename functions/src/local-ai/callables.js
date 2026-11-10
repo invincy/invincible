@@ -1,10 +1,19 @@
 const { getFirestore } = require('firebase-admin/firestore');
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
-const { claimNextTask, completeTask, enqueueTask, failTask, expireLeases } = require('./task-bridge');
+const { claimNextTask, completeTask, createAgentPairing, enqueueTask, failTask, expireLeases, resolveAgentToken } = require('./task-bridge');
 
 const db = getFirestore();
 function requireAuth(request) { if (!request.auth?.uid) throw new HttpsError('unauthenticated', 'Sign in to Invincible first.'); return request.auth.uid; }
 function bridgeError(error) { if (error instanceof HttpsError) return error; return new HttpsError('failed-precondition', error.message || 'Local AI task bridge rejected the request.'); }
+async function requireAgent(request) {
+  if (request.auth?.uid) return { uid: request.auth.uid, agentId: String(request.data?.agentId || '').trim() };
+  return resolveAgentToken({ db, token: request.data?.agentToken });
+}
+
+exports.createInvincibleAgentPairing = onCall({ region: 'asia-south1' }, async request => {
+  const uid = requireAuth(request), agentId = String(request.data?.agentId || '').trim();
+  try { return await createAgentPairing({ db, uid, agentId }); } catch (error) { throw bridgeError(error); }
+});
 
 exports.enqueueInvincibleAiTask = onCall({ region: 'asia-south1' }, async request => {
   const uid = requireAuth(request), data = request.data || {};
@@ -12,18 +21,17 @@ exports.enqueueInvincibleAiTask = onCall({ region: 'asia-south1' }, async reques
 });
 
 exports.claimInvincibleAiTask = onCall({ region: 'asia-south1' }, async request => {
-  const uid = requireAuth(request), agentId = String(request.data?.agentId || '').trim();
-  try { return await claimNextTask({ db, uid, agentId }); } catch (error) { throw bridgeError(error); }
+  try { const agent = await requireAgent(request); return await claimNextTask({ db, uid: agent.uid, agentId: agent.agentId }); } catch (error) { throw bridgeError(error); }
 });
 
 exports.completeInvincibleAiTask = onCall({ region: 'asia-south1' }, async request => {
-  const uid = requireAuth(request), data = request.data || {};
-  try { return await completeTask({ db, uid, taskId: data.taskId, agentId: data.agentId, result: data.result }); } catch (error) { throw bridgeError(error); }
+  const data = request.data || {};
+  try { const agent = await requireAgent(request); return await completeTask({ db, uid: agent.uid, taskId: data.taskId, agentId: agent.agentId, result: data.result }); } catch (error) { throw bridgeError(error); }
 });
 
 exports.failInvincibleAiTask = onCall({ region: 'asia-south1' }, async request => {
-  const uid = requireAuth(request), data = request.data || {};
-  try { return await failTask({ db, uid, taskId: data.taskId, agentId: data.agentId, error: data.error }); } catch (error) { throw bridgeError(error); }
+  const data = request.data || {};
+  try { const agent = await requireAgent(request); return await failTask({ db, uid: agent.uid, taskId: data.taskId, agentId: agent.agentId, error: data.error }); } catch (error) { throw bridgeError(error); }
 });
 
 exports.recoverInvincibleAiTasks = onCall({ region: 'asia-south1' }, async request => {

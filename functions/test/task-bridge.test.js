@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { claimNextTask, completeTask, enqueueTask, expireLeases, failTask, TASK_STATUS, assertRegisteredTool } = require('../src/local-ai/task-bridge');
+const { claimNextTask, completeTask, createAgentPairing, enqueueTask, expireLeases, failTask, resolveAgentToken, TASK_STATUS, assertRegisteredTool } = require('../src/local-ai/task-bridge');
 
 function memoryDb() {
   const docs = new Map();
@@ -37,3 +37,10 @@ test('failed attempts retry, then become terminal; expired leases are recovered'
 });
 
 test('only registered tools can be executed locally', () => { assert.equal(assertRegisteredTool('create_project'), true); assert.throws(() => assertRegisteredTool('delete_project'), /not registered/); });
+
+test('agent pairing resolves a scoped token without exposing the token hash', async () => {
+  const db = memoryDb(); const pairing = await createAgentPairing({ db, uid: 'user_pair', agentId: 'laptop-agent-1', now: 1000, ttlMs: 60000 });
+  assert.match(pairing.token, /^[A-Za-z0-9_-]{40,}$/); assert.equal((await resolveAgentToken({ db, token: pairing.token, now: 2000 })).uid, 'user_pair');
+  assert.equal((await db.collection('users').doc('user_pair').collection('aiAgents').doc('laptop-agent-1').get()).data().tokenHash.length, 64);
+  await assert.rejects(() => resolveAgentToken({ db, token: 'invalid-token-invalid-token-invalid-token', now: 2000 }), /invalid/);
+});
