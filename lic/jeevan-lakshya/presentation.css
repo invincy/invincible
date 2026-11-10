@@ -81,7 +81,7 @@ html, body {
   background: #000;
   border-radius: 48px;
   overflow: hidden;
-  box-shadow: 
+  box-shadow:
     0 0 0 10px #172338,
     0 0 0 13px #090e18,
     0 25px 60px -10px rgba(0, 0, 0, 0.95),
@@ -185,7 +185,7 @@ html, body {
 /* Layer 2: Atmospheric Lighting */
 .layer-atmosphere {
   z-index: 2;
-  background: 
+  background:
     radial-gradient(circle at 50% 18%, rgba(56, 189, 248, 0.15) 0%, transparent 60%),
     radial-gradient(circle at 80% 65%, rgba(232, 189, 109, 0.12) 0%, transparent 50%),
     linear-gradient(180deg, rgba(3, 10, 23, 0.2) 0%, rgba(3, 10, 23, 0.85) 90%);

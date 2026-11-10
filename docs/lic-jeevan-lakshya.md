@@ -4,7 +4,7 @@
 
 LIC → **Plans** opens the existing `lic/agent/` route. Both plan cards have separate Present and Calculate actions. Jeevan Lakshya runs natively at `lic/jeevan-lakshya/`; it is not a React route. Shared top-level navigation remains owned by `shared/navigation.js` and `site-nav.js`.
 
-The working tree already contained the migrated Jeevan Lakshya folder and an edited Agent Tools page before this work. This integration completes those files. No commit, deployment, database migration or production customer write was performed.
+The working tree already contained the migrated Jeevan Lakshya folder and an edited Agent Tools page before this work. This integration completes those files. The initial implementation made no database migration or production customer write. Publication was subsequently authorised by the user.
 
 ## Evidence
 
@@ -64,6 +64,6 @@ The migrated `plan.css`, unused `visual.css` and all 14 image/logo assets are re
 - The full browser command stopped at Journal's previously documented `Save journal idea` dialog timeout. Separate CRM and Cashier runs reproduced the previously documented loading failures at `#addCustomer:enabled` and `#entryPanel:visible`. The CRM test first required its expected shortcut label to be updated to Plans; that navigation step then passed before the existing loading timeout. No assertions were removed.
 - The Firestore emulator attempt produced no completed rule/browser test results, and Java is unavailable locally. Emulator rule coverage remains unverified; no persistence or permission behavior was changed.
 
-Real issued-policy quotations, physical-device Safari and production Firebase permissions are not established by these checks. This feature has no customer persistence or production backend changes. The local working-tree integration is complete; publication is separate.
+Real issued-policy quotations, physical-device Safari and production Firebase permissions are not established by these checks. This feature has no customer persistence or production backend changes. Publication follow-up: the integration was applied to the latest master in a separate checkout to preserve newer project updates. The release uses the existing Publish main site GitHub Pages workflow. The original checkout’s untracked scratch files are excluded. Deployment status is recorded in the release report.
 
 Temporary extraction scripts, brochure page images and test logs remain untracked in the project `work/` directory. Automatic approval review rejected both the checked-directory cleanup and the explicit scratch-file deletion with “blocked by policy”; no deletion occurred. These files are not needed for publication. Browser screenshot evidence remains in the already ignored `.test-output/` directory.
