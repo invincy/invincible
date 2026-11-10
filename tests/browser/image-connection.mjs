@@ -18,6 +18,8 @@ try{
   return route.fulfill({contentType:name.endsWith('.css')?'text/css':'text/javascript',body:await fs.readFile(file)});
  });
  await page.goto(site+'/invincible/connection-fixture');await page.waitForSelector('[data-image-pair]');
+ assert.equal(await page.locator('[data-image-generate]').isEnabled(),false,'No generation before pairing');
+ assert.ok(await page.locator('.image-connection-bar [data-image-pair]').isVisible(),'Connection is above the prompt, outside Advanced settings');
  const popupEvent=page.waitForEvent('popup');await page.locator('[data-image-pair]').click();const popup=await popupEvent;
  await popup.waitForSelector('#connect');
  assert.equal(await page.evaluate(()=>sessionStorage.getItem('invincible.local-worker.'+client.origin)),null,'No token before local confirmation');
@@ -27,5 +29,8 @@ try{
  assert.equal(await page.locator('[data-image-pair]').isVisible(),false);
  await page.locator('[data-image-prompt]').fill('Published-origin fixture illustration');await page.locator('[data-image-generate]').click();await page.waitForSelector('[data-image-status]:has-text("Completed")');
  assert.ok(await page.locator('[data-image-preview]').evaluate(image=>image.complete&&image.naturalWidth===512));assert.equal(backend.loads,1);assert.deepEqual(errors,[]);
+ await page.evaluate(()=>sessionStorage.removeItem('invincible.local-worker.'+client.origin));await page.locator('[data-image-generate]').click();
+ await page.waitForSelector('[data-image-pair]:visible');assert.equal(await page.locator('[data-image-generate]').isEnabled(),false);assert.equal(backend.loads,1,'Expired pairing never submits GPU work');
+ assert.match(await page.locator('[data-image-status]').textContent(),/Connect this laptop/);assert.equal(await page.locator('[data-image-preview]').isVisible(),false,'Connection errors clear the prior preview');
  console.log('PASS: HTTPS published-origin popup confirmation, nonce/source checks, browser loopback permission, CORS authentication and verified preview.');
 }finally{await browser?.close();await service.close();await fs.rm(directory,{recursive:true,force:true,maxRetries:3});}
