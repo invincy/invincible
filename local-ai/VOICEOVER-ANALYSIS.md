@@ -11,3 +11,5 @@ This path converts a local MP3/WAV into an importable Creator Studio scene draft
 The recommended model is `faster-whisper` `small` with INT8 CPU inference (about 461 MB) for this laptop. Dependencies and model files belong under `E:\AI\Whisper`, not the repository. No MP4 renderer is invoked.
 
 The service enforces `E:\Invincible\AgentWorkspace` and localhost-only access. The hardened ACL currently permits the `MSI\InvincibleAgent` identity to write there; a regular `MSI\vaibh` process is intentionally denied. Uploads must therefore be performed by the restricted agent identity before the service can process them.
+
+Use `start-local-ai-restricted.ps1` to launch the agent and Whisper service with a local Windows credential prompt. The password is not stored. Do not use the ordinary launcher for the secure upload test; it runs under the interactive user and will be denied by the hardened ACL.
