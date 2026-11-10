@@ -140,3 +140,20 @@ checks. Use the installed Chromium path in CHROMIUM_EXECUTABLE for older browser
 scripts that otherwise default to a Linux executable.
 
 Windows task-registration credential requirements: https://learn.microsoft.com/en-us/windows/win32/taskschd/security-contexts-for-running-tasks
+
+## Personal images and Creator tool selection
+
+Invincible AI now has Chat and Images tabs. The Images tab reuses the same fixed
+local worker and PNG verification as Creator, without selecting a project or
+asking Qwen. Images can be previewed, downloaded and regenerated independently.
+The generator stays mounted when switching tabs so a running job or completed
+preview is retained. Account changes destroy its old view and keep the existing
+owner checks. The direct entry is ai/?tool=images; cloud chat provider selection
+does not change the local image executor.
+
+Creator's first asset section now offers Upload & voiceover and Create image
+side by side. The image view keeps Attach to current project through the existing
+asset upload flow. Keyboard arrow/Home/End navigation works in both tool selectors.
+A Qwen image notification reveals the Creator image view. Advanced image controls
+remain collapsed and accessible. No video or production project is needed for
+personal generation, and this UI change does not write production project data.
