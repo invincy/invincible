@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="presentation.css?v=1">
+  <link rel="stylesheet" href="presentation.css?v=8">
   <link rel="stylesheet" href="../../shared/app-theme.css?v=1">
 </head>
 <body>
@@ -83,7 +83,7 @@
     </div>
 
     <!-- The Presentation Stage (Strict Layer Architecture) -->
-    <div id="stageContainer" class="stage-container" data-story-step="1">
+    <div id="stageContainer" data-opening="loading" class="stage-container" data-story-step="1">
       <div class="layer-stage-3d">
 
         <!-- LAYER 1: Environment Plate (Cosmic Background) -->
@@ -92,12 +92,30 @@
         </div>
 
         <!-- LAYER 2: Atmosphere & Glow -->
-        <div id="layerAtmosphere" class="scene-layer layer-atmosphere"></div>
+        <div id="layerAtmosphere" class="scene-layer layer-atmosphere"><svg viewBox="0 0 390 844" preserveAspectRatio="none" width="100%" height="100%" aria-hidden="true"><g fill="none" stroke="#a9cbff" stroke-width="1.3" opacity=".35"><path d="M0 188H45L120 142H195L250 188L327 169M0 280H62L126 239H211L289 295H390M0 400L75 356L141 398L213 355L304 410H390M0 622H67L132 566H218L283 612H390M0 706L79 663L146 704L227 654L310 700H390"/></g><g fill="#ffdf85" opacity=".4"><circle cx="120" cy="142" r="3"/><circle cx="250" cy="188" r="3"/><circle cx="126" cy="239" r="3"/><circle cx="213" cy="355" r="3"/><circle cx="132" cy="566" r="3"/><circle cx="283" cy="612" r="3"/></g></svg></div>
 
         <!-- LAYER 3: Characters & Path Ground Plate -->
-        <div id="layerCharacters" class="scene-layer layer-characters"></div>
+        <div id="layerCharacters" class="scene-layer layer-characters" aria-hidden="true"><img class="story-road" src="assets/path.png" alt=""><img class="story-family" src="assets/dad&daughter.png" alt=""><img class="story-child" src="assets/girl.png" alt=""></div>
 
-        <!-- LAYER 4: Foreground Contrast Vignette -->
+        <button type="button" id="goalCoin" disabled class="scene-coin-badge" aria-label="Choose your child’s goal" aria-expanded="false" aria-controls="goalChoices">
+              <img id="storyGoal" class="story-goal" src="assets/jeevan-lakshya.png" alt="LIC Jeevan Lakshya"></button>
+<span id="goalHint" class="goal-hint" hidden>Tap the gold coin to choose a goal</span>
+<div id="goalChoices" class="goals-selection-row" inert>
+              <button class="goal-card-btn active" type="button" data-goal="education">
+                <img src="assets/study.png" alt="Higher Education">
+                <span>Education</span>
+              </button>
+              <button class="goal-card-btn" type="button" data-goal="career">
+                <img src="assets/career.png" alt="Career Foundation">
+                <span>Career</span>
+              </button>
+              <button class="goal-card-btn" type="button" data-goal="marriage">
+                <img src="assets/marriage.png" alt="Daughter Marriage">
+                <span>Marriage</span>
+              </button>
+            </div>
+
+<!-- LAYER 4: Foreground Contrast Vignette -->
         <div id="layerVignette" class="scene-layer layer-vignette"></div>
 
         <!-- LAYER 5: Navigation & Top Status Bar -->
@@ -138,27 +156,10 @@
 
         <!-- LAYER 8: Story Scenes Viewport (Non-Scrollable) -->
         <div id="sceneStageContent" class="scene-stage-content">
+<div id="scene1" class="scene-1-wrap">
 
-          <!-- SCENE 1: The Child's Dream Goal -->
-          <div id="scene1" class="scene-1-wrap">
-            <div class="scene-coin-badge">
-              <img src="assets/jeevan-lakshya.png" alt="LIC Jeevan Lakshya">
-            </div>
 
-            <div class="goals-selection-row">
-              <button class="goal-card-btn active" type="button" data-goal="education">
-                <img src="assets/study.png" alt="Higher Education">
-                <span>Education</span>
-              </button>
-              <button class="goal-card-btn" type="button" data-goal="career">
-                <img src="assets/career.png" alt="Career Foundation">
-                <span>Career</span>
-              </button>
-              <button class="goal-card-btn" type="button" data-goal="marriage">
-                <img src="assets/marriage.png" alt="Daughter Marriage">
-                <span>Marriage</span>
-              </button>
-            </div>
+
 
             <div class="figures-ground-plate">
               <img src="assets/dad&daughter.png" alt="Father and Daughter" class="dad-daughter-img">
@@ -166,115 +167,9 @@
             </div>
           </div>
 
-          <!-- SCENE 2: The Planned Journey (Normal Life & Growth) -->
-          <div id="scene2" class="scene-1-wrap" style="display: none; justify-content: center;">
-            <div class="journey-timeline-box">
-              <div class="journey-stat-row">
-                <div class="stat-pill">
-                  <span>Policy Term</span>
-                  <b id="s2Term">25 Years</b>
-                </div>
-                <div class="stat-pill">
-                  <span>Pay Only (PPT)</span>
-                  <b id="s2Ppt">22 Years</b>
-                </div>
-              </div>
 
-              <div class="timeline-meter-wrap">
-                <div class="meter-labels">
-                  <span>Premium Paying Years (Term - 3)</span>
-                  <span>No premiums due</span>
-                </div>
-                <div class="meter-track">
-                  <div class="meter-fill-ppt"></div>
-                  <div class="meter-fill-bonus"></div>
-                </div>
-              </div>
-
-              <div class="journey-stat-row">
-                <div class="stat-pill">
-                  <span>Annual Commitment</span>
-                  <b id="s2Premium">LIC quote required</b>
-                </div>
-                <div class="stat-pill">
-                  <span>Contractual Survival Maturity</span>
-                  <b id="s2Maturity" style="color: var(--accent-emerald);">₹10,00,000</b>
-                </div>
-              </div>
-
-              <div class="journey-benefit-callout">
-                <span>✨</span>
-                <span>In-force policy: BSA at survival maturity; future bonuses are not guaranteed.</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- SCENE 3: The Unforeseen Event ("What-If") — The Core Shield -->
-          <div id="scene3" class="whatif-container" style="display: none;">
-            <div class="unforeseen-alert-pill">
-              <span>⚠️</span>
-              <span>If Unfortunate Event Occurs to Parent</span>
-            </div>
-
-            <div class="unbreakable-shield-list">
-              <div class="shield-benefit-item">
-                <div class="shield-icon-badge">
-                  <img src="assets/death.png" alt="Waiver of Premium">
-                </div>
-                <div class="shield-benefit-text">
-                  <h4>1. Premiums Cease Immediately</h4>
-                  <p>After an in-force death, no future base premiums are due. Policy exclusions apply.</p>
-                </div>
-              </div>
-
-              <div class="shield-benefit-item">
-                <div class="shield-icon-badge">
-                  <img src="assets/10sa.png" alt="10% Annual Income">
-                </div>
-                <div class="shield-benefit-text">
-                  <h4>2. Annual Income: 10% of BSA</h4>
-                  <p>From the anniversary coinciding with/following death until the anniversary before maturity.</p>
-                </div>
-              </div>
-
-              <div class="shield-benefit-item">
-                <div class="shield-icon-badge">
-                  <img src="assets/maturity.png" alt="110% BSA due at maturity after in-force death">
-                </div>
-                <div class="shield-benefit-text">
-                  <h4>3. At Maturity: 110% BSA + Bonuses, if any</h4>
-                  <p>In-force death benefits; 7× annualised premium and 105% premiums-paid safeguards apply.</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="whatif-visual-scene">
-              <div class="shield-umbrella-halo"></div>
-              <img src="assets/girl.png" alt="Daughter Protected" class="girl-alone-img">
-            </div>
-          </div>
-
-          <!-- SCENE 4: Comparison vs Market & Traditional Savings -->
-          <div id="scene4" class="comparison-container" style="display: none;">
-            <div class="compare-card market-fd">
-              <div class="compare-header">
-                <b>Mutual Fund SIP / Bank FD</b>
-                <span class="badge-status red">SAVINGS ONLY</span>
-              </div>
-              <p>These savings products do not themselves include this plan’s life cover. Values and terms differ; separate life insurance can complement savings.</p>
-            </div>
-
-            <div class="compare-card lakshya-shield">
-              <div class="compare-header">
-                <b>LIC Jeevan Lakshya (Plan 733)</b>
-                <span class="badge-status gold">LIFE COVER + SAVINGS</span>
-              </div>
-              <p>For an in-force death: scheduled annual income and a lump sum at maturity. Future bonuses and the cost of a child’s goal are not guaranteed.</p>
-            </div>
-          </div>
-
-          <!-- SCENE 5: Interactive Customizer & Quote -->
-          <div id="scene5" class="customizer-box" style="display: none;">
+<section id="selectionPanel" class="flow-glass selection-panel" hidden aria-label="Selected goal"><b id="selectionTitle">Your goal is selected</b><p>Choose an age and policy term to explore the plan.</p><button id="getPremiumBtn" class="flow-gold" type="button">Get premium →</button></section>
+<section id="configurationPanel" hidden aria-label="Choose plan profile"><div id="scene5" class="customizer-box" style="display: none;">
             <div class="input-row">
               <label>Parent Age</label>
               <div class="segmented-btn-group">
@@ -303,34 +198,40 @@
               </div>
             </div>
 
-            <div class="live-quote-card">
-              <div>
-                <span>Annual Premium</span>
-                <b id="liveAnnualPremium">LIC quote required</b>
+            <div class="rider-scenario"><b>Term rider illustration</b><small id="riderScenarioAmount"></small><small>Rider premium quoted separately.</small></div></div><button id="openPreviewBtn" class="flow-gold" type="button">Show premium →</button></section>
+<section id="previewPanel" class="preview-panel" hidden aria-label="Premium and maturity"><div id="premiumPill" class="flow-glass premium-pill"><span>Annual base premium</span><strong id="previewPremium"></strong><small id="previewTerm"></small><small>Rider premium quoted separately</small></div><div id="maturityPill" class="flow-glass maturity-pill" hidden><span>Maturity</span><strong id="previewMaturity"></strong><small>BSA + bonus, if any<br>Bonuses not guaranteed</small></div></section>
+<section id="whatIfPanel" class="whatif-panel" hidden aria-label="What if"><div id="whatIfCaption" class="question-pill" hidden><b>What happens<br>if the parent dies?</b><span>શું બાળકનું સપનું અધૂરું રહેશે?</span></div></section>
+<section id="protectionPanel" class="protection-panel" hidden aria-label="Family protection journey">
+<div id="assurancePill" class="journey-caption" hidden><b>The path continues for your child.</b><small>In-force base policy and term rider · illustrative cover</small></div>
+<svg class="benefit-route" viewBox="0 0 320 430" preserveAspectRatio="none" aria-hidden="true"><path class="route-bed" d="M50 385 C260 355 280 310 180 280 S30 225 110 185 S290 135 235 70"/><path id="benefitTrail" class="route-gold" pathLength="1" d="M50 385 C260 355 280 310 180 280 S30 225 110 185 S290 135 235 70"/><circle id="journeyOrb" cx="50" cy="385" r="6"/></svg>
+<div id="riderPill" class="flow-glass benefit-pill route-rider" hidden><span class="milestone-number">01</span><div><span class="benefit-label">On death · term rider</span><b id="riderAmount"></b><small>In-force rider · illustrated cover = BSA.</small></div></div>
+<div id="ceasesPill" class="flow-glass benefit-pill route-ceases" hidden><span class="milestone-number">02</span><div><span class="benefit-label">Future base premiums</span><b>Premiums stop</b><small>No further base premiums due.</small></div></div>
+<div id="incomePill" class="flow-glass benefit-pill route-income" hidden><span class="milestone-number">03</span><div><span class="benefit-label">Every eligible year</span><b id="incomeAmount"></b><small>10% BSA · anniversaries before maturity.</small></div></div>
+<div id="deathMaturityPill" class="flow-glass benefit-pill route-maturity" hidden><div><span class="benefit-label">Maturity</span><b id="deathMaturityAmount"></b><small>110% BSA<br>+ bonus, if any*</small></div></div>
+<div id="journeyStatus" class="journey-status" role="status" aria-live="polite"></div>
+</section>
+<section id="detailsPanel" hidden aria-label="Plan details"><div id="scene4" class="comparison-container" style="display: none;">
+            <div class="compare-card market-fd">
+              <div class="compare-header">
+                <b>Mutual Fund SIP / Bank FD</b>
+                <span class="badge-status red">SAVINGS ONLY</span>
               </div>
-              <div>
-                <span>Premium Paying Term</span>
-                <b id="liveMonthlyPremium">22 Years</b>
-              </div>
-              <div>
-                <span>10% Annual Income on Demise</span>
-                <b id="liveAnnualIncome" style="color: var(--accent-gold);">₹1,00,000/yr</b>
-              </div>
-              <div>
-                <span>Survival BSA · bonuses extra, if any</span>
-                <b id="liveMaturityBenefit" style="color: var(--accent-emerald);">₹10,00,000</b>
-              </div>
+              <p>These savings products do not themselves include this plan’s life cover. Values and terms differ; separate life insurance can complement savings.</p>
             </div>
 
-            <a href="calculator.html" class="open-calc-btn">
-              <span>Open Detailed Plan 733 Calculator</span>
-              <span>→</span>
-            </a>
+            <div class="compare-card lakshya-shield">
+              <div class="compare-header">
+                <b>LIC Jeevan Lakshya (Plan 733)</b>
+                <span class="badge-status gold">LIFE COVER + SAVINGS</span>
+              </div>
+              <p>For an in-force death: scheduled annual income and a lump sum at maturity. Future bonuses and the cost of a child’s goal are not guaranteed.</p>
+            </div>
           </div>
 
-        </div><!-- /.scene-stage-content -->
+          <a id="fullCalculatorLink" class="open-calc-btn" href="calculator.html">Open base-plan calculator →</a><button id="replayBtn" type="button" class="flow-secondary">Replay story</button></section>
+</div>
 
-        <!-- STAGE FOOTER: Bottom CTA & Navigation -->
+<!-- STAGE FOOTER: Bottom CTA & Navigation -->
         <footer id="stageFooter" class="stage-footer">
           <button id="ctaPrevBtn" class="cta-prev-btn" type="button" aria-label="Previous Scene" disabled>←</button>
           <button id="ctaNextBtn" class="cta-next-btn" type="button" aria-label="Continue Story">
@@ -366,6 +267,6 @@
 </div><!-- /.app-viewport-wrapper -->
 
 <script type="module" src="../../site-nav.js?v=7"></script>
-<script type="module" src="presentation.js?v=2"></script>
+<script type="module" src="presentation.js?v=8"></script>
 </body>
 </html>
