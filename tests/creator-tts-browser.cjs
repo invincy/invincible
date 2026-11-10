@@ -29,7 +29,8 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
    if(req.method==='DELETE'){historyDb.delete(key);res.end('{}');return;}
    res.end(JSON.stringify([...historyDb].filter(([path])=>path.startsWith(key+'/')).map(([path,data])=>({id:path.split('/').at(-1),data}))));return;
   }
-  res.setHeader('Content-Type',relative.endsWith('.js')?'text/javascript':relative.endsWith('.css')?'text/css':'text/html');
+  res.setHeader('Content-Type',relative.endsWith('.js')?'text/javascript':relative.endsWith('.css')?'text/css':relative.endsWith('.svg')?'image/svg+xml':'text/html');
+  if(relative==='ai/'){res.end('<style>html,body{margin:0;background:transparent;color-scheme:dark}</style>');return;}
   if(relative==='shared/firebase-client.js'){res.end(fixtureAuth);return;}
   if(relative==='creator/tts-api.js'){res.end(fixtureApi);return;}
   const file=path.resolve(root,relative);
@@ -47,6 +48,10 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   const base='http://127.0.0.1:'+server.address().port+'/invincible/creator/tts.html';
   await page.addInitScript(()=>{if(!localStorage.getItem('invincible.creator.tts.draft.v1.owner'))localStorage.setItem('invincible.creator.tts.draft.v1.owner',JSON.stringify({engine:'classic'}));});
   await page.goto(base);await page.locator('#accountStatus').filter({hasText:'voices available'}).waitFor();
+  assert.equal(await page.evaluate(()=>getComputedStyle(document.body,'::before').animationName),'studio-water-drift');
+  await page.emulateMedia({reducedMotion:'reduce'});
+  assert.equal(await page.evaluate(()=>getComputedStyle(document.body,'::before').animationName),'none');
+  await page.emulateMedia({reducedMotion:'no-preference'});
   assert.equal(await page.locator('#script').inputValue(),'');assert.equal(await page.locator('#voiceDemo').isEnabled(),true);assert.equal(await page.locator('#generate').isDisabled(),true);
   await page.locator('#voiceDemo').click();await page.waitForFunction(()=>document.querySelector('#voiceDemo').getAttribute('aria-pressed')==='true');
   assert.ok(demoRequests.at(-1).endsWith('hi-IN-Neural2-B.wav'));assert.equal(await page.evaluate(()=>window.lastTtsRequest),undefined);
@@ -89,6 +94,8 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   for(const width of [320,393,768,1280]){await page.setViewportSize({width,height:1000});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);}
   await page.setViewportSize({width:1280,height:1100});await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:path.join(out,'desktop.png'),fullPage:true});
   await page.setViewportSize({width:393,height:852});await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:path.join(out,'mobile.png'),fullPage:true});
+  assert.equal(await page.locator('#engine').isVisible(),false,'Phone settings start collapsed');
+  await page.locator('#voiceSettings > summary').click();
   await page.locator('#engine').selectOption('gemini');
   assert.equal(await page.locator('#expressiveControls').isVisible(),true);
   assert.equal(await page.locator('#pitchRow').isHidden(),true);
@@ -102,6 +109,7 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   const expressive=await page.evaluate(()=>window.lastTtsRequest);
   assert.equal(expressive.engine,'gemini');assert.equal(expressive.delivery,'sales');assert.equal(expressive.direction,'Warm and confident.');assert.equal(expressive.speed,1.35);assert.equal(expressive.pitch,0);assert.equal(expressive.paragraphPause,0);assert.equal(expressive.modelName,'gemini-2.5-pro-tts');
   await page.waitForTimeout(350);await page.reload();await page.locator('#accountStatus').filter({hasText:'voices available'}).waitFor();
+  await page.locator('#voiceSettings > summary').click();
   assert.equal(await page.locator('#direction').inputValue(),'Warm and confident.');assert.equal(await page.locator('#preset').inputValue(),'sales');
   await page.evaluate(()=>window.failHistorySave=true);await page.locator('#generate').click();
   await page.locator('#historyStatus').filter({hasText:'History not saved'}).waitFor();
@@ -109,6 +117,7 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   await page.reload();await page.locator('#accountStatus').filter({hasText:'voices available'}).waitFor();
   await page.locator('[data-action=retry]').waitFor();await page.locator('[data-action=retry]').click();
   await page.locator('#historyStatus').filter({hasText:'saved to your account'}).waitFor();assert.equal(historyDb.size,2);
+  await page.locator('#voiceSettings > summary').click();
   await page.locator('#engine').selectOption('classic');await page.locator('#family').selectOption('Neural2');
   await page.locator('.history-entry').first().locator('[data-action=restore]').click();
   assert.equal(await page.locator('#engine').inputValue(),'gemini');assert.equal(await page.locator('#model').inputValue(),'gemini-2.5-pro-tts');assert.equal(await page.locator('#direction').inputValue(),'Warm and confident.');assert.equal(await page.locator('#preset').inputValue(),'sales');assert.equal(await page.locator('#speed').inputValue(),'1.35');
@@ -129,6 +138,36 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
    await page.waitForTimeout(350);await page.reload();await page.locator('#accountStatus').filter({hasText:'voices available'}).waitFor();
    assert.equal(await page.locator('#preset').inputValue(),delivery);
   }
+  // Real landscape/portrait ratios, generated playback, and the phone disclosure.
+  await page.locator('#title').fill('A story, in your voice');
+  await page.locator('#script').fill('21 अप्रैल, 1526! पानीपत के मैदान में आमने-सामने थीं दो सेनाएँ।\n\nइस कहानी में जानिए बाबर की Military Strategy और उसकी निर्णायक चाल।');
+  await page.locator('#generate').click();await page.locator('#generationStatus').filter({hasText:'MP3 ready'}).waitFor();
+  for(const [width,height] of [[1920,1080],[1440,810],[1280,720],[1024,768],[820,1180],[393,852],[360,640],[320,568]]){
+   await page.setViewportSize({width,height});await page.evaluate(()=>scrollTo(0,0));
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'No overflow '+width);
+   const action=await page.locator('#generate').boundingBox();
+   assert.ok(action.height>=44&&action.y>=0&&action.y+action.height<=height,'Generate in viewport '+width);
+   for(const id of ['generate','player','download'])assert.ok(await page.locator('#'+id).evaluate(el=>{
+    const r=el.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+    return r.y>=0&&r.bottom<=innerHeight&&hit&&(hit===el||el.contains(hit));
+   }),'Transport visible and unobscured: '+id+' at '+width);
+   if(width>900){
+    const editor=await page.locator('#script').boundingBox();
+    assert.ok(editor.width>width*.45,'Spacious desktop editor '+width);
+    assert.equal(await page.locator('#engine').isVisible(),true,'Desktop settings reopen');
+   }
+   if(width===393){
+    await page.locator('#voiceSettings').evaluate(el=>el.open=false);
+    await page.locator('#voiceSettings > summary').press('Enter');
+    assert.equal(await page.locator('#engine').isVisible(),true,'Keyboard opens settings');
+   }
+   await page.screenshot({path:path.join(out,'responsive-'+width+'.png')});
+   if(width<=900){
+    await page.locator('#voiceSettings').evaluate(el=>el.open=false);await page.evaluate(()=>scrollTo(0,0));
+    await page.screenshot({path:path.join(out,'portrait-'+width+'.png')});
+   }
+  }
+  await page.setViewportSize({width:1440,height:810});
   await page.locator('#engine').selectOption('classic');await page.locator('#family').selectOption('Neural2');
   assert.equal(await page.locator('#preset').inputValue(),'natural');
   for(const delivery of ['social','empathetic'])assert.equal(await page.locator('#preset option[value='+delivery+']').evaluate(el=>el.disabled),true);
@@ -140,6 +179,6 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   await page.locator('#historyStatus').filter({hasText:'saved to your account'}).waitFor();assert.equal(await page.locator('.history-entry').count(),0,'Another account cannot see owner history');
   await page.locator('#voiceDemo').click();await page.waitForFunction(()=>document.querySelector('#voiceDemo').getAttribute('aria-pressed')==='true');
   await page.evaluate(()=>window.setTtsUser(null));assert.equal(await page.locator('#voiceDemoAudio').evaluate(a=>a.paused&&!a.hasAttribute('src')),true);assert.equal(await page.locator('#workspace').isHidden(),true);assert.equal(await page.locator('#signedOut').isVisible(),true);
-  assert.deepEqual(errors,[]);console.log('Voiceover browser: saved history snapshots, script/settings export and restore, fresh-context retrieval, pending-save retry, pagination, delete failure/success and account isolation; existing demos, generation, downloads, drafts and 320–1280px layouts passed.');
+  assert.deepEqual(errors,[]);console.log('Voiceover browser: saved history/export/restore/retry/pagination/deletion and account isolation; demos, preview/full generation, settings, MP3 download, errors, retained drafts, account isolation, keyboard disclosure and unobscured transport at 320–1920px passed.');
  }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

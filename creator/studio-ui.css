@@ -1,0 +1,86 @@
+/* Shared Creator UI, independent of film artwork and export presentation. */
+body.studio-ui{
+ --studio-canvas:#080f1b;--studio-surface:#0e1927b8;--studio-raised:#132332e0;
+ --studio-line:#243646;--studio-accent:#75d9d0;--studio-muted:#9bafbd;
+ --bg:var(--studio-canvas);--panel:var(--studio-surface);--panel2:var(--studio-raised);
+ --panel-2:var(--studio-raised);--surface:var(--studio-surface);
+ --line:var(--studio-line);--line-strong:#478e93;--hot:var(--studio-accent);--pink:#70bcd3;
+ --text:#e7eff5;--muted:var(--studio-muted);--app-canvas:var(--studio-canvas);
+ --app-surface:var(--studio-surface);--app-surface-raised:var(--studio-raised);
+ isolation:isolate;color:var(--text);background:var(--studio-canvas)!important;
+ font-family:Roboto,"Noto Sans Devanagari",system-ui,sans-serif;
+ scrollbar-color:#345c6b var(--studio-canvas);scrollbar-width:thin;
+}
+/* A composited water layer: no canvas, input handlers or per-frame script. */
+.studio-ui::before{
+ content:"";position:fixed;inset:-12%;z-index:-1;pointer-events:none;
+ background:url("./studio-flow.svg?v=3") center / cover no-repeat;
+ transform-origin:60% 45%;animation:studio-water-drift 28s ease-in-out infinite alternate;
+}
+@keyframes studio-water-drift{
+ from{transform:translate3d(-2%,-1%,0) rotate(-2deg) scale(1.02)}
+ to{transform:translate3d(2%,2%,0) rotate(2deg) scale(1.06)}
+}
+.studio-ui::after{display:none}
+.studio-ui *{box-sizing:border-box}
+.studio-ui :where(button,input,select,textarea,summary,a):focus-visible{outline:2px solid var(--studio-accent);outline-offset:3px}
+.studio-ui :where(button,summary){touch-action:manipulation}
+.studio-ui :where(button,select,input:not([type=checkbox]):not([type=radio]),summary){min-height:44px}
+.studio-ui :where(input,select,textarea){color-scheme:dark}
+.studio-ui .primary,.studio-ui #contentDialog .primary{background:var(--studio-accent);border-color:transparent;color:#082025;box-shadow:none;font-weight:600}
+.studio-ui .primary:hover:not(:disabled){background:#98e7df}
+.studio-ui .secondary,.studio-ui .tts-launch{background:#172b39;border-color:var(--studio-line);color:#e7eff5}
+.studio-ui .production-workbench{--wb-line:var(--studio-line);--wb-accent:var(--studio-accent);--wb-cyan:var(--studio-accent);--wb-surface:var(--studio-surface)}
+.studio-ui :is(.studio-header,.project-header),.studio-ui>main{max-width:none;padding-inline:clamp(16px,2vw,36px)}
+.studio-ui .studio-header{padding-top:24px;gap:16px}
+.studio-ui .studio-header h1{font-size:clamp(25px,2.6vw,36px);font-weight:550;letter-spacing:-.04em}
+.studio-ui .header-actions{flex-direction:row;align-items:center;flex-wrap:wrap;gap:8px}
+.studio-ui .sync-status{color:var(--studio-muted)}
+.studio-ui .metrics .metric-card,.studio-ui .content-card,.studio-ui .column{border-color:var(--studio-line);box-shadow:none;border-radius:12px}
+.studio-ui .metrics .metric-card{min-height:94px;padding:16px}
+.studio-ui .metrics .metric-card::before{display:none}
+.studio-ui .metrics .metric-card.active,.studio-ui .metrics .metric-card:hover{background:#132c38;border-color:#478e93;box-shadow:none;transform:none}
+.studio-ui .metrics span{text-transform:none;letter-spacing:0}
+.studio-ui .metrics strong{font-size:25px;margin-top:6px}
+.studio-ui .content-card:hover{border-color:#478e93;box-shadow:none}
+.studio-ui .open-project{background:#132c38;border-color:#345c6b;color:#c6efed}
+.studio-ui .open-project span{color:var(--studio-accent)}
+.studio-ui .stage-tabs button.active,.studio-ui .filter.active{background:#15313d;border-color:#478e93;color:#d2f4ef}
+.studio-ui #contentDialog .dialog-actions{background:var(--studio-raised)!important;border-color:var(--studio-line)}
+.studio-ui #contentDialog .content-title-field input{background:#09131f;border-color:var(--studio-line);color:var(--text)}
+.studio-ui .video-studio{--studio-red:var(--studio-accent);--studio-red-soft:#b2e7e2;background:var(--studio-surface);color:var(--text);border-radius:12px;padding:20px}
+.studio-ui .vs-step{background:var(--studio-surface);border-color:var(--studio-line);box-shadow:none;border-radius:12px;padding:18px}
+.studio-ui .vs-studio-header h2{font-size:clamp(24px,2.5vw,32px);font-weight:550}
+.studio-ui .vs-studio-header>div:first-child::before,.studio-ui .vs-drop::before{display:none}
+.studio-ui .vs-studio-header>div:first-child{display:block}
+.studio-ui .vs-drop{background:#102631;color:#c8e8e6!important;border-color:#3e727a;border-radius:10px;padding:18px}
+.studio-ui .vs-drop:hover{background:#16313b;border-color:var(--studio-accent)}
+.studio-ui .video-studio :is(input,select,textarea),.studio-ui .production-workbench .video-studio :is(input,select){background:#09131f;border-color:var(--studio-line);color:var(--text)}
+.studio-ui .video-studio button{background:#172b39;border-color:#34505d;color:var(--text);min-height:44px}
+.studio-ui .video-studio [data-vs=export]{background:var(--studio-accent);border-color:transparent;color:#082025}
+.studio-ui .video-studio [data-vs=export]:hover{background:#98e7df;border-color:transparent}
+.studio-ui .video-studio :is([data-vs=copy-brief],[data-vs=apply]:not(:disabled),button[aria-pressed=true]){background:#183b43;border-color:#478e93;color:#d2f4ef}
+.studio-ui .video-studio :is(button,input,select,textarea):focus-visible{outline-color:var(--studio-accent)}
+.studio-ui .vs-audio-track>div{background:#183b43;color:#d2f4ef;border-color:#478e93}
+.studio-ui :is(.vs-media-library article,.vs-scene-list button,.vs-audio-list button,.vs-track button){background:#112331;border-color:#34505d;color:#d5e5ed}
+.studio-ui .vs-scene-list button[aria-pressed=true]{background:#183b43;border-color:var(--studio-accent)}
+.studio-ui .vs-preview{background:#09131f;border-color:var(--studio-line);box-shadow:none;padding:16px}
+.studio-ui :is(.vs-help,.vs-files,.video-studio label,.vs-advanced>summary){color:var(--studio-muted)}
+.studio-ui .wb-tabs button{min-height:44px}
+.studio-ui .production-workbench.wb-studio-home .wb-tabs button[aria-current=page]{background:#15313d;border-color:#478e93;color:#bceae5;box-shadow:none}
+.studio-ui .wb-studio-home .wb-tabs button{background:#112331;border-color:var(--studio-line);color:#b5cbd6}
+.studio-ui .project-progress span{background:linear-gradient(90deg,#458e9c,var(--studio-accent));box-shadow:none}
+@media(max-width:700px){
+ .studio-ui :is(.studio-header,.project-header),.studio-ui>main{padding-inline:12px}
+ .studio-ui .studio-header{padding-block:18px 12px}
+ .studio-ui .metrics .metric-card{min-height:84px;padding:12px}
+ .studio-ui .video-studio{padding:12px}
+ .studio-ui .vs-step{padding:14px}
+ .studio-ui .vs-flow{gap:12px}
+ .studio-ui :where(input:not([type=range]),select,textarea){font-size:16px}
+}
+@media(max-width:700px){.studio-ui::before{animation-duration:36s;background-size:auto 100%}}
+@media(prefers-reduced-motion:reduce){
+ .studio-ui::before{animation:none;transform:none}
+ .studio-ui *{scroll-behavior:auto!important;transition:none!important}
+}
