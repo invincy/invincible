@@ -1,4 +1,4 @@
-import{createLocalImageClient,waitForImage}from'../../../../../shared/local-image-client.js';
+import{createLocalImageClient,waitForImage,hasLocalPairing}from'../../../../../shared/local-image-client.js';
 import{httpsCallable}from'firebase/functions';
 import{doc,onSnapshot}from'firebase/firestore';
 import{auth,db,functions}from'../../../firebase';
@@ -10,7 +10,7 @@ const pairAgent=httpsCallable(functions,'createInvincibleAgentPairing',{timeout:
 const queryLocal=typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('local-ai')==='1';
 const imageWorkerOrigin='http://127.0.0.1:8788';
 const publicLaptop=typeof window!=='undefined'&&location.origin==='https://invincy.github.io';
-const hasLaptopPair=()=>typeof sessionStorage!=='undefined'&&Boolean(sessionStorage.getItem('invincible.local-worker.'+imageWorkerOrigin));
+const hasLaptopPair=()=>typeof window!=='undefined'&&!!auth.currentUser?.uid&&hasLocalPairing(imageWorkerOrigin,auth.currentUser.uid);
 const getLocalOrigin=()=>typeof window!=='undefined'&&(window.__INVINCIBLE_LOCAL_AI_ORIGIN__||(['127.0.0.1','localhost'].includes(location.hostname)||hasLaptopPair()?imageWorkerOrigin:''))||'';
 const localBridgeEnabled=queryLocal&&!getLocalOrigin();
 export const PROVIDERS=Object.freeze({cloud:'cloud',local:'local'});

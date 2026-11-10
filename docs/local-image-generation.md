@@ -68,7 +68,8 @@ Windows-encrypted credential to launch the existing non-administrator worker.
 In Creator's Add assets panel or Invincible AI with Local selected, choose
 Connect this laptop, then confirm Connect Invincible in the local popup.
 The handoff validates the exact popup source, origin, account and nonce; the
-token stays in session storage. Chrome may ask permission to connect locally.
+verified connection is remembered in this browser for the signed-in account.
+Chrome may ask permission to connect locally on first use.
 The private local pairing link remains available for the isolated local UI.
 Keep ComfyUI running using its existing E: installation launcher.
 The new worker does not install or start models, launch shells from tools, or
@@ -85,8 +86,8 @@ account batch logon; no new logon right was granted. Folder ACLs and group
 membership were preserved.
 
 Use the Invincible Image Studio shortcut or local-ai/start-image-studio.cmd.
-The shortcut reuses a running worker and opens the private local pairing link.
-ComfyUI must also be running using its existing E: launcher. No router port,
+The shortcut starts or reuses ComfyUI and the restricted worker, then opens
+Invincible AI's Images tab for the configured account. No router port,
 public listener or remote tunnel is required. This connection operates on the
 laptop running both services. No production account write was tested here.
 GitHub Pages staging includes the public shared client and excludes local worker
@@ -174,3 +175,22 @@ user to Advanced settings. An expired session clears the previous preview and
 never submits GPU work. Repeated pairing clicks are guarded. The existing popup
 origin/source/nonce checks, server bearer authentication and workspace checks
 remain in force. Manual pairing remains an advanced fallback.
+
+## Remember this laptop
+
+Successful pairing is saved for the exact loopback worker and Invincible UID in
+the current browser profile. Another tab, a browser restart, or switching between
+Creator and AI does not require a new pairing. A different signed-in account does
+not inherit the connection. Existing valid tab credentials are migrated only after
+session verification. Advanced settings includes Forget this laptop. A rejected
+key is removed; a temporarily offline worker keeps the remembered connection and
+offers Check connection instead of requesting another pairing.
+
+The existing laptop-owner launcher protects its stable worker bearer with Windows
+DPAPI in the ImageGen installation directory. It adopts the current key only after
+verifying the worker owner and workspace. This preserves the current connection
+without forcing a restart. The key is passed privately to the restricted worker at
+startup and removed from its inherited environment after reading. Changing the
+configured owner rotates the key. The separate Windows worker login is unchanged.
+The launcher starts the existing ComfyUI installation silently when needed; GPU
+model swapping remains the image worker's responsibility.

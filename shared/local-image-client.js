@@ -1,21 +1,31 @@
+export const localPairingKey=(origin,accountId)=>'invincible.local-worker.remembered.v1.'+origin+'.'+encodeURIComponent(accountId||'local');
+const stored=(name,key)=>{try{return window[name].getItem(key)}catch{return null}};
+export function hasLocalPairing(origin,accountId){return !!(stored('localStorage',localPairingKey(origin,accountId))||stored('sessionStorage',localPairingKey(origin,accountId))||stored('sessionStorage','invincible.local-worker.'+origin));}
 export function createLocalImageClient({ origin = window.__INVINCIBLE_LOCAL_AI_ORIGIN__ || 'http://127.0.0.1:8788', getAccountId = () => null, requireAccount = false } = {}) {
   const parsed = new URL(origin);
   if (!['127.0.0.1', 'localhost'].includes(parsed.hostname) || parsed.protocol !== 'http:' || parsed.origin !== origin) throw Error('Choose a loopback local worker address.');
   const key = 'invincible.local-worker.' + origin;
   const fragment = new URLSearchParams(location.hash.slice(1)), paired = fragment.get('pair');
-  if (paired) { sessionStorage.setItem(key, paired); history.replaceState(null, '', location.pathname + location.search); }
-  async function request(route, body, { binary = false } = {}) {
-    const account = getAccountId(), token = sessionStorage.getItem(key);
+  let temporary=paired?{account:getAccountId(),token:paired}:null;
+  if (paired) history.replaceState(null, '', location.pathname + location.search);
+  const tokenFor=account=>temporary&&temporary.account===account?temporary.token:stored('localStorage',localPairingKey(origin,account))||stored('sessionStorage',localPairingKey(origin,account))||stored('sessionStorage',key);
+  function forget(account=getAccountId(),rejectedToken){if(temporary&&temporary.account===account&&(!rejectedToken||temporary.token===rejectedToken))temporary=null;for(const [name,storageKey] of [['localStorage',localPairingKey(origin,account)],['sessionStorage',localPairingKey(origin,account)],['sessionStorage',key]])try{if(!rejectedToken||stored(name,storageKey)===rejectedToken)window[name].removeItem(storageKey)}catch{}if(!tokenFor(account))window.dispatchEvent(new CustomEvent('invincible-local-disconnected',{detail:{origin,account}}));}
+  async function connect(token){
+    const account=getAccountId();if(token)temporary={account,token:token.trim()};
+    try{const verified=tokenFor(account),result=await request('/api/session',undefined,{},verified);if(requireAccount&&result.uid!==account)throw Error('The local worker belongs to another account.');let remembered=true;temporary=null;try{localStorage.setItem(localPairingKey(origin,account),verified)}catch{remembered=false;try{sessionStorage.setItem(localPairingKey(origin,account),verified)}catch{temporary={account,token:verified}}}try{sessionStorage.removeItem(key)}catch{}return{...result,remembered};}catch(error){temporary=null;throw error;}
+  }
+  async function request(route, body, { binary = false } = {}, selectedToken) {
+    const account = getAccountId(), token = selectedToken===undefined?tokenFor(account):selectedToken;
     if (requireAccount && !account) throw Error('Sign in before using the local image worker.');
     if (!token) throw Object.assign(Error('Connect this laptop to generate images.'), {status:401,code:'LOCAL_PAIRING_REQUIRED',definitive:true});
     let response;
     try { response = await fetch(origin + route, { method: body === undefined ? 'GET' : 'POST', headers: { Authorization: 'Bearer ' + token, ...(account ? { 'X-Invincible-Account': account } : {}), ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal: AbortSignal.timeout(route === '/api/command' ? 120000 : 15000), redirect: 'error', targetAddressSpace: 'loopback' }); }
-    catch { throw Error('Cannot reach this laptop. Start Image Studio and allow the browser’s local connection, then retry the same request.'); }
+    catch { throw Object.assign(Error('Start Image Studio, then check the connection. If Chrome asks, allow local access.'),{code:'LOCAL_WORKER_UNREACHABLE'}); }
     if (getAccountId() !== account) throw Error('Your account changed. Reopen the image panel.');
-    if (!response.ok) { const data = await response.json(); if (response.status === 401) sessionStorage.removeItem(key); throw Object.assign(Error(data.error || 'Local worker rejected this request.'), { definitive: true, status: response.status, code: data.code }); }
+    if (!response.ok) { if (response.status === 401) forget(account,token);const data = await response.json();throw Object.assign(Error(data.error || 'Local worker rejected this request.'), { definitive: true, status: response.status, code: data.code }); }
     return binary ? response.blob() : response.json();
   }
-  return { origin, request,
+  return { origin, request,connect,forget,hasPairing:()=>!!tokenFor(getAccountId()),get pairingKey(){return localPairingKey(origin,getAccountId())},
     pairInBrowser() {
       const uid = getAccountId();
       if (!uid) return Promise.reject(Error('Sign in to Invincible before connecting this laptop.'));
@@ -28,8 +38,7 @@ export function createLocalImageClient({ origin = window.__INVINCIBLE_LOCAL_AI_O
           if (event.origin !== origin || event.source !== popup || message?.type !== 'invincible-local-pair' || message.nonce !== nonce || message.uid !== uid || !/^[A-Za-z0-9_-]{32,100}$/.test(message.token || '')) return;
           cleanup();
           if (getAccountId() !== uid) { reject(Error('Your account changed. Connect again.')); return; }
-          sessionStorage.setItem(key, message.token);
-          try { const result = await request('/api/session'); if (result.uid !== uid) throw Error('The local worker belongs to another account.'); window.dispatchEvent(new Event('invincible-local-connected')); resolve(result); } catch (error) { sessionStorage.removeItem(key); reject(error); }
+          try { const result = await connect(message.token); window.dispatchEvent(new Event('invincible-local-connected')); resolve(result); } catch (error) { reject(error); }
         }
         window.addEventListener('message', receive);
         popup = window.open(origin + '/connect?' + new URLSearchParams({ origin: location.origin, nonce, uid }), 'invincible-local-connect', 'popup,width=560,height=440');
@@ -38,7 +47,6 @@ export function createLocalImageClient({ origin = window.__INVINCIBLE_LOCAL_AI_O
         closed = setInterval(() => { if (popup.closed) { cleanup(); reject(Error('The connection window closed before confirmation.')); } }, 500);
       });
     },
-    async connect(token) { if (token) sessionStorage.setItem(key, token.trim()); return request('/api/session'); },
     generate: (args, idempotencyKey) => request('/api/generations', { arguments: args, idempotencyKey }),
     job: id => request('/api/generations/' + encodeURIComponent(id)),
     image: (id, download = false) => request('/api/generations/' + encodeURIComponent(id) + '/image' + (download ? '?download=1' : ''), undefined, { binary: true }),
