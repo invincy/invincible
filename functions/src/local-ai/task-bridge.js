@@ -79,7 +79,7 @@ async function resolveAgentToken({ db, token, now }) {
   const users = await db.collection('users').get();
   for (const user of users.docs) {
     const agents = await agentCollection(db, user.id).where('tokenHash', '==', hash).get();
-    if (!agents.empty) {
+    if (agents.docs.length > 0) {
       const data = agents.docs[0].data();
       if (data.revoked || Number(data.expiresAtMs || 0) <= timestamp) throw new Error('Agent token is expired or revoked.');
       await agentTokenCollection(db).doc(hash).set({ uid: user.id, agentId: data.agentId, expiresAtMs: data.expiresAtMs, revoked: false }, { merge: true });
