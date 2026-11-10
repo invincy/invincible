@@ -31,11 +31,13 @@ let browser;try{
  window.nativeStudio=mountVideoStudio(document.querySelector('#studio'),{getProject:()=>({id:'isolated-native-project',ownerUid:'test-owner',title:'Isolated native test',scenes:[]}),getAccountId:()=> 'test-owner',session:window.testSession,mediaService:media});
  await window.nativeStudio.ready;
  </script>`}));
- await page.goto(service.origin+'/creator/index.html');await page.waitForSelector('[data-image-prompt]');
+ await page.goto(service.origin+'/creator/index.html');await page.getByRole('tab',{name:'Create image',exact:true}).click();await page.waitForSelector('[data-image-prompt]');
  await page.locator('[data-image-prompt]').fill('Native Studio fixture fortress');await page.locator('[data-image-generate]').click();await page.waitForSelector('[data-image-status]:has-text("Completed")');
  await page.locator('[data-image-attach]').click();await page.waitForSelector('[data-image-status]:has-text("Attached")');
  assert.equal(await page.evaluate(()=>window.testSession.manifest.assets.length),1,'Native project uses existing uploadFiles/useMedia path');
  assert.equal(await page.evaluate(()=>window.testSession.files.size),1,'Original PNG retained by existing project asset store');
+ await page.getByRole('tab',{name:'Upload & voiceover',exact:true}).click();assert.equal(await page.locator('[data-image-preview]').isVisible(),false);
+ await page.getByRole('tab',{name:'Upload & voiceover',exact:true}).press('ArrowRight');assert.equal(await page.getByRole('tab',{name:'Create image',exact:true}).getAttribute('aria-selected'),'true');assert.ok(await page.locator('[data-image-preview]').isVisible(),'Switching tools preserves the generated image');
  assert.equal(await page.evaluate(()=>window.unintendedProjectSaves),0,'Image actions never submit the parent project form');
  // Use the actual React AI service logic; substitute only its Firebase SDK dependencies.
  const aiSource=(await fs.readFile(new URL('../../react/src/features/invincible-ai/services/aiService.js',import.meta.url),'utf8'))
