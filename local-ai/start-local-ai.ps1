@@ -8,7 +8,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $Root 'local-ai\agent-service.mjs'))
 if (-not $FirebaseAgentToken) {
   $tokenFile = Join-Path $env:LOCALAPPDATA 'Invincible\firebase-agent-token.dpapi'
   if (-not (Test-Path -LiteralPath $tokenFile)) { throw "No saved token found. Run save-agent-token.ps1 once." }
-  try { $secure = Get-Content -LiteralPath $tokenFile -Raw | ConvertTo-SecureString } catch { throw 'Saved token file is invalid. Run save-agent-token.ps1 once again with the current pairing token.' }
+  try { $secure = ConvertTo-SecureString -String ((Get-Content -LiteralPath $tokenFile -Raw).Trim()) } catch { throw 'Saved token file is invalid. Run save-agent-token.ps1 once again with the current pairing token.' }
   $ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
   try { $FirebaseAgentToken = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr) } finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr) }
 }
