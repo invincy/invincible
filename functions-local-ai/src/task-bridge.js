@@ -55,6 +55,11 @@ async function enqueueTask({ db, uid, workspaceId, command, idempotencyKey, now 
 async function createAgentPairing({ db, uid, agentId, now, ttlMs = AGENT_TOKEN_TTL_MS }) {
   if (!uid) throw new Error('Authentication is required.');
   const id = cleanAgentId(agentId), token = randomAgentToken(), timestamp = nowMs(now);
+  const previous = await agentCollection(db, uid).get();
+  for (const entry of previous.docs) {
+    const oldHash = entry.data().tokenHash;
+    if (oldHash) await agentTokenCollection(db).doc(oldHash).set({ revoked: true }, { merge: true });
+  }
   const tokenHash = hashAgentToken(token), expiresAtMs = timestamp + Math.min(AGENT_TOKEN_TTL_MS, Math.max(60000, Number(ttlMs)));
   await agentCollection(db, uid).doc(id).set({ agentId: id, tokenHash, createdAtMs: timestamp, expiresAtMs, revoked: false });
   await agentTokenCollection(db).doc(tokenHash).set({ uid: String(uid), agentId: id, expiresAtMs, revoked: false });
