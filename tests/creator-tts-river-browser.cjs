@@ -5,6 +5,16 @@ const path = require('node:path');
 const { chromium } = require('playwright');
 
 const root = path.resolve(__dirname, '..');
+// River is retained for future use; mount it on the real page only in this fixture.
+let riverPage = fs.readFileSync(path.join(root, 'creator', 'tts.html'), 'utf8');
+for (const [pattern, replacement] of [
+  [/(href=["'])tts-forest\.css(\?[^"']*)?(["'])/g, '$1tts-river.css$2$3'],
+  [/(class=["'])tts-forest(["'])/g, '$1tts-river$2'],
+  [/(src=["'])tts-forest\.js(\?[^"']*)?(["'])/g, '$1tts-river.js$2$3']
+]) {
+  assert.equal([...riverPage.matchAll(pattern)].length, 1, 'expected exactly one forest resource to substitute');
+  riverPage = riverPage.replace(pattern, replacement);
+}
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://localhost');
   const relative = decodeURIComponent(url.pathname.replace(/^\/invincible\//, ''));
@@ -14,6 +24,7 @@ const server = http.createServer((req, res) => {
     return res.end("document.querySelector('#workspace').hidden=false;document.querySelector('#accountStatus').textContent='Test account';");
   }
   if (relative === 'site-nav.js') { res.setHeader('Content-Type', 'text/javascript'); return res.end(''); }
+  if (relative === 'creator/tts.html') { res.setHeader('Content-Type', 'text/html'); return res.end(riverPage); }
   const file = path.resolve(root, relative);
   if (!file.startsWith(root + path.sep)) return res.writeHead(403).end();
   try {

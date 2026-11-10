@@ -66,9 +66,34 @@ firebase deploy --only functions:creator-tts --project life-by-adichimp
 
 Reference: [Google Gemini-TTS API, limits and permissions](https://docs.cloud.google.com/text-to-speech/docs/gemini-tts).
 
-## Flowing water workbench — November 10, 2026
+## Forest workbench — November 10, 2026
 
-Voiceover uses compact translucent panels over a procedural flowing-water surface
+Voiceover now places a bounded narration editor, larger control labels, a compact
+listen/export area and account history together on wide screens. History and voice
+settings scroll independently when needed. Phones retain the settings disclosure,
+with History and Narration links for moving between the editor and saved entries;
+short screens can scroll normally rather than being covered by the transport.
+Drafts, account ownership, playback, generation and history behavior are unchanged.
+
+The decorative background is an illustrated forest with layered trees, hills, sky,
+a softly glowing lightning bolt and flowing river highlights. The forest WebGL
+renderer uses a maximum of 750,000 pixels and a 20 fps scheduling target, stops in
+hidden tabs and displays a still frame for reduced motion. A static illustrated
+landscape remains if WebGL is unavailable. Shader time wraps and may visibly reset
+after long sessions, especially on lower-precision devices. The previous water-only
+effect remains in `creator/tts-river.js` and `creator/tts-river.css` for future use;
+it is not loaded on Voiceover. Pixel/frame caps do not establish physical-device
+performance or battery usage.
+
+Chromium checks cover the real page's history navigation, generation fixtures,
+responsive controls and account isolation, plus forest layer visibility, flowing
+water, input, reduced motion, fallback, resizing and context recovery. The retained
+river is tested through an in-memory page substitution. Physical-device/Safari,
+live Firebase permissions and paid speech generation were not tested.
+
+## Previous flowing water workbench — November 10, 2026
+
+The previous Voiceover design used compact translucent panels over a procedural flowing-water surface
 with expanding rain ripples. Desktop keeps narration, independently scrollable
 voice settings and the transport together; phones put settings in a disclosure
 and keep playback/actions accessible while allowing the editor and history to

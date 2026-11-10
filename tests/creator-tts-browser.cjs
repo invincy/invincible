@@ -48,11 +48,9 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   const base='http://127.0.0.1:'+server.address().port+'/invincible/creator/tts.html';
   await page.addInitScript(()=>{if(!localStorage.getItem('invincible.creator.tts.draft.v1.owner'))localStorage.setItem('invincible.creator.tts.draft.v1.owner',JSON.stringify({engine:'classic'}));});
   await page.goto(base);await page.locator('#accountStatus').filter({hasText:'voices available'}).waitFor();
-  await page.locator('.tts-river.is-ready').waitFor();
-  assert.equal(await page.locator('.tts-river').getAttribute('aria-hidden'),'true');
-  await page.emulateMedia({reducedMotion:'reduce'});
-  assert.equal(await page.evaluate(()=>getComputedStyle(document.body,'::before').animationName),'none');
-  await page.emulateMedia({reducedMotion:'no-preference'});
+    assert.equal(await page.locator('.tts-forest').getAttribute('aria-hidden'),'true');
+    assert.equal(await page.locator('.tts-river').count(),0,'The page uses the forest background');
+  for(const asset of ['tts-forest.css','tts-forest.js'])assert.equal(await page.evaluate(async asset=>(await fetch(asset)).status,asset),200,'Forest asset loads: '+asset);
   assert.equal(await page.locator('#script').inputValue(),'');assert.equal(await page.locator('#voiceDemo').isEnabled(),true);assert.equal(await page.locator('#generate').isDisabled(),true);
   await page.locator('#voiceDemo').click();await page.waitForFunction(()=>document.querySelector('#voiceDemo').getAttribute('aria-pressed')==='true');
   assert.ok(demoRequests.at(-1).endsWith('hi-IN-Neural2-B.wav'));assert.equal(await page.evaluate(()=>window.lastTtsRequest),undefined);
@@ -78,6 +76,15 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   const downloadPromise=page.waitForEvent('download');await page.locator('#download').click();const download=await downloadPromise;await download.saveAs(path.join(out,'download.mp3'));assert.ok(fs.statSync(path.join(out,'download.mp3')).size>10000);
   await page.locator('#historyStatus').filter({hasText:'saved to your account'}).waitFor();
   assert.equal(historyDb.size,1);assert.equal(await page.locator('.history-entry').count(),1);
+    await page.setViewportSize({width:393,height:852});await page.evaluate(()=>scrollTo(0,0));
+    const historyLink=page.locator('.history-link');
+    assert.ok(await historyLink.evaluate(el=>{const r=el.getBoundingClientRect();return r.height>=44&&r.top>=0&&r.bottom<=innerHeight;}),'Direct phone history link is initially reachable');
+    await historyLink.focus();await page.keyboard.press('Enter');
+    assert.equal(await page.evaluate(()=>location.hash),'#voiceoverHistory');
+    assert.ok(await page.locator('#historyRefresh').evaluate(el=>{const r=el.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return r.top>=0&&r.bottom<=innerHeight&&(hit===el||el.contains(hit));}),'History is directly reachable and unobscured');
+    await page.locator('.editor-link').click();assert.equal(await page.evaluate(()=>location.hash),'#scriptHeading');
+    assert.equal(await page.locator('#script').inputValue(),full.text,'Navigating history preserves the draft');
+    await page.setViewportSize({width:1280,height:720});
   const saved=[...historyDb.values()][0];assert.deepEqual(saved.request,full);assert.equal(saved.settings.script,full.text);assert.equal(saved.settings.preset,'custom');assert.equal(saved.settings.volume,'3');assert.equal(saved.settings.pause,'500');
   assert.equal('audioBase64' in saved,false);
   const recipePromise=page.waitForEvent('download');await page.locator('[data-action=export]').click();const recipe=await recipePromise;
@@ -146,16 +153,28 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   for(const [width,height] of [[1920,1080],[1440,810],[1280,720],[1024,768],[820,1180],[393,852],[360,640],[320,568]]){
    await page.setViewportSize({width,height});await page.evaluate(()=>scrollTo(0,0));
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'No overflow '+width);
+    if(width<=600&&height<=700){
+     assert.ok(await page.locator('.history-link').evaluate(el=>{const r=el.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}),'Direct history link on short phone '+width);
+     await page.locator('#script').scrollIntoViewIfNeeded();
+     assert.ok(await page.locator('#script').evaluate(el=>{const r=el.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return hit===el;}),'Editor unobscured on short phone '+width);
+     await page.locator('#generate').scrollIntoViewIfNeeded();
+    }
    const action=await page.locator('#generate').boundingBox();
    assert.ok(action.height>=44&&action.y>=0&&action.y+action.height<=height,'Generate in viewport '+width);
    for(const id of ['generate','player','download'])assert.ok(await page.locator('#'+id).evaluate(el=>{
     const r=el.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
     return r.y>=0&&r.bottom<=innerHeight&&hit&&(hit===el||el.contains(hit));
    }),'Transport visible and unobscured: '+id+' at '+width);
-   if(width>900){
+    if(width>900&&height>=650){
     const editor=await page.locator('#script').boundingBox();
-    assert.ok(editor.width>width*.45,'Spacious desktop editor '+width);
+    assert.ok(editor.width>=220&&editor.height>=110&&editor.height<=301,'Usable, bounded desktop editor '+width);
     assert.equal(await page.locator('#engine').isVisible(),true,'Desktop settings reopen');
+     for(const id of ['historyHeading','historyRefresh'])assert.ok(await page.locator('#'+id).evaluate(el=>{
+      const r=el.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+      return r.top>=0&&r.bottom<=innerHeight&&hit&&(hit===el||el.contains(hit));
+     }),'Desktop history reachable without page scrolling: '+id+' at '+width);
+     assert.equal(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight+2),true,'Desktop workbench fits viewport '+width);
+     assert.equal(await page.locator('#voiceoverHistory').evaluate(el=>el.scrollHeight>el.clientHeight),true,'Long history has its own scroll region '+width);
    }
    if(width===393){
     await page.locator('#voiceSettings').evaluate(el=>el.open=false);
@@ -172,7 +191,9 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   await page.locator('#engine').selectOption('classic');await page.locator('#family').selectOption('Neural2');
   assert.equal(await page.locator('#preset').inputValue(),'natural');
   for(const delivery of ['social','empathetic'])assert.equal(await page.locator('#preset option[value='+delivery+']').evaluate(el=>el.disabled),true);
-  await page.evaluate(()=>{window.failGenerate=false;window.generationDelay=250;});await page.locator('#generate').click();
+    await page.evaluate(()=>{window.failGenerate=false;window.generationDelay=250;});await page.locator('#generate').click();
+    assert.equal(await page.locator('#generate').isDisabled(),true,'Generation disables duplicate requests');
+    assert.equal(await page.locator('#preview').isDisabled(),true,'Preview is disabled while generating');
   await page.evaluate(()=>window.setTtsUser({uid:'other'}));await page.waitForTimeout(400);
   assert.equal(await page.locator('#direction').inputValue(),'');
   await page.locator('#engine').selectOption('classic');await page.locator('#family').selectOption('Neural2');
@@ -180,6 +201,6 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   await page.locator('#historyStatus').filter({hasText:'saved to your account'}).waitFor();assert.equal(await page.locator('.history-entry').count(),0,'Another account cannot see owner history');
   await page.locator('#voiceDemo').click();await page.waitForFunction(()=>document.querySelector('#voiceDemo').getAttribute('aria-pressed')==='true');
   await page.evaluate(()=>window.setTtsUser(null));assert.equal(await page.locator('#voiceDemoAudio').evaluate(a=>a.paused&&!a.hasAttribute('src')),true);assert.equal(await page.locator('#workspace').isHidden(),true);assert.equal(await page.locator('#signedOut').isVisible(),true);
-  assert.deepEqual(errors,[]);console.log('Voiceover browser: saved history/export/restore/retry/pagination/deletion and account isolation; demos, preview/full generation, settings, MP3 download, errors, retained drafts, account isolation, keyboard disclosure and unobscured transport at 320–1920px passed.');
+    assert.deepEqual(errors,[]);console.log('Voiceover browser: history navigation/scroll/export/restore/retry/pagination/deletion and account isolation; demos, preview/full generation, busy states, settings, MP3 download, errors, retained drafts, keyboard disclosure and unobscured transport at 320–1920px passed.');
  }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

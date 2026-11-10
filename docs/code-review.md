@@ -1,5 +1,34 @@
 # Cleanup review — 2026-10-03
 
+## Voiceover forest and balanced workspace — November 10, 2026
+
+Resumed the existing uncommitted Voiceover work: bounded the desktop narration
+field, improved label readability, placed history within the desktop workbench,
+compacted the transport and added phone links between narration and history. The
+new decorative scene has layered trees, terrain, sky, a softly glowing lightning
+bolt and moving river highlights. Reduced motion is still, hidden tabs pause, and a
+static illustrated landscape covers WebGL failure. The former water-only renderer
+remains available separately, without loading on the Voiceover page.
+
+Validation: the 13 TTS backend tests and actual-page Chromium workflow suite passed
+including history, preview/generation fixtures, errors, account isolation and
+320–1920px layouts. Forest and retained-river browser checks passed for motion,
+fallback, input, reduced motion, resize and context restoration; desktop and phone
+screenshots were inspected. The root suite passed 223 with two existing skips, plus
+15 Functions and five media tests; build and site-reference checks passed. The
+broader browser suite passed through Creator and stopped at the previously documented
+Journal Save journal idea dialog timeout; later checks did not run. Physical-device
+performance/Safari, live Firebase permissions and paid TTS were not verified. The
+shader's bounded time can reset after long sessions.
+
+Release-base follow-up: after fast-forwarding over two unrelated remote commits,
+the root suite passed 229 with two skips, the Functions and media suites passed,
+and the build and site-reference checks passed. The Voiceover workflow and retained
+river checks passed again; the forest rerun passed desktop and phone motion checks
+but stalled during later layer comparisons, so its earlier complete pass remains
+the latest full forest result. The broad browser rerun passed through Task Copy
+but stalled in Creator; subsequent checks were not run in that attempt.
+
 ## Voiceover flowing water — November 10, 2026
 
 Voiceover now has compact translucent script, settings, transport and history

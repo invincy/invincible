@@ -1,0 +1,21 @@
+/* Static illustrated landscape remains visible while WebGL loads or is unavailable. */
+body.voiceover-page.studio-ui::before {
+  inset: 0;
+  z-index: -2;
+  transform: none;
+  animation: none;
+  background: #0a1a22 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='sky' x2='0' y2='1'%3E%3Cstop stop-color='%230b1927'/%3E%3Cstop offset='1' stop-color='%233b6970'/%3E%3C/linearGradient%3E%3ClinearGradient id='water' x2='0' y2='1'%3E%3Cstop stop-color='%233f7778'/%3E%3Cstop offset='1' stop-color='%230d343d'/%3E%3C/linearGradient%3E%3Cpath id='pine' d='M0 0L-12 30h7l-14 24h9l-17 30h23v12h8V84h23L10 54h9L5 30h7z'/%3E%3C/defs%3E%3Cpath fill='url%28%23sky%29' d='M0 0h1200v800H0z'/%3E%3Cpath d='M754 60l-20 62 25-8-27 56 41-69-24 8z' fill='%2393c4c0' opacity='.45'/%3E%3Cpath fill='%23315158' d='M0 355L140 275 250 333 405 236 570 337 718 265 870 328 1015 245 1200 339V800H0z'/%3E%3Cpath fill='%23213f44' d='M0 420Q200 325 360 405T720 390T1200 394V800H0z'/%3E%3Cg fill='%23163237'%3E%3Cuse href='%23pine' transform='translate(40 303) scale(1.7)'/%3E%3Cuse href='%23pine' transform='translate(120 324) scale(1.2)'/%3E%3Cuse href='%23pine' transform='translate(210 299) scale(1.5)'/%3E%3Cuse href='%23pine' transform='translate(303 342) scale(1.1)'/%3E%3Cuse href='%23pine' transform='translate(390 314) scale(1.3)'/%3E%3Cuse href='%23pine' transform='translate(860 315) scale(1.3)'/%3E%3Cuse href='%23pine' transform='translate(940 300) scale(1.6)'/%3E%3Cuse href='%23pine' transform='translate(1030 323) scale(1.3)'/%3E%3Cuse href='%23pine' transform='translate(1140 292) scale(1.8)'/%3E%3C/g%3E%3Cpath fill='%2313262c' d='M0 480Q225 411 480 475T1200 460V800H0z'/%3E%3Cpath fill='url%28%23water%29' d='M545 443Q695 460 692 507T615 579Q540 646 820 800H300Q479 683 450 616T492 515Q555 475 545 443z'/%3E%3Cg fill='none' stroke='%2374aaa5' opacity='.24'%3E%3Cpath d='M525 515q50-9 99 0M479 568q76-15 145-2M474 643q72-14 170-2M470 715q115-14 225 1'/%3E%3C/g%3E%3Cg fill='%23091b20'%3E%3Cuse href='%23pine' transform='translate(28 340) scale(2.6)'/%3E%3Cuse href='%23pine' transform='translate(133 405) scale(2.1)'/%3E%3Cuse href='%23pine' transform='translate(1155 327) scale(2.8)'/%3E%3Cuse href='%23pine' transform='translate(1051 400) scale(2.2)'/%3E%3C/g%3E%3C/svg%3E") center / 100% 100% no-repeat;
+}
+
+.voiceover-page .tts-forest {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.voiceover-page .tts-forest.is-ready { opacity: 1; }

@@ -5,13 +5,13 @@
 <title>Voiceover · Invincible</title>
 <link rel="icon" href="/invincible/favicon.ico" sizes="any">
 <link rel="stylesheet" href="../site-nav.css?v=18">
-<link rel="stylesheet" href="tts.css?v=2026111006">
+<link rel="stylesheet" href="tts.css?v=2026111007">
 <link rel="stylesheet" href="studio-ui.css?v=3">
-<link rel="stylesheet" href="tts-river.css?v=1">
+<link rel="stylesheet" href="tts-forest.css?v=1">
 <meta name="theme-color" content="#080f1b">
 </head>
 <body class="voiceover-page studio-ui">
-<canvas class="tts-river" aria-hidden="true"></canvas>
+<canvas class="tts-forest" aria-hidden="true"></canvas>
 <nav class="global-nav" data-compact-nav data-icon-nav aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
 <script type="module" src="../site-nav.js?v=8"></script>
 <main>
@@ -20,7 +20,7 @@
 <div id="signedOut" class="notice" hidden><p>Sign in to Invincible to generate voiceovers.</p><a href="../">Open Dashboard to sign in</a></div>
 <div id="workspace" class="workspace" hidden>
 <section class="panel script-panel" aria-labelledby="scriptHeading">
-<div class="panel-heading"><h2 id="scriptHeading">Narration</h2><button id="sample" type="button" class="quiet">Try a sample</button></div>
+<div class="panel-heading"><h2 id="scriptHeading" tabindex="-1">Narration</h2><div class="script-heading-actions"><a class="history-link" href="#voiceoverHistory">History ↓</a><button id="sample" type="button" class="quiet">Try a sample</button></div></div>
 <label for="title">Recording name</label><input id="title" maxlength="100" value="My voiceover" autocomplete="off">
 <div class="script-label"><label for="script">Your script</label><label class="mode-label" for="mode">Input <select id="mode"><option value="text">Plain text</option><option value="ssml">SSML</option></select></label></div>
 <textarea id="script" rows="10" spellcheck="false" placeholder="Paste Hindi, English, or your complete narration here…"></textarea>
@@ -47,14 +47,14 @@
 </fieldset></div></details>
 </section>
 <section class="panel result-panel" aria-labelledby="resultHeading"><div class="result-status"><h2 id="resultHeading">Listen &amp; export</h2><p id="generationStatus" role="status" aria-live="polite">Your recording will appear here.</p></div><div class="transport-actions"><div class="generate-actions"><button id="preview" type="button" class="secondary" disabled>Preview opening</button><button id="generate" type="button" class="primary" disabled>Generate MP3</button></div><p class="help quota-note">Uses paid Google TTS quota.</p></div><div id="recording" hidden><audio id="player" controls preload="metadata" aria-label="Generated voiceover"></audio><div class="download-row"><span id="recordingInfo"></span><a id="download" class="secondary" download>Download MP3 ↓</a></div></div></section>
-</div>
-<section id="voiceoverHistory" class="panel history-panel" hidden aria-labelledby="historyHeading">
-<div class="panel-heading"><h2 id="historyHeading">Voiceover history</h2><button id="historyRefresh" type="button" class="quiet">Refresh history</button></div>
+<section id="voiceoverHistory" class="panel history-panel" hidden aria-labelledby="historyHeading" tabindex="-1">
+<div class="panel-heading"><h2 id="historyHeading">Voiceover history</h2><div class="history-heading-actions"><a class="editor-link" href="#scriptHeading">Narration ↑</a><button id="historyRefresh" type="button" class="quiet" aria-label="Refresh history">Refresh</button></div></div>
 <p id="historyStatus" class="help" role="status" aria-live="polite"></p>
 <p id="historyEmpty" class="help">Completed voiceovers appear here with their scripts and settings. Opening previews are not saved.</p>
 <div id="historyList"></div><button id="historyMore" type="button" class="secondary" hidden>Load more</button>
 </section>
+</div>
 </main>
 <script type="module" src="tts.js?v=2026111005"></script>
-<script type="module" src="tts-river.js?v=1"></script>
+<script type="module" src="tts-forest.js?v=1"></script>
 </body></html>
