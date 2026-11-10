@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="presentation.css?v=8">
+  <link rel="stylesheet" href="presentation.css?v=11">
   <link rel="stylesheet" href="../../shared/app-theme.css?v=1">
 </head>
 <body>
@@ -83,7 +83,7 @@
     </div>
 
     <!-- The Presentation Stage (Strict Layer Architecture) -->
-    <div id="stageContainer" data-opening="loading" class="stage-container" data-story-step="1">
+    <div id="stageContainer" data-opening="welcome" data-flow-step="intro" class="stage-container" data-story-step="1">
       <div class="layer-stage-3d">
 
         <!-- LAYER 1: Environment Plate (Cosmic Background) -->
@@ -155,7 +155,7 @@
         </div>
 
         <!-- LAYER 8: Story Scenes Viewport (Non-Scrollable) -->
-        <div id="sceneStageContent" class="scene-stage-content">
+        <div id="sceneStageContent" class="scene-stage-content"><section id="welcomePanel" class="welcome-panel" hidden><button id="startStoryBtn" class="flow-gold" type="button">Start with voice →</button></section>
 <div id="scene1" class="scene-1-wrap">
 
 
@@ -168,7 +168,7 @@
           </div>
 
 
-<section id="selectionPanel" class="flow-glass selection-panel" hidden aria-label="Selected goal"><b id="selectionTitle">Your goal is selected</b><p>Choose an age and policy term to explore the plan.</p><button id="getPremiumBtn" class="flow-gold" type="button">Get premium →</button></section>
+<section id="selectionPanel" class="flow-glass selection-panel" hidden aria-label="Selected goal"><b id="selectionTitle">Your goal is selected</b><p>Choose an age and policy term to explore the plan.</p></section>
 <section id="configurationPanel" hidden aria-label="Choose plan profile"><div id="scene5" class="customizer-box" style="display: none;">
             <div class="input-row">
               <label>Parent Age</label>
@@ -198,7 +198,7 @@
               </div>
             </div>
 
-            <div class="rider-scenario"><b>Term rider illustration</b><small id="riderScenarioAmount"></small><small>Rider premium quoted separately.</small></div></div><button id="openPreviewBtn" class="flow-gold" type="button">Show premium →</button></section>
+            <div class="rider-scenario"><b>Term rider illustration</b><small id="riderScenarioAmount"></small><small>Rider premium quoted separately.</small></div></div><button id="openPreviewBtn" class="flow-gold" type="button">See my plan →</button></section>
 <section id="previewPanel" class="preview-panel" hidden aria-label="Premium and maturity"><div id="premiumPill" class="flow-glass premium-pill"><span>Annual base premium</span><strong id="previewPremium"></strong><small id="previewTerm"></small><small>Rider premium quoted separately</small></div><div id="maturityPill" class="flow-glass maturity-pill" hidden><span>Maturity</span><strong id="previewMaturity"></strong><small>BSA + bonus, if any<br>Bonuses not guaranteed</small></div></section>
 <section id="whatIfPanel" class="whatif-panel" hidden aria-label="What if"><div id="whatIfCaption" class="question-pill" hidden><b>What happens<br>if the parent dies?</b><span>શું બાળકનું સપનું અધૂરું રહેશે?</span></div></section>
 <section id="protectionPanel" class="protection-panel" hidden aria-label="Family protection journey">
@@ -267,6 +267,6 @@
 </div><!-- /.app-viewport-wrapper -->
 
 <script type="module" src="../../site-nav.js?v=7"></script>
-<script type="module" src="presentation.js?v=8"></script>
+<script type="module" src="presentation.js?v=11"></script>
 </body>
 </html>
