@@ -155,6 +155,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    field('Visual style','visualStyle',project().visualStyle||'','data-project-field="visualStyle"')+
    '<label>Aspect ratio<select data-project-field="aspectRatio">'+options(['9:16','16:9','1:1'],project().aspectRatio||'9:16')+'</select></label>'+
    field('Language','language',project().language||'','data-project-field="language"')+
+   field('AI Creative direction','creativeInstructions',project().creativeInstructions||'','data-project-field="creativeInstructions" placeholder="Example: Show Babur’s army advancing from the northwest with restrained gold titles and slow cinematic camera movement."')+
    field('Character bible','characterBible',project().characterBible||'','data-project-field="characterBible"')+
    field('Continuity and location notes','continuityNotes',project().continuityNotes||'','data-project-field="continuityNotes"')+'</div>'+
    (onCopyBrief?'<button type="button" data-action="copy-brief">Copy brief</button>':'')+'</details>'+

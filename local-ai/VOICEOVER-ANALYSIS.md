@@ -4,7 +4,7 @@ This path converts a local MP3/WAV into an importable Creator Studio scene draft
 
 1. The audio path is checked against the restricted agent workspace.
 2. `transcribeWithWhisper` calls `http://127.0.0.1:8790/transcribe`, a private localhost Whisper service with word and segment timestamps enabled. Start it with `start-whisper.cmd`; set `INVINCIBLE_WHISPER_URL` to that URL for the Node adapter.
-3. The transcript is normalized and timing is validated. Qwen receives segment IDs and the supplied asset catalog; it is not allowed to author timestamps or asset IDs.
+3. The transcript is normalized and timing is validated. Qwen receives segment IDs, creative instructions, the supplied asset catalog, and registered animation presets; it is not allowed to author timestamps or asset IDs.
 4. `assembleSceneDraft` derives scene timing from Whisper segments, rejects unknown asset IDs, and flags missing visual/asset information.
 5. `toCreatorStudioImport` produces the existing storyboard-compatible JSON shape for review/import.
 

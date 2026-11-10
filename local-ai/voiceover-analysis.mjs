@@ -46,6 +46,12 @@ export async function loadCreatorAssetCatalog(repoRoot) {
   };
 }
 
+export function normalizeCreativeInstructions(value) {
+  const text = String(value ?? '').trim();
+  if (text.length > 4000) throw new Error('Creative instructions must be 4,000 characters or fewer.');
+  return text;
+}
+
 export async function transcribeWithWhisper(audio, { endpoint = process.env.INVINCIBLE_WHISPER_URL } = {}) {
   if (!endpoint) throw new Error('Local Whisper is not configured. Set INVINCIBLE_WHISPER_URL to a private local Whisper service.');
   const url = new URL(endpoint);
@@ -55,11 +61,11 @@ export async function transcribeWithWhisper(audio, { endpoint = process.env.INVI
   return normalizeTranscript(await response.json());
 }
 
-export async function analyzeVoiceover({ audioPath, workspaceRoot, assetCatalog = [], transcribe = transcribeWithWhisper, plan }) {
+export async function analyzeVoiceover({ audioPath, workspaceRoot, assetCatalog = [], creativeInstructions = '', transcribe = transcribeWithWhisper, plan }) {
   const audio = await inspectAudio(audioPath, { workspaceRoot });
   const transcript = normalizeTranscript(await transcribe(audio));
   if (typeof plan !== 'function') throw new Error('A local Qwen planner is required.');
-  const qwenDraft = await plan(buildQwenPrompt(transcript, assetCatalog));
+  const qwenDraft = await plan(buildQwenPrompt(transcript, assetCatalog, creativeInstructions));
   return assembleSceneDraft(transcript, qwenDraft, assetCatalog);
 }
 
@@ -89,8 +95,9 @@ export function normalizeTranscript(input) {
   return { text: String(input.text ?? normalizedSegments.map(segment => segment.text).join(' ')).trim(), language: input.language || '', duration, segments: normalizedSegments };
 }
 
-export function buildQwenPrompt(transcript, assetCatalog = []) {
+export function buildQwenPrompt(transcript, assetCatalog = [], creativeInstructions = '') {
   const normalized = normalizeTranscript(transcript);
+  const direction = normalizeCreativeInstructions(creativeInstructions);
   const catalog = Array.isArray(assetCatalog) ? { assets: assetCatalog, animationPresets: [] } : assetCatalog;
   const assets = (catalog.assets || []).map(asset => ({ id: String(asset.id), name: String(asset.name ?? ''), type: String(asset.type ?? ''), description: String(asset.description ?? asset.notes ?? '') }));
   return [
@@ -98,7 +105,7 @@ export function buildQwenPrompt(transcript, assetCatalog = []) {
     'Create a draft scene plan from the supplied transcript.',
     'Do not create timestamps: use only sourceSegmentIds. Do not invent asset IDs; choose only IDs from the supplied catalog. If no asset fits, return an empty assetIds array and add a missingInfo item.',
     'Required JSON shape: {"scenes":[{"id":"scene-1","sourceSegmentIds":["segment-1"],"visual":"...","animation":"...","assetIds":[],"missingInfo":[]}]}',
-    JSON.stringify({ transcript: normalized, assetCatalog: assets, animationPresets: catalog.animationPresets || [] })
+    JSON.stringify({ transcript: normalized, creativeInstructions: direction, assetCatalog: assets, animationPresets: catalog.animationPresets || [] })
   ].join('\n');
 }
 

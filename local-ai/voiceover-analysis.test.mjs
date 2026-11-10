@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assembleSceneDraft, analyzeVoiceover, buildQwenPrompt, loadCreatorAssetCatalog, normalizeTranscript, toCreatorStudioImport } from './voiceover-analysis.mjs';
+import { assembleSceneDraft, analyzeVoiceover, buildQwenPrompt, loadCreatorAssetCatalog, normalizeCreativeInstructions, normalizeTranscript, toCreatorStudioImport } from './voiceover-analysis.mjs';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -17,9 +17,15 @@ test('normalizes Whisper segment and word timing', () => {
 });
 
 test('builds a constrained Qwen prompt', () => {
-  const prompt = buildQwenPrompt(transcript, [{ id: 'commander_babur', name: 'Babur', type: 'image' }]);
+  const prompt = buildQwenPrompt(transcript, [{ id: 'commander_babur', name: 'Babur', type: 'image' }], 'Use restrained gold titles and a slow camera movement.');
   assert.match(prompt, /Do not invent asset IDs/);
   assert.match(prompt, /commander_babur/);
+  assert.match(prompt, /restrained gold titles/);
+});
+
+test('bounds creative direction', () => {
+  assert.equal(normalizeCreativeInstructions('  cinematic map reveal  '), 'cinematic map reveal');
+  assert.throws(() => normalizeCreativeInstructions('x'.repeat(4001)), /4,000/);
 });
 
 test('loads real Creator Studio assets and animation presets', async () => {
