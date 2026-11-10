@@ -14,7 +14,7 @@ async function call(name, data = {}) {
 }
 
 async function execute(task) {
-  const response = await fetch(`${localAgentOrigin}/api/command`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ message: task.command, idempotencyKey: task.id }) });
+  const response = await fetch(`${localAgentOrigin}/api/command`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ message: task.command, idempotencyKey: task.id }), signal: AbortSignal.timeout(120000) });
   const payload = await response.json();
   if (!response.ok) throw new Error(payload.error || 'Local agent rejected the task.');
   const action = payload.result?.result?.action;
@@ -25,8 +25,16 @@ async function poll() {
   try {
     const task = await call('claimInvincibleAiTask');
     if (!task) return;
-    try { await call('completeInvincibleAiTask', { taskId: task.id, result: await execute(task) }); }
-    catch (error) { await call('failInvincibleAiTask', { taskId: task.id, error: error.message }); }
+    console.log(`[bridge] claimed ${task.id}: ${task.command}`);
+    try {
+      console.log(`[bridge] executing ${task.id} through local agent`);
+      const result = await execute(task);
+      await call('completeInvincibleAiTask', { taskId: task.id, result });
+      console.log(`[bridge] completed ${task.id} (verified=${result.verified === true})`);
+    } catch (error) {
+      console.error(`[bridge] execution failed ${task.id}: ${error.message}`);
+      await call('failInvincibleAiTask', { taskId: task.id, error: error.message });
+    }
   } catch (error) { console.error(`[bridge] ${error.message}`); }
 }
 
