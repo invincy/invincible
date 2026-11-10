@@ -23,3 +23,9 @@ test('executes the model-selected create_project through the validated tool', as
 test('rejects an unapproved tool request', async () => {
   await assert.rejects(() => executeLocalCommand({ message: 'delete everything', ask: async () => ({ tool: 'delete_project', arguments: {} }), executeTool: async () => ({}) }), /allow-list/);
 });
+
+test('answers ordinary questions without invoking a tool', async () => {
+  const output = await executeLocalCommand({ message: 'What is Panipat?', ask: async () => ({ kind: 'chat', text: 'Panipat is a historic city in Haryana.' }), executeTool: async () => { throw new Error('tool should not run'); } });
+  assert.equal(output.conversational, true);
+  assert.match(output.result.text, /Panipat/);
+});

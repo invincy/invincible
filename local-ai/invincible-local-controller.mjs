@@ -13,7 +13,9 @@ function extractJson(value) {
 
 export function buildLocalPrompt(message) {
   return [
-    'You are Invincible Local AI. Return only a JSON object with keys tool and arguments.',
+    'You are Invincible Local AI. Return only a JSON object.',
+    'For an ordinary informational question, return {"kind":"chat","text":"..."} and do not request a tool.',
+    'For an Invincible action, return {"kind":"tool","tool":"create_project","arguments":{...}}.',
     'Allowed tool: create_project.',
     'create_project arguments: title (string), description (string or null), stages (array of strings), current_stage (string or null).',
     'Never claim success; the host application will execute and verify the tool.',
@@ -42,6 +44,7 @@ export async function askOllama({ message, model = 'qwen3:4b', baseUrl = DEFAULT
 export async function executeLocalCommand({ message, ask = askOllama, executeTool }) {
   if (typeof executeTool !== 'function') throw new TypeError('executeTool is required.');
   const command = await ask({ message });
+  if (command?.kind === 'chat') return { command, result: { text: String(command.text || '').slice(0, 4000) }, verified: true, conversational: true };
   if (command?.tool !== 'create_project') throw new Error('Local model requested a tool outside the Phase 1 allow-list.');
   const result = await executeTool(command.tool, command.arguments ?? {});
   return { command, result, verified: result?.action?.status === 'completed' };

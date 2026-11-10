@@ -63,6 +63,7 @@ const server = http.createServer(async (request, response) => {
       const message = String(body.message || '').trim();
       if (!message || message.length > 4000) return send(response, 400, { error: 'Message must be between 1 and 4,000 characters.' });
       const command = await askOllama({ message, model: 'qwen3:4b' });
+      if (command?.kind === 'chat') return send(response, 200, { command, result: { result: { text: String(command.text || '').slice(0, 4000) } }, verified: true });
       const idempotencyKey = String(body.idempotencyKey || `browser-${crypto.createHash('sha256').update(message).digest('hex').slice(0, 24)}`);
       const result = await universalAgent.execute({ principal: { uid: 'local-test-user', workspaceIds: ['local-test-user'] }, workspaceId: 'local-test-user', idempotencyKey, tool: command.tool, arguments: command.arguments });
       return send(response, 200, { command, result, verified: result.verified });

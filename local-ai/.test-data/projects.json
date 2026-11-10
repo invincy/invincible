@@ -112,5 +112,36 @@
     ],
     "environment": "isolated-local-ai-test",
     "createdAt": "2026-11-10T13:20:29.098Z"
+  },
+  {
+    "id": "local-mwathlpb",
+    "title": "Panipat",
+    "description": "",
+    "status": "Not Started",
+    "currentStage": "Planning",
+    "steps": [
+      {
+        "id": "stage-1",
+        "title": "Planning",
+        "done": false
+      },
+      {
+        "id": "stage-2",
+        "title": "Development",
+        "done": false
+      },
+      {
+        "id": "stage-3",
+        "title": "Testing",
+        "done": false
+      },
+      {
+        "id": "stage-4",
+        "title": "Deployment",
+        "done": false
+      }
+    ],
+    "environment": "isolated-local-ai-test",
+    "createdAt": "2026-11-10T15:00:36.767Z"
   }
 ]

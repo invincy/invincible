@@ -18,7 +18,8 @@ async function execute(task) {
   const payload = await response.json();
   if (!response.ok) throw new Error(payload.error || 'Local agent rejected the task.');
   const action = payload.result?.result?.action;
-  return { text: action?.summary || 'Local action completed.', actions: action ? [action] : [], verified: payload.verified === true };
+  const text = payload.result?.result?.text;
+  return { text: text || action?.summary || 'Local action completed.', actions: action ? [action] : [], verified: payload.verified === true };
 }
 
 async function poll() {
