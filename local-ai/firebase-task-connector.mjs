@@ -10,7 +10,7 @@ async function call(name, data = {}) {
   const response = await fetch(`${functionsOrigin}/${name}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ data: { ...data, agentToken: token } }) });
   const payload = await response.json();
   if (!response.ok || payload.error) throw new Error(payload.error?.message || `Firebase bridge call failed: ${name}`);
-  return payload.data;
+  return payload.data ?? payload.result ?? payload;
 }
 
 async function execute(task) {
