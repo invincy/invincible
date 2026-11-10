@@ -4,6 +4,7 @@ import{auth,db,functions}from'../../../firebase';
 
 const chat=httpsCallable(functions,'invincibleAiChat',{timeout:120000});
 const enqueueTask=httpsCallable(functions,'enqueueInvincibleAiTask',{timeout:30000});
+const pairAgent=httpsCallable(functions,'createInvincibleAgentPairing',{timeout:30000});
 
 const queryLocal=typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('local-ai')==='1';
 const localOrigin=typeof window!=='undefined'&&(window.__INVINCIBLE_LOCAL_AI_ORIGIN__||'')||'';
@@ -13,6 +14,7 @@ export const isLocalAiAvailable=Boolean(localOrigin||localBridgeEnabled);
 const providerKey='invincible.ai.provider.v1';
 export function getAiProvider(){if(typeof localStorage==='undefined')return PROVIDERS.cloud;return localStorage.getItem(providerKey)===PROVIDERS.local?PROVIDERS.local:PROVIDERS.cloud}
 export function setAiProvider(provider){if(provider!==PROVIDERS.local&&provider!==PROVIDERS.cloud)throw Error('Unknown AI provider.');localStorage?.setItem(providerKey,provider);return provider}
+export async function createLocalAgentPairing(agentId){const response=await pairAgent({agentId});return response.data}
 
 function waitForTask(taskId,timeoutMs=180000){
  const uid=auth.currentUser?.uid;if(!uid)throw Error('Sign in to Invincible before using Local Qwen.');

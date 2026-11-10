@@ -11,6 +11,10 @@
     {
       "source": "functions-media",
       "codebase": "creator-media"
+    },
+    {
+      "source": "functions-local-ai",
+      "codebase": "local-ai"
     }
   ],
   "firestore": {

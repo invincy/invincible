@@ -2,7 +2,7 @@ import{useEffect,useRef,useState}from'react';
 import{useTasks}from'../../useTasks';
 import{chooseFocusTask,taskSteps}from'../../task-model';
 import{useAiConversation}from'./hooks/useAiConversation';
-import{isLocalAiAvailable,PROVIDERS}from'./services/aiService';
+import{createLocalAgentPairing,isLocalAiAvailable,PROVIDERS}from'./services/aiService';
 import'./invincible-ai.css';
 
 const starterPrompts=[
@@ -21,13 +21,16 @@ function Message({message}){
 
 export function InvincibleAiPage(){
  const{tasks}=useTasks(),focus=chooseFocusTask(tasks),next=taskSteps(focus).find(step=>!step.done&&step.status!=='Done');
- const{messages,pending,actions,sending,error,send,newConversation,provider,setProvider}=useAiConversation(),[draft,setDraft]=useState(''),end=useRef(null),input=useRef(null);
+ const{messages,pending,actions,sending,error,send,newConversation,provider,setProvider}=useAiConversation(),[draft,setDraft]=useState(''),[pairing,setPairing]=useState(null),[pairingError,setPairingError]=useState(''),end=useRef(null),input=useRef(null);
  useEffect(()=>{if(typeof end.current?.scrollIntoView==='function')end.current.scrollIntoView({behavior:'smooth',block:'end'})},[messages,pending,sending]);
  const submit=event=>{event.preventDefault();const text=draft.trim();if(!text)return;setDraft('');send(text)};
  const ask=text=>{setDraft(text);if(typeof requestAnimationFrame==='function')requestAnimationFrame(()=>input.current?.focus());else input.current?.focus()};
+ const pairLaptop=async()=>{setPairingError('');try{setPairing(await createLocalAgentPairing(`laptop-${Date.now().toString(36)}`))}catch(pairError){setPairingError(pairError?.message||'Laptop pairing failed.')}};
  return <div className="invincible-ai-page">
   <div className="ai-ambient" aria-hidden="true"><i/><i/><i/></div>
-  <header className="ai-page-header"><div><span className="ai-eyebrow">INTENT → ACTION</span><h1>Invincible <em>AI</em></h1><p>Tell it what you want. It maintains the operational structure.</p></div><div className="ai-page-actions"><label className="ai-provider-picker">PROVIDER<select aria-label="AI provider" value={provider} onChange={event=>setProvider(event.target.value)}><option value={PROVIDERS.cloud}>Cloud · OpenAI</option><option value={PROVIDERS.local} disabled={!isLocalAiAvailable}>Local · Qwen3 4B{isLocalAiAvailable?'':' (offline)'}</option></select></label><button type="button" onClick={newConversation}>＋ New chat</button></div></header>
+  <header className="ai-page-header"><div><span className="ai-eyebrow">INTENT → ACTION</span><h1>Invincible <em>AI</em></h1><p>Tell it what you want. It maintains the operational structure.</p></div><div className="ai-page-actions"><label className="ai-provider-picker">PROVIDER<select aria-label="AI provider" value={provider} onChange={event=>setProvider(event.target.value)}><option value={PROVIDERS.cloud}>Cloud · OpenAI</option><option value={PROVIDERS.local} disabled={!isLocalAiAvailable}>Local · Qwen3 4B{isLocalAiAvailable?'':' (offline)'}</option></select></label>{isLocalAiAvailable&&<button type="button" onClick={pairLaptop}>Pair laptop</button>}<button type="button" onClick={newConversation}>＋ New chat</button></div></header>
+  {pairing&&<aside className="ai-pairing-card"><strong>Laptop pairing token</strong><p>Copy this token into the Windows connector environment. It is shown once.</p><code>{pairing.token}</code><small>Set INVINCIBLE_FIREBASE_AGENT_TOKEN to this value, then start firebase-task-connector.mjs.</small></aside>}
+  {pairingError&&<div className="ai-error" role="alert"><strong>Pairing stopped</strong><span>{pairingError}</span></div>}
   <section className="ai-context-bar" aria-label="Current Invincible context"><div className="ai-core-pulse" aria-hidden="true"><span/></div><div><small>CURRENT FOCUS</small><strong>{focus?.title||'No active focus'}</strong></div><div><small>{provider===PROVIDERS.local?'LOCAL PROVIDER':'NEXT ACTION'}</small><strong>{provider===PROVIDERS.local?'Qwen3 4B':next?.title||next?.text||(focus?'Add the first clear stage':'Create or choose a project')}</strong></div><a href={focus?`/invincible/task/?id=${encodeURIComponent(focus.id)}`:'/invincible/'}>{focus?'Open project':'Open dashboard'} →</a></section>
   <main className="ai-chat-panel">
    <div className="ai-chat-stream" aria-live="polite">
