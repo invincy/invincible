@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 2,
+  "title": "Canvas and authored impact example",
+  "aspectRatio": "9:16",
+  "fps": 30,
+  "brandPresetId": "adichimp",
+  "scenes": [
+    {
+      "id": "blueprint",
+      "name": "Blueprint",
+      "startSeconds": 0,
+      "durationSeconds": 3,
+      "engineType": "graphic",
+      "engineData": {
+        "background": "#071b39",
+        "backgroundStyle": "blueprint",
+        "gridColor": "#6388a8",
+        "gridSpacing": 48
+      },
+      "overlays": [
+        {
+          "id": "shape",
+          "type": "rectangle",
+          "color": "#65b7e6",
+          "x": 0.3,
+          "y": 0.5,
+          "width": 0.18,
+          "height": 0.12,
+          "keyframes": [
+            {
+              "timeSeconds": 0,
+              "x": 0.25,
+              "rotation": 0,
+              "easing": "smooth"
+            },
+            {
+              "timeSeconds": 2,
+              "x": 0.7,
+              "rotation": 90
+            }
+          ]
+        },
+        {
+          "id": "title",
+          "type": "text",
+          "text": "Explore • Explain • Animate",
+          "fontFamily": "Invincible Sans",
+          "fontSize": 54,
+          "x": 0.5,
+          "y": 0.2,
+          "width": 0.85
+        }
+      ]
+    },
+    {
+      "id": "impact",
+      "name": "Authored trajectory",
+      "startSeconds": 3,
+      "durationSeconds": 3,
+      "engineType": "battlefield",
+      "engineData": {
+        "background": "#7b865b",
+        "terrain": [],
+        "formations": [],
+        "camera": [
+          {
+            "timeSeconds": 0,
+            "x": 0.5,
+            "y": 0.5,
+            "zoom": 1,
+            "tilt": 0.35,
+            "bearing": 0
+          }
+        ],
+        "projectiles": [
+          {
+            "id": "shot",
+            "from": [
+              0.2,
+              0.7
+            ],
+            "to": [
+              0.8,
+              0.4
+            ],
+            "launchSeconds": 0.3,
+            "flightSeconds": 1.2,
+            "arcHeight": 0.2,
+            "radius": 0.006,
+            "color": "#ffbd65",
+            "impactSeconds": 0.5,
+            "impactRadius": 0.06
+          }
+        ]
+      },
+      "overlays": []
+    }
+  ],
+  "assets": [],
+  "audio": null,
+  "introEnabled": false,
+  "outroEnabled": false,
+  "audioClips": []
+}

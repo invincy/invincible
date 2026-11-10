@@ -30,3 +30,70 @@ Owners' drafts live at _creatorMedia/{uid}/drafts/{projectId}, alongside a revis
 Deploy only functions:creator-media with CREATOR_MEDIA_BUCKET configured. This does not redeploy existing AI/TTS functions or change Firestore rules. The dedicated runtime service account has object access to this bucket, Firestore service access, and signing permission on itself. Client database rules do not open _creatorMedia. Backend source and fixtures are excluded from public Pages staging.
 
 Run npm test, npm run test:video-studio, the existing Map Editor/history/map-animation/default/universal checks, npm run build and npm run check. The new single-flow browser test uploads synthetic image/audio, imports one map-plus-army-overlay manifest, exports with audio from an independent browser context, and checks account isolation and stale-draft conflicts through a controlled remote service. Backend tests exercise the actual handler's authentication/account scope and original-byte validation. These are distinct from signed-in production acceptance.
+
+## Motion Studio extension — November 10, 2026
+
+The existing Studio now exposes Canvas / explainer scenes alongside Map and Battlefield;
+these are modes in the same project, compositor, manifest and MP4 exporter. The internal
+`graphic` engine name and schema versions 1/2 remain compatible. Canvas supports plain,
+grid, blueprint and image backgrounds. Background image IDs reference the same assets
+as overlays. Grid spacing and text sizes are reference pixels at a 1080-pixel short edge.
+Bundled Latin/Hindi font aliases and standard system/serif/monospace choices are available.
+
+The Objects disclosure below preview edits screen-space overlays on every engine:
+text, image, rectangle, circle, line and arrow. Select in the preview or object track;
+drag to move and use the corner handle to scale. Track bodies move visibility windows;
+track edges trim them. Numeric controls remain available for keyboard/mobile precision.
+Motion keys edit position/scale/rotation/opacity at the playhead, with linear/smooth/hold
+easing. Dragging an animated object inserts/updates a key at the current scene-local time.
+Object edits retain bounded undo/redo history; external manifest edits invalidate that
+history so undo cannot erase a later audio/import/scene change. Selection guides are DOM
+controls and do not enter exported frames. This does not add timeline waveform editing,
+formula typesetting, grouped screen objects, arbitrary custom font uploads or 3D physics.
+
+Battlefields optionally contain up to 200 `projectiles`. Each has id, normalized from/to,
+launchSeconds, flightSeconds, arcHeight, radius, color, impactSeconds and impactRadius.
+The flight is a deterministic parabolic trajectory; impact is an expanding fading cue.
+All timing fits within the scene; scene resizing retimes flights and impacts. These are
+explicit authored cues, not automatic collision detection. Formation movement remains
+authored through the existing paths. Place the target at the arrival position/time.
+
+Sound effects/music can repeat one original trimmed source segment with `loop:true`
+and `sourceDurationSeconds`; clip duration controls the total repeated span. Volume and
+fades cover that whole span. Preview and export use the same clip timing and loop bounds;
+voiceover looping is rejected. Add cannon and impact clips at scene start plus launch
+and arrival times. No sound is synthesized or automatically attached to a projectile.
+
+Copy ChatGPT brief documents the complete accepted schema. JSON supplies every render
+property, including backgrounds, fonts, shapes, paths, effects and audio clips; manual
+controls edit that same canonical data. Media files must exist and be accessible via
+exact references. Unknown fields and missing files fail explicitly. No executable JSON
+commands, inferred speech alignment or invented media IDs are supported.
+
+`creator/video-studio/motion-example.json` is a six-second asset-free import example,
+not a finished film or a scientific/historical reconstruction. Import using the existing
+Review import / Apply reviewed import controls, then Export MP4.
+
+### Verification and continuation
+
+Base checkout: `b66808a41729ccb97433c9bddcee2152e9facbc9`.
+All 231 repository Node cases ran: 229 passed, two existing skips. Focused Studio cases:
+30 passed, including six new tests for schema roundtrip, invalid imports, trajectory
+seeks/retiming, audio-loop samples/scheduling, typography scaling and the AI brief.
+The later loop-seam interpolation correction passed the six affected new tests.
+Site references and diff whitespace checks passed. An isolated DOM check exercised font
+edits, undo/redo, key insertion, blueprint selection, duplicate/delete and cleanup.
+
+Browser verification is **unfinished**: the required Video Studio command stopped when
+Chromium aborted at startup (`socket() failed: Operation not permitted`). No workaround
+or permissions change was attempted. Consequently canvas/pointer layout, real WebAudio
+loop seams, mobile interaction, saved-account behavior and a new encoded MP4 are not
+certified. Production Firebase permissions and deployment were not exercised.
+
+On a machine with Chrome, run `npm run test:video-studio` and
+`node tests/creator-motion-studio-browser.cjs` (set CHROMIUM_EXECUTABLE if necessary).
+The added browser scenario exercises the real import, manual font edit, undo/redo,
+save/reload, responsive width and native JSON-to-MP4 export. Inspect its resulting
+`.test-output/creator-motion-studio.mp4`, verify both streams when adding real audio,
+and review dragging/resizing/track trims on desktop and mobile before publishing.
+Publication was subsequently authorized by the user. The GitHub Pages workflow publishes the master branch; its run result is the authority for deployment status. Browser/media verification limits above still apply.

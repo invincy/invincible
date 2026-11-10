@@ -1,7 +1,8 @@
+import {validateCanvas,CANVAS_FONTS} from './canvas.js?v=2026111014';
 import {compileAnimation} from '../map-animation-import.js?v=2026111002';
 import {safeAssetUrl} from '../map-editor-model.js?v=2026111002';
 import {validateMap,durationOf} from '../history-model.js?v=2026111002';
-import {validateBattlefield} from './battlefield.js';
+import {validateBattlefield} from './battlefield.js?v=2026111014';
 import {exportDimensions} from '../map-video-export.js';
 export {exportDimensions};
 export const PRESETS = Object.freeze([
@@ -29,9 +30,13 @@ const color = x=>{if(!/^#[\da-f]{6}$/i.test(x))fail('Colors must be #rrggbb.');}
 const id = x=>{if(typeof x!=='string'||!x.length||x.length>150)fail('Use nonempty IDs up to 150 characters.');};
 export function emptyVideo(){return {schemaVersion:1,title:'Untitled video',aspectRatio:'9:16',fps:30,brandPresetId:'adichimp',scenes:[],assets:[],audio:null,introEnabled:false,outroEnabled:false};}
 export function validateLayer(layer,duration,assets){
- keys(layer,['id','type','text','assetId','x','y','width','height','scale','rotation','opacity','fontSize','color','startSeconds','endSeconds','keyframes'],'layer');id(layer.id);
- if(!['text','image','rectangle'].includes(layer.type))fail('Layer type must be text, image or rectangle.');
+ keys(layer,['id','type','text','assetId','x','y','width','height','scale','rotation','opacity','fontSize','fontFamily','fontWeight','textAlign','lineWidth','color','startSeconds','endSeconds','keyframes'],'layer');id(layer.id);
+ if(!['text','image','rectangle','circle','line','arrow'].includes(layer.type))fail('Choose text, image, rectangle, circle, line or arrow.');
  if(layer.type==='text')str(layer.text,2000,'layer text');
+ if(layer.fontFamily!==undefined&&!CANVAS_FONTS.includes(layer.fontFamily))fail('Choose a bundled or standard canvas font.');
+ if(layer.fontWeight!==undefined&&![400,600,700].includes(layer.fontWeight))fail('Choose font weight 400, 600 or 700.');
+ if(layer.textAlign!==undefined&&!['left','center','right'].includes(layer.textAlign))fail('Invalid text alignment.');
+ if(layer.lineWidth!==undefined)num(layer.lineWidth,1,40,'line width');
  if(layer.type==='image'&&!assets.has(layer.assetId))fail('Image refers to a missing asset: '+layer.assetId);
  for(const field of ['x','y'])if(layer[field]!==undefined)num(layer[field],-2,3,field);
  for(const field of ['width','height'])if(layer[field]!==undefined)num(layer[field],0.001,4,field);
@@ -73,7 +78,7 @@ function validateScene(scene,assets,mapAssets,{template=false,version=1,mapSourc
   keys(data,['title','source','points'],'LIC engine');str(data.title,200,'graph title');str(data.source,1000,'illustration source');if(!data.source.trim())fail('Financial graphs require an illustration source.');
   if(!Array.isArray(data.points)||!data.points.length||data.points.length>100)fail('Use 1–100 financial milestones.');let previous=-1;
   for(const p of data.points){keys(p,['timeSeconds','year','label','premium','addition','income','booster','maturity'],'milestone');num(p.timeSeconds,0,scene.durationSeconds,'milestone time');if(p.timeSeconds<previous)fail('Milestones must follow timeline order.');previous=p.timeSeconds;num(p.year,0,100,'policy year');str(p.label,100,'milestone label');for(const field of ['premium','addition','income','booster','maturity'])if(p[field]!==undefined)num(p[field],0,1e10,field);}
- }else keys(data,['background'],'graphics engine');
+ }else validateCanvas(data,assets);
  if(data.background!==undefined)color(data.background);
  if(!Array.isArray(scene.overlays)||scene.overlays.length>100)fail('Use up to 100 overlays per scene.');const ids=new Set();for(const l of scene.overlays){validateLayer(l,scene.durationSeconds,assets);if(ids.has(l.id))fail('Duplicate layer ID.');ids.add(l.id);}
  if(scene.transition!==undefined){keys(scene.transition,['type','durationSeconds'],'transition');if(!['cut','fade'].includes(scene.transition.type))fail('Transition must be cut or fade.');num(scene.transition.durationSeconds,0,scene.durationSeconds/2,'transition duration');}
@@ -97,7 +102,7 @@ export function validateManifest(input,{mapAssets=[]}={}){
  if(m.schemaVersion===2){
   if(m.audio!=null)fail('Version 2 uses audioClips, not legacy audio.');
   if(!Array.isArray(m.audioClips)||m.audioClips.length>100)fail('Use up to 100 audio clips.');const ids=new Set();
-  for(const a of m.audioClips){keys(a,['id','fileId','name','role','startSeconds','trimStart','durationSeconds','gain','fadeIn','fadeOut'],'audio clip');id(a.id);if(ids.has(a.id))fail('Duplicate audio clip.');ids.add(a.id);id(a.fileId);str(a.name,200,'audio name');if(!['voiceover','music','effect'].includes(a.role))fail('Invalid audio role.');num(a.startSeconds,0,600,'audio start');num(a.trimStart,0,600,'audio trim');num(a.durationSeconds,1/48000,600,'audio duration');num(a.gain,0,2,'gain');num(a.fadeIn,0,a.durationSeconds,'fade in');num(a.fadeOut,0,a.durationSeconds,'fade out');if(a.fadeIn+a.fadeOut>a.durationSeconds||a.startSeconds+a.durationSeconds>600)fail('Audio timing exceeds its bounds.');}
+  for(const a of m.audioClips){keys(a,['id','fileId','name','role','startSeconds','trimStart','durationSeconds','gain','fadeIn','fadeOut','loop','sourceDurationSeconds'],'audio clip');id(a.id);if(a.loop!==undefined&&typeof a.loop!=='boolean')fail('Audio loop must be boolean.');if(a.loop){if(a.role==='voiceover')fail('Voiceover cannot loop.');num(a.sourceDurationSeconds,1/48000,600,'loop source duration');}else if(a.sourceDurationSeconds!==undefined)fail('Source duration requires loop:true.');if(ids.has(a.id))fail('Duplicate audio clip.');ids.add(a.id);id(a.fileId);str(a.name,200,'audio name');if(!['voiceover','music','effect'].includes(a.role))fail('Invalid audio role.');num(a.startSeconds,0,600,'audio start');num(a.trimStart,0,600,'audio trim');num(a.durationSeconds,1/48000,600,'audio duration');num(a.gain,0,2,'gain');num(a.fadeIn,0,a.durationSeconds,'fade in');num(a.fadeOut,0,a.durationSeconds,'fade out');if(a.fadeIn+a.fadeOut>a.durationSeconds||a.startSeconds+a.durationSeconds>600)fail('Audio timing exceeds its bounds.');}
  }
  return m;
 }

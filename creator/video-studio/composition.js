@@ -1,4 +1,4 @@
-import {emptyVideo,validateManifest} from './model.js?v=2026111002';
+import {emptyVideo,validateManifest} from './model.js?v=2026111014';
 import {sceneTimeline,validateMap} from '../history-model.js?v=2026111002';
 export function upgradeVideo(manifest,audioDuration=0){
  const out=structuredClone(manifest);if(out.schemaVersion===2)return out;
@@ -24,6 +24,7 @@ export function resizeScene(scene,duration){
  for(const layer of out.overlays){for(const p of ['startSeconds','endSeconds'])if(layer[p]!==undefined)layer[p]*=ratio;for(const key of layer.keyframes||[])key.timeSeconds*=ratio;}
  if(out.transition)out.transition.durationSeconds=Math.min(out.transition.durationSeconds,duration/2);
  if(out.engineType==='battlefield')for(const keys of [out.engineData.camera,...out.engineData.formations.map(f=>f.path)])for(const key of keys)key.timeSeconds*=ratio;
+ for(const p of out.engineData.projectiles||[])for(const key of ['launchSeconds','flightSeconds','impactSeconds'])p[key]*=ratio;
  if(out.engineType==='lic')for(const key of out.engineData.points)key.timeSeconds*=ratio;
  if(out.engineType==='map'&&out.engineData.animation){const a=out.engineData.animation;a.duration=duration;for(const key of [...a.camera,...(a.lighting||[])])key.time*=ratio;for(const layer of a.layers){layer.start*=ratio;layer.end*=ratio;for(const p of ['fadeIn','fadeOut','revealDuration'])if(layer[p]!==undefined)layer[p]*=ratio;}}
  return out;

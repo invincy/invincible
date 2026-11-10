@@ -1,9 +1,11 @@
+import {drawCanvasBackground,drawCanvasLayer} from './canvas.js?v=2026111014';
+import {ensureDocumentaryFonts} from '../map-fonts.js';
 import {compileAnimation} from '../map-animation-import.js?v=2026111002';
 import {createHistoryPlayer} from '../history-player.js?v=2026111002';
-import {layerFrame,sceneAt,referencedMapAssets} from './model.js?v=2026111002';
+import {layerFrame,sceneAt,referencedMapAssets} from './model.js?v=2026111014';
 import {resolveMapAsset} from '../map-assets-client.js?v=2026111002';
-import {drawBattlefield} from './battlefield.js';
-import {fitMedia} from './composition.js?v=2026111002';
+import {drawBattlefield} from './battlefield.js?v=2026111014';
+import {fitMedia} from './composition.js?v=2026111014';
 export function mapDraft(animation,geometryReviewed,mapAssets=[]){
  return compileAnimation({scenes:[],historicalMap:{version:1,theme:'night',events:[],features:{type:'FeatureCollection',features:[]},camera:[],visual:{version:1,assets:referencedMapAssets(mapAssets,animation),layers:[]}}},animation,{geometryReviewed}).project;
 }
@@ -12,8 +14,8 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
  const ownedUrls=[],hosts=[];
  const destroy=()=>{if(disposed)return;disposed=true;for(const {player} of maps.values())player.destroy();for(const v of videos.values())v.input.dispose();for(const h of hosts)h.remove();for(const url of ownedUrls)URL.revokeObjectURL(url);};
  try{
-  await document.fonts.ready;
-  const required=new Set([brand.logoAssetId,...timeline.scenes.flatMap(scene=>[...scene.overlays.filter(layer=>layer.type==='image').map(layer=>layer.assetId),...(['image','video'].includes(scene.engineType)?[scene.engineData.assetId]:[]),...(scene.engineData.formations||[]).map(f=>f.assetId)])]);
+  await ensureDocumentaryFonts();await document.fonts.ready;
+  const required=new Set([brand.logoAssetId,...timeline.scenes.flatMap(scene=>[...scene.overlays.filter(layer=>layer.type==='image').map(layer=>layer.assetId),...(scene.engineData.backgroundAssetId?[scene.engineData.backgroundAssetId]:[]),...(['image','video'].includes(scene.engineType)?[scene.engineData.assetId]:[]),...(scene.engineData.formations||[]).map(f=>f.assetId)])]);
   const videoIds=new Set(timeline.scenes.filter(s=>s.engineType==='video').map(s=>s.engineData.assetId));
   for(const asset of manifest.assets.filter(asset=>required.has(asset.id))){
    signal?.throwIfAborted();let url=asset.url;
@@ -43,12 +45,7 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
  }
  function graphics(scene,time){for(const layer of scene.overlays){
   if(time<(layer.startSeconds??0)||time>=(layer.endSeconds??scene.durationSeconds))continue;
-  const l=layerFrame(layer,time);ctx.save();ctx.globalAlpha*=l.opacity;ctx.translate(l.x*width,l.y*height);ctx.rotate(l.rotation*Math.PI/180);ctx.scale(l.scale,l.scale);ctx.fillStyle=l.color||brand.foreground;
-  const w=(l.width??.8)*width,h=(l.height??.3)*height;
-  if(l.type==='text'){ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`600 ${l.fontSize??56}px ${brand.font}`;const lines=l.text.split('\n');lines.forEach((line,i)=>ctx.fillText(line,0,(i-(lines.length-1)/2)*(l.fontSize??56)*1.3,w));}
-  if(l.type==='rectangle')ctx.fillRect(-w/2,-h/2,w,h);
-  if(l.type==='image'){const image=images.get(l.assetId),scale=Math.min(w/image.width,h/image.height);ctx.drawImage(image,-image.width*scale/2,-image.height*scale/2,image.width*scale,image.height*scale);}
-  ctx.restore();
+  drawCanvasLayer(ctx,layerFrame(layer,time),brand,images);
  }}
  const money=n=>'₹'+Math.round(n).toLocaleString('en-IN');
  function financial(scene,time){
@@ -73,7 +70,8 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
     player.seek(local+(scene.engineData.sourceStart||0));if(player.isNative)await player.settleFrame(frameSignal);
     if(exporting&&errors.length)throw Error(errors[0]);ctx.drawImage(player.map.getCanvas(),0,0,width,height);
     const overlay=host.querySelector('.history-overlay');if(overlay)ctx.drawImage(overlay,0,0,width,height);
-   }else if(scene.engineType==='lic')financial(scene,local);
+   }else if(scene.engineType==='graphic')drawCanvasBackground(ctx,scene.engineData,images);
+   else if(scene.engineType==='lic')financial(scene,local);
    else if(scene.engineType==='battlefield')drawBattlefield(ctx,scene.engineData,local,images);
    else if(scene.engineType==='image')fitMedia(ctx,images.get(scene.engineData.assetId),scene.engineData.fit);
    else if(scene.engineType==='video'){

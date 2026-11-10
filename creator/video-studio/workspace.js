@@ -1,11 +1,11 @@
 import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=2026111002';
-import {studioBrief} from './handoff.js?v=2026111002';
-import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111002';
-import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111002';
-import {createStudioRenderer} from './adapters.js?v=2026111002';
-import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111002';
-import {mountAssembly} from './assembly.js?v=2026111002';
-import {encodeStudioVideo} from './export.js';
+import {studioBrief} from './handoff.js?v=2026111014';
+import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111014';
+import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111014';
+import {createStudioRenderer} from './adapters.js?v=2026111014';
+import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111014';
+import {mountAssembly} from './assembly.js?v=2026111014';
+import {encodeStudioVideo} from './export.js?v=2026111014';
 import {openStudioStore} from './storage.js';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>crypto.randomUUID();
@@ -26,7 +26,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  const legacy=$('.vs-layout > div'),advanced=document.createElement('details'),assemblyRoot=document.createElement('section'),header=document.createElement('header');
  advanced.className='vs-advanced';advanced.innerHTML='<summary>Advanced · brand & project settings</summary>';legacy.before(advanced);advanced.append(legacy);legacy.querySelector('strong').textContent='Project settings';
  assemblyRoot.dataset.assembly='';assemblyRoot.className='vs-assembly';$('.vs-layout').prepend(assemblyRoot);
- header.className='vs-studio-header';header.innerHTML='<div><span class="vs-eyebrow">CREATOR</span><h2>Studio</h2></div><div class="vs-actions" data-studio-actions></div>';root.prepend(header);const mobile=document.createElement('nav');mobile.className='vs-mobile-tabs';mobile.setAttribute('aria-label','Studio panels');mobile.innerHTML='<button data-mobile-panel=preview aria-pressed=true>Preview</button><button data-mobile-panel=scenes aria-pressed=false>Scenes & audio</button>';header.after(mobile);root.dataset.mobilePanel='preview';mobile.onclick=e=>{const b=e.target.closest('[data-mobile-panel]');if(!b)return;root.dataset.mobilePanel=b.dataset.mobilePanel;mobile.querySelectorAll('button').forEach(n=>n.setAttribute('aria-pressed',String(n===b)));};
+ header.className='vs-studio-header';header.innerHTML='<div><span class="vs-eyebrow">CREATOR</span><h2>Motion Studio</h2></div><div class="vs-actions" data-studio-actions></div>';root.prepend(header);const mobile=document.createElement('nav');mobile.className='vs-mobile-tabs';mobile.setAttribute('aria-label','Studio panels');mobile.innerHTML='<button data-mobile-panel=preview aria-pressed=true>Preview</button><button data-mobile-panel=scenes aria-pressed=false>Scenes & audio</button>';header.after(mobile);root.dataset.mobilePanel='preview';mobile.onclick=e=>{const b=e.target.closest('[data-mobile-panel]');if(!b)return;root.dataset.mobilePanel=b.dataset.mobilePanel;mobile.querySelectorAll('button').forEach(n=>n.setAttribute('aria-pressed',String(n===b)));};
  for(const key of ['save','export'])header.querySelector('[data-studio-actions]').append($(`[data-vs=${key}]`));
  $('.vs-layout').after(advanced);advanced.append($('[data-vs-status]'));root.append($('[data-vs-status]'));
  $('.vs-preview .vs-help').textContent='Full HD · 30 fps. Your scenes and audio export together.';
@@ -79,7 +79,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  }
  async function draw(){
   if(drawing)await drawing.catch(()=>{});
-  const task=(async()=>{await prepare();if(disposed||!renderer)return;await renderer.draw(time);state.time=time;$('[data-vs-seek]').value=time;$('[data-vs-time]').textContent=`${time.toFixed(2)} / ${timeline.duration.toFixed(2)}s`;})();drawing=task;try{await task;}finally{if(drawing===task)drawing=null;}
+  const task=(async()=>{await prepare();if(disposed||!renderer)return;await renderer.draw(time);assembly?.highlight();state.time=time;$('[data-vs-seek]').value=time;$('[data-vs-time]').textContent=`${time.toFixed(2)} / ${timeline.duration.toFixed(2)}s`;})();drawing=task;try{await task;}finally{if(drawing===task)drawing=null;}
  }
  async function applyManifest(next,{brands:nextBrands=null}={}){
   const prevManifest=state.manifest,prevBrands=state.brands,prevTime=time,prevPending=pending;
@@ -200,7 +200,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    validateManifest(next,{mapAssets:mapAssets()});await applyManifest(next);
   });
  });
- assembly=mountAssembly(assemblyRoot,{session:state,getManifest:()=>state.manifest,getProject,getFile,importFiles:uploadFiles,putFile:(id,file)=>state.files.set(id,file),deleteFile:id=>state.files.delete(id),run,status,getTime:()=>time,setTime:value=>{time=value;state.time=value;},releaseRenderer:async()=>{stop();if(drawing)await drawing.catch(()=>{});invalidate();},setManifest:applyManifest,previewManifest:async next=>{if(next===state.manifest){invalidate();await draw();return;}invalidate();try{const b=brand(),t=compileTimeline(next,b);audioTracks=await loadAudioTracks(next,getFile);const lead=t.audioClips[0]&&next.audioClips?.[0]?t.audioClips[0].startSeconds-next.audioClips[0].startSeconds:0;audioTracks=audioTracks.map(a=>({...a,startSeconds:a.startSeconds+lead}));const nextRenderer=await createStudioRenderer(canvas,next,t,b,{getFile,mapAssets:mapAssets(),signal:lifecycle.signal});if(disposed){nextRenderer.destroy();return;}renderer=nextRenderer;timeline=t;await renderer.draw(time);}catch(error){invalidate();try{await draw();}catch{}throw error;}}});
+ assembly=mountAssembly(assemblyRoot,{pause:stop,session:state,getManifest:()=>state.manifest,getProject,getFile,importFiles:uploadFiles,putFile:(id,file)=>state.files.set(id,file),deleteFile:id=>state.files.delete(id),run,status,getTime:()=>time,setTime:value=>{time=value;state.time=value;},releaseRenderer:async()=>{stop();if(drawing)await drawing.catch(()=>{});invalidate();},setManifest:applyManifest,previewManifest:async next=>{if(next===state.manifest){invalidate();await draw();return;}invalidate();try{const b=brand(),t=compileTimeline(next,b);audioTracks=await loadAudioTracks(next,getFile);const lead=t.audioClips[0]&&next.audioClips?.[0]?t.audioClips[0].startSeconds-next.audioClips[0].startSeconds:0;audioTracks=audioTracks.map(a=>({...a,startSeconds:a.startSeconds+lead}));const nextRenderer=await createStudioRenderer(canvas,next,t,b,{getFile,mapAssets:mapAssets(),signal:lifecycle.signal});if(disposed){nextRenderer.destroy();return;}renderer=nextRenderer;timeline=t;await renderer.draw(time);}catch(error){invalidate();try{await draw();}catch{}throw error;}}});
  const ready=run(async()=>{
   if(!state.loaded){if(store){const library=await store.get('brands');if(library){state.brands=library.brands;state.brandAssets=library.assets;}if(projectId){const version=await store.get('draft:'+projectId);if(version){const saved=await store.get('version:'+projectId+':'+version);if(saved)state.manifest=validateManifest(saved,{mapAssets:mapAssets()});}}}state.manifest.assets=assetsForBrand(brand(),state.manifest.assets,state.brandAssets);state.loaded=true;}
   if(getProject()?.ownerUid===account||mediaService){try{state.cloudRevision=await store?.get('cloudRevision:'+projectId)||0;const cloud=await media.loadDraft(projectId);if(cloud&&!await store?.get('draft:'+projectId)){state.manifest=validateManifest(cloud.manifest,{mapAssets:mapAssets()});state.brands=cloud.brands;state.cloudRevision=cloud.revision;}else if(cloud&&cloud.revision!==state.cloudRevision)status('Another device has a newer cloud draft. Use Review cloud draft before saving.');}catch(e){status('Cloud draft unavailable. Your local copy is retained; check your connection and try again.');}}

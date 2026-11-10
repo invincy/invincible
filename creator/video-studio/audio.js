@@ -16,20 +16,21 @@ export function audioGainAt(clip,local){
 export function mixAudioChunk(tracks,at,length,rate=48000){
  const channels=Math.max(1,...tracks.map(t=>t.buffer.numberOfChannels)),data=new Float32Array(length*channels);
  for(const t of tracks){for(let c=0;c<channels;c++){const source=t.buffer.getChannelData(Math.min(c,t.buffer.numberOfChannels-1));for(let n=0;n<length;n++){
-  const local=(at+n)/rate-t.startSeconds;if(local<0||local>=t.durationSeconds)continue;const pos=(local+t.trimStart)*t.buffer.sampleRate,i=Math.floor(pos),f=pos-i;if(i>=source.length)continue;
-  data[c*length+n]+=(source[i]+((source[i+1]??source[i])-source[i])*f)*audioGainAt(t,local);
+  const local=(at+n)/rate-t.startSeconds;if(local<0||local>=t.durationSeconds)continue;const pos=((t.loop?local%t.sourceDurationSeconds:local)+t.trimStart)*t.buffer.sampleRate,i=Math.floor(pos),f=pos-i;if(i>=source.length)continue;
+  let next=source[i+1]??source[i];if(t.loop&&(i+1)>=((t.trimStart+t.sourceDurationSeconds)*t.buffer.sampleRate)){const wrap=t.trimStart*t.buffer.sampleRate+((i+1-(t.trimStart+t.sourceDurationSeconds)*t.buffer.sampleRate)%(t.sourceDurationSeconds*t.buffer.sampleRate)),j=Math.floor(wrap),fraction=wrap-j;next=source[j]+((source[j+1]??source[j])-source[j])*fraction;}
+  data[c*length+n]+=(source[i]+(next-source[i])*f)*audioGainAt(t,local);
  }}}
  for(let i=0;i<data.length;i++)data[i]=Math.max(-1,Math.min(1,data[i]));return {data,channels};
 }
-export function audioTrimWithinSource(clip,buffer){return clip.trimStart+clip.durationSeconds<=buffer.duration+1/Math.min(48000,buffer.sampleRate)+Number.EPSILON;}
+export function audioTrimWithinSource(clip,buffer){return clip.trimStart+(clip.loop?clip.sourceDurationSeconds:clip.durationSeconds)<=buffer.duration+1/Math.min(48000,buffer.sampleRate)+Number.EPSILON;}
 export async function loadAudioTracks(manifest,getFile){
  const clips=manifest.audioClips||[],buffers=new Map(),tracks=[];
  for(const clip of clips){let buffer=buffers.get(clip.fileId);if(!buffer){const file=await getFile(clip.fileId);if(!file)throw Error('Missing recording on this device: '+clip.name);buffer=await decodeVoiceover(file);buffers.set(clip.fileId,buffer);}if(!audioTrimWithinSource(clip,buffer))throw Error('Audio trim exceeds original recording: '+clip.name);tracks.push({...clip,buffer});}return tracks;
 }
 // Piecewise-linear envelopes match audioGainAt, including playback from the middle of a fade.
 export function scheduleAudioTracks(context,tracks,time){
- const nodes=[];for(const t of tracks){const local=Math.max(0,time-t.startSeconds);if(local>=t.durationSeconds)continue;const when=context.currentTime+Math.max(0,t.startSeconds-time),source=context.createBufferSource(),gain=context.createGain();source.buffer=t.buffer;gain.gain.setValueAtTime(audioGainAt(t,local),when);
+ const nodes=[];for(const t of tracks){const local=Math.max(0,time-t.startSeconds);if(local>=t.durationSeconds)continue;const when=context.currentTime+Math.max(0,t.startSeconds-time),source=context.createBufferSource(),gain=context.createGain();source.buffer=t.buffer;if(t.loop){source.loop=true;source.loopStart=t.trimStart;source.loopEnd=t.trimStart+t.sourceDurationSeconds;}gain.gain.setValueAtTime(audioGainAt(t,local),when);
   for(const [point,value] of [[t.fadeIn,t.gain],[t.durationSeconds-t.fadeOut,t.gain],[t.durationSeconds,t.fadeOut?0:t.gain]])if(point>local)gain.gain.linearRampToValueAtTime(value,when+point-local);
-  source.connect(gain);gain.connect(context.destination);source.start(when,t.trimStart+local,t.durationSeconds-local);nodes.push({source,gain});
+  source.connect(gain);gain.connect(context.destination);source.start(when,t.trimStart+(t.loop?local%t.sourceDurationSeconds:local),t.durationSeconds-local);nodes.push({source,gain});
  }return ()=>nodes.forEach(({source,gain})=>{try{source.stop();}catch{}source.disconnect();gain.disconnect();});
 }
