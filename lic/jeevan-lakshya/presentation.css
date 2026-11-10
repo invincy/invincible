@@ -1219,3 +1219,40 @@ button:focus-visible,a:focus-visible{outline:2px solid #fff1a3;outline-offset:3p
 @media(max-height:650px){.layer-advisor-audio{right:14px!important}}
 
 #goalHint{left:50%;width:max-content;max-width:90%;transform:translateX(-50%);padding:5px 11px;border:1px solid #ffe59444;border-radius:999px;background:#102458c9;font-size:.65rem;text-shadow:none;backdrop-filter:blur(8px)}
+
+/* Narrative-first opening. Goal choice is a decision, not a reveal-button task. */
+#welcomePanel{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;text-align:center;z-index:35}
+.welcome-panel p{font:600 1.55rem/1.35 var(--font-serif);color:#fff1b9}.welcome-panel .flow-gold{width:75%;max-width:280px}
+[data-opening="welcome"] #goalCoin,[data-opening="welcome"] .story-family,[data-opening="welcome"] .story-road,[data-opening="dreams"] #goalCoin{opacity:0}
+[data-opening="welcome"] .layer-advisor-audio{display:none}
+[data-flow-step="intro"][data-opening="dreams"] .story-family{animation:familyIn 1.5s cubic-bezier(.16,1,.3,1) .2s both}
+[data-flow-step="intro"][data-opening="dreams"] .story-road{animation:roadIn 1.45s cubic-bezier(.16,1,.3,1) .65s both}
+[data-opening="dreams"] #goalChoices .goal-card-btn{opacity:1;pointer-events:none;transition:transform .9s cubic-bezier(.16,1,.3,1),opacity .6s}
+[data-opening="dreams"] #goalChoices .goal-card-btn:nth-child(1){transform:translate(calc(-50% - 98px),84px);transition-delay:.15s}
+[data-opening="dreams"] #goalChoices .goal-card-btn:nth-child(2){transform:translate(calc(-50% + 98px),84px);transition-delay:.35s}
+[data-opening="dreams"] #goalChoices .goal-card-btn:nth-child(3){transform:translate(-50%,224px);transition-delay:.55s}
+[data-opening="merging"] #goalChoices .goal-card-btn{transform:translate(-50%,-50%) scale(.3);opacity:0;transition:transform 1s cubic-bezier(.16,1,.3,1),opacity .9s}
+[data-flow-step="intro"][data-opening="merging"] #goalCoin{opacity:1;animation:coinSettle .9s cubic-bezier(.16,1,.3,1) .25s both}
+#selectionPanel{padding:14px 18px}#selectionPanel p{margin-bottom:0}
+@media(max-height:650px){[data-opening="dreams"] #goalChoices .goal-card-btn:nth-child(1){transform:translate(calc(-50% - 78px),72px)}[data-opening="dreams"] #goalChoices .goal-card-btn:nth-child(2){transform:translate(calc(-50% + 78px),72px)}[data-opening="dreams"] #goalChoices .goal-card-btn:nth-child(3){transform:translate(-50%,188px)}}
+
+[data-opening="merging"] #goalChoices{z-index:23}
+
+/* Shared portrait composition: path.png arrow tip is (268,55) on its 500px canvas. */
+#stageContainer{--coin-x:50%;--coin-y:33%;--coin-size:clamp(150px,48vw,210px)}
+#goalCoin,[data-flow-step="intro"] #goalCoin{left:var(--coin-x);top:var(--coin-y);width:var(--coin-size);height:var(--coin-size)}
+.story-road{left:calc(var(--coin-x) - 81.472%);top:calc(var(--coin-y) - 8.8%);bottom:auto;width:152%;height:80%;max-width:none}
+#goalChoices .goal-card-btn{left:var(--coin-x);top:var(--coin-y)}
+#goalHint{top:calc(var(--coin-y) + var(--coin-size) * .34 + 8px)}
+
+/* Start unlocks mobile audio on the existing illustrated opening. */
+[data-opening="welcome"] .story-family,[data-opening="welcome"] .story-road{opacity:1}
+#welcomePanel{justify-content:flex-end;padding-bottom:20px;pointer-events:none}
+#welcomePanel button{pointer-events:auto}
+[data-opening="welcome"] #goalChoices .goal-card-btn{opacity:1;transform:translate(-50%,-50%);pointer-events:none}
+[data-opening="welcome"] #goalChoices .goal-card-btn:nth-child(1){transform:translate(calc(-50% - 78px),-50%)}
+[data-opening="welcome"] #goalChoices .goal-card-btn:nth-child(2){transform:translate(calc(-50% + 78px),-50%)}
+[data-opening="welcome"] #goalChoices .goal-card-btn:nth-child(3){transform:translate(-50%,70%)}
+
+/* Goal choices get clear space; family artwork returns after selection. */
+[data-flow-step="intro"]:not([data-opening="welcome"]) .story-family{animation:none;opacity:0}

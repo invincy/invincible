@@ -1,8 +1,9 @@
 import {eligibleTerms,computePlan} from './benefits.mjs';
+import {createNarrator} from './narration.mjs';
 const $=id=>document.getElementById(id),stage=$('stageContainer');
 const money=n=>n===null?'LIC quote required':'₹'+n.toLocaleString('en-IN');
 const shortMoney=n=>'₹'+Number((n/100000).toFixed(2)).toLocaleString('en-IN')+' lakh';
-const panels=['scene1','selectionPanel','configurationPanel','previewPanel','whatIfPanel','protectionPanel','detailsPanel'];
+const panels=['welcomePanel','scene1','selectionPanel','configurationPanel','previewPanel','whatIfPanel','protectionPanel','detailsPanel'];
 const steps=['intro','selected','configure','preview','whatif','protection','details'];
 const copy={
  intro:['Child future · બાળકના સપના','Your Child’s <span class="gold">Lakshya</span>','બાળકનું લક્ષ્ય, માતા-પિતાનો સંકલ્પ',''],
@@ -13,12 +14,13 @@ const copy={
  protection:['Family protection','The path <span class="gold">continues</span>','પરિવાર માટે આવકનો આધાર',''],
  details:['Plan 733','Explore the <span class="gold">details</span>','તમારા પરિવાર માટે આયોજન કરો','Review the assumptions and full cash-flow calculation.']
 };
+let started=false;
 let state='intro',age=30,term=25,sa=200000,goal='Education',goalSrc='assets/study.png',hasGoal=false;
 let timers=new Set(),generation=0,ready=true,capturing=false,flyer=null,flight=null;
 let paused=false,pausedAnimations=[],benefitIndex=-1,transitioning=false,beatMoving=false,exitAnimations=[];
 const BENEFIT_HOLD=4800;
 const benefitIds=['riderPill','ceasesPill','incomePill','deathMaturityPill'];
-let speechToken=0,speaking=false;
+let speaking=false;
 const coin=$('goalCoin'),choices=$('goalChoices');
 // Keep the visible artwork centred despite different transparent margins in the PNGs.
 function coinArt(src){const specs=src.includes('study')?[232.5,272.5,329]:src.includes('career')?[235,245.5,338]:src.includes('marriage')?[259.5,242.5,371]:[250,235.5,315];return{scale:325/specs[2],dx:.5-specs[0]/500,dy:.5-specs[1]/500};}
@@ -28,17 +30,19 @@ const sceneAssets=Promise.all([...document.querySelectorAll('.story-road,.story-
 const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 function arm(task){task.deadline=Date.now()+task.remaining;task.id=setTimeout(()=>{timers.delete(task);if(task.token===generation)task.fn();},task.remaining);}
 function later(ms,fn){const task={remaining:ms,fn,token:generation,id:null,deadline:0};timers.add(task);if(!paused)arm(task);}
-function cancelSequence(){generation++;exitAnimations.forEach(a=>a.cancel());exitAnimations=[];transitioning=false;stage.dataset.transitioning='false';for(const task of timers)clearTimeout(task.id);timers.clear();flight?.cancel();flight=null;flyer?.remove();flyer=null;capturing=false;pausedAnimations.forEach(a=>{try{a.cancel();}catch{}});pausedAnimations=[];}
-function pauseTimeline(){if(paused)return;paused=true;for(const task of timers){clearTimeout(task.id);task.id=null;task.remaining=Math.max(0,task.deadline-Date.now());}pausedAnimations=stage.getAnimations({subtree:true}).filter(a=>a.playState==='running');pausedAnimations.forEach(a=>a.pause());control();}
-function resumeTimeline(){if(!paused)return;paused=false;for(const task of timers)arm(task);pausedAnimations.forEach(a=>{try{a.play();}catch{}});pausedAnimations=[];control();}
-function stopVoice(){speechToken++;speaking=false;if('speechSynthesis'in window)speechSynthesis.cancel();$('advisorAudioBtn').classList.remove('is-playing');$('advisorAudioLabel').textContent='Hear Advisor Voice';$('advisorAudioBtn').setAttribute('aria-label','Listen to advisor');}
-function speak(){stopVoice();if(!('speechSynthesis'in window)){$('advisorAudioLabel').textContent='Voice unavailable';return;}const token=speechToken;const u=new SpeechSynthesisUtterance(copy[state][3]||(state==='intro'?'Tap the gold coin to choose a goal.':$('headlineMain').textContent));u.lang='en-IN';const voice=speechSynthesis.getVoices().find(v=>v.lang.toLowerCase().startsWith('en-in'));if(voice)u.voice=voice;u.rate=.95;speaking=true;$('advisorAudioBtn').setAttribute('aria-label','Stop advisor voice');$('advisorAudioBtn').classList.add('is-playing');$('advisorAudioLabel').textContent='Stop Advisor Voice';u.onend=u.onerror=()=>{if(token!==speechToken)return;speaking=false;$('advisorAudioBtn').classList.remove('is-playing');$('advisorAudioLabel').textContent='Hear Advisor Voice';};try{speechSynthesis.speak(u);}catch{stopVoice();}}
+function cancelSequence(){stopVoice();generation++;exitAnimations.forEach(a=>a.cancel());exitAnimations=[];transitioning=false;stage.dataset.transitioning='false';for(const task of timers)clearTimeout(task.id);timers.clear();flight?.cancel();flight=null;flyer?.remove();flyer=null;capturing=false;pausedAnimations.forEach(a=>{try{a.cancel();}catch{}});pausedAnimations=[];}
+function pauseTimeline(){if(paused)return;paused=true;narration.pause();for(const task of timers){clearTimeout(task.id);task.id=null;task.remaining=Math.max(0,task.deadline-Date.now());}pausedAnimations=stage.getAnimations({subtree:true}).filter(a=>a.playState==='running');pausedAnimations.forEach(a=>a.pause());control();}
+function resumeTimeline(){if(!paused)return;paused=false;narration.resume();for(const task of timers)arm(task);pausedAnimations.forEach(a=>{try{a.play();}catch{}});pausedAnimations=[];control();}
+const narration=createNarrator({schedule:later,onStatus:({value,muted})=>{speaking=value==='playing';stage.dataset.audioStatus=value;const label=muted?'Unmute narration':'Mute narration';$('advisorAudioBtn').classList.toggle('is-playing',speaking&&!muted);$('advisorAudioLabel').textContent=label;$('advisorAudioBtn').setAttribute('aria-label',label);$('advisorAudioBtn').setAttribute('aria-pressed',String(!muted));}});
+function stopVoice(){narration.cancel();}
+function voiceCue(key,done,fallback){stage.dataset.voiceCue=key;stage.dispatchEvent(new CustomEvent('plan733:voice-cue',{detail:{key,goal,age,term,sumAssured:sa}}));narration.cue(key,done,fallback);}
+function chooseGoalReady(){stage.dataset.opening='settled';ready=true;$('goalHint').hidden=false;$('goalHint').textContent='Choose your child’s goal';$('subtitleText').hidden=true;control();openGoals(true);voiceCue('goal.choose');}
 function openGoals(open){if(open&&(state!=='intro'||!ready))return;stage.dataset.goalsOpen=String(open);$('scene1').classList.toggle('goals-open',open);coin.setAttribute('aria-expanded',String(open));choices.inert=!open;choices.setAttribute('aria-hidden',String(!open));}
 function control(){
  const n=steps.indexOf(state);document.querySelector('.stage-counter-text').textContent=(n+1)+' / '+steps.length;document.querySelector('.stage-progress-fill').style.width=((n+1)/steps.length*100)+'%';$('ctaPrevBtn').disabled=state==='intro';
  const next=$('ctaNextBtn');next.hidden=['intro','selected','configure'].includes(state);next.disabled=transitioning||beatMoving||(state==='protection'?false:!ready);coin.disabled=transitioning||capturing||!ready||!['intro','selected'].includes(state);
  next.textContent=({preview:'What if the parent dies? →',whatif:'How does the plan help? →',protection:ready?'View plan details →':'Next benefit →',details:'Open base-plan calculator →'})[state]||'Continue →';next.setAttribute('aria-label',next.textContent);
- const toggle=$('storyModeToggle');toggle.hidden=!['preview','whatif','protection'].includes(state);toggle.textContent=state==='protection'&&ready?'Replay':paused?'Resume':'Pause';toggle.setAttribute('aria-label',state==='protection'&&ready?'Replay benefit journey':paused?'Resume automatic story':'Pause automatic story');toggle.setAttribute('aria-pressed',String(!paused));
+ const toggle=$('storyModeToggle');toggle.hidden=!paused&&!['preview','whatif','protection'].includes(state)&&!(state==='intro'&&started&&!ready&&['loading','dreams','merging','plan'].includes(stage.dataset.opening));toggle.textContent=paused?'Resume':state==='intro'?'Skip intro':state==='protection'&&ready?'Replay':paused?'Resume':'Pause';toggle.setAttribute('aria-label',paused?'Resume automatic story':state==='intro'?'Skip introduction':state==='protection'&&ready?'Replay benefit journey':paused?'Resume automatic story':'Pause automatic story');toggle.setAttribute('aria-pressed',String(!paused));
  stage.dataset.sequenceReady=String(ready);stage.dataset.paused=String(paused);stage.dataset.capturing=String(capturing);
 }
 function model(){return computePlan({age,term,sumAssured:sa});}
@@ -47,12 +51,12 @@ function reveal(id){$(id).hidden=false;stage.dataset.reveal=id;if(id==='maturity
 function alignMaturity(){const goal=$('storyGoal').getBoundingClientRect(),body=$('sceneStageContent').getBoundingClientRect();const left=goal.left+goal.width*(goalSrc.includes('marriage')?.90:.84)-body.left+7;stage.style.setProperty('--maturity-left',left+'px');stage.style.setProperty('--maturity-top',Math.max(8,goal.top+goal.height*.24-body.top)+'px');stage.style.setProperty('--maturity-width',Math.max(55,body.width-left)+'px');}
 function setState(next,options={}){
  if(reduced()||options.immediate||!stage.dataset.ready||next==='whatif'){renderState(next,options);return;}
- cancelSequence();transitioning=true;stage.dataset.transitioning='true';control();
+ cancelSequence();paused=false;transitioning=true;stage.dataset.transitioning='true';control();
  for(const id of panels){const el=$(id);if(!el.hidden&&id!=='scene1')exitAnimations.push(el.animate([{opacity:1,translate:'0 0'},{opacity:0,translate:'0 -6px'}],{duration:180,easing:'ease-out',fill:'forwards'}));}
  later(180,()=>renderState(next,options));
 }
 function renderState(next,{focus=true}={}){
- cancelSequence();stopVoice();openGoals(false);state=next;ready=true;beatMoving=false;
+ cancelSequence();paused=false;stopVoice();openGoals(false);state=next;ready=true;beatMoving=false;
  stage.dataset.flowStep=state;stage.dataset.storyStep=({intro:1,selected:1,configure:1,preview:2,whatif:3,protection:3,details:4})[state];
  stage.classList.remove('pills-out','family-away','child-in','path-restored','goal-restored');benefitIndex=-1;delete stage.dataset.benefitStep;stage.style.setProperty('--journey-progress','0');
  for(const id of panels)$(id).hidden=true;
@@ -64,18 +68,28 @@ function renderState(next,{focus=true}={}){
  if(!reduced()&&stage.dataset.ready==='true')$('layerHeadline').animate([{opacity:.35,translate:'0 5px'},{opacity:1,translate:'0 0'}],{duration:500,easing:'cubic-bezier(.16,1,.3,1)'});
  $('goalHint').hidden=state!=='intro';
  if(state==='intro'){
-  paused=false;const token=generation;ready=false;coin.disabled=true;$('goalHint').hidden=true;stage.dataset.opening='loading';
-  sceneAssets.then(()=>{if(token!==generation||state!=='intro')return;stage.dataset.opening=hasGoal?'settled':'playing';const done=()=>{if(state!=='intro')return;ready=true;stage.dataset.opening='settled';$('goalHint').hidden=false;control();};if(reduced()||hasGoal)done();else later(2600,done);});
+  paused=false;const token=generation;ready=false;coin.disabled=true;$('goalHint').hidden=true;
+  if(!started){stage.dataset.opening='welcome';$('welcomePanel').hidden=false;}
+  else{
+   stage.dataset.opening='loading';Promise.all([sceneAssets,narration.ready]).then(()=>{if(token!==generation||state!=='intro')return;if(reduced()||hasGoal){chooseGoalReady();return;}
+    stage.dataset.opening='dreams';$('subtitleText').hidden=false;$('subtitleText').textContent='Education. Career. Marriage.';
+    voiceCue('intro.dreams',()=>{stage.dataset.opening='merging';
+     later(1200,()=>{stage.dataset.opening='plan';$('subtitleText').textContent='Savings + life cover, planned around a goal.';voiceCue('intro.plan',chooseGoalReady,2800);});
+    },3200);
+   });
+  }
  }
+ if(state==='selected'){voiceCue('goal.'+(goal==='Education'?'education':goal==='Career'?'career':'marriage'),()=>setState('configure'),1800);}
+ if(state==='configure')voiceCue('profile.choose');
  if(state==='preview'){
-  ready=false;reveal('premiumPill');later(1500,()=>{reveal('maturityPill');ready=true;control();});later(6500,()=>setState('whatif'));
+  ready=false;reveal('premiumPill');voiceCue('plan.premium',()=>{reveal('maturityPill');ready=true;control();voiceCue('plan.maturity',()=>setState('whatif'),5000);},1500);
  }
  if(state==='whatif'){
-  ready=false;reveal('premiumPill');reveal('maturityPill');
+  ready=false;reveal('premiumPill');reveal('maturityPill');voiceCue('family.whatif',()=>setState('protection'),7200);
   later(1200,()=>{stage.classList.add('pills-out');reveal('whatIfCaption');});
   later(2000,()=>stage.classList.add('child-in'));
   later(2200,()=>stage.classList.add('family-away'));
-  later(4700,()=>{$('previewPanel').hidden=true;ready=true;control();});later(7200,()=>setState('protection'));
+  later(4700,()=>{$('previewPanel').hidden=true;ready=true;control();});
  }
  if(state==='protection'){stage.classList.add('family-away','child-in');showBenefit(0);}
 
@@ -88,28 +102,29 @@ function showBenefit(index){
  benefitIds.forEach((id,i)=>{$(id).hidden=i>index;$(id).classList.toggle('is-current',i===index);$(id).classList.toggle('is-settled',i<index);});
  const trail=$('benefitTrail'),point=trail.getPointAtLength(trail.getTotalLength()*progress);$('journeyOrb').setAttribute('cx',point.x);$('journeyOrb').setAttribute('cy',point.y);
  $('journeyStatus').textContent=['1 / 4 · Term rider payout','2 / 4 · Future premiums stop','3 / 4 · Income every eligible year','4 / 4 · *Bonuses not guaranteed'][index];
- alignMaturity();control();if(beatMoving)later(1100,()=>{beatMoving=false;control();});if(!ready)later(BENEFIT_HOLD,()=>showBenefit(index+1));
+ alignMaturity();control();if(beatMoving)later(1100,()=>{beatMoving=false;control();});voiceCue(['family.rider','family.premiums-stop','family.annual-income','family.maturity'][index],index<3?()=>showBenefit(index+1):null,BENEFIT_HOLD);
 }
-function back(){const previous={selected:'intro',configure:'selected',preview:'configure',whatif:'preview',protection:'whatif',details:'protection'}[state];if(previous)setState(previous);else if(capturing)setState('intro');}
+function back(){const previous={selected:'intro',configure:'intro',preview:'configure',whatif:'preview',protection:'whatif',details:'protection'}[state];if(previous)setState(previous);else if(capturing)setState('intro');}
 function next(){if(transitioning||beatMoving)return;if(state==='protection'&&!ready){if(paused)resumeTimeline();showBenefit(benefitIndex+1);return;}if(!ready||capturing)return;const target={preview:'whatif',whatif:'protection',protection:'details'}[state];if(target)setState(target);else if(state==='details')location.href=$('fullCalculatorLink').href;}
 coin.addEventListener('click',()=>{if(!capturing&&state==='intro')openGoals(coin.getAttribute('aria-expanded')!=='true');else if(state==='selected')setState('intro');});
 document.querySelectorAll('[data-goal]').forEach(b=>b.addEventListener('click',async()=>{
- if(capturing||state!=='intro')return;capturing=true;ready=false;control();const token=generation;
+ if(capturing||state!=='intro')return;stopVoice();capturing=true;ready=false;control();const token=generation;
  const source=b.querySelector('img'),from=source.getBoundingClientRect(),to=coinLanding(source.getAttribute('src'));
  flyer=source.cloneNode();flyer.dataset.captureGhost='true';flyer.alt='';flyer.setAttribute('aria-hidden','true');Object.assign(flyer.style,{position:'fixed',left:from.left+'px',top:from.top+'px',width:from.width+'px',height:from.height+'px',zIndex:1000,pointerEvents:'none',objectFit:'contain',transformOrigin:'0 0',filter:'drop-shadow(0 0 20px #ffe478)'});document.body.append(flyer);openGoals(false);
  if(!reduced()){flight=flyer.animate([{transform:'translate(0,0) scale(1)'},{transform:'translate('+(to.left-from.left)+'px,'+(to.top-from.top)+'px) scale('+(to.width/from.width)+')'}],{duration:700,easing:'cubic-bezier(.16,1,.3,1)',fill:'forwards'});try{await flight.finished;}catch{}}
  if(token!==generation)return;goal=b.textContent.trim();goalSrc=source.getAttribute('src');hasGoal=true;document.querySelectorAll('[data-goal]').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-pressed',String(x===b));});setState('selected',{immediate:true});
 }));
-$('getPremiumBtn').addEventListener('click',()=>setState('configure'));
+$('startStoryBtn').disabled=true;Promise.all([sceneAssets,narration.ready]).then(()=>{$('startStoryBtn').disabled=false;});
+$('startStoryBtn').addEventListener('click',()=>{started=true;setState('intro',{immediate:true});});
 $('openPreviewBtn').addEventListener('click',()=>setState('preview'));
 $('replayBtn').addEventListener('click',()=>{paused=false;hasGoal=false;setState('intro');});
 $('ctaNextBtn').addEventListener('click',next);$('ctaPrevBtn').addEventListener('click',back);
 for(const key of ['age','term','sa'])document.querySelectorAll('[data-'+key+']').forEach(b=>b.addEventListener('click',()=>{if(key==='age')age=Number(b.dataset.age);if(key==='term')term=Number(b.dataset.term);if(key==='sa')sa=Number(b.dataset.sa);quote();}));
-$('advisorAudioBtn').addEventListener('click',()=>{if(speaking)stopVoice();else speak();});
-$('storyModeToggle').addEventListener('click',()=>{if(state==='protection'&&ready){paused=false;setState('protection');}else if(paused)resumeTimeline();else pauseTimeline();});
+$('advisorAudioBtn').addEventListener('click',()=>narration.toggle());
+$('storyModeToggle').addEventListener('click',()=>{if(paused){resumeTimeline();return;}if(state==='intro'){cancelSequence();chooseGoalReady();return;}if(state==='protection'&&ready){paused=false;setState('protection');}else if(paused)resumeTimeline();else pauseTimeline();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){openGoals(false);if(state==='intro')coin.focus();}if(e.target.closest('button,a,input,select,textarea')||e.altKey||e.ctrlKey||e.metaKey)return;if(e.key==='ArrowRight'){e.preventDefault();next();}if(e.key==='ArrowLeft'){e.preventDefault();back();}});
 const wrapper=document.querySelector('.app-viewport-wrapper');function fit(){const vv=visualViewport;const height=vv&&Math.abs(vv.scale-1)<.01?vv.height:innerHeight;wrapper.style.setProperty('--presentation-height',Math.floor(height)+'px');if(stage.dataset.ready==='true')alignMaturity();}fit();addEventListener('resize',fit);visualViewport?.addEventListener('resize',fit);
-addEventListener('pagehide',()=>{cancelSequence();stopVoice();});document.addEventListener('visibilitychange',()=>{if(document.hidden){stopVoice();if(['preview','whatif','protection'].includes(state))pauseTimeline();}});
+addEventListener('pagehide',()=>{cancelSequence();stopVoice();});document.addEventListener('visibilitychange',()=>{if(document.hidden&&started)pauseTimeline();});
 const debug=new URLSearchParams(location.search).get('debug')==='1';$('inspectorFab').hidden=!debug;$('inspectorFab').addEventListener('click',()=>$('inspectorPanel').classList.toggle('open'));$('toggle3DExploded').addEventListener('click',()=>stage.classList.toggle('exploded-view'));$('toggleDeviceFrame').addEventListener('click',()=>$('deviceFrame').classList.toggle('mode-fullscreen'));document.querySelectorAll('.layer-toggle-input').forEach(input=>input.addEventListener('change',()=>{const target=$(input.dataset.target);if(target){target.style.opacity=input.checked?'1':'0';target.style.pointerEvents=input.checked?'':'none';}}));
 addEventListener('pageshow',e=>{if(e.persisted)setState(state,{focus:false});});
 setState('intro',{focus:false});stage.dataset.ready='true';document.fonts?.ready.then(alignMaturity);coin.addEventListener('transitionend',e=>{if(['width','height'].includes(e.propertyName))alignMaturity();});
