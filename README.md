@@ -17,7 +17,7 @@ This document is the starting point for understanding what runs today, where to 
 | Garage | `garage/index.html` | `garage/garage.js`, `garage-model.js` | Native JavaScript modules |
 | Creator Studio | `creator/index.html`, `project.html` | `creator/creator.js`, `project.js`, `scene-tools.js` | Native JavaScript modules |
 | Journal | `journal/index.html` | `journal/journal-strokes-hook.js`, `advanced-tools.js`; existing `assets/journal-v11.js` | Separate bundled React app |
-| LIC | `lic/index.html`, `lic/bima-platinum/index.html`, `lic/follow-up/index.html` | `lic/` | Native pages; follow-ups use Firebase |
+| LIC | `lic/index.html`, `lic/agent/index.html` (Plans), `lic/jeevan-lakshya/index.html`, `lic/bima-platinum/index.html`, `lic/follow-up/index.html` | `lic/` | Native pages; follow-ups use Firebase |
 | Portfolio | External Apps Script link; separate legacy `portfolio.html` URL | Apps Script deployment; local viewer remains supported | Separate origin/backend |
 
 The main React app chooses and lazily loads its page in `react/src/App.jsx`. Its HTML entry points load the same generated JS/CSS assets. Garage, Creator, Journal, and LIC have their own entry points; they are not silently redirected through React.
@@ -270,3 +270,7 @@ Saved Creator projects now open in Studio, with Script and Assets one click away
 The review branch adds map/battlefield/image/video assembly, focused scene editing,
 multiple voice/music/effect tracks and deterministic portrait MP4 composition.
 See [workflow, compatibility and actual export evidence](docs/unified-studio-composition.md).
+
+## Jeevan Lakshya Plan 733
+
+LIC → Plans retains the existing `lic/agent/` route and opens either Jeevan Lakshya or Bima Platinum presentations/calculators. Plan 733 uses the shared, brochure-verified `lic/jeevan-lakshya/benefits.mjs` model. Only exact ₹2 lakh standard-life brochure premiums are displayed; other combinations require an LIC quotation. Future bonus assumptions default to zero and remain separate from contractual benefits. See [verification and scope](docs/lic-jeevan-lakshya.md).

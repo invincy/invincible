@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jeevan Lakshya · Plan 733 Benefits Calculator</title>
+<link rel="icon" href="../../favicon.ico"><link rel="stylesheet" href="../../site-nav.css?v=18">
+<link rel="stylesheet" href="plan.css?v=3"><link rel="stylesheet" href="detail.css?v=3">
+</head><body class="lic-page">
+<nav class="global-nav" aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
+<header class="plan-header"><a class="back" href="../agent/">← LIC Plans</a><a class="back" href="index.html">Presentation →</a></header>
+<main>
+<section class="hero panel"><div class="hero-copy"><span class="eyebrow">PLAN 733 · UIN 512N297V03</span>
+<h1>A plan for<br><em>their next chapter.</em></h1>
+<p>A participating, non-linked, individual life savings plan. Explore contractual benefits and optional bonus assumptions separately.</p>
+<p>Full benefits below assume an in-force policy with all due premiums paid. Lapse, paid-up, surrender, loans, exclusions and riders can change the amount payable.</p>
+<a id="brochureLink" target="_blank" rel="noopener">Read official LIC brochure ↗</a></div>
+<form id="profileForm" class="profile-card" novalidate>
+<span class="eyebrow">YOUR PLAN</span>
+<label>Parent name<input id="customerName" value="Mr. Sharma" maxlength="100"></label>
+<label>Child goal<input id="childGoal" value="Higher Education" maxlength="160"></label>
+<div class="split"><label>Entry age<input id="customerAge" type="number" min="18" max="50" step="1" value="30"></label>
+<label>Policy term<select id="policyTerm"></select></label></div>
+<label>Basic Sum Assured (₹)<input id="targetSumAssured" type="number" min="200000" step="10000" value="200000"></label>
+<label>Sum Assured presets<select id="saPresetSelect"><option value="200000">₹2 lakh · brochure samples</option><option value="500000">₹5 lakh</option><option value="1000000">₹10 lakh</option><option value="2000000">₹20 lakh</option></select></label>
+<p id="profileError" role="alert" hidden></p>
+</form></section>
+<section class="panel summary"><span class="eyebrow">GUARANTEED AND NON-GUARANTEED</span><h2>Keep the promise and the projection separate.</h2>
+<p>Survival maturity: Basic Sum Assured plus vested Simple Reversionary Bonuses and Final Additional Bonus, if any. Future bonuses are not guaranteed; once declared, reversionary bonuses vest on LIC's terms. They are simple bonuses, not compound interest.</p>
+<div class="split"><label>Assumed annual bonus per ₹1,000 BSA<input id="bonusRate" type="number" min="0" max="1000" step="0.1" value="0"></label>
+<label>Assumed one-time FAB per ₹1,000 BSA<input id="fabRate" type="number" min="0" max="1000" step="0.1" value="0"></label></div>
+<p>Optional sensitivity inputs, initially zero. The annual assumption is applied over the whole policy term, including after an in-force death. These are user assumptions, not LIC-declared rates or LIC's 4%/8% investment-return illustrations.</p>
+<div id="benefitGrid" class="summary-grid"></div></section>
+<div id="results">
+<section class="context panel"><div><span class="eyebrow">POLICY STRUCTURE</span><h2 id="structureTitle"></h2>
+<p>Entry: 18–50 years; term: 13–25 years; maturity age: 31–65. Minimum entry age uses last birthday; maximum entry and maturity ages use nearer birthday. LIC must confirm the age basis and underwriting.</p></div><div class="context-facts" id="planFacts"></div></section>
+<section class="panel summary"><span class="eyebrow">PREMIUM EVIDENCE</span><h2 id="premiumValue"></h2><p id="premiumNote"></p>
+<p>Only exact ₹2 lakh brochure samples are shown. Other ages, terms, Sum Assured values, payment modes and riders require an LIC quotation. High Sum Assured and mode rebates make simple scaling unreliable. Tax is subject to applicable rules; no tax exemption is promised.</p></section>
+
+<section class="timeline-section panel"><div class="section-bar"><div><span class="eyebrow">CASH FLOW</span><h2 id="timelineTitle"></h2></div><div class="segmented" role="group" aria-label="Cash flow scenario"><button id="viewSurvivalBtn" class="active" aria-pressed="true">Survival</button><button id="viewWhatIfBtn" aria-pressed="false">Death during term</button></div></div>
+<div id="whatIfControlBar" hidden><label>Death just before policy anniversary <b id="demiseYearLabel">5</b><input id="demiseYearSlider" type="range" min="1" max="25" value="5"></label>
+<p id="deathTiming"></p><p id="deathSafeguards"></p></div>
+<p>Premiums appear in the policy year they are due at the start; income and maturity appear at the anniversary ending that year. Death is assumed just before the selected anniversary. On an exact anniversary, income starts on that anniversary; otherwise it starts on the following anniversary, ending before maturity.</p>
+<div class="table-wrap"><table id="cashflowTable"><caption>Scheduled cash flow (₹)</caption><thead><tr><th>Policy year</th><th>Premium out</th><th>Annual income in</th><th>Contractual maturity in</th><th>Assumed bonuses in · not guaranteed</th></tr></thead><tbody></tbody></table></div>
+<p>No future base premiums are due after an in-force death. Death benefit is subject to the higher-of-seven-times-annualised-premium provision and the 105% total-premiums-paid minimum. When a premium is unavailable, these safeguards cannot be calculated here. No immediate death lump sum is modelled. LIC must confirm any safeguard adjustment and its timing.</p></section>
+<section class="summary panel"><span class="eyebrow">PERSONAL SUMMARY</span><h2 id="summaryName"></h2><p id="summaryGoal"></p><div class="summary-grid" id="summaryGrid"></div></section>
+</div>
+<footer>Discussion aid, not an issued-policy quote. LIC's policy terms and personalised benefit illustration govern. No customer information is saved or sent.</footer>
+</main><script type="module" src="../../site-nav.js?v=7"></script><script type="module" src="plan.js?v=3"></script></body></html>

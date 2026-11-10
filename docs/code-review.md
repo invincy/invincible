@@ -1,5 +1,16 @@
 # Cleanup review — 2026-10-03
 
+## Jeevan Lakshya Plan 733 — November 10, 2026
+
+LIC → Plans now exposes the migrated Jeevan Lakshya presentation and calculator alongside the original Bima Platinum card. Both Jeevan Lakshya pages use one verified benefits model: UIN 512N297V03, eligibility and BSA increments, exact brochure premiums only, separate contractual and assumed bonus amounts, and anniversary-based death income with premiums capped at PPT. Unverified combinations require an LIC quotation. Misleading guaranteed-goal, compound-bonus, tax-free and immediate-income claims were removed. Profile selections carry into the calculator, invalid inputs hide stale figures, literal text rendering prevents HTML injection, and the responsive presentation keeps navigation visible with scene-body scrolling on short screens. Inspector tools require `?debug=1`.
+
+Validation: full unit/Functions suite 209 passed, two skipped, zero failed; production build and site-reference check passed. Five focused model tests and Chromium integration at 320×480, 390×844, 844×390 and 1440×900 passed, including narration completion/cancellation. Bima Platinum opening passed; its complete journey rerun passed all seven viewports after an initial audio-stage timeout under concurrent checks. No Bima Platinum product files changed.
+
+Broader browser checks passed Garage/storage, shared navigation, dashboard/reminders, Orb, Task Copy, Creator, LIC Follow-ups, Journal notebook, Workday and account menu. Full browser run stopped at the previously documented Journal Save journal idea dialog timeout. Separate CRM/Cashier runs reproduced existing addCustomer-enabled / entryPanel-visible loading timeouts. The CRM navigation assertion now expects Plans and passes that step. Java is absent and no completed emulator-rule result was obtained. Physical-device Safari, real issued-policy quotes and production Firebase permissions remain unverified. No deployment, credentials, database paths/rules or customer records changed.
+
+See [exact edits, brochure sources and calculator scope](lic-jeevan-lakshya.md).
+
+
 ## Minimal responsive Creator UI — November 10, 2026
 
 Publication follow-up: lightened water to pale blue (#89d8ff / #b6edff) with

@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <link rel="icon" href="/invincible/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/invincible/assets/branding/invincible-cyan-orb-v1-32.png">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/invincible/assets/branding/invincible-cyan-orb-v1-180.png">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>LIC Jeevan Lakshya (Plan 733) — Child Future Security</title>
+  <meta name="theme-color" content="#020712">
+  <meta name="description" content="LIC Jeevan Lakshya Plan 733 interactive sales presentation. Participating savings and in-force family income protection. Future bonuses are not guaranteed.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="presentation.css?v=1">
+  <link rel="stylesheet" href="../../shared/app-theme.css?v=1">
+</head>
+<body>
+
+<div class="app-viewport-wrapper">
+
+  <!-- Developer Tooling: Floating Layer Inspector Launcher -->
+  <button id="inspectorFab" hidden class="inspector-fab" aria-label="Open Layer Inspector (Developer Tool)">
+    <span>📐</span>
+    <span>Layers Inspector</span>
+  </button>
+
+  <!-- Interactive Layer Inspector Drawer -->
+  <div id="inspectorPanel" class="inspector-panel" role="region" aria-label="Layer Inspector Controls">
+    <div class="inspector-title">
+      <span>Architectural Layers</span>
+      <span style="font-size: 10px; color: #94a3b8;">DEV TOOL</span>
+    </div>
+    <div class="inspector-toggles">
+      <label class="inspector-toggle-item">
+        <span>1. Environment Plate</span>
+        <input type="checkbox" class="layer-toggle-input" data-target="layerEnv" checked>
+      </label>
+      <label class="inspector-toggle-item">
+        <span>2. Atmosphere & Glow</span>
+        <input type="checkbox" class="layer-toggle-input" data-target="layerAtmosphere" checked>
+      </label>
+      <label class="inspector-toggle-item">
+        <span>3. Characters & Path</span>
+        <input type="checkbox" class="layer-toggle-input" data-target="layerCharacters" checked>
+      </label>
+      <label class="inspector-toggle-item">
+        <span>4. Vignette Shadow</span>
+        <input type="checkbox" class="layer-toggle-input" data-target="layerVignette" checked>
+      </label>
+      <label class="inspector-toggle-item">
+        <span>5. Navigation Bar</span>
+        <input type="checkbox" class="layer-toggle-input" data-target="layerNav" checked>
+      </label>
+      <label class="inspector-toggle-item">
+        <span>6. Headline Typography</span>
+        <input type="checkbox" class="layer-toggle-input" data-target="layerHeadline" checked>
+      </label>
+      <label class="inspector-toggle-item">
+        <span>7. Advisor Voice Control</span>
+        <input type="checkbox" class="layer-toggle-input" data-target="layerAdvisorAudio" checked>
+      </label>
+      <label class="inspector-toggle-item">
+        <span>8. Interactive Stage</span>
+        <input type="checkbox" class="layer-toggle-input" data-target="sceneStageContent" checked>
+      </label>
+    </div>
+    <div class="inspector-divider" style="height: 1px; background: rgba(255,255,255,0.1); margin: 6px 0;"></div>
+    <button id="toggle3DExploded" class="inspector-btn-action">📦 3D Exploded View</button>
+    <button id="toggleDeviceFrame" class="inspector-btn-action">📱 Edge-to-Edge Fullscreen</button>
+  </div>
+
+  <!-- Mobile Portrait Shell Simulator -->
+  <div id="deviceFrame" class="device-frame">
+    <!-- Hardware Island Indicator -->
+    <div class="device-dynamic-island">
+      <div class="island-camera"></div>
+      <div class="island-sensor"></div>
+    </div>
+
+    <!-- The Presentation Stage (Strict Layer Architecture) -->
+    <div id="stageContainer" class="stage-container" data-story-step="1">
+      <div class="layer-stage-3d">
+
+        <!-- LAYER 1: Environment Plate (Cosmic Background) -->
+        <div id="layerEnv" class="scene-layer layer-env">
+          <img src="assets/backgrond.png" alt="Cosmic Atmosphere" class="env-bg">
+        </div>
+
+        <!-- LAYER 2: Atmosphere & Glow -->
+        <div id="layerAtmosphere" class="scene-layer layer-atmosphere"></div>
+
+        <!-- LAYER 3: Characters & Path Ground Plate -->
+        <div id="layerCharacters" class="scene-layer layer-characters"></div>
+
+        <!-- LAYER 4: Foreground Contrast Vignette -->
+        <div id="layerVignette" class="scene-layer layer-vignette"></div>
+
+        <!-- LAYER 5: Navigation & Top Status Bar -->
+        <div id="layerNav" class="scene-layer layer-nav interactive">
+          <a href="../agent/" class="nav-btn" title="Back to LIC Tools" aria-label="Back">←</a>
+          <div class="nav-stage-group">
+            <div class="nav-stage-badge" title="Story Progress">
+              <span class="stage-counter-text">1 / 5</span>
+              <div class="stage-progress-bar">
+                <div class="stage-progress-fill"></div>
+              </div>
+            </div>
+            <button id="storyModeToggle" class="story-mode-toggle" type="button" aria-pressed="false" aria-label="Automatic progression toggle">Manual</button>
+          </div>
+          <a href="/invincible/" class="nav-btn" title="Invincible Hub" aria-label="Home">⚡</a>
+        </div>
+
+        <!-- LAYER 6: Headline & Indic Typography -->
+        <div id="layerHeadline" class="scene-layer layer-headline">
+          <div id="eyebrowChip" class="eyebrow-chip">Child Future • બાળકના સપના</div>
+          <h1 id="headlineMain" class="headline-main">Your Child's <span class="gold">Lakshya</span></h1>
+          <span id="headlineIndic" class="headline-indic">બાળકનું લક્ષ્ય, માતા-પિતાનો સંકલ્પ</span>
+          <p id="subtitleText" class="subtitle-text">Every child carries a grand dream — higher education, career, or wedding.</p>
+        </div>
+
+        <!-- LAYER 7: Advisor Audio Voice Control -->
+        <div id="layerAdvisorAudio" class="scene-layer layer-advisor-audio interactive" style="top: 154px; bottom: auto;">
+          <button id="advisorAudioBtn" class="advisor-audio-btn" type="button" aria-label="Hear Advisor Perspective">
+            <span class="audio-wave-bars" aria-hidden="true">
+              <span class="bar bar-1"></span>
+              <span class="bar bar-2"></span>
+              <span class="bar bar-3"></span>
+              <span class="bar bar-4"></span>
+            </span>
+            <span id="advisorAudioLabel">Hear Advisor Voice</span>
+          </button>
+        </div>
+
+        <!-- LAYER 8: Story Scenes Viewport (Non-Scrollable) -->
+        <div id="sceneStageContent" class="scene-stage-content">
+
+          <!-- SCENE 1: The Child's Dream Goal -->
+          <div id="scene1" class="scene-1-wrap">
+            <div class="scene-coin-badge">
+              <img src="assets/jeevan-lakshya.png" alt="LIC Jeevan Lakshya">
+            </div>
+
+            <div class="goals-selection-row">
+              <button class="goal-card-btn active" type="button" data-goal="education">
+                <img src="assets/study.png" alt="Higher Education">
+                <span>Education</span>
+              </button>
+              <button class="goal-card-btn" type="button" data-goal="career">
+                <img src="assets/career.png" alt="Career Foundation">
+                <span>Career</span>
+              </button>
+              <button class="goal-card-btn" type="button" data-goal="marriage">
+                <img src="assets/marriage.png" alt="Daughter Marriage">
+                <span>Marriage</span>
+              </button>
+            </div>
+
+            <div class="figures-ground-plate">
+              <img src="assets/dad&daughter.png" alt="Father and Daughter" class="dad-daughter-img">
+              <img src="assets/path.png" alt="Golden Path" class="golden-path-img">
+            </div>
+          </div>
+
+          <!-- SCENE 2: The Planned Journey (Normal Life & Growth) -->
+          <div id="scene2" class="scene-1-wrap" style="display: none; justify-content: center;">
+            <div class="journey-timeline-box">
+              <div class="journey-stat-row">
+                <div class="stat-pill">
+                  <span>Policy Term</span>
+                  <b id="s2Term">25 Years</b>
+                </div>
+                <div class="stat-pill">
+                  <span>Pay Only (PPT)</span>
+                  <b id="s2Ppt">22 Years</b>
+                </div>
+              </div>
+
+              <div class="timeline-meter-wrap">
+                <div class="meter-labels">
+                  <span>Premium Paying Years (Term - 3)</span>
+                  <span>No premiums due</span>
+                </div>
+                <div class="meter-track">
+                  <div class="meter-fill-ppt"></div>
+                  <div class="meter-fill-bonus"></div>
+                </div>
+              </div>
+
+              <div class="journey-stat-row">
+                <div class="stat-pill">
+                  <span>Annual Commitment</span>
+                  <b id="s2Premium">LIC quote required</b>
+                </div>
+                <div class="stat-pill">
+                  <span>Contractual Survival Maturity</span>
+                  <b id="s2Maturity" style="color: var(--accent-emerald);">₹10,00,000</b>
+                </div>
+              </div>
+
+              <div class="journey-benefit-callout">
+                <span>✨</span>
+                <span>In-force policy: BSA at survival maturity; future bonuses are not guaranteed.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- SCENE 3: The Unforeseen Event ("What-If") — The Core Shield -->
+          <div id="scene3" class="whatif-container" style="display: none;">
+            <div class="unforeseen-alert-pill">
+              <span>⚠️</span>
+              <span>If Unfortunate Event Occurs to Parent</span>
+            </div>
+
+            <div class="unbreakable-shield-list">
+              <div class="shield-benefit-item">
+                <div class="shield-icon-badge">
+                  <img src="assets/death.png" alt="Waiver of Premium">
+                </div>
+                <div class="shield-benefit-text">
+                  <h4>1. Premiums Cease Immediately</h4>
+                  <p>After an in-force death, no future base premiums are due. Policy exclusions apply.</p>
+                </div>
+              </div>
+
+              <div class="shield-benefit-item">
+                <div class="shield-icon-badge">
+                  <img src="assets/10sa.png" alt="10% Annual Income">
+                </div>
+                <div class="shield-benefit-text">
+                  <h4>2. Annual Income: 10% of BSA</h4>
+                  <p>From the anniversary coinciding with/following death until the anniversary before maturity.</p>
+                </div>
+              </div>
+
+              <div class="shield-benefit-item">
+                <div class="shield-icon-badge">
+                  <img src="assets/maturity.png" alt="110% BSA due at maturity after in-force death">
+                </div>
+                <div class="shield-benefit-text">
+                  <h4>3. At Maturity: 110% BSA + Bonuses, if any</h4>
+                  <p>In-force death benefits; 7× annualised premium and 105% premiums-paid safeguards apply.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="whatif-visual-scene">
+              <div class="shield-umbrella-halo"></div>
+              <img src="assets/girl.png" alt="Daughter Protected" class="girl-alone-img">
+            </div>
+          </div>
+
+          <!-- SCENE 4: Comparison vs Market & Traditional Savings -->
+          <div id="scene4" class="comparison-container" style="display: none;">
+            <div class="compare-card market-fd">
+              <div class="compare-header">
+                <b>Mutual Fund SIP / Bank FD</b>
+                <span class="badge-status red">SAVINGS ONLY</span>
+              </div>
+              <p>These savings products do not themselves include this plan’s life cover. Values and terms differ; separate life insurance can complement savings.</p>
+            </div>
+
+            <div class="compare-card lakshya-shield">
+              <div class="compare-header">
+                <b>LIC Jeevan Lakshya (Plan 733)</b>
+                <span class="badge-status gold">LIFE COVER + SAVINGS</span>
+              </div>
+              <p>For an in-force death: scheduled annual income and a lump sum at maturity. Future bonuses and the cost of a child’s goal are not guaranteed.</p>
+            </div>
+          </div>
+
+          <!-- SCENE 5: Interactive Customizer & Quote -->
+          <div id="scene5" class="customizer-box" style="display: none;">
+            <div class="input-row">
+              <label>Parent Age</label>
+              <div class="segmented-btn-group">
+                <button type="button" class="segment-btn" data-age="20">20Y</button>
+                <button type="button" class="segment-btn active" data-age="30">30Y</button>
+                <button type="button" class="segment-btn" data-age="40">40Y</button>
+                <button type="button" class="segment-btn" data-age="50">50Y</button>
+              </div>
+            </div>
+
+            <div class="input-row">
+              <label>Policy Term</label>
+              <div class="segmented-btn-group">
+                <button type="button" class="segment-btn" data-term="15">15Y (Pay 12)</button>
+                <button type="button" class="segment-btn" data-term="20">20Y (Pay 17)</button>
+                <button type="button" class="segment-btn active" data-term="25">25Y (Pay 22)</button>
+              </div>
+            </div>
+
+            <div class="input-row">
+              <label>Sum Assured</label>
+              <div class="segmented-btn-group">
+                <button type="button" class="segment-btn" data-sa="200000">₹2 Lakh</button>
+                <button type="button" class="segment-btn active" data-sa="1000000">₹10 Lakh</button>
+                <button type="button" class="segment-btn" data-sa="2000000">₹20 Lakh</button>
+              </div>
+            </div>
+
+            <div class="live-quote-card">
+              <div>
+                <span>Annual Premium</span>
+                <b id="liveAnnualPremium">LIC quote required</b>
+              </div>
+              <div>
+                <span>Premium Paying Term</span>
+                <b id="liveMonthlyPremium">22 Years</b>
+              </div>
+              <div>
+                <span>10% Annual Income on Demise</span>
+                <b id="liveAnnualIncome" style="color: var(--accent-gold);">₹1,00,000/yr</b>
+              </div>
+              <div>
+                <span>Survival BSA · bonuses extra, if any</span>
+                <b id="liveMaturityBenefit" style="color: var(--accent-emerald);">₹10,00,000</b>
+              </div>
+            </div>
+
+            <a href="calculator.html" class="open-calc-btn">
+              <span>Open Detailed Plan 733 Calculator</span>
+              <span>→</span>
+            </a>
+          </div>
+
+        </div><!-- /.scene-stage-content -->
+
+        <!-- STAGE FOOTER: Bottom CTA & Navigation -->
+        <footer id="stageFooter" class="stage-footer">
+          <button id="ctaPrevBtn" class="cta-prev-btn" type="button" aria-label="Previous Scene" disabled>←</button>
+          <button id="ctaNextBtn" class="cta-next-btn" type="button" aria-label="Continue Story">
+            <span>Continue Story</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </footer>
+
+      </div><!-- /.layer-stage-3d -->
+    </div><!-- /.stage-container -->
+  </div><!-- /.device-frame -->
+
+  <!-- Desktop Bottom Helper Bar -->
+  <div class="desktop-tools-bar">
+    <a href="../agent/" class="desktop-tool-link">
+      <span>←</span>
+      <span>LIC Plans</span>
+    </a>
+    <span style="color: rgba(255,255,255,0.2);">|</span>
+    <a href="/invincible/" class="desktop-tool-link">
+      <span>⚡</span>
+      <span>Invincible Hub</span>
+    </a>
+    <span style="color: rgba(255,255,255,0.2);">|</span>
+    <a href="calculator.html" class="desktop-tool-link">
+      <span>📊</span>
+      <span>Plan 733 Calculator</span>
+    </a>
+    <span style="color: rgba(255,255,255,0.2);">|</span>
+    <span style="color: #FFE5A3; font-size: 11px;">LIC Jeevan Lakshya (Plan 733)</span>
+  </div>
+
+</div><!-- /.app-viewport-wrapper -->
+
+<script type="module" src="../../site-nav.js?v=7"></script>
+<script type="module" src="presentation.js?v=2"></script>
+</body>
+</html>
