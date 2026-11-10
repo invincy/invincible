@@ -1,8 +1,11 @@
 import {observeAuth} from '../shared/firebase-client.js';
 import {loadVoices,generateVoiceover} from './tts-api.js';
 import {createVoiceDemoPlayer} from './tts-voice-demo-player.js';
+import {createTtsHistoryClient} from './tts-history-api.js?v=2026111004';
 const $=id=>document.getElementById(id),fields=['title','script','mode','engine','model','direction','language','gender','family','voice','preset','speed','pitch','volume','pause'];
 let user=null,voices=[],busy=false,loading=false,epoch=0,voiceEpoch=0,audioUrl=null,saveTimer;
+let historyClient=null,historyEntries=[],historyCursor=null,historyEpoch=0,historyLoading=false;
+let pendingHistory=new Map(),historyWrites=new Set();
 const controls=['sample','title','script','mode','reloadVoices','preview','generate'];
 const encoder=new TextEncoder();
 // One settings form and one transport across layouts. Remember the phone's
@@ -43,6 +46,9 @@ function refreshAvailability(){
  $('speedHelp').textContent=expressive()?'Directed speaking pace. The resulting timing can vary.':'Changes the voice’s synthesis speed.';
  for(const value of ['sales','social','empathetic','calm'])$('preset').querySelector('[value='+value+']').disabled=!expressive();
  $('preset').querySelector('[value=custom]').disabled=expressive();
+ for(const button of $('historyList').querySelectorAll('button'))button.disabled=busy||loading||historyLoading||!user||(historyWrites.has(button.dataset.id)&&!['restore','export'].includes(button.dataset.action));
+ $('historyRefresh').disabled=historyLoading||!user;
+ $('historyMore').disabled=historyLoading||!user;
 }
 function meters(){
  $('speedValue').textContent=(expressive()?'≈ ':'')+Number($('speed').value).toFixed(2)+'×';
@@ -86,8 +92,8 @@ function remember(){
  const uid=user.uid,storageKey=key();
  clearTimeout(saveTimer);saveTimer=setTimeout(()=>{if(user?.uid!==uid)return;try{localStorage.setItem(storageKey,JSON.stringify(snapshot));$('draftStatus').textContent='Draft saved on this device';}catch{$('draftStatus').textContent='Draft could not be saved on this device';}},250);
 }
-function restore(){
- let draft={};try{draft=JSON.parse(localStorage.getItem(key())||'{}');}catch{}
+function restore(saved){
+ let draft=saved||{};if(!saved)try{draft=JSON.parse(localStorage.getItem(key())||'{}');}catch{}
  $('title').value=draft.title||'My voiceover';$('script').value=draft.script||'';$('mode').value=draft.mode==='ssml'?'ssml':'text';
  const hasGemini=voices.some(v=>v.family==='Gemini');
  $('engine').querySelector('[value=gemini]').disabled=!hasGemini;
@@ -99,8 +105,95 @@ function restore(){
  $('gender').value=draft.gender??'MALE';
  families(draft.family??'Neural2');
  if(draft.voice&&Array.from($('voice').options).some(o=>o.value===draft.voice))$('voice').value=draft.voice;
+ for(const id of ['speed','pitch','volume','pause','preset'])if(typeof draft[id]==='string')$(id).value=draft[id];
  voiceDetails();
 }
+function pendingKey(uid){return 'invincible.creator.tts.history.pending.v1.'+uid;}
+function rememberPending(){
+ if(!user)return;
+ try{if(pendingHistory.size)localStorage.setItem(pendingKey(user.uid),JSON.stringify([...pendingHistory.values()]));else localStorage.removeItem(pendingKey(user.uid));}
+ catch{$('historyStatus').textContent='Device backup unavailable. Export unsaved scripts and settings before leaving.';}
+}
+function exportRecipe(entry){
+ const url=URL.createObjectURL(new Blob([JSON.stringify({format:'invincible-voiceover-recipe',version:1,...entry},null,2)],{type:'application/json'}));
+ const link=document.createElement('a');link.href=url;link.download=(entry.filename||'voiceover.mp3').replace(/\.mp3$/i,'')+'-settings.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function renderHistory(){
+ const entries=new Map(historyEntries.map(e=>[e.id,e]));for(const entry of pendingHistory.values())entries.set(entry.id,entry);
+ const rows=[...entries.values()].sort((a,b)=>b.createdAt-a.createdAt);
+ $('historyList').replaceChildren();$('historyEmpty').hidden=!!rows.length;
+ for(const entry of rows){
+  const row=document.createElement('article');row.className='history-entry';
+  const heading=document.createElement('h3');heading.textContent=entry.settings.title||'Voiceover';
+  const detail=document.createElement('p');detail.className='help';detail.textContent=new Date(entry.createdAt).toLocaleString()+' · '+entry.voiceName+' · '+Number(entry.durationSeconds).toFixed(1)+' sec'+(pendingHistory.has(entry.id)?' · Not saved to account':'');
+  const text=document.createElement('p');text.className='history-excerpt';text.textContent=entry.settings.script.slice(0,180);
+  const full=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Script & settings';
+  const script=document.createElement('p');script.className='history-script';script.textContent=entry.settings.script;
+  const settings=document.createElement('p');settings.className='help';
+  const r=entry.request;settings.textContent=[r.engine==='gemini'?'Gemini':'Google classic',r.languageCode,r.voiceName,r.modelName,r.delivery,'Speed '+r.speed+'×','Pitch '+r.pitch,'Volume '+r.volume+' dB','Paragraph pause '+r.paragraphPause+' ms',r.mode==='ssml'?'SSML':'Plain text',r.direction].filter(Boolean).join(' · ');
+  full.append(summary,script,settings);
+  const actions=document.createElement('div');actions.className='history-actions';
+  for(const [action,label] of [['restore','Use again'],['export','Export settings'],...(pendingHistory.has(entry.id)?[['retry','Retry save']]:[]),['delete','Delete']]){
+   const button=document.createElement('button');button.type='button';button.className='quiet';button.textContent=label;button.dataset.action=action;button.dataset.id=entry.id;actions.append(button);
+  }
+  row.append(heading,detail,text,full,actions);$('historyList').append(row);
+ }
+ $('historyMore').hidden=!historyCursor;refreshAvailability();
+}
+async function loadHistory(more=false){
+ if(!historyClient||historyLoading)return;
+ const current=epoch,version=++historyEpoch,client=historyClient,cursor=more?historyCursor:null,startedAt=Date.now();
+ historyLoading=true;refreshAvailability();$('historyStatus').textContent='Loading history…';
+ try{
+  const page=await client.list(cursor);
+  if(current!==epoch||version!==historyEpoch)return;
+  const addedWhileLoading=historyEntries.filter(e=>e.createdAt>=startedAt);
+  historyEntries=[...new Map([...(more?historyEntries:[]),...page.entries,...addedWhileLoading].map(e=>[e.id,e])).values()];historyCursor=page.cursor;
+  $('historyStatus').textContent='Scripts and settings saved to your account. MP3 files stay in your downloads.';
+ }catch(error){if(current===epoch&&version===historyEpoch)$('historyStatus').textContent='Could not load account history. '+friendly(error);}
+ finally{if(current===epoch&&version===historyEpoch){historyLoading=false;renderHistory();}}
+}
+async function saveHistory(entry){
+ if(!historyClient||historyWrites.has(entry.id))return;
+ const current=epoch,client=historyClient;
+ pendingHistory.set(entry.id,entry);rememberPending();historyWrites.add(entry.id);renderHistory();
+ $('historyStatus').textContent='Saving script and settings…';
+ try{
+  await client.save(entry);if(current!==epoch)return;
+  pendingHistory.delete(entry.id);rememberPending();
+  historyEntries=[entry,...historyEntries.filter(e=>e.id!==entry.id)];
+  $('historyStatus').textContent='Script and settings saved to your account. Audio stays in your downloads.';
+ }catch(error){if(current===epoch)$('historyStatus').textContent='History not saved to your account. Retry save or export settings. '+friendly(error);}
+ finally{if(current===epoch){historyWrites.delete(entry.id);renderHistory();}}
+}
+$('historyRefresh').addEventListener('click',()=>loadHistory());
+$('historyMore').addEventListener('click',()=>loadHistory(true));
+$('historyList').addEventListener('click',async event=>{
+ const button=event.target.closest('button[data-action]');if(!button||busy||loading||historyLoading||!user||(historyWrites.has(button.dataset.id)&&!['restore','export'].includes(button.dataset.action)))return;
+ const entry=pendingHistory.get(button.dataset.id)||historyEntries.find(e=>e.id===button.dataset.id);if(!entry)return;
+ const action=button.dataset.action;
+ if(action==='export'){exportRecipe(entry);return;}
+ if(action==='retry'){saveHistory(entry);return;}
+ if(action==='restore'){
+  if(($('script').value.trim()&&$('script').value!==entry.settings.script)&&!confirm('Replace your current script and settings with this recording?'))return;
+  voiceDemo.stop();clearAudio();restore(entry.settings);
+  // Never silently substitute an unavailable historical voice or engine.
+  const exact=$('voice').value===entry.settings.voice&&$('engine').value===entry.settings.engine;
+  if(!exact){$('voice').selectedIndex=-1;refreshAvailability();}
+  remember();$('script').focus();
+  status(exact?'Script and settings restored. Generate MP3 when you are ready.':'Script restored. The saved voice is unavailable; choose a voice before generating.',!exact);return;
+ }
+ if(action==='delete'){
+  if(!confirm('Delete this saved script and settings? Downloaded MP3 files will stay on your device.'))return;
+  const current=epoch,client=historyClient;historyWrites.add(entry.id);renderHistory();
+  try{
+   // Even an unsaved entry may have reached the server before an interrupted reply.
+   await client.remove(entry.id);if(current!==epoch)return;
+   pendingHistory.delete(entry.id);rememberPending();historyEntries=historyEntries.filter(e=>e.id!==entry.id);$('historyStatus').textContent='History entry deleted.';
+  }catch(error){if(current===epoch)$('historyStatus').textContent='Could not delete this entry. '+friendly(error);}
+  finally{if(current===epoch){historyWrites.delete(entry.id);renderHistory();}}
+ }
+});
 function languages(preferred=$('language').value){
  const matching=voices.filter(v=>(v.family==='Gemini')===expressive());
  setOptions($('language'),[...new Set(matching.flatMap(v=>v.languageCodes))].sort().map(value=>({value,label:new Intl.DisplayNames(['en'],{type:'language'}).of(value)+' · '+value+(expressive()&&value==='gu-IN'?' · Preview':'')})),preferred);
@@ -134,6 +227,7 @@ function requestData(preview){
 async function record(preview){
  if(busy||!user||!selectedVoice())return;
  const data=requestData(preview);
+ const settings=Object.fromEntries(fields.map(id=>[id,$(id).value]));
  if(!data.text.trim())return;
  if(encoder.encode(data.text).length>30000){status('The script is too long. Split it into recordings of at most 30,000 UTF-8 bytes.',true);return;}
  if(data.engine==='gemini'&&encoder.encode(data.direction).length>2000){status('Shorten Voice direction to at most 2,000 UTF-8 bytes.',true);return;}
@@ -152,6 +246,7 @@ async function record(preview){
   $('recording').hidden=false;$('recordingInfo').textContent=result.durationSeconds.toFixed(1)+' sec · '+result.voiceName+(preview?' · opening preview':'');
   if(data.engine==='gemini')$('recordingInfo').textContent+=' · '+data.delivery+' · directed pace '+data.speed+'×';
   status(preview?'Preview ready. Listen, adjust, then generate the full recording.':'MP3 ready. Listen before downloading.');
+  if(!preview)saveHistory({id:crypto.randomUUID(),version:1,createdAt:Date.now(),settings,request:data,filename:result.filename,voiceName:result.voiceName,durationSeconds:result.durationSeconds});
  }catch(error){if(current===epoch)status(friendly(error),true);}
  finally{if(current===epoch){busy=false;refreshAvailability();}}
 }
@@ -178,13 +273,19 @@ $('sample').addEventListener('click',()=>{
 });
 observeAuth(next=>{
  epoch++;voiceEpoch++;clearTimeout(saveTimer);voiceDemo.stop();busy=false;loading=false;voices=[];clearAudio();user=next;
+ historyEpoch++;historyClient=null;historyEntries=[];historyCursor=null;historyLoading=false;pendingHistory=new Map();historyWrites=new Set();
+ $('historyStatus').textContent='';renderHistory();
  $('workspace').hidden=!next;$('signedOut').hidden=!!next;
+ $('voiceoverHistory').hidden=!next;
  $('script').value='';$('title').value='My voiceover';
  for(const id of ['language','family','voice'])$(id).replaceChildren();
  $('mode').value='text';$('gender').value='MALE';$('preset').value='natural';$('speed').value='1';$('pitch').value='0';$('volume').value='0';$('pause').value='0';
  $('direction').value='';$('engine').value='classic';$('model').value='gemini-2.5-flash-tts';
  status('Your recording will appear here.');meters();
  if(!next){$('accountStatus').textContent='Signed out';return;}
+ historyClient=createTtsHistoryClient(next.uid);
+ try{for(const entry of JSON.parse(localStorage.getItem(pendingKey(next.uid))||'[]'))if(entry?.id&&entry.settings?.script)pendingHistory.set(entry.id,entry);}catch{}
+ renderHistory();loadHistory();
  // Restore narration even if the backend has not been activated yet.
  try{const draft=JSON.parse(localStorage.getItem(key())||'{}');$('script').value=draft.script||'';$('title').value=draft.title||'My voiceover';}catch{}
  meters();fetchVoices({initial:true});

@@ -14,7 +14,7 @@ body.studio-ui{
 /* A composited water layer: no canvas, input handlers or per-frame script. */
 .studio-ui::before{
  content:"";position:fixed;inset:-12%;z-index:-1;pointer-events:none;
- background:url("./studio-flow.svg") center / cover no-repeat;
+ background:url("./studio-flow.svg?v=3") center / cover no-repeat;
  transform-origin:60% 45%;animation:studio-water-drift 28s ease-in-out infinite alternate;
 }
 @keyframes studio-water-drift{

@@ -2,6 +2,13 @@
 
 ## Minimal responsive Creator UI — November 10, 2026
 
+Publication follow-up: lightened water to pale blue (#89d8ff / #b6edff) with
+translucent sky-blue edges, retaining slow drift and the still reduced-motion
+fallback. Integrated master’s new voiceover-history workflow without removing
+its save, restore, recipe export, retry, pagination or account isolation. History
+sits below the main workspace so it does not shrink the editor or displace the
+transport. The combined history/Voiceover responsive browser suite passes.
+
 Follow-up: replaced the static river glow with three translucent water ribbons,
 slowly drifting behind lightly translucent panels. The layer uses a single SVG
 and CSS transform animation, no canvas or per-frame JavaScript, and cannot capture
@@ -42,6 +49,33 @@ CRM emulator tests were not run because Java is unavailable on this host.
 These are verification limits, not a claim that the broad browser suite is green.
 No live paid generation or production Firebase permissions were exercised by this
 UI-only change. Physical-device keyboard/Safari verification remains outstanding.
+
+## Voiceover script/settings history — November 10, 2026
+
+Successful full TTS generations now save an account-owned recipe in
+`users/{uid}/voiceoverHistory/{recordingId}`. The existing page adds paged history,
+expandable scripts/settings, restore without synthesis, JSON recipe export and
+confirmed deletion. Previews/failures do not create records; repeated downloads
+do not duplicate them. Original request and form values are captured before the
+generation call. Pending saves have an account-scoped local retry copy and stable
+IDs. Errors retain retry/export options; account changes reject stale UI responses.
+Historical voice unavailability blocks silent substitution. Audio remains a local
+download/in-memory player; no new audio storage, paid call, auth change, migration,
+Firestore rule or backend deployment is introduced.
+
+Validation: 218 root tests passed, two existing skips; all 15 Functions, five media
+and 12 TTS backend tests passed. The extended real-Chrome TTS browser suite passes
+history request snapshots, preview exclusion, download/recipe export, classic and
+Gemini setting restoration, fresh-context history, reload/retry, 25-item pagination,
+delete failure/success and account isolation, plus existing generation/draft/sample
+checks and 320–1280px layouts. Mobile output was visually inspected. Production
+build and site references pass; generated React content is unchanged. Broad browser
+checks passed Garage, navigation, Reminders, Orb, Task copy and Creator, then stopped
+at the Journal `Save journal idea` dialog timeout in `tests/journal-tools-browser.cjs:54`,
+already documented as a baseline limitation. Later checks did not run. Java is not
+installed, so emulator rules checks are unavailable; no rules were edited. Live
+signed-in history permissions, production speech and physical devices remain
+unverified. No commit, push or publication performed.
 
 ## Creator Studio red interface — November 10, 2026
 

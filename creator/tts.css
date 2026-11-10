@@ -1,4 +1,5 @@
 /* Voiceover layout. Shared colours and control treatments live in studio-ui.css. */
+.history-panel{margin-top:16px}
 :root{color-scheme:dark;--bg:#080f1b;--panel:#0e1927;--line:#243646;--text:#e7eff5;--muted:#9bafbd;--cyan:#75d9d0}
 *{box-sizing:border-box}
 body{margin:0;color:var(--text);font:14px/1.5 system-ui,"Noto Sans Devanagari",sans-serif}
@@ -127,3 +128,7 @@ audio{width:100%;height:36px}
  .download-row{flex-wrap:wrap}
  .download-row a{margin-left:auto}
 }
+
+
+.history-panel{grid-column:1/-1}.history-panel .panel-heading{margin-bottom:10px}.history-entry{border-top:1px solid var(--line);padding:18px 0;min-width:0}.history-entry h3{margin:0;font-size:16px;overflow-wrap:anywhere}.history-entry .help{margin:5px 0}.history-excerpt{font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--muted);margin:8px 0}.history-actions{display:flex;gap:8px;flex-wrap:wrap}.history-actions button{border-color:var(--line);font-size:12px}.history-actions [data-action=delete]{color:#ffab9f}
+.history-entry summary{cursor:pointer;font-size:12px;min-height:36px;display:flex;align-items:center}.history-script{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.8}.history-entry details .help{overflow-wrap:anywhere}.history-actions{margin-top:8px}
