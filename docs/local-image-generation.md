@@ -194,3 +194,34 @@ startup and removed from its inherited environment after reading. Changing the
 configured owner rotates the key. The separate Windows worker login is unchanged.
 The launcher starts the existing ComfyUI installation silently when needed; GPU
 model swapping remains the image worker's responsibility.
+
+## Generate from a phone
+
+Open Invincible Image Studio on the Windows laptop and leave it awake and online.
+On the phone, sign in to the same Invincible account and open Invincible AI →
+Images or Creator Studio → Image generator. Browsers without a remembered local
+connection use the remote connection by default. A paired browser can switch
+using **Use my laptop remotely**. Check connection refreshes laptop availability
+after opening Image Studio. No phone pairing code is needed.
+
+The outbound image connector uses the existing Windows-encrypted Firebase agent
+credential. It checks that the agent and loopback image workspace have the same
+owner before claiming jobs. The existing text connector remains independent.
+Only the approved prompt, frame and optional seed reach the same local
+generate_image worker. It still controls the fixed workflow, PNG verification,
+workspace writes and GPU cleanup. The worker and ComfyUI remain on loopback.
+
+The Firebase callable scopes the queue and downloads to the signed-in owner.
+Agent actions require the indexed, unexpired agent credential and job updates
+require its active lease. Firestore receives the prompt while the job is active
+and retains up to four verified PNGs per account in a server-only collection.
+New images replace the oldest relay copy. Download an image or attach it through
+Creator's existing upload path to retain it independently of that limit.
+Only one remote generation per account can be active. A laptop that sleeps or
+loses connectivity can leave a job waiting until its deadline expires. If the
+existing Firebase agent credential expires or is revoked, renew it through the
+same Invincible local AI connection and reopen Image Studio.
+
+The relay tests exercise ownership, idempotency, leases, offline handling and
+PNG validation. The mobile-size browser fixture checks preview, download, the
+attachment callback and failure with loopback blocked.

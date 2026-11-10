@@ -12,6 +12,8 @@ on:
       - 'functions/**'
       - 'functions-tts/**'
       - 'functions-media/**'
+      - 'functions-local-ai/**'
+      - 'local-ai/**'
       - 'firebase.json'
       - 'firestore.rules'
       - 'firebase.crm-test.json'

@@ -1,5 +1,5 @@
-import {mountImageGenerator} from '../image-generator.js';
-import {createLocalImageClient} from '../../shared/local-image-client.js';
+import {mountConnectedImageGenerator} from '../image-generator.js';
+import {callImageRelay} from '../../shared/firebase-image-relay.js';
 import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=2026111002';
 import {studioBrief} from './handoff.js?v=2026111014';
 import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111014';
@@ -63,7 +63,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  assetTabs.onclick=event=>{const button=event.target.closest('[data-asset-tool]');if(button)selectAssetTool(button.dataset.assetTool);};
  assetTabs.onkeydown=event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const value=event.key==='Home'?'upload':event.key==='End'?'images':state.assetTool==='upload'?'images':'upload';selectAssetTool(value);assetTabs.querySelector(`[data-asset-tool="${value}"]`).focus();};
  selectAssetTool(state.assetTool==='images'?'images':'upload');
- const images=mountImageGenerator(imageRoot,{client:createLocalImageClient({getAccountId,requireAccount:true}),getAccountId,getProjectId:()=>getProject()?.id,onReveal:()=>selectAssetTool('images'),onAttach:async file=>{if(disposed||getAccountId()!==account||getProject()?.id!==projectId||getProject()?.ownerUid!==account)throw Error('Only the current project owner can attach generated artwork.');await uploadFiles([file]);}});
+ const images=mountConnectedImageGenerator(imageRoot,{getAccountId,callRelay:callImageRelay,getProjectId:()=>getProject()?.id,onReveal:()=>selectAssetTool('images'),onAttach:async file=>{if(disposed||getAccountId()!==account||getProject()?.id!==projectId||getProject()?.ownerUid!==account)throw Error('Only the current project owner can attach generated artwork.');await uploadFiles([file]);}});
 
  const brand=()=>state.brands.find(b=>b.id===state.manifest.brandPresetId)||state.brands[0];
  function stop(){playing=false;cancelAnimationFrame(raf);stopTracks?.();stopTracks=null;if(source){try{source.stop();}catch{}source.disconnect();source=null;}gainNode?.disconnect();gainNode=null;}
