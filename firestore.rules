@@ -39,26 +39,29 @@ service cloud.firestore {
     //   aspectRatio, visualStyle, language, hook, script, notes, characterBible, continuityNotes, scenes, assets,
     //   animationGroups, productionClips, historicalMap (null|map), productionState (null|map)
     match /creatorProjects/{projectId} {
-      function creatorProjectValidFields(d) {
-        return (!('title' in d) || (d.title is string && d.title.size() <= 300))
-          && (!('format' in d) || (d.format is string && d.format.size() <= 64))
-          && (!('stage' in d) || (d.stage is string && d.stage.size() <= 64))
-          && (!('series' in d) || (d.series is string && d.series.size() <= 200))
-          && (!('publishDate' in d) || (d.publishDate is string && d.publishDate.size() <= 32))
-          && (!('aspectRatio' in d) || (d.aspectRatio is string && d.aspectRatio.size() <= 32))
-          && (!('visualStyle' in d) || (d.visualStyle is string && d.visualStyle.size() <= 2000))
-          && (!('language' in d) || (d.language is string && d.language.size() <= 200))
-          && (!('hook' in d) || (d.hook is string && d.hook.size() <= 4000))
-          && (!('script' in d) || (d.script is string && d.script.size() <= 100000))
-          && (!('notes' in d) || (d.notes is string && d.notes.size() <= 100000))
-          && (!('characterBible' in d) || (d.characterBible is string && d.characterBible.size() <= 20000))
-          && (!('continuityNotes' in d) || (d.continuityNotes is string && d.continuityNotes.size() <= 20000))
-          && (!('scenes' in d) || (d.scenes is list && d.scenes.size() <= 500))
-          && (!('assets' in d) || (d.assets is list && d.assets.size() <= 500))
-          && (!('animationGroups' in d) || (d.animationGroups is list && d.animationGroups.size() <= 200))
-          && (!('productionClips' in d) || (d.productionClips is list && d.productionClips.size() <= 500))
-          && (!('historicalMap' in d) || d.historicalMap == null || d.historicalMap is map)
-          && (!('productionState' in d) || d.productionState == null || d.productionState is map);
+      function verifiedCreatorEditor(d) {
+        return edits(d) && request.auth.token.get('email_verified', false) == true;
+      }
+      function creatorProjectValidFields(d, checked) {
+        return (!checked.hasAny(['title']) || !('title' in d) || (d.title is string && d.title.size() <= 300))
+          && (!checked.hasAny(['format']) || !('format' in d) || (d.format is string && d.format.size() <= 64))
+          && (!checked.hasAny(['stage']) || !('stage' in d) || (d.stage is string && d.stage.size() <= 64))
+          && (!checked.hasAny(['series']) || !('series' in d) || (d.series is string && d.series.size() <= 200))
+          && (!checked.hasAny(['publishDate']) || !('publishDate' in d) || (d.publishDate is string && d.publishDate.size() <= 32))
+          && (!checked.hasAny(['aspectRatio']) || !('aspectRatio' in d) || (d.aspectRatio is string && d.aspectRatio.size() <= 32))
+          && (!checked.hasAny(['visualStyle']) || !('visualStyle' in d) || (d.visualStyle is string && d.visualStyle.size() <= 2000))
+          && (!checked.hasAny(['language']) || !('language' in d) || (d.language is string && d.language.size() <= 200))
+          && (!checked.hasAny(['hook']) || !('hook' in d) || (d.hook is string && d.hook.size() <= 4000))
+          && (!checked.hasAny(['script']) || !('script' in d) || (d.script is string && d.script.size() <= 100000))
+          && (!checked.hasAny(['notes']) || !('notes' in d) || (d.notes is string && d.notes.size() <= 100000))
+          && (!checked.hasAny(['characterBible']) || !('characterBible' in d) || (d.characterBible is string && d.characterBible.size() <= 20000))
+          && (!checked.hasAny(['continuityNotes']) || !('continuityNotes' in d) || (d.continuityNotes is string && d.continuityNotes.size() <= 20000))
+          && (!checked.hasAny(['scenes']) || !('scenes' in d) || (d.scenes is list && d.scenes.size() <= 500))
+          && (!checked.hasAny(['assets']) || !('assets' in d) || (d.assets is list && d.assets.size() <= 500))
+          && (!checked.hasAny(['animationGroups']) || !('animationGroups' in d) || (d.animationGroups is list && d.animationGroups.size() <= 200))
+          && (!checked.hasAny(['productionClips']) || !('productionClips' in d) || (d.productionClips is list && d.productionClips.size() <= 500))
+          && (!checked.hasAny(['historicalMap']) || !('historicalMap' in d) || d.historicalMap == null || d.historicalMap is map)
+          && (!checked.hasAny(['productionState']) || !('productionState' in d) || d.productionState == null || d.productionState is map);
       }
 
       function creatorProjectCreateValid(d) {
@@ -74,7 +77,7 @@ service cloud.firestore {
           && d.writtenAt == request.time
           && (!('createdAt' in d) || d.createdAt == request.time)
           && (!('updatedAt' in d) || d.updatedAt == request.time)
-          && creatorProjectValidFields(d);
+          && creatorProjectValidFields(d, d.keys());
       }
 
       function creatorProjectUpdateValid(next, prev) {
@@ -84,7 +87,7 @@ service cloud.firestore {
           && next.writtenBy == request.auth.uid
           && next.writtenAt == request.time
           && (!('updatedAt' in next) || next.updatedAt == request.time)
-          && creatorProjectValidFields(next)
+          && creatorProjectValidFields(next, next.diff(prev).affectedKeys())
           && (
             (
               owns(prev)
@@ -96,7 +99,7 @@ service cloud.firestore {
                     || (hasSignedInEmail() && next.ownerEmail == signedInEmail())))
               )
               && next.editorEmails is list
-              && next.editorEmails.size() <= 50
+              && (next.editorEmails == prev.get('editorEmails', []) || next.editorEmails.size() <= 50)
               && (
                 ('createdAt' in prev && next.createdAt == prev.createdAt)
                 || (!('createdAt' in prev)
@@ -109,14 +112,18 @@ service cloud.firestore {
                     || (next.id is string && next.id == projectId)))
               )
             ) || (
-              edits(prev)
+              verifiedCreatorEditor(prev)
               && !next.diff(prev).affectedKeys()
                 .hasAny(['ownerUid', 'ownerEmail', 'editorEmails', 'createdAt', 'id'])
             )
           );
       }
 
-      allow read: if owns(resource.data) || edits(resource.data);
+      // A transaction must be able to check a fresh random project ID before creating it.
+      // Existing documents and collection queries still require owner/editor access.
+      allow get: if (signedIn() && !exists(/databases/$(database)/documents/creatorProjects/$(projectId)))
+        || owns(resource.data) || verifiedCreatorEditor(resource.data);
+      allow list: if owns(resource.data) || verifiedCreatorEditor(resource.data);
 
       allow create: if creatorProjectCreateValid(request.resource.data);
 

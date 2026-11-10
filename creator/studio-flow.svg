@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" fill="none">
+  <defs>
+    <linearGradient id="water" x1="150" y1="900" x2="1450" y2="50" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#92ddff" stop-opacity="0"/>
+      <stop offset=".4" stop-color="#89d8ff" stop-opacity=".28"/>
+      <stop offset=".7" stop-color="#b6edff" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#8cd8ff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="200" y1="850" x2="1450" y2="100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d0f4ff" stop-opacity="0"/>
+      <stop offset=".6" stop-color="#d0f4ff" stop-opacity=".5"/>
+      <stop offset="1" stop-color="#d0f4ff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <path d="M-160 850C240 1060 490 300 930 400S1300 20 1770 160L1770 235C1310 70 1270 560 915 495S240 1110-160 950Z" fill="url(#water)"/>
+  <path d="M-150 720C290 970 450 170 900 320S1300-60 1770 70L1770 115C1280 15 1270 485 910 385S260 1040-150 790Z" fill="url(#water)" opacity=".65"/>
+  <path d="M-120 960C330 1080 560 430 970 510S1370 170 1750 290L1750 365C1360 250 1370 650 960 585S340 1160-120 1030Z" fill="url(#water)" opacity=".5"/>
+  <path d="M-160 850C240 1060 490 300 930 400S1300 20 1770 160M-150 720C290 970 450 170 900 320S1300-60 1770 70" stroke="url(#edge)" stroke-width="1.5"/>
+</svg>

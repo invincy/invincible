@@ -5,6 +5,29 @@ const {generate,encodeMp3,GoogleTtsError,googleRequest}=require('../src/tts-serv
 const {assertAccount}=require('../src/tts-callables');
 const voice=normalizeVoices([{name:'hi-IN-Neural2-B',languageCodes:['hi-IN'],ssmlGender:'MALE'}])[0];
 const input={text:'पानीपत की कहानी। Military Strategy!',voiceName:voice.name,languageCode:'hi-IN'};
+const {geminiVoices}=require('../src/tts-gemini');
+const gemini=geminiVoices().find(v=>v.name==='hi-IN-Gemini-Charon');
+test('Gemini sends performance instructions separately on every Unicode-safe chunk',async()=>{
+ const text='हिंदी English 🚀 '.repeat(700),seen=[];
+ const data={...input,voiceName:gemini.name,text,engine:'gemini',modelName:'gemini-2.5-flash-tts',delivery:'sales',direction:'Emphasize the opening question.',speed:1.35};
+ await generate(data,{voices:[gemini],request:async(route,body)=>{seen.push(body);return {audioContent:makeWav([Buffer.alloc(4800)]).toString('base64')};},encoder:async()=>Buffer.from('fixture')});
+ assert.ok(seen.length>1);assert.equal(seen.map(r=>r.input.text).join(''),text);
+ for(const body of seen){
+  assert.ok(Buffer.byteLength(body.input.text)<=4000);assert.ok(Buffer.byteLength(body.input.prompt)<=4000);
+  assert.match(body.input.prompt,/persuasive sales/);assert.match(body.input.prompt,/1.35/);assert.match(body.input.prompt,/Emphasize the opening question/);
+  assert.equal(body.voice.name,'Charon');assert.equal(body.voice.modelName,'gemini-2.5-flash-tts');
+  assert.equal(body.audioConfig.speakingRate,undefined);assert.equal(body.audioConfig.pitch,undefined);
+ }
+});
+test('Gemini rejects unsupported controls, model and oversized instructions before a request',async()=>{
+ const data={...input,voiceName:gemini.name};let count=0;
+ for(const invalid of [{modelName:'arbitrary-model'},{delivery:'fake'},{direction:'अ'.repeat(700)},{mode:'ssml'},{pitch:1},{paragraphPause:500},{engine:'classic'},{direction:42}]){
+  await assert.rejects(()=>generate({...data,...invalid},{voices:[gemini],request:async()=>{count++;}}));
+ }
+ assert.equal(count,0);
+ assert.throws(()=>parseInput({...input,direction:'excited'},voice),/Gemini/);
+ assert.equal(parseInput({...data,modelName:'gemini-2.5-pro-tts'},gemini).modelName,'gemini-2.5-pro-tts');
+});
 test('requires authentication and the configured account',()=>{
  assert.throws(()=>assertAccount({},'owner'),/Sign in/);
  assert.throws(()=>assertAccount({auth:{uid:'owner'}},''),/not activated/);
@@ -70,4 +93,12 @@ test('does not retry Google failures or print upstream response details',async()
 test('real MP3 encoder produces a nonempty, fully decodable recording',async()=>{
  const pcm=Buffer.alloc(48000);for(let i=0;i<24000;i++)pcm.writeInt16LE(Math.round(3000*Math.sin(2*Math.PI*440*i/24000)),i*2);
  const result=await encodeMp3(makeWav([pcm]));assert.ok(result.length>10000);
+});
+
+test('social and empathetic delivery preserve narration and carry distinct performance prompts',async()=>{
+ for(const [delivery,expected] of [['social',/social media delivery/],['empathetic',/empathetic and understanding/]]){
+  const text='आज एक नई शुरुआत करते हैं। Let’s make this happen!';let seen;
+  await generate({...input,text,voiceName:gemini.name,engine:'gemini',delivery,direction:'Keep the language switch clear.'},{voices:[gemini],request:async(route,body)=>{seen=body;return {audioContent:makeWav([Buffer.alloc(4800)]).toString('base64')};},encoder:async()=>Buffer.from('fixture')});
+  assert.equal(seen.input.text,text);assert.match(seen.input.prompt,expected);assert.match(seen.input.prompt,/Keep the language switch clear/);assert.equal(seen.audioConfig.speakingRate,undefined);
+ }
 });

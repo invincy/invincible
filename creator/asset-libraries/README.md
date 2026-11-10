@@ -6,7 +6,7 @@
 
 Download [the native asset library](historical-army-commanders-v1.json). In any existing Map Editor project, expand **Images & 3D assets**, choose **Import asset library**, and select this JSON. Search the library by name or category, then choose **Place**. Importing adds references without replacing scenes or layers; repeated imports of the same URLs are deduplicated. Save the destination project through its normal save controls afterward.
 
-The initial Panipat project with the same named references is saved on branch `codex/panipat-film-20261109` at `creator/history-data/panipat/codex-native-project.json`. These files are durable GitHub/project exports; no account-owned cloud project was edited.
+The obsolete Panipat film branch is retired. Reusable artwork remains pinned to the shared-inputs commit `eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536`; these references do not depend on the film branch. No account-owned cloud project was edited.
 
 | Category | Asset name | Stable ID |
 | --- | --- | --- |

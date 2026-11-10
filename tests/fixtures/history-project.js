@@ -1,53 +1,7 @@
-import {makeScene} from './storyboard-model.js?v=3';
-import {emptyMap} from './history-model.js';
-import {safeRelativeAssetPath} from './map-editor-model.js';
-import {registerMapOverlayPlugin} from './history-player.js';
-
-export const archiveSource='https://commons.wikimedia.org/wiki/File:India1765and1805b.jpg';
-const exportIdentifierPattern=/^[a-zA-Z_$][a-zA-Z0-9_$]*$/;
-const dynamicImport=specifier=>import(specifier);
-
-function resolveDemoAssetUrl(relativeOrSitePath){
- if(!safeRelativeAssetPath(relativeOrSitePath))throw Error('Demo catalog path must stay within this creator directory.');
- return new URL(relativeOrSitePath,import.meta.url).href;
-}
-
-export async function loadDemoCatalog(catalogUrl=new URL('./history-data/demos.json',import.meta.url)){
- const response=await fetch(catalogUrl);
- if(!response.ok)throw Error('Unable to load demo catalog.');
- const data=await response.json();
- if(data?.format!=='invincible-map-demos'||data.version!==1||!Array.isArray(data.demos))throw Error('Invalid map demo catalog format.');
- return data.demos;
-}
-
-export async function loadDemoProject(demoId,{catalogUrl}={}){
- const demos=await loadDemoCatalog(catalogUrl);
- const entry=demos.find(item=>item.id===demoId);
- if(!entry)throw Error(`Unknown demo project: ${demoId}`);
- if(entry.builtIn&&entry.id==='british-india')return {entry,project:britishIndiaDemo()};
- if(entry.pluginModule){
-  const mod=await dynamicImport(resolveDemoAssetUrl(entry.pluginModule));
-  const exportName=entry.pluginExport||'default';
-  if(!exportIdentifierPattern.test(exportName)||!mod?.[exportName])throw Error('Invalid demo overlay plugin export.');
-  registerMapOverlayPlugin(entry.pluginId||entry.id,mod[exportName]);
- }
- let raw=null;
- if(entry.projectUrl){
-  const response=await fetch(resolveDemoAssetUrl(entry.projectUrl));
-  if(!response.ok)throw Error(`Unable to load demo project data for ${entry.id}.`);
-  raw=await response.json();
- }
- let project=raw;
- if(entry.adapterModule){
-  const mod=await dynamicImport(resolveDemoAssetUrl(entry.adapterModule));
-  const exportName=entry.adapterExport||'default';
-  if(!exportIdentifierPattern.test(exportName)||typeof mod?.[exportName]!=='function')throw Error('Invalid demo adapter export.');
-  project=await mod[exportName](raw,entry);
- }
- if(!project||!Array.isArray(project.scenes))throw Error(`Demo project ${entry.id} did not produce a valid storyboard.`);
- return {entry,project};
-}
-
+// Internal regression fixture; excluded from the published site.
+import {makeScene} from '../../creator/storyboard-model.js';
+import {emptyMap} from '../../creator/history-model.js';
+const archiveSource='https://commons.wikimedia.org/wiki/File:India1765and1805b.jpg';
 export function britishIndiaDemo(){
  const scenes=[
  ['Trading settlements','Company के trading bases थे Bombay, Madras और Calcutta।','1709–1756',[79,21],3.4],

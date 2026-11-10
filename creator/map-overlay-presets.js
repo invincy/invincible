@@ -153,11 +153,13 @@ function mergeSection(base, ...overrides) {
 }
 
 export function resolveOverlayPolicy(project = null, spec = null, pluginPolicy = null) {
+ const p=spec?.presentation;
  const requestedPreset = spec?.overlayPreset ?? project?.overlayPreset ?? 'legacy';
- const presetId = Object.hasOwn(OVERLAY_PRESETS, requestedPreset) ? requestedPreset : 'legacy';
- const preset = OVERLAY_PRESETS[presetId];
+ const presetId = p?p.presetId:Object.hasOwn(OVERLAY_PRESETS, requestedPreset) ? requestedPreset : 'legacy';
+ const legacy=OVERLAY_PRESETS.legacy;
+ const preset=p?{...legacy,scaling:'shortEdge1080',events:{...legacy.events,mode:'card',font:'600 '+p.labelSize+'px '+p.fontFamily,dotColor:p.accentColor,leaderColor:p.accentColor,nightBg:p.cardColor,dayBg:p.cardColor,nightText:p.textColor,dayText:p.textColor,borderColor:p.accentColor,cornerRadius:p.cardRadius,padX:p.padding,minY:p.safeMargin,cardHeight:p.labelSize*1.22+p.padding*2},dateBanner:{...legacy.dateBanner,visible:p.showDates,font:'600 '+p.secondaryLabelSize+'px '+p.fontFamily},attribution:{...legacy.attribution,mode:'compact',font:'500 22px '+p.fontFamily,suffix:''}}:OVERLAY_PRESETS[presetId];
  const sources = [pluginPolicy, project?.overlayPolicy, spec?.overlayPolicy].filter(isPlainObject);
- return {
+ const resolved={
   presetId,
   scaling: sources.reduce((acc, s) => s.scaling ?? acc, preset.scaling),
   events: mergeSection(preset.events, ...sources.map(s => s.events)),
@@ -168,6 +170,9 @@ export function resolveOverlayPolicy(project = null, spec = null, pluginPolicy =
    symbol: mergeSection(preset.renderer.symbol, ...sources.map(s => s.renderer?.symbol))
   }
  };
+ // New maps describe their actual saved presentation; older overlay policies are compatibility inputs.
+ if(p){if(p.presetVersion===2)resolved.renderer.relief={exaggeration:p.reliefStrength,shadowColor:p.reliefShadow,highlightColor:p.reliefHighlight,accentColor:p.reliefAccent};resolved.scaling=preset.scaling;resolved.events={...resolved.events,...preset.events,visible:resolved.events.visible};resolved.dateBanner={...resolved.dateBanner,...preset.dateBanner};resolved.attribution={...resolved.attribution,...preset.attribution,visible:true,sourceCredit:resolved.attribution.sourceCredit};}
+ return resolved;
 }
 
 function validateAllowedKeys(obj, allowed, label) {

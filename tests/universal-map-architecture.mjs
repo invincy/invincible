@@ -5,7 +5,7 @@ import {OVERLAY_PRESETS,resolveOverlayPolicy,validateOverlayConfig} from '../cre
 import {emptyMap,validateMap,mapFrame,timeOf} from '../creator/history-model.js';
 import {safeRelativeAssetPath,safeAssetUrl} from '../creator/map-editor-model.js';
 import {compileAnimation} from '../creator/map-animation-import.js';
-import {britishIndiaDemo} from '../creator/history-demo.js';
+import {britishIndiaDemo} from './fixtures/history-project.js';
 import {referencedMapAssets,validateManifest} from '../creator/video-studio/model.js';
 import {makeScene} from '../creator/storyboard-model.js';
 
@@ -14,12 +14,19 @@ const repoUrl=rel=>new URL('../'+rel,import.meta.url);
 test('shared map/studio modules and catalogs contain no Panipat hardcoding',async()=>{
  const sharedFiles=[
   'creator/history-player.js',
+  'creator/map-defaults.js',
+  'creator/map-labels.js',
+  'creator/map-editor.js',
+  'creator/map-editor-model.js',
+  'creator/map-animation-import.js',
+  'creator/creator.js',
+  'creator/project.js',
+  'creator/video-studio/adapters.js',
+  'creator/video-studio/model.js',
+  'creator/video-studio/workspace.js',
   'creator/map-overlay-presets.js',
   'creator/map-editor-renderer.js',
-  'creator/history-demo.js',
-  'creator/history-demo.html',
   'creator/video-studio/assembly.js',
-  'creator/history-data/demos.json',
   'creator/asset-libraries/index.json'
  ];
  for(const rel of sharedFiles){
@@ -28,12 +35,7 @@ test('shared map/studio modules and catalogs contain no Panipat hardcoding',asyn
  }
 });
 
-test('data-driven demo and asset library catalogs are valid and point to existing files',async()=>{
- const demoCatalog=JSON.parse(await fs.readFile(repoUrl('creator/history-data/demos.json'),'utf8'));
- assert.equal(demoCatalog.format,'invincible-map-demos');
- assert.equal(demoCatalog.version,1);
- assert.ok(demoCatalog.demos.some(d=>d.id==='british-india'&&d.builtIn===true));
-
+test('reusable asset library catalog is valid and point to existing files',async()=>{
  const assetCatalog=JSON.parse(await fs.readFile(repoUrl('creator/asset-libraries/index.json'),'utf8'));
  assert.equal(assetCatalog.format,'invincible-asset-library-catalog');
  assert.equal(assetCatalog.version,1);
@@ -315,8 +317,8 @@ test('storageError and Creator saveItem protect revisions and immutable collabor
  const storageFnSrc=fbSource.slice(fbSource.indexOf('export function storageError('));
  const storageError=new Function(storageFnSrc.replace('export function storageError','function storageError')+'return storageError;')();
  assert.match(storageError({code:'revision-conflict'}),/another session or tab/);
- assert.match(storageError({code:'aborted'}),/another session or tab/);
- assert.match(storageError({code:'failed-precondition'}),/another session or tab/);
+ assert.match(storageError({code:'aborted'}),/retry/);
+ assert.doesNotMatch(storageError({code:'failed-precondition',message:'Missing index'}),/another session or tab/);
 
  const creatorSource=await fs.readFile(repoUrl('creator/creator.js'),'utf8');
  const saveFnSrc=creatorSource.slice(creatorSource.indexOf('async function saveItem('),creatorSource.indexOf('async function migrateLegacyProjects('));
@@ -385,4 +387,5 @@ test('storageError and Creator saveItem protect revisions and immutable collabor
  await saveItem(legacyItem);
  assert.equal(legacyItem.writeRevision,1);
  assert.equal(store.get('creatorProjects/legacy').writeRevision,1);
+ store.delete('creatorProjects/legacy');await assert.rejects(()=>saveItem({...legacyItem,writeRevision:0},{mustExist:true}),e=>e.code==='revision-conflict');assert.equal(store.has('creatorProjects/legacy'),false);
 });

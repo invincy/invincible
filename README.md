@@ -22,6 +22,18 @@ This document is the starting point for understanding what runs today, where to 
 
 The main React app chooses and lazily loads its page in `react/src/App.jsx`. Its HTML entry points load the same generated JS/CSS assets. Garage, Creator, Journal, and LIC have their own entry points; they are not silently redirected through React.
 
+## Creator Studio: one video flow
+
+Studio now opens with shared cloud uploads, one complete-video JSON import, the scene/audio timeline and MP4 export on the same screen. Assets uploaded through Studio, Maps or production clips use the same private account library; owners can sync complete video drafts across devices. Existing projects and detailed editors remain available. See [the workflow and storage contract](docs/creator-single-flow.md).
+
+## Universal Creator Studio
+
+Creator Studio is a shared production workspace for independent videos. Film content stays in each project’s JSON, assets, voiceover and timing; the shared Map Editor never selects rendering by a film title or ID. Optional overlays use explicitly registered, versioned plugin factories. New projects share the saved default style, while older projects retain their appearance.
+
+## Creator Map Editor defaults
+
+New Creator projects automatically save the Documentary Terrain style: NASA imagery, attributed terrain, readable typography, restrained gold routes, safe portrait framing and timeline-driven motion. The main Map Editor’s Style controls support project overrides; existing maps retain their saved appearance. See [the production standard](docs/map-editor-production-standard.md#built-in-creator-studio-defaults). No repeated style prompt or demo page is required. See [Documentary Terrain](docs/documentary-terrain.md) for hierarchy, optional information graphics, scene overrides and imagery limits.
+
 ## Creator voiceover
 
 Creator Studio → **Voiceover** opens the Google TTS workspace: paste narration, choose language/voice, adjust delivery, preview, generate and download an MP3. The page uses authenticated backend Functions; production activation and limits are documented in [Creator voiceover](docs/creator-tts.md). Private Google credentials never belong in the browser or repository.
@@ -233,7 +245,7 @@ All agents and contributors must read the [permanent Map Editor production stand
 
 ## Historical Creator production — Phase 1 draft
 
-Creator's existing workbench now includes **Maps** and **Clips**. Maps supports sourced events/GeoJSON, scene-linked camera/timing, local voiceover preview and real-time WebM export. Clips groups adjacent storyboard scene IDs and retains prompts, keyframe references and versioned manual video assets. The unsaved demonstration is `creator/history-demo.html`; existing projects can explicitly append its British India scenes. React, Firebase auth, existing paths and import columns remain unchanged.
+Creator's existing workbench now includes **Maps** and **Clips**. Maps supports sourced events/GeoJSON, scene-linked camera/timing, local voiceover preview and real-time WebM export. Clips groups adjacent storyboard scene IDs and retains prompts, keyframe references and versioned manual video assets. Map projects use the main visual editor; obsolete standalone demos and sample-project buttons have been retired. React, Firebase auth, existing paths and import columns remain unchanged.
 
 [Architecture, official Kling feasibility and remaining work](docs/creator-history-phase1.md) distinguishes implemented behavior from unfinished territorial geometry, live OAuth/account verification, paid generation, full sequence export and P4 integrations. No production deployment or billed generation is included. Run `node --test tests/creator*.mjs`, `npm --prefix functions test` and `node tests/creator-history-browser.cjs` (Playwright Chromium required). MapLibre's pinned local files regenerate with `npm run vendor:creator-map`.
 

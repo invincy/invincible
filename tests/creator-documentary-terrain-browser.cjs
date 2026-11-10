@@ -1,0 +1,50 @@
+// Controlled Firestore-shaped fixture; never contacts production Firebase.
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
+const {chromium}=require('playwright'),root=path.resolve(__dirname,'..');
+const fixture=[
+"export const db={},auth={currentUser:{uid:'owner',email:'owner@example.com'}},authReady=Promise.resolve();export async function observeAuth(callback){queueMicrotask(()=>callback(auth.currentUser));return()=>{}}export const storageError=error=>error?.code==='revision-conflict'||error?.code==='failed-precondition'||error?.code==='aborted'?'This project was updated in another session or tab. Reload the latest cloud copy before overwriting.':'Save failed.';",
+"let listeners=[];window.emitCreatorSnapshot=()=>listeners.forEach(fn=>fn());const read=()=>JSON.parse(localStorage.getItem('test.creator')||'{}');",
+"export const doc=(db,...parts)=>parts.join('/');export const collection=(db,name)=>name;export const where=(...args)=>args;export const query=(collection,...filters)=>({collection,filters});export const serverTimestamp=()=>1;",
+"function snapshot(ref){const data=read();if(typeof ref==='string')return {exists:()=>!!data[ref],data:()=>data[ref],metadata:{hasPendingWrites:false,fromCache:false}};return {docs:Object.entries(data).filter(([key,value])=>key.startsWith('creatorProjects/')&&ref.filters.every(([field,op,wanted])=>op==='=='?value[field]===wanted:value[field]?.includes(wanted))).map(([key,value])=>({id:key.split('/')[1],data:()=>value}))}}",
+"export async function getDoc(ref){return snapshot(ref)}export async function getDocs(ref){return snapshot(ref)}",
+"export function onSnapshot(ref,...args){const callback=args.find(item=>typeof item==='function');const listener=()=>callback(snapshot(ref));listeners.push(listener);queueMicrotask(listener);return()=>listeners=listeners.filter(item=>item!==listener)}",
+"export async function runTransaction(db,fn){window.writes=(window.writes||0)+1;await new Promise(resolve=>setTimeout(resolve,window.saveDelay||20));if(window.failSave)throw Object.assign(Error('denied'),{code:'permission-denied'});const reads=new Map(),writes=[];const result=await fn({async get(ref){const snap=snapshot(ref);reads.set(ref,snap.exists()?JSON.stringify(snap.data()):null);return snap;},set(ref,value){writes.push([ref,value]);}});const all=read();for(const [ref,expected] of reads){const current=Object.prototype.hasOwnProperty.call(all,ref)?JSON.stringify(all[ref]):null;if(current!==expected)throw Object.assign(Error('aborted'),{code:'aborted'});}for(const [ref,value] of writes)all[ref]=value;localStorage.setItem('test.creator',JSON.stringify(all));listeners.forEach(fn=>fn());return result;}export async function setDoc(ref,value){window.writes=(window.writes||0)+1;await new Promise(resolve=>setTimeout(resolve,window.saveDelay||20));if(window.failSave)throw Error('denied');const all=read();all[ref]={...all[ref],...value};localStorage.setItem('test.creator',JSON.stringify(all));listeners.forEach(fn=>fn())}export async function deleteDoc(ref){const all=read();delete all[ref];localStorage.setItem('test.creator',JSON.stringify(all));listeners.forEach(fn=>fn())}"
+].join('\n');
+const server=http.createServer((req,res)=>{
+ const url=new URL(req.url,'http://localhost').pathname;
+ res.setHeader('Content-Type',/\.m?js$/.test(url)?'text/javascript':url.endsWith('.css')?'text/css':'text/html');
+ if(url==='/invincible/ai/'){res.end('<style>html,body{background:#0e111a;color-scheme:dark}</style><body></body>');return;}
+ if(url==='/fixture.mjs'||url==='/invincible/shared/firebase-client.js'){res.end(fixture);return;}
+ try{
+  let file=path.join(root,url.replace(/^\/invincible\/?/,''));
+  if(fs.statSync(file).isDirectory())file=path.join(file,'index.html');
+  let content=/\.(?:m?js|html)$/.test(file)?fs.readFileSync(file,'utf8').replaceAll('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js','/fixture.mjs'):fs.readFileSync(file);
+  if(url.endsWith('/history-player.js'))content=content.replace('return {loaded,seek,play','return window.testMapPlayer={loaded,seek,play');
+  res.end(content);
+ }catch{res.statusCode=404;res.end('Missing');}
+});
+(async()=>{
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;
+ try{
+  const project=JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/documentary-terrain-project.json'),'utf8'));project.ownerUid='owner';project.ownerEmail='owner@example.com';project.editorEmails=[];project.writeRevision=1;
+  const {validateMap}=await import('../creator/history-model.js');validateMap(project.historicalMap,project);
+  browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE||undefined,args:['--enable-unsafe-swiftshader']});const page=await browser.newPage({viewport:{width:1440,height:1000}});page.setDefaultTimeout(45000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.addInitScript(p=>localStorage.setItem('test.creator',JSON.stringify({'creatorProjects/documentary-render-test':p})),project);
+  const base='http://127.0.0.1:'+server.address().port+'/invincible/creator/';await page.goto(base+'project.html?id=documentary-render-test');await page.locator('.wb-more').evaluate(n=>n.open=true);await page.locator('[data-tab="Maps"]').click();await page.waitForFunction(()=>window.testMapPlayer?.isNative);await page.evaluate(()=>testMapPlayer.loaded);
+  fs.mkdirSync(path.join(root,'.test-output/documentary'),{recursive:true});const report=[];
+  for(const time of [.9,3.9,7.5,10.2]){console.log('Inspecting native frame',time);
+   const diagnostics=await page.evaluate(async({project,time})=>{const player=window.testMapPlayer;player.seek(time);await player.settleFrame();const {drawDocumentary,safeRect,presentationAt}=await import('/invincible/creator/map-documentary.js');const {mapFrame}=await import('/invincible/creator/history-model.js');const host=document.querySelector('[data-map]'),canvas=document.createElement('canvas');canvas.width=host.clientWidth;canvas.height=host.clientHeight;const frame=mapFrame(project,project.historicalMap,time);const placed=drawDocumentary(canvas.getContext('2d'),{map:player.map,project,spec:project.historicalMap,time,width:canvas.width,height:canvas.height,events:frame.events});const p=presentationAt(project,project.historicalMap,time);const markers=placed.filter(r=>r.role!=='regional').map(r=>{const factor=Math.min(canvas.width,canvas.height)/1080;return Array.from(canvas.getContext('2d').getImageData(Math.round(r.anchor[0]*factor),Math.round(r.anchor[1]*factor),1,1).data);});return{time,placed,markers,routeColor:player.map.getPaintProperty('visual-connection','line-color'),safe:safeRect(p,1080,canvas.height*1080/canvas.width),camera:player.camera,overlay:document.querySelector('.history-overlay').toDataURL()};},{project,time});
+   for(const r of diagnostics.placed){assert.ok(r.x>=diagnostics.safe.x-.1&&r.y>=diagnostics.safe.y-.1);assert.ok(r.x+r.w<=diagnostics.safe.x+diagnostics.safe.w+.1);for(const other of diagnostics.placed)if(r!==other)assert.ok(!(r.x<other.x+other.w&&r.x+r.w>other.x&&r.y<other.y+other.h&&r.y+r.h>other.y),'No text overlap');}
+   for(const pixel of diagnostics.markers)assert.ok(pixel[0]>140&&pixel[1]>100&&pixel[2]<150&&pixel[3]>120,'Marker pixels stay at the terrain-projected coordinate during zoom/tilt');
+   if(time===7.5){assert.ok(diagnostics.placed.some(r=>r.text==='दिल्ली'),'Hindi location is visibly placed');assert.equal(diagnostics.placed.find(r=>r.text==='DELHI').fontSize,52);assert.equal(diagnostics.routeColor.toLowerCase(),'#d6bd52','Scene route color override reaches the native renderer');}
+   await page.locator('[data-map]').screenshot({path:path.join(root,'.test-output/documentary/preview-'+time+'.png')});report.push(diagnostics);
+  }
+  await page.evaluate(async()=>{testMapPlayer.seek(3.9);await testMapPlayer.settleFrame();testMapPlayer.seek(7.5);await testMapPlayer.settleFrame();});assert.equal(await page.locator('.history-overlay').evaluate(n=>n.toDataURL()),report[2].overlay,'Seeking replay is deterministic');
+  await page.locator('[data-safe-guide]').evaluate(n=>n.closest('details').open=true);const beforeGuide=await page.locator('.history-overlay').evaluate(n=>n.toDataURL());await page.locator('[data-safe-guide]').check();assert.equal(await page.locator('.map-shorts-guide').isVisible(),true);assert.equal(await page.locator('.history-overlay').evaluate(n=>n.toDataURL()),beforeGuide,'Guide never enters the compositor');
+  await page.setViewportSize({width:393,height:900});await page.locator('[data-map]').screenshot({path:path.join(root,'.test-output/documentary/phone-preview.png')});await page.setViewportSize({width:1440,height:1000});
+  console.log('Rendering full-resolution MP4');
+  const download=page.waitForEvent('download',{timeout:240000});await page.locator('[data-map-export="mp4"]').click();await (await download).saveAs(path.join(root,'.test-output/documentary/documentary-terrain.mp4'));await page.waitForFunction(()=>document.querySelector('[data-export-status]').textContent.startsWith('Silent MP4 rendered'));
+  const bytes=fs.readFileSync(path.join(root,'.test-output/documentary/documentary-terrain.mp4'));const metadata=await page.evaluate(async b=>{const v=document.createElement('video');v.src=URL.createObjectURL(new Blob([Uint8Array.from(atob(b),c=>c.charCodeAt(0))],{type:'video/mp4'}));await new Promise((r,j)=>{v.onloadedmetadata=r;v.onerror=j});return{width:v.videoWidth,height:v.videoHeight,duration:v.duration};},bytes.toString('base64'));assert.deepEqual(metadata,{width:1080,height:1920,duration:12});
+  assert.deepEqual(errors,[]);fs.writeFileSync(path.join(root,'.test-output/documentary/verification.json'),JSON.stringify({metadata,frames:report.map(({overlay,...r})=>r)},null,2));console.log('Documentary Terrain: native frames, Hindi, collisions, seeking, guide exclusion, phone preview and real 12-second portrait MP4 passed.');
+ }finally{await browser?.close();await new Promise(r=>server.close(r));}
+})().catch(e=>{console.error(e);process.exitCode=1;});

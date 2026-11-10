@@ -1,5 +1,11 @@
 # Invincible storage and migration audit
 
+## Creator revision writes — November 9, 2026
+
+The universal-studio branch uses transactional writeRevision progression, server timestamps and writer identity for creatorProjects. Stale writes offer reload, draft download or explicit overwrite; missing records are never recreated by a save. Account changes invalidate pending writes and legacy imports. Rules retain owner access and verified invited editors, protect ownership/ACL fields and validate changed bounded fields without blocking unchanged legacy oversized fields. Actual demo-project Firestore emulator tests pass.
+
+The Creator block was deployed on November 9, 2026 against the backed-up live ruleset; unrelated live rules were preserved, and the repository’s separate LIC rules remain undeployed. Keep frontend and strict-rule releases coordinated: old cached clients without revision-aware writes will be denied and must reload while retaining drafts. No production migration, credential change or cloud service activation was performed. See [the universal-studio contract](creator-studio-universal.md).
+
 All internal pages use the Firebase project `life-by-adichimp`, the default Firebase app, and the same persisted Google account on `invincy.github.io`. React and native modules prefer browser local persistence, with IndexedDB as a migration/fallback store. Auth restoration finishes before protected data loads. Separate origins (including the external Apps Script Portfolio) cannot inherit this session.
 
 | Page | Runtime | Personal data path |
@@ -12,6 +18,7 @@ All internal pages use the Firebase project `life-by-adichimp`, the default Fire
 | Invincible AI | Main React app | Existing authenticated Functions tools and private user data |
 | Garage | Native JavaScript | `users/{uid}/garage/main` |
 | Creator Studio | Native JavaScript | Owned/invited `creatorProjects`; legacy `users/{uid}/creator/main` import |
+| Creator voiceover history | Native JavaScript | `users/{uid}/voiceoverHistory/{recordingId}`; script/settings metadata only, no audio |
 | Journal | Separate React bundle | `users/{uid}/journals/{date}/strokes/{id}` |
 | LIC Customer CRM | Native JavaScript | `users/{uid}/licCustomers/{customerId}` |
 | LIC Follow-up Manager | Native JavaScript | `users/{uid}/licFollowups/{policyId}` and `history/{eventId}` beneath each policy |
@@ -227,3 +234,7 @@ Version 2 video manifests and original voice/music/effect/video/image Blobs use 
 ## Creator voiceover — November 9, 2026
 
 The new TTS endpoints use existing Firebase authentication plus an explicit CREATOR_TTS_ACCOUNT_UID allowlist. Scripts/settings stay in account-scoped local browser drafts; generated audio is returned directly and held in memory for playback/download. Server-only _creatorTtsUsage/{uid} records hold hourly counts, byte totals and a short-lived generation lock. No customer/project data migration, Storage bucket or Firestore rule change is introduced. Runtime Google TTS permission and production account access require deployment and signed-in verification.
+
+## Creator shared media — November 10, 2026
+
+See [one Creator flow](creator-single-flow.md) for the account-owned private bucket, backend-only _creatorMedia metadata/drafts, stable cloud file IDs and owner draft revisions. Shared uploads replace the older undeployed map upload path; old saved references remain supported. Local IndexedDB remains a recovery/cache store. No Firestore client permission is broadened.

@@ -119,7 +119,7 @@ const server=http.createServer((req,res)=>{
   await page.locator('#shareDialog [aria-label="Close sharing"]').click();
   fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});await page.screenshot({path:path.join(root,'.test-output/creator-project-current.png')});
   await openArea('Production');await page.locator('[data-filter-method]').selectOption('Blender');assert.equal(await page.locator('.wb-production-card').count(),1);
-  await page.locator('[data-tab=Assets]').click();assert.equal(await page.locator('[data-asset-field=path]').inputValue(),'E:\\3D\\draft.blend');
+  await openArea('Assets');assert.equal(await page.locator('[data-asset-field=path]').inputValue(),'E:\\3D\\draft.blend');
   await page.goto(base);await page.locator('.content-card').filter({hasText:'Draft production'}).locator('[data-edit]').click();
   assert.equal(await dialog.locator('[data-tab=Storyboard]').getAttribute('aria-current'),'page');
   await dialog.locator('[data-tab=Production]').click();await dialog.locator('.wb-group-create summary').click();
@@ -313,13 +313,13 @@ const server=http.createServer((req,res)=>{
   await page.locator('[data-action=apply-script]').click();await page.locator('.wb-script summary').click();
   assert.match(await page.locator('[data-canonical-script]').textContent(),/^Changed narration/);
   // Asset metadata and associations survive reload; local references are never file URLs.
-  await page.locator('[data-tab=Assets]').click();await page.locator('[data-action=add-asset]').click();
+  await openArea('Assets');await page.locator('[data-action=add-asset]').click();
   await page.locator('[data-asset-field=name]').fill('Crew Module');await page.locator('[data-asset-field=path]').fill('E:\\3D\\MY\\Gaganyaan\\crew.blend');
   await page.locator('[data-associate-group]').check();await page.locator('[data-asset-field=status]').selectOption('Ready');
   assert.equal(await page.locator('.wb-asset a').count(),0);await page.locator('[data-copy-path]').click();
   assert.equal(await page.evaluate(()=>window.copied),'E:\\3D\\MY\\Gaganyaan\\crew.blend');
   await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.assets?.[0]?.status==='Ready',projectId);
-  await page.reload();await openArea('Storyboard');await page.locator('[data-tab=Assets]').click();assert.equal(await page.locator('[data-asset-field=name]').inputValue(),'Crew Module');
+  await page.reload();await openArea('Storyboard');await openArea('Assets');assert.equal(await page.locator('[data-asset-field=name]').inputValue(),'Crew Module');
   // Markdown, mapping, voiceover only, inline edits, reorder, duplication and insertion.
   await page.locator('[data-tab=Storyboard]').click();
   if(await page.locator('.wb-focus-layout').count())await page.locator('[data-action=view-mode]').click();

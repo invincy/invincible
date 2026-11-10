@@ -2,6 +2,18 @@
 
 This is the standing production standard for **all** Invincible Map Editor work: geography, borders, country overlays, history, routes, explainers and future topics. It is not a Panipat-only brief. Apply it before planning, editing, importing, previewing or exporting map scenes. Explicit instructions for the current film override stylistic defaults; preserve the existing editor and source accuracy.
 
+## Built-in Creator Studio defaults
+
+New projects on the main Creator Studio page save a resolved default map immediately. The same defaults initialize a project's first map if it has none. Existing map JSON is not restyled or migrated.
+
+The central configuration is `creator/map-defaults.js`. New maps use NASA GIBS Blue Marble, attributed Terrarium terrain, north-up/smooth camera defaults and portrait 9:16. Their `historicalMap.presentation` contains a complete versioned snapshot. New projects use Documentary Terrain (version 2): 56 px primary labels, 48 px secondary labels, 34 px regional labels, bundled Hindi-capable typography, restrained gold routes, compact rounded location cards and portrait-safe framing. Saved version-1 card projects remain unchanged. No film names, narration, locations or timings belong in this configuration.
+
+Use the main editor's **Style** controls to apply a preset explicitly or override typography, routes, markers, captions, automatic framing, margins, colors and date visibility; change an individual label size in its inspector. Remaining presentation properties can be edited in the existing map JSON panel. Explicit map, camera, layer scale/color/font size, image corners and terrain settings remain authoritative. Show dates defaults off; narration is never turned into captions. New image placement fits the original proportions to 220 reference pixels; imported geographic image corners are retained. GLB scale remains an authored physical scale.
+
+Saved projects read their own snapshot, not today's defaults, so later configuration changes do not change an older film. Legacy maps without a presentation snapshot retain the original rendering. New label cards use the same compositor in editor preview, WebM, deterministic MP4 and native-map Studio composition. Map MP4 remains silent; this change does not add audio alignment or generation.
+
+Run `npm run test:map-defaults` with Chrome available through `CHROMIUM_EXECUTABLE` for main-page creation, save/reload, overrides, responsive layout and a real 1080×1920 MP4 test. The new scene uses synthetic content and real NASA tiles; it does not certify geographic research or editorial quality of any film.
+
 ## 1. Read the real implementation before building
 
 Start with [the repository README](../README.md), [Creator map architecture](creator-history-phase1.md), and the current project/scene JSON. Inspect these existing components rather than rebuilding the editor:
@@ -10,7 +22,7 @@ Start with [the repository README](../README.md), [Creator map architecture](cre
 - `creator/map-animation-import.js`: accepted instruction schema and copied brief.
 - `creator/map-editor-model.js`, `creator/map-editor-renderer.js`: normalization, layers and artwork rendering.
 - `creator/history-model.js`, `creator/history-player.js`, `creator/map-video-export.js`: timeline, camera, preview and export.
-- `creator/map-animation-example.json`, `creator/map-animation-demo.html`: working declarative example, not a final visual-quality benchmark.
+- `creator/map-animation-example.json`: reusable declarative reference for the main Map Editor, not a final visual-quality benchmark.
 - `creator/history-data/border-flags-v3/manifest.json` and `SOURCES.md`: the existing sourced flag-map treatment the user wants to build on. Read each texture's corners, regional coverage and source notes.
 
 The earlier border/country-overlay work is a visual reference for real NASA imagery, georeferenced artwork, separate boundaries and deliberate camera movement. Do not copy one film's territorial claims, country list, timing or colours into every other film. Some flag textures cover only regional clips, not entire countries. Use their recorded geographic corners and never stretch a regional clip across a whole country.

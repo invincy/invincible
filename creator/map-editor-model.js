@@ -5,7 +5,7 @@ export function assetLibrary(map){return {format:'invincible-map-assets',version
 export function importAssetLibrary(map,pkg){
  if(pkg?.format!=='invincible-map-assets'||pkg.version!==1||!Array.isArray(pkg.assets))throw Error('Use an Invincible asset library JSON file.');
  const out=structuredClone(map);
- for(const asset of pkg.assets){if(!out.visual.assets.some(a=>a.type===asset.type&&(asset.url?a.url===asset.url:a.storagePath===asset.storagePath)))out.visual.assets.push({...structuredClone(asset),id:uid()});}
+ for(const asset of pkg.assets){if(!out.visual.assets.some(a=>a.type===asset.type&&(asset.url?a.url===asset.url:asset.cloudAssetId?a.cloudAssetId===asset.cloudAssetId:a.storagePath===asset.storagePath)))out.visual.assets.push({...structuredClone(asset),id:uid()});}
  return out;
 }
 const finite=(v,a,b)=>typeof v==='number'&&Number.isFinite(v)&&v>=a&&v<=b;
@@ -15,9 +15,12 @@ export function validateVisual(map,project){
  const v=map.visual;if(v===undefined)return;
  if(v.version!==1||!Array.isArray(v.layers)||v.layers.length>100||!Array.isArray(v.assets)||v.assets.length>50)throw Error('Visual map requires version 1, up to 100 layers and 50 assets.');
  const ids=new Set(),assets=new Map();
- for(const a of v.assets){if(!a.id||assets.has(a.id)||!['image','glb'].includes(a.type)||!((safeAssetUrl(a.url)&&!a.storagePath&&!a.storageProjectId)||(!a.url&&typeof a.storageProjectId==='string'&&/^[a-zA-Z0-9_-]{1,100}$/.test(a.storageProjectId)&&typeof a.storagePath==='string'&&new RegExp('^creatorProjects/'+a.storageProjectId+'/mapAssets/[a-zA-Z0-9_-]{1,100}$').test(a.storagePath)))||!String(a.name||'').trim())throw Error('Assets need unique IDs, a name, image/GLB type and a durable HTTPS URL or a valid private storage reference.');assets.set(a.id,a);}
+ for(const a of v.assets){if(!a.id||assets.has(a.id)||!['image','glb'].includes(a.type)||!((typeof a.cloudAssetId==='string'&&/^cloud-[a-f0-9]{64}$/.test(a.cloudAssetId)&&!a.url&&!a.storagePath&&!a.storageProjectId)||(safeAssetUrl(a.url)&&!a.cloudAssetId&&!a.storagePath&&!a.storageProjectId)||(!a.url&&!a.cloudAssetId&&typeof a.storageProjectId==='string'&&/^[a-zA-Z0-9_-]{1,100}$/.test(a.storageProjectId)&&typeof a.storagePath==='string'&&new RegExp('^creatorProjects/'+a.storageProjectId+'/mapAssets/[a-zA-Z0-9_-]{1,100}$').test(a.storagePath)))||!String(a.name||'').trim())throw Error('Assets need unique IDs, a name, image/GLB type and a durable HTTPS URL or a valid private storage reference.');assets.set(a.id,a);}
  for(const l of v.layers){
   if(!l.id||ids.has(l.id)||!String(l.name||'').trim()||!['feature','event','icon','image','glb','label','route'].includes(l.kind))throw Error('Layer IDs must be unique, with a name and supported type.');ids.add(l.id);
+  for(const key of ['inheritRouteColor','inheritRouteWidth'])if(l[key]!==undefined&&typeof l[key]!=='boolean')throw Error(key+' must be boolean.');
+  if(map.presentation&&l.inheritTextColor!==undefined&&typeof l.inheritTextColor!=='boolean')throw Error('inheritTextColor must be boolean.');
+  if(map.presentation&&l.fontSize!==undefined&&!finite(l.fontSize,16,240))throw Error('Label font size must be between 16 and 240.');
   if(typeof l.visible!=='boolean'||!finite(l.opacity,0,1)||!/^#[0-9a-f]{6}$/i.test(l.color))throw Error('Invalid visibility, opacity or layer color.');
   for(const key of ['fadeIn','fadeOut'])if(l[key]!==undefined&&!finite(l[key],0,l.duration??3600))throw Error('Layer fades must fit inside its duration.');
   if(l.lineWidth!==undefined&&!finite(l.lineWidth,1,20))throw Error('Line width must be between 1 and 20.');
@@ -45,7 +48,7 @@ export function validateVisual(map,project){
 export function visualMap(map){
  const copy=structuredClone(map);copy.visual??={version:1,layers:[],assets:[]};
  for(const [kind,items] of [['feature',copy.features.features.map(f=>f.properties)],['event',copy.events]])for(const item of items){
-  if(!copy.visual.layers.some(l=>l.kind===kind&&l.ref===item.id))copy.visual.layers.push({id:uid(),kind,ref:item.id,name:item.label,visible:true,opacity:0.7,color:'#c5a15d'});
+  if(!copy.visual.layers.some(l=>l.kind===kind&&l.ref===item.id))copy.visual.layers.push({id:uid(),kind,ref:item.id,name:item.label,visible:true,...(copy.presentation&&kind==='event'?{inheritTextColor:true}:{}),opacity:copy.presentation?1:0.7,color:copy.presentation?(kind==='event'?copy.presentation.textColor:copy.presentation.accentColor):'#c5a15d'});
  }
  return copy;
 }
@@ -69,10 +72,12 @@ export function moveLayer(layer,position){
 }
 export function scenePackage(project,map,sceneId,initialCamera){
  const scene=project.scenes.find(s=>s.id===sceneId);if(!scene)throw Error('Select a scene.');
- const out=structuredClone(map);out.events=out.events.filter(e=>e.sceneId===sceneId);out.features.features=out.features.features.filter(f=>f.properties.sceneId===sceneId);out.camera=out.camera.filter(c=>c.sceneId===sceneId);if(out.lighting)out.lighting=out.lighting.filter(c=>c.sceneId===sceneId);
+ if(map.overlayPlugin||project.overlayPlugin)throw Error('This scene depends on an overlay plugin. Export the full project or use its scene exporter.');
+ const keys=['version','theme','projection','basemap','presentation','cameraDefaults','overlayPreset','overlayPolicy','events','features','camera','lighting','visual'];
+ const out=structuredClone(Object.fromEntries(keys.filter(k=>map[k]!==undefined).map(k=>[k,map[k]])));out.events=out.events.filter(e=>e.sceneId===sceneId);out.features.features=out.features.features.filter(f=>f.properties.sceneId===sceneId);out.camera=out.camera.filter(c=>c.sceneId===sceneId);if(out.lighting)out.lighting=out.lighting.filter(c=>c.sceneId===sceneId);
  if(initialCamera&&!out.camera.some(c=>c.offset===0))out.camera.unshift({...structuredClone(initialCamera),sceneId,offset:0});
  const keep=new Set([...out.events.map(e=>e.id),...out.features.features.map(f=>f.properties.id)]);
- if(out.visual){out.visual.layers=out.visual.layers.filter(l=>['feature','event'].includes(l.kind)?keep.has(l.ref):l.sceneId===sceneId);const assets=new Set(out.visual.layers.map(l=>l.assetId));out.visual.assets=out.visual.assets.filter(a=>assets.has(a.id));}
+ if(out.visual){if(out.visual.overlays)out.visual.overlays=out.visual.overlays.filter(o=>o.sceneId===sceneId);out.visual.layers=out.visual.layers.filter(l=>['feature','event'].includes(l.kind)?keep.has(l.ref):l.sceneId===sceneId);const assets=new Set(out.visual.layers.map(l=>l.assetId));out.visual.assets=out.visual.assets.filter(a=>assets.has(a.id));}
  return {format:'invincible-map-scene',version:1,scene:structuredClone(scene),historicalMap:out};
 }
 export function appendScenePackage(project,pkg){
@@ -82,9 +87,9 @@ export function appendScenePackage(project,pkg){
  const remap=new Map(),next=id=>{if(!remap.has(id))remap.set(id,uid());return remap.get(id);};
  const anchor=o=>{if(o.sceneId!==old)throw Error('Scene package contains an unrelated scene reference.');o.sceneId=scene.id;};
  for(const e of incoming.events){anchor(e);e.id=next(e.id);}for(const f of incoming.features.features){anchor(f.properties);f.properties.id=next(f.properties.id);}incoming.camera.forEach(anchor);incoming.lighting?.forEach(anchor);
- if(incoming.visual){for(const a of incoming.visual.assets)a.id=next(a.id);for(const l of incoming.visual.layers){l.id=uid();if(l.ref)l.ref=next(l.ref);else anchor(l);if(l.assetId)l.assetId=next(l.assetId);}}
- p.scenes.push(scene);
+ if(incoming.visual){for(const o of incoming.visual.overlays||[]){anchor(o);o.id=uid();}for(const a of incoming.visual.assets)a.id=next(a.id);for(const l of incoming.visual.layers){l.id=uid();if(l.ref)l.ref=next(l.ref);else anchor(l);if(l.assetId)l.assetId=next(l.assetId);}}
+ if(incoming.presentation&&p.historicalMap?.presentation?.presetId!==incoming.presentation.presetId)scene.mapPresentation=structuredClone(incoming.presentation);p.scenes.push(scene);
  if(!p.historicalMap)p.historicalMap=incoming;
- else {const m=visualMap(p.historicalMap);m.events.push(...incoming.events);m.features.features.push(...incoming.features.features);m.camera.push(...incoming.camera);if(incoming.lighting){m.lighting??=[];m.lighting.push(...incoming.lighting);}m.visual.layers.push(...(incoming.visual?.layers||[]));m.visual.assets.push(...(incoming.visual?.assets||[]));p.historicalMap=visualMap(m);}
+ else {const m=visualMap(p.historicalMap);m.events.push(...incoming.events);m.features.features.push(...incoming.features.features);m.camera.push(...incoming.camera);if(incoming.lighting){m.lighting??=[];m.lighting.push(...incoming.lighting);}m.visual.layers.push(...(incoming.visual?.layers||[]));if(incoming.visual?.overlays?.length){m.visual.overlays??=[];m.visual.overlays.push(...incoming.visual.overlays);}m.visual.assets.push(...(incoming.visual?.assets||[]));p.historicalMap=visualMap(m);}
  return p;
 }

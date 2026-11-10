@@ -54,6 +54,7 @@ const denied=fn=>assert.rejects(fn,err=>err?.code==='permission-denied');
   const noEmail=await make('noemail',{sub:'noemail'});
   const owner=await make('owner',{sub:'owner',email:'Owner@Example.com',email_verified:true});
   const editor=await make('editor',{sub:'editor',email:'editor@example.com',email_verified:true});
+  const unverified=await make('unverified',{sub:'unverified',email:'editor@example.com',email_verified:false});
   const outsider=await make('outsider',{sub:'outsider',email:'outsider@example.com',email_verified:true});
 
   const baseDoc=(id,overrides={})=>({
@@ -88,6 +89,17 @@ const denied=fn=>assert.rejects(fn,err=>err?.code==='permission-denied');
   await denied(()=>sdk.setDoc(owner.ref('p-long-title'),baseDoc('p-long-title',{title:'x'.repeat(301)})));
   await denied(()=>sdk.setDoc(owner.ref('p-many-scenes'),baseDoc('p-many-scenes',{scenes:Array.from({length:501},(_,i)=>({id:'s'+i}))})));
   await denied(()=>sdk.setDoc(owner.ref('p-bad-map'),baseDoc('p-bad-map',{historicalMap:'invalid'})));
+
+  // The real Creator client reads a new ID in a transaction before its initial write.
+  await denied(()=>sdk.getDoc(anon.ref('transaction-create')));
+  await sdk.runTransaction(owner.db,async tx=>{
+   const ref=owner.ref('transaction-create'),snap=await tx.get(ref);
+   assert.equal(snap.exists(),false);
+   tx.set(ref,baseDoc('transaction-create'));
+  });
+  assert.equal((await sdk.getDoc(owner.ref('transaction-create'))).data().writeRevision,1);
+  await denied(()=>sdk.getDoc(outsider.ref('transaction-create')));
+  await denied(()=>sdk.getDocs(sdk.collection(outsider.db,'creatorProjects')));
 
   // 3. Valid owner create succeeds (preserving custom metadata & uppercase email normalization).
   await sdk.setDoc(owner.ref('p1'),baseDoc('p1'));
@@ -126,6 +138,9 @@ const denied=fn=>assert.rejects(fn,err=>err?.code==='permission-denied');
    writtenAt:sdk.serverTimestamp(),
    updatedAt:sdk.serverTimestamp()
   }));
+
+  await denied(()=>sdk.getDoc(unverified.ref('p1')));
+  await denied(()=>sdk.updateDoc(unverified.ref('p1'),{title:'Unverified',writeRevision:3,writtenBy:'unverified',writtenAt:sdk.serverTimestamp(),updatedAt:sdk.serverTimestamp()}));
 
   // 6. Invited editor can read and bump writeRevision r2 -> r3, but cannot hijack ACL/immutable fields or delete.
   assert.equal((await sdk.getDoc(editor.ref('p1'))).data().title,'Rule Hardened Film');
@@ -171,7 +186,11 @@ const denied=fn=>assert.rejects(fn,err=>err?.code==='permission-denied');
    createdAt:sdk.serverTimestamp(),
    updatedAt:sdk.serverTimestamp()
   });
+  await sdk.setDoc(owner.ref('legacy-large'),{ownerUid:'owner',ownerEmail:'owner@example.com',editorEmails:[],title:'Legacy large project',notes:'x'.repeat(100001)});
   await setRules(fullRules);
+  await sdk.updateDoc(owner.ref('legacy-large'),{title:'Retain old notes',writeRevision:1,writtenBy:'owner',writtenAt:sdk.serverTimestamp(),updatedAt:sdk.serverTimestamp()});
+  assert.equal((await sdk.getDoc(owner.ref('legacy-large'))).data().notes.length,100001);
+  await denied(()=>sdk.updateDoc(owner.ref('legacy-large'),{notes:'y'.repeat(100001),writeRevision:2,writtenBy:'owner',writtenAt:sdk.serverTimestamp(),updatedAt:sdk.serverTimestamp()}));
   await sdk.runTransaction(owner.db,async tx=>{
    const snap=await tx.get(owner.ref('legacy-p'));
    const prev=snap.data();
@@ -189,9 +208,9 @@ const denied=fn=>assert.rejects(fn,err=>err?.code==='permission-denied');
 
   // 8. Owner can delete.
   await sdk.deleteDoc(owner.ref('p1'));
-  await denied(()=>sdk.getDoc(outsider.ref('p1')));
+  assert.equal((await sdk.getDoc(outsider.ref('p1'))).exists(),false,'Authenticated missing-document checks return no content');
 
-  console.log('Creator Project Firestore Rules passed: create/update/delete auth, writeRevision monotonicity, collaborator ACL lock, legacy upgrade, and bounds enforced.');
+  console.log('Creator Project Firestore Rules passed: transactional creation, create/update/delete auth, writeRevision monotonicity, collaborator ACL lock, legacy upgrade, and bounds enforced.');
  }finally{
   await setRules(fullRules).catch(()=>{});
   for(const c of clients)await c.close().catch(()=>{});

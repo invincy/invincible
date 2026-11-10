@@ -1,5 +1,128 @@
 # Cleanup review — 2026-10-03
 
+## Minimal responsive Creator UI — November 10, 2026
+
+Publication follow-up: lightened water to pale blue (#89d8ff / #b6edff) with
+translucent sky-blue edges, retaining slow drift and the still reduced-motion
+fallback. Integrated master’s new voiceover-history workflow without removing
+its save, restore, recipe export, retry, pagination or account isolation. History
+sits below the main workspace so it does not shrink the editor or displace the
+transport. The combined history/Voiceover responsive browser suite passes.
+
+Follow-up: replaced the static river glow with three translucent water ribbons,
+slowly drifting behind lightly translucent panels. The layer uses a single SVG
+and CSS transform animation, no canvas or per-frame JavaScript, and cannot capture
+input. Reduced motion disables the drift. Desktop/mobile Voiceover and complete
+Studio import/export browser checks and site references passed again; a browser
+probe confirmed the active animation and reduced-motion fallback. Existing broad
+regression limitations below remain unchanged.
+
+Rebuilt Voiceover's layout around a wide script editor, compact independently
+scrollable settings and a common generation/playback/export transport. Portrait
+uses an initially collapsed voice-settings disclosure above narration and a
+sticky transport with 44 px actions. Resizing retains one set of input values and
+the existing phone disclosure preference. The assistant launcher clears the
+transport. Removed duplicated gold-era Voiceover CSS, numbered section ornaments
+and the redundant brand badge. Shared scoped Studio tokens, quiet surfaces, teal
+selection/focus controls and a static blurred river background now also apply to
+the project list, project workbench and video/audio controls. Existing navigation,
+auth, API requests, project data, map art/export presets and workflow features are
+preserved. Original screenshot was recovered from the reference chat; the later
+concept image was unavailable, so styling follows the user's written direction.
+
+Verification on Windows / Chrome / Node 24: production build and site references
+passed; root suite 218 passed / two existing skips, Functions 15 passed, media
+Functions five passed and TTS 13 passed. Voiceover's actual-page browser suite
+passed Classic/Gemini settings, sample playback, preview/full MP3 download, XML
+and quota errors, draft recovery and account isolation. Added eight viewport
+checks (320–1920 px, landscape and portrait), keyboard disclosure and unobscured
+Generate/player/download assertions. Creator creation/storyboard/recovery and
+complete-video/upload/import/audio-MP4/conflict/account-isolation checks passed
+with the shared stylesheet enabled, and generated screenshots were inspected.
+
+The full browser run passed Garage, navigation, dashboard/reminders, Orb, Task
+copy and Creator before timing out in unchanged journal-tools-browser.cjs at the
+Save journal idea dialog (also reproduced separately). Continuation checks passed
+Journal notebook, LIC follow-up, Workday cases and account settings. Unchanged
+LIC CRM timed out at #addCustomer:enabled; LIC cashier timed out at #entryPanel.
+CRM emulator tests were not run because Java is unavailable on this host.
+These are verification limits, not a claim that the broad browser suite is green.
+No live paid generation or production Firebase permissions were exercised by this
+UI-only change. Physical-device keyboard/Safari verification remains outstanding.
+
+## Voiceover script/settings history — November 10, 2026
+
+Successful full TTS generations now save an account-owned recipe in
+`users/{uid}/voiceoverHistory/{recordingId}`. The existing page adds paged history,
+expandable scripts/settings, restore without synthesis, JSON recipe export and
+confirmed deletion. Previews/failures do not create records; repeated downloads
+do not duplicate them. Original request and form values are captured before the
+generation call. Pending saves have an account-scoped local retry copy and stable
+IDs. Errors retain retry/export options; account changes reject stale UI responses.
+Historical voice unavailability blocks silent substitution. Audio remains a local
+download/in-memory player; no new audio storage, paid call, auth change, migration,
+Firestore rule or backend deployment is introduced.
+
+Validation: 218 root tests passed, two existing skips; all 15 Functions, five media
+and 12 TTS backend tests passed. The extended real-Chrome TTS browser suite passes
+history request snapshots, preview exclusion, download/recipe export, classic and
+Gemini setting restoration, fresh-context history, reload/retry, 25-item pagination,
+delete failure/success and account isolation, plus existing generation/draft/sample
+checks and 320–1280px layouts. Mobile output was visually inspected. Production
+build and site references pass; generated React content is unchanged. Broad browser
+checks passed Garage, navigation, Reminders, Orb, Task copy and Creator, then stopped
+at the Journal `Save journal idea` dialog timeout in `tests/journal-tools-browser.cjs:54`,
+already documented as a baseline limitation. Later checks did not run. Java is not
+installed, so emulator rules checks are unavailable; no rules were edited. Live
+signed-in history permissions, production speech and physical devices remain
+unverified. No commit, push or publication performed.
+
+## Creator Studio red interface — November 10, 2026
+
+Applied a YouTube-inspired red/charcoal interface to Studio and the Creator project list: readable Roboto/Hindi typography, clear step headings, quieter cards, improved upload/file controls, red focus/selection/timeline accents and a prominent export action. CSS is scoped to Creator/Studio controls; film presentation presets and saved data are not changed. Advanced controls, scene editors and phone menus remain available. Studio CSS references advance to v=2026111003 for existing sessions.
+
+Validation: existing complete-video/cloud-fixture/export and full Creator navigation/responsive browser checks, root/Functions/media unit suites and site references; visual inspection of the actual redesigned workspace. Final remote regression/publication results are recorded in this chat release report.
+
+## One Creator Studio flow — November 10, 2026
+
+Promoted one shared upload/library area and complete-video JSON handoff into the opening Studio screen, retaining focused map/battlefield editors and audio MP4 export. Studio, map and production-clip uploads share account-owned immutable cloud originals; named metadata and stable IDs are reused across projects/devices. Owner video drafts and brand profiles sync with revision conflict protection, keeping local recovery. Added dedicated creator-media backend and private media bucket; existing AI/TTS functions, Firestore rules and user project records are preserved. Historical local-only notes are superseded by docs/creator-single-flow.md.
+
+Validation includes full root/Functions/media tests, actual handler account-denial tests, original-byte validation, independent-context media/draft retrieval, one-JSON map+army-overlay+voice export, stale-device protection, existing Studio/map/default/universal browser acceptance, production build and site checks. Real signed-in production upload acceptance remains separate and must be recorded in the release report.
+
+## Creator Studio product cleanup — November 10, 2026
+
+Maps now opens the shared visual Map Editor directly; Advanced / recording retains the local audio, source and capture controls, and Production Clips remains available. Removed the canned cloud Demo action, two standalone map demo pages/catalog/loader, the unused predecessor storyboard editor, a one-off local checker, and the optional Panipat film export fixture. Historical geography and animation JSON remain as references; the Hindi fonts, map engine, MP4 encoder, reusable asset catalog, defaults and project data are preserved. Internal regression fixtures live under tests and are excluded from the public site together with development/server source. Native importer versions were bumped together.
+
+Focused verification passed: main Maps/Advanced/Clips navigation, timeline playback, invalid JSON rejection, responsive layout, universal architecture/rollback/revision checks, direct Map Editor interactions, new-project defaults/overrides/reload and a real portrait 1080×1920 MP4. Root tests: 215 passed and two existing skips; all 15 Functions tests passed. Production build and site-reference checks passed. Broad regression and remote publication results are recorded in the final cleanup report. No Firebase records, ownership/rules, user videos or local Antigravity worktrees were changed. The retired remote film branch is backed up locally; its separate shared-inputs branch and pinned asset URLs remain.
+
+## Documentary Terrain export refinement — November 9, 2026
+
+Added a shared version-2 Documentary Terrain snapshot for new maps, with explicit opt-in from existing projects. Classic and legacy snapshots remain valid. Phone-size feedback increased secondary labels to 48 px (52 px in the connection test) and made compact dark rounded cards the default for location names; regional text can remain unboxed. Central typography/hierarchy, locally bundled licensed Hindi-capable fonts, halo/card/callout labels, thin output-scaled routes, one-shot marker entrances, deterministic optional year/counter/caption graphics and a DOM-only Shorts guide use the existing editor/player/export pipeline. Scene mapPresentation overrides are validated; scene packages preserve/remap information graphics. Ordinary new animation instructions can omit cameras and inherit scene framing, while authored keys retain precedence.
+
+The native compositor avoids reprocessing unchanged paint and GeoJSON during export. Readiness, audio composition, assets, cancellation, projection and saved cameras remain in the existing system. This is an editor upgrade: the Panipat/Delhi sequence is isolated test data with sourced modern locators and a visibly illustrative connector. No reference-image geography or historical itinerary was invented.
+
+Local validation: 217 root cases (215 passed, two existing skips), 15 Functions cases, production build and site references; default creation/override/reload/portrait MP4, architecture, Map Editor, history, animation and mixed-composition browser checks. The 12-second native 1080×1920 demonstration passes Hindi placement, terrain-projected marker pixels, collision/safe-area checks, scene overrides, seeking/replay and guide exclusion. Encoded frames and filmstrip were visually inspected; full decode passed. Final remote release verification follows these checks.
+
+See [Documentary Terrain](documentary-terrain.md) for configuration and limitations: NASA source detail is finite, dense lower-priority labels may be suppressed, regional terrain alignment is approximate, and the mobile earthquake recording was not supplied. The test export is silent; existing Studio audio is regression-tested. No Firebase/auth/backend changes or Gemini generation are part of this refinement.
+
+
+## Creator Studio publication and live save fixes — November 9, 2026
+
+PR #168 passed all eight remote check groups and published the universal editor through the main GitHub Pages route. A signed-in live check then exposed cached native module URLs: an existing browser could retain old creation/editor code. Native entry points and the changed modules' importer graph now use a consistent release query version, with the updated project stylesheet version. This changes loading URLs, not project data or rendering semantics. Unit/Functions, site-reference, default creation/export and architecture browser checks passed again locally. The publication follow-up repeats remote verification. A later signed-in create attempt also exposed a missing-document read denial: transaction-based creation must read a fresh ID before writing. Creator rules now allow authenticated point reads of missing IDs while retaining owner/verified-editor checks for existing documents and all collection queries. The emulator suite exercises the actual read-before-create transaction, anonymous denial and outsider read/list denial. Repeated metadata/own-write acknowledgements of the current revision now update the draft clock without remounting the active editor; a browser regression explicitly delivers that acknowledgement after a style save.
+
+The live Firestore ruleset predates the repository's LIC rules. The Creator release package is therefore built from the saved live ruleset plus the reviewed Creator block and its local email helper; unrelated rules remain byte-for-byte unchanged. The scoped package passed actual emulator permissions tests and cloud compilation. The scoped rules were activated as ruleset 407e4f48-4e0a-493c-bfaf-5e4bd2452272, and read-back confirmed an exact match with the tested package and unchanged unrelated rules. The previously rejected signed-in creation succeeded on retry with the preserved form. Final editor/save acceptance is recorded in the release handoff.
+
+## Universal Creator Studio consolidation — November 9, 2026
+
+Integrated the universal-map handoff with the main editor's versioned default presentation in an isolated checkout. Shared code has no Panipat title/branch conditions. Demo/artwork catalogs are data, optional overlays use isolated trusted factories, missing plugins fail visibly, and scene packages exclude undeclared project-wide metadata. Plugin scenes require the full project or a dedicated scene exporter. Binding preserves existing narration/timing and rejects nonadjacent selections.
+
+Revision-aware transactions, explicit conflict recovery, account-switch guards and deleted-record protection are covered. Central NASA/terrain attribution, portrait output, readable cards and per-project overrides remain consistent through the shared preview/export path. Existing legacy map JSON retains its compatibility rendering. See [the architecture contract](creator-studio-universal.md).
+
+Validation: 211 root cases (209 pass, two existing skips), 15 Functions cases, actual Creator Firestore emulator rules tests, production build and 460-file site check passed. Focused architecture/default-style, Map Editor, map animation, history, storyboard and mixed-composition browser checks passed; real portrait MP4 and mixed exports fully decoded. Isolation coverage constructs 100 independent records; it is not a 100-video throughput claim. The broad browser suite remains non-green: Journal tools, LIC personal CRM and LIC cashier timeouts also occurred on unchanged master in the prior baseline comparison. The CRM rules/Web SDK checks pass; the separate Agent CRM browser timeout was also reproduced on unchanged master. No source was changed to suppress unrelated failures.
+
+Original Antigravity worktrees were left untouched. No push, merge, cloud rules deployment, Gemini generation or paid service activation occurred. Strict rules require a coordinated client/rules release and real signed-in validation before production use.
+
+
 ## Ready-made TTS voice samples — November 9, 2026
 
 A round play/stop button immediately before the Google voice selector plays the exact selected voice’s existing public Google demo without narration. An allowlist of 2,002 observed catalogue sample names prevents guessing URLs for voices with no demo. Missing samples are disabled; failed playback shows a retry message and never falls back to synthesis. Samples retain Google’s original settings. Changing voice/account, starting generation or playing a generated recording stops the sample, including stale play promises.
@@ -850,3 +973,50 @@ Verification: repository unit/Functions tests, Creator unit coverage, production
 The broader V1 browser chain passes Garage, navigation, reminders, Orb, Task Copy and Creator, then stops at the Journal Save journal idea dialog timeout (`tests/journal-tools-browser.cjs:54`). This exact failure was reproduced in a separate unchanged master worktree at `b2c3c34f3fb24a8f151c3ccca6f59f84a78ed189`; later chain scenarios were not reached. An initial V2 run timed out in the existing reduced-motion canvas scenario under concurrent browser load; both Chromium and Firefox pass in the unchanged baseline. Final feature-branch rerun is recorded below. No Journal/dashboard runtime files are modified.
 
 Final feature-branch V2 rerun passed the complete Chromium and Firefox scenarios, including reduced motion, plan import/edit/recovery, navigation, account isolation and production auth gate. Full repository unit run: 189 passed, two existing skips; Functions: 15 passed.
+
+
+## Creator Studio default map style — November 9, 2026
+
+Implemented on an isolated checkout of master ae1e806; the active Antigravity Panipat branch and working tree were not modified. New main-page Creator projects and new Studio Map scenes use one central default configuration in creator/map-defaults.js. Each map saves a complete versioned presentation snapshot and default camera; legacy maps retain their prior rendering. Main-editor Style controls and per-label font sizes override saved values. The same canvas label compositor serves preview and export, with rounded navy/gold cards, reference-resolution typography, safe margins and label deconfliction. Dates remain opt-in. NASA Blue Marble and attributed terrain initialize new maps. Newly placed images preserve their original proportions; supplied geographic image corners and authored GLB scale remain unchanged.
+
+Animation instructions may omit aspect ratio and basemap; those values resolve from the current project before the central defaults. Import preserves saved color adjustments and an explicitly disabled terrain. No Gemini integration, Firebase permission changes, deployment or film-specific rendering was added.
+
+Verification: 198 repository unit cases (196 passed, two existing skips), 15 Functions tests, the production build and site-reference check passed. Browser coverage passed for main-page creation, Studio Map creation, default snapshots, overrides/reload, 320/390/820/1440 layouts, native Map Editor tools, animation imports, history playback, Video Studio and mixed composition. A two-second 1080×1920 30-fps native NASA-map MP4 was exported with a 64-pixel label override verified in the export compositor. FFmpeg decoded the output and existing mixed-editor proof files. Exported imagery/cards and a phone-size frame were visually inspected; this synthetic sample does not certify a film's geography or narration alignment.
+
+The broader browser run passed storage, navigation, reminders, focus orb, task copying, Creator storyboard, Journal notebook, LIC follow-ups, Workday and account-menu scenarios. Journal tools, personal LIC CRM and LIC cashier timed out; the same three failures reproduced against an untouched master archive in this environment. CRM emulator command output did not establish completed rule/browser checks and is not counted as verification. Tests used Node 24 and desktop Chrome; production Node 22, live signed-in Firebase, mobile hardware/Safari and maximum-length rendering remain unverified.
+
+
+## Creator Gemini voice direction — November 10, 2026 (review branch)
+
+Added Gemini 2.5 Flash/Pro TTS to the existing authenticated Google synthesis path.
+The server supplies a separate performance prompt for Natural/Sales/Energetic/
+Documentary/Dramatic/Calm, custom direction and approximate pace; classic voices
+retain their existing SSML/rate/pitch behavior. Gemini uses an allowlist of models,
+speakers and locales, with Unicode-safe 4,000-byte text chunks. Per-hour accounting
+includes repeated prompts. No new credentials, authentication policy, database paths
+or client Firestore access are introduced.
+
+The navy/gold voiceover page adds engine and direction controls, hides unsupported
+Gemini controls, preserves style when speed changes, and groups fine adjustments.
+Old drafts retain classic voices; settings remain per-account and stale generation
+results are discarded. The old backend disables the new engine rather than silently
+substituting a voice. Gemini speed is explicitly approximate, not an exact post-render
+speed effect. No sentence selection editing or word-level timeline is implemented.
+
+Validation: 12 TTS backend tests passed, including separate prompt/model/voice request
+contracts, every-chunk directions, Hindi/emoji preservation, validation before any
+upstream call and real MP3 encode/decode. Controlled Chromium browser checks passed
+for classic samples/SSML/preview/download, Gemini directions/Pro selection/style+speed,
+draft recovery and account isolation, with responsive checks and inspected phone and
+desktop screenshots. These fixtures use generated silent audio, not real Gemini speech.
+Full repository units: 215 passed, 2 existing skips; Functions: 15 passed. Production
+build and site references passed. Broader browser chain passed Garage, navigation,
+reminders, Orb, Task Copy and Creator, then failed at Journal addStyleTag line 56.
+The same failure reproduced in an untouched master bf8fd1c worktree.
+
+Activation remains unverified: no Firebase CLI login or Google ADC is present here.
+No paid Gemini request, IAM edit, Functions deployment or production publication was
+performed. Deploy TTS first and verify the runtime account's model permission, then
+publish the page and perform a short approved real listening comparison. See
+[Creator voiceover](creator-tts.md#activation). Node 22, physical phones and Safari
+remain unverified; checks used Node 24 and desktop Chromium.

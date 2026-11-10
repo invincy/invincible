@@ -1,6 +1,6 @@
 import{makeScene}from'./storyboard-model.js?v=3';
-import{createProductionWorkbench}from'./production-workbench.js?v=14';
-import{projectProgress,canonicalScript}from'./production-model.js?v=5';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026111002';
+import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{doc,getDoc,onSnapshot,runTransaction,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{splitVoiceoverScript}from"./scene-tools.js?v=2";
@@ -24,6 +24,7 @@ function onConflict(conflict){
  const banner=$("conflictBanner"),msg=$("conflictMessage");
  if(!banner)return;
  if(!conflict){banner.hidden=true;return;}
+ $('conflictKeepOverwrite').disabled=!!conflict.serverDeleted;
  if(conflict.source==='stale-draft'){
   const draftRev=conflict.draft?.baseRevision??'?';
   msg.textContent=`An unsaved local draft from revision ${draftRev} is on this device, while Firebase is now at revision ${conflict.serverRevision}. Discard the old draft to keep the cloud version, or restore and overwrite Firebase.`;
@@ -108,14 +109,14 @@ function buildProjectWrite(payload,server,nextRev,{isCreate=false}={}){
 }
 async function save(options={}){
  if(!user||!project||!projectRef)return false;
- const force=!!options?.force;
+ const force=!!options?.force,writerUid=user.uid;
  clearTimeout(saveTimer);saveTimer=null;localDirty=true;const version=++editVersion,payload=copyProject(project),ref=projectRef;
  keepDraft();status("Saving…");
  const result=saveChain.then(async()=>{
   const expectedBase=baseRevision;
   try{
    const txResult=await runTransaction(db,async tx=>{
-    const snap=await tx.get(ref);
+    const snap=await tx.get(ref);if(user?.uid!==writerUid||ref!==projectRef)throw Object.assign(Error('Account changed during save.'),{code:'cancelled'});
     if(snap.exists()){
      const server=snap.data()||{};
      const serverRev=Number.isInteger(server.writeRevision)?server.writeRevision:0;
@@ -128,14 +129,10 @@ async function save(options={}){
      tx.set(ref,buildProjectWrite(payload,server,nextRev));
      return {nextRev};
     }
-    if(expectedBase>0&&!force){
-     const err=new Error('This project was deleted or is no longer available in Firebase.');
-     err.code='revision-conflict';err.serverDeleted=true;
-     throw err;
-    }
-    tx.set(ref,buildProjectWrite(payload,{},1,{isCreate:true}));
-    return {nextRev:1};
+    const err=new Error('This project was deleted or is no longer available in Firebase.');
+    err.code='revision-conflict';err.serverDeleted=true;throw err;
    });
+   if(user?.uid!==writerUid||ref!==projectRef)return false;
    baseRevision=txResult.nextRev;
    if(project)project.writeRevision=txResult.nextRev;
    if(typeof onConflict==='function')onConflict(null);
@@ -143,7 +140,7 @@ async function save(options={}){
    else{keepDraft();}
    return true;
   }catch(error){
-   if(error?.code==='revision-conflict'||error?.code==='failed-precondition'||error?.code==='aborted'){
+   if(error?.code==='revision-conflict'||error?.code==='aborted'){
     if(typeof onConflict==='function')onConflict({source:'save',error,serverData:error.serverData||null,serverRevision:error.serverRevision,serverDeleted:!!error.serverDeleted});
    }
    status(storageError(error)+" Your draft is kept on this device.","error");
@@ -390,6 +387,12 @@ async function load(){
       const data=live.data()||{};
       const remoteRev=Number.isInteger(data.writeRevision)?data.writeRevision:0;
       const remoteUpdatedAt=data.updatedAt?.toMillis?.()||0;
+      // Repeated metadata/own-write acknowledgements must not remount an active editor.
+      if(remoteRev>0&&remoteRev===baseRevision&&pendingConflict?.source!=='stale-draft'){
+        cloudVersion=remoteUpdatedAt||cloudVersion;
+        if(localDirty)keepDraft();
+        return;
+      }
       if(localDirty||pendingConflict?.source==='stale-draft'){
         if(remoteRev>baseRevision||(remoteRev===0&&baseRevision===0&&remoteUpdatedAt>cloudVersion)){
           if(pendingConflict?.source==='stale-draft'){
@@ -411,6 +414,6 @@ async function load(){
 
 load();
 let observedUid;
-observeAuth(current=>{const uid=current?.uid||'';if(observedUid===undefined){observedUid=uid;return}if(uid!==observedUid)location.reload()});
+observeAuth(current=>{const uid=current?.uid||'';if(observedUid===undefined){observedUid=uid;return}if(uid!==observedUid){user=null;projectRef=null;clearTimeout(saveTimer);location.reload();}});
 window.addEventListener('pagehide',()=>{if(localDirty&&project&&user)keepDraft()});
 window.addEventListener('online',()=>{if(localDirty)save()});
