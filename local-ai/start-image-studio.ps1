@@ -9,7 +9,10 @@ $config = if (Test-Path -LiteralPath 'E:\Invincible\ImageGen\worker-config.json'
 . (Join-Path $PSScriptRoot 'image-pairing-credential.ps1')
 $pairingToken = Get-ImagePairingCredential -OwnerUid $config.ownerUid -Origin $origin -Log $log -File 'E:\Invincible\ImageGen\image-worker-pairing.dpapi'
 function Test-ComfyUI {
-    try { return [bool](Invoke-RestMethod 'http://127.0.0.1:8188/system_stats' -TimeoutSec 2).system.comfyui_version }
+    try {
+        $loader = Invoke-RestMethod 'http://127.0.0.1:8188/object_info/CheckpointLoaderSimple' -TimeoutSec 2
+        return $loader.CheckpointLoaderSimple.input.required.ckpt_name[0] -contains 'v1-5-pruned-emaonly-fp16.safetensors'
+    }
     catch [System.Net.WebException] { return $false }
 }
 if (-not (Test-ComfyUI)) {
@@ -51,4 +54,8 @@ for ($i=0; $i -lt 40; $i++) {
     Start-Sleep -Seconds 1
 }
 if (-not $ready) { throw 'Worker startup did not finish. Inspect E:\Invincible\ImageGen\logs\worker-startup-stderr.log.' }
+if ($config.appOrigin -eq 'https://invincy.github.io') {
+    try { & (Join-Path $PSScriptRoot 'start-image-relay.ps1') -ImageToken $pairingToken }
+    catch { Write-Warning ('Image Studio is ready locally. Mobile connection could not start. ' + $_.Exception.Message) }
+}
 Write-Output 'Invincible Image Studio is ready on this laptop.'

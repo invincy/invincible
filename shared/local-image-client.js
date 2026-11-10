@@ -62,7 +62,7 @@ export async function waitForImage(client, initial, onStatus = () => {}, signal)
     if (job.status === 'failed') throw Object.assign(Error(job.error?.message || 'Image generation failed.'), { job });
     if (job.status === 'completed') { if (!job.verified || !job.image) throw Error('The worker did not verify this PNG.'); return job; }
     if (!['queued', 'running'].includes(job.status)) throw Error('Unknown generation status.');
-    await new Promise(resolve => setTimeout(resolve, 1000)); job = (await client.job(job.id)).job;
+    await new Promise(resolve => setTimeout(resolve, client.pollInterval || 1000)); job = (await client.job(job.id)).job;
   }
   throw Error('Still waiting for the worker. Reconnect to check the existing generation.');
 }
