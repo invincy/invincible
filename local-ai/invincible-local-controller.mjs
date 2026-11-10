@@ -1,6 +1,17 @@
 const DEFAULT_OLLAMA_URL = 'http://127.0.0.1:11434';
 
 const PANIPAT_STAGES = ['Research', 'Script', '3D Scenes', 'Voiceover', 'Edit', 'Publish'];
+const GREETING = /^(hi|hello|hey|good morning|good afternoon|good evening)\b[!.? ]*$/i;
+const CREATOR_REQUEST = /\b(render|export|mp3|audio|video|json|scene|timeline|creator studio|storyboard)\b/i;
+const CONTROL_REQUEST = /\b(create|add|update|change|open|show|list|move|set|delete|finish|start)\b/i;
+
+export function detectLocalIntent(message) {
+  const text = String(message || '').trim();
+  if (GREETING.test(text)) return { mode: 'chat', reason: 'greeting' };
+  if (CREATOR_REQUEST.test(text)) return { mode: 'creator', reason: 'creator-or-media-request' };
+  if (CONTROL_REQUEST.test(text)) return { mode: 'control', reason: 'application-action-request' };
+  return { mode: 'chat', reason: 'informational-or-conversational' };
+}
 
 function extractJson(value) {
   if (value && typeof value === 'object') return value;
@@ -43,11 +54,14 @@ export async function askOllama({ message, model = 'qwen3:4b', baseUrl = DEFAULT
 
 export async function executeLocalCommand({ message, ask = askOllama, executeTool }) {
   if (typeof executeTool !== 'function') throw new TypeError('executeTool is required.');
+  const intent = detectLocalIntent(message);
+  if (intent.mode === 'chat' && GREETING.test(String(message || '').trim())) return { command: { kind: 'chat', text: 'Hello! What are we working on?' }, result: { text: 'Hello! What are we working on?' }, verified: true, conversational: true, intent };
+  if (intent.mode === 'creator') return { command: { kind: 'chat', text: 'Creator and media export tools are not enabled yet.' }, result: { text: 'Creator and media export tools are not enabled yet.' }, verified: true, conversational: true, intent, unsupported: true };
   const command = await ask({ message });
-  if (command?.kind === 'chat') return { command, result: { text: String(command.text || '').slice(0, 4000) }, verified: true, conversational: true };
+  if (command?.kind === 'chat') return { command, result: { text: String(command.text || '').slice(0, 4000) }, verified: true, conversational: true, intent };
   if (command?.tool !== 'create_project') throw new Error('Local model requested a tool outside the Phase 1 allow-list.');
   const result = await executeTool(command.tool, command.arguments ?? {});
-  return { command, result, verified: result?.action?.status === 'completed' };
+  return { command, result, verified: result?.action?.status === 'completed', intent };
 }
 
 export { DEFAULT_OLLAMA_URL, PANIPAT_STAGES };

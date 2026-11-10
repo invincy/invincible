@@ -1,6 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { executeLocalCommand, PANIPAT_STAGES } from './invincible-local-controller.mjs';
+import { detectLocalIntent, executeLocalCommand, PANIPAT_STAGES } from './invincible-local-controller.mjs';
+
+test('routes local chat, control, and creator intents', () => {
+  assert.equal(detectLocalIntent('Hi').mode, 'chat');
+  assert.equal(detectLocalIntent('Create a Panipat project').mode, 'control');
+  assert.equal(detectLocalIntent('Export my video as MP3').mode, 'creator');
+});
 
 test('executes the model-selected create_project through the validated tool', async () => {
   let received;
@@ -28,4 +34,9 @@ test('answers ordinary questions without invoking a tool', async () => {
   const output = await executeLocalCommand({ message: 'What is Panipat?', ask: async () => ({ kind: 'chat', text: 'Panipat is a historic city in Haryana.' }), executeTool: async () => { throw new Error('tool should not run'); } });
   assert.equal(output.conversational, true);
   assert.match(output.result.text, /Panipat/);
+});
+
+test('answers greetings immediately without calling Qwen or a tool', async () => {
+  const output = await executeLocalCommand({ message: 'Hello!', ask: async () => { throw new Error('Qwen should not run'); }, executeTool: async () => { throw new Error('tool should not run'); } });
+  assert.equal(output.result.text, 'Hello! What are we working on?');
 });

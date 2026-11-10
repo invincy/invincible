@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { askOllama } from './invincible-local-controller.mjs';
+import { askOllama, detectLocalIntent } from './invincible-local-controller.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { createUniversalAgent } = require('../functions/src/local-ai/universal-agent-api.js');
@@ -62,6 +62,9 @@ const server = http.createServer(async (request, response) => {
       const body = await readBody(request);
       const message = String(body.message || '').trim();
       if (!message || message.length > 4000) return send(response, 400, { error: 'Message must be between 1 and 4,000 characters.' });
+      const intent = detectLocalIntent(message);
+      if (intent.mode === 'chat' && /^(hi|hello|hey|good morning|good afternoon|good evening)\b[!.? ]*$/i.test(message)) return send(response, 200, { command: { kind: 'chat', text: 'Hello! What are we working on?' }, result: { result: { text: 'Hello! What are we working on?' } }, verified: true, intent });
+      if (intent.mode === 'creator') return send(response, 200, { command: { kind: 'chat', text: 'Creator and media export tools are not enabled yet.' }, result: { result: { text: 'Creator and media export tools are not enabled yet.' } }, verified: true, intent, unsupported: true });
       const command = await askOllama({ message, model: 'qwen3:4b' });
       if (command?.kind === 'chat') return send(response, 200, { command, result: { result: { text: String(command.text || '').slice(0, 4000) } }, verified: true });
       const idempotencyKey = String(body.idempotencyKey || `browser-${crypto.createHash('sha256').update(message).digest('hex').slice(0, 24)}`);
