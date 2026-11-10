@@ -1,5 +1,43 @@
 # Cleanup review — 2026-10-03
 
+## Voiceover flowing water — November 10, 2026
+
+Voiceover now has compact translucent script, settings, transport and history
+surfaces over a procedural flowing river with rain rings. The decorative layer
+has bounded resolution/frame rate, hidden-tab and reduced-motion handling, and
+a static WebGL fallback. The page retains existing workflows and responsive
+settings disclosure. The old shared SVG remains unchanged for other Studio pages.
+
+The TTS backend's 13 tests and the actual-page Chromium workflow suite passed,
+including sample playback, preview/full generation fixtures, history, errors,
+downloads and responsive transport. The water browser checks passed on desktop
+and phone for visible motion/rain, reduced motion, fallback, input, visibility,
+resize and context recovery. Desktop and phone screenshots were inspected; the
+site reference check passed. The limits and shader phase reset are documented in
+[Creator voiceover](creator-tts.md). Physical-device/Safari performance, live
+Firebase permissions and new paid speech generation were not verified.
+
+## Responsive layout first pass — November 10, 2026
+
+Reminders, Garage and the LIC hub/Plans entry now use more of a wide desktop
+screen. Reminders displays multiple cards per row on wider screens and separates
+its add action from the AI launcher. Garage wraps long vehicle and record text;
+LIC Plans can display its two presentations side by side. Phone layouts retain
+their existing navigation and content scrolling. Dashboard and its intentionally
+scrollable My Workspace board were not changed.
+
+Focused Chromium checks cover the actual Garage and LIC pages with controlled
+data and the Reminders stylesheet with synthetic loading, overdue, expanded,
+empty and upcoming states, including phone and desktop sizes. The existing Garage
+storage browser and model checks passed. The full unit suite passed (223 passed,
+two existing skips; 15 Functions and five media tests passed), as did the build
+and site-reference check. The browser suite passed through Creator, including
+the new responsive checks, then stopped at the previously documented Journal
+Save journal idea dialog timeout; later browser checks did not run. These checks
+do not establish production Firebase permissions or physical-device/Safari
+behavior. Other pages have not all been audited and this first pass does not
+certify screen fit across the site.
+
 ## Jeevan Lakshya Plan 733 — November 10, 2026
 
 LIC → Plans now exposes the migrated Jeevan Lakshya presentation and calculator alongside the original Bima Platinum card. Both Jeevan Lakshya pages use one verified benefits model: UIN 512N297V03, eligibility and BSA increments, exact brochure premiums only, separate contractual and assumed bonus amounts, and anniversary-based death income with premiums capped at PPT. Unverified combinations require an LIC quotation. Misleading guaranteed-goal, compound-bonus, tax-free and immediate-income claims were removed. Profile selections carry into the calculator, invalid inputs hide stale figures, literal text rendering prevents HTML injection, and the responsive presentation keeps navigation visible with scene-body scrolling on short screens. Inspector tools require `?debug=1`.

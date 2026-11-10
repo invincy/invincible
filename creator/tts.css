@@ -132,3 +132,96 @@ audio{width:100%;height:36px}
 
 .history-panel{grid-column:1/-1}.history-panel .panel-heading{margin-bottom:10px}.history-entry{border-top:1px solid var(--line);padding:18px 0;min-width:0}.history-entry h3{margin:0;font-size:16px;overflow-wrap:anywhere}.history-entry .help{margin:5px 0}.history-excerpt{font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--muted);margin:8px 0}.history-actions{display:flex;gap:8px;flex-wrap:wrap}.history-actions button{border-color:var(--line);font-size:12px}.history-actions [data-action=delete]{color:#ffab9f}
 .history-entry summary{cursor:pointer;font-size:12px;min-height:36px;display:flex;align-items:center}.history-script{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.8}.history-entry details .help{overflow-wrap:anywhere}.history-actions{margin-top:8px}
+
+/* Voiceover workbench: quiet translucent surfaces leave the Studio water visible. */
+.voiceover-page{--voice-line:#56818b80;--voice-surface:#091b27d9;--voice-field:#071620ed}
+.voiceover-page main{padding-block:14px 28px}
+.voiceover-page .heading{gap:20px;margin-bottom:2px}
+.voiceover-page .heading>div{gap:12px}
+.voiceover-page h1{font-size:clamp(23px,2vw,29px);font-weight:650}
+.voiceover-page .back{color:#b7d8db}
+.voiceover-page .account{margin:4px 0 10px;min-height:16px;color:#c1d5dd}
+.voiceover-page .workspace{gap:10px;grid-template-columns:minmax(0,1fr) minmax(320px,360px)}
+.voiceover-page .panel,.voiceover-page .notice{
+ border:1px solid var(--voice-line);border-radius:16px;background:var(--voice-surface);
+ box-shadow:0 12px 32px #020b1280;
+}
+.voiceover-page .panel{padding:16px}
+.voiceover-page .panel-heading{margin-bottom:10px}
+.voiceover-page h2{font-size:15px;font-weight:650;letter-spacing:-.015em}
+.voiceover-page label{color:#c7dce2;margin-bottom:4px}
+.voiceover-page :is(input:not([type=range]),select,textarea){
+ background:var(--voice-field);border-color:#507481a6;border-radius:10px;
+}
+.voiceover-page :is(input:not([type=range]),select){margin-bottom:8px}
+.voiceover-page :is(button,a.secondary){border-color:#527986a6}
+.voiceover-page button:not(:disabled):hover,.voiceover-page a.secondary:hover{border-color:#75d9d0}
+.voiceover-page .quiet{color:#c1dce0}
+.voiceover-page .help,.voiceover-page .script-footer,.voiceover-page .result-status p{color:#b6cbd3}
+.voiceover-page .script-panel{padding:16px 18px}
+.voiceover-page .script-panel textarea{
+ background:#071720e8;border-color:#52818a;line-height:1.7;
+}
+.voiceover-page .script-label{margin:4px 0 6px}
+.voiceover-page .script-footer{margin-top:7px}
+.voiceover-page .ssml-guide{margin-top:8px;padding-top:4px}
+.voiceover-page .ssml-guide pre{background:#071620ed}
+.voiceover-page .controls-panel{padding:8px 14px 14px}
+.voiceover-page .settings-body>.quiet{right:14px;top:8px}
+.voiceover-page .settings-body .help{margin:3px 0 7px}
+.voiceover-page .voice-picker{margin-bottom:3px}
+.voiceover-page .advanced{margin-top:4px;padding-top:4px}
+.voiceover-page .result-panel{padding:10px 16px;gap:8px 16px;background:#0b2531e8}
+.voiceover-page .result-status p{margin-top:2px}
+.voiceover-page .quota-note{margin-top:2px}
+.voiceover-page .history-panel{margin-top:12px;padding:14px 18px}
+.voiceover-page #historyList{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));column-gap:20px}
+.voiceover-page .history-entry{border-color:#56818b80;padding:12px 0}
+.voiceover-page .history-entry h3{font-size:15px}
+.voiceover-page .history-excerpt{margin:5px 0;color:#c2d4da}
+.voiceover-page .history-actions{margin-top:4px}
+.voiceover-page .history-actions button{background:#102b38b8}
+
+@media(min-width:901px) and (min-height:650px){
+ .voiceover-page .workspace{height:calc(100dvh - 156px);min-height:460px}
+ .voiceover-page .script-panel textarea{min-height:160px}
+}
+@media(max-width:900px){
+ .voiceover-page main{padding-block:10px calc(20px + env(safe-area-inset-bottom))}
+ .voiceover-page .heading{flex-direction:row;align-items:center;gap:12px;flex-wrap:wrap}
+ .voiceover-page .heading>div{width:auto;justify-content:flex-start;gap:10px}
+ .voiceover-page h1{font-size:23px}
+ .voiceover-page .account{margin:4px 0 8px}
+ .voiceover-page .workspace{grid-template-columns:minmax(0,1fr);gap:8px}
+ .voiceover-page .panel{border-radius:14px}
+ .voiceover-page .controls-panel{padding:4px 12px}
+ .voiceover-page .settings-body{padding-top:2px;padding-bottom:8px}
+ .voiceover-page .script-panel{padding:12px}
+ .voiceover-page .script-panel textarea{height:clamp(160px,30dvh,360px);min-height:160px;padding:12px;line-height:1.6}
+ .voiceover-page .result-panel,.voiceover-page .result-panel:has(#recording:not([hidden])){
+  padding:8px 12px calc(8px + env(safe-area-inset-bottom));gap:4px;
+  background:#0b2531f5;box-shadow:0 -8px 24px #020b1299;
+ }
+ .voiceover-page .result-status{display:flex;align-items:baseline;gap:8px}
+ .voiceover-page .result-status h2{display:block;flex:none;font-size:12px}
+ .voiceover-page .result-status p{margin:0;min-width:0}
+ .voiceover-page .quota-note{margin:0}
+ .voiceover-page .download-row{gap:8px;margin-top:2px}
+ .voiceover-page .history-panel{padding:12px;margin-top:10px}
+ /* Do not let the transport cover the focused editor or settings on a phone. */
+ .voiceover-page:has(.script-panel :is(input,select,textarea):focus) .result-panel,
+ .voiceover-page:has(.controls-panel :is(input,select,textarea):focus) .result-panel{position:static}
+}
+@media(max-width:900px) and (max-height:700px){
+ .voiceover-page #recording{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:'player download' 'info info';gap:2px 8px;align-items:center}
+ .voiceover-page #player{grid-area:player;min-width:0}
+ .voiceover-page .download-row{display:contents}
+ .voiceover-page #recordingInfo{grid-area:info}
+ .voiceover-page #download{grid-area:download}
+}
+@media(max-width:360px){
+ .voiceover-page .heading{gap:6px 10px}
+ .voiceover-page .intro{font-size:11px}
+ .voiceover-page .download-row{flex-wrap:nowrap}
+ .voiceover-page .download-row a{margin-left:0}
+}

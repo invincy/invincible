@@ -48,7 +48,8 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   const base='http://127.0.0.1:'+server.address().port+'/invincible/creator/tts.html';
   await page.addInitScript(()=>{if(!localStorage.getItem('invincible.creator.tts.draft.v1.owner'))localStorage.setItem('invincible.creator.tts.draft.v1.owner',JSON.stringify({engine:'classic'}));});
   await page.goto(base);await page.locator('#accountStatus').filter({hasText:'voices available'}).waitFor();
-  assert.equal(await page.evaluate(()=>getComputedStyle(document.body,'::before').animationName),'studio-water-drift');
+  await page.locator('.tts-river.is-ready').waitFor();
+  assert.equal(await page.locator('.tts-river').getAttribute('aria-hidden'),'true');
   await page.emulateMedia({reducedMotion:'reduce'});
   assert.equal(await page.evaluate(()=>getComputedStyle(document.body,'::before').animationName),'none');
   await page.emulateMedia({reducedMotion:'no-preference'});

@@ -29,7 +29,7 @@ check; local tests do not establish either.
 - Hourly byte accounting includes each repeated prompt and synthesized text/SSML.
 - Drafts retain engine/model/direction per account on the device. Old drafts retain
   their classic voice; a backend without Gemini catalogue entries disables Gemini.
-- The navy/gold layout keeps the script and voice controls beside one another on
+- The dark, translucent layout keeps the script and voice controls beside one another on
   desktop and stacked on phones. Model, volume and compatible classic controls are
   under Fine adjustments. Existing public voice demos do not generate paid audio;
   Gemini uses the explicit paid opening preview.
@@ -65,6 +65,25 @@ firebase deploy --only functions:creator-tts --project life-by-adichimp
 ```
 
 Reference: [Google Gemini-TTS API, limits and permissions](https://docs.cloud.google.com/text-to-speech/docs/gemini-tts).
+
+## Flowing water workbench — November 10, 2026
+
+Voiceover uses compact translucent panels over a procedural flowing-water surface
+with expanding rain ripples. Desktop keeps narration, independently scrollable
+voice settings and the transport together; phones put settings in a disclosure
+and keep playback/actions accessible while allowing the editor and history to
+scroll. Existing draft, history, synthesis and download behavior is unchanged.
+
+The decorative WebGL layer is capped at 750,000 pixels and 20 frames per second,
+does not accept input, pauses in hidden tabs and renders a still frame for reduced
+motion. If WebGL fails, a static gradient remains. Animation time is bounded for
+shader precision and can visibly reset after a long session (sooner on devices
+without high-precision fragment floats). Actual battery use, performance on physical
+devices and Safari remain unmeasured; the caps are not a performance guarantee.
+Chromium browser checks cover visible flow and rain, fallback, reduced motion,
+visibility, resize, context recovery and controls. The real-page fixture covers
+preview/generation, download, history, errors and phone/desktop transport. No paid
+generation or live Firebase permissions were exercised for this UI change.
 
 ## What the page supports
 

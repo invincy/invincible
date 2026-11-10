@@ -14,3 +14,22 @@ body[data-theme="green"]{--cyan:#9cff38;--cyan2:#39ff14;--orange:#ff9b42}
 .appearance-fields{padding:12px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.025)}
 
 .garage-save-error{color:#ff8999;font-size:.85rem;line-height:1.45}button:disabled{cursor:wait;opacity:.45}
+
+/* Keep user-entered vehicle and maintenance text inside the workspace. */
+main{max-width:1680px}
+.vehicle-copy,.main-column,.side-column,.record-main>div,.reminder .record>div:first-child{min-width:0}
+.vehicle-copy,.summary-grid strong,.record-main>div,.reminder .record>div:first-child,.last-service{overflow-wrap:anywhere}
+.summary-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.record{flex-wrap:wrap}
+.record-main,.reminder .record>div:first-child{flex:1 1 120px}
+.record-actions{flex-shrink:0}
+@media(max-width:900px){.summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){
+	.status{margin:8px 14px}
+	main{padding-top:10px;padding-bottom:16px}
+	.vehicle-hero{gap:12px}
+	.vehicle-actions{margin-top:12px}
+	.summary-grid{margin:12px 0}
+	.main-column,.side-column{gap:12px}
+	.layout{gap:12px}
+}
