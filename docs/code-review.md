@@ -1,5 +1,37 @@
 # Cleanup review — 2026-10-03
 
+## Local ComfyUI image tool — 11 November 2026
+
+Implemented the fixed SD 1.5 generate_image capability through the existing
+Universal Agent API, local pairing and owner checks, persisted jobs, exact-output
+PNG verification, idempotency, and a shared Qwen/image GPU queue. The compact
+panel uses the existing Video Studio uploader for attachment; React local chat
+invokes the same tool. Production data, model installations and existing worktrees
+were preserved.
+
+After explicit user approval, reset only the existing restricted worker login.
+Its credential is Windows DPAPI-encrypted for the laptop owner. The working
+launcher starts Node directly using the account's existing standard login;
+folder ACLs, groups, PowerShell policy and logon rights were not changed. The
+attempted scheduled task was removed because that account lacks batch-logon
+permission. No password is printed or supplied by an AI tool request.
+
+Real UI generation passed for square (41.795 s), real Qwen-requested portrait
+(40.210 s image execution), and landscape (43.246 s), with 3,363 MiB peak sampled
+GPU memory. PNG verification, preview, download and isolated-project attachment
+passed. Live duplicate/auth/invalid-request checks returned the expected results.
+38 focused tests and actual-page browser fixtures passed, including native
+Studio and React local chat paths. Build/reference checks and 229 root + 15
+Functions + 5 media tests passed, with two existing root skips.
+
+Existing Video Studio unit tests pass (24); its MP4 browser export timed out.
+The broad browser suite stopped at Task Copy's 320px layout assertion. Baseline
+status was not separately established; later scenarios were not run. Production
+Firebase writes and remote bridge image generation were not tested or enabled.
+An extra stop/restart test was rejected by automatic approval review; normal
+worker startup and reuse passed, and the working worker was left running.
+See local-image-generation.md for the detailed contract and evidence.
+
 ## Voiceover forest and balanced workspace — November 10, 2026
 
 Resumed the existing uncommitted Voiceover work: bounded the desktop narration

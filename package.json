@@ -27,7 +27,8 @@
     "vendor:creator-map": "node scripts/vendor-creator-map.mjs",
     "test:video-studio": "node --test tests/creator-video-studio.mjs tests/creator-studio-composition.mjs && node tests/creator-video-studio-browser.cjs && node tests/creator-studio-composition-browser.cjs && node tests/creator-single-flow-browser.cjs",
     "vendor:video-studio": "node scripts/vendor-studio-video.mjs",
-    "test:tts": "npm --prefix functions-tts test && node tests/creator-tts-browser.cjs && node tests/creator-tts-river-browser.cjs && node tests/creator-tts-forest-browser.cjs"
+    "test:tts": "npm --prefix functions-tts test && node tests/creator-tts-browser.cjs && node tests/creator-tts-river-browser.cjs && node tests/creator-tts-forest-browser.cjs",
+    "test:imagegen": "node --test functions/test/universal-agent-api.test.js functions/test/task-bridge.test.js local-ai/image-worker.test.mjs local-ai/agent-server.test.mjs local-ai/invincible-local-controller.test.mjs && node tests/browser/image-generator.mjs && node tests/browser/image-connection.mjs"
   },
   "devDependencies": {
     "esbuild": "0.25.12",

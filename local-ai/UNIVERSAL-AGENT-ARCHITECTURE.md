@@ -19,4 +19,4 @@ The provider is deliberately outside the execution layer. A local model may inte
 
 Task Bridge requests use the same ownership and idempotency concepts. Firebase callable wrappers enqueue, claim, complete, fail and recover tasks; the laptop agent must still submit its claimed command to the universal executor rather than calling a provider-specific function.
 
-The current registered capability is only `create_project`. Navigation, JSON import, rendering and media operations are represented as future extension points but are not registered and cannot execute.
+Registered capabilities are `create_project` and the fixed local SD 1.5 `generate_image` tool. Image execution is injected by the authenticated local worker; arbitrary rendering graphs, filesystem tools and shell execution remain unavailable. See [local image generation](../docs/local-image-generation.md) for the executor, interface, launch requirements and verification limits.
