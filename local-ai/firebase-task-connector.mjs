@@ -40,5 +40,6 @@ async function poll() {
 }
 
 console.log(`Invincible Firebase connector polling every ${pollMs}ms; local agent ${localAgentOrigin}`);
+call('getInvincibleAgentStatus').then(status => console.log(`[bridge] authenticated for Firebase user ${status.uid} as ${status.agentId}`)).catch(error => console.error(`[bridge] authentication check failed: ${error.message}`));
 setInterval(poll, pollMs);
 poll();

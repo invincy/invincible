@@ -14,6 +14,9 @@ exports.createInvincibleAgentPairing = onCall({ region: 'asia-south1' }, async r
   const uid = requireAuth(request), agentId = String(request.data?.agentId || '').trim();
   try { return await createAgentPairing({ db, uid, agentId }); } catch (error) { throw bridgeError(error); }
 });
+exports.getInvincibleAgentStatus = onCall({ region: 'asia-south1' }, async request => {
+  try { return await resolveAgentToken({ db, token: request.data?.agentToken }); } catch (error) { throw bridgeError(error); }
+});
 
 exports.enqueueInvincibleAiTask = onCall({ region: 'asia-south1' }, async request => {
   const uid = requireAuth(request), data = request.data || {};
