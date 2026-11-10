@@ -30,3 +30,10 @@ Reuse existing project and shared-library assets before generating or downloadin
 ## Creative acceptance
 
 A successful passage answers the narration visually, uses accurate geography, remains readable on a phone and moves purposefully without clutter. Review with the real recording. Report uncertain sources, provisional cues, missing assets and unreviewed passages; polished appearance alone is not approval. See [VIDEO_PRODUCTION.md](VIDEO_PRODUCTION.md) for the production handoff and delivery checks.
+
+
+## History films: kingdom and polity overlays
+
+Every future history film must include date-appropriate kingdom/polity overlays for the powers relevant to the narration. Plan their reveal, terrain transparency, boundary treatment and camera framing as part of the map sequence. Use sourced historical extents with dates and precision notes; label schematic influence/extent in metadata and never present it as a surveyed frontier. Do not substitute modern borders or invent exact boundaries. Current user instructions remain authoritative.
+
+The current Panipat geography v7 revision is explicitly unchanged in this respect: the user asked to save this rule for future videos, not add kingdom overlays to that export.
