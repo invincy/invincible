@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import {dashboardStartupMotion} from '../react/src/startup-motion.mjs';
 import {createOrbParticles,orbParticleTier} from '../react/src/orb-particles.js';
 test('orb uses bounded desktop, mobile and low-capability particle budgets',()=>{
  for(const [mobile,lightweight,count]of[[false,false,19456],[true,false,14544],[false,true,14544],[true,true,11112]]){
@@ -25,4 +26,23 @@ test('rich dashboard orb increases density with bounded mobile and low capabilit
   assert.ok(rich.streams>base.streams);assert.ok(rich.flecks>=base.flecks*3);
   assert.ok(count<limit);assert.ok(count>createOrbParticles(base).length/5);
  }
+});
+
+test('dashboard adds smaller particles across all capability tiers',()=>{
+ for(const mobile of [false,true])for(const lightweight of [false,true]){
+  const rich=orbParticleTier(mobile,lightweight,true);
+  const fine=orbParticleTier(mobile,lightweight,true,true);
+  const particles=createOrbParticles(fine);
+  assert.ok(fine.flecks>rich.flecks);
+  assert.ok(particles.length>createOrbParticles(rich).length);
+  for(let size=3;size<particles.length;size+=5)assert.ok(particles[size]<1.8);
+ }
+});
+
+test('the whole globe keeps turning beyond two seconds as startup momentum decays',()=>{
+ const speed=seconds=>(dashboardStartupMotion(seconds+.01).turn-dashboardStartupMotion(seconds).turn)/.01;
+ assert.ok(speed(0)>speed(1));
+ assert.ok(speed(1)>speed(2));
+ assert.ok(speed(2)>.2);
+ assert.ok(speed(5)<.01);
 });

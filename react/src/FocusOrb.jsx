@@ -1,4 +1,4 @@
-import {startupMotion} from './startup-motion.mjs';
+import {dashboardStartupMotion,startupMotion} from './startup-motion.mjs';
 import{useEffect,useRef}from'react';
 import{createOrbParticles,orbParticleTier}from'./orb-particles';
 
@@ -60,19 +60,20 @@ vec4 projected=projection*vec4(p,1.0);gl_Position=projected;float size=mix(1.0,1
 const particleFragment=`precision mediump float;uniform vec3 colorA;uniform vec3 colorB;varying float opacity;void main(){float radius=length(gl_PointCoord-vec2(0.5))*2.0;if(radius>1.0)discard;float core=1.0-smoothstep(0.0,1.0,radius);gl_FragColor=vec4(mix(colorA,colorB,core),core*opacity);}`;
 function perspective(aspect){const f=1/Math.tan(Math.PI/8),near=.1,far=30,distance=4.6;return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)/(near-far),-1,0,0,(far+near)/(near-far)*-distance+2*far*near/(near-far),distance])}
 const palettes={cyan:{style:0,a:[.08,.55,.78],b:[.55,1,1]},emerald:{style:1,a:[.03,.32,.12],b:[.46,1,.62]},gold:{style:2,a:[.42,.16,.025],b:[1,.85,.38]}};
-export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=false,followPagePointer=false}){
+export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=false,followPagePointer=false,dashboardMotion=false,interactionSurface}){
  const canvas=useRef(null),host=useRef(null);
  useEffect(()=>{
   const c=canvas.current,container=host.current,surface=container.parentElement;
+  const eventSurface=interactionSurface?.current||surface;
   const reduced=matchMedia('(prefers-reduced-motion: reduce)'),mobile=matchMedia('(max-width:1024px)');
   const lightweight=(navigator.hardwareConcurrency>0&&navigator.hardwareConcurrency<=4)||(navigator.deviceMemory>0&&navigator.deviceMemory<=4);
   const palette=palettes[theme]||palettes.cyan;
   let gl,dots,particleBuffer,uniforms,frame=null,timer=null,resizeObserver,intersectionObserver;
   let disposed=false,inView=true,contextLost=false,start=performance.now(),last=0,particleCount=0,particleTier=null;
-  let drag=null,yaw=0,pitch=0,velocityX=0,velocityY=0,hoverX=0,hoverY=0,hoverStrength=0,targetX=0,targetY=0,targetStrength=0;
+  let drag=null,hoverSample=null,yaw=0,pitch=0,velocityX=0,velocityY=0,hoverX=0,hoverY=0,hoverStrength=0,targetX=0,targetY=0,targetStrength=0;
   const stop=()=>{if(timer!==null)clearTimeout(timer);if(frame!==null)cancelAnimationFrame(frame);timer=frame=null};
   const canDraw=()=>!disposed&&!contextLost&&!document.hidden&&inView;
-  const interactive=()=>drag||targetStrength>0||hoverStrength>.015||Math.hypot(velocityX,velocityY)>.0005;
+  const interactive=()=>drag||targetStrength>0||hoverStrength>.015||Math.hypot(velocityX,velocityY)>.015;
   const initialize=()=>{
    dots=program(gl,particleVertex,particleFragment);particleBuffer=gl.createBuffer();particleTier=null;
    uniforms=Object.fromEntries(['projection','pixelRatio','pointScale','time','spin','rotation','influence','style','expressive','colorA','colorB'].map(name=>[name,gl.getUniformLocation(dots,name)]));
@@ -90,10 +91,17 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=fa
   const render=timestamp=>{
    frame=null;if(!canDraw())return;const renderedAt=performance.now();
    const dt=Math.min((timestamp-last)/1000||1/45,.05);last=timestamp;
-   const motion=startupMotion((timestamp-start)/1000,reduced.matches),time=motion.phase;
+   const elapsed=(timestamp-start)/1000;
+   const motion=(dashboardMotion?dashboardStartupMotion:startupMotion)(elapsed,reduced.matches),time=motion.phase;
    const smoothing=reduced.matches?1:1-Math.exp(-dt*9);
    hoverX+=(targetX-hoverX)*smoothing;hoverY+=(targetY-hoverY)*smoothing;hoverStrength+=(targetStrength-hoverStrength)*smoothing;
-   if(!drag&&!reduced.matches){const decay=Math.exp(-dt*5);yaw+=velocityX*dt*30;pitch+=velocityY*dt*30;velocityX*=decay;velocityY*=decay}
+   if(!drag&&!reduced.matches){
+    const damping=dashboardMotion?2.15:5;
+    const decay=Math.exp(-dt*damping);
+    const travel=(1-decay)/damping;
+    yaw=(yaw+velocityX*travel)%(2*Math.PI);pitch=(pitch+velocityY*travel)%(2*Math.PI);
+    velocityX*=decay;velocityY*=decay;
+   }
    const autoInfluenceX=Math.cos(time*.43)*.78+Math.sin(time*.19+1.2)*.18,autoInfluenceY=Math.sin(time*.37)*.65+Math.cos(time*.23+.4)*.16,manualMix=Math.min(1,hoverStrength),influenceX=autoInfluenceX*(1-manualMix)+hoverX*manualMix,influenceY=autoInfluenceY*(1-manualMix)+hoverY*manualMix,influenceStrength=1+(richParticles?.9:.4)*manualMix;
    gl.clear(gl.COLOR_BUFFER_BIT);gl.uniform1f(uniforms.time,time);gl.uniform2f(uniforms.rotation,yaw+motion.turn+influenceX*influenceStrength*(richParticles?.24:.16),pitch-influenceY*influenceStrength*(richParticles?.24:.16));gl.uniform3f(uniforms.influence,influenceX,influenceY,influenceStrength);gl.drawArrays(gl.POINTS,0,particleCount);
    container.dataset.ready='true';schedule(renderedAt);
@@ -106,27 +114,77 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=fa
    c.width=Math.round(rect.width*ratio);c.height=Math.round(rect.height*ratio);
    gl.viewport(0,0,c.width,c.height);gl.uniformMatrix4fv(uniforms.projection,false,perspective(rect.width/rect.height));gl.uniform1f(uniforms.pixelRatio,ratio);gl.uniform1f(uniforms.pointScale,Math.max(.85,Math.min(1.5,rect.width/480)));
    const compact=rect.width<100;
-   const tier=orbParticleTier(mobile.matches||compact,lightweight||compact,richParticles&&!compact);
+   const tier=orbParticleTier(mobile.matches||compact,lightweight||compact,richParticles&&!compact,dashboardMotion&&!compact);
    const key=JSON.stringify(tier);
    if(particleTier!==key){const particles=createOrbParticles(tier);particleCount=particles.length/5;gl.bufferData(gl.ARRAY_BUFFER,particles,gl.STATIC_DRAW);particleTier=key}
    // Resizing clears a canvas, so replace its contents immediately rather than waiting for a paced frame.
    resume();
   };
-  const pointerLocation=event=>{
-   if(followPagePointer){const rect=surface.getBoundingClientRect();targetX=Math.max(-1.7,Math.min(1.7,((event.clientX-rect.left)/rect.width-.5)*2.5));targetY=Math.max(-1.7,Math.min(1.7,(.5-(event.clientY-rect.top)/rect.height)*2.5));targetStrength=1;return}
-   const rect=surface.getBoundingClientRect();targetX=((event.clientX-rect.left)/rect.width-.5)*2.5;targetY=(.5-(event.clientY-rect.top)/rect.height)*2.5;targetStrength=1
+  const clamp=(value,limit)=>Math.max(-limit,Math.min(limit,value));
+  const isGlobePoint=(event,rect)=>Math.hypot((event.clientX-rect.left)/rect.width-.5,(event.clientY-rect.top)/rect.height-.5)<.49;
+  const pointerLocation=(event,rect=surface.getBoundingClientRect())=>{
+   targetX=clamp(((event.clientX-rect.left)/rect.width-.5)*2.5,1.7);
+   targetY=clamp((.5-(event.clientY-rect.top)/rect.height)*2.5,1.7);
+   targetStrength=1;
   };
-  const pointerDown=event=>{if(!allowDrag||!event.isPrimary||event.button!==0||drag||event.target.closest('button,a'))return;drag={id:event.pointerId,x:event.clientX,y:event.clientY};velocityX=velocityY=0;surface.setPointerCapture(event.pointerId);surface.dataset.dragging='true';pointerLocation(event);resume()};
+  const samplePointer=(event,rect,previous,sensitivity)=>{
+   const sample={x:event.clientX,y:event.clientY,time:event.timeStamp};
+   if(previous){
+    const elapsed=(sample.time-previous.time)/1000;
+    const dx=(sample.x-previous.x)/rect.width*sensitivity;
+    const dy=(sample.y-previous.y)/rect.height*sensitivity;
+    if(drag){yaw+=dx;pitch+=dy}
+    if(!reduced.matches&&elapsed>=0&&(dx||dy)){
+     const dt=Math.max(.008,elapsed);
+     const mix=previous.time===drag?.start||elapsed>.10?1:1-Math.exp(-dt*45);
+     velocityX+=(clamp(dx/dt,13)-velocityX)*mix;
+     velocityY+=(clamp(dy/dt,13)-velocityY)*mix;
+    }
+   }
+   return sample;
+  };
+  const pointerDown=event=>{
+   if(!allowDrag||!event.isPrimary||event.button!==0||drag||event.target.closest('button,a'))return;
+   const rect=surface.getBoundingClientRect();
+   if(dashboardMotion&&(surface.classList.contains('is-compact')||!event.target.closest('.v2-guide-orb-anchor')||!isGlobePoint(event,rect)))return;
+   drag={id:event.pointerId,start:event.timeStamp,sample:samplePointer(event,rect)};
+   hoverSample=null;velocityX=velocityY=0;
+   eventSurface.setPointerCapture(event.pointerId);surface.dataset.dragging='true';pointerLocation(event,rect);resume();
+  };
   const pointerMove=event=>{
-   if(drag&&event.pointerId!==drag.id)return;const wasInteractive=interactive();
-   if(event.pointerType==='mouse'||drag)pointerLocation(event);
-   if(drag){const rect=surface.getBoundingClientRect();velocityX=(event.clientX-drag.x)/rect.width*3.5;velocityY=(event.clientY-drag.y)/rect.height*3.5;yaw+=velocityX;pitch+=velocityY;drag.x=event.clientX;drag.y=event.clientY}
+   if(drag&&event.pointerId!==drag.id)return;
+   const wasInteractive=interactive(),rect=surface.getBoundingClientRect();
+   if(drag){
+    pointerLocation(event,rect);
+    drag.sample=samplePointer(event,rect,drag.sample,3.5);
+   }else if(event.pointerType==='mouse'){
+    if(!dashboardMotion||(!surface.classList.contains('is-compact')&&isGlobePoint(event,rect))){
+     pointerLocation(event,rect);
+     if(dashboardMotion)hoverSample=samplePointer(event,rect,hoverSample,.62);
+    }else if(targetStrength>0||hoverSample)pointerLeave();
+   }
    if(reduced.matches||(!wasInteractive&&interactive()))resume();
   };
-  const pointerUp=event=>{if(!drag||event.pointerId!==drag.id)return;drag=null;delete surface.dataset.dragging;if(surface.hasPointerCapture(event.pointerId))surface.releasePointerCapture(event.pointerId);if(event.pointerType!=='mouse')targetStrength=0;if(event.type==='pointercancel'||reduced.matches)velocityX=velocityY=0;resume()};
-  const pointerLeave=()=>{if(!drag&&!followPagePointer){targetStrength=0;if(reduced.matches)resume()}};
+  const pointerUp=event=>{
+   if(!drag||event.pointerId!==drag.id)return;
+   const rect=surface.getBoundingClientRect();
+   if(event.type==='pointerup'&&(drag.sample.x!==event.clientX||drag.sample.y!==event.clientY)){
+    drag.sample=samplePointer(event,rect,drag.sample,3.5);
+   }
+   const idle=Math.max(0,(event.timeStamp-drag.sample.time)/1000);
+   const release=event.type==='pointercancel'||reduced.matches?0:Math.exp(-Math.max(0,idle-.055)*22);
+   velocityX*=release;velocityY*=release;
+   drag=null;delete surface.dataset.dragging;
+   if(eventSurface.hasPointerCapture(event.pointerId))eventSurface.releasePointerCapture(event.pointerId);
+   if(event.pointerType!=='mouse'||(dashboardMotion&&!isGlobePoint(event,rect)))targetStrength=0;
+   resume();
+  };
+  const pointerLeave=()=>{
+   hoverSample=null;
+   if(!drag&&!followPagePointer){targetStrength=0;if(reduced.matches)resume()}
+  };
   const pagePointerMove=event=>{if(reduced.matches||event.pointerType!=='mouse'||drag)return;pointerLocation(event)};
-  const pageBlur=()=>{targetStrength=0;if(reduced.matches)resume()};
+  const pageBlur=()=>{hoverSample=null;targetStrength=0;if(reduced.matches)resume()};
   const lostCapture=event=>{if(drag?.id===event.pointerId){drag=null;velocityX=velocityY=0;targetStrength=0;delete surface.dataset.dragging;resume()}};
   const events={pointerdown:pointerDown,pointermove:pointerMove,pointerup:pointerUp,pointercancel:pointerUp,pointerleave:pointerLeave,lostpointercapture:lostCapture};
   const visibility=()=>resume(),preferences=()=>resize();
@@ -136,8 +194,8 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=fa
    try{contextLost=false;initialize();resize()}catch(error){contextLost=true;stop();delete container.dataset.ready;console.warn('3D orb recovery unavailable; keeping the particle fallback.',error)}
   };
   const cleanup=()=>{
-   disposed=true;stop();for(const[name,handler]of Object.entries(events))surface.removeEventListener(name,handler);
-   if(drag&&surface.hasPointerCapture(drag.id))surface.releasePointerCapture(drag.id);delete surface.dataset.dragging;
+   disposed=true;stop();for(const[name,handler]of Object.entries(events))eventSurface.removeEventListener(name,handler);
+   if(drag&&eventSurface.hasPointerCapture(drag.id))eventSurface.releasePointerCapture(drag.id);delete surface.dataset.dragging;
    resizeObserver?.disconnect();intersectionObserver?.disconnect();document.removeEventListener('visibilitychange',visibility);document.removeEventListener('pointermove',pagePointerMove);window.removeEventListener('blur',pageBlur);reduced.removeEventListener('change',preferences);mobile.removeEventListener('change',preferences);c.removeEventListener('invincible-capture',capture);c.removeEventListener('webglcontextlost',lost);c.removeEventListener('webglcontextrestored',restored);
    if(gl){if(particleBuffer)gl.deleteBuffer(particleBuffer);if(dots)gl.deleteProgram(dots)}
   };
@@ -146,10 +204,10 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=fa
    initialize();resizeObserver=new ResizeObserver(resize);resizeObserver.observe(container);
    // V2's Orb is fixed and moves between the Dashboard and header. Observing it
    // during that transition can mark it offscreen while resize clears the canvas.
-   if(!followPagePointer&&typeof IntersectionObserver!=='undefined'){intersectionObserver=new IntersectionObserver(entries=>{inView=entries[0].isIntersecting;resume()});intersectionObserver.observe(container)}
-   document.addEventListener('visibilitychange',visibility);if(followPagePointer){document.addEventListener('pointermove',pagePointerMove,{passive:true});window.addEventListener('blur',pageBlur)}reduced.addEventListener('change',preferences);mobile.addEventListener('change',preferences);c.addEventListener('invincible-capture',capture);c.addEventListener('webglcontextlost',lost);c.addEventListener('webglcontextrestored',restored);for(const[name,handler]of Object.entries(events))surface.addEventListener(name,handler);resize();
+   if(!followPagePointer&&!dashboardMotion&&typeof IntersectionObserver!=='undefined'){intersectionObserver=new IntersectionObserver(entries=>{inView=entries[0].isIntersecting;resume()});intersectionObserver.observe(container)}
+   document.addEventListener('visibilitychange',visibility);if(followPagePointer)document.addEventListener('pointermove',pagePointerMove,{passive:true});if(followPagePointer||dashboardMotion)window.addEventListener('blur',pageBlur);reduced.addEventListener('change',preferences);mobile.addEventListener('change',preferences);c.addEventListener('invincible-capture',capture);c.addEventListener('webglcontextlost',lost);c.addEventListener('webglcontextrestored',restored);for(const[name,handler]of Object.entries(events))eventSurface.addEventListener(name,handler);resize();
    return cleanup;
   }catch(error){console.warn('3D orb unavailable; keeping the particle fallback.',error);cleanup()}
- },[theme,spin,allowDrag,richParticles,followPagePointer]);
+ },[theme,spin,allowDrag,richParticles,followPagePointer,dashboardMotion,interactionSurface]);
  return <div ref={host} className={'focus-orb-3d orb-theme-'+theme} aria-hidden="true"><div className="orb-3d-fallback"/><canvas ref={canvas}/></div>;
 }

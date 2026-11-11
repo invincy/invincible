@@ -63,7 +63,12 @@
 /* The particle projection occupies about 60% of its canvas. Expand only the
    Dashboard renderer so the visible globe fills the shared anchor/icon stage.
    The compact Workspace orb and its single renderer keep their original size. */
+.v2-guide-orb-anchor{touch-action:none}
+.v2-guide-orb-anchor::before{content:"";position:absolute;inset:0;clip-path:circle(49%);pointer-events:auto}
 .v2-orb:not(.is-compact) .focus-orb-3d{inset:-24%}
+@media (width > 900px) and (pointer: fine){
+  .v2-guide-scene{--orb-size:clamp(315px,min(52.5vw,65.625dvh),840px)}
+}
 
 /* Keep the irregular page map inside the visible globe, not the canvas corners.
    These scoped coordinates also replace the older dashboard.css positions. */

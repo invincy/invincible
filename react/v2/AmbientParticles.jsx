@@ -1,4 +1,4 @@
-import {startupMotion} from '../src/startup-motion.mjs';
+import {dashboardStartupMotion} from '../src/startup-motion.mjs';
 import React, {useEffect, useRef} from 'react';
 
 // A viewport-sized, bounded network independent of the square orb stage.
@@ -17,11 +17,12 @@ export default function AmbientParticles({theme = 'gold'}) {
     const draw=seconds=>{
       if(!width||!height)return;
       context.clearRect(0,0,width,height);
-      const motion=startupMotion((performance.now()-born.current)/1000,reduced.matches);
+      const motion=dashboardStartupMotion((performance.now()-born.current)/1000,reduced.matches);
       canvas.dataset.startupStorm=String(motion.storm);
       const interactive=pointer.active&&!reduced.matches, smoothing=1-Math.exp(-seconds*9), radius=190;
+      const angle=seconds*4*motion.storm,cos=Math.cos(angle),sin=Math.sin(angle);
       for(const p of particles){
-        const angle=seconds*4*motion.storm,cos=Math.cos(angle),sin=Math.sin(angle),x=p.x-.5,y=p.y-.5;
+        const x=p.x-.5,y=p.y-.5;
         p.x=(.5+x*cos-y*sin+p.vx*seconds*motion.speed/width+2)%1;p.y=(.5+x*sin+y*cos+p.vy*seconds*motion.speed/height+2)%1;
         const dx=p.x*width-pointer.x,dy=p.y*height-pointer.y,distance=Math.hypot(dx,dy),push=interactive?Math.max(0,1-distance/radius)*34:0;
         p.dx+=((dx/Math.max(1,distance))*push-p.dx)*smoothing;p.dy+=((dy/Math.max(1,distance))*push-p.dy)*smoothing;
@@ -32,11 +33,11 @@ export default function AmbientParticles({theme = 'gold'}) {
         const p=points[i];
         for(let j=i+1;j<points.length;j++){
           const q=points[j],distance=Math.hypot(p.x-q.x,p.y-q.y);if(distance>=reach)continue;
-          context.strokeStyle=`rgba(${colour},${(.29*(1-distance/reach)*motion.links).toFixed(3)})`;context.lineWidth=.7;
+          context.strokeStyle=`rgba(${colour},${(.29*(1-distance/reach)*motion.links).toFixed(3)})`;context.lineWidth=.55;
           context.beginPath();context.moveTo(p.x,p.y);context.lineTo(q.x,q.y);context.stroke();links++;
         }
         const distance=Math.hypot(p.x-pointer.x,p.y-pointer.y),near=interactive&&distance<radius;
-        if(near&&mouseLinks<12){context.strokeStyle=`rgba(${colour},${(.5*(1-distance/radius)).toFixed(3)})`;context.lineWidth=.9;context.beginPath();context.moveTo(p.x,p.y);context.lineTo(pointer.x,pointer.y);context.stroke();mouseLinks++;}
+        if(near&&mouseLinks<12){context.strokeStyle=`rgba(${colour},${(.5*(1-distance/radius)).toFixed(3)})`;context.lineWidth=.65;context.beginPath();context.moveTo(p.x,p.y);context.lineTo(pointer.x,pointer.y);context.stroke();mouseLinks++;}
         context.fillStyle=`rgba(${colour},${near?.9:p.size>1.5?.7:.48})`;context.beginPath();context.arc(p.x,p.y,p.size+(near?.7:0),0,Math.PI*2);context.fill();
       }
       canvas.dataset.linkCount=String(links);canvas.dataset.mouseLinks=String(mouseLinks);canvas.dataset.pointerActive=String(interactive);
@@ -49,7 +50,12 @@ export default function AmbientParticles({theme = 'gold'}) {
     };
     const stop=()=>{cancelAnimationFrame(frame);frame=0;};
     const schedule=()=>{if(!frame&&!document.hidden&&inView&&!reduced.matches)frame=requestAnimationFrame(tick);};
-    const tick=timestamp=>{frame=0;if(timestamp-last>=33){const seconds=Math.min((timestamp-last)/1000||0,.05);last=timestamp;draw(seconds);}schedule();};
+    const tick=timestamp=>{
+      frame=0;
+      if(reduced.matches){visibility();return;}
+      if(timestamp-last>=33){const seconds=Math.min((timestamp-last)/1000||0,.05);last=timestamp;draw(seconds);}
+      schedule();
+    };
     const visibility=()=>{stop();last=performance.now();if(reduced.matches){pointer.active=false;draw(0);}else schedule();};
     const move=event=>{if(event.pointerType!=='mouse'||reduced.matches)return;const rect=scene.getBoundingClientRect();pointer.x=event.clientX-rect.left;pointer.y=event.clientY-rect.top;pointer.active=pointer.x>=0&&pointer.x<=width&&pointer.y>=0&&pointer.y<=height;};
     const leave=()=>{pointer.active=false;};

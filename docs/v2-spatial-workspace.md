@@ -247,3 +247,11 @@ V2's existing per-account/session focus timer continues unchanged; an in-memory 
 ## Compact LIC hub and startup motion
 
 LIC now uses three compact labelled icon shortcuts instead of large cards. Staff follow-ups, Agent CRM and agent tools retain their original routes. The orb starts at nine times its normal animation speed and decelerates continuously over two seconds. Ambient dots start independently scattered, swirl during that same opening window, and fade their connecting lines in as they settle. Reduced-motion rendering remains static; no data/authentication changes. Local repository tests, production build/stage and site references pass; desktop LIC layout inspected in the cloud preview. Full V2/orb/LIC browser CI validates interactions. Known unrelated Journal notebook timeout remains outside this change.
+
+## Dashboard globe gestures and density
+
+The globe and shortcut layout use 75% of their previous desktop diameter. The touch layout retains its original diameter. Both use finer, brighter individual particles with less prominent filaments. The opening rotation and background particle network use a gradually decaying startup curve.
+
+Dragging the globe with a mouse or finger rotates the particle field. Release speed controls how quickly it coasts, and mouse movement over the globe also leaves momentum when the pointer exits. The gesture surface sits beneath the shortcut and plan controls. Reduced motion keeps the field static between direct interactions.
+
+The production and V2 builds, site references, particle and startup tests, and Chromium mouse and emulated touch gestures were verified. Physical touch behavior and signed-in production remain unverified.

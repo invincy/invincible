@@ -88,6 +88,106 @@ window.emitTaskTitle=title=>{tasks[0].title=title;for(const entry of listeners)e
 window.failSync=()=>{for(const entry of listeners)entry.error(Error('permission-denied'));};
 window.listenerCount=()=>listeners.size;
 `;
+async function checkOrbGestures(browser, base, touch) {
+  const context=await browser.newContext({viewport:touch?{width:393,height:852}:{width:1440,height:1000},hasTouch:touch,isMobile:touch});
+  try {
+    await context.addInitScript(()=>{
+      const locate=WebGLRenderingContext.prototype.getUniformLocation;
+      const uniform=WebGLRenderingContext.prototype.uniform2f;
+      const influence=WebGLRenderingContext.prototype.uniform3f;
+      const rotationLocations=new WeakSet(),influenceLocations=new WeakSet();
+      WebGLRenderingContext.prototype.getUniformLocation=function(program,name){
+        const location=locate.call(this,program,name);
+        if(name==='rotation'&&location)rotationLocations.add(location);
+        if(name==='influence'&&location)influenceLocations.add(location);
+        return location;
+      };
+      WebGLRenderingContext.prototype.uniform2f=function(location,x,y){
+        if(rotationLocations.has(location))window.orbYaw=x;
+        return uniform.call(this,location,x,y);
+      };
+      WebGLRenderingContext.prototype.uniform3f=function(location,x,y,strength){
+        if(influenceLocations.has(location))window.orbInfluence=x*strength*.24;
+        return influence.call(this,location,x,y,strength);
+      };
+    });
+    const page=await context.newPage();
+    await page.route('https://**/*',route=>route.abort());
+    await page.goto(base+'/fixture');
+    const orb=page.locator('.v2-orb:not(.is-compact)');
+    const assertWidth=width=>page.waitForFunction(expected=>{
+      const element=document.querySelector('.v2-orb:not(.is-compact)');
+      return element&&Math.abs(element.getBoundingClientRect().width-expected)<2;
+    },width);
+    const originalNarrowWidth=()=>page.locator('.v2-guide-scene').evaluate(scene=>Math.min(scene.clientWidth,640));
+    await assertWidth(touch?await originalNarrowWidth():656.25);
+    await orb.locator('[data-ready=true]').waitFor();
+    await page.waitForTimeout(2300);
+    const {x,y}=await orb.evaluate(element=>{
+      const rect=element.getBoundingClientRect();
+      const controls=[...document.querySelectorAll('.v2-constellation a,.v2-constellation button,.v2-orb-plan')]
+        .filter(control=>control.getClientRects().length)
+        .map(control=>control.getBoundingClientRect());
+      let best;
+      for(let row=.12;row<.9;row+=.025)for(let column=.15;column<.72;column+=.025){
+        const x=Math.round(rect.left+rect.width*column);
+        const y=Math.round(rect.top+rect.height*row);
+        if(Math.hypot(column-.5,row-.5)>=.44||![0,12,24,36,48,60,72].every(dx=>
+          document.elementFromPoint(x+dx,y)?.matches('.v2-guide-orb-anchor')))continue;
+        const clearance=Math.min(...controls.map(control=>Math.hypot(
+          Math.max(control.left-x,x-control.right,0),Math.max(control.top-y,y-control.bottom,0))));
+        if(!best||clearance>best.clearance)best={x,y,clearance};
+      }
+      if(!best)throw new Error('No exposed strip on the globe');
+      return best;
+    });
+    const dragState=()=>orb.getAttribute('data-dragging');
+    const yaw=()=>page.evaluate(()=>window.orbYaw-window.orbInfluence);
+    const assertCoasts=async(threshold=.035)=>{
+      const start=await yaw();
+      await page.waitForFunction(({start,threshold})=>{
+        const delta=window.orbYaw-window.orbInfluence-start;
+        return Math.atan2(Math.sin(delta),Math.cos(delta))>threshold;
+      },{start,threshold},{timeout:1600});
+    };
+    if(touch){
+      const session=await context.newCDPSession(page);
+      const send=(type,touchPoints)=>session.send('Input.dispatchTouchEvent',{type,touchPoints});
+      assert.equal(await page.locator('.v2-guide-orb-anchor').evaluate(element=>getComputedStyle(element).touchAction),'none');
+      await send('touchStart',[{x,y}]);
+      assert.equal(await dragState(),'true');
+      await send('touchMove',[{x:x+24,y}]);
+      await send('touchMove',[{x:x+72,y}]);
+      await send('touchEnd',[]);
+      await assertCoasts();
+    }else{
+      await page.mouse.move(x,y);
+      await page.mouse.down();
+      assert.equal(await dragState(),'true');
+      await page.mouse.move(x+72,y,{steps:3});
+      await page.mouse.up();
+      await assertCoasts();
+      await page.waitForTimeout(1800);
+      await page.mouse.move(x,y);
+      await page.waitForTimeout(400);
+      await page.mouse.move(x+72,y,{steps:4});
+      await page.mouse.move(x+72,0);
+      await assertCoasts();
+    }
+    assert.equal(await dragState(),null);
+    if(!touch){
+      const icon=await page.locator('.v2-page-point[data-page="ai"] .v2-page-glow').boundingBox();
+      await page.mouse.move(icon.x+icon.width/2,icon.y+icon.height/2);
+      await page.mouse.down();
+      assert.equal(await dragState(),null,'app icons keep their own pointer handling');
+      await page.mouse.move(5,5);
+      await page.mouse.up();
+      await page.setViewportSize({width:1280,height:600});
+      await assertWidth(393.75);
+    }
+  }finally{await context.close();}
+}
+
 (async () => {
   fs.mkdirSync(output,{recursive:true});
   await esbuild.build({
@@ -118,6 +218,10 @@ window.listenerCount=()=>listeners.size;
         if (!smokeOnly) await require('./v2-canvas-scenarios.cjs')({browser,base,output,name});
         if (process.env.V2_CANVAS_ONLY === '1') continue;
         if (process.env.V2_PLAN_ONLY === '1') {await require('./v2-plan-scenarios.cjs')({browser,base,output,name}); continue;}
+        if(name==='chromium'){
+          await checkOrbGestures(browser,base,false);
+          await checkOrbGestures(browser,base,true);
+        }
         const context=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
         const page=await context.newPage(), errors=[];
         page.on('pageerror',error=>errors.push(error.message));
@@ -131,9 +235,9 @@ window.listenerCount=()=>listeners.size;
         await page.waitForTimeout(150);
         if(await page.locator('.focus-orb-3d').getAttribute('data-ready')==='true') {
           const orbRect=await page.locator('.v2-orb').boundingBox();
-          await page.mouse.move(orbRect.x+orbRect.width/2,orbRect.y+orbRect.height*.12);
+          await page.mouse.move(orbRect.x+orbRect.width*.43,orbRect.y+orbRect.height*.34);
           await page.mouse.down();
-          assert.equal(await page.locator('.v2-orb').getAttribute('data-dragging'),null,'V2 Orb does not rotate away from stable map points');
+          assert.equal(await page.locator('.v2-orb').getAttribute('data-dragging'),'true','dragging the particle field captures the pointer');
           await page.mouse.move(orbRect.x+orbRect.width/2+24,orbRect.y+orbRect.height*.12+15);
           await page.mouse.up();
           assert.equal(await page.locator('.v2-orb').getAttribute('data-dragging'),null);
@@ -200,8 +304,13 @@ window.listenerCount=()=>listeners.size;
         await page.screenshot({path:path.join(output,name+'-task-focus-phone.png')});
         await page.setViewportSize({width:1440,height:1000});
         await page.getByRole('button',{name:/Close saved work/}).click();
-        await page.screenshot({path:path.join(output,name+'-map.png')});
         if(smokeOnly) {
+          await page.getByRole('link',{name:'01 Main Dashboard'}).click();
+          await page.waitForFunction(()=>{
+            const orb=document.querySelector('.v2-orb:not(.is-compact)');
+            return orb&&Math.abs(orb.getBoundingClientRect().left+orb.getBoundingClientRect().width/2-innerWidth/2)<2;
+          });
+          await page.screenshot({path:path.join(output,name+'-map.png')});
           assert.equal(await page.getByRole('button',{name:"Open today's plan"}).count(),1,'the Orb center does not repeat a current-task label');
           const centered=await page.evaluate(()=>{
             const orb=document.querySelector('.v2-orb').getBoundingClientRect();
@@ -311,7 +420,13 @@ window.listenerCount=()=>listeners.size;
           });
           assert.equal(scene.compact,false,name+' '+width+' dashboard Orb remains prominent');
           assert.ok(scene.orbWidth>=200,name+' '+width+' dashboard Orb size');
-          if(width>=901) assert.ok(scene.orbWidth>=Math.min(width*.55,height*.87,750),name+' '+width+' enlarged desktop Orb');
+          if(width>=901){
+            const originalWidth=Math.max(420,Math.min(width*.70,height*.875,1120));
+            assert.ok(Math.abs(scene.orbWidth-originalWidth*.75)<2,name+' '+width+' desktop Orb at 75%');
+          }else{
+            const originalWidth=await page.locator('.v2-guide-scene').evaluate(element=>Math.min(element.clientWidth,640));
+            assert.ok(Math.abs(scene.orbWidth-originalWidth)<2,name+' '+width+' original narrow Orb size');
+          }
           if(width>=1101) assert.ok(scene.missionRight<scene.orbLeft+scene.orbWidth*.25,name+' '+width+' mission keeps clear space for Orb');
           if([393,1280,1366,1440,1870,1920,2560].includes(width)){await page.screenshot({path:path.join(output,name+'-'+width+'.png')});}
           if(width===393){

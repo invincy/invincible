@@ -144,7 +144,7 @@ function SignedInWorkspace({user, logout}) {
       </Region>)}
     </main>
     <div className={'v2-orb '+(orbBox.compact ? 'is-compact' : travelPage && active === 'dashboard' ? 'is-approaching' : '')} style={{left: orbBox.left, top: orbBox.top, width: orbBox.width, height: orbBox.height}}
-      onWheel={event => {const distance = event.deltaX + (event.shiftKey ? event.deltaY : 0); if (distance && viewport.current) {event.preventDefault(); viewport.current.scrollLeft += distance;}}}><FocusOrb theme={theme} spin={false} allowDrag={false} richParticles followPagePointer/>
+      onWheel={event => {const distance = event.deltaX + (event.shiftKey ? event.deltaY : 0); if (distance && viewport.current) {event.preventDefault(); viewport.current.scrollLeft += distance;}}}><FocusOrb theme={theme} spin={false} richParticles dashboardMotion interactionSurface={viewport}/>
       {orbBox.compact && <button className="v2-orb-theme" aria-label={'Orb theme: '+theme+'. Change theme'} onClick={changeTheme}>◐</button>}
     </div>
     <footer className="v2-footer"><span>DASHBOARD MAP · PERSONAL WORKSPACE</span><span className="v2-footer-desktop">{active==='dashboard'?'Choose a page · Open today’s plan':'Drag cards to organise your work'}</span><span className="v2-footer-mobile">{active==='dashboard'?'Tap the centre for today’s plan':'Move cards or open a project'}</span><span>{active === 'dashboard' ? '01' : '02'} / 02</span></footer>
