@@ -1,5 +1,5 @@
 import{observeAuth}from'../shared/firebase-client.js';
-import{mountConnectedImageGenerator}from'./image-generator.js?v=2026111205';
+import{mountConnectedImageGenerator}from'./image-generator.js?v=2026111206';
 import{callImageRelay,draftRemoteImagePrompt}from'../shared/firebase-image-relay.js?v=2026111205';
 const host=document.getElementById('creator-image-studio'),status=document.getElementById('image-account-status');
 let account=null,panel;

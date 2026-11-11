@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="tts.css?v=2026111113">
 <link rel="stylesheet" href="studio-ui.css?v=3">
 <link rel="stylesheet" href="tts-forest.css?v=1">
+<link rel="stylesheet" href="../shared/spatial-workspace.css?v=1">
 <link rel="stylesheet" href="image-generator.css?v=2026111103"><meta name="theme-color" content="#080f1b">
 </head>
 <body class="voiceover-page studio-ui">
@@ -18,9 +19,10 @@
 <header class="heading"><a class="back" href="./">← Creator Studio</a><nav class="creator-tool-nav" aria-label="Creator tools"><a class="current-tool" href="tts.html" aria-current="page"><h1>Voiceover</h1></a><a href="images.html">Image generator</a></nav></header>
 <p id="accountStatus" class="account" role="status">Restoring your Invincible account…</p>
 <div id="signedOut" class="notice" hidden><p>Sign in to Invincible to generate voiceovers.</p><a href="../">Open Dashboard to sign in</a></div>
-<div id="workspace" class="workspace" hidden>
-<section class="panel script-panel" aria-labelledby="scriptHeading">
-<div class="panel-heading"><h2 id="scriptHeading" tabindex="-1">Narration</h2><div class="script-heading-actions"><a class="history-link" href="#voiceoverHistory">History ↓</a><button id="sample" type="button" class="quiet">Try a sample</button></div></div>
+<nav class="voice-panel-links" aria-label="Voiceover panels"><a href="#scriptHeading">Narration</a><a href="#voiceHeading">Voice</a><a class="history-link" href="#voiceoverHistory">History</a></nav>
+<div id="workspace" class="workspace space-panels" tabindex="0" aria-label="Voiceover panels" hidden>
+<div class="space-panel voice-script-pane"><section class="panel script-panel" aria-labelledby="scriptHeading">
+<div class="panel-heading"><h2 id="scriptHeading" tabindex="-1">Narration</h2><div class="script-heading-actions"><button id="sample" type="button" class="quiet">Try a sample</button></div></div>
 <label for="title">Recording name</label><input id="title" maxlength="100" value="My voiceover" autocomplete="off">
 <div class="script-label"><label for="script">Your script</label><label class="mode-label" for="mode">Input <select id="mode"><option value="text">Plain text</option><option value="ssml">SSML</option></select></label></div>
 <textarea id="script" rows="10" spellcheck="false" placeholder="Paste Hindi, English, or your complete narration here…"></textarea>
@@ -29,14 +31,17 @@
 <p id="inputHelp" class="help">Paragraph breaks can become pauses. Your wording stays unchanged.</p>
 <details id="ssmlGuide" class="ssml-guide"><summary>Fine control with SSML</summary><p>Use SSML to set pauses, emphasis and pronunciation. Available tags depend on the selected voice. External audio and voice-switching tags are not accepted.</p><pre>&lt;speak&gt;21 अप्रैल, 1526! &lt;break time="500ms"/&gt;पानीपत की कहानी।&lt;/speak&gt;</pre></details>
 </section>
-<section class="panel controls-panel" aria-labelledby="voiceHeading">
+<section class="panel result-panel" aria-labelledby="resultHeading"><div class="result-status"><h2 id="resultHeading">Listen &amp; export</h2><p id="generationStatus" role="status" aria-live="polite">Your recording will appear here.</p></div><div class="transport-actions"><div class="generate-actions"><button id="preview" type="button" class="secondary" disabled>Preview opening</button><button id="generate" type="button" class="primary" disabled>Generate MP3</button></div><p class="help quota-note">Uses paid Google TTS quota.</p></div><div id="recording" hidden><audio id="player" controls preload="metadata" aria-label="Generated voiceover"></audio><div class="playback-controls"><label for="playbackSpeed">Playback speed</label><select id="playbackSpeed" aria-describedby="playbackHelp"><option value="0.75">0.75×</option><option value="1" selected>1.00×</option><option value="1.2">1.20×</option><option value="1.4">1.40×</option><option value="1.55">1.55×</option><option value="1.6">1.60×</option><option value="1.75">1.75×</option><option value="2">2.00×</option></select><span id="playbackHelp" class="help">Changes listening speed only. The MP3 download keeps its original pace.</span></div><div class="download-row"><span id="recordingInfo"></span><a id="download" class="secondary" download>Download MP3 ↓</a></div></div></section>
+<button id="analyzeLocal" type="button" class="secondary" disabled>Analyze with Local AI</button><p id="localAnalysisStatus" class="help" role="status" aria-live="polite"></p><pre id="localAnalysisResult" hidden></pre>
+</div>
+<section class="space-panel panel controls-panel" aria-labelledby="voiceHeading">
 <details id="voiceSettings" class="voice-settings" open><summary><h2 id="voiceHeading">Voice &amp; delivery</h2><span class="settings-hint">Settings</span></summary>
 <div class="settings-body"><button id="reloadVoices" type="button" class="quiet">Refresh voices</button>
 <fieldset id="voiceFields" disabled><legend class="sr-only">Voice settings</legend>
 <label for="engine">Speech engine</label><select id="engine"><option value="gemini">Gemini · expressive</option><option value="classic" selected>Google · classic</option></select>
 <div class="two"><div><label for="language">Language</label><select id="language"></select></div><div><label for="gender">Voice gender</label><select id="gender"><option value="">All voices</option><option value="MALE">Male</option><option value="FEMALE">Female</option><option value="NEUTRAL">Neutral</option></select></div></div>
 <div id="familyRow"><label for="family">Voice family</label><select id="family"></select></div>
-<label for="voice">Google voice</label><div class="voice-picker"><button id="voiceDemo" class="voice-demo-button" type="button" aria-label="Play Google voice sample" aria-pressed="false" disabled><span data-demo-icon aria-hidden="true">▶</span></button><select id="voice"></select></div><audio id="voiceDemoAudio" preload="none" hidden></audio><p id="voiceDemoStatus" class="help" role="status" aria-live="polite">Listen to Google’s original sample. No narration needed.</p><p id="voiceHelp" class="help"></p>
+<label for="voice">Google voice</label><div class="voice-picker"><button id="voiceDemo" class="voice-demo-button" type="button" aria-label="Play Google voice sample" aria-pressed="false" disabled><span data-demo-icon aria-hidden="true">▶</span></button><select id="voice"></select></div><audio id="voiceDemoAudio" preload="none" hidden></audio><p id="voiceDemoStatus" class="help" role="status" aria-live="polite">Listen to Google’s sample at the selected playback speed.</p><p id="voiceHelp" class="help"></p>
 <label for="preset">Delivery</label><select id="preset"><option value="natural">Natural</option><option value="sales">Sales · persuasive</option><option value="social">Social media · engaging</option><option value="empathetic">Empathetic · warm</option><option value="calm">Calm · reassuring</option><option value="documentary">Documentary · steady</option><option value="energetic">Excited · energetic</option><option value="dramatic">Dramatic · deliberate</option><option value="custom">Custom</option></select>
 <p id="deliveryHelp" class="help">These presets adjust speed and pitch only.</p>
 <div id="expressiveControls" hidden><label for="direction">Voice direction <span class="optional">optional</span></label><textarea id="direction" rows="3" maxlength="2000" placeholder="Describe the tone, emphasis or pronunciation you want…"></textarea><p class="help">Tone, emphasis and pronunciation · up to 2,000 bytes.</p></div>
@@ -47,9 +52,7 @@
 <div id="pauseRow"><label for="pause">Pause between paragraphs</label><select id="pause"><option value="0">Keep natural pauses</option><option value="250">Short · 250 ms</option><option value="500">Medium · 500 ms</option><option value="800">Long · 800 ms</option><option value="1500">Extended · 1.5 seconds</option></select></div></details>
 </fieldset></div></details>
 </section>
-<section class="panel result-panel" aria-labelledby="resultHeading"><div class="result-status"><h2 id="resultHeading">Listen &amp; export</h2><p id="generationStatus" role="status" aria-live="polite">Your recording will appear here.</p></div><div class="transport-actions"><div class="generate-actions"><button id="preview" type="button" class="secondary" disabled>Preview opening</button><button id="generate" type="button" class="primary" disabled>Generate MP3</button></div><p class="help quota-note">Uses paid Google TTS quota.</p></div><div id="recording" hidden><audio id="player" controls preload="metadata" aria-label="Generated voiceover"></audio><div class="playback-controls"><label for="playbackSpeed">Playback speed</label><select id="playbackSpeed" aria-describedby="playbackHelp"><option value="0.75">0.75×</option><option value="1" selected>1.00×</option><option value="1.2">1.20×</option><option value="1.4">1.40×</option><option value="1.55">1.55×</option><option value="1.75">1.75×</option><option value="2">2.00×</option></select><span id="playbackHelp" class="help">Changes listening speed only. The MP3 download keeps its original pace.</span></div><div class="download-row"><span id="recordingInfo"></span><a id="download" class="secondary" download>Download MP3 ↓</a></div></div></section>
-<button id="analyzeLocal" type="button" class="secondary" disabled>Analyze with Local AI</button><p id="localAnalysisStatus" class="help" role="status" aria-live="polite"></p><pre id="localAnalysisResult" hidden></pre>
-<section id="voiceoverHistory" class="panel history-panel" hidden aria-labelledby="historyHeading" tabindex="-1">
+<section id="voiceoverHistory" class="space-panel panel history-panel" hidden aria-labelledby="historyHeading" tabindex="-1">
 <div class="panel-heading"><h2 id="historyHeading">Voiceover history</h2><div class="history-heading-actions"><a class="editor-link" href="#scriptHeading">Narration ↑</a><button id="historyRefresh" type="button" class="quiet" aria-label="Refresh history">Refresh</button></div></div>
 <p id="historyStatus" class="help" role="status" aria-live="polite"></p>
 <p id="historyEmpty" class="help">Completed voiceovers appear here with their scripts and settings. Opening previews are not saved.</p>
@@ -57,6 +60,6 @@
 </section>
 </div>
 </main>
-<script type="module" src="tts.js?v=2026111113"></script>
+<script type="module" src="tts.js?v=2026111114"></script>
 <script type="module" src="tts-forest.js?v=1"></script>
 </body></html>

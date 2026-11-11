@@ -47,7 +47,7 @@ const server = http.createServer((req, res) => {
       });
       assert.ok(measurements.scrollWidth <= measurements.width + 1, `${width}: document overflow ${JSON.stringify(measurements)}`);
       assert.deepEqual(measurements.textOverflow, [], `${width}: clipped text`);
-      for (const [parent, child] of [['hero', 'vehicleText'], ['hero', 'service'], ['service', 'serviceText'], ['reminder', 'reminderText']]) {
+      for (const [parent, child] of [['hero', 'vehicleText'], ['service', 'serviceText'], ['reminder', 'reminderText']]) {
         assert.ok(measurements[child].right <= measurements[parent].right + 1, `${width}: ${child} exceeds ${parent}: ${JSON.stringify(measurements)}`);
       }
       if (width === 1920) assert.ok(measurements.main.width >= 1600, `Desktop workspace too narrow: ${JSON.stringify(measurements)}`);
@@ -58,6 +58,13 @@ const server = http.createServer((req, res) => {
       assert.equal(await page.locator('#vehicleForm [name=odometer]').isVisible(), true);
       await page.locator('#vehicleDialog .close').first().click();
       await page.locator('#serviceList button.edit').click();
+      const panels=await page.locator('.space-panels').evaluate(track=>({
+        count:track.querySelectorAll(':scope > .space-panel').length,
+        snap:getComputedStyle(track).scrollSnapType,
+        left:track.scrollLeft
+      }));
+      assert.equal(panels.count,3);
+      if(width<=900){assert.match(panels.snap,/x mandatory/);assert.ok(panels.left>0);}
       assert.equal(await page.locator('#serviceForm [name=work]').inputValue(), fixture.services[0].work);
       await page.locator('#serviceDialog .close').first().click();
       await page.locator('#reminderList button.edit').click();

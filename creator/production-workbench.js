@@ -1,5 +1,5 @@
-import {mountVideoStudio} from './video-studio/workspace.js?v=2026111207';
-import {mountHistoryWorkspace} from './history-workspace.js?v=2026111202';
+import {mountVideoStudio} from './video-studio/workspace.js?v=2026111208';
+import {mountHistoryWorkspace} from './history-workspace.js?v=2026111203';
 import {makeScene} from './storyboard-model.js?v=3';
 import {METHODS,IMPORT_FIELDS,uid,methodsOf,inspectImport,parseProductionImport,uniqueScenes,groupFor,taskFor,setTask,animationStage,requirements,sceneState,projectProgress,queueScenes,canonicalScript,scriptReview,filterScenes,productionReadiness} from './production-model.js?v=2026111112';
 import {loadPendingAiDraft,loadPendingAiAudio,clearPendingAiDraft} from './ai-draft.js?v=2026111112';

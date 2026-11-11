@@ -135,3 +135,63 @@
 }
 
 .v2-guide-empty{margin:8px 0;color:#a9bdc6;font-size:14px;line-height:1.4}
+/* Separate the dashboard's distant light, globe and foreground controls. */
+.v2-shell > .v2-ambient-field {
+  background:
+    radial-gradient(ellipse at 50% 52%, #1d26351c 0%, transparent 57%),
+    radial-gradient(ellipse at 12% 24%, #1d446126, transparent 42%),
+    radial-gradient(ellipse at 81% 78%, #7852271e, transparent 46%),
+    #000;
+}
+.v2-shell > .v2-topbar {
+  background: linear-gradient(180deg, #111c25f5, #05090ef2);
+  box-shadow: 0 14px 32px #000c, inset 0 1px #b6eef523;
+}
+.v2-guide-atmosphere {
+  background: radial-gradient(ellipse at 50% 49%, #d69f3f22, #19364614 38%, transparent 65%);
+}
+.v2-guide-mission,.v2-guide-timer,.v2-guide-work {
+  box-sizing: border-box;
+  padding: clamp(9px, 1.2vw, 18px);
+  border: 1px solid #a1d6df27;
+  border-radius: 14px;
+  background: linear-gradient(150deg, #101d27d9, #060a10e8 74%);
+  box-shadow: 0 16px 44px #000a, inset 0 1px #bcf1f620;
+}
+.v2-guide-panel-links { display: none }
+.v2-guide-globe-panel,.v2-guide-session-panel { display: contents }
+@media (max-width: 900px) {
+  .v2-guide-panel-links {
+    display: grid;
+    grid-template-columns: repeat(3,minmax(0,1fr));
+    gap: 5px;
+    padding: 6px;
+  }
+  .v2-guide-scene {
+    grid-template: auto / repeat(3,100%);
+    gap: 0;
+    padding: 0;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+  }
+  .v2-guide-scene > :is(.v2-guide-globe-panel,.v2-guide-mission,.v2-guide-session-panel) {
+    position: relative;
+    grid-area: 1 / auto;
+    min-width: 0;
+    align-self: start;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+  .v2-guide-globe-panel { display: grid; padding-block-start: 8px }
+  .v2-guide-globe-panel .v2-guide-atmosphere { pointer-events: none }
+  .v2-guide-session-panel { display: grid; gap: 12px; padding: 12px }
+  .v2-guide-session-panel :is(.v2-guide-timer,.v2-guide-work) {
+    grid-area: auto;
+    width: auto;
+    justify-self: stretch;
+    display: block;
+  }
+  .v2-guide-scene > .v2-guide-mission { margin: 12px; grid-column: 2; scroll-margin-inline: 12px }
+}

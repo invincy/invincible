@@ -12,6 +12,7 @@ const InvincibleAiPage=lazy(()=>import('./features/invincible-ai/InvincibleAiPag
 import{AppErrorBoundary}from'./AppErrorBoundary';
 import{InvincibleAiDock}from'./features/invincible-ai/InvincibleAiDock';
 import'./app-shell.css';
+import '../../shared/spatial-workspace.css';
 import{navigationPages,pageForPath}from'../../shared/navigation';
 const reactPages={dashboard:DashboardPage,ai:InvincibleAiPage,workday:WorkdayPage,reminders:RemindersPage,finance:FinancePage,portfolio:PortfolioPage,task:TaskPage};
 export default function App(){

@@ -52,7 +52,11 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
     assert.equal(await page.locator('.tts-river').count(),0,'The page uses the forest background');
   for(const asset of ['tts-forest.css','tts-forest.js'])assert.equal(await page.evaluate(async asset=>(await fetch(asset)).status,asset),200,'Forest asset loads: '+asset);
   assert.equal(await page.locator('#script').inputValue(),'');assert.equal(await page.locator('#voiceDemo').isEnabled(),true);assert.equal(await page.locator('#generate').isDisabled(),true);
+  await page.locator('#speed').fill('1.6');
   await page.locator('#voiceDemo').click();await page.waitForFunction(()=>document.querySelector('#voiceDemo').getAttribute('aria-pressed')==='true');
+  assert.equal(await page.locator('#voiceDemoAudio').evaluate(audio=>audio.playbackRate),1.6);
+  await page.locator('#speed').fill('1.25');
+  assert.equal(await page.locator('#voiceDemoAudio').evaluate(audio=>audio.playbackRate),1.25);
   assert.ok(demoRequests.at(-1).endsWith('hi-IN-Neural2-B.wav'));assert.equal(await page.evaluate(()=>window.lastTtsRequest),undefined);
   await page.locator('#voiceDemo').click();assert.equal(await page.locator('#voiceDemoAudio').evaluate(a=>a.paused&&!a.hasAttribute('src')),true);
   await page.locator('#voiceDemo').click();await page.waitForFunction(()=>document.querySelector('#voiceDemo').getAttribute('aria-pressed')==='true');
@@ -66,11 +70,14 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   await page.locator('.advanced').evaluate(el=>el.open=true);
   await page.locator('#volume').fill('3');
   await page.locator('#pause').selectOption('500');
+  await page.locator('#speed').fill('1.6');
   await page.locator('#preview').click();await page.locator('#recording').waitFor();
   const preview=await page.evaluate(()=>window.lastTtsRequest);
   assert.ok(preview.text.length<await page.locator('#script').inputValue().then(x=>x.length));
-  assert.equal(preview.speed,1.15);assert.equal(preview.volume,3);assert.equal(preview.paragraphPause,500);
+  assert.equal(await page.locator('#player').evaluate(audio=>audio.playbackRate),1);
+  assert.equal(preview.speed,1.6);assert.equal(preview.volume,3);assert.equal(preview.paragraphPause,500);
   assert.equal(historyDb.size,0,'Opening previews do not create history');
+  await page.locator('#speed').fill('1.15');
   await page.locator('#generate').click();await page.locator('#generationStatus').filter({hasText:'MP3 ready'}).waitFor();
   const full=await page.evaluate(()=>window.lastTtsRequest);assert.equal(full.text,await page.locator('#script').inputValue());
   const downloadPromise=page.waitForEvent('download');await page.locator('#download').click();const download=await downloadPromise;await download.saveAs(path.join(out,'download.mp3'));assert.ok(fs.statSync(path.join(out,'download.mp3')).size>10000);
@@ -117,8 +124,8 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   const expressive=await page.evaluate(()=>window.lastTtsRequest);
   assert.equal(await page.locator('#speedLabel').innerText(),'Gemini pace request');
   const downloadUrl=await page.locator('#download').getAttribute('href');
-  await page.locator('#playbackSpeed').selectOption('1.4');
-  assert.equal(await page.locator('#player').evaluate(a=>a.playbackRate),1.4);
+  await page.locator('#playbackSpeed').selectOption('1.6');
+  assert.equal(await page.locator('#player').evaluate(a=>a.playbackRate),1.6);
   assert.equal(await page.locator('#download').getAttribute('href'),downloadUrl);
   assert.equal(expressive.engine,'gemini');assert.equal(expressive.delivery,'sales');assert.equal(expressive.direction,'Warm and confident.');assert.equal(expressive.speed,1.35);assert.equal(expressive.pitch,0);assert.equal(expressive.paragraphPause,0);assert.equal(expressive.modelName,'gemini-2.5-pro-tts');
   await page.waitForTimeout(350);await page.reload();await page.locator('#accountStatus').filter({hasText:'voices available'}).waitFor();
@@ -164,12 +171,26 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
      assert.ok(await page.locator('#script').evaluate(el=>{const r=el.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return hit===el;}),'Editor unobscured on short phone '+width);
      await page.locator('#generate').scrollIntoViewIfNeeded();
     }
+   if(width<=900){
+    const positions=await page.locator('#workspace').evaluate(track=>{
+      const panels=[...track.querySelectorAll(':scope > .space-panel')];
+      return {mode:getComputedStyle(track).scrollSnapType, offsets:panels.map(panel=>panel.offsetLeft),width:track.clientWidth};
+    });
+    assert.match(positions.mode,/x mandatory/);
+    assert.equal(positions.offsets.length,3);
+    assert.ok(positions.offsets[2]-positions.offsets[1]>=positions.width-1);
+    await page.locator('#generate').scrollIntoViewIfNeeded();
+   }
    const action=await page.locator('#generate').boundingBox();
    assert.ok(action.height>=44&&action.y>=0&&action.y+action.height<=height,'Generate in viewport '+width);
-   for(const id of ['generate','player','download'])assert.ok(await page.locator('#'+id).evaluate(el=>{
+   for(const id of ['generate','player','download']){
+    const control=page.locator('#'+id);
+    await control.scrollIntoViewIfNeeded();
+    assert.ok(await control.evaluate(el=>{
     const r=el.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
     return r.y>=0&&r.bottom<=innerHeight&&hit&&(hit===el||el.contains(hit));
-   }),'Transport visible and unobscured: '+id+' at '+width);
+   }),'Transport reachable and unobscured: '+id+' at '+width);
+   }
     if(width>900&&height>=650){
     const editor=await page.locator('#script').boundingBox();
     assert.ok(editor.width>=220&&editor.height>=110&&editor.height<=301,'Usable, bounded desktop editor '+width);
@@ -178,7 +199,7 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
       const r=el.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
       return r.top>=0&&r.bottom<=innerHeight&&hit&&(hit===el||el.contains(hit));
      }),'Desktop history reachable without page scrolling: '+id+' at '+width);
-     assert.equal(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight+2),true,'Desktop workbench fits viewport '+width);
+     assert.equal(await page.locator('#workspace > .space-panel').count(),3);
      assert.equal(await page.locator('#voiceoverHistory').evaluate(el=>el.scrollHeight>el.clientHeight),true,'Long history has its own scroll region '+width);
    }
    if(width===393){

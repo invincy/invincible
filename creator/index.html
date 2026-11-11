@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="video-studio/studio.css?v=2026111003">
   <link rel="stylesheet" href="studio-ui.css?v=3">
   <link rel="stylesheet" href="image-generator.css?v=2026111205">
+<link rel="stylesheet" href="../shared/spatial-workspace.css?v=1">
 </head>
 <body class="creator-page studio-ui">
   <nav class="global-nav" data-compact-nav data-icon-nav aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
@@ -30,7 +31,7 @@
   <div id="status" class="sync-status" role="status" aria-live="polite">Connecting to Firebase…</div>
 
   <main id="app" hidden>
-    <section class="metrics" aria-label="Content overview">
+    <div class="space-panels creator-project-panels" tabindex="0" aria-label="Creator project panels"><div class="space-panel"><section class="metrics" aria-label="Content overview">
       <button class="metric-card" type="button" data-metric="pipeline"><span>In pipeline</span><strong id="inPipeline">0</strong></button>
       <button class="metric-card" type="button" data-metric="record"><span>Ready to record</span><strong id="readyCount">0</strong></button>
       <button class="metric-card" type="button" data-metric="next"><span>Next release</span><strong id="nextRelease">—</strong><small id="nextReleaseTitle">nothing scheduled</small></button>
@@ -38,7 +39,7 @@
     </section>
     <div id="metricView" class="metric-view" hidden><span id="metricViewLabel"></span><button id="clearMetric" type="button">Show everything ×</button></div>
 
-    <section class="toolbar">
+    </div><div class="space-panel"><section class="toolbar">
       <div class="filter-group" aria-label="Filter content">
         <button class="filter active" data-filter="All">All</button>
         <button class="filter" data-filter="Short">Shorts</button>
@@ -48,7 +49,7 @@
     </section>
 
     <nav id="stageTabs" class="stage-tabs" aria-label="Workflow stage"></nav>
-    <section id="board" class="board" aria-label="Content workflow"></section>
+    </div><section id="board" class="board space-panel" aria-label="Content workflow"></section></div>
   </main>
 
   <dialog id="contentDialog">
@@ -67,6 +68,6 @@
       <div class="dialog-actions"><button id="deleteContent" type="button" class="danger">Delete</button><span id="contentShotSummary" role="status" aria-live="polite">No scenes</span><button type="button" class="secondary close">Cancel</button><button id="saveContent" class="primary">Create</button></div>
     </form>
   </dialog>
-  <script type="module" src="creator.js?v=2026111207"></script>
+  <script type="module" src="creator.js?v=2026111208"></script>
 </body>
 </html>

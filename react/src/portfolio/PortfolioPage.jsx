@@ -80,8 +80,8 @@ function PortfolioWorkspace(){
  <nav className="pf-switch" aria-label="Asset class">{[['all','All assets'],['equity','Equity'],['mf','Mutual funds']].map(([v,label])=><button aria-pressed={filter===v} className={filter===v?'active':''} key={v} onClick={()=>{setFilter(v);setShowHoldings(false)}}>{label}</button>)}</nav>
  <section className="pf-summary"><div className="pf-balance"><span>Portfolio value</span><strong>{money(summary.value)}</strong><span className="pf-balance-icon"><PageIcon page="portfolio"/></span></div><div><span>Invested</span><strong>{money(summary.cost)}</strong></div><div><span>Unrealised return</span><strong className={summary.gain<0?'pf-down':'pf-up'}>{summary.gain>=0?'+':''}{money(summary.gain)}</strong><small>{summary.cost?`${(summary.gain/summary.cost*100).toFixed(2)}%`:'—'}</small></div></section>
  {filter==='equity'&&<EquityChart range={range} setRange={setRange} money={money} {...equityHistory}/>}
- <div className="pf-columns">
-   <section className="pf-surface pf-holdings">
+ <div className="pf-columns space-panels" tabIndex={0} aria-label="Portfolio panels">
+   <section className="pf-surface pf-holdings space-panel">
      <div className="pf-section-heading">
        <h2>Holdings <small>{rows.length}</small></h2>
        <button onClick={()=>{setDraft(fresh());openPanel('holding')}}>+ Add</button>
@@ -125,7 +125,7 @@ function PortfolioWorkspace(){
      </div>
      {rows.length>4&&!search&&<button className="pf-mobile-more" aria-expanded={showHoldings} aria-controls="pf-holdings-list" onClick={()=>setShowHoldings(!showHoldings)}>{showHoldings?'Show fewer':`View all ${rows.length} holdings`} <span aria-hidden="true">{showHoldings?'↑':'→'}</span></button>}
    </section>
-   <aside className="pf-surface pf-sips">
+   <aside className="pf-surface pf-sips space-panel">
      <div className="pf-section-heading">
        <h2><span className="pf-section-icon"><PageIcon page="workday"/></span>Monthly SIPs</h2>
        <button onClick={()=>{setSip(freshSip());openPanel('sip')}}>+ Add</button>
@@ -141,8 +141,7 @@ function PortfolioWorkspace(){
        {pending.map(s=><button className="pf-due" key={s.eventId} onClick={()=>{setTrade({id:s.holdingId,type:'buy',units:'',price:'',date:s.date,eventId:s.eventId,amount:s.amount,name:fundName(s.holdingId)});openPanel('trade')}}>{s.date} · {money(s.amount)} →</button>)}
      </div>
    </aside>
- </div>
- <details className="pf-surface pf-sales"><summary>Sales & “if I had held”</summary>{state.events.filter(e=>e.type==='sell').map(e=>{const h=state.holdings.find(h=>h.id===e.holdingId);return <div className="pf-sale" key={e.id}><b>{e.name} · {e.date}</b><span>Sold {e.units} for {money(e.units*e.price)}</span><span>Realised {money(e.realised)}</span><span>{h?`If held: ${money(e.units*h.price)} · difference ${money(e.units*(h.price-e.price))} as of ${h.priceDate}`:'Current quote unavailable'}</span></div>})}{!state.events.some(e=>e.type==='sell')&&<p>No recorded sales</p>}</details>
+ <details className="pf-surface pf-sales space-panel"><summary>Sales & “if I had held”</summary>{state.events.filter(e=>e.type==='sell').map(e=>{const h=state.holdings.find(h=>h.id===e.holdingId);return <div className="pf-sale" key={e.id}><b>{e.name} · {e.date}</b><span>Sold {e.units} for {money(e.units*e.price)}</span><span>Realised {money(e.realised)}</span><span>{h?`If held: ${money(e.units*h.price)} · difference ${money(e.units*(h.price-e.price))} as of ${h.priceDate}`:'Current quote unavailable'}</span></div>})}{!state.events.some(e=>e.type==='sell')&&<p>No recorded sales</p>}</details></div>
  {panel&&<dialog ref={dialogRef} className={`pf-dialog${panel==='import'?' pf-dialog-import':''}`} aria-labelledby="pf-dialog-title" onCancel={e=>{e.preventDefault();closePanel()}} onClick={e=>{if(e.target===e.currentTarget)closePanel()}}>
  <section className="pf-dialog-content">
    <header><h2 id="pf-dialog-title">{({details:selectedHolding?.name||'Holding',holding:'Holding details',trade:'Record transaction',sip:'SIP schedule',import:'Review Kite import',removeSip:'Remove SIP schedule?',undo:'Undo last change?'})[panel]}</h2><button type="button" aria-label="Close" onClick={closePanel}>×</button></header>

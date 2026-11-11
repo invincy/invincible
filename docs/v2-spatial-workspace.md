@@ -261,3 +261,13 @@ The production and V2 builds, site references, particle and startup tests, and C
 The globe, dashboard header, shared menus and Journal navigation use larger icons. The globe keeps its original animated filaments and flecks. Additional fine dots use simpler motion, bringing the total to 174,000 points on desktop and 114,000 on mobile. Lower-capability devices use 66,000 points. The desktop globe and its shortcut layout are 15% larger than the preceding release. The mobile diameter is unchanged.
 
 A dedicated circular surface accepts presses and swipes across empty areas of the globe. App shortcuts remain separate targets. Quick releases produce a stronger spin and longer coast, including on the fallback globe. Reduced motion suppresses automatic movement and keeps deliberate flicks available.
+
+## Spatial workspace layout
+
+The Dashboard uses a black backdrop, the existing particle network, and raised focus and session surfaces. On phones, the Globe, In focus, and Session views share one horizontal scroll track. Tapping the named controls also switches panels.
+
+Finance, Portfolio, Tasks, Workday, Reminders, Invincible AI, Garage, the LIC hub, Creator projects, Voiceover, Image Generator, Motion Studio, and Map Editor use three-panel workspaces. Desktop shows the panels side by side. At 900 px and below, a horizontally snapped track shows one panel at a time. The Map Editor reserves gestures on the canvas for map manipulation and has separate Tools, Map, and Layers buttons. The layout leaves saved maps and export settings intact.
+
+The packaged Journal notebook and individual LIC workspaces and presentations still use their own layouts.
+
+Local browser checks covered Dashboard touch navigation, Finance desktop and phone panels with fixture data, Map Editor editing and responsive layout, Garage records and dialogs, Portfolio, Reminders, and Task and Workday controls. Release 2026.11.11.5 includes these layouts. Signed-in production data and physical phone gestures remain unverified.

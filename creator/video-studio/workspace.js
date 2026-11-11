@@ -1,5 +1,5 @@
 import {checkStudioGlb, MAX_MODEL_BYTES} from './three-scene.js';
-import {mountConnectedImageGenerator} from '../image-generator.js?v=2026111205';
+import {mountConnectedImageGenerator} from '../image-generator.js?v=2026111206';
 import {callImageRelay,draftRemoteImagePrompt} from '../../shared/firebase-image-relay.js?v=2026111205';
 import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=2026111002';
 import {studioBrief} from './handoff.js?v=2026111207';
@@ -7,7 +7,7 @@ import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111207';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111207';
 import {createStudioRenderer} from './adapters.js?v=2026111207';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111014';
-import {mountAssembly} from './assembly.js?v=2026111207';
+import {mountAssembly} from './assembly.js?v=2026111208';
 import {encodeStudioVideo} from './export.js?v=2026111014';
 import {openStudioStore} from './storage.js';
 import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111203';
@@ -20,7 +20,7 @@ const uid=()=>crypto.randomUUID();
 const template=(name,text)=>({id:name,startSeconds:0,durationSeconds:2,engineType:'graphic',engineData:{},transition:{type:'fade',durationSeconds:.3},overlays:[{id:'title',type:'text',text,x:.5,y:.5,fontSize:64}]});
 export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session={},mediaService=null}){
  root.className='video-studio';
- root.innerHTML=`<div class="vs-layout"><div><strong>Video Studio · Phase 1</strong><p class="vs-help">Separate video draft. Existing storyboard, map and LIC pages are preserved. Use the shared uploader above for cloud media. The owner can Save the complete video draft to sync it across devices.</p>
+ root.innerHTML=`<div class="vs-layout space-panels" tabindex="0" aria-label="Motion Studio panels"><div><strong>Video Studio · Phase 1</strong><p class="vs-help">Separate video draft. Existing storyboard, map and LIC pages are preserved. Use the shared uploader above for cloud media. The owner can Save the complete video draft to sync it across devices.</p>
  <div class="vs-actions"><button data-vs="save">Save video draft</button><button data-vs="download">Download JSON</button><button data-vs="example">Load example</button></div>
  <label>Video title<input data-vs-title maxlength="200"></label><div class="vs-grid"><label>Frame<select data-vs-ratio><option value="9:16">Portrait · 1080 × 1920</option><option value="16:9">Landscape · 1920 × 1080</option></select></label><label>Brand<select data-vs-brand></select></label></div>
  <div class="vs-actions"><label><input type="checkbox" data-vs-intro>Apply intro</label><label><input type="checkbox" data-vs-outro>Apply outro</label></div>
@@ -28,15 +28,23 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  <details><summary>Animation JSON</summary><label>Import JSON file<input type="file" data-vs-json-file accept=".json,application/json"></label><textarea data-vs-json aria-label="Video manifest JSON" placeholder="Paste structured Video Studio JSON"></textarea><div class="vs-actions"><button data-vs="validate">Review import</button><button data-vs="apply" disabled>Apply reviewed import</button></div><p data-vs-review class="vs-help"></p></details>
  <details><summary>Assets & voiceover</summary><label>Upload images<input type="file" data-vs-images multiple accept="image/png,image/jpeg,image/webp"></label><p class="vs-help">PNG, JPEG or WebP, up to 25 MB each. Use the asset ID in an image overlay or logo slot. Existing map image references appear below.</p><select data-vs-library aria-label="Existing map image"><option value="">Choose existing map image</option></select><button data-vs="reuse">Reuse selected image</button><div data-vs-assets class="vs-files"></div>
  <label>Upload voiceover<input type="file" data-vs-audio accept=".mp3,.wav,audio/mpeg,audio/wav"></label><p data-vs-audio-name class="vs-help">No voiceover selected</p><div class="vs-grid"><label>Audio start (content seconds)<input type="number" min="0" max="600" step=".01" data-vs-audio-start value="0"></label><label>Gain<input type="number" min="0" max="2" step=".05" data-vs-gain value="1"></label></div><button data-vs="remove-audio">Remove voiceover from video</button></details>
- <div role="status" aria-live="polite" data-vs-status></div></div><div class="vs-preview"><canvas aria-label="Video preview"></canvas><div data-vs-track class="vs-track" aria-label="Common timeline"></div><input type="range" min="0" max="1" step=".0333333333" value="0" data-vs-seek aria-label="Video time"><output data-vs-time>0.00s</output><div class="vs-actions"><button data-vs="play">Play</button><button data-vs="pause">Pause</button><button data-vs="export">Export MP4</button><button data-vs="cancel" disabled>Cancel export</button></div><progress data-vs-progress value="0" max="1"></progress><p class="vs-help">30 fps · 1080p · MP4 with audio when voiceover is selected (AAC preferred, Opus fallback). Full audio is preserved; its duration may extend the video. Fade transitions use the brand background. Export needs H.264 and audio WebCodecs support. Opus MP4 may need a current player.</p></div></div>`;
+ <div role="status" aria-live="polite" data-vs-status></div></div><div class="vs-preview space-panel"><canvas aria-label="Video preview"></canvas><div data-vs-track class="vs-track" aria-label="Common timeline"></div><input type="range" min="0" max="1" step=".0333333333" value="0" data-vs-seek aria-label="Video time"><output data-vs-time>0.00s</output><div class="vs-actions"><button data-vs="play">Play</button><button data-vs="pause">Pause</button><button data-vs="export">Export MP4</button><button data-vs="cancel" disabled>Cancel export</button></div><progress data-vs-progress value="0" max="1"></progress><p class="vs-help">30 fps · 1080p · MP4 with audio when voiceover is selected (AAC preferred, Opus fallback). Full audio is preserved; its duration may extend the video. Fade transitions use the brand background. Export needs H.264 and audio WebCodecs support. Opus MP4 may need a current player.</p></div></div>`;
  const $=q=>root.querySelector(q),canvas=$('canvas'),mapAssets=()=>getProject()?.historicalMap?.visual?.assets||[];
  // Keep the original controls available under Advanced; make visual assembly the opening view.
  const legacy=$('.vs-layout > div'),advanced=document.createElement('details'),assemblyRoot=document.createElement('section'),header=document.createElement('header');
- advanced.className='vs-advanced';advanced.innerHTML='<summary>Advanced · brand & project settings</summary>';legacy.before(advanced);advanced.append(legacy);legacy.querySelector('strong').textContent='Project settings';
- assemblyRoot.dataset.assembly='';assemblyRoot.className='vs-assembly';$('.vs-layout').prepend(assemblyRoot);
- header.className='vs-studio-header';header.innerHTML='<div><span class="vs-eyebrow">CREATOR</span><h2>Motion Studio</h2></div><div class="vs-actions" data-studio-actions></div>';root.prepend(header);const mobile=document.createElement('nav');mobile.className='vs-mobile-tabs';mobile.setAttribute('aria-label','Studio panels');mobile.innerHTML='<button data-mobile-panel=preview aria-pressed=true>Preview</button><button data-mobile-panel=scenes aria-pressed=false>Scenes & audio</button>';header.after(mobile);root.dataset.mobilePanel='preview';mobile.onclick=e=>{const b=e.target.closest('[data-mobile-panel]');if(!b)return;root.dataset.mobilePanel=b.dataset.mobilePanel;mobile.querySelectorAll('button').forEach(n=>n.setAttribute('aria-pressed',String(n===b)));};
+ advanced.className='vs-advanced space-panel';advanced.innerHTML='<summary>Advanced · brand & project settings</summary>';legacy.before(advanced);advanced.append(legacy);legacy.querySelector('strong').textContent='Project settings';
+ assemblyRoot.dataset.assembly='';assemblyRoot.className='vs-assembly space-panel';$('.vs-layout').prepend(assemblyRoot);
+ header.className='vs-studio-header';header.innerHTML='<div><span class="vs-eyebrow">CREATOR</span><h2>Motion Studio</h2></div><div class="vs-actions" data-studio-actions></div>';root.prepend(header);const mobile=document.createElement('nav');
+ mobile.className='vs-mobile-tabs';mobile.setAttribute('aria-label','Studio panels');
+ mobile.innerHTML='<button type="button" data-mobile-panel="scenes">Scenes &amp; audio</button><button type="button" data-mobile-panel="preview">Preview</button><button type="button" data-mobile-panel="settings">Settings</button>';
+ header.after(mobile);
+ const panels={scenes:assemblyRoot,preview:$('.vs-preview'),settings:advanced};
+ mobile.onclick=event=>{
+  const button=event.target.closest('[data-mobile-panel]');
+  if(button)panels[button.dataset.mobilePanel].scrollIntoView({block:'nearest',inline:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+ };
  for(const key of ['save','export'])header.querySelector('[data-studio-actions]').append($(`[data-vs=${key}]`));
- $('.vs-layout').after(advanced);advanced.append($('[data-vs-status]'));root.append($('[data-vs-status]'));
+ $('.vs-layout').append(advanced);advanced.append($('[data-vs-status]'));root.append($('[data-vs-status]'));
  $('.vs-preview .vs-help').textContent='Full HD · 30 fps. Your scenes and audio export together.';
  $('[data-vs=save]').textContent='Save';$('[data-vs=export]').textContent='Export MP4';
  const jpgButton=document.createElement('button');jpgButton.type='button';jpgButton.dataset.vs='jpg-previews';jpgButton.textContent='Export JPG previews';$('[data-vs=export]').before(jpgButton);

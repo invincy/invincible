@@ -280,3 +280,7 @@ modules are migrated or modified by opening this page.
 - [Google audio settings](https://docs.cloud.google.com/text-to-speech/docs/reference/rest/v1/AudioConfig)
 - [Chirp 3 HD controls](https://docs.cloud.google.com/text-to-speech/docs/chirp3-hd)
 - [Firebase callable Functions](https://firebase.google.com/docs/functions/callable)
+
+## Sample playback speed
+
+The stock Google voice sample follows the speed slider, including changes during playback. Preview opening and Generate MP3 send the selected speed to synthesis. Their audio starts at its recorded rate by default. The separate Playback speed control changes only listening speed. Classic voices with rate support receive a numeric speaking rate. Gemini receives a performance direction with an approximate speaking pace.

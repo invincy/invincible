@@ -1,6 +1,6 @@
 import {observeAuth} from '../shared/firebase-client.js';
 import {loadVoices,generateVoiceover} from './tts-api.js';
-import {createVoiceDemoPlayer} from './tts-voice-demo-player.js';
+import {createVoiceDemoPlayer} from './tts-voice-demo-player.js?v=2026111113';
 import {createTtsHistoryClient} from './tts-history-api.js?v=2026111004';
 import {savePendingAiDraft} from './ai-draft.js?v=2026111112';
 import {createLocalImageClient} from '../shared/local-image-client.js?v=2026111112';
@@ -19,7 +19,7 @@ function arrangeSettings(){voiceSettings.open=desktopLayout.matches||mobileSetti
 voiceSettings.addEventListener('toggle',()=>{if(!desktopLayout.matches)mobileSettingsOpen=voiceSettings.open;});
 desktopLayout.addEventListener('change',arrangeSettings);
 arrangeSettings();
-const voiceDemo=createVoiceDemoPlayer({button:$('voiceDemo'),audio:$('voiceDemoAudio'),message:$('voiceDemoStatus'),recording:$('player'),getVoice:()=>$('voice').value,canPlay:()=>!!user&&!busy&&!loading});
+const voiceDemo=createVoiceDemoPlayer({button:$('voiceDemo'),audio:$('voiceDemoAudio'),message:$('voiceDemoStatus'),recording:$('player'),getVoice:()=>$('voice').value,getSpeed:()=>$('speed').value,canPlay:()=>!!user&&!busy&&!loading});
 function status(message,error=false){$('generationStatus').textContent=message;$('generationStatus').classList.toggle('error',error);}
 function setOptions(select,options,value){select.replaceChildren(...options.map(o=>{const el=document.createElement('option');el.value=o.value;el.textContent=o.label;return el;}));if(options.some(o=>o.value===value))select.value=value;}
 function selectedVoice(){return voices.find(v=>v.name===$('voice').value);}
@@ -47,7 +47,7 @@ function refreshAvailability(){
  $('ssmlGuide').hidden=expressive();
  $('deliveryHelp').textContent=expressive()?'Style and voice direction are sent to Gemini as performance instructions.':'These presets adjust speed and pitch only.';
  $('speedLabel').textContent=expressive()?'Gemini pace request':'Generation speed';
- $('speedHelp').textContent=expressive()?'Applies to your next preview or MP3. Gemini aims for this pace, so the result may be slower or faster. Use Playback speed to hear an exact speed change.':'Applies to your next preview or MP3. Use Playback speed to change how fast the current recording plays.';
+ $('speedHelp').textContent=expressive()?'Applies to your next preview or MP3. Gemini aims for this pace, so the result may be slower or faster. Use Playback speed to hear an exact speed change.':'Applies to the Google sample and to your next preview or MP3. Use Playback speed for the current recording.';
  for(const value of ['sales','social','empathetic','calm'])$('preset').querySelector('[value='+value+']').disabled=!expressive();
  $('preset').querySelector('[value=custom]').disabled=expressive();
  for(const button of $('historyList').querySelectorAll('button'))button.disabled=busy||loading||historyLoading||!user||(historyWrites.has(button.dataset.id)&&!['restore','export'].includes(button.dataset.action));
@@ -55,6 +55,7 @@ function refreshAvailability(){
  $('historyMore').disabled=historyLoading||!user;
 }
 function meters(){
+ voiceDemo.updateSpeed();
  $('speedValue').textContent=(expressive()?'≈ ':'')+Number($('speed').value).toFixed(2)+'×';
  $('pitchValue').textContent=$('pitch').value+' semitones';$('volumeValue').textContent=$('volume').value+' dB';
  $('count').textContent=encoder.encode($('script').value).length.toLocaleString()+' / 30,000 bytes';
@@ -246,7 +247,7 @@ async function record(preview){
   if(typeof result.audioBase64!=='string'||result.mimeType!=='audio/mpeg')throw Error('The server returned no MP3.');
   const decoded=atob(result.audioBase64),buffer=Uint8Array.from(decoded,c=>c.charCodeAt(0));
   clearAudio();audioBytes=buffer;audioUrl=URL.createObjectURL(new Blob([buffer],{type:result.mimeType}));
-  $('player').src=audioUrl;$('download').href=audioUrl;$('download').download=result.filename;
+  $('player').src=audioUrl;applyPlaybackSpeed();$('download').href=audioUrl;$('download').download=result.filename;
   $('recording').hidden=false;$('recordingInfo').textContent=result.durationSeconds.toFixed(1)+' sec · '+result.voiceName+(preview?' · opening preview':'');
   if(data.engine==='gemini')$('recordingInfo').textContent+=' · '+data.delivery+' · requested pace ≈ '+data.speed+'×';
   status(preview?'Preview ready. Listen, adjust, then generate the full recording.':'MP3 ready. Listen before downloading.');

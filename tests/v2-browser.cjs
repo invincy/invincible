@@ -160,6 +160,15 @@ async function checkOrbGestures(browser, base, touch) {
       await send('touchMove',[{x:x+72,y}]);
       await send('touchEnd',[]);
       await assertCoasts();
+      const panelLinks=page.getByRole('navigation',{name:'Dashboard panels'});
+      await panelLinks.getByRole('button',{name:'Session'}).click();
+      await page.waitForFunction(()=>{
+        const track=document.querySelector('.v2-guide-scene');
+        return track.scrollLeft>track.clientWidth*1.8;
+      });
+      await panelLinks.getByRole('button',{name:'Globe'}).click();
+      await page.waitForFunction(()=>document.querySelector('.v2-guide-scene').scrollLeft<2);
+      await assertWidth(await originalNarrowWidth());
     }else{
       await page.mouse.move(x,y);
       await page.mouse.down();
@@ -651,10 +660,13 @@ async function checkGlobeWithoutWebGL(browser,base) {
           await touchPage.goto(base+'/fixture');
           await touchPage.locator('.v2-guide-mission h2').getByText('Build the living workspace').waitFor();
           const cdp=await touchContext.newCDPSession(touchPage);
-          await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:350,y:540}]});
-          for(let x=330;x>=110;x-=20){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:540}]});await touchPage.waitForTimeout(20);}
+          const dashboardTrack=await touchPage.locator('.v2-guide-scene').boundingBox();
+          const swipeY=Math.round(dashboardTrack.y+dashboardTrack.height-12);
+          await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:350,y:swipeY}]});
+          for(let x=330;x>=70;x-=20){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:swipeY}]});await touchPage.waitForTimeout(20);}
           await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
-          await touchPage.waitForFunction(()=>document.querySelector('.v2-canvas').scrollLeft>100);
+          await touchPage.waitForFunction(()=>document.querySelector('.v2-guide-scene').scrollLeft>100);
+          assert.ok(await touchPage.locator('.v2-canvas').evaluate(canvas=>canvas.scrollLeft<2),'Dashboard swipes stay within its panel track');
           assert.equal(await touchPage.locator('.v2-free-canvas').count(),0,'Touch navigation remains bounded to the two workspace regions');
           await touchPage.getByRole('link',{name:'02 My Workspace'}).click();
           await touchPage.waitForFunction(()=>document.querySelector('.v2-canvas').scrollLeft>100);
