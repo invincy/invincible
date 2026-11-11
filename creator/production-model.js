@@ -10,7 +10,7 @@ const aliases={
  videoPrompt:['videoprompt','videogenerationprompt'],blenderPrompt:['blenderprompt','codexprompt','animationprompt'],
  productionMethods:['productionmethod','productionmethods','method'],productionStatus:['productionstatus','status'],
  voiceoverTimestamp:['timestamp','timestamps','voiceovertimestamp','voiceovertimestamps','audiotimestamp','audiotimestamps','votimestamp','timecode','audiotimecode','exacttimestamp'],
- animationGroup:['animationgroup','group'],camera:['camera','cameramovement'],technicalNotes:['technicalnotes','notes']
+ animationGroup:['animationgroup','group'],camera:['camera','cameramovement'],technicalNotes:['technicalnotes','notes'],mapAnimation:['mapanimation','animationplan']
 };
 export const IMPORT_FIELDS=Object.keys(aliases);
 export function methodsOf(scene){
@@ -32,7 +32,7 @@ export function inspectImport(input){
   const items=Array.isArray(data)?data:data.scenes;
   if(!Array.isArray(items)||!items.length||items.some(item=>!item||typeof item!=="object"||Array.isArray(item)))throw Error("JSON must contain a non-empty array of scene objects.");
   const headers=[...new Set(items.flatMap(item=>Object.keys(item)))];
-  return {format:"JSON",headers,rows:items.map(item=>headers.map(key=>Array.isArray(item[key])?item[key].join("; "):String(item[key]??""))),mapping:headers.map(key=>IMPORT_FIELDS.find(field=>aliases[field].includes(norm(key)))||"")};
+  return {format:"JSON",headers,rows:items.map(item=>headers.map(key=>Array.isArray(item[key])?item[key].join("; "):item[key]&&typeof item[key]==='object'?JSON.stringify(item[key]):String(item[key]??""))),mapping:headers.map(key=>IMPORT_FIELDS.find(field=>aliases[field].includes(norm(key)))||"")};
  }
  const lines=text.split(/\r?\n/);
  const separator=lines.findIndex(line=>line.includes('|')&&markdownRow(line).every(cell=>/^:?-{3,}:?$/.test(cell.replace(/\s/g,''))));
@@ -56,7 +56,7 @@ export function parseProductionImport(input,mappingOverride){
  return table.rows.map((row,index)=>{
   if(row.length!==table.headers.length)throw Error('Row '+(index+1)+': column count differs. Use quoted TSV cells or <br> in Markdown for line breaks.');
   const data={};
-  mapping.forEach((field,i)=>{if(field)data[field]=row[i]??'';});
+  mapping.forEach((field,i)=>{if(field)data[field]=field==='mapAnimation'&&row[i]?JSON.parse(row[i]):row[i]??'';});
   const timing=data.duration;
   if(timing){try{data.duration=storyboardDuration(timing);}catch(error){throw Error('Row '+(index+1)+': '+error.message);}if(/[-–—−]/.test(timing))data.timeline=timing;}
   data.productionMethods=methodsOf(data);

@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { readAnimation } from '../creator/map-animation-import.js?v=2026111112';
 
 const AUDIO_EXTENSIONS = new Set(['.mp3', '.wav']);
 
@@ -29,6 +30,8 @@ export async function loadCreatorAssetCatalog(repoRoot) {
   const readJson = async relative => JSON.parse(await fs.readFile(path.join(root, relative), 'utf8'));
   const army = await readJson('creator/asset-libraries/historical-army-commanders-v1.json');
   const flags = await readJson('creator/history-data/border-flags-v3/manifest.json');
+  const styleProfile = await readJson('creator/creative-style-profile.json');
+  const verifiedExample = await readJson('creator/map-animation-example.json');
   const assets = [
     ...(Array.isArray(army.assets) ? army.assets : []),
     ...(Array.isArray(flags) ? flags : [])
@@ -36,6 +39,8 @@ export async function loadCreatorAssetCatalog(repoRoot) {
   return {
     version: 1,
     assets,
+    styleProfile,
+    verifiedExample,
     animationPresets: [
       { id: 'documentary', description: 'Documentary map overlay and typography preset.' },
       { id: 'legacy', description: 'Legacy map overlay preset.' },
@@ -69,6 +74,34 @@ export async function analyzeVoiceover({ audioPath, workspaceRoot, assetCatalog 
   return assembleSceneDraft(transcript, qwenDraft, assetCatalog);
 }
 
+export function buildCreativePlanPrompt(transcript, assetCatalog, creativeInstructions = '') {
+  const t=normalizeTranscript(transcript), assets=(assetCatalog.assets||[]).filter(a=>/commander|troop|infantry|cavalry|elephant|cannon/i.test(a.name)).map(({id,name,type})=>({id,name,type}));
+  const locations=Array.isArray(assetCatalog.verifiedLocations)?assetCatalog.verifiedLocations:[],routes=Array.isArray(assetCatalog.verifiedRoutes)?assetCatalog.verifiedRoutes:[];
+  return `Return JSON only. Choose one compact animation intention for each segment. Never invent positions, routes or asset IDs. Use only the verified locations and routes supplied here; if the catalog has no suitable geometry, keep the intent descriptive and explain what is missing. Output {"scenes":[{"sourceSegmentId":"segment-1","intent":"advance|reveal|hold|title","assetId":"catalog id or empty","locationId":"verified location ID or empty","routeId":"verified route ID or empty","title":"short label"}]}. Segments: ${JSON.stringify(t.segments.map(s=>({id:s.id,text:s.text,start:s.start,end:s.end})))}. Verified locations: ${JSON.stringify(locations.map(({id,name,coordinates,sourceUrl,sourceDate,precisionNote})=>({id,name,coordinates,sourceUrl,sourceDate,precisionNote})))}. Verified routes: ${JSON.stringify(routes.map(({id,name,coordinates,sourceUrl,sourceDate,precisionNote,reviewed})=>({id,name,coordinates,sourceUrl,sourceDate,precisionNote,reviewed})))}. Approved assets: ${JSON.stringify(assets)}. Creative direction: ${normalizeCreativeInstructions(creativeInstructions)}`;
+}
+
+export function compileCreativePlan(transcript, plan, assetCatalog) {
+  const t=normalizeTranscript(transcript),segments=new Map(t.segments.map(s=>[s.id,s])),assets=catalogMap(assetCatalog),rows=Array.isArray(plan?.scenes)?plan.scenes:[];
+  if(rows.length!==t.segments.length)throw Error(`Creative pass must return one plan per segment; expected ${t.segments.length}, received ${rows.length}.`);
+  const locations=new Map((assetCatalog.verifiedLocations||[]).map(item=>[String(item.id),item])),routes=new Map((assetCatalog.verifiedRoutes||[]).filter(item=>item.reviewed===true).map(item=>[String(item.id),item]));
+  const scenes=rows.map((row,i)=>{
+    const seg=segments.get(String(row.sourceSegmentId));if(!seg)throw Error(`Plan ${i+1} references an unknown segment.`);
+    const assetId=String(row.assetId||'');if(assetId&&!assets.has(assetId))throw Error(`Plan ${i+1} selected an unregistered asset.`);
+    if(!['advance','reveal','hold','title'].includes(row.intent))throw Error(`Plan ${i+1} has an unsupported intent.`);
+    const duration=Number((seg.end-seg.start).toFixed(3)),route=routes.get(String(row.routeId||'')),location=locations.get(String(row.locationId||''));let mapAnimation=null;const missingInfo=[];
+    if(row.intent==='advance'){
+      const coordinates=route?.coordinates;
+      const sourced=route&&String(route.sourceUrl||'').startsWith('https://')&&String(route.sourceDate||'').trim()&&String(route.precisionNote||'').trim()&&Array.isArray(coordinates)&&coordinates.length>=2&&coordinates.every(point=>Array.isArray(point)&&point.length===2&&point.every(Number.isFinite)&&Math.abs(point[0])<=180&&Math.abs(point[1])<=90);
+      if(sourced){const first=coordinates[0],last=coordinates.at(-1);mapAnimation={format:'invincible-map-animation',version:1,title:String(route.name||row.title||'Verified route'),duration,aspectRatio:'9:16',basemap:'terrain',terrain:false,overlayPreset:'documentary',camera:[{time:0,center:first,zoom:5,pitch:0,bearing:0,easing:'smooth'},{time:duration,center:last,zoom:5.35,pitch:0,bearing:0,easing:'smooth'}],assets:[],layers:[{id:`route-${i+1}`,type:'route',name:`${String(route.name||'Verified route')} · ${String(route.precisionNote)}`,start:0,end:duration,coordinates,color:'#E1C65B',lineWidth:3.5,revealDuration:Math.min(1.8,duration*.6),fadeIn:.2,fadeOut:.2,arrowhead:true}]};}
+      else missingInfo.push('No reviewed, sourced route geometry is available for this movement; no route was invented.');
+    }else if(location&&Array.isArray(location.coordinates)&&location.coordinates.length===2&&location.coordinates.every(Number.isFinite)&&String(location.sourceUrl||'').startsWith('https://')&&String(location.sourceDate||'').trim()&&String(location.precisionNote||'').trim()){
+      const center=location.coordinates;mapAnimation={format:'invincible-map-animation',version:1,title:String(row.title||location.name||row.intent),duration,aspectRatio:'9:16',basemap:'terrain',terrain:false,overlayPreset:'documentary',camera:[{time:0,center,zoom:4.9,pitch:0,bearing:0,easing:'smooth'},{time:duration,center,zoom:5.25,pitch:0,bearing:0,easing:'smooth'}],assets:[],layers:[{id:`label-${i+1}`,type:'label',name:String(location.name),start:0,end:duration,position:center,color:'#F4F5F7',scale:1}]};
+    }else missingInfo.push('No reviewed, sourced location geometry is available for this scene; no coordinates were invented.');
+    if(assetId)missingInfo.push(`Selected asset ${assets.get(assetId).name} has no verified map placement in this catalog.`);
+    const checked=mapAnimation?readAnimation(mapAnimation):null;return {id:`scene-${i+1}`,sourceSegmentIds:[seg.id],visual:String(row.title||seg.text),animation:String(row.intent),assetIds:assetId?[assetId]:[],missingInfo,mapAnimation:checked};
+  });return {scenes};
+}
+
 function finite(value) { return typeof value === 'number' && Number.isFinite(value); }
 
 export function normalizeTranscript(input) {
@@ -100,13 +133,45 @@ export function buildQwenPrompt(transcript, assetCatalog = [], creativeInstructi
   const direction = normalizeCreativeInstructions(creativeInstructions);
   const catalog = Array.isArray(assetCatalog) ? { assets: assetCatalog, animationPresets: [] } : assetCatalog;
   const assets = (catalog.assets || []).map(asset => ({ id: String(asset.id), name: String(asset.name ?? ''), type: String(asset.type ?? ''), description: String(asset.description ?? asset.notes ?? '') }));
+  const styleProfile = catalog.styleProfile || { id: 'invincible-documentary-v1', composition: { aspectRatio: '9:16', safeMargin: 64 }, palette: { background: '#071426', foreground: '#F4F5F7', accent: '#E1C65B' }, camera: { movement: 'continuous-subtle', preferredEasing: 'smooth', minimumKeys: 2 }, animation: { overlayPreset: 'documentary', troopMovement: 'sequential-timed-layers' }, historicalIntegrity: { useVerifiedAssetsOnly: true, doNotInventCoordinates: true } };
   return [
     'You are Invincible Voiceover Analysis. Return JSON only.',
     'Create a draft scene plan from the supplied transcript.',
     'Do not create timestamps: use only sourceSegmentIds. Do not invent asset IDs; choose only IDs from the supplied catalog. If no asset fits, return an empty assetIds array and add a missingInfo item.',
-    'Required JSON shape: {"scenes":[{"id":"scene-1","sourceSegmentIds":["segment-1"],"visual":"...","animation":"...","assetIds":[],"missingInfo":[]}]}',
-    JSON.stringify({ transcript: normalized, creativeInstructions: direction, assetCatalog: assets, animationPresets: catalog.animationPresets || [] })
+    'Required JSON shape: {"scenes":[{"id":"scene-1","sourceSegmentIds":["segment-1"],"visual":"...","animation":"...","assetIds":[],"missingInfo":[],"mapAnimation":null}]}',
+    'When the narration or creative instructions contain map, troop, army, route, camera or movement language, mapAnimation must be an invincible-map-animation version 1 object for that scene. Use only supported layer types (symbol,label,route,image,glb), increasing camera times starting at 0, and registered libraryId values. Image and GLB layers require position, scale, rotation, altitude; image layers also require four geographic corners. The engine does not support arbitrary layer keyframes: represent troop movement only with sequential timed layers at verified positions, or use a revealed route. If locations, geometry or assets are not supplied or cannot be verified, set mapAnimation to null and explain the missingInfo instead of guessing.',
+    'Follow the supplied Invincible creative style profile exactly: premium minimalist documentary, dark navy/black backgrounds, restrained gold accents, clean readable labels, portrait-safe margins, continuous subtle camera motion through narration and gaps, no abrupt jumps, and historically cautious sourcing.',
+    JSON.stringify({ transcript: normalized, creativeInstructions: direction, styleProfile, verifiedExample: catalog.verifiedExample || null, assetCatalog: assets, animationPresets: catalog.animationPresets || [] })
   ].join('\n');
+}
+
+export function validateMapAnimation(plan, { duration, assetCatalog = [] } = {}) {
+  if (plan == null) return { valid: false, errors: ['No map animation was supplied.'] };
+  const errors = [];
+  try {
+    const normalized = readAnimation(plan);
+    if (normalized.aspectRatio !== '9:16') errors.push('Invincible documentary maps must use the 9:16 portrait composition.');
+    if (normalized.overlayPreset !== 'documentary') errors.push('Invincible documentary maps must use the documentary overlay preset.');
+    if (Number(normalized.duration) > 1 && (!Array.isArray(normalized.camera) || normalized.camera.length < 2)) errors.push('Camera movement must include at least a start and end keyframe.');
+    if (Array.isArray(normalized.camera) && normalized.camera.length > 1) {
+      for (let i = 1; i < normalized.camera.length; i++) {
+        const previous = normalized.camera[i - 1], current = normalized.camera[i], span = current.time - previous.time;
+        if (span > 0) {
+          const zoomDelta = Math.abs(Number(current.zoom || 0) - Number(previous.zoom || 0));
+          const bearingDelta = Math.abs(Number(current.bearing || 0) - Number(previous.bearing || 0));
+          if (zoomDelta / span > 0.8) errors.push('Camera zoom changes too quickly for the documentary style.');
+          if (bearingDelta / span > 20) errors.push('Camera bearing changes too quickly for the documentary style.');
+        }
+      }
+    }
+    if (duration != null && Math.abs(Number(normalized.duration) - Number(duration)) > 0.02) errors.push('Map animation duration must match the narration scene duration.');
+    const assets = new Map((Array.isArray(assetCatalog) ? assetCatalog : assetCatalog?.assets || []).map(asset => [String(asset.id), asset]));
+    for (const asset of normalized.assets || []) {
+      const ref = asset.libraryId || asset.libraryName;
+      if (ref && !assets.has(String(ref)) && ![...assets.values()].some(item => String(item.name).trim().toLowerCase() === String(ref).trim().toLowerCase())) errors.push(`Map animation references an unavailable library asset: ${ref}.`);
+    }
+  } catch (error) { errors.push(error.message); }
+  return { valid: errors.length === 0, errors };
 }
 
 function catalogMap(assetCatalog) {
@@ -133,11 +198,16 @@ export function assembleSceneDraft(transcript, qwenDraft, assetCatalog = []) {
     const end = source.length ? Math.max(...source.map(segment => segment.end)) : 0;
     const voiceover = source.map(segment => segment.text).join(' ').trim();
     const missingInfo = Array.isArray(draft.missingInfo) ? draft.missingInfo.map(String) : [];
+    const mapAnimation = draft.mapAnimation || null;
+    if (mapAnimation) {
+      const mapValidation = validateMapAnimation(mapAnimation, { duration: end - start, assetCatalog });
+      if (!mapValidation.valid) mapValidation.errors.forEach(error => { missingInfo.push(`mapAnimation: ${error}`); errors.push(`Scene ${index + 1} mapAnimation: ${error}`); });
+    }
     if (!String(draft.visual ?? '').trim()) missingInfo.push('visual description');
     if (!assetIds.length) missingInfo.push('verified asset reference');
     return {
       id: String(draft.id || `scene-${index + 1}`), startSeconds: start, endSeconds: end, durationSeconds: Number((end - start).toFixed(3)),
-      voiceover, voiceoverTimestamp: `${start.toFixed(3)}-${end.toFixed(3)}s`, visual: String(draft.visual ?? '').trim(),
+      voiceover, voiceoverTimestamp: `${start.toFixed(3)}-${end.toFixed(3)}s`, visual: String(draft.visual ?? '').trim(), mapAnimation,
       animation: String(draft.animation ?? '').trim(), assets: assetIds.map(id => assets.get(id)?.name || id).join('; '), assetIds,
       assetReferences: assetIds.join('; '), sourceSegmentIds: source.map(segment => segment.id), missingInfo: [...new Set(missingInfo)]
     };
@@ -164,5 +234,5 @@ export function toCreatorStudioImport(result, title = 'Voiceover analysis draft'
   if (!validation.valid) throw new Error(`Draft is not importable: ${validation.errors.join(' ')}`);
   // `animation` is kept in technicalNotes because Creator Studio's importer
   // aliases both `animation` and `visual` to the same field.
-  return { schemaVersion: 1, title, aspectRatio: '9:16', assets: [], audio: null, scenes: result.scenes.map(scene => ({ id: scene.id, timeline: `${scene.startSeconds.toFixed(3)}-${scene.endSeconds.toFixed(3)}s`, voiceover: scene.voiceover, voiceoverTimestamp: scene.voiceoverTimestamp, visual: scene.visual, assets: scene.assets, assetReferences: scene.assetReferences, technicalNotes: scene.animation ? `Suggested animation: ${scene.animation}` : '' })) };
+  return { schemaVersion: 1, title, aspectRatio: '9:16', assets: [], audio: null, scenes: result.scenes.map(scene => ({ id: scene.id, timeline: `${scene.startSeconds.toFixed(3)}-${scene.endSeconds.toFixed(3)}s`, voiceover: scene.voiceover, voiceoverTimestamp: scene.voiceoverTimestamp, visual: scene.visual, assets: scene.assets, assetReferences: scene.assetReferences, mapAnimation: scene.mapAnimation || null, technicalNotes: scene.animation ? `Suggested animation: ${scene.animation}` : '' })) };
 }

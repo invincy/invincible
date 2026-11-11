@@ -54,6 +54,18 @@ def transcribe(audio_path):
     return {"language": info.language, "duration": float(info.duration), "text": " ".join(item["text"] for item in result), "segments": result}
 
 class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path != "/health":
+            self.send_error(404)
+            return
+        ready = model is not None
+        payload = json.dumps({"ready": ready, "device": DEVICE, "model": MODEL}).encode()
+        self.send_response(200 if ready else 503)
+        self.send_header("content-type", "application/json")
+        self.send_header("content-length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
     def do_POST(self):
         if self.path != "/transcribe":
             self.send_error(404)
@@ -80,5 +92,6 @@ class Handler(BaseHTTPRequestHandler):
         return
 
 if __name__ == "__main__":
-    print(f"Invincible Whisper: http://{HOST}:{PORT} (workspace {WORKSPACE})", flush=True)
+    load_model()
+    print(f"Invincible Whisper ({DEVICE}/{COMPUTE}, {MODEL} ready): http://{HOST}:{PORT} (workspace {WORKSPACE})", flush=True)
     ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assembleSceneDraft, analyzeVoiceover, buildQwenPrompt, loadCreatorAssetCatalog, normalizeCreativeInstructions, normalizeTranscript, toCreatorStudioImport } from './voiceover-analysis.mjs';
+import { assembleSceneDraft, analyzeVoiceover, buildCreativePlanPrompt, buildQwenPrompt, compileCreativePlan, loadCreatorAssetCatalog, normalizeCreativeInstructions, normalizeTranscript, toCreatorStudioImport, validateMapAnimation } from './voiceover-analysis.mjs';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -33,6 +33,8 @@ test('loads real Creator Studio assets and animation presets', async () => {
   assert.ok(catalog.assets.some(asset => asset.id === 'commander_babur'));
   assert.ok(catalog.assets.some(asset => asset.id === 'india-flag-map'));
   assert.ok(catalog.animationPresets.some(preset => preset.id === 'documentary'));
+  assert.equal(catalog.styleProfile.composition.aspectRatio, '9:16');
+  assert.equal(catalog.styleProfile.animation.troopMovement, 'sequential-timed-layers');
 });
 
 test('uses transcript timing as source of truth and accepts catalog assets', () => {
@@ -55,6 +57,23 @@ test('rejects invented assets and missing transcript segments', () => {
 
 test('rejects malformed word timings', () => {
   assert.throws(() => normalizeTranscript({ segments: [{ start: 0, end: 2, text: 'x', words: [{ word: 'x', start: 1, end: 3 }] }] }), /Invalid word timing/);
+});
+
+test('accepts executable map animation instructions and rejects unsupported references', () => {
+  const plan = { format: 'invincible-map-animation', version: 1, title: 'Babur advances', duration: 3, aspectRatio: '9:16', overlayPreset: 'documentary', basemap: 'terrain', terrain: false, camera: [{ time: 0, center: [76.96, 29.39], zoom: 5, pitch: 20, bearing: 0, easing: 'smooth' }, { time: 3, center: [76.96, 29.39], zoom: 5.4, pitch: 20, bearing: 2, easing: 'smooth' }], assets: [{ id: 'babur', libraryId: 'commander_babur' }], layers: [{ id: 'army', type: 'image', name: 'Babur', start: 0, end: 3, assetId: 'babur', position: [76.8, 29.5], scale: 1, rotation: 0, altitude: 0, corners: [[76.5, 29.7], [77.1, 29.7], [77.1, 29.1], [76.5, 29.1]] }] };
+  assert.deepEqual(validateMapAnimation(plan, { duration: 3, assetCatalog: [{ id: 'commander_babur', name: 'Commander · Babur · 1526', type: 'image' }] }), { valid: true, errors: [] });
+  assert.equal(validateMapAnimation({ ...plan, assets: [{ id: 'babur', libraryId: 'made-up' }] }, { duration: 3, assetCatalog: [] }).valid, false);
+});
+
+test('does not invent Panipat positions or routes when the approved catalog has no geometry', () => {
+  const transcript = { segments: [{ id: 'segment-1', start: 0, end: 3, text: 'Babur advanced toward Panipat.' }] };
+  const prompt = buildCreativePlanPrompt(transcript, { assets: [], verifiedLocations: [], verifiedRoutes: [] });
+  assert.match(prompt, /Never invent positions, routes or asset IDs/);
+  assert.match(prompt, /Verified locations: \[\]/);
+  assert.doesNotMatch(prompt, /76\.96|29\.39|Panipat \[/);
+  const draft = compileCreativePlan(transcript, { scenes: [{ sourceSegmentId: 'segment-1', intent: 'advance', location: 'Panipat', routeId: 'invented' }] }, { assets: [], verifiedLocations: [], verifiedRoutes: [] });
+  assert.equal(draft.scenes[0].mapAnimation, null);
+  assert.match(draft.scenes[0].missingInfo.join(' '), /no route was invented/);
 });
 
 test('analyzes only workspace audio through injected local adapters', async () => {

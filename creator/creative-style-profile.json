@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "id": "invincible-documentary-v1",
+  "name": "Invincible Premium Documentary",
+  "composition": {
+    "aspectRatio": "9:16",
+    "safeMargin": 64,
+    "safeTop": 120,
+    "safeRight": 172,
+    "safeBottom": 330,
+    "avoidEdgeText": true
+  },
+  "palette": {
+    "background": "#071426",
+    "foreground": "#F4F5F7",
+    "accent": "#E1C65B",
+    "muted": "#A9B5C3"
+  },
+  "typography": {
+    "fontFamily": "Invincible Sans, Invincible Hindi, sans-serif",
+    "titleWeight": 700,
+    "labelWeight": 600,
+    "minimumLabelSize": 26,
+    "maximumTitleLines": 2,
+    "labelStyle": "card",
+    "uppercaseTitles": true
+  },
+  "camera": {
+    "movement": "continuous-subtle",
+    "minimumKeys": 2,
+    "preferredEasing": "smooth",
+    "avoidAbruptJumps": true,
+    "allowNarrationGaps": true,
+    "maxZoomDeltaPerSecond": 0.8,
+    "maxBearingDeltaPerSecond": 20
+  },
+  "animation": {
+    "overlayPreset": "documentary",
+    "routeReveal": true,
+    "troopMovement": "sequential-timed-layers",
+    "maximumSimultaneousLayers": 8,
+    "avoidCrowding": true,
+    "transitions": ["fade", "cut"]
+  },
+  "historicalIntegrity": {
+    "useVerifiedAssetsOnly": true,
+    "doNotInventCoordinates": true,
+    "doNotInventBoundaries": true,
+    "illustrativeAssetsMustBeLabeled": true,
+    "missingInformationAction": "flag-for-review"
+  }
+}

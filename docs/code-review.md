@@ -1,5 +1,33 @@
 # Cleanup review — 2026-10-03
 
+## Local AI narration handoff and map safety — November 11, 2026
+
+Creator Voiceover now retains the analyzed MP3 as a same-device IndexedDB blob
+alongside its pending AI draft. Creator review can open a fully executable draft
+in the existing Video Studio; deterministic conversion validates a version-2
+manifest, preserves absolute scene timing and attaches that exact audio file.
+Scene previews render portrait frames at each scene's own timeline position.
+Import refuses timeline gaps, mismatched audio duration, missing map actions and
+replacement of an already populated Video Studio draft.
+
+The map planner no longer inserts a guessed Panipat route or troop placement.
+It emits an executable map action only when approved, source-described geometry
+exists in the catalog. The current catalog contains no verified Panipat movement
+route or geospatial placement for the commander artwork, so such scenes remain
+reviewable storyboards and cannot be opened as executable map video yet. This is
+an intentional safety limit, not a completed Panipat animation.
+
+Verification: repository `npm test` passed 230 cases with two existing skips,
+Functions 15/15 and media 5/5; Local AI voiceover tests passed 10/10; site check
+and production build passed. Universal map, map animation, map editor, map defaults,
+documentary terrain, Video Studio and TTS checks passed using installed Chrome;
+Video Studio decoded actual portrait/landscape MP4s with AAC audio and confirmed
+audio onset. H.264 export is unsupported in the bundled Playwright Chromium but
+passed in installed Chrome. The automated Creator-rules emulator check was not
+run because Java is unavailable. No production data, Firebase rules, deployment
+or account data was changed by these checks. The live laptop-to-browser-to-agent
+audio analysis and executable Panipat route are not verified by this release.
+
 ## Voiceover forest and balanced workspace — November 10, 2026
 
 Resumed the existing uncommitted Voiceover work: bounded the desktop narration

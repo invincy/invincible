@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { askOllama, detectLocalIntent } from './invincible-local-controller.mjs';
-import { assembleSceneDraft, buildQwenPrompt, loadCreatorAssetCatalog, toCreatorStudioImport, transcribeWithWhisper } from './voiceover-analysis.mjs';
+import { assembleSceneDraft, buildQwenPrompt, buildCreativePlanPrompt, compileCreativePlan, loadCreatorAssetCatalog, toCreatorStudioImport, transcribeWithWhisper } from './voiceover-analysis.mjs';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { createUniversalAgent } = require('../functions/src/local-ai/universal-agent-api.js');
@@ -62,6 +62,10 @@ async function planVoiceover(prompt) {
   const payload = await response.json();
   return JSON.parse(payload?.message?.content || '{}');
 }
+async function askQwenJson(prompt){
+ const response=await fetch('http://127.0.0.1:11434/api/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({model:'qwen3:4b-instruct',stream:false,think:false,format:'json',options:{temperature:0},messages:[{role:'user',content:prompt}]})});
+ if(!response.ok)throw Error(`Ollama request failed (${response.status}).`);return JSON.parse((await response.json())?.message?.content||'{}');
+}
 
 const server = http.createServer(async (request, response) => {
   try {
@@ -95,9 +99,14 @@ const server = http.createServer(async (request, response) => {
       try {
         const transcript = await transcribeWithWhisper({ path: audioPath });
         const catalog = await loadCreatorAssetCatalog(repoRoot);
-        const draft = await planVoiceover(buildQwenPrompt(transcript, catalog, String(body.creativeInstructions || '')));
+        let intentions, draft, failure;
+        for(let attempt=0;attempt<2;attempt++){
+          try{intentions=await askQwenJson(buildCreativePlanPrompt(transcript,catalog,String(body.creativeInstructions||'')));draft=compileCreativePlan(transcript,intentions,catalog);failure=null;break;}
+          catch(error){failure=error;}
+        }
+        if(failure)throw Error(`Map planning failed after 2 targeted attempts: ${failure.message}`);
         const analysis = assembleSceneDraft(transcript, draft, catalog);
-        return send(response, analysis.valid ? 200 : 422, { analysis, creatorStudio: analysis.valid ? toCreatorStudioImport(analysis, String(body.title || 'AI voiceover draft')) : null });
+        return send(response, analysis.valid ? 200 : 422, { analysis, creatorStudio: analysis.valid ? toCreatorStudioImport(analysis, String(body.title || 'AI voiceover draft')) : null, mapAnimations: analysis.valid ? analysis.scenes.map(scene => ({ sceneId: scene.id, voiceoverTimestamp: scene.voiceoverTimestamp, plan: scene.mapAnimation, missingInfo: scene.missingInfo.filter(item => item.startsWith('mapAnimation:')) })) : [] });
       } finally { await fs.rm(audioPath, { force: true }); }
     }
     if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
