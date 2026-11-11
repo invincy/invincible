@@ -1,10 +1,10 @@
 import {eligibleTerms,computePlan} from './benefits.mjs';
-import {createNarrator} from './narration.mjs?v=17';
+import {createNarrator} from './narration.mjs?v=18';
 const $=id=>document.getElementById(id),stage=$('stageContainer');
 const money=n=>n===null?'LIC quote required':'₹'+n.toLocaleString('en-IN');
 const shortMoney=n=>'₹'+Number((n/100000).toFixed(2)).toLocaleString('en-IN')+' lakh';
-const panels=['scene1','selectionPanel','configurationPanel','previewPanel','whatIfPanel','protectionPanel','detailsPanel'];
-const steps=['intro','selected','configure','preview','whatif','protection','details'];
+const panels=['scene1','selectionPanel','configurationPanel','previewPanel','whatIfPanel','protectionPanel','closingPanel','detailsPanel'];
+const steps=['intro','selected','configure','preview','whatif','protection','closing','details'];
 const copy={
  intro:['Child future · બાળકના સપના','Your Child’s <span class="gold">Lakshya</span>','બાળકનું લક્ષ્ય, માતા-પિતાનો સંકલ્પ',''],
  selected:['Your chosen goal','A future to <span class="gold">plan for</span>','તમારા બાળકનું લક્ષ્ય',''],
@@ -12,6 +12,7 @@ const copy={
  preview:['Planned journey','The <span class="gold">Golden Path</span>','બચત અને જીવન સુરક્ષા','Build savings along your child’s journey.'],
  whatif:['A change in the journey','What <span class="gold">if…?</span>','જો માતા કે પિતાનું અવસાન થાય તો?','For an in-force policy, with all due premiums paid.'],
  protection:['Family protection','The path <span class="gold">continues</span>','પરિવાર માટે આવકનો આધાર',''],
+ closing:['','The day you <span class="gold">chose</span>','',''],
  details:['Plan 733','Explore the <span class="gold">details</span>','તમારા પરિવાર માટે આયોજન કરો','Review the assumptions and full cash-flow calculation.']
 };
 let state='intro',age=30,term=25,sa=200000,goal='Education',goalSrc='assets/study.png',hasGoal=false;
@@ -80,13 +81,13 @@ function openGoals(open){if(open&&(state!=='intro'||!ready))return;stage.dataset
 function control(){
  const n=steps.indexOf(state);document.querySelector('.stage-counter-text').textContent=(n+1)+' / '+steps.length;document.querySelector('.stage-progress-fill').style.width=((n+1)/steps.length*100)+'%';$('ctaPrevBtn').disabled=state==='intro';
  const next=$('ctaNextBtn');next.hidden=['intro','selected','configure'].includes(state);next.disabled=transitioning||beatMoving||(state==='protection'?false:!ready);coin.disabled=transitioning||capturing||!ready||!['intro','selected'].includes(state);
- next.textContent=({preview:'What if the parent dies? →',whatif:'How does the plan help? →',protection:ready?'View plan details →':'Next benefit →',details:'Open base-plan calculator →'})[state]||'Continue →';next.setAttribute('aria-label',next.textContent);
+ next.textContent=({preview:'What if the parent dies? →',whatif:'How does the plan help? →',protection:ready?'Continue →':'Next benefit →',closing:'View plan details →',details:'Open base-plan calculator →'})[state]||'Continue →';next.setAttribute('aria-label',next.textContent);
  const toggle=$('storyModeToggle');
  const introRunning=state==='intro'&&!ready&&!capturing;
- const replayBenefits=state==='protection'&&ready;
- toggle.hidden=!paused&&!introRunning&&!['preview','whatif','protection'].includes(state);
- toggle.textContent=paused?'Resume':introRunning?'Skip intro':replayBenefits?'Replay':'Pause';
- toggle.setAttribute('aria-label',paused?'Resume automatic story':introRunning?'Skip introduction':replayBenefits?'Replay benefit journey':'Pause automatic story');
+ const replay=ready&&['protection','closing'].includes(state);
+ toggle.hidden=!paused&&!introRunning&&!['preview','whatif','protection','closing'].includes(state);
+ toggle.textContent=paused?'Resume':introRunning?'Skip intro':replay?'Replay':'Pause';
+ toggle.setAttribute('aria-label',paused?'Resume automatic story':introRunning?'Skip introduction':replay?(state==='closing'?'Replay closing narration':'Replay benefit journey'):'Pause automatic story');
  toggle.setAttribute('aria-pressed',String(!paused));
  stage.dataset.sequenceReady=String(ready);stage.dataset.paused=String(paused);stage.dataset.capturing=String(capturing);
 }
@@ -107,14 +108,14 @@ function setState(next,options={}){
  for(const id of panels){const el=$(id);if(!el.hidden&&id!=='scene1')exitAnimations.push(el.animate([{opacity:1,translate:'0 0'},{opacity:0,translate:'0 -6px'}],{duration:180,easing:'ease-out',fill:'forwards'}));}
  later(180,()=>renderState(next,options));
 }
-function renderState(next,{focus=true,restartOpening=false}={}){
+function renderState(next,{focus=true,restartOpening=false,benefitStart=0}={}){
  cancelSequence();paused=false;stopVoice();openGoals(false);state=next;ready=true;beatMoving=false;
- stage.dataset.flowStep=state;stage.dataset.storyStep=({intro:1,selected:1,configure:1,preview:2,whatif:3,protection:3,details:4})[state];
+ stage.dataset.flowStep=state;stage.dataset.storyStep=({intro:1,selected:1,configure:1,preview:2,whatif:3,protection:3,closing:3,details:4})[state];
  stage.classList.remove('pills-out','family-away','child-in','path-restored','goal-restored');benefitIndex=-1;delete stage.dataset.benefitStep;stage.style.setProperty('--journey-progress','0');
  for(const id of panels)$(id).hidden=true;
  for(const id of ['maturityPill','previewBonusNote','familyBonusNote','whatIfCaption','assurancePill','riderPill','ceasesPill','incomePill','deathMaturityPill'])$(id).hidden=true;
- const visible=({intro:['scene1'],selected:['scene1','selectionPanel'],configure:['configurationPanel'],preview:['previewPanel'],whatif:['previewPanel','whatIfPanel'],protection:['protectionPanel'],details:['detailsPanel']})[state];visible.forEach(id=>$(id).hidden=false);
- const data=copy[state];$('eyebrowChip').textContent=data[0];$('headlineMain').innerHTML=data[1];$('headlineIndic').textContent=data[2];$('subtitleText').textContent=data[3];$('subtitleText').hidden=!data[3];
+ const visible=({intro:['scene1'],selected:['scene1','selectionPanel'],configure:['configurationPanel'],preview:['previewPanel'],whatif:['previewPanel','whatIfPanel'],protection:['protectionPanel'],closing:['closingPanel'],details:['detailsPanel']})[state];visible.forEach(id=>$(id).hidden=false);
+ const data=copy[state];$('eyebrowChip').textContent=state==='closing'?goal:data[0];$('headlineMain').innerHTML=data[1];$('headlineIndic').textContent=data[2];$('subtitleText').textContent=data[3];$('subtitleText').hidden=!data[3];
  const storyGoal=$('storyGoal');
  storyGoal.src=hasGoal?goalSrc:'assets/jeevan-lakshya.png';
  storyGoal.alt=hasGoal?goal:'LIC Jeevan Lakshya';
@@ -146,7 +147,22 @@ function renderState(next,{focus=true,restartOpening=false}={}){
   later(2200,()=>stage.classList.add('family-away'));
   later(4700,()=>{$('previewPanel').hidden=true;ready=true;control();});
  }
- if(state==='protection'){stage.classList.add('family-away','child-in');showBenefit(0);}
+ if(state==='protection'){stage.classList.add('family-away','child-in');showBenefit(benefitStart);}
+ if(state==='closing'){
+  ready=false;
+  const message=$('closingMessage'),trust=$('closingTrust');
+  message.hidden=true;
+  trust.classList.remove('is-visible');
+  voiceCue('story.close',()=>{
+   message.hidden=false;
+   trust.classList.add('is-visible');
+   ready=true;
+   control();
+  },9000,()=>{
+   later(6540,()=>{message.hidden=false;});
+   later(7680,()=>trust.classList.add('is-visible'));
+  });
+ }
 
  control();if(focus){$('headlineMain').tabIndex=-1;$('headlineMain').focus({preventScroll:true});}
 }
@@ -160,8 +176,8 @@ function showBenefit(index){
  $('familyBonusNote').hidden=index!==3;
  alignMaturity();control();if(beatMoving)later(1100,()=>{beatMoving=false;control();});voiceCue(['family.rider','family.premiums-stop','family.annual-income','family.maturity'][index],index<3?()=>showBenefit(index+1):null,BENEFIT_HOLD);
 }
-function back(){const previous={selected:'intro',configure:'intro',preview:'configure',whatif:'preview',protection:'whatif',details:'protection'}[state];if(previous)setState(previous);else if(capturing)setState('intro');}
-function next(){if(transitioning||beatMoving)return;if(state==='protection'&&!ready){if(paused)resumeTimeline();showBenefit(benefitIndex+1);return;}if(!ready||capturing)return;const target={preview:'whatif',whatif:'protection',protection:'details'}[state];if(target)setState(target);else if(state==='details')location.href=$('fullCalculatorLink').href;}
+function back(){const previous={selected:'intro',configure:'intro',preview:'configure',whatif:'preview',protection:'whatif',closing:'protection',details:'closing'}[state];if(previous)setState(previous,{benefitStart:state==='closing'?3:0});else if(capturing)setState('intro');}
+function next(){if(transitioning||beatMoving)return;if(state==='protection'&&!ready){if(paused)resumeTimeline();showBenefit(benefitIndex+1);return;}if(!ready||capturing)return;const target={preview:'whatif',whatif:'protection',protection:'closing',closing:'details'}[state];if(target)setState(target);else if(state==='details')location.href=$('fullCalculatorLink').href;}
 coin.addEventListener('click',()=>{
  if(state==='intro'&&!choices.inert)choices.querySelector('button').focus();
  else if(state==='selected')setState('intro');
@@ -182,7 +198,7 @@ $('advisorAudioBtn').addEventListener('click',()=>{
   renderState('intro',{focus:false,restartOpening:true});
  }else narration.toggle();
 });
-$('storyModeToggle').addEventListener('click',()=>{if(paused){resumeTimeline();return;}if(state==='intro'){cancelSequence();chooseGoalReady();return;}if(state==='protection'&&ready){paused=false;setState('protection');}else if(paused)resumeTimeline();else pauseTimeline();});
+$('storyModeToggle').addEventListener('click',()=>{if(paused){resumeTimeline();return;}if(state==='intro'){cancelSequence();chooseGoalReady();return;}if(ready&&['protection','closing'].includes(state)){setState(state);}else if(paused)resumeTimeline();else pauseTimeline();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&state==='intro'&&!coin.disabled)coin.focus();if(e.target.closest('button,a,input,select,textarea')||e.altKey||e.ctrlKey||e.metaKey)return;if(e.key==='ArrowRight'){e.preventDefault();next();}if(e.key==='ArrowLeft'){e.preventDefault();back();}});
 const wrapper=document.querySelector('.app-viewport-wrapper');function fit(){const vv=visualViewport;const height=vv&&Math.abs(vv.scale-1)<.01?vv.height:innerHeight;wrapper.style.setProperty('--presentation-height',Math.floor(height)+'px');if(stage.dataset.ready==='true')alignMaturity();}fit();addEventListener('resize',fit);visualViewport?.addEventListener('resize',fit);
 addEventListener('pagehide',()=>{cancelSequence();stopVoice();});document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseTimeline();});

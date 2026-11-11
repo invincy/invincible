@@ -1272,3 +1272,31 @@ button:focus-visible,a:focus-visible{outline:2px solid #fff1a3;outline-offset:3p
  overflow:hidden;
  clip-path:inset(50%);
 }
+
+/* Keep the child, road, and chosen goal in the same places as the maturity scene. */
+[data-flow-step="closing"] .story-child{height:61%;bottom:9%;left:0}
+[data-flow-step="closing"] .story-road{filter:drop-shadow(0 0 14px #ffdc6d99)}
+[data-flow-step="closing"] #goalCoin #storyGoal{filter:drop-shadow(0 0 20px #ffe47899)}
+.closing-panel{position:absolute;inset:0;z-index:26;pointer-events:none}
+.closing-message{
+ position:absolute;
+ right:0;
+ bottom:16%;
+ width:53%;
+ margin:0;
+ padding:12px 10px;
+ border-radius:14px;
+ background:linear-gradient(100deg,#10265766,#0c1a43ee 35%);
+ color:#f9eccc;
+ font-family:"Noto Sans Devanagari",var(--font-sans);
+ font-size:clamp(.86rem,3.5vw,1.16rem);
+ line-height:1.65;
+ text-align:center;
+}
+.closing-message strong{display:block;color:#ffe692;font-size:1.16em;visibility:hidden}
+.closing-message strong.is-visible{visibility:visible}
+[data-flow-step="closing"][data-sequence-ready="false"] #ctaNextBtn{visibility:hidden}
+@media(prefers-reduced-motion:no-preference){
+ .closing-message,.closing-message strong.is-visible{animation:cueIn .55s ease-out both}
+ [data-flow-step="closing"][data-sequence-ready="true"] #ctaNextBtn{animation:cueIn .35s ease-out both}
+}

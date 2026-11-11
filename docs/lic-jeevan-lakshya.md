@@ -169,3 +169,7 @@ The four goal coins now spread once into a staggered row and hold those position
 The opening recording includes the full “करते हैं” ending with a short silent tail. The choice cue is “Please, अपना goal चुनिए।” Both clips use the existing Social voice.
 
 The goal selection and profile instructions now play at 1.4×. The narrator applies each cue’s rate when playback starts or resumes, and advances on the media end event.
+
+### Closing scene (11 November 2026)
+
+After the family maturity step, Continue opens the closing scene with the same goal coin and gold path. The approved Hindi-English narration plays in the existing Kore voice at 1.2×. The on-screen words follow the closing phrases, and View plan details appears after playback finishes or the visual fallback completes. The closing scene can be replayed, and Back returns to the maturity step.

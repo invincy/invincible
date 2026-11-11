@@ -130,6 +130,14 @@
       "bytes": 137804,
       "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
       "sha256": "25876c784f42db892035346f46617015e0eb003f6e62ae2e4041df8f6e190f9f"
+    },
+    "story.close": {
+      "file": "story.close.mp3",
+      "spokenText": "आज आप अपने बच्चे के भविष्य के लिए एक ख़ास दिन चुन रहे हैं। आप साथ हों या न हों… उस दिन आपके बच्चे के साथ होगी आपकी planning और LIC का भरोसा।",
+      "duration": 10.771,
+      "bytes": 217005,
+      "direction": "Read the supplied text exactly, in a warm, confident Indian Hindi-English voice. Keep the pace conversational and brisk, with a brief reflective pause after the second clause. Land clearly on the LIC phrase and finish the last syllable completely. Pronounce LIC as L I C. No extra words.",
+      "sha256": "67f73a8f426798dd36cacf366106859fb04f919d758052559e32525645551108"
     }
   }
 }
