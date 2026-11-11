@@ -1,7 +1,8 @@
 import{useEffect,useRef,useState}from'react';
 import{flushSync}from'react-dom';
 import{useAiConversation}from'./hooks/useAiConversation';
-import{connectThisLaptop,isLocalAiAvailable,PROVIDERS}from'./services/aiService';
+import{isLocalAiAvailable,PROVIDERS}from'./services/aiService';
+import{LaptopConnection}from'./LaptopConnection';
 import'./invincible-ai-dock.css';
 
 const MicIcon=()=> <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.3a3.8 3.8 0 0 0 3.8-3.8V6.8a3.8 3.8 0 1 0-7.6 0v4.7a3.8 3.8 0 0 0 3.8 3.8Z"/><path d="M5.8 11.2a6.2 6.2 0 0 0 12.4 0M12 17.4V21M8.7 21h6.6"/></svg>;
@@ -14,7 +15,6 @@ function DockMessage({message}){
 
 export function InvincibleAiDock({pageTitle,embedded=false}){
  const{messages,pending,actions,sending,error,send,provider,setProvider}=useAiConversation();
- const[localConnection,setLocalConnection]=useState('');
  const[mode,setMode]=useState('closed'),[draft,setDraft]=useState(''),[listening,setListening]=useState(false),[voiceText,setVoiceText]=useState(''),[voiceStatus,setVoiceStatus]=useState('Tap the orb and speak naturally.');
  const historyEntry=useRef(false),input=useRef(null),dock=useRef(null),stream=useRef(null),recognition=useRef(null),voiceBuffer=useRef(''),waitingForReply=useRef(false),previousReply=useRef('');
  const speechRecognition=typeof window!=='undefined'&&(window.SpeechRecognition||window.webkitSpeechRecognition);
@@ -67,7 +67,7 @@ export function InvincibleAiDock({pageTitle,embedded=false}){
  return <aside ref={dock} className={'invincible-ai-dock mode-'+mode+(embedded?' embedded':'')} aria-label="Invincible AI assistant">
   {mode==='chat'&&<section className="ai-dock-panel ai-dock-chat" role="dialog" aria-label="Chat with Invincible AI">
    <header><div className="ai-dock-mini-avatar ai-orb" aria-hidden="true"/><div><strong>Invincible AI</strong><small>{provider===PROVIDERS.local?'Local Qwen3 4B':'Cloud OpenAI'} · {pageTitle} context</small></div><select className="ai-provider-select" aria-label="AI provider" value={provider} onChange={event=>setProvider(event.target.value)}><option value={PROVIDERS.cloud}>Cloud</option><option value={PROVIDERS.local} disabled={!isLocalAiAvailable}>Local</option></select><button type="button" onClick={()=>openMode('voice')} aria-label="Use voice input"><MicIcon/></button><button type="button" onClick={close} aria-label="Close Invincible AI">×</button></header>
-   {provider===PROVIDERS.local&&<div className="ai-local-connection"><button type="button" onClick={async()=>{setLocalConnection('Confirm on this laptop…');try{await connectThisLaptop();setLocalConnection('Laptop connected.')}catch(e){setLocalConnection(e.message)}}}>Connect this laptop</button><small role="status">{localConnection}</small></div>}
+   {provider===PROVIDERS.local&&<LaptopConnection/>}
    <div className="ai-dock-stream" ref={stream} aria-live="polite">
     {!messages.length&&!sending&&<div className="ai-dock-empty"><span className="ai-orb" aria-hidden="true"/><strong>What should I handle?</strong><p>Create tasks, update projects, or choose your next action.</p></div>}
     {messages.slice(-30).map(message=><DockMessage key={message.id} message={message}/>)}

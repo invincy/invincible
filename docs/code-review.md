@@ -1,5 +1,37 @@
 # Cleanup review — 2026-10-03
 
+## Image Studio connection controls
+
+Phones and tablets use the account's remote laptop connection by default,
+including browsers with an older saved local-mode preference. A compact
+laptop status gives the phone one Retry action when offline. Desktop
+connection switching and manual pairing are in Advanced settings. Prompt
+drafting is collapsed under Help me write and appears when the connected
+local worker supports it. Retrying the saved remote connection uses the
+existing status request and does not issue a pairing key. Forget laptop
+requires confirmation before clearing this browser's saved connection.
+
+Verification used the production build, site reference checks, repository
+tests, and browser fixtures for mobile relay, saved desktop pairing and
+image generation. The browser fixtures do not change production data.
+
+## Mobile Qwen chat connection
+
+The Windows launcher starts the chat relay alongside the image relay using the
+existing saved connection. The chat relay checks the Firebase and local worker
+owners before claiming a task and carries the worker's chat reply back to the
+site. The chat page and dock show a laptop status with a refresh control.
+Mobile uses the account's remote connection. Desktop key replacement requires
+confirmation because a replacement revokes the old key. Status on the remote
+path reports the laptop's image relay heartbeat.
+
+Verified on Windows: the saved Firebase key authenticated, the restricted
+worker answered a Qwen question, and relaunching kept one process per relay.
+An isolated chat relay round trip returned the worker's reply and rejected a
+cross-workspace task. Browser fixtures verified refresh and both confirmation
+outcomes. The build and site checks passed. The broad browser suite stopped
+at the Garage mobile navigation trigger. A signed-in phone test remains open.
+
 ## Native portfolio draft — 11 November 2026
 
 Replaced the external portfolio destination with the shared React/auth page. Added reviewed Kite imports, editable holdings, units/NAV valuations, buy/sell history, date-matched SIP estimates, snapshots, undo, and current-month Finance aggregation. No private holdings were checked in, and no production writes, commit, push or deployment occurred. See [portfolio scope and remaining work](portfolio.md).

@@ -1,6 +1,7 @@
 import { createLocalImageClient, waitForImage } from '../shared/local-image-client.js';
 import { createRemoteImageClient } from '../shared/remote-image-client.js';
 import { imageHistory } from '../shared/image-history.js';
+import { isPhoneOrTablet } from '../shared/laptop-device.js';
 
 async function prepareReference(file) {
   if (!['image/png', 'image/jpeg'].includes(file.type) || file.size > 10 * 1024 * 1024) {
@@ -24,10 +25,11 @@ export function mountConnectedImageGenerator(root, { getAccountId, callRelay, cl
   let selected;
   try { selected = sessionStorage.getItem(preference); } catch {}
   const loopbackPage = ['127.0.0.1', 'localhost'].includes(location.hostname);
-  let client = selected === 'remote' || (!selected && !loopbackPage && !local.hasPairing?.()) ? remote : local;
+  const remoteOnly = isPhoneOrTablet() && !loopbackPage;
+  let client = remoteOnly || selected === 'remote' || (!selected && !loopbackPage && !local.hasPairing?.()) ? remote : local;
   let panel;
   function mount() {
-    panel = mountImageGenerator(root, { ...options, getAccountId, client, onSwitch: () => {
+    panel = mountImageGenerator(root, { ...options, getAccountId, client, onSwitch: remoteOnly ? undefined : () => {
       const prompt = root.querySelector('[data-image-prompt]').value;
       const frame = root.querySelector('input[name=image-frame]:checked').value;
       const seed = root.querySelector('[data-image-seed]').value;
@@ -40,7 +42,8 @@ export function mountConnectedImageGenerator(root, { getAccountId, callRelay, cl
       root.querySelector('input[value=' + frame + ']').checked = true;
       root.querySelector('[data-image-seed]').value = seed;
       root.querySelector('[data-image-idea]').value = idea;
-      root.querySelector('[data-image-switch]').focus();
+      const primary = root.querySelector('[data-image-pair]');
+      (primary.hidden ? root.querySelector('[data-image-advanced] summary') : primary).focus();
     } });
   }
   mount();
@@ -50,16 +53,19 @@ export function mountConnectedImageGenerator(root, { getAccountId, callRelay, cl
 export function mountImageGenerator(root, { client = createLocalImageClient(), getAccountId = () => null, getProjectId = () => null, onAttach, onReveal = () => {}, onSwitch } = {}) {
   const remote = client.remote === true;
   root.classList.add('image-generator');
-  root.innerHTML = `<div data-image-form><header><div><h3>Create an image</h3></div><span>SD 1.5</span></header>
-    <div class="image-connection-bar"><p data-image-connection role="status">Connect this laptop to start.</p><button type="button" data-image-pair>Connect this laptop</button></div>
-    <button type="button" data-image-switch ${onSwitch ? '' : 'hidden'}>${remote ? 'Use this device’s local connection' : 'Use my laptop remotely'}</button>
-    <div class="image-prompt-assistant">
-      <label>Describe your idea<textarea data-image-idea rows="3" maxlength="1500" placeholder="A hill fortress at sunrise, with clouds in the valley…"></textarea></label>
-      <button type="button" data-image-draft disabled>Generate prompt</button>
-      <p data-image-draft-status role="status">${remote ? 'Use the laptop’s local connection to draft with Qwen.' : 'Draft a prompt with local Qwen.'}</p>
+  root.innerHTML = `<div data-image-form><header><h3>Create image</h3></header>
+    <div class="image-connection-bar" data-connection-state="checking">
+      <div class="image-laptop-status"><span class="image-laptop-icon" aria-hidden="true"></span><p data-image-connection role="status">Checking laptop…</p></div>
+      <button type="button" data-image-pair hidden>Retry</button>
     </div>
-    <label>Prompt<textarea data-image-prompt rows="4" maxlength="1500" required placeholder="Write or edit the prompt for the image generator…"></textarea></label>
-    <button type="button" data-image-clear>Clear prompt</button>
+    <label>Prompt<textarea data-image-prompt rows="4" maxlength="1500" required placeholder="A hill fortress at sunrise…"></textarea></label>
+    <button type="button" data-image-clear aria-label="Clear prompt">Clear</button>
+    <details class="image-prompt-assistant" data-image-assistant hidden>
+      <summary>Help me write</summary>
+      <label>Describe your idea<textarea data-image-idea rows="3" maxlength="1500" placeholder="Describe the image you want…"></textarea></label>
+      <button type="button" data-image-draft disabled>Generate prompt</button>
+      <p data-image-draft-status role="status"></p>
+    </details>
     <div class="image-reference" ${client.supportsReference ? '' : 'hidden'}>
       <label>Reference image <input type="file" accept="image/png,image/jpeg" data-image-reference></label>
       <p data-image-reference-status role="status">Optional · square crop · keep close to reference</p>
@@ -67,9 +73,9 @@ export function mountImageGenerator(root, { client = createLocalImageClient(), g
       <button type="button" data-image-reference-remove hidden>Remove reference</button>
     </div>
     <fieldset><legend>Frame</legend><label><input type="radio" name="image-frame" value="square" checked>Square <small>512 × 512</small></label><label><input type="radio" name="image-frame" value="portrait">Portrait <small>384 × 640</small></label><label><input type="radio" name="image-frame" value="landscape">Landscape <small>640 × 384</small></label></fieldset>
-    <details><summary>Advanced settings</summary><label>Seed <small>Leave empty for a new variation</small><input data-image-seed type="number" min="0" max="4294967295" step="1"></label><button type="button" data-image-forget hidden>Forget this laptop</button><details ${remote ? 'hidden' : ''}><summary>Manual pairing</summary><label>Pairing code<input data-image-token type="password" autocomplete="off"></label><button type="button" data-image-connect>Connect</button></details></details>
+    <details data-image-advanced><summary>Advanced settings</summary><label>Seed <small>Leave empty for a new variation</small><input data-image-seed type="number" min="0" max="4294967295" step="1"></label><div class="image-connection-options"><button type="button" data-image-switch ${onSwitch ? '' : 'hidden'}>${remote ? 'Set up on this laptop' : 'Use saved laptop'}</button><button type="button" data-image-forget hidden>Forget laptop</button></div><details ${remote ? 'hidden' : ''}><summary>Manual pairing</summary><label>Pairing code<input data-image-token type="password" autocomplete="off"></label><button type="button" data-image-connect>Connect</button></details></details>
     <div class="image-actions"><button type="button" data-image-generate disabled>Generate</button><button type="button" data-image-regenerate hidden>Regenerate</button></div></div>
-    <p role="status" aria-live="polite" data-image-status>Ready · usually 30–60 seconds</p>
+    <p role="status" aria-live="polite" data-image-status></p>
     <figure hidden><img data-image-preview alt="Generated image"><figcaption data-image-caption></figcaption></figure>
     <div class="image-empty" data-image-empty><span aria-hidden="true">✦</span><strong>A space for your next idea</strong><p>Your generated image will appear here.</p></div>
     <div class="image-actions"><button type="button" data-image-download hidden>Download PNG</button><button type="button" data-image-attach hidden>Attach to current project</button></div>
@@ -92,7 +98,26 @@ export function mountImageGenerator(root, { client = createLocalImageClient(), g
     $('[data-image-reference]').disabled = busy || !capabilities?.referenceImage;
     $('[data-image-generate]').disabled ||= !!reference && !capabilities?.referenceImage;
   };
-  function connection(session,error){if(!current())return;if(session&&actor&&session.uid!==actor)throw Error('This worker belongs to another account.');connected=!!session?.storage?.available;capabilities=session?.capabilities;const saved=client.hasPairing?.();$('[data-image-pair]').hidden=connected;$('[data-image-pair]').textContent=saved||remote?'Check connection':'Connect this laptop';$('[data-image-forget]').hidden=!saved;$('[data-image-connection]').textContent=connected?(remote?'Laptop online · remote connection':session.remembered===false?'Connected for this tab':'Connected · laptop remembered'):error?.message||session?.storage?.error||(remote?'Checking your laptop…':'Connect this laptop to start.');if(connected&&!remote&&!capabilities?.draftPrompt)draftStatus('Update and reopen the laptop image worker to draft prompts.');if(connected&&!remote&&!capabilities?.referenceImage)$('[data-image-reference-status]').textContent='Update and reopen the laptop image worker to use references.';lock(busy);}
+  function connection(session, error) {
+    if (!current()) return;
+    if (session && actor && session.uid !== actor) throw Error('This worker belongs to another account.');
+    connected = !!session?.storage?.available;
+    capabilities = session?.capabilities;
+    const saved = !!client.hasPairing?.();
+    const state = connected ? 'online' : !remote && !saved ? 'unpaired' : error || session ? 'offline' : 'checking';
+    $('.image-connection-bar').dataset.connectionState = state;
+    $('[data-image-connection]').textContent = {
+      online: 'Laptop online', offline: 'Laptop offline', unpaired: 'Pair a laptop', checking: 'Checking laptop…'
+    }[state];
+    $('[data-image-pair]').hidden = state === 'online' || state === 'checking';
+    $('[data-image-pair]').textContent = state === 'unpaired' ? 'Pair' : 'Retry';
+    $('[data-image-forget]').hidden = !saved;
+    $('[data-image-assistant]').hidden = remote || !connected || !capabilities?.draftPrompt || !client.draftPrompt;
+    if (connected && !remote && !capabilities?.referenceImage) {
+      $('[data-image-reference-status]').textContent = 'Update the laptop worker to use a reference.';
+    }
+    lock(busy);
+  }
   function clearPreview() { if (preview) URL.revokeObjectURL(preview); preview = null; png = null; $('figure').hidden = true; $('[data-image-empty]').hidden = false; $('[data-image-download]').hidden = true; $('[data-image-attach]').hidden = true; }
   async function showImage(result, blob) {
     const decoded = await createImageBitmap(blob);
@@ -260,9 +285,38 @@ export function mountImageGenerator(root, { client = createLocalImageClient(), g
   $('[data-image-generate]').addEventListener('click', generate);
   $('[data-image-regenerate]').onclick = () => { pending = null; void generate(); };
   $('[data-image-switch]').onclick = () => { if (!busy) onSwitch?.(); };
-  $('[data-image-pair]').onclick = async () => { if(pairing)return;pairing=true;$('[data-image-pair]').disabled=true;lock(busy);try { const saved=remote||client.hasPairing?.();status(saved?'Checking the laptop connection…':'Confirm the connection in the laptop window.');const session=await (saved?client.connect():client.pairInBrowser());if(!current())return;connection(session);status(connected?'Connected · ready to generate':session.storage.error); } catch(error) { connection(null,error);status(error.message); } finally{pairing=false;if(current()){$('[data-image-pair]').disabled=false;lock(busy);}} };
-  $('[data-image-forget]').onclick=()=>{client.forget();clearPreview();connection();status('Laptop forgotten on this browser.');};
-  $('[data-image-connect]').onclick = async () => { try { const session = await client.connect($('[data-image-token]').value); $('[data-image-token]').value = '';connection(session);status(connected?'Connected · ready to generate':session.storage.error); } catch (error) { connection(null,error); } };
+  $('[data-image-pair]').onclick = async () => {
+    if (pairing) return;
+    pairing = true;
+    $('[data-image-pair]').disabled = true;
+    lock(busy);
+    const saved = remote || client.hasPairing?.();
+    $('[data-image-connection]').textContent = saved ? 'Checking laptop…' : 'Confirm in the popup';
+    status('');
+    try {
+      const session = await (saved ? client.connect() : client.pairInBrowser());
+      if (!current()) return;
+      connection(session);
+      if (!connected) status(session.storage.error);
+    } catch (error) {
+      connection(null, error);
+      status(error.message);
+    } finally {
+      pairing = false;
+      if (current()) {
+        $('[data-image-pair]').disabled = false;
+        lock(busy);
+      }
+    }
+  };
+  $('[data-image-forget]').onclick=()=>{
+    if (!window.confirm('Forget the saved laptop connection in this browser? You’ll need to connect it again to use this laptop here.')) return;
+    client.forget();
+    clearPreview();
+    connection();
+    status('Laptop forgotten on this browser.');
+  };
+  $('[data-image-connect]').onclick = async () => { try { const session = await client.connect($('[data-image-token]').value); $('[data-image-token]').value = '';connection(session);status(connected?'':session.storage.error); } catch (error) { connection(null,error);status(error.message); } };
   $('[data-image-download]').onclick = async () => { try { const blob = png || await client.image(job.id, true); if (!current()) return; const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = 'invincible-' + job.id + '.png'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); } catch (error) { status('Download failed · ' + error.message); } };
   $('[data-image-attach]').onclick = async () => { if (busy || !current()) return; const projectId = getProjectId(); lock(true); $('[data-image-attach]').disabled = true;
     try { const blob = png || await client.image(job.id); if (!current() || getProjectId() !== projectId) throw Error('The current project changed.'); await onAttach(new File([blob], 'generated-' + job.id + '.png', { type: 'image/png' }), job); if (current() && getProjectId() === projectId) status('Attached to current project'); }

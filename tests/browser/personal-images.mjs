@@ -11,14 +11,14 @@ const gpu=fakeGpu({ollamaOffline:true}),service=await createLocalAgentServer({ow
 const fixtures={
  tasks:"export const useTasks=()=>({tasks:[]});",
  auth:"export const useAuth=()=>({user:{uid:'test-owner'}});",
- conversation:"export const useAiConversation=()=>({messages:[],actions:[],sending:false,send:()=>{throw Error('Chat must not be used to generate an image')},newConversation:()=>{},provider:'cloud',setProvider:()=>{}});",
- service:"export const PROVIDERS={cloud:'cloud',local:'local'},isLocalAiAvailable=true;export const connectThisLaptop=()=>{throw Error('Use the real image connection')},createLocalAgentPairing=()=>{throw Error('Remote pairing prohibited')};"
+ conversation:"import{useState}from'react';export function useAiConversation(){const [provider,setProvider]=useState('cloud');return {messages:[],actions:[],sending:false,send:()=>{throw Error('Chat must not be used to generate an image')},newConversation:()=>{},provider,setProvider};}",
+ service:"export const PROVIDERS={cloud:'cloud',local:'local'},isLocalAiAvailable=true,mobileLaptop=location.search.includes('mobile=1');export async function checkLaptopConnection(){window.connectionChecks=(window.connectionChecks||0)+1;return window.connectionChecks>1;}export const connectThisLaptop=()=>{throw Error('Use the real image connection')},createLocalAgentPairing=async()=>{window.replacementKeys=(window.replacementKeys||0)+1;return {token:'fixture-only-key'};};"
 };
-const compiled=await build({absWorkingDir:path.join(root,'react'),stdin:{contents:"import React from 'react';import{createRoot}from'react-dom/client';import{InvincibleAiPage}from'./src/features/invincible-ai/InvincibleAiPage.jsx';createRoot(document.getElementById('root')).render(<InvincibleAiPage/>);",resolveDir:path.join(root,'react'),loader:'jsx'},bundle:true,write:false,outdir:'fixture',jsx:'automatic',plugins:[{name:'isolated-app-state',setup(b){b.onResolve({filter:/(useTasks|AuthContext|useAiConversation|aiService)$/},args=>({path:args.path.includes('useTasks')?'tasks':args.path.includes('AuthContext')?'auth':args.path.includes('useAiConversation')?'conversation':'service',namespace:'fixture'}));b.onLoad({filter:/.*/,namespace:'fixture'},args=>({contents:fixtures[args.path],loader:'js'}));}}]});
+const compiled=await build({absWorkingDir:path.join(root,'react'),stdin:{contents:"import React from 'react';import{createRoot}from'react-dom/client';import{InvincibleAiPage}from'./src/features/invincible-ai/InvincibleAiPage.jsx';createRoot(document.getElementById('root')).render(<InvincibleAiPage/>);",resolveDir:path.join(root,'react'),loader:'jsx'},bundle:true,write:false,outdir:'fixture',jsx:'automatic',plugins:[{name:'isolated-app-state',setup(b){b.onResolve({filter:/(useTasks|AuthContext|useAiConversation|aiService)$/},args=>({path:args.path.includes('useTasks')?'tasks':args.path.includes('AuthContext')?'auth':args.path.includes('useAiConversation')?'conversation':'service',namespace:'fixture'}));b.onLoad({filter:/.*/,namespace:'fixture'},args=>({contents:fixtures[args.path],loader:'js',resolveDir:path.join(root,'react')}));}}]});
 let browser;
 try{
  await service.listen();browser=await chromium.launch({headless:true});const page=await browser.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
- await page.route(service.origin+'/personal-images',route=>route.fulfill({contentType:'text/html',body:`<!doctype html><meta name="viewport" content="width=device-width"><div id="root"></div><link rel="stylesheet" href="/personal.css"><script>window.__INVINCIBLE_LOCAL_AI_ORIGIN__=location.origin;sessionStorage.setItem('invincible.local-worker.'+location.origin,${JSON.stringify(service.token)});</script><script type="module" src="/personal.js"></script>`}));
+ await page.route(url=>url.origin===service.origin&&url.pathname==='/personal-images',route=>route.fulfill({contentType:'text/html',body:`<!doctype html><meta name="viewport" content="width=device-width"><div id="root"></div><link rel="stylesheet" href="/personal.css"><script>window.__INVINCIBLE_LOCAL_AI_ORIGIN__=location.origin;sessionStorage.setItem('invincible.local-worker.'+location.origin,${JSON.stringify(service.token)});</script><script type="module" src="/personal.js"></script>`}));
  for(const extension of ['js','css'])await page.route(service.origin+'/personal.'+extension,route=>route.fulfill({contentType:extension==='js'?'text/javascript':'text/css',body:compiled.outputFiles.find(file=>file.path.endsWith('.'+extension)).text}));
  await page.goto(service.origin+'/personal-images');
  await page.getByRole('tab',{name:'Images',exact:true}).click();assert.equal(await page.getByRole('tabpanel',{name:'Chat',exact:true}).isVisible(),false);
@@ -29,6 +29,26 @@ try{
  await page.getByRole('tab',{name:'Chat',exact:true}).click();await page.getByRole('tab',{name:'Chat',exact:true}).press('ArrowRight');assert.equal(await page.getByRole('tab',{name:'Images',exact:true}).getAttribute('aria-selected'),'true');assert.ok(await page.getByRole('img',{name:'Generated image',exact:true}).isVisible(),'Tab switches retain the completed image');
  for(const width of [320,393,820,1440]){await page.setViewportSize({width,height:950});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'No personal studio overflow at '+width);}
  assert.equal(gpu.loads,1);
+ await page.goto(service.origin+'/personal-images?mobile=1');
+ await page.getByRole('combobox',{name:'AI provider'}).selectOption('local');
+ const laptopStatus=page.locator('.ai-laptop-connection').getByRole('status');
+ await laptopStatus.filter({hasText:/^Laptop offline$/}).waitFor();
+ await page.getByRole('button',{name:'Refresh laptop connection'}).click();
+ await laptopStatus.filter({hasText:/^Laptop online$/}).waitFor();
+ assert.equal(await page.getByText('Laptop settings',{exact:true}).count(),0);
+ assert.equal(await page.evaluate(()=>window.replacementKeys||0),0);
+ await page.goto(service.origin+'/personal-images');
+ await page.getByRole('combobox',{name:'AI provider'}).selectOption('local');
+ await page.getByText('Laptop settings',{exact:true}).click();
+ const replace=page.getByRole('button',{name:'Replace remote key'});
+ const dismiss=async dialog=>{assert.match(dialog.message(),/disables the saved remote key/);await dialog.dismiss();};
+ page.once('dialog',dismiss);
+ await replace.click();
+ assert.equal(await page.evaluate(()=>window.replacementKeys||0),0);
+ page.once('dialog',dialog=>dialog.accept());
+ await replace.click();
+ await page.getByText('New remote key',{exact:true}).waitFor();
+ assert.equal(await page.evaluate(()=>window.replacementKeys),1);
  await page.route(/\/(?:creator\/[^?]+\.(?:html|css|js)|site-nav\.(?:js|css)|shared\/firebase-client\.js)(?:\?.*)?$/,async route=>{
   const name=new URL(route.request().url()).pathname.slice(1);
   if(name==='site-nav.js'||name==='creator/creator.js')return route.fulfill({contentType:'text/javascript',body:''});

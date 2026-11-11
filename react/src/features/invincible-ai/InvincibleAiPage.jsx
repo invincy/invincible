@@ -4,7 +4,8 @@ import{useAuth}from'../../AuthContext';
 import{ImageStudio}from'./ImageStudio';
 import{chooseFocusTask,taskSteps}from'../../task-model';
 import{useAiConversation}from'./hooks/useAiConversation';
-import{connectThisLaptop,createLocalAgentPairing,isLocalAiAvailable,PROVIDERS}from'./services/aiService';
+import{isLocalAiAvailable,PROVIDERS}from'./services/aiService';
+import{LaptopConnection}from'./LaptopConnection';
 import'./invincible-ai.css';
 
 const starterPrompts=[
@@ -24,17 +25,15 @@ function Message({message}){
 export function InvincibleAiPage(){
  const{user}=useAuth(),[mode,setMode]=useState(()=>new URLSearchParams(window.location.search).get('tool')==='images'?'images':'chat');
  const{tasks}=useTasks(),focus=chooseFocusTask(tasks),next=taskSteps(focus).find(step=>!step.done&&step.status!=='Done');
- const{messages,pending,actions,sending,error,send,newConversation,provider,setProvider}=useAiConversation(),[draft,setDraft]=useState(''),[pairing,setPairing]=useState(null),[pairingError,setPairingError]=useState(''),end=useRef(null),input=useRef(null);
+ const{messages,pending,actions,sending,error,send,newConversation,provider,setProvider}=useAiConversation(),[draft,setDraft]=useState(''),end=useRef(null),input=useRef(null);
  useEffect(()=>{if(typeof end.current?.scrollIntoView==='function')end.current.scrollIntoView({behavior:'smooth',block:'end'})},[messages,pending,sending]);
  useEffect(()=>{const showImages=()=>setMode('images');window.addEventListener('invincible-image-job',showImages);return()=>window.removeEventListener('invincible-image-job',showImages)},[]);
  const submit=event=>{event.preventDefault();const text=draft.trim();if(!text)return;setDraft('');send(text)};
  const ask=text=>{setDraft(text);if(typeof requestAnimationFrame==='function')requestAnimationFrame(()=>input.current?.focus());else input.current?.focus()};
- const pairLaptop=async()=>{setPairingError('');try{setPairing(await createLocalAgentPairing(`laptop-${Date.now().toString(36)}`))}catch(pairError){setPairingError(pairError?.message||'Laptop pairing failed.')}};
  return <div className="invincible-ai-page">
   <div className="ai-ambient" aria-hidden="true"><i/><i/><i/></div>
-  <header className="ai-page-header"><div><span className="ai-eyebrow">INTENT → ACTION</span><h1>Invincible <em>AI</em></h1><p>Tell it what you want. Plan your next step or create something of your own.</p></div><div className="ai-page-actions" hidden={mode!=='chat'}><label className="ai-provider-picker">PROVIDER<select aria-label="AI provider" value={provider} onChange={event=>setProvider(event.target.value)}><option value={PROVIDERS.cloud}>Cloud · OpenAI</option><option value={PROVIDERS.local} disabled={!isLocalAiAvailable}>Local · Qwen3 4B{isLocalAiAvailable?'':' (offline)'}</option></select></label>{isLocalAiAvailable&&<button type="button" onClick={async()=>{setPairingError('');try{await connectThisLaptop()}catch(e){setPairingError(e.message)}}}>Connect this laptop</button>}{isLocalAiAvailable&&<button type="button" onClick={pairLaptop}>Pair remote agent</button>}<button type="button" onClick={newConversation}>＋ New chat</button></div></header>
-  {pairing&&<aside className="ai-pairing-card"><strong>Laptop pairing token</strong><p>Copy this token into the Windows connector environment. It is shown once.</p><code>{pairing.token}</code><small>Set INVINCIBLE_FIREBASE_AGENT_TOKEN to this value, then start firebase-task-connector.mjs.</small></aside>}
-  {pairingError&&<div className="ai-error" role="alert"><strong>Pairing stopped</strong><span>{pairingError}</span></div>}
+  <header className="ai-page-header"><div><span className="ai-eyebrow">INTENT → ACTION</span><h1>Invincible <em>AI</em></h1><p>Tell it what you want. Plan your next step or create something of your own.</p></div><div className="ai-page-actions" hidden={mode!=='chat'}><label className="ai-provider-picker">PROVIDER<select aria-label="AI provider" value={provider} onChange={event=>setProvider(event.target.value)}><option value={PROVIDERS.cloud}>Cloud · OpenAI</option><option value={PROVIDERS.local} disabled={!isLocalAiAvailable}>Local · Qwen3 4B</option></select></label><button type="button" onClick={newConversation}>＋ New chat</button></div></header>
+  {mode==='chat'&&provider===PROVIDERS.local&&isLocalAiAvailable&&<LaptopConnection key={user?.uid} allowReset/>}
   <section hidden={mode!=='chat'} className="ai-context-bar" aria-label="Current Invincible context"><div className="ai-core-pulse" aria-hidden="true"><span/></div><div><small>CURRENT FOCUS</small><strong>{focus?.title||'No active focus'}</strong></div><div><small>{provider===PROVIDERS.local?'LOCAL PROVIDER':'NEXT ACTION'}</small><strong>{provider===PROVIDERS.local?'Qwen3 4B':next?.title||next?.text||(focus?'Add the first clear stage':'Create or choose a project')}</strong></div><a href={focus?`/invincible/task/?id=${encodeURIComponent(focus.id)}`:'/invincible/'}>{focus?'Open project':'Open dashboard'} →</a></section>
   <nav className="ai-tool-tabs" role="tablist" aria-label="Invincible AI tools">{[['chat','Chat'],['images','Images']].map(([value,label],index)=><button key={value} type="button" id={'ai-tool-'+value} role="tab" aria-selected={mode===value} aria-controls={'ai-panel-'+value} tabIndex={mode===value?0:-1} onClick={()=>setMode(value)} onKeyDown={event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const next=event.key==='Home'?'chat':event.key==='End'?'images':index===0?'images':'chat';setMode(next);document.getElementById('ai-tool-'+next)?.focus()}}>{label}</button>)}</nav>
   <div id="ai-panel-images" className="ai-tool-panel" role="tabpanel" aria-labelledby="ai-tool-images" hidden={mode!=='images'}><ImageStudio accountId={user?.uid||null}/></div>

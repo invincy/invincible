@@ -1,0 +1,13 @@
+.ai-laptop-connection { margin: 8px 0; color: #a9c7c9; font-size: 13px; }
+.ai-laptop-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ai-laptop-dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: #82969d; }
+.ai-laptop-connection[data-state="online"] .ai-laptop-dot { background: #69dfa9; }
+.ai-laptop-connection[data-state="offline"] .ai-laptop-dot { background: #edb565; }
+.ai-laptop-bar button, .ai-laptop-bar summary { color: inherit; cursor: pointer; }
+.ai-laptop-bar button { min-height: 32px; border: 1px solid #355056; border-radius: 7px; background: transparent; }
+.ai-laptop-bar > button { display: grid; width: 34px; place-items: center; }
+.ai-laptop-bar > button:disabled { opacity: .55; cursor: default; }
+.ai-laptop-bar svg { width: 16px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.ai-laptop-bar details { max-width: 100%; }
+.ai-laptop-bar details[open] { flex-basis: 100%; }
+.ai-laptop-bar details > button { margin: 6px 6px 0 0; padding-inline: 9px; }

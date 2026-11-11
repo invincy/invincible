@@ -2,23 +2,39 @@ import{createLocalImageClient,waitForImage,hasLocalPairing}from'../../../../../s
 import{httpsCallable}from'firebase/functions';
 import{doc,onSnapshot}from'firebase/firestore';
 import{auth,db,functions}from'../../../firebase';
+import{isPhoneOrTablet}from'../../../../../shared/laptop-device.js';
 
 const chat=httpsCallable(functions,'invincibleAiChat',{timeout:120000});
 const enqueueTask=httpsCallable(functions,'enqueueInvincibleAiTask',{timeout:30000});
 const pairAgent=httpsCallable(functions,'createInvincibleAgentPairing',{timeout:30000});
+const imageRelay=httpsCallable(functions,'invincibleImageRelay',{timeout:12000});
 
 const queryLocal=typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('local-ai')==='1';
 const imageWorkerOrigin='http://127.0.0.1:8788';
 const publicLaptop=typeof window!=='undefined'&&location.origin==='https://invincy.github.io';
+export const mobileLaptop=publicLaptop&&isPhoneOrTablet();
 const hasLaptopPair=()=>typeof window!=='undefined'&&!!auth.currentUser?.uid&&hasLocalPairing(imageWorkerOrigin,auth.currentUser.uid);
-const getLocalOrigin=()=>typeof window!=='undefined'&&(window.__INVINCIBLE_LOCAL_AI_ORIGIN__||(['127.0.0.1','localhost'].includes(location.hostname)||hasLaptopPair()?imageWorkerOrigin:''))||'';
-const localBridgeEnabled=queryLocal&&!getLocalOrigin();
+const getLocalOrigin=()=>!mobileLaptop&&typeof window!=='undefined'&&(window.__INVINCIBLE_LOCAL_AI_ORIGIN__||(['127.0.0.1','localhost'].includes(location.hostname)||hasLaptopPair()?imageWorkerOrigin:''))||'';
+const localBridgeEnabled=queryLocal||publicLaptop;
 export const PROVIDERS=Object.freeze({cloud:'cloud',local:'local'});
 export const isLocalAiAvailable=Boolean(getLocalOrigin()||localBridgeEnabled||publicLaptop);
 const providerKey='invincible.ai.provider.v1';
 export function getAiProvider(){if(typeof localStorage==='undefined')return PROVIDERS.cloud;return localStorage.getItem(providerKey)===PROVIDERS.local?PROVIDERS.local:PROVIDERS.cloud}
 export function setAiProvider(provider){if(provider!==PROVIDERS.local&&provider!==PROVIDERS.cloud)throw Error('Unknown AI provider.');localStorage?.setItem(providerKey,provider);return provider}
-export function connectThisLaptop(){return createLocalImageClient({origin:window.__INVINCIBLE_LOCAL_AI_ORIGIN__||imageWorkerOrigin,getAccountId:()=>auth.currentUser?.uid||null,requireAccount:true}).pairInBrowser()}
+function laptopClient(origin=imageWorkerOrigin){return createLocalImageClient({origin,getAccountId:()=>auth.currentUser?.uid||null,requireAccount:true})}
+export function connectThisLaptop(){
+ if(mobileLaptop)throw Error('Set up this device from your laptop.');
+ return laptopClient(window.__INVINCIBLE_LOCAL_AI_ORIGIN__||imageWorkerOrigin).pairInBrowser();
+}
+export async function checkLaptopConnection(){
+ const origin=getLocalOrigin();
+ if(origin){
+  const session=await laptopClient(origin).request('/api/session');
+  return Boolean(session.storage?.available);
+ }
+ if(!localBridgeEnabled)return false;
+ return (await imageRelay({action:'status'})).data?.online===true;
+}
 export async function createLocalAgentPairing(agentId){const response=await pairAgent({agentId});return response.data}
 
 function waitForTask(taskId,timeoutMs=180000){
@@ -31,7 +47,7 @@ export async function sendInvincibleAiMessage({conversationId,message,provider=P
   const localOrigin=getLocalOrigin();
   if(!isLocalAiAvailable)throw Error('Local Qwen3 is unavailable. Start the laptop connector first.');
   if(!localOrigin){
-   if(!localBridgeEnabled)throw Error('Choose Connect this laptop before using Local Qwen.');
+   if(!localBridgeEnabled)throw Error('Set up your laptop connection before using Local Qwen.');
    try{const response=await enqueueTask({command:message,idempotencyKey:`web-${Date.now()}-${Math.random().toString(36).slice(2,10)}`});const task=response.data;const result=await waitForTask(task.id);return{...result,local:true};}catch(error){throw Error(error?.message||'The laptop connector is offline.');}
   }
   const client=createLocalImageClient({origin:localOrigin,getAccountId:()=>auth.currentUser?.uid||null,requireAccount:true});

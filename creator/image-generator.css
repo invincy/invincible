@@ -2,8 +2,19 @@
 .image-empty{display:grid;place-items:center;align-content:center;gap:8px;min-height:180px;margin-top:20px;padding:24px;text-align:center;border:1px dashed #36545d;border-radius:14px;background:radial-gradient(circle at center,#12313b80,transparent 75%);color:#a2bec5}.image-empty>span{font-size:36px;color:#8bd5df}.image-empty>strong{font-weight:500;color:#c0dce2}.image-empty>p{margin:0;font-size:12px}.ai-image-studio .image-empty{grid-column:2;min-height:300px;margin-top:0}@media(max-width:999px){.ai-image-studio .image-empty{grid-column:auto;min-height:180px;margin-top:16px}}
 .image-connection-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 20px;padding:10px 12px;border:1px solid #34545c;border-radius:10px;background:#102a32}.image-connection-bar p{margin:0;font-size:12px;color:#b4d8df}.image-connection-bar button{flex-shrink:0}.creator-tool-nav{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 24px}.creator-tool-nav a{display:inline-flex;align-items:center;min-height:42px;padding:0 16px;border:1px solid #3a5962;border-radius:10px;color:#b7d5dc;background:#10232b;text-decoration:none;font:600 13px system-ui}.creator-tool-nav a[aria-current=page]{background:#18424c;border-color:#75d8e3;color:#e6fcff}.creator-tool-nav a:focus-visible{outline:2px solid #89e3e9;outline-offset:3px}.creator-images-page{margin:0;background:#071419;color:#e5f3f5;font-family:system-ui,sans-serif}.creator-images-page main{max-width:1100px;margin:0 auto;padding:28px 20px}.creator-images-page h1{margin:8px 0;font-size:clamp(26px,4vw,38px)}.creator-images-page .intro{color:#a7c3cb}.creator-images-page .back{color:#a7d8e2;text-decoration:none}.creator-images-page .image-generator{max-width:none;margin:24px 0}@media(min-width:1000px){.creator-images-page .image-generator{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px 28px;align-items:start}.creator-images-page [data-image-form]{grid-column:1;grid-row:1/4}.creator-images-page [data-image-status],.creator-images-page .image-empty,.creator-images-page figure,.creator-images-page .image-generator>.image-actions{grid-column:2}.creator-images-page .image-empty{min-height:300px}.creator-images-page figure{margin-top:0}}@media(max-width:480px){.image-connection-bar{align-items:stretch;flex-direction:column}.image-connection-bar button{width:100%}}
 .voiceover-page .heading>.creator-tool-nav{margin:0;gap:12px}.voiceover-page .heading>.creator-tool-nav a{min-height:28px;padding-inline:10px}.voiceover-page .heading>.creator-tool-nav .current-tool{padding:0;border:0;background:transparent;color:inherit}.voiceover-page .heading>.creator-tool-nav h1{margin:0}
-.image-generator [data-image-switch]{margin:-8px 0 16px}
-.image-prompt-assistant{margin-bottom:16px;padding:12px;border:1px solid #29444c;border-radius:10px}
+.image-generator .image-connection-bar{align-items:center;flex-direction:row;flex-wrap:wrap;gap:8px;margin-bottom:14px;padding:7px 10px}
+.image-generator .image-connection-bar button{width:auto;min-height:40px;padding:6px 12px}
+.image-laptop-status{display:flex;align-items:center;gap:10px;min-width:0}
+.image-laptop-icon{position:relative;display:block;flex:0 0 17px;width:17px;height:12px;border:1px solid currentColor;border-radius:2px;color:#9ebdc4}
+.image-laptop-icon::before{position:absolute;content:"";height:1px;background:currentColor;bottom:-4px;left:-3px;right:-3px}
+.image-laptop-icon::after{position:absolute;content:"";height:5px;width:5px;border-radius:50%;right:2px;top:2px;background:currentColor}
+[data-connection-state=online] .image-laptop-icon{color:#8ee0a9}
+[data-connection-state=offline] .image-laptop-icon{color:#efb88e}
+.image-connection-options{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.image-connection-options:not(:has(button:not([hidden]))){display:none}
+.image-generator [data-image-status]:empty,.image-generator [data-image-draft-status]:empty{display:none}
+.image-generator .image-prompt-assistant{margin:8px 0 12px}
+.image-generator .image-prompt-assistant textarea{min-height:76px}
 .image-prompt-assistant button,.image-generator [data-image-clear]{margin-top:8px}
 .image-prompt-assistant p,.image-history p{margin:8px 0 0;font-size:12px}
 .image-reference{margin-top:16px;padding:12px;border:1px solid #29444c;border-radius:10px}

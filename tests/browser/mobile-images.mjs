@@ -13,6 +13,7 @@ let online = false, failed = false, polls = 0;
 const browser = await chromium.launch();
 try {
   const page = await browser.newPage(devices['Pixel 7']);
+  await page.addInitScript(() => sessionStorage.setItem('invincible.image-connection.test-owner', 'local'));
   const localRequests = [];
   await page.route('http://127.0.0.1:8788/**', route => {
     localRequests.push(route.request().url());
@@ -55,9 +56,13 @@ try {
   const generate = page.getByRole('button', { name: 'Generate', exact: true });
   assert.equal(await generate.isEnabled(), false);
   assert.equal(await page.getByText('Manual pairing', { exact: true }).isVisible(), false);
+  await page.getByText('Advanced settings', { exact: true }).click();
+  assert.equal(await page.getByRole('button', { name: 'Set up on this laptop', exact: true }).isVisible(), false);
+  assert.equal(await page.getByText('Help me write', { exact: true }).isVisible(), false);
+  await page.getByText('Advanced settings', { exact: true }).click();
   online = true;
-  await page.getByRole('button', { name: 'Check connection', exact: true }).click();
-  await page.getByText('Laptop online · remote connection').waitFor();
+  await page.getByRole('button', { name: 'Retry', exact: true }).click();
+  await page.getByText('Laptop online', { exact: true }).waitFor();
   await page.getByRole('textbox', { name: 'Prompt' }).fill('An Indian fortress at sunrise');
   await page.getByRole('radio', { name: /Portrait/ }).check();
   await generate.click();

@@ -16,5 +16,5 @@ export function ImageStudio({accountId,clientFactory=createLocalImageClient}){
   const panel=mountConnectedImageGenerator(host.current,{clientFactory,getAccountId,callRelay});
   return()=>panel.destroy();
  },[accountId,clientFactory]);
- return <section className="ai-image-studio" aria-label="Personal image studio"><header className="ai-image-intro"><h2>Create an image of your own</h2><p>Describe it, choose a frame, and download the PNG. Images are generated on your Invincible laptop.</p></header>{accountId?<div key={accountId} ref={host}/>:<p role="status">Sign in to create and download your own images.</p>}</section>;
+ return <section className="ai-image-studio" aria-label="Image Studio">{accountId?<div key={accountId} ref={host}/>:<p role="status">Sign in to create images.</p>}</section>;
 }

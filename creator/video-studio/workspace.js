@@ -1,4 +1,4 @@
-import {mountConnectedImageGenerator} from '../image-generator.js';
+import {mountConnectedImageGenerator} from '../image-generator.js?v=2026111204';
 import {callImageRelay} from '../../shared/firebase-image-relay.js';
 import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=2026111002';
 import {studioBrief} from './handoff.js?v=2026111014';
