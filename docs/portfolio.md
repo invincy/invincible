@@ -27,3 +27,19 @@ The actual provided Kite export parsed into 18 holdings and reconciled invested 
 Focused tests cover invalid numbers, pledged import quantities, total reconciliation, replacement/deduplication, sale cost, sale retry, overselling/pledge guards, date-matched estimated SIPs, month-end dates, Finance category deduplication and native navigation. Browser fixture tests cover 1440/390/320 widths, denied-save draft retention and sale recording, but could not execute here: Chromium fails at startup because the environment denies its process-singleton socket. No visual pass is claimed.
 
 Build and site-reference checks passed. Full automated suite: 239 root passes, two existing skips, 15 Functions passes, five media passes. Final focused model/navigation run: 10 passes.
+
+## Mobile import dialog correction — 11 November 2026
+
+Raised the Portfolio overlay above the shell navigation and floating controls.
+Import review uses a bounded flex column: summary and Confirm import stay visible,
+while the holdings list shrinks and scrolls. Dialog height includes device safe
+areas and short phone viewports; other portfolio forms retain scrolling.
+
+Validation: production build and site-reference check pass; 240 root tests pass
+(two skipped), and 15 Functions tests pass. The existing browser fixture cannot
+launch Chromium in this environment (process-singleton socket denied), so a
+mobile visual pass is not claimed. The production page was inspected and requires
+Google sign-in in the available browser. No private holdings were saved or seeded,
+and no personal financial data is included in public source. Data population
+remains blocked on an authenticated account session; fund units are still missing
+from the previously supplied summary screenshots.
