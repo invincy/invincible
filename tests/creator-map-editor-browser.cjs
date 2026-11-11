@@ -21,6 +21,27 @@ const server=http.createServer((req,res)=>{try{const route=new URL(req.url,'http
  await page.locator('summary').filter({hasText:'Historical GeoJSON'}).click();await page.locator('[data-geo]').fill(JSON.stringify({type:'Polygon',coordinates:[[[80,20],[81,20],[80,21],[80,20]]]}));await click('geo');assert.match(await page.locator('[data-editor-status]').textContent(),/Review the geometry/);
  await page.locator('[data-geo-label]').fill('Synthetic polygon fixture');await page.locator('[data-geo-date]').fill('TEST ONLY');await page.locator('[data-geo-source]').fill('https://example.org/test-fixture');await page.locator('[data-geo-note]').fill('Synthetic automated test, not historical evidence.');await page.locator('[data-reviewed]').check();await click('geo');await settled();assert.equal(await page.evaluate(()=>project.historicalMap.features.features.length),1);
 
+ await page.locator('summary').filter({hasText:'Find a historical territory'}).click();
+ await page.locator('[data-reference-name]').fill('Lodi');
+ await click('reference-find');
+ await page.waitForFunction(()=>document.querySelector('[data-reference-result]').options.length>0);
+ await click('reference-use');
+ assert.match(await page.locator('[data-geo-label]').inputValue(),/Lodi Dynasty.*Approximate extent/);
+ assert.match(await page.locator('[data-geo-note]').inputValue(),/CC BY 4.0/);
+ assert.equal(await page.locator('[data-reviewed]').isChecked(),false);
+ assert.equal(await page.evaluate(()=>project.historicalMap.features.features.length),1);
+ await page.locator('[data-reviewed]').check();
+ await page.locator('[data-geo-note]').fill('Cliopatria v0.2.1 · CC BY 4.0 · approximate extent');
+ assert.equal(await page.locator('[data-reviewed]').isChecked(),false);
+ await page.locator('[data-reviewed]').check();
+ await click('geo');await settled();
+ assert.equal(await page.evaluate(()=>project.historicalMap.features.features.length),2);
+ await click('undo');await settled();
+ await page.locator('[data-reference-name]').fill('NoSuchPolityFixture');
+ await click('reference-find');
+ assert.match(await page.locator('[data-reference-status]').textContent(),/No matching outline/);
+ assert.equal(await page.locator('[data-edit=reference-use]').isDisabled(),true);
+
  // Real MapLibre image, terrain and Three.js layers with intercepted synthetic assets.
  const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');x.fillStyle='rgb(1,134,160)';x.fillRect(0,0,256,256);return c.toDataURL().split(',')[1];});
  const raw=Buffer.from(new Float32Array([-1,0,0,1,0,0,0,2,0]).buffer);

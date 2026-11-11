@@ -6,6 +6,38 @@ Replaced the external portfolio destination with the shared React/auth page. Add
 
 Validation: build and site-reference checks passed. Root tests: 239 passed, two skipped; Functions: 15 passed; media: five passed. Ten focused portfolio/navigation cases passed after the final validation change. The supplied Kite statement reconciled exactly. Broad and focused browser tests were attempted but Chromium could not start: the environment denies its process-singleton socket. Visual layouts and signed-in production access therefore remain unverified. Live NAV/quotes, Nifty comparison, screenshot extraction and unattended scheduling remain unfinished.
 
+## Historical territory reference in Map Editor
+
+Added a date and polity search to the existing Historical GeoJSON panel. It
+loads approximate South Asia outlines from the pinned Cliopatria v0.2.1 data pack
+and prefills the existing review form with source, date range and attribution.
+Loading a result does not edit the map. The normal reviewed import applies it
+at the playhead, with undo available. Editing any geography field clears the
+review checkbox. The full upstream archive is available as a local reference.
+
+All 314 simplified outlines passed the native map validator individually.
+The Map Editor suite passed 12 unit tests and the Chromium browser regression
+covered search, attribution, review reset, import, undo and a missing name.
+The site reference check passed. This verifies the editor path, not historical
+accuracy for a particular event. Automatic Qwen selection and production
+publication remain outside this change.
+
+The one-click video flow now requests automatic geographic context from the
+local agent. When a route or placement is unavailable, it looks for a dated
+Cliopatria locator or a sourced modern reference point in the narration or
+creative brief. A segment without a usable match can use a graphic context
+card at the original narration time. This flow supports locator scenes and
+keeps the existing boundary review for territory polygons.
+
+Release verification covered the Map Editor, the Video Studio browser suites,
+site staging and the local agent and analysis suites. The browser's Generate
+video test used fixture service responses and decoded both audio and video
+tracks from the resulting MP4. A separate release check under InvincibleAgent
+used real local Whisper and Qwen on 5.691 seconds of Hindi audio and compiled a
+map scene with present-day Gujarat and Rajasthan locators. Google TTS live
+endpoints responded with the expected sign-in requirement. A complete run
+with live Google TTS still needs a signed-in session. Restart the existing
+paired laptop worker with the updated code before using the release.
 
 ## Local AI narration handoff and map safety — November 11, 2026
 
@@ -1173,3 +1205,29 @@ performed. Deploy TTS first and verify the runtime account's model permission, t
 publish the page and perform a short approved real listening comparison. See
 [Creator voiceover](creator-tts.md#activation). Node 22, physical phones and Safari
 remain unverified; checks used Node 24 and desktop Chromium.
+
+## One-click local video path — November 11, 2026
+
+Added a Create with AI entry to the existing Creator Video Studio. It reuses the
+project narration and saved Google/Gemini TTS voice preferences, checks the signed-in
+account against the paired localhost agent, submits the generated MP3 to the existing
+Whisper/Qwen analysis endpoint, imports only executable map scenes into the native
+Video Studio manifest, saves the editable draft, and calls the existing MP4 exporter.
+The exporter returns its real MP4 blob to the coordinator while retaining its normal
+browser download behavior. The job checkpoints audio and scene planning so a retry
+can reuse completed work.
+
+If the planner returns descriptive scenes or lacks verified map geometry, the flow
+saves the audio and draft but stops before import/render with the actual missing-data
+reason. The repository's current verified location/route catalog is still empty, so
+this guard is expected to block Panipat map video until reviewed geography and routes
+are supplied. No paid TTS request, laptop pairing, local-service availability, real MP4
+render, Windows restricted-identity test, production publication, or end-to-end browser
+run was performed during implementation.
+
+Validation: Three coordinator unit tests cover the honest block path, checkpoint reuse,
+MP4 signature checks, and missing identity/provider output; 20 Video Studio unit tests
+passed; site reference check passed across 639 files. Browser-based end-to-end generation
+with real Google TTS, Whisper/Qwen, sourced Panipat geometry and actual MP4 remains
+unverified. A completed render is downloadable from the browser; storing the MP4 as a
+persistent cloud project asset is not yet part of this flow.

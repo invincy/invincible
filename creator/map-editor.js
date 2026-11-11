@@ -13,9 +13,13 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const button=(action,text)=>`<button type="button" data-edit="${action}">${text}</button>`;
 const number=(label,key,value,min,max,step='any')=>`<label>${label}<input type="number" data-prop="${key}" value="${esc(typeof value==='number'?Number(value.toFixed(6)):value)}" min="${min}" max="${max}" step="${step}"></label>`;
 const jsonDownload=(value,name)=>downloadBlob(new Blob([JSON.stringify(value,null,2)],{type:'application/json'}),name);
+const cliopatriaSource='https://github.com/Seshat-Global-History-Databank/cliopatria/tree/v0.2.1';
+const cliopatriaLicense='https://creativecommons.org/licenses/by/4.0/';
+const cliopatriaFile=new URL('./history-data/cliopatria-south-asia-v021.json',import.meta.url);
 
 export function mountMapEditor(root,{getProject,onChange,onAdvanced,initialTime=0}){
  let sharedMedia=[];
+ let referenceCatalog, referenceMatches=[], referenceYear;
  const project=getProject(),initialized=initializeMapProject(project);let spec=visualMap(project.historicalMap),player,disposed=false,selected='',armed='',route=[],drag=null,pendingPosition=null,localPreview=null,playing=false,working=false,editingAsset='';let pendingFile=null,pendingUploadId='';
  const undo=[],redo=[];
  root.classList.add('history-workspace','visual-map-editor');
@@ -30,7 +34,18 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced,initialTime=
  <details><summary>Import / export</summary><p>Map JSON preserves scene IDs. A scene package appends a new scene with fresh IDs. Existing scenes stay intact.</p><input data-import type="file" accept=".json,application/json" aria-label="Import map or scene JSON">${button('export','Download map JSON')}<textarea data-json aria-label="Map specification" spellcheck="false"></textarea>${button('apply','Apply map JSON')}</details>
  </section><aside class="map-editor-sidebar"><details open><summary>Layers · top first</summary><div data-layers class="map-layer-list"></div><div data-inspector></div></details>
  <details><summary>Information graphics</summary><div data-information-controls>${informationControls(spec,project)}</div></details><details data-assets><summary>Images & 3D assets</summary><button type="button" data-edit="shared-library">Browse shared cloud library</button><select data-shared-media aria-label="Shared cloud artwork"></select><button type="button" data-edit="shared-place">Place shared artwork</button><label>Upload to shared library (up to 100 MB)<input data-upload-file type="file" accept="image/png,image/jpeg,image/webp,.glb"></label>${button('upload','Upload and place file')}<p>Files upload to the same private library used by Studio.</p><p>Drag a file onto the map to choose its position, then provide its durable HTTPS URL. Choose Upload and place file to store it privately, or provide a hosted URL below. Images and GLB models are illustrative.</p><label>Asset name<input data-asset-name placeholder="e.g. BSF"></label><small>Give custom images clear names. Copy ChatGPT brief includes your library so imported instructions can reuse the correct asset.</small><label>Type<select data-asset-type><option value="image">Image (PNG / JPEG / WebP)</option><option value="glb">GLB (embedded resources)</option></select></label><label>Durable asset URL<input data-asset-url type="url" placeholder="https://…"></label><label>Credit / rights<input data-asset-credit></label><img data-local-preview hidden alt="Local asset preview"><p data-local-note></p>${button('asset','Place asset')}${button('asset-save','Save asset changes')}${button('asset-new','New asset')}<label>Search library<input data-asset-search type="search"></label><div class="history-controls">${button('library-export','Export asset library')}<label>Import asset library<input data-library-import type="file" accept=".json,application/json"></label></div><div data-asset-list></div></details>
- <details><summary>Historical GeoJSON</summary><p>Import Polygon, MultiPolygon or LineString geometry. This review is your assertion, not an automated verification.</p><label>GeoJSON file<input data-geo-file type="file" accept=".json,.geojson"></label><textarea data-geo aria-label="Historical GeoJSON" placeholder="GeoJSON FeatureCollection"></textarea><label>Label<input data-geo-label></label><label>Historical date / period<input data-geo-date></label><label>HTTPS source<input data-geo-source type="url"></label><label>Provenance, precision & uncertainty<textarea data-geo-note></textarea></label><label><input data-reviewed type="checkbox"> I reviewed this geometry against the cited source</label>${button('geo','Import reviewed geography')}</details>
+ <details><summary>Historical GeoJSON</summary>
+ <details><summary>Find a historical territory</summary>
+ <p>Approximate outlines for South Asia and nearby regions, 1450–1600. <a href="${cliopatriaSource}" target="_blank" rel="noopener">Cliopatria v0.2.1 · Seshat Global History Databank</a> · <a href="${cliopatriaLicense}" target="_blank" rel="noopener">CC BY 4.0</a>.</p>
+ <label>Year<input data-reference-year type="number" min="1450" max="1600" step="1" value="1526" required></label>
+ <label>Polity name<input data-reference-name type="search" placeholder="e.g. Lodi"></label>
+ ${button('reference-find','Find outlines')}
+ <label>Matching outlines<select data-reference-result disabled aria-label="Matching outlines"></select></label>
+ <button type="button" data-edit="reference-use" disabled>Load into GeoJSON form</button>
+ <p data-reference-status role="status" aria-live="polite"></p>
+ </details>
+ <p>Import Polygon, MultiPolygon or LineString geometry after checking the source. If an outline is unavailable, use sourced place markers or an on-screen label such as “Regional context · modern geography”.</p>
+ <label>GeoJSON file<input data-geo-file type="file" accept=".json,.geojson"></label><textarea data-geo aria-label="Historical GeoJSON" placeholder="GeoJSON FeatureCollection"></textarea><label>Label<input data-geo-label></label><label>Historical date / period<input data-geo-date></label><label>HTTPS source<input data-geo-source type="url"></label><label>Provenance, precision & uncertainty<textarea data-geo-note></textarea></label><label><input data-reviewed type="checkbox"> I reviewed this geometry against the cited source</label>${button('geo','Import reviewed geography')}</details>
  <details><summary>Terrain / elevation</summary><p>Use a provider's raster DEM TileJSON. Coverage, CORS and usage rights depend on that provider. Terrain represents the supplied elevation dataset, not a historical reconstruction.</p><label>DEM TileJSON URL<input data-dem-url type="url" placeholder="https://…/tiles.json"></label><label>Attribution<input data-dem-credit></label><label>Encoding<select data-dem-encoding><option>mapbox</option><option>terrarium</option></select></label><label>Exaggeration<input data-dem-scale type="number" min="0" max="5" step="0.1" value="1"></label><label><input data-dem-enabled type="checkbox"> Enable terrain</label>${button('terrain','Apply terrain')}</details>
  <details><summary>Historical sources</summary><div data-sources></div></details></aside></div>`;
  const q=s=>root.querySelector(s),host=q('[data-map]');
@@ -139,6 +154,48 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced,initialTime=
   if(b.dataset.keyRemove!==undefined){await edit(m=>m.camera.splice(Number(b.dataset.keyRemove),1));return;}
   if(b.dataset.keyReplace!==undefined){const view=player.camera;await edit(m=>Object.assign(m.camera[Number(b.dataset.keyReplace)],view));return;}
   const action=b.dataset.edit;
+  if(action==='reference-find'){
+   const yearField=q('[data-reference-year]');
+   if(!yearField.checkValidity())throw Error('Enter a whole year from 1450 to 1600.');
+   const year=Number(yearField.value),name=q('[data-reference-name]').value.trim().toLowerCase();
+   const result=q('[data-reference-result]'),message=q('[data-reference-status]'),use=q('[data-edit=reference-use]');
+   b.disabled=true;result.disabled=true;use.disabled=true;
+   message.textContent='Loading reference outlines…';
+   try{
+    if(!referenceCatalog){
+     const response=await fetch(cliopatriaFile);
+     if(!response.ok)throw Error('Reference outlines could not be loaded. Try again.');
+     referenceCatalog=await response.json();
+    }
+    if(disposed)return;
+    if(Number(yearField.value)!==year||q('[data-reference-name]').value.trim().toLowerCase()!==name){
+     message.textContent='Search again for the updated year or name.';
+     return;
+    }
+    referenceYear=year;
+    referenceMatches=referenceCatalog.records.filter(row=>row.start<=year&&year<=row.end&&row.name.toLowerCase().includes(name));
+    result.replaceChildren(...referenceMatches.map((row,index)=>new Option(row.name+' · '+row.start+'–'+row.end,String(index))));
+    result.disabled=use.disabled=!referenceMatches.length;
+    message.textContent=referenceMatches.length?`${referenceMatches.length} approximate outline(s) for ${year}.`:'No matching outline. Try another spelling or use sourced GeoJSON or place markers.';
+   }catch(error){
+    if(!disposed)message.textContent=error.message;
+   }finally{
+    if(!disposed)b.disabled=false;
+   }
+   return;
+  }
+  if(action==='reference-use'){
+   const row=referenceMatches[Number(q('[data-reference-result]').value)];
+   if(!row)throw Error('Find and select an outline first.');
+   q('[data-geo]').value=JSON.stringify(row.geometry);
+   q('[data-geo-label]').value=row.name+' · Approximate extent';
+   q('[data-geo-date]').value=`${referenceYear} CE (source range ${row.start}–${row.end} CE)`;
+   q('[data-geo-source]').value=cliopatriaSource;
+   q('[data-geo-note]').value=`Cliopatria v0.2.1, Seshat Global History Databank, CC BY 4.0 (${cliopatriaLicense}). Approximate extent; geometry simplified by Invincible. The dataset's year ranges may include transitions within a year.`;
+   q('[data-reviewed]').checked=false;
+   q('[data-reference-status]').textContent='Outline loaded for review. Add an “Approximate extent” label in the scene if you use this overlay.';
+   return;
+  }
   if(action==='play'){if(!playing){playing=true;try{await player.play();}catch(err){playing=false;throw err;}}return;}if(action==='pause'){player.pause();playing=false;return;}
   if(action==='label'){armed='label';if(!player.isNative)await add('label',center());else status('Click to place a label.');return;}
   if(action==='route'){if(!player.isNative)throw Error('Drawing routes requires WebGL2. Import route coordinates in JSON for 2D preview.');armed='route';route=[];status('Click route points, then Finish route. Drawn routes are illustrative.');return;}
@@ -177,7 +234,18 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced,initialTime=
   if(action==='terrain'){const terrain={enabled:q('[data-dem-enabled]').checked,url:q('[data-dem-url]').value,attribution:q('[data-dem-credit]').value,encoding:q('[data-dem-encoding]').value,exaggeration:Number(q('[data-dem-scale]').value)};await edit(m=>m.visual.terrain=terrain);if(!player.isNative)status('Terrain saved, but this browser supports only 2D preview.');return;}
   if(action==='geo'){if(!q('[data-reviewed]').checked)throw Error('Review the geometry against its source before importing.');const input=JSON.parse(q('[data-geo]').value),features=input.type==='FeatureCollection'?input.features:input.type==='Feature'?[input]:[{type:'Feature',properties:{},geometry:input}],timing=anchor();await edit(m=>{for(const f of features){const copy=structuredClone(f);copy.properties={...copy.properties,id:productionId(),sceneId:timing.sceneId,offset:timing.offset,duration:timing.duration,label:q('[data-geo-label]').value||copy.properties?.label,date:q('[data-geo-date]').value,sourceUrl:q('[data-geo-source]').value,sourceNote:q('[data-geo-note]').value,reviewed:true};m.features.features.push(copy);}m.visual=visualMap(m).visual;});return;}
  }catch(error){status(error.message);}};
- root.oninput=e=>{if(e.target.matches('[data-animation-plan]')){q('[data-edit=animation-add]').disabled=true;q('[data-animation-reviewed]').checked=false;}if(e.target.matches('[data-asset-search]'))renderAssets();if(e.target.matches('[data-seek]')){player?.pause();playing=false;player?.seek(Number(e.target.value));}};
+ root.oninput=e=>{
+  const target=e.target;
+  if(target.matches('[data-animation-plan]')){q('[data-edit=animation-add]').disabled=true;q('[data-animation-reviewed]').checked=false;}
+  if(target.matches('[data-geo],[data-geo-label],[data-geo-date],[data-geo-source],[data-geo-note]'))q('[data-reviewed]').checked=false;
+  if(target.matches('[data-reference-year],[data-reference-name]')){
+   q('[data-reference-result]').replaceChildren();
+   q('[data-reference-result]').disabled=q('[data-edit=reference-use]').disabled=true;
+   q('[data-reference-status]').textContent='';
+  }
+  if(target.matches('[data-asset-search]'))renderAssets();
+  if(target.matches('[data-seek]')){player?.pause();playing=false;player?.seek(Number(target.value));}
+ };
  root.onchange=async e=>{const t=e.target;try{
   requireReady();
   if(t.matches('[data-export-ratio]')){player.pause();playing=false;sizeMapFrame(host,t.value);return;}
@@ -187,7 +255,7 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced,initialTime=
   if(t.matches('[data-projection]')){if(!player.isNative&&t.value==='globe')throw Error('Globe view requires WebGL2.');await edit(m=>m.projection=t.value);return;}
   if(t.matches('[data-upload-file]')&&t.files[0]){pendingFile=t.files[0];pendingUploadId=uid();pendingPosition=null;q('[data-local-note]').textContent=pendingFile.name+' ready to upload at the camera center.';return;}
   if(t.matches('[data-library-import]')&&t.files[0]){if(t.files[0].size>240000)throw Error('Use an asset library under 240 KB.');await commit(importAssetLibrary(spec,JSON.parse(await t.files[0].text())));return;}
-  if(t.matches('[data-geo-file]')&&t.files[0]){if(t.files[0].size>240000)throw Error('Simplify GeoJSON to under 240 KB.');q('[data-geo]').value=await t.files[0].text();return;}
+  if(t.matches('[data-geo-file]')&&t.files[0]){if(t.files[0].size>240000)throw Error('Simplify GeoJSON to under 240 KB.');q('[data-geo]').value=await t.files[0].text();q('[data-reviewed]').checked=false;return;}
   if(t.matches('[data-import]')&&t.files[0]){if(t.files[0].size>500000)throw Error('Import is limited to 500 KB.');const data=JSON.parse(await t.files[0].text());if(data.format==='invincible-map-scene'){const p=appendScenePackage(project,data);validateMap(p.historicalMap,p);await commit(p.historicalMap,{history:false,resetHistory:true,scenes:p.scenes});q('[data-seek]').max=durationOf(project);status('Scene appended with new IDs. Existing scenes are unchanged.');}else await commit(visualMap(validateMap(data,project)));return;}
   if(t.matches('[data-safe-guide]')){host.classList.toggle('show-shorts-guide',t.checked);return;}
   if(t.dataset.infoKey){await edit(m=>{const o=m.visual.overlays.find(o=>o.id===t.dataset.infoId);o[t.dataset.infoKey]=t.type==='number'?Number(t.value):t.value;});return;}

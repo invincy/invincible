@@ -9,6 +9,8 @@ function wav(){const rate=48000,frames=rate,b=Buffer.alloc(44+frames*2);b.write(
 (async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;try{
  browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE||undefined,args:['--enable-unsafe-swiftshader']});const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(30000);const url=`http://127.0.0.1:${server.address().port}/fixture`;
  await page.goto(url);assert.equal(await page.locator('.video-studio').count(),0,'workspace opt-in');await page.getByRole('button',{name:'Video Studio',exact:true}).click();await waitReady(page);
+ assert.equal(await page.getByRole('heading',{name:'Create with AI'}).count(),1,'one-click AI production is available inside the existing Video Studio');assert.equal(await page.getByRole('button',{name:'Generate video',exact:true}).count(),1);
+ assert.equal(await page.locator('[data-ai-production] [role=tablist]').count(),0,'asset tabs are scoped to shared media');
  await page.locator('[data-vs=example]').click();await waitReady(page);assert.equal(await page.locator('[data-vs-title]').inputValue(),'My first video');assert.equal(await page.locator('canvas').getAttribute('width'),'1080');assert.equal(await page.locator('canvas').getAttribute('height'),'1920');
  await page.locator('[data-vs-json]').evaluate(n=>n.closest('details').open=true);await page.locator('[data-vs-json]').fill('{"schemaVersion":1,"script":"alert(1)"}');await page.locator('[data-vs=validate]').click();await waitReady(page);assert.equal(await page.locator('[data-vs=apply]').isDisabled(),true);assert.equal(await page.locator('[data-vs-title]').inputValue(),'My first video');
  const manifest={schemaVersion:1,title:'Two engines',aspectRatio:'9:16',fps:30,brandPresetId:'lic',assets:[],audio:null,introEnabled:false,outroEnabled:false,scenes:[{id:'graphic',startSeconds:0,durationSeconds:1,engineType:'graphic',engineData:{},overlays:[{id:'text',type:'text',text:'Hello',keyframes:[{timeSeconds:0,x:.3},{timeSeconds:1,x:.7}]}]},{id:'policy',startSeconds:1,durationSeconds:1,engineType:'lic',engineData:{title:'Synthetic illustration',source:'Test fixture — not a policy quote',points:[{timeSeconds:0,year:1,label:'Payment',premium:100},{timeSeconds:.5,year:2,label:'Payout',income:50}]},overlays:[]}]};
@@ -51,4 +53,45 @@ function wav(){const rate=48000,frames=rate,b=Buffer.alloc(44+frames*2);b.write(
  await page.getByRole('button',{name:'Storyboard',exact:true}).click();assert.equal(await page.locator('.video-studio').count(),0);await page.getByRole('button',{name:'Video Studio',exact:true}).click();await waitReady(page);assert.equal(await page.locator('[data-vs-title]').inputValue(),'Two engines');
  for(const width of [320,390,820,1440]){await page.setViewportSize({width,height:900});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`overflow at ${width}`);}
  await page.locator('[data-vs-seek]').evaluate(input=>{input.value='2.5';input.dispatchEvent(new Event('input',{bubbles:true}));});await page.waitForFunction(()=>document.querySelector('[data-vs-time]').textContent.startsWith('2.50'));await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:path.join(root,'.test-output/creator-video-studio.png'),fullPage:true});assert.deepEqual(errors,[]);console.log('Video Studio UI, safe import, byte-identical persistence, account isolation, branding, playback, export, cancellation and dimensions passed.',{decoded,direct});
+ const mp3=fs.readFileSync(path.join(root,'lic/jeevan-lakshya/audio/intro.plan.mp3')).toString('base64');
+ const automatic=await browser.newPage({acceptDownloads:true});
+ let syntheses=0,offline=true;
+ await automatic.addInitScript(()=>localStorage.setItem('invincible.local-worker.remembered.v1.http://127.0.0.1:8788.owner','fixture-pairing'));
+ await automatic.route('**/creator/tts-api.js',route=>route.fulfill({contentType:'text/javascript',body:
+  `export async function loadVoices(){return [{name:'hi-IN-test',languageCodes:['hi-IN'],family:'Neural',capabilities:{supported:true}}];}
+  export async function generateVoiceover(){window.fixtureTts=true;return {mimeType:'audio/mpeg',audioBase64:${JSON.stringify(mp3)}};}`}));
+ await automatic.route('http://127.0.0.1:8788/api/**',async route=>{
+  const req=route.request(),endpoint=new URL(req.url()).pathname;
+  const headers={'access-control-allow-origin':'*','access-control-allow-headers':'authorization,content-type,x-invincible-account','access-control-allow-methods':'GET,POST,OPTIONS','access-control-allow-private-network':'true'};
+  if(req.method()==='OPTIONS')return route.fulfill({status:204,headers});
+  if(endpoint==='/api/session')return route.fulfill({headers,json:{uid:'owner'}});
+  if(endpoint.endsWith('/catalog-status'))return route.fulfill({headers,status:offline?400:200,json:offline?{error:'Local Whisper is offline'}:{automaticContext:true}});
+  assert.equal(endpoint,'/api/voiceover/analyze');
+  assert.equal(req.postDataJSON().production,true);
+  assert.equal(req.postDataJSON().audioBase64,mp3);
+  syntheses++;
+  return route.fulfill({headers,json:{analysis:{valid:true,scenes:[]},creatorStudio:{scenes:[{id:'context',timeline:'0.1-1s',contextCard:true}]}}});
+ });
+ await automatic.goto(url+'?project=automatic-video');
+ await automatic.getByRole('button',{name:'Video Studio',exact:true}).click();await waitReady(automatic);
+ await automatic.locator('[data-ai-script]').fill('A short narration test.');
+ await automatic.getByRole('button',{name:'Generate video',exact:true}).click();
+ await automatic.getByText('Local Whisper is offline',{exact:true}).first().waitFor();
+ assert.equal(await automatic.evaluate(()=>Boolean(window.fixtureTts)),false);
+ offline=false;
+ const generated=automatic.waitForEvent('download',{timeout:120000});
+ await automatic.getByRole('button',{name:'Generate video',exact:true}).click();
+ const output=fs.readFileSync(await (await generated).path());
+ assert.equal(output.subarray(4,8).toString(),'ftyp');
+ assert.equal(syntheses,1);
+ await automatic.getByText(/MP4 exported.*1 context card/).waitFor();
+ const streams=await automatic.evaluate(async base64=>{
+  const {Input,BlobSource,ALL_FORMATS}=await import('/creator/vendor/studio-video.mjs');
+  const source=new BlobSource(new Blob([Uint8Array.from(atob(base64),char=>char.charCodeAt(0))]));
+  const input=new Input({source,formats:ALL_FORMATS});
+  try{return [Boolean(await input.getPrimaryVideoTrack()),Boolean(await input.getPrimaryAudioTrack())];}
+  finally{input.dispose();}
+ },output.toString('base64'));
+ assert.deepEqual(streams,[true,true]);
+ console.log('One Generate click: readiness gate, narration, laptop analysis, save, and MP4 video/audio tracks passed.');
  }finally{await browser?.close();await new Promise(r=>server.close(r));}})().catch(e=>{console.error(e);process.exitCode=1;});

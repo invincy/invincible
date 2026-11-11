@@ -19,6 +19,14 @@ test('import is atomic, bounded, cloned and rejects executable/unknown schema fi
  for(const bad of ['{',JSON.stringify({...m,script:'alert(1)'}),JSON.stringify({...m,fps:60}),JSON.stringify({...m,schemaVersion:2})])assert.throws(()=>validateManifest(bad));
  assert.throws(()=>validateManifest({...m,title:'x'.repeat(1000001)}));
 });
+test('one-click production can keep original narration timing with a context card and silence gaps',()=>{
+ const rows=[{id:'missing',timeline:'0.3-2s',contextCard:true}];
+ const manifest=compileAiStoryboardManifest(rows,{allowContextCards:true,audioFileId:'voice-file',audioDuration:2.5});
+ assert.equal(manifest.scenes[0].engineType,'graphic');
+ assert.equal(manifest.scenes[0].startSeconds,.3);
+ assert.equal(manifest.audioClips[0].durationSeconds,2.5);
+ assert.throws(()=>compileAiStoryboardManifest(rows),/timeline gap/);
+});
 test('scene order, overlap, duration, duplicate IDs and nonfinite timing are rejected',()=>{
  for(const scenes of [[graphic('a',0,3),graphic('b',2)],[graphic('a'),graphic('a',2)],[graphic('a',0,0)],[graphic('a',599,2)],[graphic('a',NaN)]])assert.throws(()=>validateManifest({...emptyVideo(),scenes}));
 });

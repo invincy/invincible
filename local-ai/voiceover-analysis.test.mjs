@@ -4,6 +4,7 @@ import { assembleSceneDraft, analyzeVoiceover, buildCreativePlanPrompt, buildQwe
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { compileAiStoryboardManifest } from '../creator/ai-preview.js';
 
 const transcript = { duration: 7, segments: [
   { id: 's1', start: 0, end: 3, text: 'Babur reached Panipat.', words: [{ word: 'Babur', start: 0, end: 1 }, { word: 'reached', start: 1, end: 2 }, { word: 'Panipat.', start: 2, end: 3 }] },
@@ -83,4 +84,21 @@ test('analyzes only workspace audio through injected local adapters', async () =
   const result = await analyzeVoiceover({ audioPath, workspaceRoot: workspace, assetCatalog: [], transcribe: async () => transcript, plan: async () => ({ scenes: [{ sourceSegmentIds: ['s1', 's2'], visual: 'Map reveal', assetIds: [] }] }) });
   assert.equal(result.scenes[0].durationSeconds, 7);
   await assert.rejects(() => analyzeVoiceover({ audioPath: path.join(workspace, '..', 'outside.wav'), workspaceRoot: workspace, transcribe: async () => transcript, plan: async () => ({ scenes: [] }) }), /restricted agent workspace/);
+});
+
+test('production finds dated and modern locators and falls back without invented geometry', async () => {
+  const root = new URL('..', import.meta.url).pathname.replace(/^\/(\w:)/, '$1');
+  const catalog = await loadCreatorAssetCatalog(root, { includeHistory: true });
+  const text = ['१५२६ में लोदी का शासन था।', 'यह गुजरात और राजस्थान के हिस्सों में था।', 'A completely unlisted dynasty.'];
+  const transcript = {segments:text.map((line,index)=>({id:'s'+index,start:index*3,end:index*3+3,text:line}))};
+  const intentions = {scenes:text.map((_,index)=>({sourceSegmentId:'s'+index,intent:'advance',routeId:'invented'}))};
+  const draft = compileCreativePlan(transcript,intentions,catalog,{production:true});
+  assert.deepEqual(draft.scenes[0].mapAnimation.layers.map(layer=>layer.name),['Lodi Dynasty · approximate locator']);
+  assert.deepEqual(draft.scenes[1].mapAnimation.layers.map(layer=>layer.name),['Present-day Gujarat','Present-day Rajasthan']);
+  assert.ok(draft.scenes.slice(0,2).every(scene=>scene.mapAnimation.layers.every(layer=>layer.type==='label')));
+  assert.equal(draft.scenes[2].contextCard,true);
+  const scenes = toCreatorStudioImport(assembleSceneDraft(transcript,draft,catalog)).scenes;
+  assert.equal(scenes[2].contextCard,true);
+  const video = compileAiStoryboardManifest(scenes,{allowContextCards:true,audioFileId:'voice',audioDuration:9.2});
+  assert.deepEqual(video.scenes.map(scene=>scene.engineType),['map','map','graphic']);
 });

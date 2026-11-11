@@ -6,10 +6,14 @@ import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111014';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111014';
 import {createStudioRenderer} from './adapters.js?v=2026111014';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111014';
-import {mountAssembly} from './assembly.js?v=2026111014';
+import {mountAssembly} from './assembly.js?v=2026111202';
 import {encodeStudioVideo} from './export.js?v=2026111014';
 import {openStudioStore} from './storage.js';
-import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111112';
+import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111203';
+import {runAiProduction} from '../ai-production-runner.mjs?v=2026111203';
+import {loadVoices,generateVoiceover} from '../tts-api.js';
+import {createLocalImageClient} from '../../shared/local-image-client.js?v=2026111112';
+import {loadPendingAiDraft,loadPendingAiAudio,savePendingAiDraft} from '../ai-draft.js?v=2026111112';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>crypto.randomUUID();
 const template=(name,text)=>({id:name,startSeconds:0,durationSeconds:2,engineType:'graphic',engineData:{},transition:{type:'fade',durationSeconds:.3},overlays:[{id:'title',type:'text',text,x:.5,y:.5,fontSize:64}]});
@@ -38,7 +42,11 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  const account=getAccountId(),projectId=getProject()?.id;const store=account?openStudioStore(account):null;
  const state=session;if(state.account!==account||state.projectId!==projectId){for(const key of Object.keys(state))delete state[key];state.account=account;state.projectId=projectId;}state.manifest??=emptyVideo();state.brands??=structuredClone(PRESETS);state.files??=new Map();state.brandAssets??=[];state.cloudRevision??=0;
  const media=mediaService||createMediaClient(account);let catalogue=[],pendingCloud=null;
- const setup=document.createElement('section');setup.className='vs-flow';setup.innerHTML=`<section class="vs-step"><h3>1 · Add assets & voiceover</h3><p class="vs-help">Upload once to your private library. Reuse the originals across videos and devices.</p><label class="vs-drop">Choose files or drop them here<input data-media-upload type="file" multiple accept="image/png,image/jpeg,image/webp,video/mp4,video/webm,.mp3,.wav,.glb"></label><div class="vs-actions"><button data-vs="library-refresh">Refresh library</button><label>Find an asset<input data-media-search type="search" placeholder="Search your library"></label></div><div data-media-library class="vs-media-library"></div><p class="vs-help" data-media-status>Loading your shared library…</p></section><section class="vs-step" data-flow-json><h3>2 · Import your complete video</h3><p class="vs-help">Copy the brief to ChatGPT with your script and exact voiceover cues. Import one JSON for maps, battles, overlays and audio.</p><div class="vs-actions"><button data-vs="copy-brief">Copy ChatGPT brief</button><button data-vs="cloud-review">Review cloud draft</button></div></section>`;
+ const localWorker=createLocalImageClient({getAccountId,requireAccount:true});
+ const setup=document.createElement('section');setup.className='vs-flow';setup.innerHTML=`<section class="vs-step"><h3>Optional · Shared media</h3><p class="vs-help">Upload once to your private library. Reuse the originals across videos and devices.</p><label class="vs-drop">Choose files or drop them here<input data-media-upload type="file" multiple accept="image/png,image/jpeg,image/webp,video/mp4,video/webm,.mp3,.wav,.glb"></label><div class="vs-actions"><button data-vs="library-refresh">Refresh library</button><label>Find an asset<input data-media-search type="search" placeholder="Search your library"></label></div><div data-media-library class="vs-media-library"></div><p class="vs-help" data-media-status>Loading your shared library…</p></section><section class="vs-step" data-flow-json><h3>Manual JSON import</h3><p class="vs-help">Copy a production brief with your script and exact voiceover cues, or review a saved cloud draft.</p><div class="vs-actions"><button data-vs="copy-brief">Copy ChatGPT brief</button><button data-vs="cloud-review">Review cloud draft</button></div></section>`;
+ const projectAtOpen=getProject()||{},scriptAtOpen=String(projectAtOpen.script||projectAtOpen.scenes?.map(scene=>scene.voiceover||'').filter(Boolean).join('\n\n')||''),styleAtOpen=typeof projectAtOpen.visualStyle==='string'?projectAtOpen.visualStyle:'';
+ const aiCreate=document.createElement('section');aiCreate.className='vs-step';aiCreate.dataset.aiProduction='';aiCreate.innerHTML='<h3>1 · Create with AI</h3><p class="vs-help">Generate narration, timed scenes and an MP4 using Google TTS, your paired laptop AI and this project’s renderer. Google TTS uses your existing quota.</p><label>Voiceover script<textarea data-ai-script rows="5" maxlength="30000" placeholder="Add the narration for this video"></textarea></label><label>Creative direction<textarea data-ai-instructions rows="3" maxlength="4000" placeholder="Describe the map, movement, camera and visual style"></textarea></label><button type="button" data-vs="generate-ai">Generate video</button><p class="vs-help" data-ai-status role="status" aria-live="polite"></p>';
+ aiCreate.querySelector('[data-ai-script]').value=scriptAtOpen;aiCreate.querySelector('[data-ai-instructions]').value=styleAtOpen;setup.prepend(aiCreate);
  header.after(setup);const jsonPanel=$('[data-vs-json]').closest('details');jsonPanel.open=true;setup.querySelector('[data-flow-json]').append(jsonPanel);setup.querySelector('[data-flow-json]').append($('[data-vs=download]'));
  $('.vs-layout').before(Object.assign(document.createElement('h3'),{textContent:'3 · Review scenes & audio',className:'vs-review-heading'}));
  const exportNote=document.createElement('p');exportNote.className='vs-help';exportNote.textContent='4 · Export your complete MP4 with audio';$('.vs-preview').prepend(exportNote);
@@ -54,7 +62,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  async function useMedia(a,{scene=false,role='voiceover'}={}){const next=await upgraded();if(a.kind==='audio'){next.audioClips.push({id:uid(),fileId:a.id,name:a.name,role,startSeconds:0,trimStart:0,durationSeconds:a.duration,gain:1,fadeIn:0,fadeOut:0});}else if(a.kind==='glb'){throw Error('GLB models are available from the shared library inside Edit map scene.');}else {if(!next.assets.some(x=>x.fileId===a.id))next.assets.push({id:a.id,name:a.name,fileId:a.id});if(scene){const row={id:uid(),name:a.name,startSeconds:0,durationSeconds:a.duration||5,engineType:a.kind,engineData:{assetId:next.assets.find(x=>x.fileId===a.id).id,fit:'contain',...(a.kind==='video'?{trimStart:0}:{})},overlays:[]};Object.assign(next,arrangeScenes(next,[...next.scenes,row],{mapAssets:mapAssets()}));}}await applyManifest(next);}
  async function uploadFiles(files,{addScenes=false,role=null}={}){for(const file of files){status('Uploading '+file.name+'…');const info=await inspectMedia(file),a=await media.upload(file,info);if(disposed||getAccountId()!==account)return;state.files.set(a.id,file);await store?.put('file:'+a.id,file);if(!catalogue.some(x=>x.id===a.id))catalogue.unshift(a);renderLibrary();if(a.kind!=='glb')await useMedia(a,{scene:addScenes&&['image','video'].includes(a.kind),role:role||'voiceover'});}status('Files saved to your cloud library. Save your video draft after making changes.');$('[data-media-status]').textContent=catalogue.length+' assets in your private cloud library.';}
 
- const assetStep=setup.querySelector('.vs-step'),uploadPanel=document.createElement('div'),assetTabs=document.createElement('div'),imageRoot=document.createElement('section');
+ const assetStep=setup.querySelector('.vs-step:not([data-ai-production]):not([data-flow-json])'),uploadPanel=document.createElement('div'),assetTabs=document.createElement('div'),imageRoot=document.createElement('section');
  uploadPanel.id='vs-assets-upload';uploadPanel.role='tabpanel';uploadPanel.setAttribute('aria-labelledby','vs-assets-tab-upload');
  for(const child of [...assetStep.children])if(child.tagName!=='H3')uploadPanel.append(child);
  assetTabs.className='vs-asset-tabs';assetTabs.role='tablist';assetTabs.setAttribute('aria-label','Asset tools');
@@ -137,11 +145,52 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   const version=uid();await store.put('version:'+projectId+':'+version,structuredClone(state.manifest));await store.put('draft:'+projectId,version);
   if(getProject()?.ownerUid===account||mediaService){const result=await media.saveDraft(projectId,state.manifest,state.brands,state.cloudRevision);state.cloudRevision=result.revision;await store.put('cloudRevision:'+projectId,state.cloudRevision);status('Saved to your account. Your video and cloud assets are available on your other devices.');}else status('Local video draft saved. Cloud draft sync is available to the project owner.');
  }
+ async function aiVoiceRequest(script){
+  const voices=await loadVoices();let saved={};try{saved=JSON.parse(localStorage.getItem('invincible.creator.tts.draft.v1.'+account)||'{}');}catch{}
+  const hasGemini=voices.some(voice=>voice.family==='Gemini'&&voice.capabilities?.supported),engine=saved.engine==='classic'?'classic':hasGemini?'gemini':'classic';
+  const language=String(saved.language||'hi-IN'),inFamily=voice=>voice.capabilities?.supported&&((voice.family==='Gemini')===(engine==='gemini'));
+  const matching=voices.filter(voice=>inFamily(voice)&&voice.languageCodes?.includes(language));
+  const fallback=matching.length?matching:voices.filter(inFamily),selected=fallback.find(voice=>voice.name===saved.voice)||fallback[0];
+  if(!selected)throw Error('No supported Google voice is available. Open Creator Voiceover and check the voice service.');
+ const languageCode=selected.languageCodes.includes(language)?language:selected.languageCodes[0];
+  const number=(value,defaultValue)=>Number.isFinite(Number(value))?Number(value):defaultValue;
+  return {title:String(getProject()?.title||'Invincible AI video').slice(0,200),text:script,mode:'text',engine,voiceName:selected.name,languageCode,speed:number(saved.speed,1),pitch:number(saved.pitch,0),volume:number(saved.volume,0),paragraphPause:number(saved.pause,0),...(engine==='gemini'?{modelName:['gemini-2.5-flash-tts','gemini-2.5-pro-tts'].includes(saved.model)?saved.model:'gemini-2.5-flash-tts',delivery:['natural','sales','social','empathetic','calm','energetic','dramatic'].includes(saved.preset)?saved.preset:'natural',direction:String(saved.direction||'').slice(0,2000)}:{})};
+ }
+ async function analyzeAiVoiceover({title,creativeInstructions,audio}){
+  const bytes=new Uint8Array(await audio.arrayBuffer());let binary='';for(let offset=0;offset<bytes.length;offset+=0x8000)binary+=String.fromCharCode(...bytes.subarray(offset,offset+0x8000));
+  return localWorker.request('/api/voiceover/analyze',{title,creativeInstructions,audioBase64:btoa(binary),production:true},{timeoutMs:180000});
+ }
+ async function createAiVideo(){
+  await ready;
+  if(state.manifest.scenes.length||(state.manifest.audioClips||[]).length||state.manifest.audio)throw Error('This Video Studio draft already has content. Open a fresh Creator video project before generating another video.');
+  if(!account||!projectId)throw Error('Sign in and open a saved Creator project first.');
+  const script=$('[data-ai-script]').value.trim(),creativeInstructions=$('[data-ai-instructions]').value.trim();if(!script)throw Error('Add a voiceover script before generating.');
+  if(!localWorker.hasPairing())throw Error('Connect this laptop to Invincible before generating with local Whisper and Qwen.');
+  const connection=await localWorker.request('/api/session');if(connection.uid!==account)throw Error('The paired laptop is connected to a different Invincible account.');
+  const restartMessage='Restart the local Invincible agent with the updated version. Narration generation has not started.';
+  let catalog;
+  try{catalog=await localWorker.request('/api/voiceover/catalog-status?check=production');}
+  catch(error){if(error.status===404)throw Error(restartMessage);throw error;}
+  if(catalog.automaticContext!==true)throw Error(restartMessage);
+  const voiceRequest=await aiVoiceRequest(script),title=String(getProject()?.title||voiceRequest.title);
+  const result=await runAiProduction({uid:account,projectId,title,script,creativeInstructions,voiceRequest,loadCheckpoint:async()=>loadPendingAiDraft(),loadAudio:loadPendingAiAudio,saveCheckpoint:savePendingAiDraft,generateVoiceover,analyzeVoiceover:analyzeAiVoiceover,importProduction:importAiProduction,saveVideo:save,exportVideo:renderExport,onProgress:event=>{$('[data-ai-status]').textContent=event.message;status(event.message);}});
+  if(result.status==='blocked'){
+   const details=result.missingInfo.length?result.missingInfo.join(' '):'The scene plan has no executable Map Editor animation.';
+   const message='Narration and scene JSON are saved, but no video was exported. '+details;
+   $('[data-ai-status]').textContent=message;status(message);return result;
+  }
+  const scenes=result.payload.creatorStudio.scenes;
+  const locatorCount=scenes.filter(scene=>scene.contextSources?.length).length;
+  const cardCount=scenes.filter(scene=>scene.contextCard===true).length;
+  const contextNote=locatorCount||cardCount?` Used ${locatorCount} locator scene(s) and ${cardCount} context card(s) where detailed map geometry was unavailable.`:'';
+  $('[data-ai-status]').textContent='MP4 exported. The editable scene plan and original narration are saved in this project.'+contextNote;
+  return result;
+ }
  function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
- function lock(value){busy=value;root.querySelectorAll('button,input,textarea,select').forEach(n=>{if(!imageRoot.contains(n))n.disabled=value;});imageRoot.inert=value;$('[data-vs=cancel]').disabled=!value;$('[data-vs=apply]').disabled=value||!pending;}
+ function lock(value){busy=value;root.querySelectorAll('button,input,textarea,select').forEach(n=>{if(!imageRoot.contains(n))n.disabled=value;});imageRoot.inert=value;$('[data-vs=cancel]').disabled=!value||!controller;$('[data-vs=apply]').disabled=value||!pending;}
  const run=async fn=>{if(busy||disposed)return;lock(true);stop();try{if(drawing)await drawing.catch(()=>{});await fn();}catch(e){if(!disposed)sync();status(e.name==='AbortError'?'Export cancelled.':e.message);}finally{if(!disposed)lock(false);}};
  async function renderExport(){
-  stop();controller=new AbortController();root.dataset.exporting='true';let codec=null;try{await prepare();status('Rendering MP4…');const blob=await encodeStudioVideo({canvas,timeline,audioBuffer,audioTracks,audioGain:state.manifest.audio?.gain??1,signal:controller.signal,onAudioCodec:value=>{codec=value;status(`Rendering H.264 + ${value.toUpperCase()} audio…`);},onProgress:p=>{if(!disposed)$('[data-vs-progress]').value=p.progress;},drawFrame:(t,signal)=>renderer.draw(t,{exporting:true,signal})});if(!disposed){download(blob,(state.manifest.title||'video').replace(/[^\p{L}\p{N}_-]/gu,'_')+'.mp4');status(audioBuffer||audioTracks.length?`MP4 exported with synchronized ${codec.toUpperCase()} voiceover and audio.${codec==='opus'?' Opus MP4 needs a compatible player.':''}`:'MP4 exported without audio (no voiceover selected).');}}finally{if(controller?.signal.aborted)invalidate();controller=null;root.dataset.exporting='false';if(!disposed)await draw();}
+  stop();controller=new AbortController();$('[data-vs=cancel]').disabled=false;root.dataset.exporting='true';let codec=null;try{await prepare();status('Rendering MP4…');const blob=await encodeStudioVideo({canvas,timeline,audioBuffer,audioTracks,audioGain:state.manifest.audio?.gain??1,signal:controller.signal,onAudioCodec:value=>{codec=value;status(`Rendering H.264 + ${value.toUpperCase()} audio…`);},onProgress:p=>{if(!disposed)$('[data-vs-progress]').value=p.progress;},drawFrame:(t,signal)=>renderer.draw(t,{exporting:true,signal})});if(!disposed){download(blob,(state.manifest.title||'video').replace(/[^\p{L}\p{N}_-]/gu,'_')+'.mp4');status(audioBuffer||audioTracks.length?`MP4 exported with synchronized ${codec.toUpperCase()} voiceover and audio.${codec==='opus'?' Opus MP4 needs a compatible player.':''}`:'MP4 exported without audio (no voiceover selected).');}return blob;}finally{if(controller?.signal.aborted)invalidate();controller=null;$('[data-vs=cancel]').disabled=true;root.dataset.exporting='false';if(!disposed)await draw();}
  }
  async function renderJpgPreviews(){
   stop();await prepare();if(!renderer||!timeline?.scenes?.length)throw Error('Add or apply a video scene before generating previews.');
@@ -156,6 +205,11 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   if(action==='cancel'){controller?.abort(new DOMException('Export cancelled','AbortError'));return;}
   run(async()=>{
    if(action==='save')await save();
+   if(action==='generate-ai'){
+    $('[data-ai-status]').textContent='Checking the laptop connection…';
+    try{await createAiVideo();}
+    catch(error){if(!disposed)$('[data-ai-status]').textContent=error.message;throw error;}
+   }
    if(action==='download')download(new Blob([JSON.stringify(state.manifest,null,2)],{type:'application/json'}),'video-studio.json');
    if(action==='library-refresh')await refreshLibrary();
    if(action==='copy-brief'){const text=studioBrief(await upgraded(),catalogue);await navigator.clipboard.writeText(text);status('Complete-video brief copied, including asset IDs and current JSON. Add your script and exact voiceover cues.');}
@@ -229,6 +283,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   if(getProject()?.ownerUid===account||mediaService){try{state.cloudRevision=await store?.get('cloudRevision:'+projectId)||0;const cloud=await media.loadDraft(projectId);if(cloud&&!await store?.get('draft:'+projectId)){state.manifest=validateManifest(cloud.manifest,{mapAssets:mapAssets()});state.brands=cloud.brands;state.cloudRevision=cloud.revision;}else if(cloud&&cloud.revision!==state.cloudRevision)status('Another device has a newer cloud draft. Use Review cloud draft before saving.');}catch(e){status('Cloud draft unavailable. Your local copy is retained; check your connection and try again.');}}
   sync();await draw();refreshLibrary().catch(e=>{if(!disposed)$('[data-media-status]').textContent='Cloud library unavailable. Check your connection, then choose Refresh library.';});
  });
+ async function importAiProduction(storyboard,audioBlob,{title='Invincible AI production',allowContextCards=false}={}){await ready;if(state.manifest.scenes.length||(state.manifest.audioClips||[]).length||state.manifest.audio)throw Error('This Video Studio draft already has scenes or audio. Save it first, then open a fresh video draft for the AI production.');if(!Array.isArray(storyboard)||!storyboard.length)throw Error('The AI draft has no executable scenes.');if(!(audioBlob instanceof Blob)||!audioBlob.size)throw Error('The original voiceover MP3 is missing. Run local analysis again to attach it.');const file=new File([audioBlob],audioBlob.name||'invincible-voiceover.mp3',{type:audioBlob.type||'audio/mpeg'}),decoded=await decodeVoiceover(file),fileId=uid(),next=compileAiStoryboardManifest(storyboard,{aspectRatio:'9:16',audioFileId:fileId,audioName:file.name,audioDuration:decoded.duration,mapAssets:mapAssets(),allowContextCards});next.title=String(title).slice(0,200);state.files.set(fileId,file);try{await applyManifest(next);time=0;await draw();status('AI scenes and their original voiceover are loaded in this video draft. Save when ready.');return next;}catch(error){state.files.delete(fileId);throw error;}}
  const hidden=()=>{if(document.hidden)stop();};document.addEventListener('visibilitychange',hidden);
- return {ready,get manifest(){return state.manifest;},async importAiProduction(storyboard,audioBlob,{title='Invincible AI production'}={}){await ready;if(state.manifest.scenes.length||(state.manifest.audioClips||[]).length||state.manifest.audio)throw Error('This Video Studio draft already has scenes or audio. Save it first, then open a fresh video draft for the AI production.');if(!Array.isArray(storyboard)||!storyboard.length)throw Error('The AI draft has no executable scenes.');if(!(audioBlob instanceof Blob)||!audioBlob.size)throw Error('The original voiceover MP3 is missing. Run local analysis again to attach it.');const file=new File([audioBlob],audioBlob.name||'invincible-voiceover.mp3',{type:audioBlob.type||'audio/mpeg'}),decoded=await decodeVoiceover(file),fileId=uid(),next=compileAiStoryboardManifest(storyboard,{aspectRatio:'9:16',audioFileId:fileId,audioName:file.name,audioDuration:decoded.duration,mapAssets:mapAssets()});next.title=String(title).slice(0,200);state.files.set(fileId,file);try{await applyManifest(next);time=0;await draw();status('AI scenes and their original voiceover are loaded in this video draft. Save when ready.');return next;}catch(error){state.files.delete(fileId);throw error;}},destroy(){images.destroy();disposed=true;state.time=time;assembly?.destroy();stop();lifecycle.abort(new DOMException('Workspace closed','AbortError'));controller?.abort(new DOMException('Workspace closed','AbortError'));renderer?.destroy();context?.close();store?.close();document.removeEventListener('visibilitychange',hidden);}};
+ return {ready,get manifest(){return state.manifest;},importAiProduction,destroy(){images.destroy();disposed=true;state.time=time;assembly?.destroy();stop();lifecycle.abort(new DOMException('Workspace closed','AbortError'));controller?.abort(new DOMException('Workspace closed','AbortError'));renderer?.destroy();context?.close();store?.close();document.removeEventListener('visibilitychange',hidden);}};
 }

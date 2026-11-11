@@ -5,7 +5,7 @@ import {emptyBattlefield} from './battlefield.js?v=2026111014';
 import {decodeVoiceover} from './audio.js?v=2026111014';
 import {validateManifest} from './model.js?v=2026111014';
 import {mapDraft} from './adapters.js?v=2026111014';
-import {mountMapEditor} from '../map-editor.js?v=2026111002';
+import {mountMapEditor} from '../map-editor.js?v=2026111202';
 import {safeRelativeAssetPath} from '../map-editor-model.js?v=2026111002';
 import {mountBattlefieldEditor} from './battlefield-editor.js?v=2026111014';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

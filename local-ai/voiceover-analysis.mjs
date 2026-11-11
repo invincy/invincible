@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { readAnimation } from '../creator/map-animation-import.js?v=2026111112';
+import { findSceneGeography, contextMap } from './history-context.mjs';
 
 const AUDIO_EXTENSIONS = new Set(['.mp3', '.wav']);
 
@@ -25,13 +26,14 @@ export async function inspectAudio(filePath, options = {}) {
   return { path: resolved, filename: path.basename(resolved), extension: path.extname(resolved).slice(1).toLowerCase(), bytes: stat.size };
 }
 
-export async function loadCreatorAssetCatalog(repoRoot) {
+export async function loadCreatorAssetCatalog(repoRoot, { includeHistory = false } = {}) {
   const root = path.resolve(repoRoot);
   const readJson = async relative => JSON.parse(await fs.readFile(path.join(root, relative), 'utf8'));
   const army = await readJson('creator/asset-libraries/historical-army-commanders-v1.json');
   const flags = await readJson('creator/history-data/border-flags-v3/manifest.json');
   const styleProfile = await readJson('creator/creative-style-profile.json');
   const verifiedExample = await readJson('creator/map-animation-example.json');
+  const history = includeHistory ? await readJson('creator/history-data/cliopatria-south-asia-v021.json') : null;
   const assets = [
     ...(Array.isArray(army.assets) ? army.assets : []),
     ...(Array.isArray(flags) ? flags : [])
@@ -41,6 +43,7 @@ export async function loadCreatorAssetCatalog(repoRoot) {
     assets,
     styleProfile,
     verifiedExample,
+    ...(history ? { territoryRecords: history.records } : {}),
     animationPresets: [
       { id: 'documentary', description: 'Documentary map overlay and typography preset.' },
       { id: 'legacy', description: 'Legacy map overlay preset.' },
@@ -57,11 +60,15 @@ export function normalizeCreativeInstructions(value) {
   return text;
 }
 
-export async function transcribeWithWhisper(audio, { endpoint = process.env.INVINCIBLE_WHISPER_URL } = {}) {
-  if (!endpoint) throw new Error('Local Whisper is not configured. Set INVINCIBLE_WHISPER_URL to a private local Whisper service.');
+export function whisperEndpoint(endpoint = process.env.INVINCIBLE_WHISPER_URL || 'http://127.0.0.1:8790/transcribe') {
   const url = new URL(endpoint);
-  if (!['127.0.0.1', 'localhost'].includes(url.hostname)) throw new Error('Whisper endpoint must remain on localhost.');
-  const response = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ audioPath: audio.path, wordTimestamps: true, segmentTimestamps: true }) });
+  if (url.protocol!=='http:' || !['127.0.0.1', 'localhost'].includes(url.hostname)) throw new Error('Whisper endpoint must remain on localhost.');
+  return url;
+}
+
+export async function transcribeWithWhisper(audio, { endpoint } = {}) {
+  const url = whisperEndpoint(endpoint);
+  const response = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ audioPath: audio.path, wordTimestamps: true, segmentTimestamps: true }), redirect: 'error' });
   if (!response.ok) throw new Error(`Whisper request failed (${response.status}).`);
   return normalizeTranscript(await response.json());
 }
@@ -80,7 +87,7 @@ export function buildCreativePlanPrompt(transcript, assetCatalog, creativeInstru
   return `Return JSON only. Choose one compact animation intention for each segment. Never invent positions, routes or asset IDs. Use only the verified locations and routes supplied here; if the catalog has no suitable geometry, keep the intent descriptive and explain what is missing. Output {"scenes":[{"sourceSegmentId":"segment-1","intent":"advance|reveal|hold|title","assetId":"catalog id or empty","locationId":"verified location ID or empty","routeId":"verified route ID or empty","title":"short label"}]}. Segments: ${JSON.stringify(t.segments.map(s=>({id:s.id,text:s.text,start:s.start,end:s.end})))}. Verified locations: ${JSON.stringify(locations.map(({id,name,coordinates,sourceUrl,sourceDate,precisionNote})=>({id,name,coordinates,sourceUrl,sourceDate,precisionNote})))}. Verified routes: ${JSON.stringify(routes.map(({id,name,coordinates,sourceUrl,sourceDate,precisionNote,reviewed})=>({id,name,coordinates,sourceUrl,sourceDate,precisionNote,reviewed})))}. Approved assets: ${JSON.stringify(assets)}. Creative direction: ${normalizeCreativeInstructions(creativeInstructions)}`;
 }
 
-export function compileCreativePlan(transcript, plan, assetCatalog) {
+export function compileCreativePlan(transcript, plan, assetCatalog, { production = false, creativeInstructions = '' } = {}) {
   const t=normalizeTranscript(transcript),segments=new Map(t.segments.map(s=>[s.id,s])),assets=catalogMap(assetCatalog),rows=Array.isArray(plan?.scenes)?plan.scenes:[];
   if(rows.length!==t.segments.length)throw Error(`Creative pass must return one plan per segment; expected ${t.segments.length}, received ${rows.length}.`);
   const locations=new Map((assetCatalog.verifiedLocations||[]).map(item=>[String(item.id),item])),routes=new Map((assetCatalog.verifiedRoutes||[]).filter(item=>item.reviewed===true).map(item=>[String(item.id),item]));
@@ -98,7 +105,14 @@ export function compileCreativePlan(transcript, plan, assetCatalog) {
       const center=location.coordinates;mapAnimation={format:'invincible-map-animation',version:1,title:String(row.title||location.name||row.intent),duration,aspectRatio:'9:16',basemap:'terrain',terrain:false,overlayPreset:'documentary',camera:[{time:0,center,zoom:4.9,pitch:0,bearing:0,easing:'smooth'},{time:duration,center,zoom:5.25,pitch:0,bearing:0,easing:'smooth'}],assets:[],layers:[{id:`label-${i+1}`,type:'label',name:String(location.name),start:0,end:duration,position:center,color:'#F4F5F7',scale:1}]};
     }else missingInfo.push('No reviewed, sourced location geometry is available for this scene; no coordinates were invented.');
     if(assetId)missingInfo.push(`Selected asset ${assets.get(assetId).name} has no verified map placement in this catalog.`);
-    const checked=mapAnimation?readAnimation(mapAnimation):null;return {id:`scene-${i+1}`,sourceSegmentIds:[seg.id],visual:String(row.title||seg.text),animation:String(row.intent),assetIds:assetId?[assetId]:[],missingInfo,mapAnimation:checked};
+    let contextSources = [];
+    if (production && duration < 1) mapAnimation = null;
+    if (production && !mapAnimation) {
+      const places = findSceneGeography(seg.text, creativeInstructions, t.text, assetCatalog.territoryRecords);
+      mapAnimation = contextMap(places, duration);
+      if (mapAnimation) contextSources = places.map(({name, source}) => ({name, source}));
+    }
+    const checked=mapAnimation?readAnimation(mapAnimation):null;return {id:`scene-${i+1}`,sourceSegmentIds:[seg.id],visual:String(row.title||seg.text),animation:String(row.intent),assetIds:assetId?[assetId]:[],missingInfo,mapAnimation:checked,...(production&&!checked?{contextCard:true}:{}),...(contextSources.length?{contextSources}:{})};
   });return {scenes};
 }
 
@@ -208,6 +222,7 @@ export function assembleSceneDraft(transcript, qwenDraft, assetCatalog = []) {
     return {
       id: String(draft.id || `scene-${index + 1}`), startSeconds: start, endSeconds: end, durationSeconds: Number((end - start).toFixed(3)),
       voiceover, voiceoverTimestamp: `${start.toFixed(3)}-${end.toFixed(3)}s`, visual: String(draft.visual ?? '').trim(), mapAnimation,
+      ...(draft.contextCard===true?{contextCard:true}:{}), ...(draft.contextSources?.length?{contextSources:draft.contextSources}:{}),
       animation: String(draft.animation ?? '').trim(), assets: assetIds.map(id => assets.get(id)?.name || id).join('; '), assetIds,
       assetReferences: assetIds.join('; '), sourceSegmentIds: source.map(segment => segment.id), missingInfo: [...new Set(missingInfo)]
     };
@@ -234,5 +249,5 @@ export function toCreatorStudioImport(result, title = 'Voiceover analysis draft'
   if (!validation.valid) throw new Error(`Draft is not importable: ${validation.errors.join(' ')}`);
   // `animation` is kept in technicalNotes because Creator Studio's importer
   // aliases both `animation` and `visual` to the same field.
-  return { schemaVersion: 1, title, aspectRatio: '9:16', assets: [], audio: null, scenes: result.scenes.map(scene => ({ id: scene.id, timeline: `${scene.startSeconds.toFixed(3)}-${scene.endSeconds.toFixed(3)}s`, voiceover: scene.voiceover, voiceoverTimestamp: scene.voiceoverTimestamp, visual: scene.visual, assets: scene.assets, assetReferences: scene.assetReferences, mapAnimation: scene.mapAnimation || null, technicalNotes: scene.animation ? `Suggested animation: ${scene.animation}` : '' })) };
+  return { schemaVersion: 1, title, aspectRatio: '9:16', assets: [], audio: null, scenes: result.scenes.map(scene => ({ id: scene.id, timeline: `${scene.startSeconds.toFixed(3)}-${scene.endSeconds.toFixed(3)}s`, voiceover: scene.voiceover, voiceoverTimestamp: scene.voiceoverTimestamp, visual: scene.visual, assets: scene.assets, assetReferences: scene.assetReferences, mapAnimation: scene.mapAnimation || null, ...(scene.contextCard===true?{contextCard:true}:{}),...(scene.contextSources?.length?{contextSources:scene.contextSources}:{}),technicalNotes: scene.animation ? `Suggested animation: ${scene.animation}` : '' })) };
 }

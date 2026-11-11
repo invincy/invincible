@@ -89,7 +89,10 @@ export function createImageWorker({ workspaceRoot = WORKSPACE_ROOT, ownerUid, gp
   async function queue() { const q = await json(comfyOrigin, '/queue'); if (!Array.isArray(q.queue_running) || !Array.isArray(q.queue_pending)) throw Error('Cannot verify the ComfyUI queue.'); return q; }
   function entries(q) { return [...(q.queue_running || []), ...(q.queue_pending || [])]; }
   async function unloadImages() {
-    if (entries(await queue()).length) throw Error('ComfyUI has other GPU work. Wait for it to finish before using Qwen.');
+    let stateBefore;
+    try { stateBefore = await queue(); }
+    catch (error) { if (error.cause?.code === 'ECONNREFUSED') return; throw error; }
+    if (entries(stateBefore).length) throw Error('ComfyUI has other GPU work. Wait for it to finish before using Qwen.');
     await json(comfyOrigin, '/free', { unload_models: true, free_memory: true });
     for (let n = 0; n < 30; n++) {
       const state = await json(comfyOrigin, '/system_stats');

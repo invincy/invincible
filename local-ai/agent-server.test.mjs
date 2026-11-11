@@ -55,6 +55,11 @@ test('published-site pairing requires the configured origin, owner and explicit 
  query.set('uid','other-owner');assert.equal((await fetch(service.origin+'/connect?'+query)).status,403);query.set('uid','test-owner');query.set('origin','https://evil.example');assert.equal((await fetch(service.origin+'/connect?'+query)).status,403);
  assert.equal((await fetch(service.origin+'/api/session',{headers:{Origin:'https://invincy.github.io'}})).status,401,'CORS never substitutes for authentication');
 });
+test('voiceover catalog preflight exposes only reviewed geography counts',async t=>{
+ const{service,call}=await setup(t,{serverOptions:{loadVoiceoverCatalog:async()=>({assets:[{id:'fixture'}],verifiedLocations:[{id:'panipat'}],verifiedRoutes:[{id:'route-1',reviewed:true},{id:'draft-route',reviewed:false}]})}});
+ assert.equal((await fetch(service.origin+'/api/voiceover/catalog-status')).status,401);
+ const response=await call('/api/voiceover/catalog-status');assert.equal(response.status,200);assert.deepEqual(await response.json(),{automaticContext:true,verifiedLocations:1,verifiedRoutes:1});
+});
 test('voiceover analysis requires pairing, confines MP3 to the workspace, and returns an importable draft',async t=>{
  let transcribedPath='',catalogPath='',planned=0;
  const transcript={text:'Hello world.',language:'en',duration:1,segments:[{id:'segment-1',start:0,end:1,text:'Hello world.',words:[{word:'Hello',start:0,end:.5},{word:'world.',start:.5,end:1}]}]};

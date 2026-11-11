@@ -7,7 +7,7 @@ import { createRequire } from 'node:module';
 import { askOllama, detectLocalIntent, draftImagePrompt, imagePromptText } from './invincible-local-controller.mjs';
 import { createGpuCoordinator } from './gpu-coordinator.mjs';
 import { createImageWorker, safeDirectory, WORKSPACE_ROOT } from './image-worker.mjs';
-import { buildCreativePlanPrompt, compileCreativePlan, assembleSceneDraft, loadCreatorAssetCatalog, toCreatorStudioImport, transcribeWithWhisper } from './voiceover-analysis.mjs';
+import { buildCreativePlanPrompt, compileCreativePlan, assembleSceneDraft, loadCreatorAssetCatalog, toCreatorStudioImport, transcribeWithWhisper, whisperEndpoint } from './voiceover-analysis.mjs';
 const require = createRequire(import.meta.url);
 const { createUniversalAgent } = require('../functions/src/local-ai/universal-agent-api.js');
 const { executeInvincibleTool } = require('../functions/src/tools/invincible-tools.js');
@@ -26,8 +26,17 @@ export async function createLocalAgentServer({ ownerUid, token = crypto.randomBy
   const principal = { uid: ownerUid, workspaceIds: [ownerUid] };
   const projectsFile = path.join(images.directory, 'projects.json'); let projectTail = Promise.resolve();
   const voiceoverDirectory=path.join(workspaceRoot,'voiceover-analysis');
+  async function installedVoiceoverModel(){
+    const response=await fetchImpl('http://127.0.0.1:11434/api/tags',{signal:AbortSignal.timeout(3000),redirect:'error'});
+    if(!response.ok)throw Error('Ollama did not report installed models.');
+    const names=new Set((await response.json()).models?.map(model=>model.name));
+    const model=['qwen3:4b-instruct','qwen3:4b'].find(name=>names.has(name));
+    if(!model)throw Error('No installed Qwen3 4B model was found.');
+    return model;
+  }
   const structuredVoiceoverAsk=askVoiceoverJson|| (async prompt=>{
-    const response=await fetchImpl('http://127.0.0.1:11434/api/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({model:'qwen3:4b-instruct',stream:false,think:false,format:'json',options:{temperature:0},messages:[{role:'user',content:prompt}]}),signal:AbortSignal.timeout(120000)});
+    const model=await installedVoiceoverModel();
+    const response=await fetchImpl('http://127.0.0.1:11434/api/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({model,stream:false,think:false,format:'json',options:{temperature:0},messages:[{role:'user',content:prompt}]}),signal:AbortSignal.timeout(120000),redirect:'error'});
     if(!response.ok)throw Error(`Ollama request failed (${response.status}).`);return JSON.parse((await response.json())?.message?.content||'{}');
   });
   async function projects() { try { if ((await fs.lstat(projectsFile)).isSymbolicLink()) throw Error('Project storage must not be a link.'); return JSON.parse(await fs.readFile(projectsFile, 'utf8')); } catch (error) { if (error.code === 'ENOENT') return []; throw error; } }
@@ -83,8 +92,19 @@ export async function createLocalAgentServer({ ownerUid, token = crypto.randomBy
         const actor = authenticate(request);
         if (request.method === 'GET' && url.pathname === '/api/session') return send(response, 200, { uid: ownerUid, workspaceId: ownerUid, storage: images.storage(), presets: IMAGE_PRESETS, capabilities: { draftPrompt: true, referenceImage: true } });
         if (request.method === 'GET' && url.pathname === '/api/projects') return send(response, 200, { projects: await projects() });
+        if (request.method === 'GET' && url.pathname === '/api/voiceover/catalog-status') {
+          const check=url.searchParams.get('check')==='production';
+          const catalog=await loadVoiceoverCatalog(root,{includeHistory:check});
+          if(check){
+            try{const response=await fetchImpl(new URL('/health',whisperEndpoint()),{signal:AbortSignal.timeout(3000),redirect:'error'});if(!response.ok)throw Error('Offline');}
+            catch{throw Error('Local Whisper is offline. Start the laptop voiceover service before generating narration.');}
+            try{await installedVoiceoverModel();}catch{throw Error('Start Ollama with your installed Qwen3 4B model before generating narration.');}
+          }
+          return send(response,200,{automaticContext:true,verifiedLocations:Array.isArray(catalog.verifiedLocations)?catalog.verifiedLocations.length:0,verifiedRoutes:Array.isArray(catalog.verifiedRoutes)?catalog.verifiedRoutes.filter(route=>route.reviewed===true).length:0});
+        }
         if (request.method === 'POST' && url.pathname === '/api/voiceover/analyze') {
-          const body=await readBody(request,22*1024*1024);strict(body,['audioBase64','title','creativeInstructions']);
+          const body=await readBody(request,22*1024*1024);strict(body,['audioBase64','title','creativeInstructions','production']);
+          if(body.production!==undefined&&typeof body.production!=='boolean')throw Error('Production must be a boolean.');
           const encoded=String(body.audioBase64||'').replace(/^data:audio\/[^;]+;base64,/i,'');
           if(!encoded||encoded.length>20*1024*1024||!/^[A-Za-z0-9+/]*={0,2}$/.test(encoded))throw Error('Audio must be a valid MP3 under 15 MB.');
           const bytes=Buffer.from(encoded,'base64'),isMp3=bytes.subarray(0,3).toString()==='ID3'||(bytes[0]===0xff&&(bytes[1]&0xe0)===0xe0);
@@ -93,10 +113,10 @@ export async function createLocalAgentServer({ ownerUid, token = crypto.randomBy
           await safeDirectory(workspaceRoot,voiceoverDirectory);const audioPath=path.join(voiceoverDirectory,'voiceover-'+crypto.randomUUID()+'.mp3');await fs.writeFile(audioPath,bytes,{flag:'wx'});
           let responseBody,status=200;
           try{
-            const transcript=await gpu.run(async()=>{await images.unloadImages();return transcribeVoiceover({path:audioPath,workspaceRoot});}),catalog=await loadVoiceoverCatalog(root);
+            const transcript=await gpu.run(async()=>{await images.unloadImages();return transcribeVoiceover({path:audioPath,workspaceRoot});}),catalog=await loadVoiceoverCatalog(root,{includeHistory:body.production===true});
             let draft,failure;
             for(let attempt=0;attempt<2;attempt++){
-              try{const prompt=buildCreativePlanPrompt(transcript,catalog,creativeInstructions),intentions=await gpu.run(async()=>{await images.unloadImages();return structuredVoiceoverAsk(prompt);});draft=compileCreativePlan(transcript,intentions,catalog);failure=null;break;}
+              try{const prompt=buildCreativePlanPrompt(transcript,catalog,creativeInstructions),intentions=await gpu.run(async()=>{await images.unloadImages();return structuredVoiceoverAsk(prompt);});draft=compileCreativePlan(transcript,intentions,catalog,{production:body.production===true,creativeInstructions});failure=null;break;}
               catch(error){failure=error;}
             }
             if(failure)throw Error('Map planning failed after 2 targeted attempts: '+failure.message);
