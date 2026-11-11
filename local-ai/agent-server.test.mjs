@@ -63,6 +63,6 @@ test('voiceover analysis requires pairing, confines MP3 to the workspace, and re
  const audioBase64=Buffer.from('ID3fixture-audio').toString('base64');
  assert.equal((await fetch(service.origin+'/api/voiceover/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({audioBase64})})).status,401);
  const response=await call('/api/voiceover/analyze',{audioBase64,title:'Fixture voiceover',creativeInstructions:'Keep it restrained.'});
- assert.equal(response.status,200,JSON.stringify(await response.clone().json()));const result=await response.json();assert.equal(result.analysis.valid,true);assert.equal(result.creatorStudio.title,'Fixture voiceover');assert.equal(result.analysis.transcript.segments[0].words.length,2);assert.equal(planned,1);assert.equal(catalogPath,path.resolve('E:\\Projects\\Invincible\\invincible'));
+ assert.equal(response.status,200,JSON.stringify(await response.clone().json()));const result=await response.json();assert.equal(result.analysis.valid,true);assert.equal(result.creatorStudio.title,'Fixture voiceover');assert.equal(result.analysis.transcript.segments[0].words.length,2);assert.equal(planned,1);assert.equal(catalogPath,path.resolve(import.meta.dirname,'..'));
  const workspace=path.join(serviceWorkspace,'voiceover-analysis');assert.deepEqual((await fs.readdir(workspace)).filter(name=>name.endsWith('.mp3')),[]);assert.equal(path.dirname(transcribedPath),workspace);
 });
