@@ -24,6 +24,7 @@
 <label for="title">Recording name</label><input id="title" maxlength="100" value="My voiceover" autocomplete="off">
 <div class="script-label"><label for="script">Your script</label><label class="mode-label" for="mode">Input <select id="mode"><option value="text">Plain text</option><option value="ssml">SSML</option></select></label></div>
 <textarea id="script" rows="10" spellcheck="false" placeholder="Paste Hindi, English, or your complete narration here…"></textarea>
+<label for="creativeInstructions">Creative instructions for Local AI <span class="optional">optional</span></label><textarea id="creativeInstructions" rows="4" maxlength="4000" placeholder="Example: Show Babur’s army advancing from the northwest, with troop formations, slow map pans and restrained gold titles."></textarea>
 <div class="script-footer"><span id="count">0 / 30,000 bytes</span><span id="draftStatus">Draft stays on this device</span></div>
 <p id="inputHelp" class="help">Paragraph breaks can become pauses. Your wording stays unchanged.</p>
 <details id="ssmlGuide" class="ssml-guide"><summary>Fine control with SSML</summary><p>Use SSML to set pauses, emphasis and pronunciation. Available tags depend on the selected voice. External audio and voice-switching tags are not accepted.</p><pre>&lt;speak&gt;21 अप्रैल, 1526! &lt;break time="500ms"/&gt;पानीपत की कहानी।&lt;/speak&gt;</pre></details>
@@ -47,6 +48,7 @@
 </fieldset></div></details>
 </section>
 <section class="panel result-panel" aria-labelledby="resultHeading"><div class="result-status"><h2 id="resultHeading">Listen &amp; export</h2><p id="generationStatus" role="status" aria-live="polite">Your recording will appear here.</p></div><div class="transport-actions"><div class="generate-actions"><button id="preview" type="button" class="secondary" disabled>Preview opening</button><button id="generate" type="button" class="primary" disabled>Generate MP3</button></div><p class="help quota-note">Uses paid Google TTS quota.</p></div><div id="recording" hidden><audio id="player" controls preload="metadata" aria-label="Generated voiceover"></audio><div class="download-row"><span id="recordingInfo"></span><a id="download" class="secondary" download>Download MP3 ↓</a></div></div></section>
+<button id="analyzeLocal" type="button" class="secondary" disabled>Analyze with Local AI</button><p id="localAnalysisStatus" class="help" role="status" aria-live="polite"></p><pre id="localAnalysisResult" hidden></pre>
 <section id="voiceoverHistory" class="panel history-panel" hidden aria-labelledby="historyHeading" tabindex="-1">
 <div class="panel-heading"><h2 id="historyHeading">Voiceover history</h2><div class="history-heading-actions"><a class="editor-link" href="#scriptHeading">Narration ↑</a><button id="historyRefresh" type="button" class="quiet" aria-label="Refresh history">Refresh</button></div></div>
 <p id="historyStatus" class="help" role="status" aria-live="polite"></p>
@@ -55,6 +57,6 @@
 </section>
 </div>
 </main>
-<script type="module" src="tts.js?v=2026111005"></script>
+<script type="module" src="tts.js?v=2026111112"></script>
 <script type="module" src="tts-forest.js?v=1"></script>
 </body></html>

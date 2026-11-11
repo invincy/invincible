@@ -8,7 +8,7 @@ import { fakeGpu, fixturePng } from '../tests/fixtures/imagegen-service.mjs';
 const TOKEN='fixture-only-local-worker-pairing-token-12345';
 async function setup(t, options={}) {
   const directory=await fs.mkdtemp(path.join(process.env.INVINCIBLE_IMAGE_TEST_ROOT||os.tmpdir(),'invincible-http-fixture-'));
-  const backend=fakeGpu(options),service=await createLocalAgentServer({ownerUid:'test-owner',token:TOKEN,port:18889,workspaceRoot:directory,fetchImpl:backend.fetchImpl,appOrigin:'https://invincy.github.io',workerOptions:{pollMs:1},ask:async()=>({kind:'tool',tool:'generate_image',arguments:{prompt:'Fixture fortress illustration',preset:'square',seed:42}})});
+  const backend=fakeGpu(options),service=await createLocalAgentServer({ownerUid:'test-owner',token:TOKEN,port:18889,workspaceRoot:directory,fetchImpl:backend.fetchImpl,appOrigin:'https://invincy.github.io',workerOptions:{pollMs:1},ask:async()=>({kind:'tool',tool:'generate_image',arguments:{prompt:'Fixture fortress illustration',preset:'square',seed:42}}),...(options.serverOptions||{})});
   await service.listen();t.after(async()=>{await service.close();await fs.rm(directory,{recursive:true,force:true,maxRetries:3});});
   const call=async(route,body,headers={})=>fetch(service.origin+route,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json',...headers},...(body?{body:JSON.stringify(body)}:{})});
   return{service,backend,call};
@@ -54,4 +54,15 @@ test('published-site pairing requires the configured origin, owner and explicit 
  assert.match(html,/Connect Invincible/);assert.match(html,/postMessage/);assert.ok(page.headers.get('Content-Security-Policy').includes("frame-ancestors 'none'"));
  query.set('uid','other-owner');assert.equal((await fetch(service.origin+'/connect?'+query)).status,403);query.set('uid','test-owner');query.set('origin','https://evil.example');assert.equal((await fetch(service.origin+'/connect?'+query)).status,403);
  assert.equal((await fetch(service.origin+'/api/session',{headers:{Origin:'https://invincy.github.io'}})).status,401,'CORS never substitutes for authentication');
+});
+test('voiceover analysis requires pairing, confines MP3 to the workspace, and returns an importable draft',async t=>{
+ let transcribedPath='',catalogPath='',planned=0;
+ const transcript={text:'Hello world.',language:'en',duration:1,segments:[{id:'segment-1',start:0,end:1,text:'Hello world.',words:[{word:'Hello',start:0,end:.5},{word:'world.',start:.5,end:1}]}]};
+ const {service,call}=await setup(t,{serverOptions:{transcribeVoiceover:async audio=>{transcribedPath=audio.path;assert.equal(audio.workspaceRoot,serviceWorkspace);assert.deepEqual([...await fs.readFile(audio.path)].slice(0,3),[73,68,51]);return transcript;},loadVoiceoverCatalog:async location=>{catalogPath=location;return{assets:[],verifiedLocations:[],verifiedRoutes:[]};},askVoiceoverJson:async()=>{planned++;return{scenes:[{sourceSegmentId:'segment-1',intent:'hold',title:'Hello',assetId:'',locationId:'',routeId:''}]};}}});
+ const serviceWorkspace=service.images.directory.split(path.sep).slice(0,-2).join(path.sep);
+ const audioBase64=Buffer.from('ID3fixture-audio').toString('base64');
+ assert.equal((await fetch(service.origin+'/api/voiceover/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({audioBase64})})).status,401);
+ const response=await call('/api/voiceover/analyze',{audioBase64,title:'Fixture voiceover',creativeInstructions:'Keep it restrained.'});
+ assert.equal(response.status,200,JSON.stringify(await response.clone().json()));const result=await response.json();assert.equal(result.analysis.valid,true);assert.equal(result.creatorStudio.title,'Fixture voiceover');assert.equal(result.analysis.transcript.segments[0].words.length,2);assert.equal(planned,1);assert.equal(catalogPath,path.resolve('E:\\Projects\\Invincible\\invincible'));
+ const workspace=path.join(serviceWorkspace,'voiceover-analysis');assert.deepEqual((await fs.readdir(workspace)).filter(name=>name.endsWith('.mp3')),[]);assert.equal(path.dirname(transcribedPath),workspace);
 });

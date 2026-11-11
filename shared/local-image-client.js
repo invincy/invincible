@@ -14,12 +14,12 @@ export function createLocalImageClient({ origin = window.__INVINCIBLE_LOCAL_AI_O
     const account=getAccountId();if(token)temporary={account,token:token.trim()};
     try{const verified=tokenFor(account),result=await request('/api/session',undefined,{},verified);if(requireAccount&&result.uid!==account)throw Error('The local worker belongs to another account.');let remembered=true;temporary=null;try{localStorage.setItem(localPairingKey(origin,account),verified)}catch{remembered=false;try{sessionStorage.setItem(localPairingKey(origin,account),verified)}catch{temporary={account,token:verified}}}try{sessionStorage.removeItem(key)}catch{}return{...result,remembered};}catch(error){temporary=null;throw error;}
   }
-  async function request(route, body, { binary = false } = {}, selectedToken) {
+  async function request(route, body, { binary = false, timeoutMs = route === '/api/command' ? 120000 : route === '/api/voiceover/analyze' ? 180000 : 15000 } = {}, selectedToken) {
     const account = getAccountId(), token = selectedToken===undefined?tokenFor(account):selectedToken;
     if (requireAccount && !account) throw Error('Sign in before using the local image worker.');
     if (!token) throw Object.assign(Error('Connect this laptop to generate images.'), {status:401,code:'LOCAL_PAIRING_REQUIRED',definitive:true});
     let response;
-    try { response = await fetch(origin + route, { method: body === undefined ? 'GET' : 'POST', headers: { Authorization: 'Bearer ' + token, ...(account ? { 'X-Invincible-Account': account } : {}), ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal: AbortSignal.timeout(['/api/command', '/api/image-prompt'].includes(route) ? 120000 : 15000), redirect: 'error', targetAddressSpace: 'loopback' }); }
+    try { response = await fetch(origin + route, { method: body === undefined ? 'GET' : 'POST', headers: { Authorization: 'Bearer ' + token, ...(account ? { 'X-Invincible-Account': account } : {}), ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal: AbortSignal.timeout(timeoutMs), redirect: 'error', targetAddressSpace: 'loopback' }); }
     catch { throw Object.assign(Error('Start Image Studio, then check the connection. If Chrome asks, allow local access.'),{code:'LOCAL_WORKER_UNREACHABLE'}); }
     if (getAccountId() !== account) throw Error('Your account changed. Reopen the image panel.');
     if (!response.ok) { if (response.status === 401) forget(account,token);const data = await response.json();throw Object.assign(Error(data.error || 'Local worker rejected this request.'), { definitive: true, status: response.status, code: data.code }); }
@@ -47,7 +47,7 @@ export function createLocalImageClient({ origin = window.__INVINCIBLE_LOCAL_AI_O
         closed = setInterval(() => { if (popup.closed) { cleanup(); reject(Error('The connection window closed before confirmation.')); } }, 500);
       });
     },
-    draftPrompt: idea => request('/api/image-prompt', { idea }),
+    draftPrompt: idea => request('/api/image-prompt', { idea }, { timeoutMs: 120000 }),
     generate: (args, idempotencyKey, referencePng) => request('/api/generations', { arguments: args, idempotencyKey, referencePng }),
     job: id => request('/api/generations/' + encodeURIComponent(id)),
     image: (id, download = false) => request('/api/generations/' + encodeURIComponent(id) + '/image' + (download ? '?download=1' : ''), undefined, { binary: true }),

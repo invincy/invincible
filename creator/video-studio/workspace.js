@@ -9,6 +9,7 @@ import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=
 import {mountAssembly} from './assembly.js?v=2026111014';
 import {encodeStudioVideo} from './export.js?v=2026111014';
 import {openStudioStore} from './storage.js';
+import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111112';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>crypto.randomUUID();
 const template=(name,text)=>({id:name,startSeconds:0,durationSeconds:2,engineType:'graphic',engineData:{},transition:{type:'fade',durationSeconds:.3},overlays:[{id:'title',type:'text',text,x:.5,y:.5,fontSize:64}]});
@@ -33,6 +34,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  $('.vs-layout').after(advanced);advanced.append($('[data-vs-status]'));root.append($('[data-vs-status]'));
  $('.vs-preview .vs-help').textContent='Full HD · 30 fps. Your scenes and audio export together.';
  $('[data-vs=save]').textContent='Save';$('[data-vs=export]').textContent='Export MP4';
+ const jpgButton=document.createElement('button');jpgButton.type='button';jpgButton.dataset.vs='jpg-previews';jpgButton.textContent='Export JPG previews';$('[data-vs=export]').before(jpgButton);
  const account=getAccountId(),projectId=getProject()?.id;const store=account?openStudioStore(account):null;
  const state=session;if(state.account!==account||state.projectId!==projectId){for(const key of Object.keys(state))delete state[key];state.account=account;state.projectId=projectId;}state.manifest??=emptyVideo();state.brands??=structuredClone(PRESETS);state.files??=new Map();state.brandAssets??=[];state.cloudRevision??=0;
  const media=mediaService||createMediaClient(account);let catalogue=[],pendingCloud=null;
@@ -141,6 +143,12 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  async function renderExport(){
   stop();controller=new AbortController();root.dataset.exporting='true';let codec=null;try{await prepare();status('Rendering MP4…');const blob=await encodeStudioVideo({canvas,timeline,audioBuffer,audioTracks,audioGain:state.manifest.audio?.gain??1,signal:controller.signal,onAudioCodec:value=>{codec=value;status(`Rendering H.264 + ${value.toUpperCase()} audio…`);},onProgress:p=>{if(!disposed)$('[data-vs-progress]').value=p.progress;},drawFrame:(t,signal)=>renderer.draw(t,{exporting:true,signal})});if(!disposed){download(blob,(state.manifest.title||'video').replace(/[^\p{L}\p{N}_-]/gu,'_')+'.mp4');status(audioBuffer||audioTracks.length?`MP4 exported with synchronized ${codec.toUpperCase()} voiceover and audio.${codec==='opus'?' Opus MP4 needs a compatible player.':''}`:'MP4 exported without audio (no voiceover selected).');}}finally{if(controller?.signal.aborted)invalidate();controller=null;root.dataset.exporting='false';if(!disposed)await draw();}
  }
+ async function renderJpgPreviews(){
+  stop();await prepare();if(!renderer||!timeline?.scenes?.length)throw Error('Add or apply a video scene before generating previews.');
+  const results=[];status('Rendering JPG previews…');
+  for(const scene of timeline.scenes){await renderer.draw(scene.startSeconds,{exporting:true});const blob=await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(Error('Canvas could not be exported as JPG.')),'image/jpeg',.92));const name=(state.manifest.title||'invincible').replace(/[^\p{L}\p{N}_-]/gu,'_')+'-scene-'+String(results.length+1).padStart(2,'0')+'.jpg';download(blob,name);results.push({sceneId:scene.id,name,durationSeconds:scene.durationSeconds});}
+  status(`${results.length} JPG previews exported. Each file was captured from the existing renderer.`);return results;
+ }
  root.addEventListener('click',event=>{
   if(event.target.closest('[data-assembly]'))return;
   const at=event.target.closest('[data-vs-at]');if(at&&!busy){stop();time=Number(at.dataset.vsAt);assembly?.select(at.dataset.vsSceneId);run(draw);return;}
@@ -173,7 +181,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    if(action==='reuse'){const a=mapAssets().find(a=>a.id===$('[data-vs-library]').value);if(!a)throw Error('Choose a map image first.');invalidate();if(!state.manifest.assets.some(x=>x.libraryId===a.id))state.manifest.assets.push({id:uid(),name:a.name,libraryId:a.id});sync();}
    if(action==='remove-audio'){const next=structuredClone(state.manifest);next.audio=null;if(next.audioClips)next.audioClips=next.audioClips.filter(a=>a.role!=='voiceover');await applyManifest(next);}
    if(action==='play')await play();if(action==='pause'){stop();await draw();}
-   if(action==='export')await renderExport();
+   if(action==='export')await renderExport();if(action==='jpg-previews')await renderJpgPreviews();
   });
  });
  root.addEventListener('input',event=>{
@@ -222,5 +230,5 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   sync();await draw();refreshLibrary().catch(e=>{if(!disposed)$('[data-media-status]').textContent='Cloud library unavailable. Check your connection, then choose Refresh library.';});
  });
  const hidden=()=>{if(document.hidden)stop();};document.addEventListener('visibilitychange',hidden);
- return {ready,get manifest(){return state.manifest;},destroy(){images.destroy();disposed=true;state.time=time;assembly?.destroy();stop();lifecycle.abort(new DOMException('Workspace closed','AbortError'));controller?.abort(new DOMException('Workspace closed','AbortError'));renderer?.destroy();context?.close();store?.close();document.removeEventListener('visibilitychange',hidden);}};
+ return {ready,get manifest(){return state.manifest;},async importAiProduction(storyboard,audioBlob,{title='Invincible AI production'}={}){await ready;if(state.manifest.scenes.length||(state.manifest.audioClips||[]).length||state.manifest.audio)throw Error('This Video Studio draft already has scenes or audio. Save it first, then open a fresh video draft for the AI production.');if(!Array.isArray(storyboard)||!storyboard.length)throw Error('The AI draft has no executable scenes.');if(!(audioBlob instanceof Blob)||!audioBlob.size)throw Error('The original voiceover MP3 is missing. Run local analysis again to attach it.');const file=new File([audioBlob],audioBlob.name||'invincible-voiceover.mp3',{type:audioBlob.type||'audio/mpeg'}),decoded=await decodeVoiceover(file),fileId=uid(),next=compileAiStoryboardManifest(storyboard,{aspectRatio:'9:16',audioFileId:fileId,audioName:file.name,audioDuration:decoded.duration,mapAssets:mapAssets()});next.title=String(title).slice(0,200);state.files.set(fileId,file);try{await applyManifest(next);time=0;await draw();status('AI scenes and their original voiceover are loaded in this video draft. Save when ready.');return next;}catch(error){state.files.delete(fileId);throw error;}},destroy(){images.destroy();disposed=true;state.time=time;assembly?.destroy();stop();lifecycle.abort(new DOMException('Workspace closed','AbortError'));controller?.abort(new DOMException('Workspace closed','AbortError'));renderer?.destroy();context?.close();store?.close();document.removeEventListener('visibilitychange',hidden);}};
 }

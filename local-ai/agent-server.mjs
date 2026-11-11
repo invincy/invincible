@@ -7,6 +7,7 @@ import { createRequire } from 'node:module';
 import { askOllama, detectLocalIntent, draftImagePrompt, imagePromptText } from './invincible-local-controller.mjs';
 import { createGpuCoordinator } from './gpu-coordinator.mjs';
 import { createImageWorker, safeDirectory, WORKSPACE_ROOT } from './image-worker.mjs';
+import { buildCreativePlanPrompt, compileCreativePlan, assembleSceneDraft, loadCreatorAssetCatalog, toCreatorStudioImport, transcribeWithWhisper } from './voiceover-analysis.mjs';
 const require = createRequire(import.meta.url);
 const { createUniversalAgent } = require('../functions/src/local-ai/universal-agent-api.js');
 const { executeInvincibleTool } = require('../functions/src/tools/invincible-tools.js');
@@ -14,7 +15,7 @@ const { imageSchema, IMAGE_PRESETS } = require('../functions/src/local-ai/image-
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.json': 'application/json', '.ico': 'image/x-icon' };
 
-export async function createLocalAgentServer({ ownerUid, token = crypto.randomBytes(32).toString('base64url'), port = 8787, workspaceRoot = WORKSPACE_ROOT, fetchImpl = fetch, ask = askOllama, appOrigin = null, workerOptions = {} } = {}) {
+export async function createLocalAgentServer({ ownerUid, token = crypto.randomBytes(32).toString('base64url'), port = 8787, workspaceRoot = WORKSPACE_ROOT, fetchImpl = fetch, ask = askOllama, askVoiceoverJson, transcribeVoiceover = transcribeWithWhisper, loadVoiceoverCatalog = loadCreatorAssetCatalog, appOrigin = null, workerOptions = {} } = {}) {
   if (!/^[A-Za-z0-9_-]{3,120}$/.test(ownerUid || '')) throw Error('Configure the local owner UID before starting the worker.');
   if (token.length < 32) throw Error('Local pairing token is too short.');
   const origin = `http://127.0.0.1:${port}`;
@@ -24,6 +25,11 @@ export async function createLocalAgentServer({ ownerUid, token = crypto.randomBy
   await images.init();
   const principal = { uid: ownerUid, workspaceIds: [ownerUid] };
   const projectsFile = path.join(images.directory, 'projects.json'); let projectTail = Promise.resolve();
+  const voiceoverDirectory=path.join(workspaceRoot,'voiceover-analysis');
+  const structuredVoiceoverAsk=askVoiceoverJson|| (async prompt=>{
+    const response=await fetchImpl('http://127.0.0.1:11434/api/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({model:'qwen3:4b-instruct',stream:false,think:false,format:'json',options:{temperature:0},messages:[{role:'user',content:prompt}]}),signal:AbortSignal.timeout(120000)});
+    if(!response.ok)throw Error(`Ollama request failed (${response.status}).`);return JSON.parse((await response.json())?.message?.content||'{}');
+  });
   async function projects() { try { if ((await fs.lstat(projectsFile)).isSymbolicLink()) throw Error('Project storage must not be a link.'); return JSON.parse(await fs.readFile(projectsFile, 'utf8')); } catch (error) { if (error.code === 'ENOENT') return []; throw error; } }
   async function updateProjects(operation) {
     const next = projectTail.then(async () => {
@@ -77,6 +83,28 @@ export async function createLocalAgentServer({ ownerUid, token = crypto.randomBy
         const actor = authenticate(request);
         if (request.method === 'GET' && url.pathname === '/api/session') return send(response, 200, { uid: ownerUid, workspaceId: ownerUid, storage: images.storage(), presets: IMAGE_PRESETS, capabilities: { draftPrompt: true, referenceImage: true } });
         if (request.method === 'GET' && url.pathname === '/api/projects') return send(response, 200, { projects: await projects() });
+        if (request.method === 'POST' && url.pathname === '/api/voiceover/analyze') {
+          const body=await readBody(request,22*1024*1024);strict(body,['audioBase64','title','creativeInstructions']);
+          const encoded=String(body.audioBase64||'').replace(/^data:audio\/[^;]+;base64,/i,'');
+          if(!encoded||encoded.length>20*1024*1024||!/^[A-Za-z0-9+/]*={0,2}$/.test(encoded))throw Error('Audio must be a valid MP3 under 15 MB.');
+          const bytes=Buffer.from(encoded,'base64'),isMp3=bytes.subarray(0,3).toString()==='ID3'||(bytes[0]===0xff&&(bytes[1]&0xe0)===0xe0);
+          if(!bytes.length||bytes.length>15*1024*1024||!isMp3||bytes.toString('base64').replace(/=+$/,'')!==encoded.replace(/=+$/,''))throw Error('Only a valid MP3 under 15 MB is accepted.');
+          const title=String(body.title||'AI voiceover draft').slice(0,200),creativeInstructions=String(body.creativeInstructions||'');if(creativeInstructions.length>4000)throw Error('Creative instructions must be 4,000 characters or fewer.');
+          await safeDirectory(workspaceRoot,voiceoverDirectory);const audioPath=path.join(voiceoverDirectory,'voiceover-'+crypto.randomUUID()+'.mp3');await fs.writeFile(audioPath,bytes,{flag:'wx'});
+          let responseBody,status=200;
+          try{
+            const transcript=await gpu.run(async()=>{await images.unloadImages();return transcribeVoiceover({path:audioPath,workspaceRoot});}),catalog=await loadVoiceoverCatalog(root);
+            let draft,failure;
+            for(let attempt=0;attempt<2;attempt++){
+              try{const prompt=buildCreativePlanPrompt(transcript,catalog,creativeInstructions),intentions=await gpu.run(async()=>{await images.unloadImages();return structuredVoiceoverAsk(prompt);});draft=compileCreativePlan(transcript,intentions,catalog);failure=null;break;}
+              catch(error){failure=error;}
+            }
+            if(failure)throw Error('Map planning failed after 2 targeted attempts: '+failure.message);
+            const analysis=assembleSceneDraft(transcript,draft,catalog);
+            status=analysis.valid?200:422;responseBody={analysis,creatorStudio:analysis.valid?toCreatorStudioImport(analysis,title):null,mapAnimations:analysis.valid?analysis.scenes.map(scene=>({sceneId:scene.id,voiceoverTimestamp:scene.voiceoverTimestamp,plan:scene.mapAnimation,missingInfo:scene.missingInfo.filter(item=>item.includes('geometry')||item.includes('placement'))})):[]};
+          }finally{await fs.rm(audioPath,{force:true});}
+          return send(response,status,responseBody);
+        }
         if (request.method === 'POST' && url.pathname === '/api/projects') {
           const body = await readBody(request); strict(body, ['title','idempotencyKey']);
           const result = await api.execute({ principal: actor, workspaceId: ownerUid, tool: 'create_project', idempotencyKey: body.idempotencyKey, arguments: { title: body.title, description: 'Isolated local image-generation test', stages: ['Images'], current_stage: 'Images' } });

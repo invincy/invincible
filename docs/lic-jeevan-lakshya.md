@@ -157,3 +157,7 @@ The presentation starts on entry from the LIC Plans card. The opening narration 
 Creator Studio recorded all 15 clips using the female Hindi-English Kore voice, Social delivery and the 1.2× directed pace setting. The audio manifest records each clip's text, duration and checksum. The story follows the end of each recording. When a browser blocks autoplay with sound, the opening still runs on its visual timeline. The existing sound control can restart the opening with narration while the intro is in progress.
 
 Verification covers the real plan-card entry in Chromium, all 15 decoded recordings, playback and interruption, the autoplay-blocked opening, four portrait sizes, the goal capture and the maturity layout. Physical iPhone playback and subjective pronunciation were not independently verified.
+
+### Rider and maturity pitch (11 November 2026)
+
+The illustrated scenario includes the Term Rider. The spoken payout starts with the in-force policy condition and the premiums-stop step follows it. Both maturity cards and recordings say “declared bonuses.” The numbered notes explain the in-force rider condition and LIC bonus declarations, including that Final Additional Bonus applies if declared. The benefit calculation and base-plan calculator use the same amounts as before.

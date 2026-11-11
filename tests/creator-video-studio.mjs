@@ -3,9 +3,17 @@ import assert from 'node:assert/strict';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,layerFrame,sceneAt,exportDimensions,assetsForBrand} from '../creator/video-studio/model.js';
 import {audioChunk} from '../creator/video-studio/audio.js';
 import {encodeStudioVideo} from '../creator/video-studio/export.js';
+import {compileAiStoryboardManifest} from '../creator/ai-preview.js';
 const graphic=(id,start=0,duration=2)=>({id,startSeconds:start,durationSeconds:duration,engineType:'graphic',engineData:{},overlays:[]});
 const video=()=>({...emptyVideo(),scenes:[graphic('one'),graphic('two',2)]});
 test('portrait defaults and exported dimensions reuse the existing map contract',()=>{assert.equal(emptyVideo().aspectRatio,'9:16');assert.deepEqual(exportDimensions('9:16'),{width:1080,height:1920});assert.deepEqual(exportDimensions('16:9'),{width:1920,height:1080});});
+test('AI storyboard compiles to one timestamped Video Studio v2 manifest with its original audio reference',()=>{
+ const mapAnimation={format:'invincible-map-animation',version:1,title:'Panipat label',duration:3,aspectRatio:'9:16',basemap:'terrain',terrain:false,overlayPreset:'documentary',camera:[{time:0,center:[76.96,29.39],zoom:4.9,pitch:0,bearing:0,easing:'smooth'},{time:3,center:[76.96,29.39],zoom:5.2,pitch:0,bearing:0,easing:'smooth'}],assets:[],layers:[{id:'panipat',type:'label',name:'Panipat',start:0,end:3,position:[76.96,29.39],color:'#F4F5F7',scale:1}]};
+ const manifest=compileAiStoryboardManifest([{id:'scene-1',timeline:'0.000-3.000s',visual:'Panipat',mapAnimation}],{audioFileId:'voice-file',audioName:'voiceover.mp3',audioDuration:3});
+ assert.equal(manifest.schemaVersion,2);assert.equal(manifest.scenes[0].startSeconds,0);assert.equal(manifest.scenes[0].durationSeconds,3);assert.equal(manifest.audioClips[0].fileId,'voice-file');assert.equal(manifest.audioClips[0].durationSeconds,3);
+ assert.throws(()=>compileAiStoryboardManifest([{id:'scene-1',timeline:'0.2-3s',visual:'Panipat',mapAnimation}],{audioFileId:'voice-file',audioDuration:3}),/timeline gap/);
+ assert.throws(()=>compileAiStoryboardManifest([{id:'scene-1',timeline:'0-3s',visual:'Panipat',mapAnimation}],{audioFileId:'voice-file',audioDuration:4}),/final timestamp differs/);
+});
 test('import is atomic, bounded, cloned and rejects executable/unknown schema fields',()=>{
  const m=video(),snapshot=structuredClone(m),out=validateManifest(JSON.stringify(m));out.scenes[0].id='changed';assert.deepEqual(m,snapshot);
  for(const bad of ['{',JSON.stringify({...m,script:'alert(1)'}),JSON.stringify({...m,fps:60}),JSON.stringify({...m,schemaVersion:2})])assert.throws(()=>validateManifest(bad));

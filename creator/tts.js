@@ -2,9 +2,12 @@ import {observeAuth} from '../shared/firebase-client.js';
 import {loadVoices,generateVoiceover} from './tts-api.js';
 import {createVoiceDemoPlayer} from './tts-voice-demo-player.js';
 import {createTtsHistoryClient} from './tts-history-api.js?v=2026111004';
-const $=id=>document.getElementById(id),fields=['title','script','mode','engine','model','direction','language','gender','family','voice','preset','speed','pitch','volume','pause'];
-let user=null,voices=[],busy=false,loading=false,epoch=0,voiceEpoch=0,audioUrl=null,saveTimer;
+import {savePendingAiDraft} from './ai-draft.js?v=2026111112';
+import {createLocalImageClient} from '../shared/local-image-client.js?v=2026111112';
+const $=id=>document.getElementById(id),fields=['title','script','creativeInstructions','mode','engine','model','direction','language','gender','family','voice','preset','speed','pitch','volume','pause'];
+let user=null,voices=[],busy=false,loading=false,epoch=0,voiceEpoch=0,audioUrl=null,audioBytes=null,saveTimer;
 let historyClient=null,historyEntries=[],historyCursor=null,historyEpoch=0,historyLoading=false;
+const localWorker=createLocalImageClient({getAccountId:()=>user?.uid||null,requireAccount:true});
 let pendingHistory=new Map(),historyWrites=new Set();
 const controls=['sample','title','script','mode','reloadVoices','preview','generate'];
 const encoder=new TextEncoder();
@@ -27,7 +30,7 @@ function refreshAvailability(){
  $('reloadVoices').disabled=busy||loading||!user;
  $('voiceDemo').disabled=busy||loading||!user||!voiceDemo.available();
  $('voiceFields').disabled=busy||loading||!user||!voices.length;
- $('generate').disabled=!ready||!$('script').value.trim();
+ $('generate').disabled=!ready||!$('script').value.trim();$('analyzeLocal').disabled=!audioBytes||busy||loading||!user;
  $('preview').disabled=!ready||!$('script').value.trim()||$('mode').value==='ssml';
  $('pitch').disabled=!voice?.capabilities.pitch;
  $('speed').disabled=!voice?.capabilities.speed;
@@ -99,7 +102,7 @@ function restore(saved){
  $('engine').querySelector('[value=gemini]').disabled=!hasGemini;
  $('engine').value=hasGemini?(draft.engine||(draft.voice?'classic':'gemini')):'classic';
  $('model').value=['gemini-2.5-flash-tts','gemini-2.5-pro-tts'].includes(draft.model)?draft.model:'gemini-2.5-flash-tts';
- $('direction').value=draft.direction||'';
+ $('direction').value=draft.direction||'';$('creativeInstructions').value=draft.creativeInstructions||'';
  for(const id of ['speed','pitch','volume','pause','preset'])if(typeof draft[id]==='string')$(id).value=draft[id];
  languages(draft.language||'hi-IN');
  $('gender').value=draft.gender??'MALE';
@@ -198,7 +201,7 @@ function languages(preferred=$('language').value){
  const matching=voices.filter(v=>(v.family==='Gemini')===expressive());
  setOptions($('language'),[...new Set(matching.flatMap(v=>v.languageCodes))].sort().map(value=>({value,label:new Intl.DisplayNames(['en'],{type:'language'}).of(value)+' · '+value+(expressive()&&value==='gu-IN'?' · Preview':'')})),preferred);
 }
-function clearAudio(){if(audioUrl)URL.revokeObjectURL(audioUrl);audioUrl=null;$('player').pause();$('player').removeAttribute('src');$('player').load();$('download').removeAttribute('href');$('recording').hidden=true;}
+function clearAudio(){if(audioUrl)URL.revokeObjectURL(audioUrl);audioUrl=null;audioBytes=null;$('player').pause();$('player').removeAttribute('src');$('player').load();$('download').removeAttribute('href');$('recording').hidden=true;$('localAnalysisResult').hidden=true;$('localAnalysisResult').textContent='';$('localAnalysisStatus').textContent='';}
 function friendly(error){
  if(error?.code==='functions/not-found')return 'Voiceover generation has not been deployed to Invincible yet. Your script is kept here.';
  if(/unauthenticated/.test(error?.code||''))return 'Sign in to Invincible again. Your script is kept here.';
@@ -241,7 +244,7 @@ async function record(preview){
   if(current!==epoch||user?.uid!==owner)return;
   if(typeof result.audioBase64!=='string'||result.mimeType!=='audio/mpeg')throw Error('The server returned no MP3.');
   const decoded=atob(result.audioBase64),buffer=Uint8Array.from(decoded,c=>c.charCodeAt(0));
-  clearAudio();audioUrl=URL.createObjectURL(new Blob([buffer],{type:result.mimeType}));
+  clearAudio();audioBytes=buffer;audioUrl=URL.createObjectURL(new Blob([buffer],{type:result.mimeType}));
   $('player').src=audioUrl;$('download').href=audioUrl;$('download').download=result.filename;
   $('recording').hidden=false;$('recordingInfo').textContent=result.durationSeconds.toFixed(1)+' sec · '+result.voiceName+(preview?' · opening preview':'');
   if(data.engine==='gemini')$('recordingInfo').textContent+=' · '+data.delivery+' · directed pace '+data.speed+'×';
@@ -250,10 +253,17 @@ async function record(preview){
  }catch(error){if(current===epoch)status(friendly(error),true);}
  finally{if(current===epoch){busy=false;refreshAvailability();}}
 }
+async function analyzeLocal(){
+ if(!audioBytes||busy||loading)return; const started=Date.now();$('analyzeLocal').disabled=true;$('localAnalysisStatus').textContent='Sending MP3 to the local Whisper/Qwen pipeline…';$('localAnalysisResult').hidden=true;
+ try { let binary='';for(let i=0;i<audioBytes.length;i+=0x8000)binary+=String.fromCharCode(...audioBytes.subarray(i,i+0x8000)); const payload=await localWorker.request('/api/voiceover/analyze',{title:$('title').value,creativeInstructions:$('creativeInstructions').value,audioBase64:btoa(binary)},{timeoutMs:180000});await savePendingAiDraft({title:$('title').value,creativeInstructions:$('creativeInstructions').value,analysis:payload.analysis,creatorStudio:payload.creatorStudio},new Blob([audioBytes],{type:'audio/mpeg'}));$('localAnalysisResult').textContent=JSON.stringify(payload.creatorStudio,null,2);$('localAnalysisResult').hidden=false;$('localAnalysisStatus').textContent=`Local analysis ready: ${payload.analysis.scenes.length} scenes in ${((Date.now()-started)/1000).toFixed(1)}s. Open Creator Studio and choose “Review AI draft” to inspect and import it.`; }
+ catch(error){$('localAnalysisStatus').textContent=error.message||'Local analysis failed.';}
+ finally{refreshAvailability();}
+}
 $('generate').addEventListener('click',()=>record(false));$('preview').addEventListener('click',()=>record(true));
+$('analyzeLocal').addEventListener('click',analyzeLocal);
 $('reloadVoices').addEventListener('click',()=>fetchVoices());
  $('engine').addEventListener('change',()=>{voiceDemo.stop();languages();families();remember();});
- for(const id of ['model','direction'])$(id).addEventListener('input',remember);
+ for(const id of ['model','direction','creativeInstructions'])$(id).addEventListener('input',remember);
 $('language').addEventListener('change',()=>{families();remember();});
 $('gender').addEventListener('change',()=>{families();remember();});
 $('family').addEventListener('change',()=>{filterVoices();remember();});

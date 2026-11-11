@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="presentation.css?v=12">
+  <link rel="stylesheet" href="presentation.css?v=13">
   <link rel="stylesheet" href="../../shared/app-theme.css?v=1">
 </head>
 <body>
@@ -202,17 +202,22 @@
               </div>
             </div>
 
-            <div class="rider-scenario"><b>Term rider illustration</b><small id="riderScenarioAmount"></small><small>Rider premium quoted separately.</small></div></div><button id="openPreviewBtn" class="flow-gold" type="button">See my plan →</button></section>
-<section id="previewPanel" class="preview-panel" hidden aria-label="Premium and maturity"><div id="premiumPill" class="flow-glass premium-pill"><span>Annual base premium</span><strong id="previewPremium"></strong><small id="previewTerm"></small><small>Rider premium quoted separately</small></div><div id="maturityPill" class="flow-glass maturity-pill" hidden><span>Maturity</span><strong id="previewMaturity"></strong><small>BSA + bonus, if any<br>Bonuses not guaranteed</small></div></section>
+            <div class="rider-scenario"><b>Term Rider included in this scenario</b><small id="riderScenarioAmount"></small><small>Rider premium quoted separately.</small></div></div><button id="openPreviewBtn" class="flow-gold" type="button">See my plan →</button></section>
+<section id="previewPanel" class="preview-panel" hidden aria-label="Premium and maturity">
+  <div id="premiumPill" class="flow-glass premium-pill"><span>Annual base premium</span><strong id="previewPremium"></strong><small id="previewTerm"></small><small>Rider premium quoted separately</small></div>
+  <div id="maturityPill" class="flow-glass maturity-pill" hidden aria-describedby="previewBonusNote"><span>Maturity</span><strong id="previewMaturity"></strong><small>+ declared bonuses<sup>2</sup></small></div>
+  <small id="previewBonusNote" class="pitch-footnote" hidden><sup>2</sup> Declared LIC bonuses vest. Future rates and amounts depend on LIC declarations. Final Additional Bonus applies if declared.</small>
+</section>
 <section id="whatIfPanel" class="whatif-panel" hidden aria-label="What if"><div id="whatIfCaption" class="question-pill" hidden><b>What happens<br>if the parent dies?</b><span>શું બાળકનું સપનું અધૂરું રહેશે?</span></div></section>
 <section id="protectionPanel" class="protection-panel" hidden aria-label="Family protection journey">
 <div id="assurancePill" class="journey-caption" hidden><b>The path continues for your child.</b><small>In-force base policy and term rider · illustrative cover</small></div>
 <svg class="benefit-route" viewBox="0 0 320 430" preserveAspectRatio="none" aria-hidden="true"><path class="route-bed" d="M50 385 C260 355 280 310 180 280 S30 225 110 185 S290 135 235 70"/><path id="benefitTrail" class="route-gold" pathLength="1" d="M50 385 C260 355 280 310 180 280 S30 225 110 185 S290 135 235 70"/><circle id="journeyOrb" cx="50" cy="385" r="6"/></svg>
-<div id="riderPill" class="flow-glass benefit-pill route-rider" hidden><span class="milestone-number">01</span><div><span class="benefit-label">On death · term rider</span><b id="riderAmount"></b><small>In-force rider · illustrated cover = BSA.</small></div></div>
+<div id="riderPill" class="flow-glass benefit-pill route-rider" hidden><span class="milestone-number">01</span><div><span class="benefit-label">Term Rider payout<sup>1</sup></span><b id="riderAmount"></b><small><sup>1</sup> Rider in force at death. Illustrated cover equals BSA.</small></div></div>
 <div id="ceasesPill" class="flow-glass benefit-pill route-ceases" hidden><span class="milestone-number">02</span><div><span class="benefit-label">Future base premiums</span><b>Premiums stop</b><small>No further base premiums due.</small></div></div>
 <div id="incomePill" class="flow-glass benefit-pill route-income" hidden><span class="milestone-number">03</span><div><span class="benefit-label">Every eligible year</span><b id="incomeAmount"></b><small>10% BSA · anniversaries before maturity.</small></div></div>
-<div id="deathMaturityPill" class="flow-glass benefit-pill route-maturity" hidden><div><span class="benefit-label">Maturity</span><b id="deathMaturityAmount"></b><small>110% BSA<br>+ bonus, if any*</small></div></div>
+<div id="deathMaturityPill" class="flow-glass benefit-pill route-maturity" hidden aria-describedby="familyBonusNote"><div><span class="benefit-label">Maturity</span><b id="deathMaturityAmount"></b><small>110% BSA<br>+ declared bonuses<sup>2</sup></small></div></div>
 <div id="journeyStatus" class="journey-status" role="status" aria-live="polite"></div>
+<small id="familyBonusNote" class="pitch-footnote" hidden><sup>2</sup> Declared LIC bonuses vest. Future rates and amounts depend on LIC declarations. Final Additional Bonus applies if declared.</small>
 </section>
 <section id="detailsPanel" hidden aria-label="Plan details"><div id="scene4" class="comparison-container" style="display: none;">
             <div class="compare-card market-fd">
@@ -228,7 +233,7 @@
                 <b>LIC Jeevan Lakshya (Plan 733)</b>
                 <span class="badge-status gold">LIFE COVER + SAVINGS</span>
               </div>
-              <p>For an in-force death: scheduled annual income and a lump sum at maturity. Future bonuses and the cost of a child’s goal are not guaranteed.</p>
+              <p>For an in-force death: scheduled annual income and a lump sum at maturity. The cost of a child’s goal can change.</p>
             </div>
           </div>
 
@@ -271,6 +276,6 @@
 </div><!-- /.app-viewport-wrapper -->
 
 <script type="module" src="../../site-nav.js?v=7"></script>
-<script type="module" src="presentation.js?v=12"></script>
+<script type="module" src="presentation.js?v=13"></script>
 </body>
 </html>

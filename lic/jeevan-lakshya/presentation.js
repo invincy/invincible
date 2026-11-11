@@ -1,5 +1,5 @@
 import {eligibleTerms,computePlan} from './benefits.mjs';
-import {createNarrator} from './narration.mjs?v=12';
+import {createNarrator} from './narration.mjs?v=13';
 const $=id=>document.getElementById(id),stage=$('stageContainer');
 const money=n=>n===null?'LIC quote required':'₹'+n.toLocaleString('en-IN');
 const shortMoney=n=>'₹'+Number((n/100000).toFixed(2)).toLocaleString('en-IN')+' lakh';
@@ -93,8 +93,15 @@ function control(){
  stage.dataset.sequenceReady=String(ready);stage.dataset.paused=String(paused);stage.dataset.capturing=String(capturing);
 }
 function model(){return computePlan({age,term,sumAssured:sa});}
-function quote(){const valid=eligibleTerms(age);if(!valid.includes(term))term=[15,20,25].find(t=>valid.includes(t));for(const key of ['age','term','sa'])document.querySelectorAll('[data-'+key+']').forEach(b=>{const value={age,term,sa}[key];b.classList.toggle('active',Number(b.dataset[key])===value);b.setAttribute('aria-pressed',String(Number(b.dataset[key])===value));if(key==='term')b.disabled=!valid.includes(Number(b.dataset.term));});const p=model();$('previewPremium').textContent=money(p.annual);$('previewTerm').textContent='Pay '+p.ppt+' years · policy term '+p.term+' years';$('previewMaturity').textContent=shortMoney(p.guaranteedMaturity);$('previewMaturity').setAttribute('aria-label',money(p.guaranteedMaturity));$('incomeAmount').textContent=money(p.annualIncome)+' / year';$('deathMaturityAmount').textContent=shortMoney(p.deathMaturity);$('deathMaturityAmount').setAttribute('aria-label',money(p.deathMaturity));$('riderAmount').textContent=money(sa)+' rider cover';$('riderScenarioAmount').textContent=money(sa)+' cover · equal to BSA';const url='calculator.html?'+new URLSearchParams({age,term,sa,goal});document.querySelectorAll('a[href^="calculator.html"]').forEach(a=>a.href=url);}
-function reveal(id){$(id).hidden=false;stage.dataset.reveal=id;if(id==='maturityPill')alignMaturity();}
+function quote(){const valid=eligibleTerms(age);if(!valid.includes(term))term=[15,20,25].find(t=>valid.includes(t));for(const key of ['age','term','sa'])document.querySelectorAll('[data-'+key+']').forEach(b=>{const value={age,term,sa}[key];b.classList.toggle('active',Number(b.dataset[key])===value);b.setAttribute('aria-pressed',String(Number(b.dataset[key])===value));if(key==='term')b.disabled=!valid.includes(Number(b.dataset.term));});const p=model();$('previewPremium').textContent=money(p.annual);$('previewTerm').textContent='Pay '+p.ppt+' years · policy term '+p.term+' years';$('previewMaturity').textContent=shortMoney(p.guaranteedMaturity);$('previewMaturity').setAttribute('aria-label',money(p.guaranteedMaturity));$('incomeAmount').textContent=money(p.annualIncome)+' / year';$('deathMaturityAmount').textContent=shortMoney(p.deathMaturity);$('deathMaturityAmount').setAttribute('aria-label',money(p.deathMaturity));$('riderAmount').textContent=money(sa);$('riderScenarioAmount').textContent=money(sa)+' cover · equal to BSA';const url='calculator.html?'+new URLSearchParams({age,term,sa,goal});document.querySelectorAll('a[href^="calculator.html"]').forEach(a=>a.href=url);}
+function reveal(id){
+ $(id).hidden=false;
+ stage.dataset.reveal=id;
+ if(id==='maturityPill'){
+  $('previewBonusNote').hidden=state!=='preview';
+  alignMaturity();
+ }
+}
 function alignMaturity(){const goal=$('storyGoal').getBoundingClientRect(),body=$('sceneStageContent').getBoundingClientRect();const left=goal.left+goal.width*(goalSrc.includes('marriage')?.90:.84)-body.left+7;stage.style.setProperty('--maturity-left',left+'px');stage.style.setProperty('--maturity-top',Math.max(8,goal.top+goal.height*.24-body.top)+'px');stage.style.setProperty('--maturity-width',Math.max(55,body.width-left)+'px');}
 function setState(next,options={}){
  if(reduced()||options.immediate||!stage.dataset.ready||next==='whatif'){renderState(next,options);return;}
@@ -107,7 +114,7 @@ function renderState(next,{focus=true,restartOpening=false}={}){
  stage.dataset.flowStep=state;stage.dataset.storyStep=({intro:1,selected:1,configure:1,preview:2,whatif:3,protection:3,details:4})[state];
  stage.classList.remove('pills-out','family-away','child-in','path-restored','goal-restored');benefitIndex=-1;delete stage.dataset.benefitStep;stage.style.setProperty('--journey-progress','0');
  for(const id of panels)$(id).hidden=true;
- for(const id of ['maturityPill','whatIfCaption','assurancePill','riderPill','ceasesPill','incomePill','deathMaturityPill'])$(id).hidden=true;
+ for(const id of ['maturityPill','previewBonusNote','familyBonusNote','whatIfCaption','assurancePill','riderPill','ceasesPill','incomePill','deathMaturityPill'])$(id).hidden=true;
  const visible=({intro:['scene1'],selected:['scene1','selectionPanel'],configure:['configurationPanel'],preview:['previewPanel'],whatif:['previewPanel','whatIfPanel'],protection:['protectionPanel'],details:['detailsPanel']})[state];visible.forEach(id=>$(id).hidden=false);
  const data=copy[state];$('eyebrowChip').textContent=data[0];$('headlineMain').innerHTML=data[1];$('headlineIndic').textContent=data[2];$('subtitleText').textContent=data[3];$('subtitleText').hidden=!data[3];
  const storyGoal=$('storyGoal');
@@ -151,7 +158,8 @@ function showBenefit(index){
  stage.classList.toggle('path-restored',index>=2);stage.classList.toggle('goal-restored',index>=3);
  benefitIds.forEach((id,i)=>{$(id).hidden=i>index;$(id).classList.toggle('is-current',i===index);$(id).classList.toggle('is-settled',i<index);});
  const trail=$('benefitTrail'),point=trail.getPointAtLength(trail.getTotalLength()*progress);$('journeyOrb').setAttribute('cx',point.x);$('journeyOrb').setAttribute('cy',point.y);
- $('journeyStatus').textContent=['1 / 4 · Term rider payout','2 / 4 · Future premiums stop','3 / 4 · Income every eligible year','4 / 4 · *Bonuses not guaranteed'][index];
+ $('journeyStatus').textContent=['1 / 4 · Term Rider payout','2 / 4 · Future premiums stop','3 / 4 · Income every eligible year','4 / 4 · Maturity'][index];
+ $('familyBonusNote').hidden=index!==3;
  alignMaturity();control();if(beatMoving)later(1100,()=>{beatMoving=false;control();});voiceCue(['family.rider','family.premiums-stop','family.annual-income','family.maturity'][index],index<3?()=>showBenefit(index+1):null,BENEFIT_HOLD);
 }
 function back(){const previous={selected:'intro',configure:'intro',preview:'configure',whatif:'preview',protection:'whatif',details:'protection'}[state];if(previous)setState(previous);else if(capturing)setState('intro');}
