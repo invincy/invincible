@@ -214,3 +214,9 @@ body:has(.space-panels) :is(.global-nav, .react-topbar) {
   .creator-project-panels .column .empty { display:none }
   .creator-project-panels #metricView[hidden] { display:none }
 }
+@media(min-width:901px) {
+  .lic-hub .hub { width:100%; max-width:none; padding:24px clamp(20px,2.4vw,46px) }
+  .lic-hub .lic-shortcuts.space-panels { width:100%; max-width:none; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:stretch; margin:0 }
+  .lic-hub .lic-shortcuts.space-panels>.space-panel { display:flex; flex-direction:column; justify-content:center; gap:16px; min-width:0; min-height:clamp(330px,62dvh,680px) }
+  .lic-hub .lic-shortcuts.space-panels .lic-shortcut { width:100%; max-width:none; flex:1; min-height:0; justify-content:center }
+}

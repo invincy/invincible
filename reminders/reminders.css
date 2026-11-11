@@ -22,3 +22,15 @@ body.reminders-page{--bg:#061013;--panel:#102226;--line:#74e2ef21;--cyan:#65e7f5
 @media(prefers-reduced-motion:reduce){.reminders-page *, .reminders-page *:before{animation:none!important;transition:none!important}}
 
 .overdue-date{display:block;margin-bottom:8px;color:#dba5a5;font:600 12px/1.4 Inter,system-ui,sans-serif}
+.reminder-card.is-completed .copy>strong { color:#82949f; text-decoration:line-through }
+.reminder-card.is-completed { opacity:.72 }
+.completed-reminders { margin-top:24px; border-top:1px solid #6a9ba42b; padding-top:16px }
+.completed-reminders summary { cursor:pointer; font-size:16px; color:#a5c4ca; margin-bottom:12px }
+.completed-reminders>p,.anytime-reminders>p { color:#8ca6ad; font-size:13px }
+.anytime-reminders { margin-top:24px }
+.reminder-card .details a { display:inline-flex; align-items:center; min-height:44px; color:#96dfdf }
+
+/* A reminder occupies the full width of its workspace panel. */
+.reminder-shell .space-panel :is(.reminder-list,.date-group) { grid-template-columns:minmax(0,1fr) }
+.reminder-shell .space-panel .reminder-card { grid-template-columns:minmax(0,1fr) 44px 44px }
+.reminder-shell .space-panel .reminder-card .time { grid-column:1/-1 }

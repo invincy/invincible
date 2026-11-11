@@ -324,3 +324,4 @@
     overflow-wrap: anywhere;
   }
 }
+.v2-reminders-open { display:flex; justify-content:space-between; gap:12px; margin-top:12px; padding-top:12px; border-top:1px solid #8ad4dc30; color:#a7e4dc!important; font-weight:650 }

@@ -338,3 +338,42 @@ emulator command shut down before producing a test result. These remain open
 verification limits. No production Firebase writes, rules changes, migrations,
 backend deploys or service-key changes were made. Signed-in production and
 physical-device interactions are not established by local fixtures.
+
+## Shared reminders and desktop Finance — November 12, 2026
+
+Release 2026.11.12.14 replaces the duplicate Quick to-dos card with Reminders,
+using the same records as the full page. Today's task priority stays separate
+and still completes the canonical task/step everywhere. Existing quick items
+migrate atomically; scheduled/unscheduled reminders support complete, restore,
+delete and Calendar handoff. Full-page reminder rows use the whole panel width.
+See firebase-storage.md for retention, migration and permissions.
+
+Finance now has equal, full-width Overview, Accounts and Payments panels on
+desktop. The workspace fits its viewport; balances/cash flow and cards/checklist/
+activity use tabs, and long lists use responsive paging. Existing month records,
+portfolio links, edits, totals, import, salary, reconciliation and chart remain
+available. Dialogs can scroll when editing; the main dashboard does not require
+vertical scrolling. Mobile retains its previous Finance layout. LIC's three
+desktop panels use the available width instead of the old narrow maximum.
+
+Verification: unified-reminder browser coverage passes concurrent migration,
+unknown-field preservation, expiry, cross-tab sync, unscheduled items, complete/
+restore, delete, denied-save draft retention, scheduling, reload and account
+isolation. Finance passes standalone and embedded desktop/laptop dimensions,
+including a 1024x434 embedded viewport, all summary/payment tabs, paging, bill/
+checklist changes, failed-save recovery, chart and unchanged mobile layout.
+Root tests: 258 passed, two skipped; Functions: 15; media: five.
+Production account data and physical-device behavior are not established by
+controlled browser fixtures.
+
+Final release checks: production build, V2 stage, site-reference check, seven
+reminder unit cases and 19 V2 unit cases pass. The full V2 suite passes in Chromium
+and Firefox, including production anonymous startup. Existing browser checks pass
+for storage/Garage, LIC hub, Reminders, navigation, globe, task copy, Journal
+notebook, LIC follow-ups, Workday and account menu. The broad browser chain stops
+at the previously documented Creator storyboard scroll assertion at 1440x1000.
+The subsequent Journal tools, LIC CRM and cashier fixtures still time out at
+the same previously documented interactions; these are not claimed as passing.
+The CRM emulator's existing incomplete verification remains open. The initial
+production-auth smoke used stale generated assets; rebuilding both published
+entries and selecting the staged V2 directory resolved that check.

@@ -23,7 +23,7 @@ window.switchAccount=uid=>{current=uid?{uid}:null;observer?.(current);};
 const firestoreMock = `
 export const collection=(_,...parts)=>({path:[_?.path,...parts].filter(Boolean).join('/')});
 export const doc=collection;
-export const query=ref=>ref,orderBy=()=>null,limit=()=>null;
+export const query=ref=>ref,orderBy=()=>null,limit=()=>null;export const Timestamp={fromDate:d=>d.getTime()};
 const listeners=new Set();const streaks={};
 window.reads=[];window.writes=0;
 const tasks=Array.from({length:24},(_,i)=>({id:'t'+i,title:i===0?'Build the living workspace':'Project '+i+' — Research, review and prepare the next meaningful action',status:['In Progress','Backlog','Today','Done'][i%4],steps:[{id:'s1',title:'Review the spatial canvas',notes:'Keep the original data.\\nVerify all user journeys.',done:false},{id:'s2',title:'Inspect existing records',done:true}]}));
@@ -31,7 +31,7 @@ const saved=JSON.parse(sessionStorage.getItem('v2-fixture-saved')||'{}');
 tasks[0].steps[0].extension={keep:'nested'};
 tasks[0].subtasks=[{text:'Review the spatial canvas',done:false,legacyNotes:'Keep legacy extension'},{text:'Inspect existing records',done:true}];
 if(saved.tasks)tasks.splice(0,tasks.length,...Object.values(saved.tasks));
-const ideas=saved.ideas||{},todos=saved.todos||{};
+const ideas=saved.ideas||{},todos=saved.todos||{},reminderRows=saved.reminders||{};
 window.seedOldTodos=()=>{
  todos.expired={title:'Expired completed item',createdAt:1,completedAt:Date.now()-8*86400000};
  todos.retained={title:'Old unchecked item',createdAt:1,completedAt:null};
@@ -42,6 +42,8 @@ let plan=saved.plan||{activeItemId:'q',items:[{id:'q',taskId:'t0',stepId:'s1'}]}
 window.writeLog=[];
 function snapshot(ref) {
   const owner=ref.path.split('/')[1];
+  if(ref.path.endsWith('/reminders'))return {metadata:{fromCache:false},docs:owner==='alice'?Object.entries(reminderRows).map(([id,row])=>({id,data:()=>todoData(row)})):[]};
+  if(ref.path.includes('/reminders/')){const item=reminderRows[ref.path.split('/').pop()];return {exists:()=>Boolean(item),data:()=>item&&todoData(item)};}
   if(ref.path.endsWith('/quickTodos'))return {docs:owner==='alice'?Object.entries(todos).map(([id,row])=>({id,data:()=>todoData(row)})):[]};
   if(ref.path.includes('/quickTodos/')){const item=todos[ref.path.split('/').pop()];return {exists:()=>Boolean(item),data:()=>item&&todoData(item)};}
   if(ref.path.endsWith('/dashboardIdeas'))return {metadata:{fromCache:false},docs:owner==='alice'?Object.entries(ideas).map(([id,value])=>({id,data:()=>value})):[]};
@@ -53,14 +55,16 @@ function snapshot(ref) {
   return {metadata:{fromCache:false},exists:()=>owner==='alice',data:()=>plan};
 }
 export const serverTimestamp=()=>Date.now();
+export const updateDoc=(ref,patch)=>runTransaction({},tx=>tx.update(ref,patch));
 export const setDoc=(ref,patch,options)=>runTransaction({},tx=>tx.set(ref,patch,options));
 export const getDocs=async ref=>{if(window.failDelete)throw Error('permission-denied');return {docs:[{ref:{path:ref.path+'/image'}}]}};
 export async function deleteDoc(ref){
  if(window.failDelete)throw Error('permission-denied');
+ if(ref.path.includes('/reminders/'))delete reminderRows[ref.path.split('/').pop()];
  if(ref.path.includes('/quickTodos/'))delete todos[ref.path.split('/').pop()];
  if(ref.path.includes('/tasks/')&&ref.path.split('/').length===4){const index=tasks.findIndex(task=>task.id===ref.path.split('/').pop());if(index>=0)tasks.splice(index,1);}
  window.writes++;window.writeLog.push({path:ref.path,deleted:true});
- sessionStorage.setItem('v2-fixture-saved',JSON.stringify({tasks:Object.fromEntries(tasks.map(task=>[task.id,task])),plan,ideas,todos}));
+ sessionStorage.setItem('v2-fixture-saved',JSON.stringify({tasks:Object.fromEntries(tasks.map(task=>[task.id,task])),plan,ideas,todos,reminders:reminderRows}));
  for(const listener of listeners)listener.next(snapshot(listener.ref));
 }
 export const writeBatch=()=>{const entries=[],deletes=[];return {delete:ref=>deletes.push(ref),set:(ref,patch)=>entries.push([ref,patch]),commit:async()=>{for(const ref of deletes)await deleteDoc(ref);if(entries.length)await runTransaction({},tx=>entries.forEach(([ref,patch])=>tx.set(ref,patch)))}}};
@@ -75,13 +79,14 @@ export async function runTransaction(_,callback) {
   if(window.failNextWrite){window.failNextWrite=false;throw Error('permission-denied');}
   for(const entry of patches){
     if(entry.path.includes('/tasks/')){const id=entry.path.split('/').pop(),task=tasks.find(task=>task.id===id);if(task)Object.assign(task,entry.patch);else tasks.push({id,...entry.patch});}
+    else if(entry.path.includes('/reminders/')){const id=entry.path.split('/').pop();if(entry.deleted)delete reminderRows[id];else reminderRows[id]={...reminderRows[id],...Object.fromEntries(Object.entries(entry.patch).map(([key,value])=>[key,value?.toMillis?.()??value]))};}
     else if(entry.path.includes('/quickTodos/')){const id=entry.path.split('/').pop();if(entry.deleted)delete todos[id];else todos[id]={...todos[id],...entry.patch};}
     else if(entry.path.includes('/dashboardIdeas/'))ideas[entry.path.split('/').pop()]=entry.merge?{...ideas[entry.path.split('/').pop()],...entry.patch}:entry.patch;
     else if(entry.path.includes('/streaks/'))streaks[entry.path.split('/').pop()]=entry.patch;
     else plan={...plan,...entry.patch};
   }
   window.writes+=patches.length;window.writeLog.push(...patches);
-  sessionStorage.setItem('v2-fixture-saved',JSON.stringify({tasks:Object.fromEntries(tasks.map(task=>[task.id,task])),plan,ideas,todos}));
+  sessionStorage.setItem('v2-fixture-saved',JSON.stringify({tasks:Object.fromEntries(tasks.map(task=>[task.id,task])),plan,ideas,todos,reminders:reminderRows}));
   for(const listener of listeners)listener.next(snapshot(listener.ref));
   if(window.loseNextAck){window.loseNextAck=false;throw Error('unavailable');}
   return result;
@@ -327,7 +332,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
           assert.equal(await page.locator('.orb-3d-fallback').count(),1);
         }
         await page.waitForFunction(()=>window.reads.some(path=>path.includes('/streaks')));
-        assert.deepEqual(await page.evaluate(()=>[...new Set(window.reads)].map(value=>value.split('/').slice(0,3).join('/')).sort()),['users/alice/dailyPlans','users/alice/finance','users/alice/quickTodos','users/alice/streaks','users/alice/tasks']);
+        assert.deepEqual(await page.evaluate(()=>[...new Set(window.reads)].map(value=>value.split('/').slice(0,3).join('/')).sort()),['users/alice/dailyPlans','users/alice/finance','users/alice/quickTodos','users/alice/reminders','users/alice/streaks','users/alice/tasks']);
         assert.equal(await page.evaluate(()=>window.writes),0);
         assert.equal(await page.evaluate(()=>getComputedStyle(document.body).paddingTop),'0px','main dashboard has no legacy shell header gap');
         assert.equal(await page.evaluate(()=>getComputedStyle(document.body).paddingBottom),'0px','main dashboard has no legacy shell bottom-nav gap');
@@ -429,13 +434,13 @@ async function checkGlobeWithoutWebGL(browser,base) {
             const orb=document.querySelector('.v2-orb:not(.is-compact)');
             return orb&&Math.abs(orb.getBoundingClientRect().left+orb.getBoundingClientRect().width/2-innerWidth/2)<2;
           });
-          const todos=page.getByRole('region',{name:'Quick to-dos'});
+          const todos=page.getByRole('region',{name:'Reminders'});
           await page.evaluate(()=>window.seedOldTodos());
           await todos.getByRole('checkbox',{name:'Old unchecked item'}).waitFor();
-          await page.waitForFunction(()=>window.writeLog.some(entry=>entry.path.endsWith('/quickTodos/expired')&&entry.deleted));
-          await todos.getByRole('textbox',{name:'New to-do'}).fill('Buy milk');
+          await page.waitForFunction(()=>window.writeLog.some(entry=>entry.path.endsWith('/reminders/quick_expired')&&entry.deleted));
+          await todos.getByRole('textbox',{name:'New reminder'}).fill('Buy milk');
           await todos.getByText('Set date and time').click();
-          await todos.getByLabel('To-do date and time').fill('2027-01-05T14:30');
+          await todos.getByLabel('Reminder date and time').fill('2027-01-05T14:30');
           await todos.getByRole('button',{name:'Add',exact:true}).click();
           const milk=todos.getByRole('checkbox',{name:'Buy milk'});
           await milk.waitFor();
@@ -450,8 +455,8 @@ async function checkGlobeWithoutWebGL(browser,base) {
           await todos.getByRole('checkbox',{name:'Review the spatial canvas'}).click();
           await page.waitForFunction(()=>window.taskRecords().find(task=>task.id==='t0').steps[0].done);
           await page.setViewportSize({width:393,height:852});
-          await page.getByRole('button',{name:'Focus & to-dos'}).click();
-          await todos.getByRole('textbox',{name:'New to-do'}).fill('Phone checklist');
+          await page.getByRole('button',{name:'Focus & reminders'}).click();
+          await todos.getByRole('textbox',{name:'New reminder'}).fill('Phone checklist');
           await page.setViewportSize({width:1440,height:1000});
           await page.screenshot({path:path.join(output,name+'-map.png')});
           assert.equal(await page.getByRole('button',{name:"Open today's plan"}).count(),1,'the Orb center does not repeat a current-task label');

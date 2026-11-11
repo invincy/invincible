@@ -238,3 +238,24 @@ The new TTS endpoints use existing Firebase authentication plus an explicit CREA
 ## Creator shared media — November 10, 2026
 
 See [one Creator flow](creator-single-flow.md) for the account-owned private bucket, backend-only _creatorMedia metadata/drafts, stable cloud file IDs and owner draft revisions. Shared uploads replace the older undeployed map upload path; old saved references remain supported. Local IndexedDB remains a recovery/cache store. No Firestore client permission is broadened.
+
+## Unified Reminders — November 12, 2026
+
+Dashboard and Reminders now share `users/{uid}/reminders`. Unscheduled items use
+`dueAt: null`; scheduled and daily reminders retain the existing fields and
+completion transaction. The duplicate quick-to-do UI/store is removed. When the
+signed-in dashboard or Reminders page opens, legacy `quickTodos/{id}` records
+move to `reminders/quick_{id}` in one transaction. Unknown metadata and creation/
+completion timestamps are preserved. A matching existing migrated record wins;
+unrelated destination collisions fail without deleting the source. Failed/offline
+migrations leave the source readable and retry on a later snapshot or reopen.
+
+Completion is shared across both views. Restore clears completion; unfinished
+items do not expire. Completed records older than seven days are transactionally
+rechecked and removed on load, focus and each minute while the view is open.
+Records without a completion timestamp are retained. There is no server cleanup
+job. The Calendar action opens a prefilled Google Calendar event for the user to
+save; it is not an automatic Calendar sync or guaranteed notification service.
+Listener disposal blocks stale account callbacks and migration/cleanup writes.
+Ownership rules, auth and task/subtask storage are unchanged. Existing owner
+rules cover both paths; live production permissions still need a signed-in check.

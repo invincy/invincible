@@ -2,7 +2,7 @@ import React, {useRef} from 'react';
 import {taskProgress, taskSteps} from '../src/task-model';
 import {formatTimer} from './model';
 import ConstellationNav from './ConstellationNav';
-import QuickTodos from './QuickTodos';
+import DashboardReminders from './DashboardReminders';
 
 const stages = [
   ['Backlog', 'Backlog'],
@@ -19,7 +19,7 @@ export default function DashboardRegion({uid, data, plan, timer, onInspect, orbA
 
   return <div className="v2-dashboard-body">
     <nav className="v2-guide-panel-links" aria-label="Dashboard panels">
-      {['Globe','Focus & to-dos','Session'].map((label,index)=><button key={label} type="button"
+      {['Globe','Focus & reminders','Session'].map((label,index)=><button key={label} type="button"
         onClick={()=>scene.current.children[index].scrollIntoView({block:'nearest',inline:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})}>{label}</button>)}
     </nav>
     <section ref={scene} className="v2-guide-scene" aria-label="Your focus and connected work" onScroll={onPanelScroll}>
@@ -44,7 +44,7 @@ export default function DashboardRegion({uid, data, plan, timer, onInspect, orbA
         </div>}
       </div>
 
-      <QuickTodos uid={uid} priority={plan.active}/>
+      <DashboardReminders uid={uid} priority={plan.active} onOpen={()=>onTravel({href:"/invincible/reminders/",label:"Reminders"})}/>
       </div>
 
       <div className="v2-guide-session-panel">

@@ -1,0 +1,46 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
+const {chromium}=require('playwright'),esbuild=require('../react/node_modules/esbuild'),root=path.resolve(__dirname,'..'),out=path.join(root,'.test-output/finance-desktop');
+const fixture=`
+export const db={};export const doc=(_,...parts)=>({path:parts.join('/')});export const serverTimestamp=()=>1;
+const initial={accounts:Array.from({length:14},(_,i)=>({id:'a'+i,name:'Bank account '+i,category:i<10?'cash':'pf',balance:10000+i*250,openingBalance:15000})),bills:Array.from({length:12},(_,i)=>({id:'b'+i,name:'Credit card '+i,amount:1200.5+i*100,paid:i===1,last4:'1234'})),transactions:Array.from({length:12},(_,i)=>({id:'t'+i,description:'Monthly activity '+i,type:i===0?'income':'expense',amount:i===0?100000:300,date:'2026-11-12'})),checklist:Array.from({length:14},(_,i)=>({id:'c'+i,label:'Bill checklist '+i,done:i===1}))};
+let data=JSON.parse(localStorage.getItem('finance-fixture')||'null')||initial;const listeners=new Set();window.financeRecords=()=>data;
+const snap=()=>({exists:()=>true,data:()=>structuredClone(data),metadata:{fromCache:false,hasPendingWrites:false}});
+export const getDoc=async()=>snap();export const onSnapshot=(_,options,next)=>{listeners.add(next);setTimeout(()=>next(snap()),20);return()=>listeners.delete(next)};
+export const runTransaction=async(_,callback)=>{const writes=[];const result=await callback({get:async()=>snap(),set:(ref,value)=>writes.push(value)});if(window.failFinance)throw Error('Denied');for(const value of writes)data={...data,...value};localStorage.setItem('finance-fixture',JSON.stringify(data));listeners.forEach(next=>next(snap()));return result;};
+`;
+(async()=>{
+ fs.mkdirSync(out,{recursive:true});
+ await esbuild.build({stdin:{contents:`import React from 'react';import {createRoot} from 'react-dom/client';import {FinancePage} from './FinancePage';import {AppShell} from './AppShell';import './app-shell.css';import '../../shared/spatial-workspace.css';const embedded=new URLSearchParams(location.search).has('embedded');if(embedded)document.documentElement.classList.add('connected-space-document');createRoot(document.getElementById('root')).render(<AppShell pageTitle="Finance"><FinancePage/></AppShell>);`,resolveDir:root+'/react/src',loader:'jsx'},bundle:true,outfile:out+'/fixture.js',jsx:'automatic',plugins:[{name:'finance-fixture',setup(build){
+  build.onResolve({filter:/AuthContext$|usePortfolio$|AccountMenu$|InvincibleAiDock$|^firebase\/firestore$|^\.\/firebase$/},args=>({path:args.path,namespace:'fixture'}));
+  build.onLoad({filter:/.*/,namespace:'fixture'},args=>({loader:'js',contents:args.path.endsWith('AuthContext')?`const user={uid:'alice'};export const useAuth=()=>({ready:true,user});`:args.path.endsWith('usePortfolio')?`export const usePortfolio=()=>({state:{holdings:[],sips:[],snapshots:[]}});`:/AccountMenu|InvincibleAiDock/.test(args.path)?`export const AccountMenu=()=>null;export const InvincibleAiDock=()=>null;`:args.path==='./firebase'?`export const db={};`:fixture}));
+ }}]});
+ const server=http.createServer((req,res)=>{const url=new URL(req.url,'http://local');if(url.pathname==='/finance'){res.setHeader('Content-Type','text/html');res.end('<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><link rel="stylesheet" href="/connected.css"><body class="finance-page"><div id="root"></div><script src="/fixture.js"></script>');return;}const file=url.pathname==='/connected.css'?path.join(root,'shared/spatial-desktop.css'):path.join(out,path.basename(url.pathname));if(!fs.existsSync(file)){res.statusCode=404;res.end();return;}res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':'text/css');res.end(fs.readFileSync(file));});
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE||undefined});
+ try{
+  const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('https://**/*',r=>r.abort());const base='http://127.0.0.1:'+server.address().port;
+  for(const embedded of [false,true])for(const [width,height] of [[1920,1080],[1366,768],[1280,600],[1024,600],[1366,602],[1024,434]]){
+   if(!embedded&&height===434)continue;
+   await page.setViewportSize({width,height});await page.goto(base+'/finance'+(embedded?'?embedded':''));await page.getByRole('button',{name:'Update Credit card 0',exact:true}).waitFor();
+   const bounds=await page.evaluate(()=>({scroll:document.documentElement.scrollHeight,width:document.documentElement.scrollWidth,panels:[...document.querySelectorAll('.finance-desktop-card')].map(node=>({w:node.getBoundingClientRect().width,bottom:node.getBoundingClientRect().bottom,content:node.scrollHeight,inner:node.clientHeight})),cards:[...document.querySelectorAll('.finance-compact-row')].map(node=>node.getBoundingClientRect().bottom)}));
+   assert.ok(bounds.scroll<=height+1,`${width}x${height} ${embedded?'embedded':'standalone'} page scroll: ${JSON.stringify(bounds)}`);
+   assert.ok(bounds.width<=width+1);assert.equal(bounds.panels.length,3);assert.ok(Math.max(...bounds.panels.map(p=>p.w))-Math.min(...bounds.panels.map(p=>p.w))<1);
+   assert.ok(bounds.panels.every(p=>p.bottom<=height+1&&p.content<=p.inner+1),'All panel contents fit '+JSON.stringify(bounds));assert.ok(bounds.cards.every(bottom=>bottom<height));
+   await page.screenshot({path:path.join(out,`${embedded?'embedded':'standalone'}-${width}-${height}.png`)});
+   for(const name of ['Cash flow',/Checklist ·/,'Activity']) {
+    await page.getByRole('button',{name,exact:true}).click();
+    await page.waitForFunction(()=>[...document.querySelectorAll('.finance-desktop-card')].every(node=>node.scrollHeight<=node.clientHeight+1));
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight+1),'Alternate tab fits viewport');
+   }
+  }
+  await page.setViewportSize({width:1366,height:768});await page.goto(base+'/finance?embedded');await page.getByRole('button',{name:'Mark paid Credit card 0',exact:true}).click();await page.waitForFunction(()=>window.financeRecords().bills[0].paid);
+  await page.getByRole('button',{name:'Next credit cards',exact:true}).click();assert.equal(await page.getByRole('button',{name:'Update Credit card 0',exact:true}).count(),0);
+  await page.getByRole('button',{name:'Previous credit cards',exact:true}).click();await page.getByRole('button',{name:'Update Credit card 0',exact:true}).click();
+  await page.getByLabel('Bill amount',{exact:true}).fill('5678');await page.evaluate(()=>window.failFinance=true);await page.getByRole('button',{name:'Save bill',exact:true}).click();await page.getByRole('alert').waitFor();assert.equal(await page.getByLabel('Bill amount',{exact:true}).inputValue(),'5678');
+  await page.evaluate(()=>window.failFinance=false);await page.getByRole('button',{name:'Save bill',exact:true}).click();await page.getByRole('dialog').waitFor({state:'detached'});await page.waitForFunction(()=>window.financeRecords().bills[0].amount===5678);
+  await page.getByRole('button',{name:/Checklist ·/}).click();await page.getByRole('checkbox',{name:'Bill checklist 0',exact:true}).check();await page.waitForFunction(()=>window.financeRecords().checklist[0].done);
+  await page.getByRole('textbox',{name:'New checklist item'}).fill('New obligation');await page.getByRole('button',{name:'Add checklist item'}).click();await page.waitForFunction(()=>window.financeRecords().checklist.some(item=>item.label==='New obligation'));
+  await page.getByRole('button',{name:'Open wealth trend'}).click();await page.getByRole('dialog',{name:'Wealth trend'}).waitFor();await page.getByRole('button',{name:'Close',exact:true}).click();
+  await page.setViewportSize({width:393,height:852});await page.goto(base+'/finance');await page.locator('.finance-mobile-cockpit').waitFor();assert.equal(await page.locator('.finance-desktop-panels').count(),0);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+  assert.deepEqual(errors,[]);console.log('Finance: bounded three-panel desktop, embedded laptop sizes, paging, bill/checklist saves, denied-save recovery, trend and mobile passed.');
+ }finally{await browser.close();await new Promise(r=>server.close(r));}
+})().catch(error=>{console.error(error);process.exitCode=1;});
