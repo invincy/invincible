@@ -1,6 +1,9 @@
 export function createNarrator({schedule,onStatus}){
  const release=new URL(import.meta.url).search;
  const audio=new Audio();
+ const playbackSpeed=1.2;
+ audio.defaultPlaybackRate=playbackSpeed;
+ audio.preservesPitch=true;
  audio.preload='auto';
  audio.setAttribute('playsinline','');
  audio.id='storyNarration';
@@ -78,6 +81,7 @@ export function createNarrator({schedule,onStatus}){
    clearTimeout(loadTimer);
    loadTimer=setTimeout(fail,5000);
    status('loading');
+   audio.playbackRate=playbackSpeed;
    audio.play().catch(error=>{
     if(!paused&&attempt===thisAttempt)fail(error);
    });
