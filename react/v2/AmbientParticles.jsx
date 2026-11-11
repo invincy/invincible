@@ -45,7 +45,7 @@ export default function AmbientParticles({theme = 'gold'}) {
     const resize=()=>{
       const rect=scene.getBoundingClientRect();width=rect.width;height=rect.height;canvas.dataset.fieldWidth=String(width);canvas.dataset.fieldHeight=String(height);if(!width||!height)return;
       const ratio=Math.min(devicePixelRatio||1,1.5);canvas.width=Math.round(width*ratio);canvas.height=Math.round(height*ratio);context.setTransform(ratio,0,0,ratio,0,0);
-      const count=Math.min(width<700?90:260,Math.max(width<700?64:140,Math.round(width*height/7500)));
+      const count=Math.round(.75*Math.min(width<700?90:260,Math.max(width<700?64:140,Math.round(width*height/7500))));
       particles=Array.from({length:count},(_,i)=>particles[i]||makeParticle(i));canvas.dataset.particleCount=String(count);draw(0);
     };
     const stop=()=>{cancelAnimationFrame(frame);frame=0;};

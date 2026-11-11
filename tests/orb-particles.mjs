@@ -29,7 +29,7 @@ test('rich dashboard orb increases density with bounded mobile and low capabilit
 });
 
 test('dashboard density retains every original particle and adds finer points within device budgets',()=>{
- for(const [mobile,lightweight,count] of [[false,false,174000],[true,false,114000],[false,true,66000],[true,true,66000]]){
+ for(const [mobile,lightweight,count] of [[false,false,130500],[true,false,85500],[false,true,49500],[true,true,49500]]){
   const tier=orbParticleTier(mobile,lightweight,true,true);
   const original=createOrbParticles({...tier,totalPoints:0});
   const particles=createOrbParticles(tier);

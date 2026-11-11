@@ -15,7 +15,7 @@ export function orbParticleTier(mobile,lightweight,rich=false,fine=false){
   tier.flecks+=lightweight?6000:mobile?11000:17000;
   tier.pointSize=.52;
   tier.brightFlecks=true;
-  tier.totalPoints=lightweight?66000:mobile?114000:174000;
+  tier.totalPoints=lightweight?49500:mobile?85500:130500;
  }
  return tier;
 }

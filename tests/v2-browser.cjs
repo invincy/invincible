@@ -289,7 +289,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
         await page.waitForFunction(()=>!document.querySelector('.v2-orb').classList.contains('is-compact'));
         await page.waitForFunction(()=>{
           const canvas=document.querySelector('.v2-ambient-field.has-globe > canvas');
-          return canvas&&getComputedStyle(canvas).maskImage.startsWith('radial-gradient(');
+          return canvas&&canvas.dataset.particleCount==='144'&&getComputedStyle(canvas).maskImage.startsWith('radial-gradient(');
         });
         await page.evaluate(()=>window.originalOrb=document.querySelector('.focus-orb-3d canvas'));
         await page.waitForTimeout(150);
@@ -340,6 +340,15 @@ async function checkGlobeWithoutWebGL(browser,base) {
         assert.ok(positions.journal.x<.35&&positions.creator.x>.7);
         assert.ok(Object.values(positions).every(({x,y})=>Math.hypot(x-.5,y-.5)<.35),'Shortcut centers stay inside the rim');
         assert.equal(await page.locator('.focus-orb-3d.orb-theme-cyan').count(),1,'Fresh preferences default to cyan');
+        const corners=await page.evaluate(()=>{
+          const bounds=selector=>document.querySelector(selector).getBoundingClientRect();
+          const orb=bounds('.v2-orb');
+          const left=bounds('.v2-guide-mission'),timer=bounds('.v2-guide-timer'),work=bounds('.v2-guide-work');
+          return {leftMargin:left.left,rightMargins:[innerWidth-timer.right,innerWidth-work.right],
+            gaps:[orb.left-left.right,timer.left-orb.right,work.left-orb.right]};
+        });
+        assert.ok([corners.leftMargin,...corners.rightMargins].every(margin=>margin>=16&&margin<=32));
+        assert.ok(corners.gaps.every(gap=>gap>80),'Desktop cards leave room around the globe');
         await page.getByRole('button',{name:'Open current task: Build the living workspace'}).click();
         await page.getByRole('region',{name:'Task workspace: Build the living workspace'}).waitFor();
         await page.setViewportSize({width:1920,height:1080});

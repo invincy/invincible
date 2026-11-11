@@ -279,3 +279,6 @@ The Dashboard fades the ambient network behind the visible globe, using its curr
 Release 2026.11.12.2 gives the gold globe a muted blue background network. One in four supplemental globe dots is larger and brighter. The filament layer, total particle budget and motion are unchanged.
 
 Release 2026.11.12.3 makes cyan the default for new preferences, reduces the globe and shortcut layout by 15%, softens shortcut halos, and moves the desktop side cards outward. Half of the supplemental globe dots keep their fine size, a quarter retain the previous accent size, and a quarter are larger. The globe uses a 1.25 brightness multiplier, and the ambient network keeps its published intensity.
+
+Release 2026.11.12.4 lowers the globe and ambient particle counts by 25%. The globe reduces its supplemental dots and retains the flowing trail layer and the three dot sizes.
+The desktop focus, timer, and workspace cards use compact widths and consistent corner gutters to keep them clear of the globe.

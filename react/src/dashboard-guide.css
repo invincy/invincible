@@ -36,6 +36,16 @@
   .v2-guide-mission h2{margin:7px 0 10px;font-size:clamp(18px,1.6vw,24px)}
   .v2-guide-nextline{margin-bottom:10px}.v2-guide-progress{margin-top:12px}
 }
+@media (width > 900px) {
+  #v2-region-dashboard { padding-inline: 0 }
+  .v2-guide-scene { --card-gutter: clamp(16px, 2vw, 32px); --card-inset: clamp(16px, 3dvh, 30px) }
+  .v2-guide-mission { top: var(--card-inset); left: var(--card-gutter); width: clamp(180px, 18vw, 252px) }
+  .v2-guide-timer,.v2-guide-work { right: var(--card-gutter); width: clamp(176px, 17vw, 242px) }
+  .v2-guide-timer { top: var(--card-inset) }
+  .v2-guide-work { bottom: var(--card-inset) }
+  .v2-guide-statuses { column-gap: 8px }
+  .v2-guide-statuses span { white-space: normal }
+}
 /* Nine real pages appear as unboxed glows within the existing irregular Orb. */
 .v2-constellation{position:absolute;left:50%;top:50%;width:var(--orb-size);aspect-ratio:1;transform:translate(-50%,-50%);z-index:5;pointer-events:none}
 .v2-orb-pages{position:absolute;inset:0;pointer-events:none}
