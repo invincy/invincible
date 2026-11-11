@@ -85,11 +85,11 @@
     },
     "plan.maturity": {
       "file": "plan.maturity.mp3",
-      "spokenText": "अगर insured parent maturity तक जीवित रहते हैं और policy चालू है, तो Basic Sum Assured के साथ bonuses भी मिलते हैं, अगर हों।",
+      "spokenText": "अगर insured parent maturity तक जीवित रहते हैं और policy in force है, तो Basic Sum Assured के साथ LIC के घोषित bonuses मिलते हैं।",
       "duration": 7.811,
       "bytes": 157964,
       "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
-      "sha256": "c6aac0eac5d8e7e82a37aad8a1d721d944c5249f7979649e3096685d5545bc0c"
+      "sha256": "1ebd70ed35f59285193f500e855dcf9bd34b950d05ca3816eef45de16cb84bee"
     },
     "family.whatif": {
       "file": "family.whatif.mp3",
@@ -101,11 +101,11 @@
     },
     "family.rider": {
       "file": "family.rider.mp3",
-      "spokenText": "अगर policy और लिया हुआ Term Rider चालू हैं, तो परिवार को rider की शर्तों के अनुसार अलग death benefit मिलता है।",
-      "duration": 7.371,
-      "bytes": 149324,
+      "spokenText": "अगर policy in force थी, तो परिवार को Term Rider की रकम मिलती है।",
+      "duration": 3.891,
+      "bytes": 79724,
       "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
-      "sha256": "fad461c410288177132f2017861bbd4afae80c4e0cf4cdff195fefd357a8558e"
+      "sha256": "ead1d432ea05f0b4c322d99dd26116c5ff7d719ab63ce5cb7ec49e4ec6a9f377"
     },
     "family.premiums-stop": {
       "file": "family.premiums-stop.mp3",
@@ -125,11 +125,11 @@
     },
     "family.maturity": {
       "file": "family.maturity.mp3",
-      "spokenText": "Maturity की तारीख पर Basic Sum Assured का एक सौ दस प्रतिशत मिलता है। साथ में bonuses, अगर हों। Future bonuses guaranteed नहीं हैं।",
-      "duration": 8.931,
-      "bytes": 180524,
+      "spokenText": "Maturity की तारीख पर Basic Sum Assured का एक सौ दस प्रतिशत मिलता है, साथ में LIC के घोषित bonuses।",
+      "duration": 6.811,
+      "bytes": 137804,
       "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
-      "sha256": "1d3f27a023159507635e866feb6fcabbcace233f28716905192c6593baa15517"
+      "sha256": "25876c784f42db892035346f46617015e0eb003f6e62ae2e4041df8f6e190f9f"
     }
   }
 }

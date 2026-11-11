@@ -41,15 +41,21 @@ const server=http.createServer((req,res)=>{
   await page.locator('#openPreviewBtn').click();await cue('plan.premium');assert.equal(await page.locator('#maturityPill').isVisible(),false);
   await page.locator('#storyModeToggle').click();const frozen=await page.locator('#storyNarration').evaluate(a=>a.currentTime);await page.waitForTimeout(600);assert.ok(Math.abs(await page.locator('#storyNarration').evaluate(a=>a.currentTime)-frozen)<.05);assert.equal(await page.locator('#storyNarration').evaluate(a=>a.paused),true);
   await page.locator('#storyModeToggle').click();await page.waitForFunction(()=>!document.querySelector('#storyNarration').paused);await finish();await cue('plan.maturity');assert.equal(await page.locator('#maturityPill').isVisible(),true);
+  assert.match(await page.locator('#maturityPill').innerText(),/declared bonuses/i);
+  assert.equal(await page.locator('#previewBonusNote').isVisible(),true);
   await page.locator('#advisorAudioBtn').click();assert.equal(await page.locator('#storyNarration').evaluate(a=>a.muted),true);await finish();await cue('family.whatif');
   await page.waitForTimeout(4800);await finish();await cue('family.rider');
+  assert.match(await page.locator('#riderPill').innerText(),/Term Rider payout/);
+  assert.equal(await page.locator('#familyBonusNote').isVisible(),false);
   const image=await page.locator('#storyGoal').elementHandle();
   for(const key of ['family.premiums-stop','family.annual-income','family.maturity']){await finish();await cue(key);}
+  assert.equal(await page.locator('#familyBonusNote').isVisible(),true);
+  assert.match(await page.locator('#deathMaturityPill').innerText(),/declared bonuses/i);
   assert.ok(await image.evaluate(e=>e===document.querySelector('#storyGoal')),'Persistent goal coin');await page.waitForTimeout(1400);
   assert.ok(!/grayscale/.test(await page.locator('#storyGoal').evaluate(e=>getComputedStyle(e).filter)));
   const anchor=await page.evaluate(()=>{const c=document.querySelector('#goalCoin').getBoundingClientRect(),r=document.querySelector('.story-road').getBoundingClientRect();return Math.hypot(c.x+c.width/2-r.x-r.width*268/500,c.y+c.height/2-r.y-r.height*55/500);});assert.ok(anchor<1.5);
   await finish();await page.waitForTimeout(700);assert.equal(await page.locator('#stageContainer').getAttribute('data-benefit-step'),'4','Final scene holds');
-  await page.locator('#storyModeToggle').click();await cue('family.rider');await page.locator('#ctaPrevBtn').click();await cue('family.whatif');assert.match(await page.locator('#storyNarration').getAttribute('src'),/family\.whatif\.mp3\?v=12$/);assert.equal(await page.locator('#stageContainer').getAttribute('data-flow-step'),'whatif');
+  await page.locator('#storyModeToggle').click();await cue('family.rider');await page.locator('#ctaPrevBtn').click();await cue('family.whatif');assert.match(await page.locator('#storyNarration').getAttribute('src'),/family\.whatif\.mp3\?v=13$/);assert.equal(await page.locator('#stageContainer').getAttribute('data-flow-step'),'whatif');
   assert.deepEqual(errors,[]);console.log('PASS 15 recordings, automatic sound from plan card, four goals, Other Goal narration, pause/resume, mute, cancellation and maturity');
  }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1;});
