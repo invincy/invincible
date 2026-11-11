@@ -7,7 +7,8 @@
 .image-prompt-assistant button,.image-generator [data-image-clear]{margin-top:8px}
 .image-prompt-assistant p,.image-history p{margin:8px 0 0;font-size:12px}
 .image-reference{margin-top:16px;padding:12px;border:1px solid #29444c;border-radius:10px}
-.image-reference input{max-width:100%}
+.image-reference label{grid-template-columns:minmax(0,1fr)}
+.image-reference input{box-sizing:border-box;width:100%;min-width:0}
 .image-reference p{margin:8px 0;font-size:12px;color:#a2b7bd}
 .image-reference img{display:block;width:112px;margin-bottom:8px}
 .image-generator .image-history{grid-column:1/-1;min-width:0}
