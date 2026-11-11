@@ -99,7 +99,7 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=fa
    gl.useProgram(dots);gl.bindBuffer(gl.ARRAY_BUFFER,particleBuffer);
    for(const [name,size,offset]of[['position',3,0],['appearance',2,12]]){const location=gl.getAttribLocation(dots,name);gl.enableVertexAttribArray(location);gl.vertexAttribPointer(location,size,gl.FLOAT,false,20,offset)}
    gl.clearColor(0,0,0,0);gl.disable(gl.DEPTH_TEST);gl.depthMask(false);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
-   gl.uniform1f(uniforms.particleBrightness,dashboardMotion?1.25:1);
+   gl.uniform1f(uniforms.particleBrightness,dashboardMotion?.9:1);
    gl.uniform1f(uniforms.style,palette.style);gl.uniform1f(uniforms.expressive,richParticles ? 1 : 0);gl.uniform1f(uniforms.spin,spin ? 1 : 0);gl.uniform3fv(uniforms.colorA,palette.a);gl.uniform3fv(uniforms.colorB,palette.b);
   };
   // A timer waits for the next due frame; rAF only aligns that frame with presentation.
