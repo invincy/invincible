@@ -11,7 +11,25 @@ function program(gl,vertex,fragment){
  finally{if(vs)gl.deleteShader(vs);if(fs)gl.deleteShader(fs)}
 }
 // Every visible mark belongs to the particle field; there is no solid mesh or orbit ring.
-const particleVertex=`attribute vec3 position;attribute vec2 appearance;uniform mat4 projection;uniform float pixelRatio;uniform float pointScale;uniform float time;uniform float style;uniform float expressive;uniform float spin;uniform vec2 rotation;uniform vec3 influence;varying float opacity;void main(){
+const particleVertex=`attribute vec3 position;attribute vec2 appearance;uniform mat4 projection;uniform float pixelRatio;uniform float pointScale;uniform float time;uniform float style;uniform float expressive;uniform float spin;uniform vec2 rotation;uniform vec3 influence;varying float opacity;
+vec3 rotateByGesture(vec3 p){
+ float cx=cos(rotation.y),sx=sin(rotation.y),cy=cos(rotation.x),sy=sin(rotation.x);
+ p=vec3(p.x,p.y*cx-p.z*sx,p.y*sx+p.z*cx);
+ return vec3(p.x*cy+p.z*sy,p.y,-p.x*sy+p.z*cy);
+}
+void main(){
+ // The added flecks need only a slow drift and the shared globe rotation.
+ if(appearance.y<0.0){
+  float angle=time*.09;
+  float c=cos(angle),s=sin(angle);
+  vec3 p=rotateByGesture(vec3(position.x*c+position.z*s,position.y,-position.x*s+position.z*c));
+  vec4 projected=projection*vec4(p,1.0);
+  gl_Position=projected;
+  gl_PointSize=max(1.5,appearance.x*pixelRatio*pointScale*4.6/projected.w);
+  opacity=-appearance.y*(.18+.82*smoothstep(-.75,1.0,p.z));
+  return;
+ }
+
 float travel=fract(position.x+time*position.z);float rawLane=position.y;float cell=step(3.5,rawLane);float ring=step(1.5,rawLane)*(1.0-cell);float lane=fract(rawLane);float tau=6.2831853;
 float hash=fract(sin(lane*913.73)*43758.5453);float angle=travel*tau+hash*tau;
 float latitude=asin(clamp(lane*2.0-1.0,-.98,.98));
@@ -49,30 +67,13 @@ float globeTilt=.5235988+.14*sin(time*.16)+.035*sin(time*.09+1.2);
 vec3 globeAxis=normalize(vec3(-sin(globeTilt),cos(globeTilt),.55+.10*sin(time*.12+.7)));
 float globeAngle=-time*.28*spin,globeCos=cos(globeAngle),globeSin=sin(globeAngle);
 p=p*globeCos+cross(globeAxis,p)*globeSin+globeAxis*dot(globeAxis,p)*(1.0-globeCos);
-float cx=cos(rotation.y),sx=sin(rotation.y),cy=cos(rotation.x),sy=sin(rotation.x);
-p=vec3(p.x,p.y*cx-p.z*sx,p.y*sx+p.z*cx);p=vec3(p.x*cy+p.z*sy,p.y,-p.x*sy+p.z*cy);
+p=rotateByGesture(p);
 vec2 delta=p.xy-influence.xy;float pull=exp(-dot(delta,delta)*2.7)*influence.z;
 p.xy+=delta*pull*mix(.13,.30,expressive);p.z+=pull*mix(.16,.28,expressive);
 // A slow planet-like pulse: six seconds inward, six seconds back; never expand.
 float planetPulse=.5-.5*cos(time*.5235988);
 p*=1.0-.015*planetPulse;
 vec4 projected=projection*vec4(p,1.0);gl_Position=projected;float size=mix(1.0,1.22,step(.5,style)*(1.0-step(1.5,style)));size*=1.0+.26*packet+.12*secondary;gl_PointSize=max(1.0,appearance.x*size*pixelRatio*pointScale*4.6/projected.w);opacity=appearance.y*edge*center*(0.35+0.65*smoothstep(-1.0,1.0,p.z));opacity*=.48+1.05*packet+.48*secondary;opacity*=mix(1.0,.68,step(1.5,style)*(1.0-step(.76,appearance.y)));}`;
-// The dashboard uses precomputed points so a denser sphere can move as one object.
-const sphereVertex=`attribute vec3 position;attribute vec2 appearance;
-uniform mat4 projection;uniform float pixelRatio;uniform float pointScale;
-uniform float time;uniform vec2 rotation;uniform vec3 influence;varying float opacity;
-void main(){
- float yaw=rotation.x+time*.08;
- float cx=cos(rotation.y),sx=sin(rotation.y),cy=cos(yaw),sy=sin(yaw);
- vec3 p=vec3(position.x,position.y*cx-position.z*sx,position.y*sx+position.z*cx);
- p=vec3(p.x*cy+p.z*sy,p.y,-p.x*sy+p.z*cy);
- vec2 delta=p.xy-influence.xy;
- p.xy+=delta*(.11*influence.z/(1.0+8.0*dot(delta,delta)));
- vec4 projected=projection*vec4(p,1.0);
- gl_Position=projected;
- gl_PointSize=max(1.65,appearance.x*pixelRatio*pointScale*4.6/projected.w);
- opacity=appearance.y*(.24+.76*smoothstep(-.75,1.0,p.z));
-}`;
 const particleFragment=`precision mediump float;uniform vec3 colorA;uniform vec3 colorB;varying float opacity;void main(){float radius=length(gl_PointCoord-vec2(0.5))*2.0;if(radius>1.0)discard;float core=1.0-smoothstep(0.0,1.0,radius);gl_FragColor=vec4(mix(colorA,colorB,core),core*opacity);}`;
 function perspective(aspect){const f=1/Math.tan(Math.PI/8),near=.1,far=30,distance=4.6;return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)/(near-far),-1,0,0,(far+near)/(near-far)*-distance+2*far*near/(near-far),distance])}
 const palettes={cyan:{style:0,a:[.08,.55,.78],b:[.55,1,1]},emerald:{style:1,a:[.03,.32,.12],b:[.46,1,.62]},gold:{style:2,a:[.42,.16,.025],b:[1,.85,.38]}};
@@ -84,7 +85,7 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=fa
   const reduced=matchMedia('(prefers-reduced-motion: reduce)'),mobile=matchMedia('(max-width:1024px)');
   const lightweight=(navigator.hardwareConcurrency>0&&navigator.hardwareConcurrency<=4)||(navigator.deviceMemory>0&&navigator.deviceMemory<=4);
   const palette=palettes[theme]||palettes.cyan;
-  let gl,dots,particleBuffer,uniforms,sphere,frame=null,timer=null,resizeObserver,intersectionObserver;
+  let gl,dots,particleBuffer,uniforms,frame=null,timer=null,resizeObserver,intersectionObserver;
   let disposed=false,inView=true,contextLost=false,start=performance.now(),last=0,particleCount=0,particleTier=null;
   let drag=null,hoverSample=null,directCoast=false,yaw=0,pitch=0,velocityX=0,velocityY=0,hoverX=0,hoverY=0,hoverStrength=0,targetX=0,targetY=0,targetStrength=0;
   const stop=()=>{if(timer!==null)clearTimeout(timer);if(frame!==null)cancelAnimationFrame(frame);timer=frame=null};
@@ -92,8 +93,7 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=fa
   const coasting=()=>Math.hypot(velocityX,velocityY)>.015;
   const interactive=()=>drag||targetStrength>0||hoverStrength>.015||coasting();
   const initialize=()=>{
-   sphere=dashboardMotion&&container.getBoundingClientRect().width>=100;
-   dots=program(gl,sphere?sphereVertex:particleVertex,particleFragment);particleBuffer=gl.createBuffer();particleTier=null;
+   dots=program(gl,particleVertex,particleFragment);particleBuffer=gl.createBuffer();particleTier=null;
    uniforms=Object.fromEntries(['projection','pixelRatio','pointScale','time','spin','rotation','influence','style','expressive','colorA','colorB'].map(name=>[name,gl.getUniformLocation(dots,name)]));
    gl.useProgram(dots);gl.bindBuffer(gl.ARRAY_BUFFER,particleBuffer);
    for(const [name,size,offset]of[['position',3,0],['appearance',2,12]]){const location=gl.getAttribLocation(dots,name);gl.enableVertexAttribArray(location);gl.vertexAttribPointer(location,size,gl.FLOAT,false,20,offset)}
@@ -133,10 +133,6 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=fa
   const capture=event=>{if(!canDraw())return;resume();event.detail.url=c.toDataURL('image/png')};
   const resize=()=>{
    const rect=container.getBoundingClientRect();if(!rect.width||!rect.height||disposed||contextLost)return;
-   const shouldUseSphere=dashboardMotion&&rect.width>=100;
-   if(sphere!==shouldUseSphere){
-    gl.deleteBuffer(particleBuffer);gl.deleteProgram(dots);initialize();
-   }
    stop();const ratio=Math.min(devicePixelRatio||1,mobile.matches?1:1.25);
    c.width=Math.round(rect.width*ratio);c.height=Math.round(rect.height*ratio);
    gl.viewport(0,0,c.width,c.height);gl.uniformMatrix4fv(uniforms.projection,false,perspective(rect.width/rect.height));gl.uniform1f(uniforms.pixelRatio,ratio);gl.uniform1f(uniforms.pointScale,Math.max(.85,Math.min(1.5,rect.width/480)));

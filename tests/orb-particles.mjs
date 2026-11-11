@@ -28,12 +28,18 @@ test('rich dashboard orb increases density with bounded mobile and low capabilit
  }
 });
 
-test('the simplified dashboard sphere increases density within device budgets',()=>{
+test('dashboard density retains every original particle and adds finer points within device budgets',()=>{
  for(const [mobile,lightweight,count] of [[false,false,174000],[true,false,114000],[false,true,66000],[true,true,66000]]){
-  const particles=createOrbParticles(orbParticleTier(mobile,lightweight,true,true));
+  const tier=orbParticleTier(mobile,lightweight,true,true);
+  const original=createOrbParticles({...tier,totalPoints:0});
+  const particles=createOrbParticles(tier);
   assert.equal(particles.length,count*5);
+  assert.deepEqual(particles.subarray(0,original.length),original);
   assert.ok(particles.every(Number.isFinite));
-  for(let size=3;size<particles.length;size+=5)assert.ok(particles[size]<1.5);
+  for(let index=original.length;index<particles.length;index+=5){
+   assert.ok(particles[index+3]<1.5);
+   assert.ok(particles[index+4]<0);
+  }
  }
 });
 
