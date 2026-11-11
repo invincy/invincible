@@ -17,6 +17,7 @@
 <meta name="theme-color" content="#000000">  <link rel="stylesheet" href="history-workspace.css?v=2026110903">
   <link rel="stylesheet" href="video-studio/studio.css?v=2026111003">
   <link rel="stylesheet" href="studio-ui.css?v=3">
+  <link rel="stylesheet" href="image-generator.css?v=2026111101">
 </head>
 <body class="creator-page studio-ui">
   <nav class="global-nav" data-compact-nav data-icon-nav aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
@@ -24,7 +25,7 @@
 
   <header class="studio-header">
     <div><h1>Creator Studio</h1></div>
-    <div class="header-actions"><a class="tts-launch" href="tts.html">Voiceover</a><button id="addContent" class="primary">+ New</button></div>
+    <div class="header-actions"><a class="tts-launch" href="tts.html">Voiceover</a><a class="tts-launch" href="images.html">Image generator</a><button id="addContent" class="primary">+ New</button></div>
   </header>
   <div id="status" class="sync-status" role="status" aria-live="polite">Connecting to Firebase…</div>
 
@@ -66,6 +67,6 @@
       <div class="dialog-actions"><button id="deleteContent" type="button" class="danger">Delete</button><span id="contentShotSummary" role="status" aria-live="polite">No scenes</span><button type="button" class="secondary close">Cancel</button><button id="saveContent" class="primary">Create</button></div>
     </form>
   </dialog>
-  <script type="module" src="creator.js?v=2026111002"></script>
+  <script type="module" src="creator.js?v=2026111101"></script>
 </body>
 </html>

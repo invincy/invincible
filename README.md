@@ -34,6 +34,10 @@ Creator Studio is a shared production workspace for independent videos. Film con
 
 New Creator projects automatically save the Documentary Terrain style: NASA imagery, attributed terrain, readable typography, restrained gold routes, safe portrait framing and timeline-driven motion. The main Map Editor’s Style controls support project overrides; existing maps retain their saved appearance. See [the production standard](docs/map-editor-production-standard.md#built-in-creator-studio-defaults). No repeated style prompt or demo page is required. See [Documentary Terrain](docs/documentary-terrain.md) for hierarchy, optional information graphics, scene overrides and imagery limits.
 
+## Local image generation
+
+The local image-generation work adds a simple Create an image panel to Creator Studio and the local AI screen. Manual controls and Qwen use the same validated Universal Agent tool and fixed SD 1.5 graph. See [local image generation](docs/local-image-generation.md) for worker authentication, sandbox-preserving startup, tested behavior and the Windows-encrypted restricted-worker launcher. Nothing is deployed by this checkout.
+
 ## Creator voiceover
 
 Creator Studio → **Voiceover** opens the Google TTS workspace: paste narration, choose language/voice, adjust delivery, preview, generate and download an MP3. The page uses authenticated backend Functions; production activation and limits are documented in [Creator voiceover](docs/creator-tts.md). Private Google credentials never belong in the browser or repository.

@@ -17,6 +17,14 @@ route or geospatial placement for the commander artwork, so such scenes remain
 reviewable storyboards and cannot be opened as executable map video yet. This is
 an intentional safety limit, not a completed Panipat animation.
 
+After the local image worker was consolidated into the paired agent server, the
+Voiceover page now submits its MP3 through the same account-bound pairing token.
+Analysis requires authentication, is limited to a 15 MB MP3 in the restricted
+workspace, serializes Whisper and Qwen with GPU work, and removes the temporary
+upload before replying. Authenticated fixture coverage verifies transcript
+timings, Creator Studio import JSON, account rejection and upload cleanup; a new
+live restricted-identity Whisper run remains unverified.
+
 Verification: repository `npm test` passed 230 cases with two existing skips,
 Functions 15/15 and media 5/5; Local AI voiceover tests passed 10/10; site check
 and production build passed. Universal map, map animation, map editor, map defaults,
@@ -27,6 +35,38 @@ passed in installed Chrome. The automated Creator-rules emulator check was not
 run because Java is unavailable. No production data, Firebase rules, deployment
 or account data was changed by these checks. The live laptop-to-browser-to-agent
 audio analysis and executable Panipat route are not verified by this release.
+
+## Local ComfyUI image tool — 11 November 2026
+
+Implemented the fixed SD 1.5 generate_image capability through the existing
+Universal Agent API, local pairing and owner checks, persisted jobs, exact-output
+PNG verification, idempotency, and a shared Qwen/image GPU queue. The compact
+panel uses the existing Video Studio uploader for attachment; React local chat
+invokes the same tool. Production data, model installations and existing worktrees
+were preserved.
+
+After explicit user approval, reset only the existing restricted worker login.
+Its credential is Windows DPAPI-encrypted for the laptop owner. The working
+launcher starts Node directly using the account's existing standard login;
+folder ACLs, groups, PowerShell policy and logon rights were not changed. The
+attempted scheduled task was removed because that account lacks batch-logon
+permission. No password is printed or supplied by an AI tool request.
+
+Real UI generation passed for square (41.795 s), real Qwen-requested portrait
+(40.210 s image execution), and landscape (43.246 s), with 3,363 MiB peak sampled
+GPU memory. PNG verification, preview, download and isolated-project attachment
+passed. Live duplicate/auth/invalid-request checks returned the expected results.
+38 focused tests and actual-page browser fixtures passed, including native
+Studio and React local chat paths. Build/reference checks and 229 root + 15
+Functions + 5 media tests passed, with two existing root skips.
+
+Existing Video Studio unit tests pass (24); its MP4 browser export timed out.
+The broad browser suite stopped at Task Copy's 320px layout assertion. Baseline
+status was not separately established; later scenarios were not run. Production
+Firebase writes and remote bridge image generation were not tested or enabled.
+An extra stop/restart test was rejected by automatic approval review; normal
+worker startup and reuse passed, and the working worker was left running.
+See local-image-generation.md for the detailed contract and evidence.
 
 ## Voiceover forest and balanced workspace — November 10, 2026
 

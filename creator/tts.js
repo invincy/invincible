@@ -3,9 +3,11 @@ import {loadVoices,generateVoiceover} from './tts-api.js';
 import {createVoiceDemoPlayer} from './tts-voice-demo-player.js';
 import {createTtsHistoryClient} from './tts-history-api.js?v=2026111004';
 import {savePendingAiDraft} from './ai-draft.js?v=2026111112';
+import {createLocalImageClient} from '../shared/local-image-client.js?v=2026111112';
 const $=id=>document.getElementById(id),fields=['title','script','creativeInstructions','mode','engine','model','direction','language','gender','family','voice','preset','speed','pitch','volume','pause'];
 let user=null,voices=[],busy=false,loading=false,epoch=0,voiceEpoch=0,audioUrl=null,audioBytes=null,saveTimer;
 let historyClient=null,historyEntries=[],historyCursor=null,historyEpoch=0,historyLoading=false;
+const localWorker=createLocalImageClient({getAccountId:()=>user?.uid||null,requireAccount:true});
 let pendingHistory=new Map(),historyWrites=new Set();
 const controls=['sample','title','script','mode','reloadVoices','preview','generate'];
 const encoder=new TextEncoder();
@@ -253,7 +255,7 @@ async function record(preview){
 }
 async function analyzeLocal(){
  if(!audioBytes||busy||loading)return; const started=Date.now();$('analyzeLocal').disabled=true;$('localAnalysisStatus').textContent='Sending MP3 to the local Whisper/Qwen pipeline…';$('localAnalysisResult').hidden=true;
- try { let binary='';for(let i=0;i<audioBytes.length;i+=0x8000)binary+=String.fromCharCode(...audioBytes.subarray(i,i+0x8000)); const response=await fetch('http://127.0.0.1:8787/api/voiceover/analyze',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({title:$('title').value,creativeInstructions:$('creativeInstructions').value,audioBase64:btoa(binary)})}); const payload=await response.json();if(!response.ok)throw Error(payload.error||payload.analysis?.errors?.join(' ')||`Local analysis failed (${response.status}).`);await savePendingAiDraft({title:$('title').value,creativeInstructions:$('creativeInstructions').value,analysis:payload.analysis,creatorStudio:payload.creatorStudio},new Blob([audioBytes],{type:'audio/mpeg'}));$('localAnalysisResult').textContent=JSON.stringify(payload.creatorStudio,null,2);$('localAnalysisResult').hidden=false;$('localAnalysisStatus').textContent=`Local analysis ready: ${payload.analysis.scenes.length} scenes in ${((Date.now()-started)/1000).toFixed(1)}s. Open Creator Studio and choose “Review AI draft” to inspect and import it.`; }
+ try { let binary='';for(let i=0;i<audioBytes.length;i+=0x8000)binary+=String.fromCharCode(...audioBytes.subarray(i,i+0x8000)); const payload=await localWorker.request('/api/voiceover/analyze',{title:$('title').value,creativeInstructions:$('creativeInstructions').value,audioBase64:btoa(binary)},{timeoutMs:180000});await savePendingAiDraft({title:$('title').value,creativeInstructions:$('creativeInstructions').value,analysis:payload.analysis,creatorStudio:payload.creatorStudio},new Blob([audioBytes],{type:'audio/mpeg'}));$('localAnalysisResult').textContent=JSON.stringify(payload.creatorStudio,null,2);$('localAnalysisResult').hidden=false;$('localAnalysisStatus').textContent=`Local analysis ready: ${payload.analysis.scenes.length} scenes in ${((Date.now()-started)/1000).toFixed(1)}s. Open Creator Studio and choose “Review AI draft” to inspect and import it.`; }
  catch(error){$('localAnalysisStatus').textContent=error.message||'Local analysis failed.';}
  finally{refreshAvailability();}
 }

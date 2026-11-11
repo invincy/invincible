@@ -7,6 +7,7 @@ const CONTROL_REQUEST = /\b(create|add|update|change|open|show|list|move|set|del
 
 export function detectLocalIntent(message) {
   const text = String(message || '').trim();
+  if (/\b(generate|draw|paint|create|make)\b[\s\S]*\b(image|picture|illustration|artwork)\b/i.test(text)) return { mode: 'image', reason: 'image-generation-request' };
   if (GREETING.test(text)) return { mode: 'chat', reason: 'greeting' };
   if (CREATOR_REQUEST.test(text)) return { mode: 'creator', reason: 'creator-or-media-request' };
   if (CONTROL_REQUEST.test(text)) return { mode: 'control', reason: 'application-action-request' };
@@ -27,16 +28,19 @@ export function buildLocalPrompt(message) {
     'You are Invincible Local AI. Return only a JSON object.',
     'For an ordinary informational question, return {"kind":"chat","text":"..."} and do not request a tool.',
     'For an Invincible action, return {"kind":"tool","tool":"create_project","arguments":{...}}.',
-    'Allowed tool: create_project.',
+    'Allowed tools: create_project, generate_image.',
+    'For a request to draw or generate an image, return {"kind":"tool","tool":"generate_image","arguments":{"prompt":"...","preset":"square"}}. Keep the requested visual details in prompt.',
+    'generate_image arguments: prompt (1-1500 characters), preset (square, portrait, landscape), optional seed (integer 0-4294967295). Do not add any other fields. Default preset is square.',
     'create_project arguments: title (string), description (string or null), stages (array of strings), current_stage (string or null).',
     'Never claim success; the host application will execute and verify the tool.',
     `User instruction: ${message}`,
   ].join('\n');
 }
 
-export async function askOllama({ message, model = 'qwen3:4b', baseUrl = DEFAULT_OLLAMA_URL, fetchImpl = fetch }) {
+export async function askOllama({ message, model = 'qwen3:4b', baseUrl = DEFAULT_OLLAMA_URL, fetchImpl = fetch, signal }) {
   const response = await fetchImpl(`${baseUrl.replace(/\/$/, '')}/api/chat`, {
     method: 'POST',
+    signal,
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
       model,
@@ -59,7 +63,7 @@ export async function executeLocalCommand({ message, ask = askOllama, executeToo
   if (intent.mode === 'creator') return { command: { kind: 'chat', text: 'Creator and media export tools are not enabled yet.' }, result: { text: 'Creator and media export tools are not enabled yet.' }, verified: true, conversational: true, intent, unsupported: true };
   const command = await ask({ message });
   if (command?.kind === 'chat') return { command, result: { text: String(command.text || '').slice(0, 4000) }, verified: true, conversational: true, intent };
-  if (command?.tool !== 'create_project') throw new Error('Local model requested a tool outside the Phase 1 allow-list.');
+  if (!['create_project', 'generate_image'].includes(command?.tool)) throw new Error('Local model requested a tool outside the allow-list.');
   const result = await executeTool(command.tool, command.arguments ?? {});
   return { command, result, verified: result?.action?.status === 'completed', intent };
 }

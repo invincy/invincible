@@ -1,8 +1,10 @@
 const crypto = require('node:crypto');
 const path = require('node:path');
 const { definitions, executeInvincibleTool, schemas } = require('../tools/invincible-tools');
+const { imageSchema, imageDefinition } = require('./image-generation');
 
 const REGISTERED_TOOLS = Object.freeze({
+  generate_image: Object.freeze({ definition: imageDefinition, schema: imageSchema, permission: 'create', requiresApproval: false }),
   create_project: Object.freeze({
     definition: definitions.find(tool => tool.name === 'create_project'),
     schema: schemas.create_project,
@@ -39,11 +41,12 @@ function cleanUid(value) { const text = String(value || '').trim(); if (!text) t
 
 function createUniversalAgent({ workspaceRoot = 'E:\\Invincible\\AgentWorkspace', workspaceOwner, toolExecutor = executeInvincibleTool, protectedRoots = PROTECTED_ROOTS, timeoutMs = 120000, logStore = [] } = {}) {
   const completed = new Map();
+  const pending = new Map();
   const ownerFor = workspaceOwner || ((workspaceId, principal) => workspaceId === principal.uid);
   const logs = logStore;
   const record = entry => { logs.push({ atMs: Date.now(), ...entry }); return logs.at(-1); };
   const authorize = (principal, workspaceId, toolName) => {
-    const uid = cleanUid(principal?.uid), workspace = cleanId(workspaceId, 'Workspace ID'), registration = REGISTERED_TOOLS[toolName];
+    const uid = cleanUid(principal?.uid), workspace = cleanId(workspaceId, 'Workspace ID'), registration = Object.hasOwn(REGISTERED_TOOLS, toolName) ? REGISTERED_TOOLS[toolName] : null;
     if (!registration) throw new AgentError('TOOL_NOT_REGISTERED', `Tool is not registered: ${toolName}`);
     if (!ownerFor(workspace, { ...principal, uid })) throw new AgentError('WORKSPACE_FORBIDDEN', 'The authenticated user does not own this workspace.');
     if (principal.workspaceIds && !principal.workspaceIds.includes(workspace)) throw new AgentError('WORKSPACE_FORBIDDEN', 'The authenticated user is not a member of this workspace.');
@@ -51,25 +54,34 @@ function createUniversalAgent({ workspaceRoot = 'E:\\Invincible\\AgentWorkspace'
   };
   async function execute({ principal, workspaceId, idempotencyKey, tool, arguments: rawArguments, approval = false, signal, timeout = timeoutMs }) {
     const auth = authorize(principal, workspaceId, tool), key = cleanId(idempotencyKey, 'Idempotency key'), taskId = taskIdFor(auth.uid, auth.workspace, key);
-    if (completed.has(taskId)) return { ...completed.get(taskId), deduplicated: true };
     if (auth.registration.requiresApproval && !approval) throw new AgentError('APPROVAL_REQUIRED', 'This action requires explicit user approval.');
     let args;
     try { args = auth.registration.schema.parse(rawArguments); } catch (error) { throw new AgentError('INVALID_ARGUMENTS', error.message); }
     if (signal?.aborted) throw new AgentError('CANCELLED', 'Execution was cancelled before starting.');
+    const fingerprint = JSON.stringify({ tool, args });
+    const existing = pending.get(taskId) || completed.get(taskId);
+    if (existing) {
+      if (existing.fingerprint !== fingerprint) throw new AgentError('IDEMPOTENCY_CONFLICT', 'This request key was already used for different arguments.');
+      return { ...(await (existing.promise || existing.output)), deduplicated: true };
+    }
     record({ taskId, uid: auth.uid, workspaceId: auth.workspace, tool, status: 'started' });
-    const operation = Promise.resolve().then(() => toolExecutor({ uid: auth.uid, workspaceId: auth.workspace }, tool, args));
+    const execution = new AbortController();
+    const operation = Promise.resolve().then(() => toolExecutor({ uid: auth.uid, workspaceId: auth.workspace, taskId, signal: execution.signal }, tool, args));
     const cancellation = signal ? new Promise((_, reject) => signal.addEventListener('abort', () => reject(new AgentError('CANCELLED', 'Execution was cancelled.')), { once: true })) : null;
     let timeoutId;
     const timeoutPromise = new Promise((_, reject) => { timeoutId = setTimeout(() => reject(new AgentError('TIMEOUT', 'Execution exceeded its time limit.')), Math.max(1, Number(timeout))); });
-    try {
+    const promise = (async () => { try {
       const result = await Promise.race([operation, timeoutPromise, cancellation].filter(Boolean));
-      const output = { taskId, status: 'completed', tool, result, verified: result?.action?.status === 'completed' };
-      completed.set(taskId, output); record({ taskId, uid: auth.uid, workspaceId: auth.workspace, tool, status: 'completed' }); return output;
+      if (result?.action?.status !== 'completed') throw new AgentError('UNVERIFIED_RESULT', 'The executor did not verify completion.');
+      const output = { taskId, status: 'completed', tool, result, verified: true };
+      completed.set(taskId, { fingerprint, output }); record({ taskId, uid: auth.uid, workspaceId: auth.workspace, tool, status: 'completed' }); return output;
     } catch (error) {
       const structured = error instanceof AgentError ? error : new AgentError('EXECUTION_FAILED', error.message || 'Execution failed.');
       record({ taskId, uid: auth.uid, workspaceId: auth.workspace, tool, status: 'failed', errorCode: structured.code });
       throw structured;
-    } finally { clearTimeout(timeoutId); }
+    } finally { execution.abort(); clearTimeout(timeoutId); pending.delete(taskId); } })();
+    pending.set(taskId, { fingerprint, promise });
+    return promise;
   }
   return Object.freeze({ execute, authorize, logs, workspaceRoot, protectedRoots, registeredTools: REGISTERED_TOOLS, assertSafePath: target => assertSafeWorkspacePath(target, workspaceRoot, protectedRoots) });
 }

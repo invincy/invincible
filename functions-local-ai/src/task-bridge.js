@@ -66,7 +66,7 @@ async function createAgentPairing({ db, uid, agentId, now, ttlMs = AGENT_TOKEN_T
   return { agentId: id, token, expiresAtMs };
 }
 
-async function resolveAgentToken({ db, token, now }) {
+async function resolveAgentToken({ db, token, now, indexedOnly = false }) {
   const value = String(token || '').trim();
   if (value.length < 32) throw new Error('A valid agent token is required.');
   const timestamp = nowMs(now), hash = hashAgentToken(value), snapshot = await agentTokenCollection(db).doc(hash).get();
@@ -75,6 +75,7 @@ async function resolveAgentToken({ db, token, now }) {
     if (data.revoked || Number(data.expiresAtMs || 0) <= timestamp) throw new Error('Agent token is expired or revoked.');
     if (data.uid) return { uid: data.uid, agentId: data.agentId };
   }
+  if (indexedOnly) throw new Error('Agent token is invalid.');
   const users = await db.collection('users').get();
   for (const user of users.docs) {
     const agents = await agentCollection(db, user.id).where('tokenHash', '==', hash).get();
