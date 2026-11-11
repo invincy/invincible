@@ -17,9 +17,9 @@ check; local tests do not establish either.
 - Hindi, Indian English and US English; Gujarati is explicitly labelled Preview.
 - Natural, Sales, Social media, Empathetic, Excited, Documentary, Dramatic and Calm delivery; optional
   custom direction up to 2,000 UTF-8 bytes.
-- Speed 0.25–2× directs Gemini's speaking pace through the prompt. It is approximate,
-  not measured time stretching or a guaranteed recording duration. Editing speed
-  does not replace the selected emotion/delivery.
+- **Gemini pace request** (0.25–2×) guides the next synthesis through the prompt.
+  The generated pace can vary. **Playback speed** changes how fast the current
+  recording plays immediately and leaves the downloaded MP3 at its generated pace.
 - Gemini accepts plain narration here. SSML, pitch and exact paragraph pauses remain
   available only for compatible classic Google voices. Existing SSML scripts are
   rejected for Gemini rather than reading markup as narration.

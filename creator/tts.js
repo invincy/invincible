@@ -46,7 +46,8 @@ function refreshAvailability(){
  $('pauseRow').hidden=expressive();
  $('ssmlGuide').hidden=expressive();
  $('deliveryHelp').textContent=expressive()?'Style and voice direction are sent to Gemini as performance instructions.':'These presets adjust speed and pitch only.';
- $('speedHelp').textContent=expressive()?'Directed speaking pace. The resulting timing can vary.':'Changes the voice’s synthesis speed.';
+ $('speedLabel').textContent=expressive()?'Gemini pace request':'Generation speed';
+ $('speedHelp').textContent=expressive()?'Applies to your next preview or MP3. Gemini aims for this pace, so the result may be slower or faster. Use Playback speed to hear an exact speed change.':'Applies to your next preview or MP3. Use Playback speed to change how fast the current recording plays.';
  for(const value of ['sales','social','empathetic','calm'])$('preset').querySelector('[value='+value+']').disabled=!expressive();
  $('preset').querySelector('[value=custom]').disabled=expressive();
  for(const button of $('historyList').querySelectorAll('button'))button.disabled=busy||loading||historyLoading||!user||(historyWrites.has(button.dataset.id)&&!['restore','export'].includes(button.dataset.action));
@@ -133,7 +134,7 @@ function renderHistory(){
   const full=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Script & settings';
   const script=document.createElement('p');script.className='history-script';script.textContent=entry.settings.script;
   const settings=document.createElement('p');settings.className='help';
-  const r=entry.request;settings.textContent=[r.engine==='gemini'?'Gemini':'Google classic',r.languageCode,r.voiceName,r.modelName,r.delivery,'Speed '+r.speed+'×','Pitch '+r.pitch,'Volume '+r.volume+' dB','Paragraph pause '+r.paragraphPause+' ms',r.mode==='ssml'?'SSML':'Plain text',r.direction].filter(Boolean).join(' · ');
+  const r=entry.request;settings.textContent=[r.engine==='gemini'?'Gemini':'Google classic',r.languageCode,r.voiceName,r.modelName,r.delivery,(r.engine==='gemini'?'Requested pace ≈ ':'Generation speed ')+r.speed+'×','Pitch '+r.pitch,'Volume '+r.volume+' dB','Paragraph pause '+r.paragraphPause+' ms',r.mode==='ssml'?'SSML':'Plain text',r.direction].filter(Boolean).join(' · ');
   full.append(summary,script,settings);
   const actions=document.createElement('div');actions.className='history-actions';
   for(const [action,label] of [['restore','Use again'],['export','Export settings'],...(pendingHistory.has(entry.id)?[['retry','Retry save']]:[]),['delete','Delete']]){
@@ -247,7 +248,7 @@ async function record(preview){
   clearAudio();audioBytes=buffer;audioUrl=URL.createObjectURL(new Blob([buffer],{type:result.mimeType}));
   $('player').src=audioUrl;$('download').href=audioUrl;$('download').download=result.filename;
   $('recording').hidden=false;$('recordingInfo').textContent=result.durationSeconds.toFixed(1)+' sec · '+result.voiceName+(preview?' · opening preview':'');
-  if(data.engine==='gemini')$('recordingInfo').textContent+=' · '+data.delivery+' · directed pace '+data.speed+'×';
+  if(data.engine==='gemini')$('recordingInfo').textContent+=' · '+data.delivery+' · requested pace ≈ '+data.speed+'×';
   status(preview?'Preview ready. Listen, adjust, then generate the full recording.':'MP3 ready. Listen before downloading.');
   if(!preview)saveHistory({id:crypto.randomUUID(),version:1,createdAt:Date.now(),settings,request:data,filename:result.filename,voiceName:result.voiceName,durationSeconds:result.durationSeconds});
  }catch(error){if(current===epoch)status(friendly(error),true);}
@@ -259,6 +260,13 @@ async function analyzeLocal(){
  catch(error){$('localAnalysisStatus').textContent=error.message||'Local analysis failed.';}
  finally{refreshAvailability();}
 }
+function applyPlaybackSpeed(){
+ const speed=Number($('playbackSpeed').value);
+ $('player').defaultPlaybackRate=speed;
+ $('player').playbackRate=speed;
+}
+$('playbackSpeed').addEventListener('change',applyPlaybackSpeed);
+$('player').addEventListener('loadedmetadata',applyPlaybackSpeed);
 $('generate').addEventListener('click',()=>record(false));$('preview').addEventListener('click',()=>record(true));
 $('analyzeLocal').addEventListener('click',analyzeLocal);
 $('reloadVoices').addEventListener('click',()=>fetchVoices());

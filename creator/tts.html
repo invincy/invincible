@@ -5,7 +5,7 @@
 <title>Voiceover · Invincible</title>
 <link rel="icon" href="/invincible/favicon.ico" sizes="any">
 <link rel="stylesheet" href="../site-nav.css?v=19">
-<link rel="stylesheet" href="tts.css?v=2026111007">
+<link rel="stylesheet" href="tts.css?v=2026111113">
 <link rel="stylesheet" href="studio-ui.css?v=3">
 <link rel="stylesheet" href="tts-forest.css?v=1">
 <link rel="stylesheet" href="image-generator.css?v=2026111103"><meta name="theme-color" content="#080f1b">
@@ -40,14 +40,14 @@
 <label for="preset">Delivery</label><select id="preset"><option value="natural">Natural</option><option value="sales">Sales · persuasive</option><option value="social">Social media · engaging</option><option value="empathetic">Empathetic · warm</option><option value="calm">Calm · reassuring</option><option value="documentary">Documentary · steady</option><option value="energetic">Excited · energetic</option><option value="dramatic">Dramatic · deliberate</option><option value="custom">Custom</option></select>
 <p id="deliveryHelp" class="help">These presets adjust speed and pitch only.</p>
 <div id="expressiveControls" hidden><label for="direction">Voice direction <span class="optional">optional</span></label><textarea id="direction" rows="3" maxlength="2000" placeholder="Describe the tone, emphasis or pronunciation you want…"></textarea><p class="help">Tone, emphasis and pronunciation · up to 2,000 bytes.</p></div>
-<label class="range-label" for="speed">Speed <output id="speedValue" for="speed">1.00×</output></label><input id="speed" type="range" min="0.25" max="2" step="0.05" value="1">
-<p id="speedHelp" class="help">Changes the voice’s synthesis speed.</p>
+<label class="range-label" for="speed"><span id="speedLabel">Generation speed</span> <output id="speedValue" for="speed">1.00×</output></label><input id="speed" aria-describedby="speedHelp" type="range" min="0.25" max="2" step="0.05" value="1">
+<p id="speedHelp" class="help">Applies when you generate new audio.</p>
 <details class="advanced"><summary>Fine adjustments</summary><div id="modelRow" hidden><label for="model">Model</label><select id="model"><option value="gemini-2.5-flash-tts">Gemini Flash · everyday</option><option value="gemini-2.5-pro-tts">Gemini Pro · higher control</option></select></div><div id="pitchRow"><label class="range-label" for="pitch">Pitch <output id="pitchValue" for="pitch">0 semitones</output></label><input id="pitch" type="range" min="-20" max="20" step="1" value="0"></div>
 <label class="range-label" for="volume">Volume <output id="volumeValue" for="volume">0 dB</output></label><input id="volume" type="range" min="-12" max="6" step="1" value="0">
 <div id="pauseRow"><label for="pause">Pause between paragraphs</label><select id="pause"><option value="0">Keep natural pauses</option><option value="250">Short · 250 ms</option><option value="500">Medium · 500 ms</option><option value="800">Long · 800 ms</option><option value="1500">Extended · 1.5 seconds</option></select></div></details>
 </fieldset></div></details>
 </section>
-<section class="panel result-panel" aria-labelledby="resultHeading"><div class="result-status"><h2 id="resultHeading">Listen &amp; export</h2><p id="generationStatus" role="status" aria-live="polite">Your recording will appear here.</p></div><div class="transport-actions"><div class="generate-actions"><button id="preview" type="button" class="secondary" disabled>Preview opening</button><button id="generate" type="button" class="primary" disabled>Generate MP3</button></div><p class="help quota-note">Uses paid Google TTS quota.</p></div><div id="recording" hidden><audio id="player" controls preload="metadata" aria-label="Generated voiceover"></audio><div class="download-row"><span id="recordingInfo"></span><a id="download" class="secondary" download>Download MP3 ↓</a></div></div></section>
+<section class="panel result-panel" aria-labelledby="resultHeading"><div class="result-status"><h2 id="resultHeading">Listen &amp; export</h2><p id="generationStatus" role="status" aria-live="polite">Your recording will appear here.</p></div><div class="transport-actions"><div class="generate-actions"><button id="preview" type="button" class="secondary" disabled>Preview opening</button><button id="generate" type="button" class="primary" disabled>Generate MP3</button></div><p class="help quota-note">Uses paid Google TTS quota.</p></div><div id="recording" hidden><audio id="player" controls preload="metadata" aria-label="Generated voiceover"></audio><div class="playback-controls"><label for="playbackSpeed">Playback speed</label><select id="playbackSpeed" aria-describedby="playbackHelp"><option value="0.75">0.75×</option><option value="1" selected>1.00×</option><option value="1.2">1.20×</option><option value="1.4">1.40×</option><option value="1.55">1.55×</option><option value="1.75">1.75×</option><option value="2">2.00×</option></select><span id="playbackHelp" class="help">Changes listening speed only. The MP3 download keeps its original pace.</span></div><div class="download-row"><span id="recordingInfo"></span><a id="download" class="secondary" download>Download MP3 ↓</a></div></div></section>
 <button id="analyzeLocal" type="button" class="secondary" disabled>Analyze with Local AI</button><p id="localAnalysisStatus" class="help" role="status" aria-live="polite"></p><pre id="localAnalysisResult" hidden></pre>
 <section id="voiceoverHistory" class="panel history-panel" hidden aria-labelledby="historyHeading" tabindex="-1">
 <div class="panel-heading"><h2 id="historyHeading">Voiceover history</h2><div class="history-heading-actions"><a class="editor-link" href="#scriptHeading">Narration ↑</a><button id="historyRefresh" type="button" class="quiet" aria-label="Refresh history">Refresh</button></div></div>
@@ -57,6 +57,6 @@
 </section>
 </div>
 </main>
-<script type="module" src="tts.js?v=2026111112"></script>
+<script type="module" src="tts.js?v=2026111113"></script>
 <script type="module" src="tts-forest.js?v=1"></script>
 </body></html>

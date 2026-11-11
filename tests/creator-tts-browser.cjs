@@ -115,6 +115,11 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   await page.locator('#model').selectOption('gemini-2.5-pro-tts');
   await page.locator('#preview').click();await page.locator('#generationStatus').filter({hasText:'Preview ready'}).waitFor();
   const expressive=await page.evaluate(()=>window.lastTtsRequest);
+  assert.equal(await page.locator('#speedLabel').innerText(),'Gemini pace request');
+  const downloadUrl=await page.locator('#download').getAttribute('href');
+  await page.locator('#playbackSpeed').selectOption('1.4');
+  assert.equal(await page.locator('#player').evaluate(a=>a.playbackRate),1.4);
+  assert.equal(await page.locator('#download').getAttribute('href'),downloadUrl);
   assert.equal(expressive.engine,'gemini');assert.equal(expressive.delivery,'sales');assert.equal(expressive.direction,'Warm and confident.');assert.equal(expressive.speed,1.35);assert.equal(expressive.pitch,0);assert.equal(expressive.paragraphPause,0);assert.equal(expressive.modelName,'gemini-2.5-pro-tts');
   await page.waitForTimeout(350);await page.reload();await page.locator('#accountStatus').filter({hasText:'voices available'}).waitFor();
   await page.locator('#voiceSettings > summary').click();
