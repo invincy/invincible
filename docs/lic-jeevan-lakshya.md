@@ -163,3 +163,5 @@ Verification covers the real plan-card entry in Chromium, all 15 decoded recordi
 The illustrated scenario includes the Term Rider. The spoken payout starts with the in-force policy condition and the premiums-stop step follows it. Both maturity cards and recordings say “declared bonuses.” The numbered notes explain the in-force rider condition and LIC bonus declarations, including that Final Additional Bonus applies if declared. The benefit calculation and base-plan calculator use the same amounts as before.
 
 The presentation plays each finished recording at 1.2× with pitch preservation enabled. This playback rate is separate from the Voiceover Studio pace setting. Scene changes still follow the end of each clip, including after pause and resume.
+
+The four goal coins now spread once into a staggered row and hold those positions through the plan narration and goal selection. The father and daughter remain visible during the opening and planning scenes and fade during the death scenario.

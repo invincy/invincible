@@ -1169,7 +1169,6 @@ button:focus-visible,a:focus-visible{outline:2px solid #fff1a3;outline-offset:3p
 [data-flow-step="intro"][data-opening="loading"] #goalCoin{opacity:0}
 [data-flow-step="intro"][data-opening="playing"] #goalCoin{animation:coinSettle 1s cubic-bezier(.16,1,.3,1) 1.3s both}
 #goalCoin::before{inset:12%;background:radial-gradient(circle,#ffe09044,transparent 72%)}
-[data-goals-open="true"] #goalCoin{filter:brightness(.68) drop-shadow(0 0 18px #ffd97f66)}
 [data-flow-step="configure"] #goalCoin{opacity:.6}
 [data-flow-step="details"] #goalCoin{opacity:.25}
 [data-story-step="3"] #goalCoin #storyGoal{filter:grayscale(1) drop-shadow(0 0 12px #d9e8ff55)}
@@ -1177,11 +1176,6 @@ button:focus-visible,a:focus-visible{outline:2px solid #fff1a3;outline-offset:3p
 #goalHint{position:absolute;top:calc(40% + min(94px,25vw));left:0;width:100%;z-index:25;margin:0;text-align:center;font-size:.68rem;animation:cueIn .55s ease-out both;transition:opacity .3s}
 [data-goals-open="true"] #goalHint{opacity:0}
 #goalChoices{position:absolute;inset:0;margin:0;z-index:36;pointer-events:none}
-#goalChoices .goal-card-btn{top:40%;left:50%;width:116px;height:116px;opacity:0;transform:translate(-50%,-50%) scale(.55);transition:transform .7s cubic-bezier(.16,1,.3,1),opacity .35s}
-[data-goals-open="true"] #goalChoices .goal-card-btn{opacity:1;pointer-events:auto}
-[data-goals-open="true"] #goalChoices .goal-card-btn:nth-child(1){transform:translate(calc(-50% - 98px),-28px);transition-delay:.02s}
-[data-goals-open="true"] #goalChoices .goal-card-btn:nth-child(2){transform:translate(calc(-50% + 98px),-28px);transition-delay:.1s}
-[data-goals-open="true"] #goalChoices .goal-card-btn:nth-child(3){transform:translate(-50%,112px);transition-delay:.18s}
 .story-family,.story-road{animation:none}
 [data-flow-step="intro"][data-opening="loading"] .story-family,[data-flow-step="intro"][data-opening="loading"] .story-road{opacity:0}
 [data-flow-step="intro"][data-opening="playing"] .story-family{animation:familyIn 1.5s cubic-bezier(.16,1,.3,1) .2s both}
@@ -1191,7 +1185,7 @@ button:focus-visible,a:focus-visible{outline:2px solid #fff1a3;outline-offset:3p
 #protectionPanel .benefit-pill{transition:opacity .6s,border-color .6s,box-shadow .6s,background .6s,padding .55s,min-height .55s}
 #protectionPanel .benefit-pill small{display:block;max-height:48px;opacity:1;overflow:hidden;transition:max-height .5s,opacity .3s,margin .5s}
 #protectionPanel .is-settled small{display:block;max-height:0;opacity:0;margin-top:0}
-@media(max-height:650px){.layer-headline{height:88px;min-height:88px}#goalChoices .goal-card-btn{width:94px;height:94px}[data-goals-open="true"] #goalChoices .goal-card-btn:nth-child(1){transform:translate(calc(-50% - 78px),-20px)}[data-goals-open="true"] #goalChoices .goal-card-btn:nth-child(2){transform:translate(calc(-50% + 78px),-20px)}[data-goals-open="true"] #goalChoices .goal-card-btn:nth-child(3){transform:translate(-50%,100px)}}
+@media(max-height:650px){.layer-headline{height:88px;min-height:88px}}
 
 [data-flow-step="intro"] #goalCoin,[data-flow-step="selected"] #goalCoin{z-index:32}
 
@@ -1200,10 +1194,6 @@ button:focus-visible,a:focus-visible{outline:2px solid #fff1a3;outline-offset:3p
 #goalCoin::after{content:'';position:absolute;inset:17%;border-radius:50%;clip-path:circle(50%);pointer-events:auto}
 #goalCoin:disabled::after{pointer-events:none}
 [data-goals-open="true"] #goalHint{animation:none;opacity:0;pointer-events:none}
-[data-goals-open="true"] #goalChoices .goal-card-btn:nth-child(1){transform:translate(calc(-50% - 98px),84px)}
-[data-goals-open="true"] #goalChoices .goal-card-btn:nth-child(2){transform:translate(calc(-50% + 98px),84px)}
-[data-goals-open="true"] #goalChoices .goal-card-btn:nth-child(3){transform:translate(-50%,224px)}
-@media(max-height:650px){[data-goals-open="true"] #goalChoices .goal-card-btn:nth-child(1){transform:translate(calc(-50% - 78px),72px)}[data-goals-open="true"] #goalChoices .goal-card-btn:nth-child(2){transform:translate(calc(-50% + 78px),72px)}[data-goals-open="true"] #goalChoices .goal-card-btn:nth-child(3){transform:translate(-50%,188px)}}
 
 [data-capturing="true"] #goalHint{animation:none;opacity:0;pointer-events:none}
 
@@ -1220,44 +1210,45 @@ button:focus-visible,a:focus-visible{outline:2px solid #fff1a3;outline-offset:3p
 
 #goalHint{left:50%;width:max-content;max-width:90%;transform:translateX(-50%);padding:5px 11px;border:1px solid #ffe59444;border-radius:999px;background:#102458c9;font-size:.65rem;text-shadow:none;backdrop-filter:blur(8px)}
 
-[data-opening="dreams"] #goalChoices .goal-card-btn{opacity:1;pointer-events:none;transition:transform .9s cubic-bezier(.16,1,.3,1),opacity .6s}
-[data-opening="dreams"] #goalChoices .goal-card-btn:nth-child(1){transition-delay:.15s}
-[data-opening="dreams"] #goalChoices .goal-card-btn:nth-child(2){transition-delay:.33s}
-[data-opening="dreams"] #goalChoices .goal-card-btn:nth-child(3){transition-delay:.51s}
-[data-opening="merging"] #goalChoices .goal-card-btn{transform:translate(-50%,-50%) scale(.3);opacity:0;transition:transform .75s cubic-bezier(.16,1,.3,1),opacity .7s}
 #selectionPanel{padding:14px 18px}#selectionPanel p{margin-bottom:0}
-
-[data-opening="merging"] #goalChoices{z-index:23}
 
 /* Shared portrait composition: path.png arrow tip is (268,55) on its 500px canvas. */
 #stageContainer{--coin-x:50%;--coin-y:33%;--coin-size:clamp(150px,48vw,210px)}
 #goalCoin,[data-flow-step="intro"] #goalCoin{left:var(--coin-x);top:var(--coin-y);width:var(--coin-size);height:var(--coin-size)}
 .story-road{left:calc(var(--coin-x) - 81.472%);top:calc(var(--coin-y) - 8.8%);bottom:auto;width:152%;height:80%;max-width:none}
-#goalChoices .goal-card-btn{left:var(--coin-x);top:var(--coin-y)}
 #goalHint{top:calc(var(--coin-y) + var(--coin-size) * .34 + 8px)}
 
 /* The first line opens on the family, then the path and four goal coins. */
-[data-flow-step="intro"] .story-family{animation:none;transition:opacity .55s ease}
-[data-flow-step="intro"]:is([data-opening="dreams"],[data-opening="merging"],[data-opening="plan"],[data-opening="settled"]) .story-family{animation:none;opacity:0}
+.story-family{transform-origin:center bottom;transition:opacity 1.5s,transform 1.5s,scale .65s ease}
+[data-flow-step="intro"] .story-family{scale:.88}
 [data-flow-step="intro"][data-opening="family"] .story-road,
 [data-flow-step="intro"]:is([data-opening="family"],[data-opening="path"]) #goalCoin{opacity:0}
 [data-flow-step="intro"][data-opening="path"] .story-road{animation:roadIn 1.05s cubic-bezier(.16,1,.3,1) both}
 
 #goalChoices .goal-card-btn{
- --goal-column:min(24vw,104px);
- --goal-row:clamp(76px,13dvh,108px);
- width:min(27vw,108px);
- height:min(27vw,108px);
+ --goal-row:calc(var(--coin-size) * .53);
+ left:var(--coin-x);
+ top:var(--coin-y);
+ width:var(--goal-diameter);
+ height:var(--goal-diameter);
+ opacity:0;
+ transform:translate(-50%,-50%) scale(.45);
+ transition:left .8s cubic-bezier(.16,1,.3,1),top .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1),opacity .4s ease;
 }
-#goalChoices .goal-card-btn:nth-child(odd){--goal-x:calc(-1 * var(--goal-column))}
-#goalChoices .goal-card-btn:nth-child(even){--goal-x:var(--goal-column)}
-#goalChoices .goal-card-btn:nth-child(-n+2){--goal-y:var(--goal-row)}
-#goalChoices .goal-card-btn:nth-child(n+3){--goal-y:calc(var(--goal-row) + clamp(106px,19dvh,148px))}
-#stageContainer:is([data-opening="dreams"],[data-goals-open="true"]) #goalChoices .goal-card-btn{
- transform:translate(calc(-50% + var(--goal-x)),calc(-50% + var(--goal-y)));
+#goalChoices [data-goal="education"]{--goal-x:14%;--goal-y:calc(var(--goal-row) - 10px);--goal-diameter:clamp(49px,17vw,73px);--goal-delay:.06s}
+#goalChoices [data-goal="career"]{--goal-x:38%;--goal-y:var(--goal-row);--goal-diameter:clamp(53px,18.5vw,79px);--goal-delay:.18s}
+#goalChoices [data-goal="marriage"]{--goal-x:62%;--goal-y:calc(var(--goal-row) - 3px);--goal-diameter:clamp(49px,17.5vw,75px);--goal-delay:.13s}
+#goalChoices [data-goal="other"]{--goal-x:86%;--goal-y:calc(var(--goal-row) - 16px);--goal-diameter:clamp(46px,16vw,68px);--goal-delay:.26s}
+#stageContainer[data-flow-step="intro"]:is([data-opening="dreams"],[data-opening="plan"],[data-opening="settled"]) #goalChoices .goal-card-btn{
+ left:var(--goal-x);
+ top:calc(var(--coin-y) + var(--goal-y));
+ transform:translate(-50%,-50%);
+ opacity:1;
+ transition-delay:var(--goal-delay);
 }
-[data-opening="dreams"] #goalChoices .goal-card-btn:nth-child(4){transition-delay:.7s}
-[data-goals-open="true"] #goalChoices .goal-card-btn:nth-child(4){transition-delay:.24s}
+#stageContainer[data-goals-open="true"] #goalChoices .goal-card-btn{pointer-events:auto}
+#stageContainer[data-capturing="true"] #goalChoices .goal-card-btn{opacity:0;transition-delay:0s}
+#goalChoices .goal-card-btn span{font-size:clamp(.56rem,2.8vw,.7rem)}
 [data-audio-status="blocked"] #advisorAudioBtn{border-color:#ffe585;box-shadow:0 0 12px #ffe58575}
 
 .preview-panel .pitch-footnote,.pitch-footnote{

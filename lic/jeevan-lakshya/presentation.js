@@ -65,16 +65,14 @@ function voiceCue(key,done,fallback,onStart){stage.dataset.voiceCue=key;stage.di
 function beginOpening(){
  stage.dataset.opening='family';
  voiceCue('intro.dreams',()=>{
-  stage.dataset.opening='merging';
-  later(750,()=>{
-   stage.dataset.opening='plan';
-   $('subtitleText').hidden=false;
-   $('subtitleText').textContent='Savings + life cover, planned around a goal.';
-   voiceCue('intro.plan',chooseGoalReady,2800);
-  });
+  stage.dataset.opening='plan';
+  $('subtitleText').hidden=false;
+  $('subtitleText').textContent='Savings + life cover, planned around a goal.';
+  voiceCue('intro.plan',chooseGoalReady,2800);
  },4200,()=>{
   later(300,()=>{stage.dataset.opening='path';});
-  later(1350,()=>{stage.dataset.opening='dreams';});
+  later(1350,()=>{stage.dataset.opening='coin';});
+  later(1550,()=>{stage.dataset.opening='dreams';});
  });
 }
 function chooseGoalReady(){stage.dataset.opening='settled';ready=true;$('goalHint').hidden=false;$('goalHint').textContent='Choose your child’s goal';$('subtitleText').hidden=true;control();openGoals(true);voiceCue('goal.choose');}
@@ -164,7 +162,10 @@ function showBenefit(index){
 }
 function back(){const previous={selected:'intro',configure:'intro',preview:'configure',whatif:'preview',protection:'whatif',details:'protection'}[state];if(previous)setState(previous);else if(capturing)setState('intro');}
 function next(){if(transitioning||beatMoving)return;if(state==='protection'&&!ready){if(paused)resumeTimeline();showBenefit(benefitIndex+1);return;}if(!ready||capturing)return;const target={preview:'whatif',whatif:'protection',protection:'details'}[state];if(target)setState(target);else if(state==='details')location.href=$('fullCalculatorLink').href;}
-coin.addEventListener('click',()=>{if(!capturing&&state==='intro')openGoals(coin.getAttribute('aria-expanded')!=='true');else if(state==='selected')setState('intro');});
+coin.addEventListener('click',()=>{
+ if(state==='intro'&&!choices.inert)choices.querySelector('button').focus();
+ else if(state==='selected')setState('intro');
+});
 document.querySelectorAll('[data-goal]').forEach(b=>b.addEventListener('click',async()=>{
  if(capturing||state!=='intro')return;stopVoice();capturing=true;ready=false;control();const token=generation;
  const source=b.querySelector('img'),from=source.getBoundingClientRect(),to=coinLanding(source.getAttribute('src'));
@@ -182,7 +183,7 @@ $('advisorAudioBtn').addEventListener('click',()=>{
  }else narration.toggle();
 });
 $('storyModeToggle').addEventListener('click',()=>{if(paused){resumeTimeline();return;}if(state==='intro'){cancelSequence();chooseGoalReady();return;}if(state==='protection'&&ready){paused=false;setState('protection');}else if(paused)resumeTimeline();else pauseTimeline();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){openGoals(false);if(state==='intro')coin.focus();}if(e.target.closest('button,a,input,select,textarea')||e.altKey||e.ctrlKey||e.metaKey)return;if(e.key==='ArrowRight'){e.preventDefault();next();}if(e.key==='ArrowLeft'){e.preventDefault();back();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&state==='intro'&&!coin.disabled)coin.focus();if(e.target.closest('button,a,input,select,textarea')||e.altKey||e.ctrlKey||e.metaKey)return;if(e.key==='ArrowRight'){e.preventDefault();next();}if(e.key==='ArrowLeft'){e.preventDefault();back();}});
 const wrapper=document.querySelector('.app-viewport-wrapper');function fit(){const vv=visualViewport;const height=vv&&Math.abs(vv.scale-1)<.01?vv.height:innerHeight;wrapper.style.setProperty('--presentation-height',Math.floor(height)+'px');if(stage.dataset.ready==='true')alignMaturity();}fit();addEventListener('resize',fit);visualViewport?.addEventListener('resize',fit);
 addEventListener('pagehide',()=>{cancelSequence();stopVoice();});document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseTimeline();});
 const debug=new URLSearchParams(location.search).get('debug')==='1';$('inspectorFab').hidden=!debug;$('inspectorFab').addEventListener('click',()=>$('inspectorPanel').classList.toggle('open'));$('toggle3DExploded').addEventListener('click',()=>stage.classList.toggle('exploded-view'));$('toggleDeviceFrame').addEventListener('click',()=>$('deviceFrame').classList.toggle('mode-fullscreen'));document.querySelectorAll('.layer-toggle-input').forEach(input=>input.addEventListener('change',()=>{const target=$(input.dataset.target);if(target){target.style.opacity=input.checked?'1':'0';target.style.pointerEvents=input.checked?'':'none';}}));
