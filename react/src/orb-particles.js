@@ -36,13 +36,15 @@ function appendFineParticles(particles,offset){
 }
 
 export function createOrbParticles(tier){
- const {streams,trailCount,wideStreams,cellStreams,flecks,pointSize=1,brightFlecks=false,totalPoints=0}=tier,wideTrailCount=224,cellTrailCount=240;
+ const {streams,trailCount,wideStreams,cellStreams,flecks,pointSize=1,brightFlecks=false,totalPoints=0,highlightTrails=false}=tier,wideTrailCount=224,cellTrailCount=240;
  const count=streams*trailCount+wideStreams*wideTrailCount+cellStreams*cellTrailCount+flecks;
  const particles=new Float32Array(Math.max(count,totalPoints)*5);let offset=0;
  const trail=(phase,lane,speed,length,alpha)=>{
   let distance=0;
   for(let point=0;point<length;point++){
-   const tail=point/(length-1),size=3.4*(1-.55*tail),opacity=alpha*Math.pow(1-tail,1.35)*(brightFlecks ? .75 : 1);
+   const tail=point/(length-1),size=3.4*(1-.55*tail);
+   const baseOpacity=alpha*Math.pow(1-tail,1.35)*(brightFlecks ? .75 : 1);
+   const opacity=highlightTrails?Math.min(.75,baseOpacity*(1+.32*(1-tail)**2)):baseOpacity;
    // Sampling shrinks with the point radius: longer heads, tightly connected fading tails.
    particles.set([phase-distance,lane,speed,size*pointSize,opacity],offset);offset+=5;distance+=.001*(1-.55*tail);
   }

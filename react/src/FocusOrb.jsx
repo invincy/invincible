@@ -138,6 +138,7 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=fa
    gl.viewport(0,0,c.width,c.height);gl.uniformMatrix4fv(uniforms.projection,false,perspective(rect.width/rect.height));gl.uniform1f(uniforms.pixelRatio,ratio);gl.uniform1f(uniforms.pointScale,Math.max(.85,Math.min(1.5,rect.width/480)));
    const compact=rect.width<100;
    const tier=orbParticleTier(mobile.matches||compact,lightweight||compact,richParticles&&!compact,dashboardMotion&&!compact);
+   tier.highlightTrails=dashboardMotion&&!compact&&theme==='gold';
    const key=JSON.stringify(tier);
    if(particleTier!==key){const particles=createOrbParticles(tier);particleCount=particles.length/5;gl.bufferData(gl.ARRAY_BUFFER,particles,gl.STATIC_DRAW);particleTier=key}
    // Resizing clears a canvas, so replace its contents immediately rather than waiting for a paced frame.

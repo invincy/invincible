@@ -50,3 +50,17 @@ test('the whole globe keeps turning beyond two seconds as startup momentum decay
  assert.ok(speed(2)>.2);
  assert.ok(speed(5)<.01);
 });
+
+test('gold highlights brighten trail heads and leave positions, sizes and fine dots intact',()=>{
+ const tier=orbParticleTier(false,false,true,true);
+ const original=createOrbParticles(tier);
+ const highlighted=createOrbParticles({...tier,highlightTrails:true});
+ const trailPoints=tier.streams*tier.trailCount+tier.wideStreams*224+tier.cellStreams*240;
+ assert.ok(highlighted[4]>original[4]);
+ assert.equal(highlighted.length,original.length);
+ for(let index=0;index<trailPoints*5;index+=5){
+  for(let field=0;field<4;field++)assert.equal(highlighted[index+field],original[index+field]);
+  assert.ok(highlighted[index+4]>=original[index+4]);
+ }
+ assert.deepEqual(highlighted.subarray(trailPoints*5),original.subarray(trailPoints*5));
+});

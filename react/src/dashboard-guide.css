@@ -145,6 +145,10 @@
     radial-gradient(ellipse at 81% 78%, #7852271e, transparent 46%),
     #000;
 }
+.v2-shell > .v2-ambient-field.has-globe > .v2-guide-particles {
+  mask-image: radial-gradient(circle var(--globe-radius) at var(--globe-x) var(--globe-y),
+    #0006 0 58%, #000 120%);
+}
 .v2-shell > .v2-topbar {
   background: linear-gradient(180deg, #111c25f5, #05090ef2);
   box-shadow: 0 14px 32px #000c, inset 0 1px #b6eef523;

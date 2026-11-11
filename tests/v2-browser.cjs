@@ -287,6 +287,10 @@ async function checkGlobeWithoutWebGL(browser,base) {
         assert.equal(await page.getByRole('navigation',{name:'Explore spaces'}).getByRole('link').count(),2);
         assert.equal(await page.locator('.focus-orb-3d canvas').count(),1);
         await page.waitForFunction(()=>!document.querySelector('.v2-orb').classList.contains('is-compact'));
+        await page.waitForFunction(()=>{
+          const canvas=document.querySelector('.v2-ambient-field.has-globe > canvas');
+          return canvas&&getComputedStyle(canvas).maskImage.startsWith('radial-gradient(');
+        });
         await page.evaluate(()=>window.originalOrb=document.querySelector('.focus-orb-3d canvas'));
         await page.waitForTimeout(150);
         if(await page.locator('.focus-orb-3d').getAttribute('data-ready')==='true') {

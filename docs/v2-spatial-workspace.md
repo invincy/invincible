@@ -273,3 +273,5 @@ The packaged Journal notebook and individual LIC workspaces and presentations st
 Local browser checks covered Dashboard touch navigation, Finance desktop and phone panels with fixture data, Map Editor editing and responsive layout, Garage records and dialogs, Portfolio, Reminders, and Task and Workday controls. Release 2026.11.11.5 includes these layouts. Signed-in production data and physical phone gestures remain unverified.
 
 Release 2026.11.11.6 increases the desktop particle field by 10% around the existing shortcut positions. The phone layout uses its existing diameter.
+
+The Dashboard fades the ambient network behind the visible globe, using its current position on desktop and mobile. The gold filament heads are slightly brighter. Particle positions, counts, animation and shortcut positions are unchanged.
