@@ -5,9 +5,11 @@
 Phones and tablets use the account's remote laptop connection by default,
 including browsers with an older saved local-mode preference. A compact
 laptop status gives the phone one Retry action when offline. Desktop
-connection switching and manual pairing are in Advanced settings. Prompt
-drafting is collapsed under Help me write and appears when the connected
-local worker supports it. Retrying the saved remote connection uses the
+connection switching and manual pairing are in Advanced settings. The idea
+field and Generate prompt are visible directly below the connection controls.
+Desktop and mobile fill the editable image prompt from the same laptop Qwen
+endpoint. Remote drafting uses the existing authenticated task bridge and the
+restricted prompt-only route. Retrying the saved remote connection uses the
 existing status request and does not issue a pairing key. Forget laptop
 requires confirmation before clearing this browser's saved connection.
 

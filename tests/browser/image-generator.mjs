@@ -70,7 +70,7 @@ let browser;try{
  assert.equal(await page.locator('[data-image-generate]').isEnabled(),false,'Video Studio must not unlock an unpaired generator');
  await page.getByText('Advanced settings',{exact:true}).click();await page.getByText('Manual pairing',{exact:true}).click();await page.locator('[data-image-token]').fill(service.token);await page.locator('[data-image-connect]').click();await page.waitForSelector('[data-image-connection]:has-text("Laptop online")');
  const idea=page.getByRole('textbox',{name:'Describe your idea'}), prompt=page.getByRole('textbox',{name:'Prompt',exact:true});
- await page.getByText('Help me write',{exact:true}).click();
+ assert.ok(await page.getByLabel('Describe your idea').isVisible(),'Prompt drafting is visible without opening a menu');
  await idea.fill('A fortress at sunrise');
  await page.getByRole('button',{name:'Generate prompt',exact:true}).click();
  await page.getByText('Prompt ready. Edit it or click Generate.').waitFor();

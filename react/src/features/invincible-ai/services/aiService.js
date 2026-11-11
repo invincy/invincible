@@ -3,6 +3,7 @@ import{httpsCallable}from'firebase/functions';
 import{doc,onSnapshot}from'firebase/firestore';
 import{auth,db,functions}from'../../../firebase';
 import{isPhoneOrTablet}from'../../../../../shared/laptop-device.js';
+import{requestImagePrompt}from'../../../../../shared/image-prompt-task.mjs';
 
 const chat=httpsCallable(functions,'invincibleAiChat',{timeout:120000});
 const enqueueTask=httpsCallable(functions,'enqueueInvincibleAiTask',{timeout:30000});
@@ -36,6 +37,15 @@ export async function checkLaptopConnection(){
  return (await imageRelay({action:'status'})).data?.online===true;
 }
 export async function createLocalAgentPairing(agentId){const response=await pairAgent({agentId});return response.data}
+
+export function draftRemoteImagePrompt(idea,signal){
+ return requestImagePrompt(idea,{
+  getAccountId:()=>auth.currentUser?.uid,
+  enqueue:async data=>(await enqueueTask(data)).data,
+  subscribe:(uid,id,onData,onError)=>onSnapshot(doc(db,'users',uid,'aiTasks',id),snapshot=>onData(snapshot.data()),onError),
+  signal,
+ });
+}
 
 function waitForTask(taskId,timeoutMs=180000){
  const uid=auth.currentUser?.uid;if(!uid)throw Error('Sign in to Invincible before using Local Qwen.');

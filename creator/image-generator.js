@@ -1,5 +1,5 @@
 import { createLocalImageClient, waitForImage } from '../shared/local-image-client.js';
-import { createRemoteImageClient } from '../shared/remote-image-client.js';
+import { createRemoteImageClient } from '../shared/remote-image-client.js?v=2026111205';
 import { imageHistory } from '../shared/image-history.js';
 import { isPhoneOrTablet } from '../shared/laptop-device.js';
 
@@ -18,9 +18,9 @@ async function prepareReference(file) {
   } finally { bitmap.close(); }
 }
 
-export function mountConnectedImageGenerator(root, { getAccountId, callRelay, clientFactory = createLocalImageClient, ...options }) {
+export function mountConnectedImageGenerator(root, { getAccountId, callRelay, draftPrompt, clientFactory = createLocalImageClient, ...options }) {
   const local = clientFactory({ getAccountId, requireAccount: true });
-  const remote = createRemoteImageClient({ getAccountId, call: callRelay });
+  const remote = createRemoteImageClient({ getAccountId, call: callRelay, draftPrompt });
   const preference = 'invincible.image-connection.' + getAccountId();
   let selected;
   try { selected = sessionStorage.getItem(preference); } catch {}
@@ -56,16 +56,18 @@ export function mountImageGenerator(root, { client = createLocalImageClient(), g
   root.innerHTML = `<div data-image-form><header><h3>Create image</h3></header>
     <div class="image-connection-bar" data-connection-state="checking">
       <div class="image-laptop-status"><span class="image-laptop-icon" aria-hidden="true"></span><p data-image-connection role="status">Checking laptop…</p></div>
-      <button type="button" data-image-pair hidden>Retry</button>
+      <div class="image-laptop-actions">
+        <button type="button" data-image-pair hidden>Retry</button>
+        <button type="button" data-image-new-pair aria-label="Pair this browser" title="Pair this browser" hidden>＋</button>
+      </div>
     </div>
-    <label>Prompt<textarea data-image-prompt rows="4" maxlength="1500" required placeholder="A hill fortress at sunrise…"></textarea></label>
-    <button type="button" data-image-clear aria-label="Clear prompt">Clear</button>
-    <details class="image-prompt-assistant" data-image-assistant hidden>
-      <summary>Help me write</summary>
+    <section class="image-prompt-assistant" data-image-assistant ${client.draftPrompt ? '' : 'hidden'}>
       <label>Describe your idea<textarea data-image-idea rows="3" maxlength="1500" placeholder="Describe the image you want…"></textarea></label>
       <button type="button" data-image-draft disabled>Generate prompt</button>
       <p data-image-draft-status role="status"></p>
-    </details>
+    </section>
+    <label>Prompt<textarea data-image-prompt rows="4" maxlength="1500" required placeholder="A hill fortress at sunrise…"></textarea></label>
+    <button type="button" data-image-clear aria-label="Clear prompt">Clear</button>
     <div class="image-reference" ${client.supportsReference ? '' : 'hidden'}>
       <label>Reference image <input type="file" accept="image/png,image/jpeg" data-image-reference></label>
       <p data-image-reference-status role="status">Optional · square crop · keep close to reference</p>
@@ -94,7 +96,7 @@ export function mountImageGenerator(root, { client = createLocalImageClient(), g
     for (const input of root.querySelectorAll('input[name=image-frame]')) input.disabled = busy || (!!reference && input.value !== 'square');
     $('[data-image-generate]').disabled = busy || drafting || preparingReference || !connected || pairing;
     $('[data-image-regenerate]').disabled = busy || drafting || preparingReference;
-    $('[data-image-draft]').disabled = busy || drafting || !connected || !capabilities?.draftPrompt || !client.draftPrompt || !$('[data-image-idea]').value.trim();
+    $('[data-image-draft]').disabled = busy || drafting || pairing || !connected || !capabilities?.draftPrompt || !client.draftPrompt || !$('[data-image-idea]').value.trim();
     $('[data-image-reference]').disabled = busy || !capabilities?.referenceImage;
     $('[data-image-generate]').disabled ||= !!reference && !capabilities?.referenceImage;
   };
@@ -109,10 +111,10 @@ export function mountImageGenerator(root, { client = createLocalImageClient(), g
     $('[data-image-connection]').textContent = {
       online: 'Laptop online', offline: 'Laptop offline', unpaired: 'Pair a laptop', checking: 'Checking laptop…'
     }[state];
-    $('[data-image-pair]').hidden = state === 'online' || state === 'checking';
-    $('[data-image-pair]').textContent = state === 'unpaired' ? 'Pair' : 'Retry';
+    $('[data-image-pair]').hidden = state === 'checking';
+    $('[data-image-pair]').textContent = state === 'unpaired' ? 'Pair' : state === 'online' ? 'Refresh' : 'Retry';
+    $('[data-image-new-pair]').hidden = remote || !saved || state === 'checking';
     $('[data-image-forget]').hidden = !saved;
-    $('[data-image-assistant]').hidden = remote || !connected || !capabilities?.draftPrompt || !client.draftPrompt;
     if (connected && !remote && !capabilities?.referenceImage) {
       $('[data-image-reference-status]').textContent = 'Update the laptop worker to use a reference.';
     }
@@ -252,12 +254,12 @@ export function mountImageGenerator(root, { client = createLocalImageClient(), g
   root.querySelectorAll('[data-image-idea],[data-image-prompt],[data-image-seed],input[name=image-frame]').forEach(control => control.addEventListener('input', changed));
   $('[data-image-clear]').onclick = () => { $('[data-image-prompt]').value = ''; changed(); $('[data-image-prompt]').focus(); };
   $('[data-image-draft]').onclick = async () => {
-    if (!current() || drafting || busy || !connected || !client.draftPrompt) return;
+    if (!current() || drafting || busy || !connected || !capabilities?.draftPrompt || !client.draftPrompt) return;
     const idea = $('[data-image-idea]').value.trim(), version = editVersion;
     if (!idea) return;
     drafting = true; lock(busy); draftStatus('Drafting with Qwen…');
     try {
-      const { prompt } = await client.draftPrompt(idea);
+      const { prompt } = await client.draftPrompt(idea, controller.signal);
       if (!current()) return;
       if (version !== editVersion) { draftStatus('Your edits were kept. Click Generate prompt to draft again.'); return; }
       if (typeof prompt !== 'string' || !prompt.trim() || prompt.length > 1500) throw Error('Qwen returned an invalid prompt.');
@@ -285,30 +287,36 @@ export function mountImageGenerator(root, { client = createLocalImageClient(), g
   $('[data-image-generate]').addEventListener('click', generate);
   $('[data-image-regenerate]').onclick = () => { pending = null; void generate(); };
   $('[data-image-switch]').onclick = () => { if (!busy) onSwitch?.(); };
-  $('[data-image-pair]').onclick = async () => {
+  async function connectLaptop({ pairBrowser = false } = {}) {
     if (pairing) return;
     pairing = true;
     $('[data-image-pair]').disabled = true;
+    $('[data-image-new-pair]').disabled = true;
     lock(busy);
-    const saved = remote || client.hasPairing?.();
-    $('[data-image-connection]').textContent = saved ? 'Checking laptop…' : 'Confirm in the popup';
+    const refresh = !pairBrowser && (remote || client.hasPairing?.());
+    const previousStatus = $('[data-image-connection]').textContent;
+    $('[data-image-connection]').textContent = refresh ? 'Checking laptop…' : 'Confirm in the popup';
     status('');
     try {
-      const session = await (saved ? client.connect() : client.pairInBrowser());
+      const session = await (refresh ? client.connect() : client.pairInBrowser());
       if (!current()) return;
       connection(session);
       if (!connected) status(session.storage.error);
     } catch (error) {
-      connection(null, error);
+      if (!pairBrowser) connection(null, error);
+      else if (current()) $('[data-image-connection]').textContent = previousStatus;
       status(error.message);
     } finally {
       pairing = false;
       if (current()) {
         $('[data-image-pair]').disabled = false;
+        $('[data-image-new-pair]').disabled = false;
         lock(busy);
       }
     }
-  };
+  }
+  $('[data-image-pair]').onclick = () => connectLaptop();
+  $('[data-image-new-pair]').onclick = () => connectLaptop({ pairBrowser: true });
   $('[data-image-forget]').onclick=()=>{
     if (!window.confirm('Forget the saved laptop connection in this browser? You’ll need to connect it again to use this laptop here.')) return;
     client.forget();

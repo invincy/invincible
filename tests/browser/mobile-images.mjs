@@ -22,6 +22,7 @@ try {
   await page.exposeFunction('fixtureRelay', data => {
     calls.push(data);
     if (data.action === 'status') return { online };
+    if (data.action === 'draft-test') return { id: 'draft-fixture' };
     if (data.action === 'enqueue') { polls = 0; return { job: { id, status: 'queued' } }; }
     if (data.action === 'job') {
       if (polls++ === 0) return { job: { id, status: 'running' } };
@@ -40,8 +41,18 @@ try {
         <main></main>
         <script type="module">
           import { mountConnectedImageGenerator } from '/invincible/creator/image-generator.js';
+          import { requestImagePrompt } from '/invincible/shared/image-prompt-task.mjs';
           mountConnectedImageGenerator(document.querySelector('main'), {
             getAccountId: () => 'test-owner', callRelay: window.fixtureRelay,
+            draftPrompt: (idea, signal) => requestImagePrompt(idea, {
+              getAccountId: () => 'test-owner',
+              enqueue: data => window.fixtureRelay({action: 'draft-test', ...data}),
+              subscribe: (uid, id, onData) => {
+                const timer = setTimeout(() => onData({status: 'completed', result: {prompt: 'An Indian fortress at sunrise'}}), 50);
+                return () => clearTimeout(timer);
+              },
+              signal,
+            }),
             getProjectId: () => 'isolated-test-project',
             onAttach: async file => { window.attachedBytes = [...new Uint8Array(await file.arrayBuffer())]; },
           });
@@ -58,12 +69,20 @@ try {
   assert.equal(await page.getByText('Manual pairing', { exact: true }).isVisible(), false);
   await page.getByText('Advanced settings', { exact: true }).click();
   assert.equal(await page.getByRole('button', { name: 'Set up on this laptop', exact: true }).isVisible(), false);
-  assert.equal(await page.getByText('Help me write', { exact: true }).isVisible(), false);
+  assert.equal(await page.getByRole('button', { name: 'Generate prompt', exact: true }).isEnabled(), false);
   await page.getByText('Advanced settings', { exact: true }).click();
   online = true;
   await page.getByRole('button', { name: 'Retry', exact: true }).click();
   await page.getByText('Laptop online', { exact: true }).waitFor();
-  await page.getByRole('textbox', { name: 'Prompt' }).fill('An Indian fortress at sunrise');
+  assert.equal(await page.getByRole('button', { name: 'Pair this browser' }).isVisible(), false);
+  await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+  await page.getByText('Laptop online', { exact: true }).waitFor();
+  await page.getByLabel('Describe your idea').fill('A fort at dawn');
+  await page.getByRole('button', { name: 'Generate prompt', exact: true }).click();
+  await page.getByText(/^Prompt ready/).waitFor();
+  assert.equal(await page.getByRole('textbox', { name: 'Prompt', exact: true }).inputValue(), 'An Indian fortress at sunrise');
+  assert.equal(calls.find(call => call.action === 'draft-test').command, 'invincible:image-prompt:v1:A fort at dawn');
+  assert.equal(calls.some(call => call.action === 'enqueue'), false, 'Drafting alone must not generate an image');
   await page.getByRole('radio', { name: /Portrait/ }).check();
   await generate.click();
   await page.getByText(/^Queued/).waitFor();
@@ -85,5 +104,5 @@ try {
   assert.equal(calls.filter(call => call.action === 'image').length, 1);
   assert.deepEqual(localRequests, []);
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
-  console.log('PASS: mobile remote images, offline state, status, verified PNG preview and download, project attachment, and failure without loopback.');
+  console.log('PASS: mobile prompt drafting and autofill, saved connection refresh, verified PNG preview and download, project attachment, and failure without loopback.');
 } finally { await browser.close(); }

@@ -3,6 +3,7 @@ import{mountConnectedImageGenerator}from'../../../../creator/image-generator.js'
 import{createLocalImageClient}from'../../../../shared/local-image-client.js';
 import{httpsCallable}from'firebase/functions';
 import{functions}from'../../firebase';
+import{draftRemoteImagePrompt}from'./services/aiService';
 import'../../../../creator/image-generator.css';
 
 const relay=httpsCallable(functions,'invincibleImageRelay');
@@ -13,7 +14,7 @@ export function ImageStudio({accountId,clientFactory=createLocalImageClient}){
  useEffect(()=>{
   if(!accountId||!host.current)return;
   const getAccountId=()=>account.current;
-  const panel=mountConnectedImageGenerator(host.current,{clientFactory,getAccountId,callRelay});
+  const panel=mountConnectedImageGenerator(host.current,{clientFactory,getAccountId,callRelay,draftPrompt:draftRemoteImagePrompt});
   return()=>panel.destroy();
  },[accountId,clientFactory]);
  return <section className="ai-image-studio" aria-label="Image Studio">{accountId?<div key={accountId} ref={host}/>:<p role="status">Sign in to create images.</p>}</section>;

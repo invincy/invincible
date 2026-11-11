@@ -32,7 +32,8 @@ try{
  await page.evaluate(()=>window.dispatchEvent(new MessageEvent('message',{origin:client.origin,source:window,data:{type:'invincible-local-pair',uid:'test-owner',nonce:'forged',token:'a'.repeat(40)}})));
  assert.equal(await page.evaluate(()=>client.hasPairing()),false,'Forged handoff ignored');
  await popup.locator('#connect').click();await page.waitForSelector('[data-image-connection]:has-text("Laptop online")');
- assert.equal(await page.locator('[data-image-pair]').isVisible(),false);
+ assert.equal(await page.getByRole('button',{name:'Refresh',exact:true}).isVisible(),true);
+ assert.equal(await page.getByRole('button',{name:'Pair this browser',exact:true}).isVisible(),true);
  await otherTab.getByText('Laptop online',{exact:true}).waitFor();assert.equal(await otherTab.locator('[data-image-generate]').isEnabled(),true,'An already-open tab connects without another popup');
  await page.locator('[data-image-prompt]').fill('Published-origin fixture illustration');await page.locator('[data-image-generate]').click();await page.waitForSelector('[data-image-status]:has-text("Completed")');
  assert.ok(await page.locator('[data-image-preview]').evaluate(image=>image.complete&&image.naturalWidth===512));assert.equal(backend.loads,1);assert.deepEqual(errors,[]);

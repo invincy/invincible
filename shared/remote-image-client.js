@@ -1,4 +1,4 @@
-export function createRemoteImageClient({ getAccountId, call }) {
+export function createRemoteImageClient({ getAccountId, call, draftPrompt }) {
   async function request(action, data) {
     const uid = getAccountId();
     if (!uid) throw Error('Sign in to generate images.');
@@ -14,11 +14,12 @@ export function createRemoteImageClient({ getAccountId, call }) {
   return {
     origin: 'firebase-image-relay',
     remote: true,
+    draftPrompt,
     pollInterval: 2500,
     async connect() {
       const uid = getAccountId();
       const { online } = await request('status');
-      return { uid, storage: { available: online, error: online ? '' : 'Laptop offline. Open Invincible Image Studio on your laptop.' } };
+      return { uid, capabilities: { draftPrompt: Boolean(draftPrompt) }, storage: { available: online, error: online ? '' : 'Laptop offline. Open Invincible Image Studio on your laptop.' } };
     },
     generate: (args, idempotencyKey) => request('enqueue', { arguments: args, idempotencyKey }),
     job: id => request('job', { id }),

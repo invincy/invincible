@@ -5,6 +5,7 @@
 .image-generator .image-connection-bar{align-items:center;flex-direction:row;flex-wrap:wrap;gap:8px;margin-bottom:14px;padding:7px 10px}
 .image-generator .image-connection-bar button{width:auto;min-height:40px;padding:6px 12px}
 .image-laptop-status{display:flex;align-items:center;gap:10px;min-width:0}
+.image-laptop-actions{display:flex;gap:6px}
 .image-laptop-icon{position:relative;display:block;flex:0 0 17px;width:17px;height:12px;border:1px solid currentColor;border-radius:2px;color:#9ebdc4}
 .image-laptop-icon::before{position:absolute;content:"";height:1px;background:currentColor;bottom:-4px;left:-3px;right:-3px}
 .image-laptop-icon::after{position:absolute;content:"";height:5px;width:5px;border-radius:50%;right:2px;top:2px;background:currentColor}
