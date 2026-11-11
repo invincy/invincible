@@ -76,6 +76,8 @@
 .v2-orb:not(.is-compact) .orb-theme-emerald .orb-3d-fallback{color:#86e7aa}
 @media (width > 900px) and (pointer: fine){
   .v2-guide-scene{--orb-size:clamp(362.25px,min(60.375vw,75.46875dvh),966px)}
+  .v2-orb:not(.is-compact) .focus-orb-3d{inset:-31.4%}
+  .v2-orb-grab{inset:-5%}
 }
 
 /* Keep the irregular page map inside the visible globe, not the canvas corners.

@@ -121,6 +121,14 @@ async function checkOrbGestures(browser, base, touch) {
     },width);
     const originalNarrowWidth=()=>page.locator('.v2-guide-scene').evaluate(scene=>Math.min(scene.clientWidth,640));
     await assertWidth(touch?await originalNarrowWidth():754.6875);
+    const ratio=await orb.evaluate(element=>{
+      const globe=element.querySelector('.focus-orb-3d').getBoundingClientRect();
+      const anchor=element.getBoundingClientRect();
+      const shortcuts=document.querySelector('.v2-constellation').getBoundingClientRect();
+      return {globe:globe.width/anchor.width,shortcuts:shortcuts.width/anchor.width};
+    });
+    assert.ok(Math.abs(ratio.globe-(touch?1.48:1.628))<.005,'Only the desktop particle field grows');
+    assert.ok(Math.abs(ratio.shortcuts-1)<.005,'The shortcut layout retains its diameter');
     await orb.locator('[data-ready=true]').waitFor();
     await page.waitForTimeout(2300);
     const {x,y}=await orb.evaluate(element=>{
