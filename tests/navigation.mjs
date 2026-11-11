@@ -6,7 +6,7 @@ const navigation=await import('data:text/javascript;base64,'+Buffer.from(source)
 test('React and standalone navigation share validated tab preferences',()=>{
  const read=value=>navigation.readMobileTabs({getItem:()=>value});
  assert.deepEqual(read('["garage","finance","creator"]'),['garage','finance','creator']);
- for(const value of ['null','bad json','["ai","ai","journal"]','["ai","portfolio","journal"]','["ai"]','["ai","missing","journal"]'])assert.deepEqual(read(value),['ai','workday','journal']);
+ for(const value of ['null','bad json','["ai","ai","journal"]','["ai"]','["ai","missing","journal"]'])assert.deepEqual(read(value),['ai','workday','journal']);
  assert.deepEqual(navigation.readMobileTabs({getItem:()=>{throw Error('Storage unavailable')}}),['ai','workday','journal']);
  const defaults=read(null);defaults[0]='garage';assert.deepEqual(read(null),['ai','workday','journal']);
 });
@@ -21,3 +21,5 @@ test('Route matching distinguishes Journal, Finance, Dashboard, and nested LIC',
  assert.equal(navigation.pageForPath('/invincible/journal/finance.html').id,'finance');
  assert.equal(navigation.pageForPath('/unknown/').id,'dashboard');
 });
+
+test('Native portfolio route and mobile tab',()=>{assert.equal(navigation.pageForPath('/invincible/portfolio.html').id,'portfolio');assert.deepEqual(navigation.readMobileTabs({getItem:()=> '["ai","portfolio","journal"]'}),['ai','portfolio','journal'])});

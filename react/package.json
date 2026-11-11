@@ -11,6 +11,7 @@
     "preview:v2": "vite preview --config vite.v2.config.js --host localhost"
   },
   "dependencies": {
+    "exceljs": "^4.4.0",
     "firebase": "10.14.1",
     "react": "18.3.1",
     "react-dom": "18.3.1"

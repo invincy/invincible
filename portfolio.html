@@ -1,150 +1,24 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
   <link rel="icon" href="/invincible/favicon.ico" sizes="any">
-  <link rel="icon" type="image/png" sizes="32x32" href="/invincible/assets/branding/invincible-32.png">
-  <link rel="icon" type="image/svg+xml" href="/invincible/assets/branding/invincible-icon.svg">
-  <link rel="apple-touch-icon" sizes="180x180" href="/invincible/assets/branding/invincible-180.png?v=971b13d25bd1">
-  <meta charset="utf-8" />
-  <title>Portfolio Viewer</title>
-  <style>
-    body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:16px}
-    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
-    .card{border:1px solid #ddd;border-radius:10px;padding:12px}
-    .title{font-weight:700;margin-bottom:6px}
-    table{width:100%;border-collapse:collapse}
-    th,td{border-bottom:1px solid #eee;padding:8px;text-align:left}
-    th{background:#fafafa}
-    .row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
-    input[type="text"],input[type="number"]{padding:6px;border:1px solid #ccc;border-radius:6px}
-    button{padding:8px 12px;border:1px solid #ccc;border-radius:8px;background:#fff;cursor:pointer}
-    button.primary{background:#0b57d0;color:#fff;border-color:#0b57d0}
-    .muted{color:#777}
-  </style>
-  <link rel="stylesheet" href="site-nav.css?v=18">
-<meta name="theme-color" content="#000000"></head>
+  <link rel="icon" type="image/png" sizes="32x32" href="/invincible/assets/branding/invincible-cyan-orb-v1-32.png">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/invincible/assets/branding/invincible-cyan-orb-v1-180.png">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Portfolio · Invincible</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Exo+2:wght@500;600;700;800;900&family=Orbitron:wght@400;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="react-dist/assets/style-D0Yc20A2.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#000000">
+</head>
 <body class="portfolio-page">
-<nav class="global-nav" aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav><script type="module" src="site-nav.js?v=7"></script>
-  <div class="grid">
-    <div class="card"><div class="title">Invested</div><div id="invested" class="muted">₹0</div></div>
-    <div class="card"><div class="title">Current Value</div><div id="value" class="muted">₹0</div></div>
-    <div class="card"><div class="title">Today’s Gain</div><div id="today" class="muted">₹0</div></div>
-    <div class="card"><div class="title">Overall P/L</div><div id="pl" class="muted">₹0 ( <span id="pct">0%</span> )</div></div>
-  </div>
-
-  <div class="row">
-    <button class="primary" onclick="rebuild()">Rebuild Portfolio</button>
-    <button onclick="scan()">Scan ±2% Movers</button>
-    <div class="row">
-      <label>Threshold %</label>
-      <input id="thr" type="number" step="0.01" value="2" style="width:70px">
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="title">Holdings</div>
-    <table id="tbl"><thead>
-      <tr><th>Name</th><th>Symbol</th><th>Qty</th><th>Avg Buy</th><th>Actions</th></tr>
-    </thead><tbody></tbody></table>
-  </div>
-
-  <div class="card">
-    <div class="title">Add / Update Stock</div>
-    <div class="row">
-      <input id="nm"  type="text"   placeholder="Name (e.g., TCS)">
-      <input id="sym" type="text"   placeholder="Symbol (e.g., NSE:TCS)">
-      <input id="qty" type="number" step="1"   placeholder="Qty">
-      <input id="avg" type="number" step="0.01"placeholder="Avg buy">
-      <button class="primary" onclick="addOrUpdate()">Save</button>
-    </div>
-    <div id="err" class="muted"></div>
-  </div>
-
-  <script>
-    // Latest deployment URL (unchanged ID unless you create a *new* deployment)
-    const API = "https://script.google.com/macros/s/AKfycbxFcLN_yGzReMRwYZb-e7Pry6dYAByM7ZeD4POBgbg0DuWXKX1s-M7lkEn9DUHN029n/exec";
-
-    async function call(action, params={}) {
-      const url = new URL(API);
-      url.searchParams.set("action", action);
-      Object.entries(params).forEach(([k,v])=>url.searchParams.set(k, v));
-      const r = await fetch(url, {method:"GET", redirect:"follow"});
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const data = await r.json();
-      if (data && data.ok===false && data.error) throw new Error(data.error);
-      return data;
-    }
-
-    const fmtINR = x => '₹'+Number(x||0).toLocaleString('en-IN',{maximumFractionDigits:2});
-    const pct    = x => (Number(x||0)*100).toFixed(2)+'%';
-    const showErr= msg => document.getElementById('err').textContent = msg||"";
-
-    async function load() {
-      try{
-        showErr("");
-        const s = await call("getsummary");
-        document.getElementById('invested').textContent = fmtINR(s.invested);
-        document.getElementById('value').textContent    = fmtINR(s.value);
-        document.getElementById('today').textContent    = fmtINR(s.today);
-        document.getElementById('pl').textContent       = fmtINR(s.pl)+' ( '+pct(s.overallPct)+' )';
-        document.getElementById('pct').textContent      = pct(s.overallPct);
-
-        const res = await call("getrows");
-        const rows = res.rows || res;
-        const tb = document.querySelector('#tbl tbody'); tb.innerHTML='';
-        rows.forEach(r=>{
-          const tr=document.createElement('tr');
-          tr.innerHTML = `<td>${r[0]}</td><td>${r[1]}</td>
-            <td><input type="number" value="${r[2]}" step="1" style="width:90px"></td>
-            <td><input type="number" value="${r[3]}" step="0.01" style="width:110px"></td>
-            <td>
-              <button onclick="saveRow(this)">Update</button>
-              <button onclick="removeRow('${r[1]}')">Remove</button>
-            </td>`;
-          tb.appendChild(tr);
-        });
-      }catch(err){ showErr(err.message); }
-    }
-
-    async function addOrUpdate(){
-      try{
-        const nm  = document.getElementById('nm').value.trim();
-        const sym = document.getElementById('sym').value.trim();
-        const qty = Number(document.getElementById('qty').value);
-        const avg = Number(document.getElementById('avg').value);
-        if(!(nm&&sym)) return;
-        await call("add",{name:nm,symbol:sym,qty:String(qty),avg:String(avg)});
-        await load();
-      }catch(err){ showErr(err.message); }
-    }
-    async function saveRow(btn){
-      try{
-        const tr = btn.closest('tr');
-        const name = tr.children[0].textContent.trim();
-        const sym  = tr.children[1].textContent.trim();
-        const qty  = Number(tr.children[2].querySelector('input').value);
-        const avg  = Number(tr.children[3].querySelector('input').value);
-        await call("add",{name,symbol:sym,qty:String(qty),avg:String(avg)});
-        await load();
-      }catch(err){ showErr(err.message); }
-    }
-    async function removeRow(sym){
-      try{
-        if(!confirm('Remove '+sym+'?')) return;
-        await call("remove",{symbol:sym});
-        await load();
-      }catch(err){ showErr(err.message); }
-    }
-    async function rebuild(){ try{ await call("rebuild"); await load(); }catch(err){ showErr(err.message); } }
-    async function scan(){
-      try{
-        const thr = Number(document.getElementById('thr').value||2)/100;
-        await call("scan",{th:String(thr)});
-        alert('Movers sheet updated at threshold ±'+(thr*100).toFixed(2)+'%.');
-      }catch(err){ showErr(err.message); }
-    }
-
-    load();
-  </script>
+  <div id="root"></div>
+  <script type="module" src="react-dist/assets/invincible-app-CCyxRniz.js"></script>
+  <script src="pwa-register.js?v=1"></script>
 </body>
 </html>

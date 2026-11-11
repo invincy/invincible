@@ -23,7 +23,7 @@ All internal pages use the Firebase project `life-by-adichimp`, the default Fire
 | LIC Customer CRM | Native JavaScript | `users/{uid}/licCustomers/{customerId}` |
 | LIC Follow-up Manager | Native JavaScript | `users/{uid}/licFollowups/{policyId}` and `history/{eventId}` beneath each policy |
 
-This is a partial React migration. Garage and Creator have not been moved into the main React app. LIC landing/product pages are static content; its Follow-up Manager adds private, editable policy records through the shared Firebase adapter. The separately hosted Portfolio is outside this repository and has not been migrated to Firebase here.
+This is a partial React migration. Garage and Creator have not been moved into the main React app. LIC landing/product pages are static content; its Follow-up Manager adds private, editable policy records through the shared Firebase adapter. The native Portfolio now uses `users/{uid}/portfolio/main` and `users/{uid}/portfolioHistory/{operationId}`. Existing owner-only rules cover these paths. Historical Google Sheet / Apps Script data is not read or migrated.
 
 ## LIC follow-ups — October 26, 2026
 

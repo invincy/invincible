@@ -10,7 +10,7 @@ export const navigationPages=[
  {id:'workday',label:'Workday',href:APP_BASE+'workday/',icon:'▣'},
  {id:'lic',label:'LIC',href:APP_BASE+'lic/',icon:'♢'},
  {id:'reminders',label:'Reminders',href:APP_BASE+'reminders/',icon:'♧'},
- {id:'portfolio',label:'Portfolio',href:'https://script.google.com/macros/s/AKfycbxbdgQqTwHIYw_dS9ko_tTieVM1PAQKNAHsTqy7bFPlVNg2P-9FNoccrZwHgbeXALoY/exec',icon:'▣',external:true}
+ {id:'portfolio',label:'Portfolio',href:APP_BASE+'portfolio.html',icon:'▣'}
 ];
 export const mobilePages=navigationPages.filter(page=>!page.external&&page.id!=='dashboard');
 export const MOBILE_TABS_KEY='invincible.mobileTabs.v1';

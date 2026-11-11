@@ -1,5 +1,12 @@
 # Cleanup review — 2026-10-03
 
+## Native portfolio draft — 11 November 2026
+
+Replaced the external portfolio destination with the shared React/auth page. Added reviewed Kite imports, editable holdings, units/NAV valuations, buy/sell history, date-matched SIP estimates, snapshots, undo, and current-month Finance aggregation. No private holdings were checked in, and no production writes, commit, push or deployment occurred. See [portfolio scope and remaining work](portfolio.md).
+
+Validation: build and site-reference checks passed. Root tests: 239 passed, two skipped; Functions: 15 passed; media: five passed. Ten focused portfolio/navigation cases passed after the final validation change. The supplied Kite statement reconciled exactly. Broad and focused browser tests were attempted but Chromium could not start: the environment denies its process-singleton socket. Visual layouts and signed-in production access therefore remain unverified. Live NAV/quotes, Nifty comparison, screenshot extraction and unattended scheduling remain unfinished.
+
+
 ## Local AI narration handoff and map safety — November 11, 2026
 
 Creator Voiceover now retains the analyzed MP3 as a same-device IndexedDB blob

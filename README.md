@@ -18,7 +18,7 @@ This document is the starting point for understanding what runs today, where to 
 | Creator Studio | `creator/index.html`, `project.html` | `creator/creator.js`, `project.js`, `scene-tools.js` | Native JavaScript modules |
 | Journal | `journal/index.html` | `journal/journal-strokes-hook.js`, `advanced-tools.js`; existing `assets/journal-v11.js` | Separate bundled React app |
 | LIC | `lic/index.html`, `lic/agent/index.html` (Plans), `lic/jeevan-lakshya/index.html`, `lic/bima-platinum/index.html`, `lic/follow-up/index.html` | `lic/` | Native pages; follow-ups use Firebase |
-| Portfolio | External Apps Script link; separate legacy `portfolio.html` URL | Apps Script deployment; local viewer remains supported | Separate origin/backend |
+| Portfolio | `portfolio.html` | `react/src/portfolio/` | Main React app; private Firebase holdings |
 
 The main React app chooses and lazily loads its page in `react/src/App.jsx`. Its HTML entry points load the same generated JS/CSS assets. Garage, Creator, Journal, and LIC have their own entry points; they are not silently redirected through React.
 
@@ -64,7 +64,7 @@ The default view is **Active cases**. Saving **Completed** or using **Remove fro
 
 Run `node --test tests/lic-follow-up.mjs` and `node tests/lic-follow-up-browser.cjs` for focused coverage. Optionally set `LIC_SAMPLE_CSV` to a local sample file to validate the original 104-policy sample without adding it to Git. Browser fixtures exercise the actual page/storage adapter with synthetic data; they do not establish production Firebase access.
 
-Internal pages use Firebase project `life-by-adichimp` and the same persisted Google account on the site origin. Authentication must finish restoring before protected data loads. Native and React SDK adapters prefer browser local persistence and fall back to IndexedDB. The external Apps Script Portfolio runs on a different origin and cannot inherit this browser Firebase session.
+Internal pages use Firebase project `life-by-adichimp` and the same persisted Google account on the site origin. Authentication must finish restoring before protected data loads. Native and React SDK adapters prefer browser local persistence and fall back to IndexedDB. The native Portfolio shares this Firebase session. See [Portfolio implementation](docs/portfolio.md) for import and pricing limitations.
 
 Personal data belongs under `users/{uid}`. Shared Creator and Workday records have explicit owner/editor fields. [Firebase storage notes](docs/firebase-storage.md) contain the path map and recovery behavior; [AI architecture](docs/invincible-ai-phase-1.md) describes the callable/tool boundary.
 
