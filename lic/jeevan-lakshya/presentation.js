@@ -1,9 +1,9 @@
 import {eligibleTerms,computePlan} from './benefits.mjs';
-import {createNarrator} from './narration.mjs';
+import {createNarrator} from './narration.mjs?v=12';
 const $=id=>document.getElementById(id),stage=$('stageContainer');
 const money=n=>n===null?'LIC quote required':'₹'+n.toLocaleString('en-IN');
 const shortMoney=n=>'₹'+Number((n/100000).toFixed(2)).toLocaleString('en-IN')+' lakh';
-const panels=['welcomePanel','scene1','selectionPanel','configurationPanel','previewPanel','whatIfPanel','protectionPanel','detailsPanel'];
+const panels=['scene1','selectionPanel','configurationPanel','previewPanel','whatIfPanel','protectionPanel','detailsPanel'];
 const steps=['intro','selected','configure','preview','whatif','protection','details'];
 const copy={
  intro:['Child future · બાળકના સપના','Your Child’s <span class="gold">Lakshya</span>','બાળકનું લક્ષ્ય, માતા-પિતાનો સંકલ્પ',''],
@@ -14,17 +14,30 @@ const copy={
  protection:['Family protection','The path <span class="gold">continues</span>','પરિવાર માટે આવકનો આધાર',''],
  details:['Plan 733','Explore the <span class="gold">details</span>','તમારા પરિવાર માટે આયોજન કરો','Review the assumptions and full cash-flow calculation.']
 };
-let started=false;
 let state='intro',age=30,term=25,sa=200000,goal='Education',goalSrc='assets/study.png',hasGoal=false;
+let goalKey='education';
 let timers=new Set(),generation=0,ready=true,capturing=false,flyer=null,flight=null;
 let paused=false,pausedAnimations=[],benefitIndex=-1,transitioning=false,beatMoving=false,exitAnimations=[];
 const BENEFIT_HOLD=4800;
 const benefitIds=['riderPill','ceasesPill','incomePill','deathMaturityPill'];
-let speaking=false;
 const coin=$('goalCoin'),choices=$('goalChoices');
 // Keep the visible artwork centred despite different transparent margins in the PNGs.
-function coinArt(src){const specs=src.includes('study')?[232.5,272.5,329]:src.includes('career')?[235,245.5,338]:src.includes('marriage')?[259.5,242.5,371]:[250,235.5,315];return{scale:325/specs[2],dx:.5-specs[0]/500,dy:.5-specs[1]/500};}
-function centreCoinArt(src){const a=coinArt(src);$('storyGoal').style.transform='translate('+(a.dx*a.scale*100)+'%,'+(a.dy*a.scale*100)+'%) scale('+a.scale+')';}
+function coinArt(src){
+ const artwork={
+  'study.png':[232.5,272.5,329],
+  'career.png':[235,245.5,338],
+  'marriage.png':[259.5,242.5,371],
+  'goals.png':[241.5,262.5,325],
+  'jeevan-lakshya.png':[250,235.5,315]
+ };
+ const [x,y,diameter]=artwork[src.split('/').pop()];
+ return{scale:325/diameter,dx:.5-x/500,dy:.5-y/500};
+}
+function centreCoinArt(img){
+ const {scale,dx,dy}=coinArt(img.getAttribute('src'));
+ img.style.transform=`translate(${dx*scale*100}%, ${dy*scale*100}%) scale(${scale})`;
+}
+choices.querySelectorAll('img').forEach(centreCoinArt);
 function coinLanding(src){const r=coin.getBoundingClientRect(),a=coinArt(src),width=r.width*a.scale,height=r.height*a.scale;return{left:r.left+(r.width-width)/2+a.dx*width,top:r.top+(r.height-height)/2+a.dy*height,width,height};}
 const sceneAssets=Promise.all([...document.querySelectorAll('.story-road,.story-family,#storyGoal,[data-goal] img')].map(img=>img.decode().catch(()=>{})));
 const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -33,16 +46,50 @@ function later(ms,fn){const task={remaining:ms,fn,token:generation,id:null,deadl
 function cancelSequence(){stopVoice();generation++;exitAnimations.forEach(a=>a.cancel());exitAnimations=[];transitioning=false;stage.dataset.transitioning='false';for(const task of timers)clearTimeout(task.id);timers.clear();flight?.cancel();flight=null;flyer?.remove();flyer=null;capturing=false;pausedAnimations.forEach(a=>{try{a.cancel();}catch{}});pausedAnimations=[];}
 function pauseTimeline(){if(paused)return;paused=true;narration.pause();for(const task of timers){clearTimeout(task.id);task.id=null;task.remaining=Math.max(0,task.deadline-Date.now());}pausedAnimations=stage.getAnimations({subtree:true}).filter(a=>a.playState==='running');pausedAnimations.forEach(a=>a.pause());control();}
 function resumeTimeline(){if(!paused)return;paused=false;narration.resume();for(const task of timers)arm(task);pausedAnimations.forEach(a=>{try{a.play();}catch{}});pausedAnimations=[];control();}
-const narration=createNarrator({schedule:later,onStatus:({value,muted})=>{speaking=value==='playing';stage.dataset.audioStatus=value;const label=muted?'Unmute narration':'Mute narration';$('advisorAudioBtn').classList.toggle('is-playing',speaking&&!muted);$('advisorAudioLabel').textContent=label;$('advisorAudioBtn').setAttribute('aria-label',label);$('advisorAudioBtn').setAttribute('aria-pressed',String(!muted));}});
+const narration=createNarrator({
+ schedule:later,
+ onStatus({value,muted}){
+  stage.dataset.audioStatus=value;
+  const blocked=value==='blocked';
+  const label=blocked?'Enable narration':muted?'Unmute narration':'Mute narration';
+  const soundButton=$('advisorAudioBtn');
+  soundButton.classList.toggle('is-playing',value==='playing'&&!muted);
+  $('advisorAudioLabel').textContent=label;
+  soundButton.title=label;
+  soundButton.setAttribute('aria-label',label);
+  soundButton.setAttribute('aria-pressed',String(!muted&&!blocked));
+ }
+});
 function stopVoice(){narration.cancel();}
-function voiceCue(key,done,fallback){stage.dataset.voiceCue=key;stage.dispatchEvent(new CustomEvent('plan733:voice-cue',{detail:{key,goal,age,term,sumAssured:sa}}));narration.cue(key,done,fallback);}
+function voiceCue(key,done,fallback,onStart){stage.dataset.voiceCue=key;stage.dispatchEvent(new CustomEvent('plan733:voice-cue',{detail:{key,goal,age,term,sumAssured:sa}}));narration.cue(key,done,fallback,onStart);}
+function beginOpening(){
+ stage.dataset.opening='family';
+ voiceCue('intro.dreams',()=>{
+  stage.dataset.opening='merging';
+  later(750,()=>{
+   stage.dataset.opening='plan';
+   $('subtitleText').hidden=false;
+   $('subtitleText').textContent='Savings + life cover, planned around a goal.';
+   voiceCue('intro.plan',chooseGoalReady,2800);
+  });
+ },4200,()=>{
+  later(300,()=>{stage.dataset.opening='path';});
+  later(1350,()=>{stage.dataset.opening='dreams';});
+ });
+}
 function chooseGoalReady(){stage.dataset.opening='settled';ready=true;$('goalHint').hidden=false;$('goalHint').textContent='Choose your child’s goal';$('subtitleText').hidden=true;control();openGoals(true);voiceCue('goal.choose');}
 function openGoals(open){if(open&&(state!=='intro'||!ready))return;stage.dataset.goalsOpen=String(open);$('scene1').classList.toggle('goals-open',open);coin.setAttribute('aria-expanded',String(open));choices.inert=!open;choices.setAttribute('aria-hidden',String(!open));}
 function control(){
  const n=steps.indexOf(state);document.querySelector('.stage-counter-text').textContent=(n+1)+' / '+steps.length;document.querySelector('.stage-progress-fill').style.width=((n+1)/steps.length*100)+'%';$('ctaPrevBtn').disabled=state==='intro';
  const next=$('ctaNextBtn');next.hidden=['intro','selected','configure'].includes(state);next.disabled=transitioning||beatMoving||(state==='protection'?false:!ready);coin.disabled=transitioning||capturing||!ready||!['intro','selected'].includes(state);
  next.textContent=({preview:'What if the parent dies? →',whatif:'How does the plan help? →',protection:ready?'View plan details →':'Next benefit →',details:'Open base-plan calculator →'})[state]||'Continue →';next.setAttribute('aria-label',next.textContent);
- const toggle=$('storyModeToggle');toggle.hidden=!paused&&!['preview','whatif','protection'].includes(state)&&!(state==='intro'&&started&&!ready&&['loading','dreams','merging','plan'].includes(stage.dataset.opening));toggle.textContent=paused?'Resume':state==='intro'?'Skip intro':state==='protection'&&ready?'Replay':paused?'Resume':'Pause';toggle.setAttribute('aria-label',paused?'Resume automatic story':state==='intro'?'Skip introduction':state==='protection'&&ready?'Replay benefit journey':paused?'Resume automatic story':'Pause automatic story');toggle.setAttribute('aria-pressed',String(!paused));
+ const toggle=$('storyModeToggle');
+ const introRunning=state==='intro'&&!ready&&!capturing;
+ const replayBenefits=state==='protection'&&ready;
+ toggle.hidden=!paused&&!introRunning&&!['preview','whatif','protection'].includes(state);
+ toggle.textContent=paused?'Resume':introRunning?'Skip intro':replayBenefits?'Replay':'Pause';
+ toggle.setAttribute('aria-label',paused?'Resume automatic story':introRunning?'Skip introduction':replayBenefits?'Replay benefit journey':'Pause automatic story');
+ toggle.setAttribute('aria-pressed',String(!paused));
  stage.dataset.sequenceReady=String(ready);stage.dataset.paused=String(paused);stage.dataset.capturing=String(capturing);
 }
 function model(){return computePlan({age,term,sumAssured:sa});}
@@ -55,7 +102,7 @@ function setState(next,options={}){
  for(const id of panels){const el=$(id);if(!el.hidden&&id!=='scene1')exitAnimations.push(el.animate([{opacity:1,translate:'0 0'},{opacity:0,translate:'0 -6px'}],{duration:180,easing:'ease-out',fill:'forwards'}));}
  later(180,()=>renderState(next,options));
 }
-function renderState(next,{focus=true}={}){
+function renderState(next,{focus=true,restartOpening=false}={}){
  cancelSequence();paused=false;stopVoice();openGoals(false);state=next;ready=true;beatMoving=false;
  stage.dataset.flowStep=state;stage.dataset.storyStep=({intro:1,selected:1,configure:1,preview:2,whatif:3,protection:3,details:4})[state];
  stage.classList.remove('pills-out','family-away','child-in','path-restored','goal-restored');benefitIndex=-1;delete stage.dataset.benefitStep;stage.style.setProperty('--journey-progress','0');
@@ -63,23 +110,26 @@ function renderState(next,{focus=true}={}){
  for(const id of ['maturityPill','whatIfCaption','assurancePill','riderPill','ceasesPill','incomePill','deathMaturityPill'])$(id).hidden=true;
  const visible=({intro:['scene1'],selected:['scene1','selectionPanel'],configure:['configurationPanel'],preview:['previewPanel'],whatif:['previewPanel','whatIfPanel'],protection:['protectionPanel'],details:['detailsPanel']})[state];visible.forEach(id=>$(id).hidden=false);
  const data=copy[state];$('eyebrowChip').textContent=data[0];$('headlineMain').innerHTML=data[1];$('headlineIndic').textContent=data[2];$('subtitleText').textContent=data[3];$('subtitleText').hidden=!data[3];
- coin.querySelector('img').src=hasGoal?goalSrc:'assets/jeevan-lakshya.png';coin.querySelector('img').alt=hasGoal?goal+' goal':'LIC Jeevan Lakshya';$('storyGoal').src=hasGoal?goalSrc:'assets/jeevan-lakshya.png';centreCoinArt($('storyGoal').getAttribute('src'));$('goalHint').textContent=hasGoal?goal+' · tap to change':'Tap coin to choose a goal';$('selectionTitle').textContent=goal+' selected';
+ const storyGoal=$('storyGoal');
+ storyGoal.src=hasGoal?goalSrc:'assets/jeevan-lakshya.png';
+ storyGoal.alt=hasGoal?goal:'LIC Jeevan Lakshya';
+ centreCoinArt(storyGoal);
+ $('goalHint').textContent=hasGoal?goal+' · tap to change':'Tap coin to choose a goal';$('selectionTitle').textContent=goal+' selected';
  $('sceneStageContent').scrollTop=0;quote();alignMaturity();
  if(!reduced()&&stage.dataset.ready==='true')$('layerHeadline').animate([{opacity:.35,translate:'0 5px'},{opacity:1,translate:'0 0'}],{duration:500,easing:'cubic-bezier(.16,1,.3,1)'});
  $('goalHint').hidden=state!=='intro';
  if(state==='intro'){
   paused=false;const token=generation;ready=false;coin.disabled=true;$('goalHint').hidden=true;
-  if(!started){stage.dataset.opening='welcome';$('welcomePanel').hidden=false;}
-  else{
-   stage.dataset.opening='loading';Promise.all([sceneAssets,narration.ready]).then(()=>{if(token!==generation||state!=='intro')return;if(reduced()||hasGoal){chooseGoalReady();return;}
-    stage.dataset.opening='dreams';$('subtitleText').hidden=false;$('subtitleText').textContent='Education. Career. Marriage.';
-    voiceCue('intro.dreams',()=>{stage.dataset.opening='merging';
-     later(1200,()=>{stage.dataset.opening='plan';$('subtitleText').textContent='Savings + life cover, planned around a goal.';voiceCue('intro.plan',chooseGoalReady,2800);});
-    },3200);
-   });
-  }
+  stage.dataset.opening='family';
+  if(restartOpening)beginOpening();
+  else Promise.all([sceneAssets,narration.ready]).then(()=>{
+   if(token!==generation||state!=='intro')return;
+   const opening=hasGoal?chooseGoalReady:beginOpening;
+   if(paused)later(0,opening);
+   else opening();
+  });
  }
- if(state==='selected'){voiceCue('goal.'+(goal==='Education'?'education':goal==='Career'?'career':'marriage'),()=>setState('configure'),1800);}
+ if(state==='selected'){voiceCue('goal.'+goalKey,()=>setState('configure'),1800);}
  if(state==='configure')voiceCue('profile.choose');
  if(state==='preview'){
   ready=false;reveal('premiumPill');voiceCue('plan.premium',()=>{reveal('maturityPill');ready=true;control();voiceCue('plan.maturity',()=>setState('whatif'),5000);},1500);
@@ -110,21 +160,23 @@ coin.addEventListener('click',()=>{if(!capturing&&state==='intro')openGoals(coin
 document.querySelectorAll('[data-goal]').forEach(b=>b.addEventListener('click',async()=>{
  if(capturing||state!=='intro')return;stopVoice();capturing=true;ready=false;control();const token=generation;
  const source=b.querySelector('img'),from=source.getBoundingClientRect(),to=coinLanding(source.getAttribute('src'));
- flyer=source.cloneNode();flyer.dataset.captureGhost='true';flyer.alt='';flyer.setAttribute('aria-hidden','true');Object.assign(flyer.style,{position:'fixed',left:from.left+'px',top:from.top+'px',width:from.width+'px',height:from.height+'px',zIndex:1000,pointerEvents:'none',objectFit:'contain',transformOrigin:'0 0',filter:'drop-shadow(0 0 20px #ffe478)'});document.body.append(flyer);openGoals(false);
+ flyer=source.cloneNode();flyer.dataset.captureGhost='true';flyer.alt='';flyer.setAttribute('aria-hidden','true');Object.assign(flyer.style,{position:'fixed',left:from.left+'px',top:from.top+'px',width:from.width+'px',height:from.height+'px',zIndex:1000,pointerEvents:'none',objectFit:'contain',transform:'none',transformOrigin:'0 0',filter:'drop-shadow(0 0 20px #ffe478)'});document.body.append(flyer);openGoals(false);
  if(!reduced()){flight=flyer.animate([{transform:'translate(0,0) scale(1)'},{transform:'translate('+(to.left-from.left)+'px,'+(to.top-from.top)+'px) scale('+(to.width/from.width)+')'}],{duration:700,easing:'cubic-bezier(.16,1,.3,1)',fill:'forwards'});try{await flight.finished;}catch{}}
- if(token!==generation)return;goal=b.textContent.trim();goalSrc=source.getAttribute('src');hasGoal=true;document.querySelectorAll('[data-goal]').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-pressed',String(x===b));});setState('selected',{immediate:true});
+ if(token!==generation)return;goal=b.textContent.trim();goalKey=b.dataset.goal;goalSrc=source.getAttribute('src');hasGoal=true;document.querySelectorAll('[data-goal]').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-pressed',String(x===b));});setState('selected',{immediate:true});
 }));
-$('startStoryBtn').disabled=true;Promise.all([sceneAssets,narration.ready]).then(()=>{$('startStoryBtn').disabled=false;});
-$('startStoryBtn').addEventListener('click',()=>{started=true;setState('intro',{immediate:true});});
 $('openPreviewBtn').addEventListener('click',()=>setState('preview'));
 $('replayBtn').addEventListener('click',()=>{paused=false;hasGoal=false;setState('intro');});
 $('ctaNextBtn').addEventListener('click',next);$('ctaPrevBtn').addEventListener('click',back);
 for(const key of ['age','term','sa'])document.querySelectorAll('[data-'+key+']').forEach(b=>b.addEventListener('click',()=>{if(key==='age')age=Number(b.dataset.age);if(key==='term')term=Number(b.dataset.term);if(key==='sa')sa=Number(b.dataset.sa);quote();}));
-$('advisorAudioBtn').addEventListener('click',()=>narration.toggle());
+$('advisorAudioBtn').addEventListener('click',()=>{
+ if(stage.dataset.audioStatus==='blocked'&&state==='intro'&&!ready){
+  renderState('intro',{focus:false,restartOpening:true});
+ }else narration.toggle();
+});
 $('storyModeToggle').addEventListener('click',()=>{if(paused){resumeTimeline();return;}if(state==='intro'){cancelSequence();chooseGoalReady();return;}if(state==='protection'&&ready){paused=false;setState('protection');}else if(paused)resumeTimeline();else pauseTimeline();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){openGoals(false);if(state==='intro')coin.focus();}if(e.target.closest('button,a,input,select,textarea')||e.altKey||e.ctrlKey||e.metaKey)return;if(e.key==='ArrowRight'){e.preventDefault();next();}if(e.key==='ArrowLeft'){e.preventDefault();back();}});
 const wrapper=document.querySelector('.app-viewport-wrapper');function fit(){const vv=visualViewport;const height=vv&&Math.abs(vv.scale-1)<.01?vv.height:innerHeight;wrapper.style.setProperty('--presentation-height',Math.floor(height)+'px');if(stage.dataset.ready==='true')alignMaturity();}fit();addEventListener('resize',fit);visualViewport?.addEventListener('resize',fit);
-addEventListener('pagehide',()=>{cancelSequence();stopVoice();});document.addEventListener('visibilitychange',()=>{if(document.hidden&&started)pauseTimeline();});
+addEventListener('pagehide',()=>{cancelSequence();stopVoice();});document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseTimeline();});
 const debug=new URLSearchParams(location.search).get('debug')==='1';$('inspectorFab').hidden=!debug;$('inspectorFab').addEventListener('click',()=>$('inspectorPanel').classList.toggle('open'));$('toggle3DExploded').addEventListener('click',()=>stage.classList.toggle('exploded-view'));$('toggleDeviceFrame').addEventListener('click',()=>$('deviceFrame').classList.toggle('mode-fullscreen'));document.querySelectorAll('.layer-toggle-input').forEach(input=>input.addEventListener('change',()=>{const target=$(input.dataset.target);if(target){target.style.opacity=input.checked?'1':'0';target.style.pointerEvents=input.checked?'':'none';}}));
 addEventListener('pageshow',e=>{if(e.persisted)setState(state,{focus:false});});
 setState('intro',{focus:false});stage.dataset.ready='true';document.fonts?.ready.then(alignMaturity);coin.addEventListener('transitionend',e=>{if(['width','height'].includes(e.propertyName))alignMaturity();});

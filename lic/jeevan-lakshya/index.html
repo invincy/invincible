@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="presentation.css?v=11">
+  <link rel="stylesheet" href="presentation.css?v=12">
   <link rel="stylesheet" href="../../shared/app-theme.css?v=1">
 </head>
 <body>
@@ -83,7 +83,7 @@
     </div>
 
     <!-- The Presentation Stage (Strict Layer Architecture) -->
-    <div id="stageContainer" data-opening="welcome" data-flow-step="intro" class="stage-container" data-story-step="1">
+    <div id="stageContainer" data-opening="family" data-flow-step="intro" class="stage-container" data-story-step="1">
       <div class="layer-stage-3d">
 
         <!-- LAYER 1: Environment Plate (Cosmic Background) -->
@@ -112,6 +112,10 @@
               <button class="goal-card-btn" type="button" data-goal="marriage">
                 <img src="assets/marriage.png" alt="Daughter Marriage">
                 <span>Marriage</span>
+              </button>
+              <button class="goal-card-btn" type="button" data-goal="other">
+                <img src="assets/goals.png" alt="">
+                <span>Other Goal</span>
               </button>
             </div>
 
@@ -155,7 +159,7 @@
         </div>
 
         <!-- LAYER 8: Story Scenes Viewport (Non-Scrollable) -->
-        <div id="sceneStageContent" class="scene-stage-content"><section id="welcomePanel" class="welcome-panel" hidden><button id="startStoryBtn" class="flow-gold" type="button">Start with voice →</button></section>
+        <div id="sceneStageContent" class="scene-stage-content">
 <div id="scene1" class="scene-1-wrap">
 
 
@@ -267,6 +271,6 @@
 </div><!-- /.app-viewport-wrapper -->
 
 <script type="module" src="../../site-nav.js?v=7"></script>
-<script type="module" src="presentation.js?v=11"></script>
+<script type="module" src="presentation.js?v=12"></script>
 </body>
 </html>

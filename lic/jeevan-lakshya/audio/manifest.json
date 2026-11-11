@@ -5,123 +5,131 @@
   "model": "gemini-2.5-flash-tts",
   "voice": "hi-IN-Gemini-Kore",
   "language": "hi-IN",
-  "delivery": "empathetic",
-  "speed": 1,
-  "generated": "2026-11-10",
+  "delivery": "social",
+  "speed": 1.2,
+  "generated": "2026-11-11",
   "timing": "Clip-relative seconds; progression uses audio ended, no word-level alignment claimed.",
   "review": "All files decoded; durations measured from decoded PCM. Browser playback/ended checks recorded in project documentation. Subjective listening and pronunciation are not independently verified.",
   "clips": {
     "intro.dreams": {
       "file": "intro.dreams.mp3",
-      "spokenText": "अपने बच्चे की education, उसके career की शुरुआत, या शादी की तैयारी… हर सपने के लिए हम planning करते हैं।",
-      "duration": 9.611,
-      "bytes": 193964,
-      "direction": "Warm, clear Indian Hindi and English. Speak naturally as a trusted advisor talking to a parent. Gently emphasise education, career and शादी, with a brief pause between these three goals. No exaggerated sales pitch.",
-      "sha256": "6d678ff55f89ef660c9ea8c77e9bf5b2b4a00780c2607f9e286cc53435ed5dda"
+      "spokenText": "अपने बच्चे की education, उसके career की शुरुआत, शादी की तैयारी, या कोई और सपना। हर goal के लिए हम planning करते हैं।",
+      "duration": 7.491,
+      "bytes": 151724,
+      "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
+      "sha256": "cef7edfe278deba92f61f53633069bf49e4ec19531d6512db406a5b94f502fc0"
     },
     "intro.plan": {
       "file": "intro.plan.mp3",
       "spokenText": "LIC Jeevan Lakshya के साथ, आप savings और life cover को अपने बच्चे के goal की planning से जोड़ सकते हैं।",
-      "duration": 8.571,
-      "bytes": 173324,
-      "direction": "Warm, clear Indian Hindi and English. Natural trusted advisor, gentle confidence. Emphasise savings, life cover and goal planning. Pause briefly after LIC Jeevan Lakshya.",
-      "sha256": "ab95adf7ee501602ffffd3b562d892b09c1551af81b839858715942c5cb4fa8d"
+      "duration": 5.691,
+      "bytes": 115724,
+      "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
+      "sha256": "e5ea9cf0b4f87bb2553bd06375a8091615c5b6a3a1faf16979bd90b4b06a7f4c"
     },
     "goal.choose": {
       "file": "goal.choose.mp3",
-      "spokenText": "आप अपने बच्चे के किस goal के लिए planning करना चाहते हैं? अपना goal चुनिए।",
-      "duration": 5.611,
-      "bytes": 113804,
-      "direction": "Warm conversational Indian Hindi-English. A gentle invitation, then leave space for the parent to choose. Natural pace, clear English word goal.",
-      "sha256": "dbec0994f095e10256ca3ef3a77d86577bb2b760dbb3c2495b4ba7cf1d5d49da"
+      "spokenText": "Education, career, शादी, या कोई और goal। आप किसके लिए planning करना चाहते हैं? अपना goal चुनिए।",
+      "duration": 6.131,
+      "bytes": 124364,
+      "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
+      "sha256": "3feaf5cf9f4e17455b1aa17a3bcc8b961971d39ec9be363944ea41820de1470a"
     },
     "goal.education": {
       "file": "goal.education.mp3",
       "spokenText": "आपने education चुनी है। आइए, इसके लिए समय और cover तय करते हैं।",
-      "duration": 6.171,
-      "bytes": 125324,
-      "direction": "Warm conversational Indian Hindi-English. A gentle invitation, then leave space for the parent to choose. Natural pace, clear English word goal.",
-      "sha256": "f8b51eb9adb8aa8356e641168460e5df3f1993b033dbc2e67466d1f885290912"
+      "duration": 4.251,
+      "bytes": 86924,
+      "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
+      "sha256": "d79af00aa8cc8dce99669d33dddaa2ce912948752d7a8b870fe8da8f7a5a919f"
     },
     "goal.career": {
       "file": "goal.career.mp3",
       "spokenText": "आपने career की शुरुआत के लिए planning चुनी है। आइए, इसके लिए समय और cover तय करते हैं।",
-      "duration": 7.611,
-      "bytes": 154124,
-      "direction": "Warm conversational Indian Hindi-English. A gentle invitation, then leave space for the parent to choose. Natural pace, clear English word goal.",
-      "sha256": "ba3b1a372070470b3b6b5c17f1c5cf15158cc91528557f82cb71a685ea5b82bf"
+      "duration": 4.811,
+      "bytes": 97964,
+      "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
+      "sha256": "b7283f36c7a6eabab88bc8204fbddc6e722bee43467462ad963540397e0ab856"
     },
     "goal.marriage": {
       "file": "goal.marriage.mp3",
       "spokenText": "आपने शादी की तैयारी के लिए planning चुनी है। आइए, इसके लिए समय और cover तय करते हैं।",
-      "duration": 7.051,
-      "bytes": 142604,
-      "direction": "Warm conversational Indian Hindi-English. A gentle invitation, then leave space for the parent to choose. Natural pace, clear English word goal.",
-      "sha256": "a2ce8bfde3b2b6147e350d6a36f1bc08f22e0de1232b23a3a1ca08859c064274"
+      "duration": 5.971,
+      "bytes": 121004,
+      "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
+      "sha256": "e9f2b31f340a7faf9f78895e59db4be55a0eac9cd149a6923502b485c5a12151"
+    },
+    "goal.other": {
+      "file": "goal.other.mp3",
+      "spokenText": "आपने अपना goal चुना है। आइए, उसके लिए समय और cover तय करते हैं।",
+      "duration": 3.771,
+      "bytes": 77324,
+      "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
+      "sha256": "5af7755a4abca2aabd6f6d4942d8e01ef051596668dff87c07aa31f1f0e79117"
     },
     "profile.choose": {
       "file": "profile.choose.mp3",
       "spokenText": "अपनी age, policy term और Basic Sum Assured चुनिए।",
-      "duration": 5.811,
-      "bytes": 118124,
-      "direction": "Warm, clear Indian Hindi and English. Calm practical guidance. Say age, policy term and Basic Sum Assured distinctly, with short natural pauses.",
-      "sha256": "2435ac5351e8fc6da617e7d8478649c1f532fb2b7fb3378c6ae88b8591e9a578"
+      "duration": 3.931,
+      "bytes": 80204,
+      "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
+      "sha256": "5c9778310c64a59754be9c5eacf11a92097f1da63a8aa7eca1de9f2b14b15e9a"
     },
     "plan.premium": {
       "file": "plan.premium.mp3",
       "spokenText": "इस profile के लिए आपका base premium स्क्रीन पर है। Policy term से तीन साल कम समय तक premiums भरने होते हैं। Rider का premium अलग होगा।",
-      "duration": 11.331,
-      "bytes": 228524,
-      "direction": "Warm clear Indian Hindi-English advisor. Explain calmly, no hype. Gently emphasise base premium, तीन साल कम, and Rider का premium अलग होगा. Natural pauses between the three sentences.",
-      "sha256": "fb7ef95178ca8696a99aac9357d2a343bf614ef91a5b4f8178cc817ff691258a"
+      "duration": 8.051,
+      "bytes": 162764,
+      "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
+      "sha256": "fc39e43d65567d07572187ad769d199d56761c2fae2833be97203edf32419861"
     },
     "plan.maturity": {
       "file": "plan.maturity.mp3",
       "spokenText": "अगर insured parent maturity तक जीवित रहते हैं और policy चालू है, तो Basic Sum Assured के साथ bonuses भी मिलते हैं, अगर हों।",
-      "duration": 11.171,
-      "bytes": 225164,
-      "direction": "Clear natural Indian Hindi and English. Warm advisor, explain carefully. Emphasise policy चालू है and bonuses अगर हों without sounding alarming. No promise of guaranteed bonuses.",
-      "sha256": "30c8075c9395c39fd9a5a16c9b8b44147684c423a222ac69b3c2034f65af79cd"
+      "duration": 7.811,
+      "bytes": 157964,
+      "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
+      "sha256": "c6aac0eac5d8e7e82a37aad8a1d721d944c5249f7979649e3096685d5545bc0c"
     },
     "family.whatif": {
       "file": "family.whatif.mp3",
       "spokenText": "लेकिन… अगर इस बीच insured parent की death हो जाए, तो परिवार को क्या support मिलता है?",
-      "duration": 7.251,
-      "bytes": 146924,
-      "direction": "Sensitive, warm Indian Hindi-English. Quiet empathetic tone, respectful and reassuring. Brief thoughtful pause after लेकिन. Do not dramatise death or sound frightening. Ask the final question gently.",
-      "sha256": "8dff03aa45e42d2034238f28fa5a7f4455051ad0eefe463fc08a7fcceb24f5da"
+      "duration": 6.491,
+      "bytes": 131564,
+      "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
+      "sha256": "b7862cc5c6f68bd11a5e1fb8e8ef93b7945127c052034cd6a9abfbee422de216"
     },
     "family.rider": {
       "file": "family.rider.mp3",
       "spokenText": "अगर policy और लिया हुआ Term Rider चालू हैं, तो परिवार को rider की शर्तों के अनुसार अलग death benefit मिलता है।",
-      "duration": 9.891,
-      "bytes": 199724,
-      "direction": "Warm reassuring Indian Hindi-English advisor. Calm factual explanation after a sensitive moment. Clearly emphasise लिया हुआ Term Rider and अलग death benefit. Avoid dramatic or celebratory delivery.",
-      "sha256": "72f1f9fa7a1d0df7897f8c2008b0aad6018bef3978c335ba118e05598accebc3"
+      "duration": 7.371,
+      "bytes": 149324,
+      "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
+      "sha256": "fad461c410288177132f2017861bbd4afae80c4e0cf4cdff195fefd357a8558e"
     },
     "family.premiums-stop": {
       "file": "family.premiums-stop.mp3",
       "spokenText": "Future base-policy premiums बंद हो जाते हैं। परिवार को ये premiums आगे नहीं भरने पड़ते।",
-      "duration": 7.611,
-      "bytes": 154124,
-      "direction": "Warm reassuring Indian Hindi-English. Clearly emphasise premiums बंद and आगे नहीं भरने पड़ते. Calm relief, no excitement or drama. Keep both sentences distinct and easy to follow.",
-      "sha256": "8fe8bc21feb6e38cfe89e60a462690659bb50301283e313e9634e48bab1c2ec6"
+      "duration": 5.491,
+      "bytes": 111404,
+      "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
+      "sha256": "44e226ad3d86f6130b340069988b0620942ba1dcf6937a1dadd9eee33b29548c"
     },
     "family.annual-income": {
       "file": "family.annual-income.mp3",
       "spokenText": "Eligible policy anniversary से, हर साल Basic Sum Assured का दस प्रतिशत मिलता है—maturity से पहले वाली anniversary तक।",
-      "duration": 10.771,
-      "bytes": 217004,
-      "direction": "Clear reassuring Indian Hindi-English advisor. Emphasise हर साल, दस प्रतिशत and maturity से पहले वाली anniversary तक. Carefully articulate eligibility and timing. Calm conversational delivery, no hype.",
-      "sha256": "e818e42e9f48108e860b7dade6f62b471b91bc23b228c4a7760e895d26622620"
+      "duration": 7.851,
+      "bytes": 158924,
+      "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
+      "sha256": "bee8cc1a5499e92f0da6b2d3520d6aafe6c1602137810ff0616c3be0f8425e36"
     },
     "family.maturity": {
       "file": "family.maturity.mp3",
       "spokenText": "Maturity की तारीख पर Basic Sum Assured का एक सौ दस प्रतिशत मिलता है। साथ में bonuses, अगर हों। Future bonuses guaranteed नहीं हैं।",
-      "duration": 13.291,
-      "bytes": 267404,
-      "direction": "Warm, clear Indian Hindi-English. Reassuring closing, no celebration after bereavement. Clearly emphasise एक सौ दस प्रतिशत. Pause before bonuses, अगर हों, then state Future bonuses guaranteed नहीं हैं clearly and naturally.",
-      "sha256": "90336206435edd3b10ec7edce72906528b0a12cf5eaa87d30d35f8148ae2e6ac"
+      "duration": 8.931,
+      "bytes": 180524,
+      "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
+      "sha256": "1d3f27a023159507635e866feb6fcabbcace233f28716905192c6593baa15517"
     }
   }
 }
