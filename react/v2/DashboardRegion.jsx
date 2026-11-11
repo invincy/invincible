@@ -33,11 +33,11 @@ export default function DashboardRegion({data, plan, timer, onInspect, orbAnchor
 
       <div className="v2-guide-mission">
         <span className="v2-guide-kicker">IN FOCUS</span>
-        {focus ? <h2 title={focus.title}>{focus.title}</h2> : <p className="v2-guide-empty">Choose a task in My Workspace.</p>}
+        {focus ? <h2 title={focus.title}>{focus.title}</h2> : <p className="v2-guide-empty">No task selected</p>}
         {next && <p className="v2-guide-nextline" title={next.title || next.text}><span>Next</span>{next.title || next.text}</p>}
-        {focus && <button className="v2-guide-primary" onClick={() => onInspect(focus.id)}>Resume work <span aria-hidden="true">↗</span></button>}
+        {focus && <button className="v2-guide-primary" onClick={() => onInspect(focus.id)}>Resume <span aria-hidden="true">↗</span></button>}
         {focus && <div className="v2-guide-progress" aria-label="Project progress">
-          <span>{progress.total ? `${progress.done} / ${progress.total} steps` : 'No steps yet'}</span>
+          <span>{progress.total ? `${progress.done} / ${progress.total} steps` : 'No steps'}</span>
           <progress max={progress.total || 1} value={progress.done} aria-label="Completed project steps"/>
         </div>}
       </div>
@@ -47,17 +47,17 @@ export default function DashboardRegion({data, plan, timer, onInspect, orbAnchor
         <span className="v2-guide-kicker">FOCUS SESSION</span>
         <output aria-label="Time remaining">{formatTimer(timer.seconds)}</output>
         <div className="v2-guide-timer-controls">
-          <button aria-label={timer.running ? 'Pause focus' : 'Start focus'} onClick={timer.running ? timer.pause : timer.start}>{timer.running ? 'Pause' : 'Start'} focus</button>
+          <button aria-label={timer.running ? 'Pause focus' : 'Start focus'} onClick={timer.running ? timer.pause : timer.start}>{timer.running ? 'Pause' : 'Start'}</button>
           <button aria-label="Reset timer" onClick={timer.reset}>Reset</button>
         </div>
       </div>
 
       <div className="v2-guide-work">
-        <span className="v2-guide-kicker">YOUR WORKSPACE</span>
+        <span className="v2-guide-kicker">WORKSPACE</span>
         <div className="v2-guide-statuses" aria-label="Task counts by status">{stages.map(([status, label]) =>
           <span key={status} data-status={status}><b>{data.tasks.filter(task => (task.status || 'Backlog') === status).length}</b> {label}</span>
         )}</div>
-        <button className="v2-guide-work-link" onClick={onOpenWorkspace}>Open My Workspace <span aria-hidden="true">→</span></button>
+        <button className="v2-guide-work-link" onClick={onOpenWorkspace}>Open workspace <span aria-hidden="true">→</span></button>
       </div>
       </div>
     </section>

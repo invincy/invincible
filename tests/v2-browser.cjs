@@ -355,6 +355,21 @@ async function checkGlobeWithoutWebGL(browser,base) {
         assert.ok(corners.widths.every(width=>width>=290),'Desktop cards have room for their content');
         assert.ok(corners.gaps.every(gap=>gap>=48),'Desktop cards clear the globe');
         assert.deepEqual(corners.borders,[['1px','1px','1px','0px'],['1px','0px','1px','1px'],['1px','0px','1px','1px']]);
+        for(const [width,height] of [[1920,900],[1024,600]]){
+          await page.setViewportSize({width,height});
+          const cards=await page.evaluate(()=>{
+            const get=selector=>document.querySelector(selector);
+            const bounds=selector=>get(selector).getBoundingClientRect();
+            const font=selector=>parseFloat(getComputedStyle(get(selector)).fontSize);
+            return {focus:bounds('.v2-guide-mission').height,timer:bounds('.v2-guide-timer').height,
+              workspace:bounds('.v2-guide-work').height,gap:bounds('.v2-guide-work').top-bounds('.v2-guide-timer').bottom,
+              heading:font('.v2-guide-kicker'),label:font('.v2-guide-statuses'),control:font('.v2-guide-work-link')};
+          });
+          assert.ok(cards.focus>=128&&cards.timer>=148&&cards.workspace>=180,JSON.stringify(cards));
+          assert.ok(cards.gap>=24, 'Right-side cards stay separated on a short laptop screen');
+          assert.ok(cards.heading>=14&&cards.label>=14&&cards.control>=15, 'Card text stays readable at desktop widths');
+        }
+        await page.setViewportSize({width:1440,height:1000});
         await page.getByRole('button',{name:'Open current task: Build the living workspace'}).click();
         await page.getByRole('region',{name:'Task workspace: Build the living workspace'}).waitFor();
         await page.setViewportSize({width:1920,height:1080});
@@ -466,7 +481,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
         await page.evaluate(()=>window.emitTaskTitle('Updated from another region'));
         await page.getByRole('link',{name:'01 Main Dashboard'}).click();
         await page.locator('.v2-guide-mission h2').getByText('Updated from another region').waitFor();
-        await page.getByRole('button',{name:/Resume work/}).click();
+        await page.getByRole('button',{name:/^Resume/}).click();
         await page.getByRole('region',{name:/Task workspace/}).waitFor();
         assert.match(await page.getByLabel('Step 1 notes',{exact:true}).inputValue(),/Keep the original data/);
         await page.locator('.v2-task-route-select').filter({hasText:'Inspect existing records'}).click();
@@ -474,7 +489,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
         assert.equal(new URL(page.url()).hash,'#dashboard');
         await page.keyboard.press('Escape');
         assert.equal(await page.getByRole('region',{name:/Task workspace/}).count(),0);
-        assert.match(await page.evaluate(()=>document.activeElement.textContent),/Resume work/);
+        assert.match(await page.evaluate(()=>document.activeElement.textContent),/^Resume/);
 
         // Each region scrolls independently; the outer document never spills horizontally.
         await page.evaluate(()=>window.emitTaskTitle('Updated from another region — a longer project title that should never push the board below the screen'));
