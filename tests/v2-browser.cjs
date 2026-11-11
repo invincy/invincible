@@ -345,10 +345,11 @@ async function checkGlobeWithoutWebGL(browser,base) {
           const orb=bounds('.v2-orb');
           const left=bounds('.v2-guide-mission'),timer=bounds('.v2-guide-timer'),work=bounds('.v2-guide-work');
           return {leftMargin:left.left,rightMargins:[innerWidth-timer.right,innerWidth-work.right],
-            gaps:[orb.left-left.right,timer.left-orb.right,work.left-orb.right]};
+            widths:[left.width,timer.width,work.width],gaps:[orb.left-left.right,timer.left-orb.right,work.left-orb.right]};
         });
-        assert.ok([corners.leftMargin,...corners.rightMargins].every(margin=>margin>=16&&margin<=32));
-        assert.ok(corners.gaps.every(gap=>gap>80),'Desktop cards leave room around the globe');
+        assert.ok([corners.leftMargin,...corners.rightMargins].every(margin=>margin>=24&&margin<=60));
+        assert.ok(corners.widths.every(width=>width>=290),'Desktop cards have room for their content');
+        assert.ok(corners.gaps.every(gap=>gap>=48&&gap<=78),'Desktop cards frame the globe with a visible gap');
         await page.getByRole('button',{name:'Open current task: Build the living workspace'}).click();
         await page.getByRole('region',{name:'Task workspace: Build the living workspace'}).waitFor();
         await page.setViewportSize({width:1920,height:1080});

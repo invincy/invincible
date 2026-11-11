@@ -282,3 +282,5 @@ Release 2026.11.12.3 makes cyan the default for new preferences, reduces the glo
 
 Release 2026.11.12.4 lowers the globe and ambient particle counts by 25%. The globe reduces its supplemental dots and retains the flowing trail layer and the three dot sizes.
 The desktop focus, timer, and workspace cards use compact widths and consistent corner gutters to keep them clear of the globe.
+
+Release 2026.11.12.5 brings the desktop cards closer to the globe and increases their width. The side gutters follow the globe diameter so the layout stays grouped on wider and shorter displays.

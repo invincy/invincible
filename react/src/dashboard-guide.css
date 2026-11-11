@@ -38,9 +38,14 @@
 }
 @media (width > 900px) {
   #v2-region-dashboard { padding-inline: 0 }
-  .v2-guide-scene { --card-gutter: clamp(16px, 2vw, 32px); --card-inset: clamp(16px, 3dvh, 30px) }
-  .v2-guide-mission { top: var(--card-inset); left: var(--card-gutter); width: clamp(180px, 18vw, 252px) }
-  .v2-guide-timer,.v2-guide-work { right: var(--card-gutter); width: clamp(176px, 17vw, 242px) }
+  .v2-guide-scene {
+    --card-width: clamp(184px, 20.5vw, 324px);
+    --card-gutter: clamp(24px, calc(50% - var(--orb-size) * .56 - var(--card-width) - 30px), 20vw);
+    --card-inset: clamp(40px, 7.5dvh, 84px);
+  }
+  .v2-guide-mission,.v2-guide-timer,.v2-guide-work { width: var(--card-width) }
+  .v2-guide-mission { top: var(--card-inset); left: var(--card-gutter) }
+  .v2-guide-timer,.v2-guide-work { right: var(--card-gutter) }
   .v2-guide-timer { top: var(--card-inset) }
   .v2-guide-work { bottom: var(--card-inset) }
   .v2-guide-statuses { column-gap: 8px }
