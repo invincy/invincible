@@ -241,5 +241,5 @@ export function createImageWorker({ workspaceRoot = WORKSPACE_ROOT, ownerUid, gp
     await Promise.allSettled([...operations]);
     if (lockHandle) { await lockHandle.close(); lockHandle = null; const lock = JSON.parse(await fs.readFile(lockPath, 'utf8')); if (lock.nonce === lockNonce) await fs.unlink(lockPath); }
   }
-  return { init, execute, submit, get: owned, readImage, releaseQwen, unloadImages, drain: () => Promise.allSettled([...operations]), shutdown, storage: () => ({ available, error: storageError }), directory };
+  return { init, execute, submit, checkConnection: async () => available && Boolean(await queue()), get: owned, readImage, releaseQwen, unloadImages, drain: () => Promise.allSettled([...operations]), shutdown, storage: () => ({ available, error: storageError }), directory };
 }

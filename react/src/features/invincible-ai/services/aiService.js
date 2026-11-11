@@ -36,6 +36,11 @@ export async function checkLaptopConnection(){
  if(!localBridgeEnabled)return false;
  return (await imageRelay({action:'status'})).data?.online===true;
 }
+export async function checkLocalServices(){
+ const origin=getLocalOrigin();
+ if(!origin)return null;
+ return laptopClient(origin).request('/api/service-status',undefined,{timeoutMs:8000});
+}
 export async function createLocalAgentPairing(agentId){const response=await pairAgent({agentId});return response.data}
 
 export function draftRemoteImagePrompt(idea,signal){

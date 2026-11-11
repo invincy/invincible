@@ -20,7 +20,7 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
  export async function getDocs(q){const response=await fetch('/history-fixture?path='+encodeURIComponent(q.path));let rows=await response.json();rows.sort((a,b)=>b.data.createdAt-a.data.createdAt);const cursor=q.rules.find(r=>r.after)?.after;if(cursor)rows=rows.slice(rows.findIndex(r=>r.id===cursor)+1);rows=rows.slice(0,q.rules.find(r=>r.limit)?.limit);return {size:rows.length,docs:rows.map(r=>({id:r.id,data:()=>r.data}))};}
  export async function setDoc(path,data){if(window.failHistorySave)throw Error('History connection failed');await fetch('/history-fixture?path='+encodeURIComponent(path),{method:'PUT',body:JSON.stringify(data)});}
  export async function deleteDoc(path){if(window.failHistoryDelete)throw Error('History deletion failed');await fetch('/history-fixture?path='+encodeURIComponent(path),{method:'DELETE'});}`;
- const fixtureApi='export async function loadVoices(){if(window.failVoices)throw Error("Backend unavailable");return '+JSON.stringify(voices)+';} export async function generateVoiceover(data){window.lastTtsRequest=data;await new Promise(r=>setTimeout(r,window.generationDelay||30));if(window.failGenerate)throw Error("Google TTS quota is exhausted");return '+JSON.stringify({audioBase64:mp3.toString('base64'),mimeType:'audio/mpeg',filename:'test-voice.mp3',durationSeconds:1,voiceName:'hi-IN-Neural2-B'})+';}';
+ const fixtureApi='export async function loadVoices(){if(window.failVoices)throw Error("Backend unavailable");return '+JSON.stringify(voices)+';} export async function generateVoiceover(data){window.lastTtsRequest=data;if(window.generationGate)await window.generationGate;await new Promise(r=>setTimeout(r,window.generationDelay||30));if(window.failGenerate)throw Error("Google TTS quota is exhausted");return '+JSON.stringify({audioBase64:mp3.toString('base64'),mimeType:'audio/mpeg',filename:'test-voice.mp3',durationSeconds:1,voiceName:'hi-IN-Neural2-B'})+';}';
  const server=http.createServer((req,res)=>{
   const url=new URL(req.url,'http://localhost'),relative=decodeURIComponent(url.pathname.replace(/^\/invincible\//,''));
   if(url.pathname==='/history-fixture'){
@@ -48,6 +48,21 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   const base='http://127.0.0.1:'+server.address().port+'/invincible/creator/tts.html';
   await page.addInitScript(()=>{if(!localStorage.getItem('invincible.creator.tts.draft.v1.owner'))localStorage.setItem('invincible.creator.tts.draft.v1.owner',JSON.stringify({engine:'classic'}));});
   await page.goto(base);await page.locator('#accountStatus').filter({hasText:'voices available'}).waitFor();
+  for (const [width,height] of [[1024,800],[1280,600],[1280,800],[1600,800]]) {
+    await page.setViewportSize({width,height});
+    const panels = await page.locator('#workspace > .space-panel').evaluateAll(elements =>
+      elements.map(element => {
+        const {width,height,top} = element.getBoundingClientRect();
+        return {width,height,top};
+      }));
+    assert.equal(panels.length,3);
+    for (const panel of panels) {
+      assert.ok(Math.abs(panel.width-panels[0].width)<1, 'Voiceover panels have equal widths at '+width);
+      assert.ok(Math.abs(panel.height-panels[0].height)<1, 'Voiceover panels have equal heights at '+width);
+      assert.equal(panel.top,panels[0].top);
+    }
+  }
+  await page.setViewportSize({width:1280,height:720});
     assert.equal(await page.locator('.tts-forest').getAttribute('aria-hidden'),'true');
     assert.equal(await page.locator('.tts-river').count(),0,'The page uses the forest background');
   for(const asset of ['tts-forest.css','tts-forest.js'])assert.equal(await page.evaluate(async asset=>(await fetch(asset)).status,asset),200,'Forest asset loads: '+asset);
@@ -217,10 +232,10 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   await page.locator('#engine').selectOption('classic');await page.locator('#family').selectOption('Neural2');
   assert.equal(await page.locator('#preset').inputValue(),'natural');
   for(const delivery of ['social','empathetic'])assert.equal(await page.locator('#preset option[value='+delivery+']').evaluate(el=>el.disabled),true);
-    await page.evaluate(()=>{window.failGenerate=false;window.generationDelay=250;});await page.locator('#generate').click();
+    await page.evaluate(()=>{window.failGenerate=false;window.generationGate=new Promise(resolve=>{window.releaseGeneration=resolve;});});await page.locator('#generate').click();
     assert.equal(await page.locator('#generate').isDisabled(),true,'Generation disables duplicate requests');
     assert.equal(await page.locator('#preview').isDisabled(),true,'Preview is disabled while generating');
-  await page.evaluate(()=>window.setTtsUser({uid:'other'}));await page.waitForTimeout(400);
+  await page.evaluate(()=>{window.setTtsUser({uid:'other'});window.releaseGeneration();});await page.waitForTimeout(400);
   assert.equal(await page.locator('#direction').inputValue(),'');
   await page.locator('#engine').selectOption('classic');await page.locator('#family').selectOption('Neural2');
   assert.equal(await page.locator('#script').inputValue(),'');assert.equal(await page.locator('#recording').isHidden(),true);

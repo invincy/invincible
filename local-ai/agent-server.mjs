@@ -26,16 +26,20 @@ export async function createLocalAgentServer({ ownerUid, token = crypto.randomBy
   const principal = { uid: ownerUid, workspaceIds: [ownerUid] };
   const projectsFile = path.join(images.directory, 'projects.json'); let projectTail = Promise.resolve();
   const voiceoverDirectory=path.join(workspaceRoot,'voiceover-analysis');
-  async function installedVoiceoverModel(){
+  async function installedQwenModel(preferredModels = ['qwen3:4b-instruct', 'qwen3:4b']){
     const response=await fetchImpl('http://127.0.0.1:11434/api/tags',{signal:AbortSignal.timeout(3000),redirect:'error'});
     if(!response.ok)throw Error('Ollama did not report installed models.');
     const names=new Set((await response.json()).models?.map(model=>model.name));
-    const model=['qwen3:4b-instruct','qwen3:4b'].find(name=>names.has(name));
+    const model=preferredModels.find(name=>names.has(name));
     if(!model)throw Error('No installed Qwen3 4B model was found.');
     return model;
   }
+  async function checkWhisper() {
+    const response = await fetchImpl(new URL('/health', whisperEndpoint()), { signal: AbortSignal.timeout(3000), redirect: 'error' });
+    if (!response.ok) throw Error('Local Whisper is offline.');
+  }
   const structuredVoiceoverAsk=askVoiceoverJson|| (async prompt=>{
-    const model=await installedVoiceoverModel();
+    const model=await installedQwenModel();
     const response=await fetchImpl('http://127.0.0.1:11434/api/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({model,stream:false,think:false,format:'json',options:{temperature:0},messages:[{role:'user',content:prompt}]}),signal:AbortSignal.timeout(120000),redirect:'error'});
     if(!response.ok)throw Error(`Ollama request failed (${response.status}).`);return JSON.parse((await response.json())?.message?.content||'{}');
   });
@@ -91,14 +95,22 @@ export async function createLocalAgentServer({ ownerUid, token = crypto.randomBy
       if (url.pathname.startsWith('/api/')) {
         const actor = authenticate(request);
         if (request.method === 'GET' && url.pathname === '/api/session') return send(response, 200, { uid: ownerUid, workspaceId: ownerUid, storage: images.storage(), presets: IMAGE_PRESETS, capabilities: { draftPrompt: true, referenceImage: true } });
+        if (request.method === 'GET' && url.pathname === '/api/service-status') {
+          const [whisper, qwen, imagesReady] = await Promise.allSettled([checkWhisper(), installedQwenModel(['qwen3:4b']), images.checkConnection()]);
+          return send(response, 200, {
+            whisper: whisper.status === 'fulfilled',
+            qwen: qwen.status === 'fulfilled',
+            images: imagesReady.status === 'fulfilled' && imagesReady.value === true,
+          });
+        }
         if (request.method === 'GET' && url.pathname === '/api/projects') return send(response, 200, { projects: await projects() });
         if (request.method === 'GET' && url.pathname === '/api/voiceover/catalog-status') {
           const check=url.searchParams.get('check')==='production';
           const catalog=await loadVoiceoverCatalog(root,{includeHistory:check});
           if(check){
-            try{const response=await fetchImpl(new URL('/health',whisperEndpoint()),{signal:AbortSignal.timeout(3000),redirect:'error'});if(!response.ok)throw Error('Offline');}
+            try{await checkWhisper();}
             catch{throw Error('Local Whisper is offline. Start the laptop voiceover service before generating narration.');}
-            try{await installedVoiceoverModel();}catch{throw Error('Start Ollama with your installed Qwen3 4B model before generating narration.');}
+            try{await installedQwenModel();}catch{throw Error('Start Ollama with your installed Qwen3 4B model before generating narration.');}
           }
           return send(response,200,{automaticContext:true,verifiedLocations:Array.isArray(catalog.verifiedLocations)?catalog.verifiedLocations.length:0,verifiedRoutes:Array.isArray(catalog.verifiedRoutes)?catalog.verifiedRoutes.filter(route=>route.reviewed===true).length:0});
         }

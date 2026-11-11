@@ -14,9 +14,9 @@ body:has(.space-panels) :is(.global-nav, .react-topbar) {
 .space-panels.space-panels {
   box-sizing: border-box;
   display: grid;
-  grid-template: auto / var(--space-columns, minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr));
+  grid-template: auto / repeat(3, minmax(0, 1fr));
   gap: clamp(10px, 1.25vw, 20px);
-  align-items: start;
+  align-items: stretch;
   min-width: 0;
 }
 .space-panels:focus-visible {
@@ -40,26 +40,25 @@ body:has(.space-panels) :is(.global-nav, .react-topbar) {
 .space-panels .space-panel img { max-width: 100% }
 .space-panels.space-panels[hidden] { display: none }
 .voiceover-page .workspace.space-panels {
-  --space-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr);
   min-height: 0;
   height: auto;
 }
-.voiceover-page .workspace.space-panels > .space-panel { grid-area: auto; max-height: none }
+.voiceover-page .workspace.space-panels > .space-panel { grid-area: auto; max-height: none; width: auto }
 .voiceover-page .workspace.space-panels .result-panel,
 .voiceover-page .workspace.space-panels .result-panel:has(#recording:not([hidden])) {
   position: static;
   grid-template-columns: minmax(0, 1fr);
 }
-.voiceover-page .workspace.space-panels .history-panel { margin-top: 12px }
+@media (min-width: 901px) {
+  .voiceover-page .workspace.space-panels { grid-template-columns: repeat(3, minmax(0, 1fr)) }
+  .voiceover-page .workspace.space-panels .history-panel { margin-top: 0 }
+}
 .voiceover-page .workspace.space-panels .script-panel { overflow: visible }
-.finance-main.space-panels { --space-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, .75fr) }
 .finance-overview-panel .finance-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) }
 .finance-main-column.space-panel .finance-account-grid { grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr)) }
 .finance-main.space-panels .finance-checklist-panel { order: 0; position: static }
-.map-editor-layout.space-panels { --space-columns: minmax(150px, .68fr) minmax(0, 2.1fr) minmax(180px, .92fr) }
 .map-editor-layout.space-panels .map-editor-toolbar button { flex: 1 1 auto }
 .map-editor-layout.space-panels .history-map { touch-action: none }
-.focus-layout.space-panels { --space-columns: minmax(0, 1fr) minmax(0, 1.9fr) minmax(0, 1fr) }
 .focus-layout.space-panels .vault-grid { grid-template-columns: minmax(0,1fr) }
 @media (max-width: 900px) {
   .space-panels.space-panels {
@@ -95,11 +94,9 @@ body:has(.space-panels) :is(.global-nav, .react-topbar) {
   .finance-main.space-panels .finance-mobile-cockpit { min-height: 100%; touch-action: auto }
   .finance-main.space-panels > .space-panel { max-height: none }
 }
-.pf-columns.space-panels { --space-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) }
+.lic-shortcuts.space-panels { max-width: 1040px }
 .workday-shell .space-panels .wd-board { grid-template-columns: minmax(0, 1fr) }
-.lic-shortcuts.space-panels { --space-columns: repeat(3, minmax(0, 1fr)); max-width: 1040px }
 .lic-shortcuts.space-panels .lic-shortcut { max-width: 100%; width: 100%; box-sizing: border-box }
-.creator-project-panels.space-panels { --space-columns: minmax(0, .7fr) minmax(0, .7fr) minmax(0, 2.2fr) }
 .creator-project-panels.space-panels .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)) }
 .creator-project-panels.space-panels .board { grid-template-columns: minmax(0, 1fr) }
 @media (min-width: 901px) and (min-height: 650px) {
@@ -109,12 +106,11 @@ body:has(.space-panels) :is(.global-nav, .react-topbar) {
     align-items: stretch;
   }
   .voiceover-page .workspace.space-panels > .space-panel { overflow-y: auto }
-  .voiceover-page .workspace.space-panels .history-panel { margin-top: 0 }
 }
 @media (max-width: 900px) {
   .voiceover-page .workspace.space-panels .history-link { display: inline-flex }
 }
-.image-generator.space-panels > [data-image-form] { grid-row: auto }
+.image-generator.space-panels > [data-image-form] { grid-area: auto }
 .image-generator.space-panels .image-history { grid-column: auto }
 .image-generator.space-panels .image-preview-panel > figure { grid-column: auto }
 .ai-chat-panel.space-panels { height: auto; min-height: 0 }
@@ -124,7 +120,6 @@ body:has(.space-panels) :is(.global-nav, .react-topbar) {
 .ai-chat-panel.space-panels .ai-chat-stream { max-height: 66dvh; overflow-y: auto }
 .ai-chat-panel.space-panels .ai-composer { grid-template-columns: minmax(0,1fr); position: static }
 .ai-chat-panel.space-panels .ai-composer textarea { width: 100%; box-sizing: border-box }
-.vs-layout.space-panels { --space-columns: minmax(0, 1.3fr) minmax(0, 1.3fr) minmax(0, .85fr) }
 .vs-layout.space-panels > .vs-preview { position: static }
 @media(max-width:900px) {
   .video-studio:not(.vs-focusing) .vs-mobile-tabs { display: flex; gap: 8px; margin-bottom: 12px }

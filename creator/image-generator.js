@@ -47,16 +47,16 @@ export function mountConnectedImageGenerator(root, { getAccountId, callRelay, dr
     } });
   }
   mount();
-  return { destroy: () => panel.destroy() };
+  return { destroy: () => panel.destroy(), refresh: () => panel.refresh() };
 }
 
-export function mountImageGenerator(root, { client = createLocalImageClient(), getAccountId = () => null, getProjectId = () => null, onAttach, onReveal = () => {}, onSwitch } = {}) {
+export function mountImageGenerator(root, { client = createLocalImageClient(), getAccountId = () => null, getProjectId = () => null, onAttach, onReveal = () => {}, onSwitch, statusOnlyConnection = false, onConnectionChange } = {}) {
   const remote = client.remote === true;
   root.classList.add('image-generator','space-panels');
   root.tabIndex=0;
   root.setAttribute('aria-label','Image generator panels');
   root.innerHTML = `<div data-image-form class="space-panel"><header><h3>Create image</h3></header>
-    <div class="image-connection-bar" data-connection-state="checking">
+    <div class="image-connection-bar" ${statusOnlyConnection ? 'hidden' : ''} data-connection-state="checking">
       <div class="image-laptop-status"><span class="image-laptop-icon" aria-hidden="true"></span><p data-image-connection role="status">Checking laptop…</p></div>
       <div class="image-laptop-actions">
         <button type="button" data-image-pair hidden>Retry</button>
@@ -77,7 +77,7 @@ export function mountImageGenerator(root, { client = createLocalImageClient(), g
       <button type="button" data-image-reference-remove hidden>Remove reference</button>
     </div>
     <fieldset><legend>Frame</legend><label><input type="radio" name="image-frame" value="square" checked>Square <small>512 × 512</small></label><label><input type="radio" name="image-frame" value="portrait">Portrait <small>384 × 640</small></label><label><input type="radio" name="image-frame" value="landscape">Landscape <small>640 × 384</small></label></fieldset>
-    <details data-image-advanced><summary>Advanced settings</summary><label>Seed <small>Leave empty for a new variation</small><input data-image-seed type="number" min="0" max="4294967295" step="1"></label><div class="image-connection-options"><button type="button" data-image-switch ${onSwitch ? '' : 'hidden'}>${remote ? 'Set up on this laptop' : 'Use saved laptop'}</button><button type="button" data-image-forget hidden>Forget laptop</button></div><details ${remote ? 'hidden' : ''}><summary>Manual pairing</summary><label>Pairing code<input data-image-token type="password" autocomplete="off"></label><button type="button" data-image-connect>Connect</button></details></details>
+    <details data-image-advanced><summary>Advanced settings</summary><label>Seed <small>Leave empty for a new variation</small><input data-image-seed type="number" min="0" max="4294967295" step="1"></label><div class="image-connection-options" ${statusOnlyConnection ? 'hidden' : ''}><button type="button" data-image-switch ${onSwitch ? '' : 'hidden'}>${remote ? 'Set up on this laptop' : 'Use saved laptop'}</button><button type="button" data-image-forget hidden>Forget laptop</button></div><details ${remote || statusOnlyConnection ? 'hidden' : ''}><summary>Manual pairing</summary><label>Pairing code<input data-image-token type="password" autocomplete="off"></label><button type="button" data-image-connect>Connect</button></details></details>
     <div class="image-actions"><button type="button" data-image-generate disabled>Generate</button><button type="button" data-image-regenerate hidden>Regenerate</button></div></div>
     <div class="space-panel image-preview-panel"><p role="status" aria-live="polite" data-image-status></p>
     <figure hidden><img data-image-preview alt="Generated image"><figcaption data-image-caption></figcaption></figure>
@@ -109,6 +109,7 @@ export function mountImageGenerator(root, { client = createLocalImageClient(), g
     capabilities = session?.capabilities;
     const saved = !!client.hasPairing?.();
     const state = connected ? 'online' : !remote && !saved ? 'unpaired' : error || session ? 'offline' : 'checking';
+    onConnectionChange?.({ accountId: actor, connected, remote, state });
     $('.image-connection-bar').dataset.connectionState = state;
     $('[data-image-connection]').textContent = {
       online: 'Laptop online', offline: 'Laptop offline', unpaired: 'Pair a laptop', checking: 'Checking laptop…'
@@ -361,5 +362,5 @@ export function mountImageGenerator(root, { client = createLocalImageClient(), g
       lock(busy);
     }
   }).catch(error => { connection(null,error); });
-  return { ready, async showJob(next) { lock(true); clearPreview(); try { await complete(next); } catch (error) { status('Failed · ' + error.message); } finally { if (current()) lock(false); } }, destroy() { window.removeEventListener('message',notification);window.removeEventListener('invincible-image-job',notification);window.removeEventListener('storage',storageChanged);window.removeEventListener('focus',focusChanged);window.removeEventListener('invincible-local-disconnected',disconnected);disposed = true; controller.abort(); clearPreview(); } };
+  return { ready, refresh: refreshPairing, async showJob(next) { lock(true); clearPreview(); try { await complete(next); } catch (error) { status('Failed · ' + error.message); } finally { if (current()) lock(false); } }, destroy() { window.removeEventListener('message',notification);window.removeEventListener('invincible-image-job',notification);window.removeEventListener('storage',storageChanged);window.removeEventListener('focus',focusChanged);window.removeEventListener('invincible-local-disconnected',disconnected);disposed = true; controller.abort(); clearPreview(); } };
 }

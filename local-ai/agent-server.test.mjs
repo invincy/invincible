@@ -55,6 +55,20 @@ test('published-site pairing requires the configured origin, owner and explicit 
  query.set('uid','other-owner');assert.equal((await fetch(service.origin+'/connect?'+query)).status,403);query.set('uid','test-owner');query.set('origin','https://evil.example');assert.equal((await fetch(service.origin+'/connect?'+query)).status,403);
  assert.equal((await fetch(service.origin+'/api/session',{headers:{Origin:'https://invincy.github.io'}})).status,401,'CORS never substitutes for authentication');
 });
+test('service status checks each dependency independently without running jobs',async t=>{
+ const requests=[];
+ const {service,call}=await setup(t,{serverOptions:{fetchImpl:async (url,options)=>{
+  const route=new URL(url).pathname;
+  requests.push([route,options.method||'GET']);
+  if(route==='/health')return new Response(null,{status:503});
+  if(route==='/api/tags')return Response.json({models:[{name:'qwen3:4b'}]});
+  if(route==='/queue')return Response.json({queue_running:[],queue_pending:[]});
+  throw Error('Unexpected request: '+route);
+ }}});
+ assert.equal((await fetch(service.origin+'/api/service-status')).status,401);
+ assert.deepEqual(await (await call('/api/service-status')).json(),{whisper:false,qwen:true,images:true});
+ assert.deepEqual(requests.sort(),[['/api/tags','GET'],['/health','GET'],['/queue','GET']]);
+});
 test('voiceover catalog preflight exposes only reviewed geography counts',async t=>{
  const{service,call}=await setup(t,{serverOptions:{loadVoiceoverCatalog:async()=>({assets:[{id:'fixture'}],verifiedLocations:[{id:'panipat'}],verifiedRoutes:[{id:'route-1',reviewed:true},{id:'draft-route',reviewed:false}]})}});
  assert.equal((await fetch(service.origin+'/api/voiceover/catalog-status')).status,401);
