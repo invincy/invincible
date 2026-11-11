@@ -119,8 +119,8 @@ async function checkOrbGestures(browser, base, touch) {
       const element=document.querySelector('.v2-orb:not(.is-compact)');
       return element&&Math.abs(element.getBoundingClientRect().width-expected)<2;
     },width);
-    const originalNarrowWidth=()=>page.locator('.v2-guide-scene').evaluate(scene=>Math.min(scene.clientWidth,640));
-    await assertWidth(touch?await originalNarrowWidth():754.6875);
+    const originalNarrowWidth=()=>page.locator('.v2-guide-scene').evaluate(scene=>Math.min(scene.clientWidth*.85,544));
+    await assertWidth(touch?await originalNarrowWidth():754.6875*.85);
     const ratio=await orb.evaluate(element=>{
       const globe=element.querySelector('.focus-orb-3d').getBoundingClientRect();
       const anchor=element.getBoundingClientRect();
@@ -128,7 +128,7 @@ async function checkOrbGestures(browser, base, touch) {
       return {globe:globe.width/anchor.width,shortcuts:shortcuts.width/anchor.width};
     });
     assert.ok(Math.abs(ratio.globe-(touch?1.48:1.628))<.005,'Only the desktop particle field grows');
-    assert.ok(Math.abs(ratio.shortcuts-1)<.005,'The shortcut layout retains its diameter');
+    assert.ok(Math.abs(ratio.shortcuts-1)<.005,'The shortcut layout aligns with the globe anchor');
     await orb.locator('[data-ready=true]').waitFor();
     await page.waitForTimeout(2300);
     const {x,y}=await orb.evaluate(element=>{
@@ -204,7 +204,7 @@ async function checkOrbGestures(browser, base, touch) {
       await page.mouse.move(5,5);
       await page.mouse.up();
       await page.setViewportSize({width:1280,height:600});
-      await assertWidth(452.8125);
+      await assertWidth(452.8125*.85);
     }
   }finally{await context.close();}
 }
@@ -338,6 +338,8 @@ async function checkGlobeWithoutWebGL(browser,base) {
         assert.ok(positions.ai.x>.3&&positions.ai.x<.6&&positions.ai.y<.4);
         assert.ok(positions.workday.x>.2&&positions.workday.x<.5&&positions.workday.y>.5);
         assert.ok(positions.journal.x<.35&&positions.creator.x>.7);
+        assert.ok(Object.values(positions).every(({x,y})=>Math.hypot(x-.5,y-.5)<.35),'Shortcut centers stay inside the rim');
+        assert.equal(await page.locator('.focus-orb-3d.orb-theme-cyan').count(),1,'Fresh preferences default to cyan');
         await page.getByRole('button',{name:'Open current task: Build the living workspace'}).click();
         await page.getByRole('region',{name:'Task workspace: Build the living workspace'}).waitFor();
         await page.setViewportSize({width:1920,height:1080});
@@ -490,10 +492,10 @@ async function checkGlobeWithoutWebGL(browser,base) {
           assert.ok(scene.orbWidth>=200,name+' '+width+' dashboard Orb size');
           if(width>=901){
             const originalWidth=Math.max(420,Math.min(width*.70,height*.875,1120));
-            assert.ok(Math.abs(scene.orbWidth-originalWidth*.8625)<2,name+' '+width+' desktop Orb at 86.25% of the original size');
+            assert.ok(Math.abs(scene.orbWidth-originalWidth*.8625*.85)<2,name+' '+width+' desktop Orb at the reduced size');
           }else{
-            const originalWidth=await page.locator('.v2-guide-scene').evaluate(element=>Math.min(element.clientWidth,640));
-            assert.ok(Math.abs(scene.orbWidth-originalWidth)<2,name+' '+width+' original narrow Orb size');
+            const originalWidth=await page.locator('.v2-guide-scene').evaluate(element=>Math.min(element.clientWidth*.85,544));
+            assert.ok(Math.abs(scene.orbWidth-originalWidth)<2,name+' '+width+' reduced narrow Orb size');
           }
           if(width>=1101) assert.ok(scene.missionRight<scene.orbLeft+scene.orbWidth*.25,name+' '+width+' mission keeps clear space for Orb');
           if([393,1280,1366,1440,1870,1920,2560].includes(width)){await page.screenshot({path:path.join(output,name+'-'+width+'.png')});}

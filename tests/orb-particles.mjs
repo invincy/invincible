@@ -37,14 +37,16 @@ test('dashboard density retains every original particle and adds finer points wi
   assert.deepEqual(particles.subarray(0,original.length),original);
   assert.ok(particles.every(Number.isFinite));
   const extraCount=(particles.length-original.length)/5;
-  let largeCount=0;
+  let largeCount=0,largestCount=0;
   for(let index=original.length;index<particles.length;index+=5){
    const size=particles[index+3];
-   if(size>=1.75){assert.ok(size>=1.84&&size<2.2);largeCount++;}
+   if(size>=2.4){assert.ok(size>=2.47&&size<2.82);largestCount++;}
+   else if(size>=1.75){assert.ok(size>=1.84&&size<2.2);largeCount++;}
    else assert.ok(size>=1.14&&size<1.5);
    assert.ok(particles[index+4]<0);
   }
   assert.equal(largeCount,Math.ceil(extraCount/4));
+  assert.equal(largestCount,Math.floor((extraCount+2)/4));
  }
 });
 

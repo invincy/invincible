@@ -25,7 +25,7 @@ void main(){
   vec3 p=rotateByGesture(vec3(position.x*c+position.z*s,position.y,-position.x*s+position.z*c));
   vec4 projected=projection*vec4(p,1.0);
   gl_Position=projected;
-  float minimumSize=mix(1.5,1.85,step(1.75,appearance.x));
+  float minimumSize=1.5+.35*step(1.75,appearance.x)+.42*step(2.4,appearance.x);
   gl_PointSize=max(minimumSize,appearance.x*pixelRatio*pointScale*4.6/projected.w);
   opacity=-appearance.y*(.18+.82*smoothstep(-.75,1.0,p.z));
   return;
@@ -75,7 +75,7 @@ p.xy+=delta*pull*mix(.13,.30,expressive);p.z+=pull*mix(.16,.28,expressive);
 float planetPulse=.5-.5*cos(time*.5235988);
 p*=1.0-.015*planetPulse;
 vec4 projected=projection*vec4(p,1.0);gl_Position=projected;float size=mix(1.0,1.22,step(.5,style)*(1.0-step(1.5,style)));size*=1.0+.26*packet+.12*secondary;gl_PointSize=max(1.0,appearance.x*size*pixelRatio*pointScale*4.6/projected.w);opacity=appearance.y*edge*center*(0.35+0.65*smoothstep(-1.0,1.0,p.z));opacity*=.48+1.05*packet+.48*secondary;opacity*=mix(1.0,.68,step(1.5,style)*(1.0-step(.76,appearance.y)));}`;
-const particleFragment=`precision mediump float;uniform vec3 colorA;uniform vec3 colorB;varying float opacity;void main(){float radius=length(gl_PointCoord-vec2(0.5))*2.0;if(radius>1.0)discard;float core=1.0-smoothstep(0.0,1.0,radius);gl_FragColor=vec4(mix(colorA,colorB,core),core*opacity);}`;
+const particleFragment=`precision mediump float;uniform vec3 colorA;uniform vec3 colorB;uniform float particleBrightness;varying float opacity;void main(){float radius=length(gl_PointCoord-vec2(0.5))*2.0;if(radius>1.0)discard;float core=1.0-smoothstep(0.0,1.0,radius);gl_FragColor=vec4(mix(colorA,colorB,core),core*opacity*particleBrightness);}`;
 function perspective(aspect){const f=1/Math.tan(Math.PI/8),near=.1,far=30,distance=4.6;return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)/(near-far),-1,0,0,(far+near)/(near-far)*-distance+2*far*near/(near-far),distance])}
 const palettes={cyan:{style:0,a:[.08,.55,.78],b:[.55,1,1]},emerald:{style:1,a:[.03,.32,.12],b:[.46,1,.62]},gold:{style:2,a:[.42,.16,.025],b:[1,.85,.38]}};
 export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=false,followPagePointer=false,dashboardMotion=false,interactionSurface}){
@@ -95,10 +95,11 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=fa
   const interactive=()=>drag||targetStrength>0||hoverStrength>.015||coasting();
   const initialize=()=>{
    dots=program(gl,particleVertex,particleFragment);particleBuffer=gl.createBuffer();particleTier=null;
-   uniforms=Object.fromEntries(['projection','pixelRatio','pointScale','time','spin','rotation','influence','style','expressive','colorA','colorB'].map(name=>[name,gl.getUniformLocation(dots,name)]));
+   uniforms=Object.fromEntries(['projection','pixelRatio','pointScale','time','spin','rotation','influence','style','expressive','colorA','colorB','particleBrightness'].map(name=>[name,gl.getUniformLocation(dots,name)]));
    gl.useProgram(dots);gl.bindBuffer(gl.ARRAY_BUFFER,particleBuffer);
    for(const [name,size,offset]of[['position',3,0],['appearance',2,12]]){const location=gl.getAttribLocation(dots,name);gl.enableVertexAttribArray(location);gl.vertexAttribPointer(location,size,gl.FLOAT,false,20,offset)}
    gl.clearColor(0,0,0,0);gl.disable(gl.DEPTH_TEST);gl.depthMask(false);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
+   gl.uniform1f(uniforms.particleBrightness,dashboardMotion?1.25:1);
    gl.uniform1f(uniforms.style,palette.style);gl.uniform1f(uniforms.expressive,richParticles ? 1 : 0);gl.uniform1f(uniforms.spin,spin ? 1 : 0);gl.uniform3fv(uniforms.colorA,palette.a);gl.uniform3fv(uniforms.colorB,palette.b);
   };
   // A timer waits for the next due frame; rAF only aligns that frame with presentation.

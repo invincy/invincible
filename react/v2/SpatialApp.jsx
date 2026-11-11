@@ -48,7 +48,7 @@ function SignedInWorkspace({user, logout}) {
   const inspect = id => setFocusedTaskId(id);
   const [authError, setAuthError] = useState('');
   const [orbBox, setOrbBox] = useState({left: innerWidth-66, top: 12, width: 48, height: 48, compact: true});
-  const [theme, setTheme] = useState(() => {try {return localStorage.getItem('invincible-orb-theme') || 'gold';} catch {return 'gold';}});
+  const [theme, setTheme] = useState(() => {try {return localStorage.getItem('invincible-orb-theme') || 'cyan';} catch {return 'cyan';}});
   useEffect(() => {
     const returnFromPage = () => setTravelPage(null);
     window.addEventListener('pageshow', returnFromPage);

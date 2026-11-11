@@ -277,3 +277,5 @@ Release 2026.11.11.6 increases the desktop particle field by 10% around the exis
 The Dashboard fades the ambient network behind the visible globe, using its current position on desktop and mobile. The gold filament heads are slightly brighter. Particle positions, counts, animation and shortcut positions are unchanged.
 
 Release 2026.11.12.2 gives the gold globe a muted blue background network. One in four supplemental globe dots is larger and brighter. The filament layer, total particle budget and motion are unchanged.
+
+Release 2026.11.12.3 makes cyan the default for new preferences, reduces the globe and shortcut layout by 15%, softens shortcut halos, and moves the desktop side cards outward. Half of the supplemental globe dots keep their fine size, a quarter retain the previous accent size, and a quarter are larger. The globe uses a 1.25 brightness multiplier, and the ambient network keeps its published intensity.
