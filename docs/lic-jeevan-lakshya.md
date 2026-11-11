@@ -165,3 +165,5 @@ The illustrated scenario includes the Term Rider. The spoken payout starts with 
 The presentation plays each finished recording at 1.2× with pitch preservation enabled. This playback rate is separate from the Voiceover Studio pace setting. Scene changes still follow the end of each clip, including after pause and resume.
 
 The four goal coins now spread once into a staggered row and hold those positions through the plan narration and goal selection. The father and daughter remain visible during the opening and planning scenes and fade during the death scenario.
+
+The opening recording includes the full “करते हैं” ending with a short silent tail. The choice cue is “Please, अपना goal चुनिए।” Both clips use the existing Social voice and 1.2× playback.

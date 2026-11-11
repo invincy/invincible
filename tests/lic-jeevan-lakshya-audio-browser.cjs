@@ -32,6 +32,9 @@ const server=http.createServer((req,res)=>{
   const finish=async()=>{await page.evaluate(()=>{const a=document.querySelector('#storyNarration');a.currentTime=a.duration-.08;});};
   // Seeking only accelerates this test; native media ended events still drive transitions.
   await cue('intro.dreams');
+  const openingEnd=page.locator('#storyNarration').evaluate(audio=>new Promise(resolve=>{
+   audio.addEventListener('ended',()=>resolve({time:audio.currentTime,duration:audio.duration}),{once:true});
+  }));
   assert.equal(await page.getByRole('button',{name:'Start with voice'}).count(),0);
   assert.equal(await page.locator('#goalChoices').evaluate(e=>e.inert),true);
   await page.waitForFunction(()=>document.querySelector('#stageContainer').dataset.opening==='dreams');
@@ -42,7 +45,10 @@ const server=http.createServer((req,res)=>{
   }));
   await page.waitForFunction(()=>[...document.querySelectorAll('#goalChoices button')].every(button=>getComputedStyle(button).opacity==='1'&&!button.getAnimations().some(animation=>animation.playState==='running')));
   const spread=await goalPositions();
-  await finish();await cue('intro.plan');assert.equal(await page.locator('#goalChoices').evaluate(e=>e.inert),true);
+  await cue('intro.plan');
+  const ended=await openingEnd;
+  assert.ok(ended.duration-ended.time<.05,'Opening audio plays to the end before the plan cue');
+  assert.equal(await page.locator('#goalChoices').evaluate(e=>e.inert),true);
   assert.deepEqual(await goalPositions(),spread);
   assert.equal(await page.locator('.story-family').evaluate(image=>getComputedStyle(image).opacity),'1');
   await finish();await cue('goal.choose');assert.equal(await page.locator('#goalChoices').evaluate(e=>e.inert),false);
@@ -69,7 +75,7 @@ const server=http.createServer((req,res)=>{
   assert.ok(!/grayscale/.test(await page.locator('#storyGoal').evaluate(e=>getComputedStyle(e).filter)));
   const anchor=await page.evaluate(()=>{const c=document.querySelector('#goalCoin').getBoundingClientRect(),r=document.querySelector('.story-road').getBoundingClientRect();return Math.hypot(c.x+c.width/2-r.x-r.width*268/500,c.y+c.height/2-r.y-r.height*55/500);});assert.ok(anchor<1.5);
   await finish();await page.waitForTimeout(700);assert.equal(await page.locator('#stageContainer').getAttribute('data-benefit-step'),'4','Final scene holds');
-  await page.locator('#storyModeToggle').click();await cue('family.rider');await page.locator('#ctaPrevBtn').click();await cue('family.whatif');assert.match(await page.locator('#storyNarration').getAttribute('src'),/family\.whatif\.mp3\?v=14$/);assert.equal(await page.locator('#stageContainer').getAttribute('data-flow-step'),'whatif');
+  await page.locator('#storyModeToggle').click();await cue('family.rider');await page.locator('#ctaPrevBtn').click();await cue('family.whatif');assert.match(await page.locator('#storyNarration').getAttribute('src'),/family\.whatif\.mp3\?v=16$/);assert.equal(await page.locator('#stageContainer').getAttribute('data-flow-step'),'whatif');
   assert.deepEqual(errors,[]);console.log('PASS 15 recordings, automatic sound from plan card, four goals, Other Goal narration, pause/resume, mute, cancellation and maturity');
  }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1;});

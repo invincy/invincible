@@ -15,9 +15,9 @@
       "file": "intro.dreams.mp3",
       "spokenText": "अपने बच्चे की education, उसके career की शुरुआत, शादी की तैयारी, या कोई और सपना। हर goal के लिए हम planning करते हैं।",
       "duration": 7.491,
-      "bytes": 151724,
-      "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
-      "sha256": "cef7edfe278deba92f61f53633069bf49e4ec19531d6512db406a5b94f502fc0"
+      "bytes": 151725,
+      "direction": "Keep the same brisk, conversational Indian Hindi-English delivery. Read every word exactly. Pronounce the entire final phrase करते हैं, including a clearly audible हैं. Let the last syllable finish naturally, then pause briefly before ending. Read only the supplied script.",
+      "sha256": "d0b32234f72e55c89b12f51d6974200d09488ad0b50195a238988bc38dba46ff"
     },
     "intro.plan": {
       "file": "intro.plan.mp3",
@@ -29,11 +29,11 @@
     },
     "goal.choose": {
       "file": "goal.choose.mp3",
-      "spokenText": "Education, career, शादी, या कोई और goal। आप किसके लिए planning करना चाहते हैं? अपना goal चुनिए।",
-      "duration": 6.131,
-      "bytes": 124364,
-      "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
-      "sha256": "3feaf5cf9f4e17455b1aa17a3bcc8b961971d39ec9be363944ea41820de1470a"
+      "spokenText": "Please, अपना goal चुनिए।",
+      "duration": 2.251,
+      "bytes": 46604,
+      "direction": "Say exactly the supplied sentence in a warm, direct tone. Give the last word चुनिए its full three natural syllables, chu-ni-ye, ending clearly on ye. Leave a short pause after it. Do not say the pronunciation guide out loud.",
+      "sha256": "c5fb36f00728c8a5981ce6184231c201395896d0f1398defbfc72b61b464c511"
     },
     "goal.education": {
       "file": "goal.education.mp3",
