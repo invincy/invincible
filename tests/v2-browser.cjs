@@ -31,11 +31,19 @@ const saved=JSON.parse(sessionStorage.getItem('v2-fixture-saved')||'{}');
 tasks[0].steps[0].extension={keep:'nested'};
 tasks[0].subtasks=[{text:'Review the spatial canvas',done:false,legacyNotes:'Keep legacy extension'},{text:'Inspect existing records',done:true}];
 if(saved.tasks)tasks.splice(0,tasks.length,...Object.values(saved.tasks));
-const ideas=saved.ideas||{};
+const ideas=saved.ideas||{},todos=saved.todos||{};
+window.seedOldTodos=()=>{
+ todos.expired={title:'Expired completed item',createdAt:1,completedAt:Date.now()-8*86400000};
+ todos.retained={title:'Old unchecked item',createdAt:1,completedAt:null};
+ for(const listener of listeners)listener.next(snapshot(listener.ref));
+};
+const todoData=row=>Object.fromEntries(Object.entries(row).map(([key,value])=>[key,key.endsWith('At')&&typeof value==='number'&&key!=='dueAt'?{toMillis:()=>value}:value]));
 let plan=saved.plan||{activeItemId:'q',items:[{id:'q',taskId:'t0',stepId:'s1'}]};
 window.writeLog=[];
 function snapshot(ref) {
   const owner=ref.path.split('/')[1];
+  if(ref.path.endsWith('/quickTodos'))return {docs:owner==='alice'?Object.entries(todos).map(([id,row])=>({id,data:()=>todoData(row)})):[]};
+  if(ref.path.includes('/quickTodos/')){const item=todos[ref.path.split('/').pop()];return {exists:()=>Boolean(item),data:()=>item&&todoData(item)};}
   if(ref.path.endsWith('/dashboardIdeas'))return {metadata:{fromCache:false},docs:owner==='alice'?Object.entries(ideas).map(([id,value])=>({id,data:()=>value})):[]};
   if(ref.path.includes('/dashboardIdeas/')){const item=ideas[ref.path.split('/').pop()];return {exists:()=>Boolean(item),data:()=>item};}
   if(ref.path.endsWith('/tasks')) return {metadata:{fromCache:false},docs:owner==='alice'?tasks.map(task=>({id:task.id,data:()=>({...task})})):[]};
@@ -44,14 +52,15 @@ function snapshot(ref) {
   if(ref.path.includes('/finance/'))return {metadata:{fromCache:false},exists:()=>true,data:()=>({transactions:[{type:'income',description:'Salary'}],checklist:[{done:true}],bills:[]})};
   return {metadata:{fromCache:false},exists:()=>owner==='alice',data:()=>plan};
 }
-export const serverTimestamp=()=>123;
+export const serverTimestamp=()=>Date.now();
 export const setDoc=(ref,patch,options)=>runTransaction({},tx=>tx.set(ref,patch,options));
 export const getDocs=async ref=>{if(window.failDelete)throw Error('permission-denied');return {docs:[{ref:{path:ref.path+'/image'}}]}};
 export async function deleteDoc(ref){
  if(window.failDelete)throw Error('permission-denied');
- if(ref.path.split('/').length===4){const index=tasks.findIndex(task=>task.id===ref.path.split('/').pop());if(index>=0)tasks.splice(index,1);}
+ if(ref.path.includes('/quickTodos/'))delete todos[ref.path.split('/').pop()];
+ if(ref.path.includes('/tasks/')&&ref.path.split('/').length===4){const index=tasks.findIndex(task=>task.id===ref.path.split('/').pop());if(index>=0)tasks.splice(index,1);}
  window.writes++;window.writeLog.push({path:ref.path,deleted:true});
- sessionStorage.setItem('v2-fixture-saved',JSON.stringify({tasks:Object.fromEntries(tasks.map(task=>[task.id,task])),plan,ideas}));
+ sessionStorage.setItem('v2-fixture-saved',JSON.stringify({tasks:Object.fromEntries(tasks.map(task=>[task.id,task])),plan,ideas,todos}));
  for(const listener of listeners)listener.next(snapshot(listener.ref));
 }
 export const writeBatch=()=>{const entries=[],deletes=[];return {delete:ref=>deletes.push(ref),set:(ref,patch)=>entries.push([ref,patch]),commit:async()=>{for(const ref of deletes)await deleteDoc(ref);if(entries.length)await runTransaction({},tx=>entries.forEach(([ref,patch])=>tx.set(ref,patch)))}}};
@@ -61,17 +70,18 @@ export async function runTransaction(_,callback) {
   const result=await callback({get:async ref=>{
     if(ref.path.includes('/tasks/')){const task=tasks.find(task=>task.id===ref.path.split('/').pop()&&task.id!==window.deletedTaskId);return {exists:()=>Boolean(task)&&ref.path.startsWith('users/alice/'),data:()=>structuredClone(task)};}
     return snapshot(ref);
-  },set:(ref,patch,options)=>patches.push({path:ref.path,patch,merge:!!options?.merge}),update:(ref,patch)=>patches.push({path:ref.path,patch})});
+  },set:(ref,patch,options)=>patches.push({path:ref.path,patch,merge:!!options?.merge}),update:(ref,patch)=>patches.push({path:ref.path,patch}),delete:ref=>patches.push({path:ref.path,deleted:true})});
   await new Promise(resolve=>setTimeout(resolve,100));
   if(window.failNextWrite){window.failNextWrite=false;throw Error('permission-denied');}
   for(const entry of patches){
     if(entry.path.includes('/tasks/')){const id=entry.path.split('/').pop(),task=tasks.find(task=>task.id===id);if(task)Object.assign(task,entry.patch);else tasks.push({id,...entry.patch});}
+    else if(entry.path.includes('/quickTodos/')){const id=entry.path.split('/').pop();if(entry.deleted)delete todos[id];else todos[id]={...todos[id],...entry.patch};}
     else if(entry.path.includes('/dashboardIdeas/'))ideas[entry.path.split('/').pop()]=entry.merge?{...ideas[entry.path.split('/').pop()],...entry.patch}:entry.patch;
     else if(entry.path.includes('/streaks/'))streaks[entry.path.split('/').pop()]=entry.patch;
     else plan={...plan,...entry.patch};
   }
   window.writes+=patches.length;window.writeLog.push(...patches);
-  sessionStorage.setItem('v2-fixture-saved',JSON.stringify({tasks:Object.fromEntries(tasks.map(task=>[task.id,task])),plan,ideas}));
+  sessionStorage.setItem('v2-fixture-saved',JSON.stringify({tasks:Object.fromEntries(tasks.map(task=>[task.id,task])),plan,ideas,todos}));
   for(const listener of listeners)listener.next(snapshot(listener.ref));
   if(window.loseNextAck){window.loseNextAck=false;throw Error('unavailable');}
   return result;
@@ -313,7 +323,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
           assert.equal(await page.locator('.orb-3d-fallback').count(),1);
         }
         await page.waitForFunction(()=>window.reads.some(path=>path.includes('/streaks')));
-        assert.deepEqual(await page.evaluate(()=>[...new Set(window.reads)].map(value=>value.split('/').slice(0,3).join('/')).sort()),['users/alice/dailyPlans','users/alice/finance','users/alice/streaks','users/alice/tasks']);
+        assert.deepEqual(await page.evaluate(()=>[...new Set(window.reads)].map(value=>value.split('/').slice(0,3).join('/')).sort()),['users/alice/dailyPlans','users/alice/finance','users/alice/quickTodos','users/alice/streaks','users/alice/tasks']);
         assert.equal(await page.evaluate(()=>window.writes),0);
         assert.equal(await page.evaluate(()=>getComputedStyle(document.body).paddingTop),'0px','main dashboard has no legacy shell header gap');
         assert.equal(await page.evaluate(()=>getComputedStyle(document.body).paddingBottom),'0px','main dashboard has no legacy shell bottom-nav gap');
@@ -410,14 +420,38 @@ async function checkGlobeWithoutWebGL(browser,base) {
             const orb=document.querySelector('.v2-orb:not(.is-compact)');
             return orb&&Math.abs(orb.getBoundingClientRect().left+orb.getBoundingClientRect().width/2-innerWidth/2)<2;
           });
+          const todos=page.getByRole('region',{name:'Quick to-dos'});
+          await page.evaluate(()=>window.seedOldTodos());
+          await todos.getByRole('checkbox',{name:'Old unchecked item'}).waitFor();
+          await page.waitForFunction(()=>window.writeLog.some(entry=>entry.path.endsWith('/quickTodos/expired')&&entry.deleted));
+          await todos.getByRole('textbox',{name:'New to-do'}).fill('Buy milk');
+          await todos.getByText('Set date and time').click();
+          await todos.getByLabel('To-do date and time').fill('2027-01-05T14:30');
+          await todos.getByRole('button',{name:'Add',exact:true}).click();
+          const milk=todos.getByRole('checkbox',{name:'Buy milk'});
+          await milk.waitFor();
+          const calendar=await todos.getByRole('link',{name:/Set Calendar alert/}).getAttribute('href');
+          assert.equal(new URL(calendar).searchParams.get('text'),'Buy milk');
+          await milk.click();
+          await todos.locator('li[data-done=true]').getByText('Buy milk').waitFor();
+          assert.ok(await todos.locator('li').last().getByRole('checkbox').isChecked());
+          await milk.click(); await todos.locator('li[data-done=false]').getByText('Buy milk').waitFor();
+          await todos.getByRole('button',{name:'Delete Buy milk'}).click();
+          await milk.waitFor({state:'detached'});
+          await todos.getByRole('checkbox',{name:'Review the spatial canvas'}).click();
+          await page.waitForFunction(()=>window.taskRecords().find(task=>task.id==='t0').steps[0].done);
+          await page.setViewportSize({width:393,height:852});
+          await page.getByRole('button',{name:'Focus & to-dos'}).click();
+          await todos.getByRole('textbox',{name:'New to-do'}).fill('Phone checklist');
+          await page.setViewportSize({width:1440,height:1000});
           await page.screenshot({path:path.join(output,name+'-map.png')});
           assert.equal(await page.getByRole('button',{name:"Open today's plan"}).count(),1,'the Orb center does not repeat a current-task label');
           const centered=await page.evaluate(()=>{
             const orb=document.querySelector('.v2-orb').getBoundingClientRect();
-            const task=document.querySelector('.v2-orb-task').getBoundingClientRect();
+            const task=document.querySelector('.v2-orb-plan').getBoundingClientRect();
             return Math.abs((orb.left+orb.width/2)-(task.left+task.width/2));
           });
-          assert.ok(centered<2,'the active task control stays centered on the Orb');
+          assert.ok(centered<2,'the daily plan stays centered on the Orb');
           assert.deepEqual(errors,[]);
           await context.close();
           console.log(name+': V2 cosmetic dashboard smoke check passed');

@@ -142,7 +142,7 @@ function SignedInWorkspace({user, logout}) {
       onKeyDown={event => {if (event.target !== event.currentTarget) return;let index = regions.findIndex(region => region.id === active);if (event.key === 'ArrowRight') index++;else if (event.key === 'ArrowLeft') index--;else if (event.key === 'Home') index=0;else if (event.key === 'End') index=regions.length-1;else return;event.preventDefault();navigate(regions[Math.max(0,Math.min(regions.length-1,index))].id);}}>
       {regions.map(region => <Region key={region.id} region={region} viewport={viewport} onScroll={moveOrb}>
         {!ready ? <div className="v2-panel v2-loading" role="status">Restoring tasks and your daily plan…</div> :
-          region.id === 'dashboard' ? <Dashboard data={data} plan={plan} timer={timer} onInspect={inspect} orbAnchor={mountOrbAnchor} theme={theme} onChangeTheme={changeTheme} onOpenWorkspace={() => navigate('workspace')} onTravel={setTravelPage} onPlan={()=>setTodayOpen(true)} onPanelScroll={moveOrb}/> :
+          region.id === 'dashboard' ? <Dashboard uid={user.uid} data={data} plan={plan} timer={timer} onInspect={inspect} orbAnchor={mountOrbAnchor} theme={theme} onChangeTheme={changeTheme} onOpenWorkspace={() => navigate('workspace')} onTravel={setTravelPage} onPlan={()=>setTodayOpen(true)} onPanelScroll={moveOrb}/> :
           <Workspace data={data} plan={plan} timer={timer} onInspect={inspect} uid={user.uid} onCreate={() => setSelected({id: newId('t'), create: true})} onPaste={() => setImportPlan({targetId: ''})}/>}
       </Region>)}
     </main>

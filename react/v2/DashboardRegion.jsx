@@ -2,6 +2,7 @@ import React, {useRef} from 'react';
 import {taskProgress, taskSteps} from '../src/task-model';
 import {formatTimer} from './model';
 import ConstellationNav from './ConstellationNav';
+import QuickTodos from './QuickTodos';
 
 const stages = [
   ['Backlog', 'Backlog'],
@@ -10,7 +11,7 @@ const stages = [
   ['Done', 'Completed'],
 ];
 
-export default function DashboardRegion({data, plan, timer, onInspect, orbAnchor, theme = 'gold', onChangeTheme, onOpenWorkspace, onTravel, onPlan, onPanelScroll}) {
+export default function DashboardRegion({uid, data, plan, timer, onInspect, orbAnchor, theme = 'gold', onChangeTheme, onOpenWorkspace, onTravel, onPlan, onPanelScroll}) {
   const scene = useRef(null);
   const focus = plan.active?.task;
   const next = plan.active?.step || taskSteps(focus).find(step => !step.done && step.status !== 'Done');
@@ -18,19 +19,20 @@ export default function DashboardRegion({data, plan, timer, onInspect, orbAnchor
 
   return <div className="v2-dashboard-body">
     <nav className="v2-guide-panel-links" aria-label="Dashboard panels">
-      {['Globe','In focus','Session'].map((label,index)=><button key={label} type="button"
+      {['Globe','Focus & to-dos','Session'].map((label,index)=><button key={label} type="button"
         onClick={()=>scene.current.children[index].scrollIntoView({block:'nearest',inline:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})}>{label}</button>)}
     </nav>
     <section ref={scene} className="v2-guide-scene" aria-label="Your focus and connected work" onScroll={onPanelScroll}>
       <div className="v2-guide-globe-panel">
       <div className="v2-guide-atmosphere" aria-hidden="true"/>
-      <div className="v2-guide-orb-anchor" ref={orbAnchor}><div className="v2-orb-grab" aria-hidden="true"/><button className="v2-orb-plan" type="button" aria-label="Open today's plan" onClick={onPlan}><span>Today’s plan</span><strong>{plan.items.filter(item=>!item.done&&!item.missing).length} remaining</strong><span className="v2-orb-plan-preview">{next?.title||next?.text||focus?.title||'Choose your next task'}</span></button></div>
+      <div className="v2-guide-orb-anchor" ref={orbAnchor}><div className="v2-orb-grab" aria-hidden="true"/><button className="v2-orb-plan" type="button" aria-label="Open today's plan" onClick={onPlan}><span>Today’s plan</span><strong>{plan.items.filter(item=>!item.done&&!item.missing).length} remaining</strong><span className="v2-orb-plan-preview">{plan.active?.step?.title||plan.active?.step?.text||focus?.title||'Choose your next task'}</span></button></div>
       <ConstellationNav task={focus} onInspect={onInspect} onTravel={onTravel}/>
       <div className="v2-guide-orb-label">
         <button onClick={onChangeTheme} aria-label={'Orb theme: '+theme+'. Change theme'}>◐ {theme}</button>
       </div>
       </div>
 
+      <div className="v2-guide-left">
       <div className="v2-guide-mission">
         <span className="v2-guide-kicker">IN FOCUS</span>
         {focus ? <h2 title={focus.title}>{focus.title}</h2> : <p className="v2-guide-empty">No task selected</p>}
@@ -40,6 +42,9 @@ export default function DashboardRegion({data, plan, timer, onInspect, orbAnchor
           <span>{progress.total ? `${progress.done} / ${progress.total} steps` : 'No steps'}</span>
           <progress max={progress.total || 1} value={progress.done} aria-label="Completed project steps"/>
         </div>}
+      </div>
+
+      <QuickTodos uid={uid} priority={plan.active}/>
       </div>
 
       <div className="v2-guide-session-panel">

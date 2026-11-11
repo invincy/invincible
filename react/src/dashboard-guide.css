@@ -245,7 +245,7 @@
     overscroll-behavior-inline: contain;
     scrollbar-width: thin;
   }
-  .v2-guide-scene > :is(.v2-guide-globe-panel,.v2-guide-mission,.v2-guide-session-panel) {
+  .v2-guide-scene > :is(.v2-guide-globe-panel,.v2-guide-left,.v2-guide-session-panel) {
     position: relative;
     grid-area: 1 / auto;
     min-width: 0;
@@ -262,5 +262,63 @@
     justify-self: stretch;
     display: block;
   }
-  .v2-guide-scene > .v2-guide-mission { margin: 12px; grid-column: 2; scroll-margin-inline: 12px }
+  .v2-guide-scene > .v2-guide-left { display: grid; gap: 12px; padding: 12px; grid-column: 2 }
+}
+
+.v2-guide-todos {
+  min-width: 0;
+  padding: clamp(14px, 1.4vw, 24px);
+  border: 1px solid #7fced547;
+  border-radius: 14px;
+  background: #0d1b25ed;
+  color: #dcecf2;
+  font-size: 15px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.v2-guide-todos h2 { margin: 12px 0 8px; font-size: 16px }
+.v2-todo-priority { color: #ffe09a; padding-bottom: 10px; border-bottom: 1px solid #c9a76255 }
+.v2-todo-priority > span { display: block; font-size: 14px; font-weight: 750; margin-bottom: 6px }
+.v2-todo-priority p { margin: 0 }
+.v2-todo-priority label,.v2-todo-list label { display: flex; gap: 8px; align-items: flex-start; min-width: 0; overflow-wrap: anywhere }
+.v2-guide-todos input[type="checkbox"] { width: 17px; height: 17px; margin: 2px 0 0; flex: none; accent-color: #e6c578 }
+.v2-todo-entry,.v2-todo-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: center }
+.v2-guide-todos input:not([type="checkbox"]) { width: 100%; min-width: 0; box-sizing: border-box; padding: 6px; font: inherit; color: inherit; background: #06131b; border: 1px solid #47626d; border-radius: 6px }
+.v2-guide-todos details { margin-top: 6px; font-size: 14px }
+.v2-guide-todos summary { cursor: pointer; padding-block: 5px }
+.v2-todo-list { display: grid; gap: 7px; padding: 0; margin: 9px 0 0; list-style: none }
+.v2-todo-list li { border-top: 1px solid #78939e35; padding-top: 4px }
+.v2-todo-list li[data-done="true"] label span { color: #9aaab2; text-decoration: line-through }
+.v2-todo-schedule { grid-column: 1 / -1; padding-inline-start: 25px; display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 13px }
+.v2-todo-schedule a { color: #a8e8f4 }
+@media (width > 900px) {
+  .v2-guide-left {
+    position: absolute;
+    inset: var(--card-inset) auto var(--card-inset) var(--card-gutter);
+    width: var(--card-width);
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(10px, 2dvh, 22px);
+  }
+  .v2-guide-left .v2-guide-mission { position: relative; inset: auto; width: 100%; flex: none }
+  .v2-guide-todos {
+    min-height: 0;
+    margin-top: auto;
+    border-left: 0;
+    border-radius: 0 14px 14px 0;
+  }
+}
+@media (width > 900px) {
+  #v2-region-dashboard .v2-orb-plan-preview {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    max-width: min(210px, 100%);
+    color: #ffe3a8;
+    font-size: 14px;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
 }
