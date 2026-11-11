@@ -27,7 +27,8 @@ const server=http.createServer((req,res)=>{
   assert.equal(durations.length,15);for(const d of durations){assert.ok(d.duration>1,d.key+' audible duration');assert.ok(Math.abs(d.duration-d.expected)<.15,d.key+' measured duration');}
   const cue=async key=>{
    await page.waitForFunction(k=>document.querySelector('#stageContainer').dataset.voiceCue===k&&document.querySelector('#stageContainer').dataset.audioStatus==='playing',key,{timeout:15000});
-   assert.equal(await page.locator('#storyNarration').evaluate(audio=>audio.playbackRate),1.2);
+   const expectedRate=key==='goal.choose'||key==='profile.choose'?1.4:1.2;
+   assert.equal(await page.locator('#storyNarration').evaluate(audio=>audio.playbackRate),expectedRate,key);
   };
   const finish=async()=>{await page.evaluate(()=>{const a=document.querySelector('#storyNarration');a.currentTime=a.duration-.08;});};
   // Seeking only accelerates this test; native media ended events still drive transitions.
@@ -75,7 +76,7 @@ const server=http.createServer((req,res)=>{
   assert.ok(!/grayscale/.test(await page.locator('#storyGoal').evaluate(e=>getComputedStyle(e).filter)));
   const anchor=await page.evaluate(()=>{const c=document.querySelector('#goalCoin').getBoundingClientRect(),r=document.querySelector('.story-road').getBoundingClientRect();return Math.hypot(c.x+c.width/2-r.x-r.width*268/500,c.y+c.height/2-r.y-r.height*55/500);});assert.ok(anchor<1.5);
   await finish();await page.waitForTimeout(700);assert.equal(await page.locator('#stageContainer').getAttribute('data-benefit-step'),'4','Final scene holds');
-  await page.locator('#storyModeToggle').click();await cue('family.rider');await page.locator('#ctaPrevBtn').click();await cue('family.whatif');assert.match(await page.locator('#storyNarration').getAttribute('src'),/family\.whatif\.mp3\?v=16$/);assert.equal(await page.locator('#stageContainer').getAttribute('data-flow-step'),'whatif');
+  await page.locator('#storyModeToggle').click();await cue('family.rider');await page.locator('#ctaPrevBtn').click();await cue('family.whatif');assert.match(await page.locator('#storyNarration').getAttribute('src'),/family\.whatif\.mp3\?v=17$/);assert.equal(await page.locator('#stageContainer').getAttribute('data-flow-step'),'whatif');
   assert.deepEqual(errors,[]);console.log('PASS 15 recordings, automatic sound from plan card, four goals, Other Goal narration, pause/resume, mute, cancellation and maturity');
  }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1;});

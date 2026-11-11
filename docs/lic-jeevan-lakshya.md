@@ -166,4 +166,6 @@ The presentation plays each finished recording at 1.2× with pitch preservation 
 
 The four goal coins now spread once into a staggered row and hold those positions through the plan narration and goal selection. The father and daughter remain visible during the opening and planning scenes and fade during the death scenario.
 
-The opening recording includes the full “करते हैं” ending with a short silent tail. The choice cue is “Please, अपना goal चुनिए।” Both clips use the existing Social voice and 1.2× playback.
+The opening recording includes the full “करते हैं” ending with a short silent tail. The choice cue is “Please, अपना goal चुनिए।” Both clips use the existing Social voice.
+
+The goal selection and profile instructions now play at 1.4×. The narrator applies each cue’s rate when playback starts or resumes, and advances on the media end event.

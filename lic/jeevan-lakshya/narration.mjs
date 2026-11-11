@@ -1,8 +1,8 @@
 export function createNarrator({schedule,onStatus}){
  const release=new URL(import.meta.url).search;
  const audio=new Audio();
- const playbackSpeed=1.2;
- audio.defaultPlaybackRate=playbackSpeed;
+ const defaultPlaybackSpeed=1.2;
+ audio.defaultPlaybackRate=defaultPlaybackSpeed;
  audio.preservesPitch=true;
  audio.preload='auto';
  audio.setAttribute('playsinline','');
@@ -38,6 +38,7 @@ export function createNarrator({schedule,onStatus}){
  function cue(key,done,fallback=4800,onStart){
   cancel();
   const token=active,clip=clips[key];
+  const playbackSpeed=key==='goal.choose'||key==='profile.choose'?1.4:defaultPlaybackSpeed;
   let settled=false,started=false,attempt=0,lastFailedAttempt=-1;
 
   function startVisuals(){
