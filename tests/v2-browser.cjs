@@ -344,12 +344,17 @@ async function checkGlobeWithoutWebGL(browser,base) {
           const bounds=selector=>document.querySelector(selector).getBoundingClientRect();
           const orb=bounds('.v2-orb');
           const left=bounds('.v2-guide-mission'),timer=bounds('.v2-guide-timer'),work=bounds('.v2-guide-work');
-          return {leftMargin:left.left,rightMargins:[innerWidth-timer.right,innerWidth-work.right],
+          const borders=['.v2-guide-mission','.v2-guide-timer','.v2-guide-work'].map(selector=>{
+            const style=getComputedStyle(document.querySelector(selector));
+            return [style.borderTopWidth,style.borderRightWidth,style.borderBottomWidth,style.borderLeftWidth];
+          });
+          return {borders,leftMargin:left.left,rightMargins:[innerWidth-timer.right,innerWidth-work.right],
             widths:[left.width,timer.width,work.width],gaps:[orb.left-left.right,timer.left-orb.right,work.left-orb.right]};
         });
-        assert.ok([corners.leftMargin,...corners.rightMargins].every(margin=>margin>=24&&margin<=60));
+        assert.ok([corners.leftMargin,...corners.rightMargins].every(margin=>margin>=24&&margin<=48));
         assert.ok(corners.widths.every(width=>width>=290),'Desktop cards have room for their content');
-        assert.ok(corners.gaps.every(gap=>gap>=48&&gap<=78),'Desktop cards frame the globe with a visible gap');
+        assert.ok(corners.gaps.every(gap=>gap>=48),'Desktop cards clear the globe');
+        assert.deepEqual(corners.borders,[['1px','1px','1px','0px'],['1px','0px','1px','1px'],['1px','0px','1px','1px']]);
         await page.getByRole('button',{name:'Open current task: Build the living workspace'}).click();
         await page.getByRole('region',{name:'Task workspace: Build the living workspace'}).waitFor();
         await page.setViewportSize({width:1920,height:1080});

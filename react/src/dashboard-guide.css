@@ -40,7 +40,7 @@
   #v2-region-dashboard { padding-inline: 0 }
   .v2-guide-scene {
     --card-width: clamp(184px, 20.5vw, 324px);
-    --card-gutter: clamp(24px, calc(50% - var(--orb-size) * .56 - var(--card-width) - 30px), 20vw);
+    --card-gutter: clamp(24px, 2.5vw, 48px);
     --card-inset: clamp(40px, 7.5dvh, 84px);
   }
   .v2-guide-mission,.v2-guide-timer,.v2-guide-work { width: var(--card-width) }
@@ -179,6 +179,23 @@
   border-radius: 14px;
   background: linear-gradient(150deg, #101d27d9, #060a10e8 74%);
   box-shadow: 0 16px 44px #000a, inset 0 1px #bcf1f620;
+}
+@media (width > 900px) {
+  .v2-guide-mission,.v2-guide-timer,.v2-guide-work {
+    border-color: #7fced547;
+    background: linear-gradient(var(--panel-direction), #09121b15, #101f2ae8 42%, #09141df5);
+    box-shadow: 0 12px 28px #0005;
+  }
+  .v2-guide-mission {
+    --panel-direction: to right;
+    border-left: 0;
+    border-radius: 0 14px 14px 0;
+  }
+  .v2-guide-timer,.v2-guide-work {
+    --panel-direction: to left;
+    border-right: 0;
+    border-radius: 14px 0 0 14px;
+  }
 }
 .v2-guide-panel-links { display: none }
 .v2-guide-globe-panel,.v2-guide-session-panel { display: contents }
