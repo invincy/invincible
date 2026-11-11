@@ -1,7 +1,7 @@
 // Declarative Canvas scenes share the Studio compositor and clock with maps.
 export const CANVAS_FONTS=['system-ui','Invincible Sans','Invincible Hindi','serif','monospace'];
 export function validateCanvas(data,assets){
- const allowed=['background','backgroundStyle','gridColor','gridSpacing','backgroundAssetId','backgroundFit'];
+ const allowed=['background','backgroundStyle','gridColor','gridSpacing','backgroundAssetId','backgroundFit','parallax'];
  if(!data||typeof data!=='object'||Array.isArray(data)||Object.keys(data).some(k=>!allowed.includes(k)))throw Error('Unsupported canvas background field.');
  for(const key of ['background','gridColor'])if(data[key]!==undefined&&!/^#[a-f\d]{6}$/i.test(data[key]))throw Error('Canvas colors must be #rrggbb.');
  if(data.backgroundStyle!==undefined&&!['plain','grid','blueprint','image'].includes(data.backgroundStyle))throw Error('Choose plain, grid, blueprint or image.');
@@ -9,6 +9,14 @@ export function validateCanvas(data,assets){
  if(data.backgroundFit!==undefined&&!['contain','cover'].includes(data.backgroundFit))throw Error('Choose contain or cover.');
  if(data.backgroundAssetId!==undefined&&!assets.has(data.backgroundAssetId))throw Error('Missing background artwork.');
  if(data.backgroundStyle==='image'&&!data.backgroundAssetId)throw Error('Choose background artwork.');
+ if(data.parallax!==undefined){
+  const camera=data.parallax;
+  const limits={panX:[-.5,.5],panY:[-.5,.5],zoom:[.5,2]};
+  if(!camera||typeof camera!=='object'||Array.isArray(camera)||Object.keys(camera).length!==3||
+   Object.entries(limits).some(([key,[min,max]])=>!Number.isFinite(camera[key])||camera[key]<min||camera[key]>max)){
+   throw Error('Set camera pan between −0.5 and 0.5 and zoom between 0.5 and 2.');
+  }
+ }
 }
 export function drawCanvasBackground(ctx,data,images){
  const {width:w,height:h}=ctx.canvas,unit=Math.min(w,h)/1080;

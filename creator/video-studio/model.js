@@ -1,4 +1,4 @@
-import {validateCanvas,CANVAS_FONTS} from './canvas.js?v=2026111014';
+import {validateCanvas,CANVAS_FONTS} from './canvas.js?v=2026111206';
 import {compileAnimation} from '../map-animation-import.js?v=2026111002';
 import {safeAssetUrl} from '../map-editor-model.js?v=2026111002';
 import {validateMap,durationOf} from '../history-model.js?v=2026111002';
@@ -30,7 +30,7 @@ const color = x=>{if(!/^#[\da-f]{6}$/i.test(x))fail('Colors must be #rrggbb.');}
 const id = x=>{if(typeof x!=='string'||!x.length||x.length>150)fail('Use nonempty IDs up to 150 characters.');};
 export function emptyVideo(){return {schemaVersion:1,title:'Untitled video',aspectRatio:'9:16',fps:30,brandPresetId:'adichimp',scenes:[],assets:[],audio:null,introEnabled:false,outroEnabled:false};}
 export function validateLayer(layer,duration,assets){
- keys(layer,['id','type','text','assetId','x','y','width','height','scale','rotation','opacity','fontSize','fontFamily','fontWeight','textAlign','lineWidth','color','startSeconds','endSeconds','keyframes'],'layer');id(layer.id);
+ keys(layer,['id','type','text','assetId','x','y','width','height','scale','rotation','opacity','fontSize','fontFamily','fontWeight','textAlign','lineWidth','color','startSeconds','endSeconds','keyframes','depth'],'layer');id(layer.id);
  if(!['text','image','rectangle','circle','line','arrow'].includes(layer.type))fail('Choose text, image, rectangle, circle, line or arrow.');
  if(layer.type==='text')str(layer.text,2000,'layer text');
  if(layer.fontFamily!==undefined&&!CANVAS_FONTS.includes(layer.fontFamily))fail('Choose a bundled or standard canvas font.');
@@ -41,6 +41,7 @@ export function validateLayer(layer,duration,assets){
  for(const field of ['x','y'])if(layer[field]!==undefined)num(layer[field],-2,3,field);
  for(const field of ['width','height'])if(layer[field]!==undefined)num(layer[field],0.001,4,field);
  if(layer.scale!==undefined)num(layer.scale,0,10,'scale');if(layer.rotation!==undefined)num(layer.rotation,-3600,3600,'rotation');
+ if(layer.depth!==undefined)num(layer.depth,0,1,'layer depth');
  if(layer.opacity!==undefined)num(layer.opacity,0,1,'opacity');if(layer.fontSize!==undefined)num(layer.fontSize,8,400,'fontSize');if(layer.color!==undefined)color(layer.color);
  const start=layer.startSeconds??0,end=layer.endSeconds??duration;num(start,0,duration,'layer start');num(end,start,duration,'layer end');
  if(layer.keyframes!==undefined){if(!Array.isArray(layer.keyframes)||layer.keyframes.length>150)fail('Use up to 150 keyframes.');let previous=-1;

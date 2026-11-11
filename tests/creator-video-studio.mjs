@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,layerFrame,sceneAt,exportDimensions,assetsForBrand} from '../creator/video-studio/model.js';
+import {DEFAULT_PARALLAX,parallaxTransform,projectLayer,trainTemplate} from '../creator/video-studio/parallax.js';
 import {audioChunk} from '../creator/video-studio/audio.js';
 import {encodeStudioVideo} from '../creator/video-studio/export.js';
 import {compileAiStoryboardManifest} from '../creator/ai-preview.js';
@@ -84,4 +85,22 @@ test('reusable profiles carry only referenced logo/template assets into a new vi
  const b={...PRESETS[0],logoAssetId:'logo',intro:{...graphic('intro'),overlays:[{id:'image',type:'image',assetId:'intro-art'}]}},catalog=[{id:'logo',fileId:'original-logo'},{id:'intro-art',fileId:'original-intro'},{id:'unrelated',fileId:'other'}];
  const prior=[{id:'existing',url:'https://example.com/a.png'}],result=assetsForBrand(b,prior,catalog);
  assert.deepEqual(result.map(a=>a.id),['existing','logo','intro-art']);assert.equal(prior.length,1);assert.deepEqual(assetsForBrand(b,result,catalog),result);assert.equal(result[1].fileId,'original-logo');
+});
+
+test('2.5D train JSON round-trips with deterministic camera and pinned overlays',()=>{
+ const scene={...graphic('train',0,5),engineData:{parallax:{...DEFAULT_PARALLAX}},overlays:trainTemplate(5)};
+ const manifest={...emptyVideo(),scenes:[scene]};
+ assert.deepEqual(validateManifest(JSON.stringify(manifest)),manifest);
+ const pose=layerFrame(scene.overlays[0],0);
+ const project=(depth,time)=>projectLayer(pose,parallaxTransform(DEFAULT_PARALLAX,depth,time,5));
+ assert.deepEqual(project(1,0),pose);
+ assert.deepEqual(project(0,4),pose);
+ assert.ok(project(1,5).x<project(.2,5).x);
+ assert.ok(project(1,5).scale>project(.2,5).scale);
+ assert.equal(project(.5,2.5).scale,1.02);
+ scene.overlays[0].depth=1.1;
+ assert.throws(()=>validateManifest(manifest),/layer depth/);
+ scene.overlays[0].depth=0;
+ scene.engineData.parallax.zoom=0;
+ assert.throws(()=>validateManifest(manifest),/camera pan/);
 });

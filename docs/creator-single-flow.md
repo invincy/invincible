@@ -9,6 +9,12 @@ Open a saved project in Studio. The opening screen has four steps:
 3. **Review scenes & audio**: map, battlefield, graphics, image and video scenes share the same timeline. Edit scene opens the existing map/battlefield tools and returns to Studio. Image overlays can appear on maps; geographic map artwork and tactical formations remain different coordinate systems.
 4. **Save / Export MP4**: Save retains a local recovery version and synchronizes the owner's complete video/brand draft. Export downloads a 1080p 30-fps MP4 with attached audio. The standalone Map Editor's silent MP4 command remains available under the existing tools.
 
+### 2.5D scenes
+
+In Video Studio, choose **Add scene → 2.5D · Train template** for an editable portrait starting point. For a blank scene, add **Canvas / explainer**, open **Objects**, and enable **2.5D camera**. Add shared artwork as image objects. Give distant layers a low depth and foreground layers a higher depth. Depth 0 pins an overlay to the frame. Object order still controls which layers appear in front. Pan X and Pan Y are fractions of the frame, and End zoom is relative to the starting size.
+
+The same Canvas scene can be authored in JSON. Set `engineData.parallax` to `{ "panX": 0.12, "panY": 0, "zoom": 1.08 }` and set `depth` from 0 to 1 on individual overlays. The camera eases from the initial frame to the specified pose across the scene, while object keyframes keep their existing timing. Preview and MP4 use the same projection. The browser still needs H.264 WebCodecs support for MP4 export.
+
 Script and the older production/asset-note tools remain available. Local Advanced / recording audio is an explicit session preview. It is not an upload or a cross-device attachment; use the shared uploader for persistent narration.
 
 ## Shared library
