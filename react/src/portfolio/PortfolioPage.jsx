@@ -1,25 +1,30 @@
 import PageIcon from '../../v2/PageIcon';
 import {useAuth} from '../AuthContext';
-import {useEffect,useRef,useState} from 'react';
+import {useEffect,useMemo,useRef,useState} from 'react';
 import {usePortfolio} from './usePortfolio';
 import {holding,totals,importKite,replaceEquity,recordSnapshot,trade,dueSips,todayIST,estimateDueSips} from './model.mjs';
+import {EquityChart, percentage, useEquityAnalysis} from './EquityChart';
+import {frontMovers, unrealised} from './equity-analysis.mjs';
 import './portfolio.css';
 const money=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(n||0);
 const savedDate=new Intl.DateTimeFormat('en-IN',{day:'numeric',month:'short',timeZone:'UTC'});
 const freshSip=()=>({holdingId:'',amount:'',day:1,start:todayIST()});
 const fresh=()=>({id:'',name:'',symbol:'',kind:'mf',units:'',cost:'',price:'',pledged:0,priceDate:todayIST()});
-function Chart({snapshots,filter,metric}){
- const points=snapshots.map(s=>({date:s.date,value:(filter==='mf'?0:s.equity[metric])+(filter==='equity'?0:s.mf[metric])}));
- if(points.length<2)return <div className="pf-chart-empty" role="img" aria-label="No valuation history yet"/>;
- const min=Math.min(0,...points.map(p=>p.value)),max=Math.max(1,...points.map(p=>p.value)),first=Date.parse(points[0].date),last=Date.parse(points.at(-1).date),x=p=>50+(Date.parse(p.date)-first)/(last-first)*850,y=p=>210-(p.value-min)/(max-min)*180;
- return <svg className="pf-chart" viewBox="0 0 950 255" role="img" aria-label={`${metric==='value'?'Portfolio value':'Unrealised gain'} history`}><line x1="50" y1={y({value:0})} x2="900" y2={y({value:0})} stroke="var(--pf-line)"/><polyline points={points.map(p=>`${x(p)},${y(p)}`).join(' ')} fill="none" stroke="var(--pf-accent)" strokeWidth="3"/>{points.map(p=><circle key={p.date} cx={x(p)} cy={y(p)} r="4" fill="var(--pf-accent)"><title>{p.date}: {money(p.value)}</title></circle>)}<text x="50" y="245">{points[0].date}</text><text x="900" y="245" textAnchor="end">{points.at(-1).date}</text><text x="50" y="20">{money(max)}</text></svg>;
-}
 export function PortfolioPage(){const {user}=useAuth();return <PortfolioWorkspace key={user?.uid||'signed-out'}/>;}
 function PortfolioWorkspace(){
- const {state,save,undo,error,busy,uid}=usePortfolio();const [filter,setFilter]=useState('all'),[metric,setMetric]=useState('value'),[search,setSearch]=useState(''),[panel,setPanel]=useState(''),[draft,setDraft]=useState(fresh),[preview,setPreview]=useState(null),[message,setMessage]=useState(''),[tradeDraft,setTrade]=useState({}),[sip,setSip]=useState(freshSip),[importing,setImporting]=useState(false);
+ const {state,save,undo,error,busy,uid}=usePortfolio();const [filter,setFilter]=useState('all'),[search,setSearch]=useState(''),[panel,setPanel]=useState(''),[draft,setDraft]=useState(fresh),[preview,setPreview]=useState(null),[message,setMessage]=useState(''),[tradeDraft,setTrade]=useState({}),[sip,setSip]=useState(freshSip),[importing,setImporting]=useState(false);
  const [showHoldings,setShowHoldings]=useState(false);
  const [showSips,setShowSips]=useState(false);
  const [selectedId,setSelectedId]=useState('');
+ const [range,setRange]=useState('1M');
+ const [sortBy,setSortBy]=useState('period');
+ const [ascending,setAscending]=useState(false);
+ const [movement,setMovement]=useState('all');
+ const [holdingType,setHoldingType]=useState('all');
+ const [pledgedOnly,setPledgedOnly]=useState(false);
+ const equities=useMemo(()=>state?.holdings.filter(h=>h.kind==='equity')||[],[state?.holdings]);
+ const equityHistory=useEquityAnalysis(equities,filter==='equity',range);
+ const {analysis}=equityHistory;
  const dialogRef=useRef(null);
  useEffect(()=>{
    const dialog=dialogRef.current;
@@ -33,7 +38,33 @@ function PortfolioWorkspace(){
  async function upload(file){if(!file)return;setImporting(true);setMessage('');try{if(file.size>5e6)throw Error('Use a file smaller than 5 MB');if(!file.name.endsWith('.xlsx'))throw Error('Upload a Kite .xlsx statement. Enter screenshot values with Add holding.');const {default:ExcelJS}=await import('exceljs');const w=new ExcelJS.Workbook();await w.xlsx.load(await file.arrayBuffer());const s=w.getWorksheet('Equity');if(!s)throw Error('Kite Equity sheet is missing');const rows=[];s.eachRow({includeEmpty:true},row=>rows.push(Array.from({length:s.columnCount},(_,i)=>{const v=row.getCell(i+1).value;return v&&typeof v==='object'?v.result??v.text??'':v})));setPreview(importKite(rows));setPanel('import')}catch(e){setMessage(e.message)}finally{setImporting(false)}}
  if(!uid)return <div className="pf"><h1>Portfolio</h1><p>Sign in to open your private holdings.</p></div>;
  if(!state)return <div className="pf" role="status">{error||'Opening portfolio…'}</div>;
- const rows=state.holdings.filter(h=>(filter==='all'||h.kind===filter)&&`${h.name} ${h.symbol}`.toLowerCase().includes(search.toLowerCase())),summary=totals(state.holdings.filter(h=>filter==='all'||h.kind===filter)),pending=dueSips(state,todayIST());
+ const summary=totals(state.holdings.filter(h=>filter==='all'||h.kind===filter));
+ const pending=dueSips(state,todayIST());
+ function ranking(h){
+   const change=analysis.rows.get(h.id);
+   switch(sortBy){
+     case 'period': return change?.percent;
+     case 'impact': return change?.contribution;
+     case 'profit': return unrealised(h);
+     case 'profitPercent': return h.cost>0 ? unrealised(h)/h.cost*100 : undefined;
+     case 'weight': return h.price*h.units;
+   }
+ }
+ function matchesFilters(h){
+   const etf=h.id.startsWith('INF');
+   if((holdingType==='stock'&&etf)||(holdingType==='etf'&&!etf)||(pledgedOnly&&h.pledged<=0))return false;
+   const value=ranking(h);
+   return movement==='all'||(movement==='gains'&&value>0)||(movement==='losses'&&value<0);
+ }
+ const matchesSearch=h=>`${h.name} ${h.symbol} ${h.id}`.toLowerCase().includes(search.trim().toLowerCase());
+ const rows=filter==='equity'
+   ? equities.filter(h=>matchesSearch(h)&&matchesFilters(h)).sort((a,b)=>{
+       const first=ranking(a),second=ranking(b);
+       if(first===undefined)return second===undefined?a.name.localeCompare(b.name):1;
+       if(second===undefined)return -1;
+       return (ascending?first-second:second-first)||a.name.localeCompare(b.name);
+     })
+   : (filter==='all' ? frontMovers(state.holdings) : state.holdings.filter(h=>h.kind==='mf')).filter(matchesSearch);
  const selectedHolding=state.holdings.find(h=>h.id===selectedId);
  const selectedSip=state.sips.find(s=>s.id===selectedId);
  const sipTotal=state.sips.reduce((sum,s)=>sum+s.amount,0);
@@ -46,15 +77,9 @@ function PortfolioWorkspace(){
  const exportData=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=`portfolio-${todayIST()}.json`;a.click();URL.revokeObjectURL(url)};
  return <main className="pf"><header className="pf-heading"><div><h1>Portfolio</h1><p>{state.asOf&&<time dateTime={state.asOf} title={state.asOf}>Saved {savedDate.format(new Date(state.asOf))}</time>}</p></div><div className="pf-actions"><button disabled={busy||!state.revision} onClick={()=>openPanel('undo')}><i className="fa-solid fa-rotate-left" aria-hidden="true"/>Undo</button><button onClick={exportData}><i className="fa-solid fa-arrow-down-to-line" aria-hidden="true"/>Export</button><label className="pf-primary"><i className="fa-solid fa-arrow-up-from-bracket" aria-hidden="true"/>{importing?'Reading…':'Import Kite'}<input aria-label="Import Kite statement" type="file" accept=".xlsx" disabled={busy||importing} onChange={e=>{upload(e.target.files[0]);e.target.value=''}}/></label></div></header>
  <div role="status" className="pf-message">{error||message}</div>
- <nav className="pf-switch" aria-label="Asset class">{[['all','All assets'],['equity','Equity'],['mf','Mutual funds']].map(([v,label])=><button aria-pressed={filter===v} className={filter===v?'active':''} key={v} onClick={()=>setFilter(v)}>{label}</button>)}</nav>
+ <nav className="pf-switch" aria-label="Asset class">{[['all','All assets'],['equity','Equity'],['mf','Mutual funds']].map(([v,label])=><button aria-pressed={filter===v} className={filter===v?'active':''} key={v} onClick={()=>{setFilter(v);setShowHoldings(false)}}>{label}</button>)}</nav>
  <section className="pf-summary"><div className="pf-balance"><span>Portfolio value</span><strong>{money(summary.value)}</strong><span className="pf-balance-icon"><PageIcon page="portfolio"/></span></div><div><span>Invested</span><strong>{money(summary.cost)}</strong></div><div><span>Unrealised return</span><strong className={summary.gain<0?'pf-down':'pf-up'}>{summary.gain>=0?'+':''}{money(summary.gain)}</strong><small>{summary.cost?`${(summary.gain/summary.cost*100).toFixed(2)}%`:'—'}</small></div></section>
- <section className="pf-surface pf-growth">
-   <div className="pf-section-heading">
-     <h2>Growth over time</h2>
-     <div className="pf-switch">{[['value','Value'],['gain','Gain / loss']].map(([v,label])=><button key={v} aria-pressed={metric===v} onClick={()=>setMetric(v)}>{label}</button>)}</div>
-   </div>
-   <Chart snapshots={state.snapshots} filter={filter} metric={metric}/>
- </section>
+ {filter==='equity'&&<EquityChart range={range} setRange={setRange} money={money} {...equityHistory}/>}
  <div className="pf-columns">
    <section className="pf-surface pf-holdings">
      <div className="pf-section-heading">
@@ -62,18 +87,41 @@ function PortfolioWorkspace(){
        <button onClick={()=>{setDraft(fresh());openPanel('holding')}}>+ Add</button>
      </div>
      <label className="pf-search"><i className="fa-solid fa-magnifying-glass" aria-hidden="true"/><input aria-label="Search holdings" placeholder="Search holdings" value={search} onChange={e=>setSearch(e.target.value)}/></label>
+     {filter==='equity'&&<div className="pf-analysis-filters">
+       <div className="pf-analysis-sort">
+         <label>Sort by<select value={sortBy} onChange={e=>{setSortBy(e.target.value);setMovement('all')}}>
+           <option value="period">{range} price change %</option>
+           <option value="impact">{range} contribution ₹</option>
+           <option value="profit">Unrealised P&amp;L ₹</option>
+           <option value="profitPercent">Unrealised P&amp;L %</option>
+           <option value="weight">Position value</option>
+         </select></label>
+         <button onClick={()=>setAscending(!ascending)} aria-label={ascending?'Sort highest first':'Sort lowest first'}>{ascending?'↑ Low first':'↓ High first'}</button>
+       </div>
+       <div className="pf-switch" aria-label="Performance filter">
+         {[['all','All'],['gains','Gainers'],['losses','Losers']].map(([value,label])=><button key={value} aria-pressed={movement===value} disabled={sortBy==='weight'&&value!=='all'} onClick={()=>setMovement(value)}>{label}</button>)}
+       </div>
+       <details className="pf-more-filters"><summary>More filters</summary>
+         <label>Instrument<select value={holdingType} onChange={e=>setHoldingType(e.target.value)}><option value="all">Stocks and ETFs</option><option value="stock">Stocks only</option><option value="etf">ETFs only</option></select></label>
+         <label className="pf-compare"><input type="checkbox" checked={pledgedOnly} onChange={e=>setPledgedOnly(e.target.checked)}/>Pledged only</label>
+       </details>
+     </div>}
+     {filter==='all'&&!search&&equities.length>0&&<p className="pf-holdings-caption">Largest equity gains and losses · unrealised P&amp;L</p>}
      <div id="pf-holdings-list" className={`pf-table${showHoldings||search?' pf-expanded':''}`}>
        <div className="pf-table-head"><span>Asset / units</span><span>Invested</span><span>Value / return</span></div>
        {rows.map(h=>{
          const value=h.units*h.price;
          const gain=value-h.cost;
+         const periodMetric=filter==='equity'&&(sortBy==='period'||sortBy==='impact');
+         const displayed=periodMetric ? ranking(h) : sortBy==='profitPercent'&&filter==='equity' ? ranking(h) : gain;
+         const formatChange=filter==='equity'&&(sortBy==='period'||sortBy==='profitPercent') ? percentage : n=>(n>=0?'+':'')+money(n);
          return <button type="button" className="pf-row" key={h.id} aria-haspopup="dialog" onClick={()=>{setSelectedId(h.id);openPanel('details')}}>
            <span className="pf-asset"><span className={h.kind==='mf'?'pf-asset-icon pf-fund-icon':'pf-asset-icon'}><PageIcon page={h.kind==='mf'?'portfolio':'finance'}/></span><span><b>{h.name}</b><small>{h.units.toLocaleString('en-IN',{maximumFractionDigits:4})} units</small></span></span>
            <span className="pf-cost">{money(h.cost)}</span>
-           <span className="pf-row-value"><b>{money(value)}</b><small className={gain<0?'pf-down':'pf-up'}>{gain>=0?'+':''}{money(gain)}</small></span>
+           <span className="pf-row-value"><b>{money(value)}</b><small className={displayed===undefined?'':displayed<0?'pf-down':'pf-up'}>{displayed===undefined?'No price history':formatChange(displayed)}</small></span>
          </button>;
        })}
-       {!rows.length&&<p className="pf-empty">{search?'No matching holdings':'No holdings yet'}</p>}
+       {!rows.length&&<p className="pf-empty">{search||filter==='equity'&&equities.length?'No matching holdings':'No holdings yet'}</p>}
      </div>
      {rows.length>4&&!search&&<button className="pf-mobile-more" aria-expanded={showHoldings} aria-controls="pf-holdings-list" onClick={()=>setShowHoldings(!showHoldings)}>{showHoldings?'Show fewer':`View all ${rows.length} holdings`} <span aria-hidden="true">{showHoldings?'↑':'→'}</span></button>}
    </section>
@@ -104,6 +152,10 @@ function PortfolioWorkspace(){
      <div><dt>Invested</dt><dd>{money(selectedHolding.cost)}</dd></div>
      <div><dt>Units</dt><dd>{selectedHolding.units.toLocaleString('en-IN',{maximumFractionDigits:6})}</dd></div>
      <div><dt>{selectedHolding.kind==='mf'?'NAV':'Price'} · {selectedHolding.priceDate}</dt><dd>₹{selectedHolding.price.toLocaleString('en-IN',{maximumFractionDigits:6})}</dd></div>
+     {filter==='equity'&&analysis.rows.has(selectedHolding.id)&&<>
+       <div><dt>{range} price change</dt><dd>{percentage(analysis.rows.get(selectedHolding.id).percent)}</dd></div>
+       <div><dt>{range} contribution</dt><dd>{money(analysis.rows.get(selectedHolding.id).contribution)}</dd></div>
+     </>}
      {selectedHolding.pledged>0&&<div><dt>Pledged units</dt><dd>{selectedHolding.pledged}</dd></div>}
    </dl><div className="pf-dialog-actions">
      <button aria-label={`Edit ${selectedHolding.name}`} onClick={()=>{setDraft(selectedHolding);openPanel('holding')}}>Edit</button>

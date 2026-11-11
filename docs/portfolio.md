@@ -13,8 +13,8 @@ The existing `/invincible/portfolio.html` now opens a lazy-loaded React page wit
 
 ## Still required
 
-- Provider selection and secure quote/NAV/index history service, refresh timestamps, exchange holidays and unattended refresh/SIP processing.
-- Nifty 50 TRI benchmark with matching contribution dates and cash-flow-adjusted returns. The UI states that the feed is unavailable rather than displaying invented comparison data.
+- Live quote and NAV services, exchange holiday rules, and unattended refresh/SIP processing.
+- Nifty 50 TRI benchmark with matching contribution dates and cash-flow-adjusted returns. Equity Analysis now offers a price-only Nifty 50 comparison.
 - Mutual fund starting units or detailed statement. Uploaded screenshots show summaries and schedules, not enough to seed units correctly. No user holdings or screenshots are committed to this public repo.
 - Screenshot extraction/review and general mutual fund statement imports. Current XLSX importer is specifically Kite Equity; fund details are manual. Export restore/import is not implemented.
 - Historical trades for accurate long-term performance, corporate actions, fees, dividends, full transaction correction/reversal UI and capital-gains accounting.
@@ -22,7 +22,7 @@ The existing `/invincible/portfolio.html` now opens a lazy-loaded React page wit
 
 ## Verification
 
-The actual provided Kite export parsed into 18 holdings and reconciled invested ₹335,719.27, valuation ₹374,434.86 and P/L ₹38,715.59. It was read outside the repository and not retained in source/test fixtures.
+The private Kite export reconciled to the statement totals. It was read outside the repository and not retained in source/test fixtures.
 
 Focused tests cover invalid numbers, pledged import quantities, total reconciliation, replacement/deduplication, sale cost, sale retry, overselling/pledge guards, date-matched estimated SIPs, month-end dates, Finance category deduplication and native navigation. Browser fixture tests cover 1440/390/320 widths, denied-save draft retention and sale recording, but could not execute here: Chromium fails at startup because the environment denies its process-singleton socket. No visual pass is claimed.
 
@@ -56,3 +56,26 @@ Removing a SIP or undoing a change requires confirmation. Browser fixtures
 verify cancellation and removal, Escape and outside-click dismissal, the
 320/390/1440 pixel layouts, failed-save recovery and trade recording. The
 production build, site checks and automated tests passed in the local checkout.
+
+## Equity price analysis
+
+The Equity tab loads daily closes for saved equity ISINs and Nifty 50 through
+the Upstox historical candle endpoint. Requests contain instrument identifiers
+and dates. Account identifiers, units, costs, and results stay in the app.
+Market prices are held in memory for the signed-in page session and never
+written to holdings, valuations, Finance, or the public repository.
+
+The chart reconstructs today's basket with fixed units. It uses common trading
+dates and a common start and end close for the price change, rupee contribution,
+and optional price-index benchmark. It excludes cash flows and dividends.
+Holdings without comparable closes or with a price discontinuity above 35%
+are flagged and excluded for that range. Provider close data does not verify
+every corporate action, and the chart does not reconstruct historical account
+balances. The All assets view prioritizes the two largest saved equity gains
+and two largest saved equity losses by rupee P&L. The Mutual funds tab has no
+price chart.
+
+Browser fixtures exercise range switching, price-chart controls, a missing
+history case, contribution filtering, and the Mutual funds view. Model tests
+cover calendar boundaries, aligned dates, exclusions, contribution, and front
+card ordering.
