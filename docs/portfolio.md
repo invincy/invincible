@@ -43,3 +43,16 @@ Google sign-in in the available browser. No private holdings were saved or seede
 and no personal financial data is included in public source. Data population
 remains blocked on an authenticated account session; fund units are still missing
 from the previously supplied summary screenshots.
+
+## Compact Portfolio and removal confirmation
+
+The mobile overview shows four holding cards in a two-by-two grid with an option to expand the list. The forest-green canvas uses translucent green surfaces and divider rows for the chart, SIPs, and sales.
+Search works across the full list. Monthly SIP details expand on tap. Desktop
+keeps a holdings table and SIP sidebar. A holding opens a keyboard-accessible
+dialog with its price or NAV, date, units, and actions. A chart without history
+shows a blank grid.
+
+Removing a SIP or undoing a change requires confirmation. Browser fixtures
+verify cancellation and removal, Escape and outside-click dismissal, the
+320/390/1440 pixel layouts, failed-save recovery and trade recording. The
+production build, site checks and automated tests passed in the local checkout.
