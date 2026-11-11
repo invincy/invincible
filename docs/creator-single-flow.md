@@ -15,6 +15,12 @@ In Video Studio, choose **Add scene → 2.5D · Train template** for an editable
 
 The same Canvas scene can be authored in JSON. Set `engineData.parallax` to `{ "panX": 0.12, "panY": 0, "zoom": 1.08 }` and set `depth` from 0 to 1 on individual overlays. The camera eases from the initial frame to the specified pose across the scene, while object keyframes keep their existing timing. Preview and MP4 use the same projection. The browser still needs H.264 WebCodecs support for MP4 export.
 
+### Lightweight 3D scenes
+
+Choose **Add scene → 3D · Train stage**. Open **3D camera** to set the start and end turn, tilt and zoom. Open **3D models** to add or remove a train, rocket, tree or box, or set each object's start and end position, height, rotation and scale. A directional light casts shadows on the ground as objects move. Add screen-space titles and graphics through the existing object controls.
+
+To reuse your own model, upload a self-contained static GLB under **Shared media**, select **Register 3D model**, then add it under **3D models**. For Motion Studio, use up to 8 MB and 20,000 triangles per model, up to six models per scene, and embedded textures up to 2048 px. Camera and model settings are editable in the version-2 JSON and use the existing preview and MP4 timeline. The renderer loads on demand and requires WebGL 2.
+
 Script and the older production/asset-note tools remain available. Local Advanced / recording audio is an explicit session preview. It is not an upload or a cross-device attachment; use the shared uploader for persistent narration.
 
 ## Shared library

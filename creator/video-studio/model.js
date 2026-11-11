@@ -1,3 +1,4 @@
+import {validateThreeScene} from './three-scene.js';
 import {validateCanvas,CANVAS_FONTS} from './canvas.js?v=2026111206';
 import {compileAnimation} from '../map-animation-import.js?v=2026111002';
 import {safeAssetUrl} from '../map-editor-model.js?v=2026111002';
@@ -56,9 +57,9 @@ function validateNativeProject(nativeProject){
    const ids=new Set();for(const s of nativeProject.scenes){keys(s,['id','duration'],'native map scene');id(s.id);num(s.duration,1/30,600,'map duration');if(ids.has(s.id))fail('Duplicate native map scene.');ids.add(s.id);}
    validateMap(nativeProject.historicalMap,nativeProject);
 }
-function validateScene(scene,assets,mapAssets,{template=false,version=1,mapSources=[]}={}){
+function validateScene(scene,assets,mapAssets,{template=false,version=1,mapSources=[],models=new Set()}={}){
  keys(scene,['id','name','startSeconds','durationSeconds','engineType','engineData','overlays','transition'],'scene');id(scene.id);if(scene.name!==undefined)str(scene.name,200,'scene name');num(scene.startSeconds,0,600,'scene start');num(scene.durationSeconds,1/30,600,'scene duration');
- if(!(version===2?['map','lic','graphic','battlefield','image','video']:['map','lic','graphic']).includes(scene.engineType)||template&&scene.engineType!=='graphic')fail('Unsupported scene engine for this manifest version.');
+ if(!(version===2?['map','lic','graphic','battlefield','image','video','three']:['map','lic','graphic']).includes(scene.engineType)||template&&scene.engineType!=='graphic')fail('Unsupported scene engine for this manifest version.');
  const data=scene.engineData;
  if(scene.engineType==='map'){
   keys(data,version===2?['animation','geometryReviewed','project','sourceId','sourceStart']:['animation','geometryReviewed'],'map engine');if(data.geometryReviewed!==undefined&&typeof data.geometryReviewed!=='boolean')fail('geometryReviewed must be boolean.');
@@ -72,7 +73,8 @@ function validateScene(scene,assets,mapAssets,{template=false,version=1,mapSourc
   const compiled=compileAnimation({scenes:[],historicalMap:{version:1,theme:'night',events:[],features:{type:'FeatureCollection',features:[]},camera:[],visual:{version:1,layers:[],assets:referencedMapAssets(mapAssets,data.animation)}}},data.animation,{geometryReviewed:data.geometryReviewed===true});
   if(Math.abs(compiled.summary.duration-scene.durationSeconds)>1e-6)fail('Map duration must match its scene.');
   }
- }else if(scene.engineType==='battlefield')validateBattlefield(data,scene.durationSeconds,assets);
+ }else if(scene.engineType==='three')validateThreeScene(data,models);
+ else if(scene.engineType==='battlefield')validateBattlefield(data,scene.durationSeconds,assets);
  else if(scene.engineType==='image'||scene.engineType==='video'){
   keys(data,scene.engineType==='video'?['assetId','trimStart','fit']:['assetId','fit'],'media scene');if(!assets.has(data.assetId))fail('Missing media asset.');if(!['contain','cover'].includes(data.fit))fail('Choose contain or cover.');if(scene.engineType==='video')num(data.trimStart,0,600,'video trim');
  }else if(scene.engineType==='lic'){
@@ -90,15 +92,16 @@ export function validateManifest(input,{mapAssets=[]}={}){
  keys(m,['schemaVersion','title','aspectRatio','fps','brandPresetId','scenes','assets','audio',...(m.schemaVersion===2?['audioClips','mapSources']:[]),'introEnabled','outroEnabled'],'manifest');
  if(![1,2].includes(m.schemaVersion)||m.fps!==30||!['9:16','16:9'].includes(m.aspectRatio))fail('Use schemaVersion 1 or 2, fps 30 and 9:16 or 16:9.');str(m.title,200,'title');id(m.brandPresetId);
  for(const p of ['introEnabled','outroEnabled'])if(m[p]!==undefined&&typeof m[p]!=='boolean')fail(p+' must be boolean.');
- if(!Array.isArray(m.assets)||m.assets.length>200)fail('Use up to 200 asset references.');const assets=new Set();
- for(const a of m.assets){keys(a,['id','name','fileId','url','libraryId',...(m.schemaVersion===2?['credit']:[])],'asset');id(a.id);str(a.name,200,'asset name');if(a.credit!==undefined)str(a.credit,2000,'asset credit');if(assets.has(a.id))fail('Duplicate asset ID.');assets.add(a.id);
+ if(!Array.isArray(m.assets)||m.assets.length>200)fail('Use up to 200 asset references.');const assets=new Set(),models=new Set(),assetIds=new Set();
+ for(const a of m.assets){keys(a,['id','name','fileId','url','libraryId',...(m.schemaVersion===2?['credit','kind']:[])],'asset');id(a.id);str(a.name,200,'asset name');if(a.credit!==undefined)str(a.credit,2000,'asset credit');if(assetIds.has(a.id))fail('Duplicate asset ID.');assetIds.add(a.id);
+  if(a.kind!==undefined){if(a.kind!=='glb'||!a.fileId)fail('Register GLB models through the shared media library.');models.add(a.id);}else assets.add(a.id);
   if(['fileId','url','libraryId'].filter(k=>a[k]!==undefined).length!==1)fail('Assets need exactly one fileId, HTTPS url or libraryId.');
   if(a.url!==undefined&&!safeAssetUrl(a.url))fail('Assets require HTTPS without credentials or a safe project-relative path.');
   if(a.fileId!==undefined)id(a.fileId);if(a.libraryId!==undefined&&!mapAssets.some(item=>item.id===a.libraryId&&item.type==='image'))fail('Missing image in existing map library: '+a.libraryId);
  }
  if(m.mapSources!==undefined){if(!Array.isArray(m.mapSources)||m.mapSources.length>100)fail('Use up to 100 native map sources.');const ids=new Set();for(const source of m.mapSources){keys(source,['id','project'],'map source');id(source.id);if(ids.has(source.id))fail('Duplicate map source.');ids.add(source.id);if(!source.project)fail('Missing source project.');validateNativeProject(source.project);}}
  if(!Array.isArray(m.scenes)||m.scenes.length>100)fail('Use up to 100 scenes.');let end=0;const ids=new Set();
- for(const s of m.scenes){validateScene(s,assets,mapAssets,{version:m.schemaVersion,mapSources:m.mapSources});if(ids.has(s.id))fail('Duplicate scene ID.');ids.add(s.id);if(s.startSeconds<end-1e-6)fail('Scenes must be ordered and cannot overlap.');end=s.startSeconds+s.durationSeconds;if(end>600)fail('Video exceeds ten minutes.');}
+ for(const s of m.scenes){validateScene(s,assets,mapAssets,{version:m.schemaVersion,mapSources:m.mapSources,models});if(ids.has(s.id))fail('Duplicate scene ID.');ids.add(s.id);if(s.startSeconds<end-1e-6)fail('Scenes must be ordered and cannot overlap.');end=s.startSeconds+s.durationSeconds;if(end>600)fail('Video exceeds ten minutes.');}
  if(m.audio!=null){keys(m.audio,['fileId','name','startSeconds','gain'],'audio');id(m.audio.fileId);str(m.audio.name,200,'audio name');num(m.audio.startSeconds,0,600,'audio start');num(m.audio.gain,0,2,'audio gain');}
  if(m.schemaVersion===2){
   if(m.audio!=null)fail('Version 2 uses audioClips, not legacy audio.');

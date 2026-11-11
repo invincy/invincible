@@ -20,3 +20,5 @@ export function createModelLayer(id,placement,url,onError){
   onRemove(){removed=true;if(model)dispose(model);renderer?.dispose();}
  };
 }
+
+export {createStudioThree} from './studio-three-source.js';

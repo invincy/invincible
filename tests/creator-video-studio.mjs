@@ -104,3 +104,36 @@ test('2.5D train JSON round-trips with deterministic camera and pinned overlays'
  scene.engineData.parallax.zoom=0;
  assert.throws(()=>validateManifest(manifest),/camera pan/);
 });
+
+test('3D stage survives JSON import and timeline resize with typed model references',async()=>{
+ const {trainStage,modelMotion,stagePose}=await import('../creator/video-studio/three-scene.js');
+ const {arrangeScenes,resizeScene,newStudioVideo}=await import('../creator/video-studio/composition.js');
+ const engineData=trainStage();
+ engineData.models.push(modelMotion('imported',{assetId:'rocket'}));
+ const manifest={...newStudioVideo(),assets:[{id:'rocket',name:'Rocket.glb',fileId:'cloud-rocket',kind:'glb'}]};
+ const scene={...graphic('stage',0,5),engineType:'three',engineData};
+ const imported=validateManifest(JSON.stringify(arrangeScenes(manifest,[scene])));
+ assert.deepEqual(imported.scenes[0],scene);
+ assert.equal(stagePose(engineData.models[0],2.5,5).x,0);
+ assert.equal(stagePose(engineData.camera,5,5).tilt,42);
+ assert.equal(stagePose(engineData.camera,3,resizeScene(scene,3).durationSeconds).tilt,42);
+ assert.throws(()=>arrangeScenes({...manifest,assets:[]},[scene]),/registered GLB/);
+ assert.throws(()=>arrangeScenes(manifest,[{...scene,overlays:[{id:'bad',type:'image',assetId:'rocket'}]}]),/missing asset/);
+ assert.throws(()=>arrangeScenes(manifest,[{...scene,engineData:{...engineData,camera:{...engineData.camera,to:{...engineData.camera.to,tilt:90}}}}]),/Camera tilt/);
+});
+
+test('lightweight GLB checks reject oversized meshes, external data and cyclic nodes',async()=>{
+ const {checkStudioGlb}=await import('../creator/video-studio/three-scene.js');
+ function glb(data){
+  const json=Buffer.from(JSON.stringify(data));
+  const length=Math.ceil(json.length/4)*4,bytes=Buffer.alloc(20+length,32);
+  [0x46546c67,2,bytes.length,length,0x4e4f534a].forEach((n,i)=>bytes.writeUInt32LE(n,i*4));
+  json.copy(bytes,20);
+  return Uint8Array.from(bytes).buffer;
+ }
+ const model={buffers:[{byteLength:48}],nodes:[{mesh:0}],meshes:[{primitives:[{attributes:{POSITION:0}}]}],accessors:[{count:6}]};
+ assert.equal(checkStudioGlb(glb(model)),2);
+ assert.throws(()=>checkStudioGlb(glb({...model,buffers:[{uri:'https://example.com/model.bin'}]})),/embedded/);
+ assert.throws(()=>checkStudioGlb(glb({...model,accessors:[{count:60003}]})),/budget/);
+ assert.throws(()=>checkStudioGlb(glb({...model,nodes:[{mesh:0,children:[0]}]})),/cycle/);
+});

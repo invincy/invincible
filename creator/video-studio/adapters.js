@@ -1,19 +1,21 @@
+import {MAX_MODEL_BYTES} from './three-scene.js';
 import {drawCanvasBackground,drawCanvasLayer} from './canvas.js?v=2026111206';
 import {ensureDocumentaryFonts} from '../map-fonts.js';
 import {compileAnimation} from '../map-animation-import.js?v=2026111002';
 import {createHistoryPlayer} from '../history-player.js?v=2026111002';
-import {layerFrame,sceneAt,referencedMapAssets} from './model.js?v=2026111206';
+import {layerFrame,sceneAt,referencedMapAssets} from './model.js?v=2026111207';
 import {resolveMapAsset} from '../map-assets-client.js?v=2026111002';
 import {drawBattlefield} from './battlefield.js?v=2026111014';
 import {parallaxTransform,projectLayer} from './parallax.js';
-import {fitMedia} from './composition.js?v=2026111014';
+import {fitMedia} from './composition.js?v=2026111207';
 export function mapDraft(animation,geometryReviewed,mapAssets=[]){
  return compileAnimation({scenes:[],historicalMap:{version:1,theme:'night',events:[],features:{type:'FeatureCollection',features:[]},camera:[],visual:{version:1,assets:referencedMapAssets(mapAssets,animation),layers:[]}}},animation,{geometryReviewed}).project;
 }
 export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFile,mapAssets=[],signal}={}){
- const ctx=canvas.getContext('2d'),images=new Map(),maps=new Map(),videos=new Map();let disposed=false;
+ const ctx=canvas.getContext('2d'),images=new Map(),maps=new Map(),videos=new Map();let disposed=false,stage=null;
  const ownedUrls=[],hosts=[];
- const destroy=()=>{if(disposed)return;disposed=true;for(const {player} of maps.values())player.destroy();for(const v of videos.values())v.input.dispose();for(const h of hosts)h.remove();for(const url of ownedUrls)URL.revokeObjectURL(url);};
+ const releaseStage=()=>{stage?.renderer.destroy();stage=null;};
+ const destroy=()=>{if(disposed)return;disposed=true;releaseStage();for(const {player} of maps.values())player.destroy();for(const v of videos.values())v.input.dispose();for(const h of hosts)h.remove();for(const url of ownedUrls)URL.revokeObjectURL(url);};
  try{
   await ensureDocumentaryFonts();await document.fonts.ready;
   const required=new Set([brand.logoAssetId,...timeline.scenes.flatMap(scene=>[...scene.overlays.filter(layer=>layer.type==='image').map(layer=>layer.assetId),...(scene.engineData.backgroundAssetId?[scene.engineData.backgroundAssetId]:[]),...(['image','video'].includes(scene.engineType)?[scene.engineData.assetId]:[]),...(scene.engineData.formations||[]).map(f=>f.assetId)])]);
@@ -44,6 +46,25 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
   const errors=[];let player;
   try{player=await createHistoryPlayer(host,draft,draft.historicalMap,{onError:e=>errors.push(e)});const entry={player,host,errors};maps.set(scene.id,entry);await player.loaded;frameSignal?.throwIfAborted();if(disposed)throw new DOMException('Renderer closed','AbortError');player.map.setPixelRatio?.(1);player.map.resize();await player.setSpec(draft.historicalMap);return entry;}catch(e){player?.destroy();host.remove();maps.delete(scene.id);throw e;}
  }
+ async function threeFor(scene, frameSignal){
+  if(stage?.id===scene.id)return stage.renderer;
+  releaseStage();
+  const {createStudioThree}=await import('../vendor/map-model.mjs?v=2026111207');
+  const activeSignal=frameSignal??signal;
+  const renderer=await createStudioThree(scene.engineData,width,height,async id=>{
+   const asset=manifest.assets.find(item=>item.id===id),file=await getFile(asset.fileId);
+   if(!file)throw Error('Missing GLB: '+asset.name+'. Add it from the shared media library.');
+   if(file.size>MAX_MODEL_BYTES)throw Error('Use GLB files up to 8 MB.');
+   return file.arrayBuffer();
+  },activeSignal);
+  if(disposed||activeSignal?.aborted){
+   renderer.destroy();
+   activeSignal?.throwIfAborted();
+   throw new DOMException('Renderer closed','AbortError');
+  }
+  stage={id:scene.id,renderer};
+  return renderer;
+ }
  function graphics(scene,time){for(const layer of scene.overlays){
   if(time<(layer.startSeconds??0)||time>=(layer.endSeconds??scene.durationSeconds))continue;
   const pose=layerFrame(layer,time);
@@ -63,7 +84,7 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
  }
  async function draw(time,{exporting=false,signal:frameSignal}={}){
   if(disposed)throw new DOMException('Renderer closed','AbortError');frameSignal?.throwIfAborted();
-  ctx.globalAlpha=1;ctx.fillStyle=brand.background;ctx.fillRect(0,0,width,height);const scene=sceneAt(timeline,time);if(!scene)return;
+  ctx.globalAlpha=1;ctx.fillStyle=brand.background;ctx.fillRect(0,0,width,height);const scene=sceneAt(timeline,time);if(scene?.engineType!=='three')releaseStage();if(!scene)return;
   const local=time-scene.startSeconds,transition=scene.transition?.type==='fade'?scene.transition.durationSeconds:0;
   ctx.save();try{
    if(transition)ctx.globalAlpha=Math.max(0,Math.min(1,local/transition,(scene.durationSeconds-local)/transition));
@@ -74,7 +95,9 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
     if(exporting&&errors.length)throw Error(errors[0]);ctx.drawImage(player.map.getCanvas(),0,0,width,height);
     const overlay=host.querySelector('.history-overlay');if(overlay)ctx.drawImage(overlay,0,0,width,height);
    }else if(scene.engineType==='graphic')drawCanvasBackground(ctx,scene.engineData,images);
-   else if(scene.engineType==='lic')financial(scene,local);
+   else if(scene.engineType==='three'){
+    const three=await threeFor(scene,frameSignal);ctx.drawImage(three.frame(local,scene.durationSeconds),0,0,width,height);
+   }else if(scene.engineType==='lic')financial(scene,local);
    else if(scene.engineType==='battlefield')drawBattlefield(ctx,scene.engineData,local,images);
    else if(scene.engineType==='image')fitMedia(ctx,images.get(scene.engineData.assetId),scene.engineData.fit);
    else if(scene.engineType==='video'){

@@ -1,16 +1,36 @@
+import {BUILTIN_MODELS, CAMERA_FIELDS, MODEL_FIELDS, MAX_MODELS, modelMotion, trainStage} from './three-scene.js';
 import {DEFAULT_PARALLAX,trainTemplate} from './parallax.js';
-import {mountObjectEditor} from './object-editor.js?v=2026111206';
+import {mountObjectEditor} from './object-editor.js?v=2026111207';
 import {createDefaultMap} from '../map-defaults.js?v=2026110903';
-import {appendProjectMaps,arrangeScenes,upgradeVideo,resizeScene} from './composition.js?v=2026111014';
+import {appendProjectMaps,arrangeScenes,upgradeVideo,resizeScene} from './composition.js?v=2026111207';
 import {emptyBattlefield} from './battlefield.js?v=2026111014';
 import {decodeVoiceover} from './audio.js?v=2026111014';
-import {validateManifest} from './model.js?v=2026111206';
-import {mapDraft} from './adapters.js?v=2026111206';
+import {validateManifest} from './model.js?v=2026111207';
+import {mapDraft} from './adapters.js?v=2026111207';
 import {mountMapEditor} from '../map-editor.js?v=2026111202';
 import {safeRelativeAssetPath} from '../map-editor-model.js?v=2026111002';
 import {mountBattlefieldEditor} from './battlefield-editor.js?v=2026111014';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const number=(name,key,value,min=0,max=600,step=.1)=>`<label>${name}<input type="number" data-assembly-prop="${key}" value="${value}" min="${min}" max="${max}" step="${step}"></label>`;
+function stageControls(stage,assets,modelId){
+ const selected=stage.models.find(model=>model.id===modelId)??stage.models[0];
+ const models=assets.filter(asset=>asset.kind==='glb');
+ const name=model=>model.preset??models.find(asset=>asset.id===model.assetId)?.name??'GLB model';
+ const fields=(prefix,keys,pose)=>Object.entries(keys).map(([key,[min,max]])=>
+  number(({yaw:'Turn (°)',tilt:'Tilt (°)',zoom:'Zoom',x:'Left / right',z:'Near / far',y:'Height',scale:'Scale'})[key],prefix+'.'+key,pose[key],min,max,.01)).join('');
+ const poses=(prefix,keys,motion)=>['from','to'].map(end=>
+  `<fieldset><legend>${end==='from'?'Start':'End'}</legend><div class="vs-grid">${fields(prefix+'.'+end,keys,motion[end])}</div></fieldset>`).join('');
+ return `<details><summary>3D camera</summary>${poses('stage.camera',CAMERA_FIELDS,stage.camera)}</details>
+  <details><summary>3D models</summary>
+   <div class="vs-actions"><label>Model<select data-stage-source>
+    ${BUILTIN_MODELS.map(p=>`<option value="preset:${p}">${p}</option>`).join('')}
+    ${models.map(a=>`<option value="asset:${esc(a.id)}">${esc(a.name)}</option>`).join('')}
+   </select></label><button data-compose="stage-add" ${stage.models.length>=MAX_MODELS?'disabled':''}>Add model</button></div>
+   ${selected?`<div class="vs-actions"><label>Edit model<select data-stage-model>
+    ${stage.models.map(m=>`<option value="${esc(m.id)}" ${m.id===selected.id?'selected':''}>${esc(name(m))}</option>`).join('')}
+   </select></label><button data-compose="stage-remove">Remove model</button></div>${poses('stage.model',MODEL_FIELDS,selected)}`:''}
+  </details>`;
+}
 const catalogUrl=new URL('../asset-libraries/index.json',import.meta.url);
 let libraryCatalogPromise=null;
 export async function loadAssetLibraryCatalog(url=catalogUrl){
@@ -22,7 +42,7 @@ export async function loadAssetLibraryCatalog(url=catalogUrl){
 }
 export function mountAssembly(root,api){
  const {getManifest,setManifest,getProject,getFile,putFile,deleteFile,importFiles,run,status,getTime,setTime,releaseRenderer,previewManifest}=api;
- let selected=api.session.selected||'',audioSelected='',pending=null,focused=null,editor=null,focusScene=null,returnTime=0,closed=false,catalog=null;
+ let modelId='',selected=api.session.selected||'',audioSelected='',pending=null,focused=null,editor=null,focusScene=null,returnTime=0,closed=false,catalog=null;
  const objectRoot=document.createElement('section');objectRoot.className='vs-object-editor';root.closest('.video-studio').querySelector('.vs-preview').append(objectRoot);
  const objects=mountObjectEditor(objectRoot,{canvas:root.closest('.video-studio').querySelector('canvas'),getScene:()=>focused?null:scene(),getManifest,getTime,setTime,run,pause:api.pause,seek:()=>previewManifest(getManifest()),change:async(fn,replacement)=>{const m=replacement||await upgrade();if(fn)fn(m.scenes.find(s=>s.id===selected));await apply(m);}});
  const lockNavigation=value=>root.closest('.production-workbench')?.querySelectorAll('[data-tab]').forEach(b=>b.disabled=value);
@@ -46,8 +66,8 @@ export function mountAssembly(root,api){
   if(note)note.textContent=active?`${active.description} Choose artwork inside Edit scene.`:'No reusable artwork libraries configured.';
  }
  function render(){if(closed||focused)return;const openDetails=new Set([...root.querySelectorAll('details[open]')].map(n=>n.querySelector('summary')?.textContent));const m=getManifest(),s=scene(),a=m.audioClips?.find(a=>a.id===audioSelected);api.session.selected=selected;
-  root.innerHTML=`<div class="vs-assembly-header"><strong>Scenes</strong><label>Add scene<select data-add-kind><option value="graphic">Canvas / explainer</option><option value="parallax">2.5D · Train template</option><option value="map">Map</option><option value="battlefield">Battlefield</option></select></label><button data-compose="add">Add scene</button></div><div class="vs-actions"><button data-compose="maps">Use project maps</button><label class="vs-upload">Add image / video<input data-compose-media type="file" accept="image/png,image/jpeg,image/webp,video/mp4,video/webm"></label></div><div class="vs-scene-list">${m.scenes.map((s,i)=>`<button data-compose-select="${esc(s.id)}" aria-pressed="${selected===s.id}"><span>${i+1}. ${esc(s.name||s.engineType)}</span><small>${s.startSeconds.toFixed(1)}–${(s.startSeconds+s.durationSeconds).toFixed(1)}s · ${esc(s.engineType)}</small></button>`).join('')||'<p class="vs-help">Add a scene or copy maps from this project to begin.</p>'}</div>
-  ${s?`<section class="vs-inspector"><h3>Selected scene</h3><label>Name<input data-assembly-prop="name" value="${esc(s.name||s.engineType)}" maxlength="200"></label><div class="vs-actions"><button data-compose="up">Move up</button><button data-compose="down">Move down</button><button data-compose="duplicate">Duplicate</button><button data-compose="remove">Remove</button></div><div class="vs-grid">${number('Duration (seconds)','duration',s.durationSeconds,1/30)}<label>Transition<select data-assembly-prop="transition"><option value="cut" ${s.transition?.type!=='fade'?'selected':''}>Cut</option><option value="fade" ${s.transition?.type==='fade'?'selected':''}>Fade through background</option></select></label>${number('Fade seconds','fade',s.transition?.durationSeconds||0,0,s.durationSeconds/2)}${s.engineType==='video'?number('Source trim start','trim',s.engineData.trimStart):''}${s.engineData.project||s.engineData.sourceId?number('Map source start','sourceStart',s.engineData.sourceStart):''}${['image','video'].includes(s.engineType)?`<label>Framing<select data-assembly-prop="fit"><option ${s.engineData.fit==='contain'?'selected':''}>contain</option><option ${s.engineData.fit==='cover'?'selected':''}>cover</option></select></label>`:''}</div>${s.engineType==='graphic'?`<label>Title text<textarea data-assembly-prop="text">${esc(s.overlays.find(o=>o.type==='text')?.text||'')}</textarea></label>`:''}${['map','battlefield'].includes(s.engineType)?'<button data-compose="edit">Edit scene</button>':''}<div class="vs-actions"><label>Overlay artwork<select data-overlay-art>${m.assets.map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('')}</select></label><button data-compose="add-overlay">Add image overlay</button></div><p class="vs-help">Overlay placement and motion can be refined in the complete video JSON. Timing changes are reviewed below before applying. Recordings keep their current positions.</p></section>`:''}
+  root.innerHTML=`<div class="vs-assembly-header"><strong>Scenes</strong><label>Add scene<select data-add-kind><option value="graphic">Canvas / explainer</option><option value="parallax">2.5D · Train template</option><option value="three">3D · Train stage</option><option value="map">Map</option><option value="battlefield">Battlefield</option></select></label><button data-compose="add">Add scene</button></div><div class="vs-actions"><button data-compose="maps">Use project maps</button><label class="vs-upload">Add image / video<input data-compose-media type="file" accept="image/png,image/jpeg,image/webp,video/mp4,video/webm"></label></div><div class="vs-scene-list">${m.scenes.map((s,i)=>`<button data-compose-select="${esc(s.id)}" aria-pressed="${selected===s.id}"><span>${i+1}. ${esc(s.name||s.engineType)}</span><small>${s.startSeconds.toFixed(1)}–${(s.startSeconds+s.durationSeconds).toFixed(1)}s · ${esc(s.engineType)}</small></button>`).join('')||'<p class="vs-help">Add a scene or copy maps from this project to begin.</p>'}</div>
+  ${s?`<section class="vs-inspector"><h3>Selected scene</h3><label>Name<input data-assembly-prop="name" value="${esc(s.name||s.engineType)}" maxlength="200"></label><div class="vs-actions"><button data-compose="up">Move up</button><button data-compose="down">Move down</button><button data-compose="duplicate">Duplicate</button><button data-compose="remove">Remove</button></div><div class="vs-grid">${number('Duration (seconds)','duration',s.durationSeconds,1/30)}<label>Transition<select data-assembly-prop="transition"><option value="cut" ${s.transition?.type!=='fade'?'selected':''}>Cut</option><option value="fade" ${s.transition?.type==='fade'?'selected':''}>Fade through background</option></select></label>${number('Fade seconds','fade',s.transition?.durationSeconds||0,0,s.durationSeconds/2)}${s.engineType==='video'?number('Source trim start','trim',s.engineData.trimStart):''}${s.engineData.project||s.engineData.sourceId?number('Map source start','sourceStart',s.engineData.sourceStart):''}${['image','video'].includes(s.engineType)?`<label>Framing<select data-assembly-prop="fit"><option ${s.engineData.fit==='contain'?'selected':''}>contain</option><option ${s.engineData.fit==='cover'?'selected':''}>cover</option></select></label>`:''}</div>${s.engineType==='graphic'?`<label>Title text<textarea data-assembly-prop="text">${esc(s.overlays.find(o=>o.type==='text')?.text||'')}</textarea></label>`:''}${['map','battlefield'].includes(s.engineType)?'<button data-compose="edit">Edit scene</button>':''}${s.engineType==='three'?stageControls(s.engineData,m.assets,modelId):''}<div class="vs-actions"><label>Overlay artwork<select data-overlay-art>${m.assets.filter(a=>a.kind!=='glb').map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('')}</select></label><button data-compose="add-overlay">Add image overlay</button></div><p class="vs-help">Overlay placement and motion can be refined in the complete video JSON. Timing changes are reviewed below before applying. Recordings keep their current positions.</p></section>`:''}
   <details><summary>Audio</summary><div class="vs-grid"><label>Type<select data-audio-role><option value="voiceover">Voice</option><option value="music">Music</option><option value="effect">Sound effect</option></select></label><label class="vs-upload">Add recording<input data-compose-audio type="file" accept=".mp3,.wav,audio/mpeg,audio/wav" multiple></label></div><div class="vs-audio-list">${(m.audioClips||[]).map(a=>`<button data-compose-audio-select="${esc(a.id)}" aria-pressed="${a.id===audioSelected}">${esc(a.name)}<small>${esc(a.role)} · ${a.startSeconds.toFixed(1)}–${(a.startSeconds+a.durationSeconds).toFixed(1)}s</small></button>`).join('')}${m.audio?'<p class="vs-help">An existing voiceover is loaded. Adding audio retains it as the first voice track.</p>':''}</div>${a?`<h4>${esc(a.name)}</h4><div class="vs-grid">${number('Timeline start','audio.startSeconds',a.startSeconds)}${number('Source trim start','audio.trimStart',a.trimStart)}${number('Duration','audio.durationSeconds',a.durationSeconds,1/48000)}${number('Volume','audio.gain',a.gain,0,2,.05)}${a.role!=='voiceover'?`<label>Repeat sound<select data-assembly-prop="audio.loop"><option value="false" ${!a.loop?'selected':''}>Off</option><option value="true" ${a.loop?'selected':''}>Loop</option></select></label>${a.loop?number('Loop source length','audio.sourceDurationSeconds',a.sourceDurationSeconds,1/48000):''}`:''}${number('Fade in','audio.fadeIn',a.fadeIn)}${number('Fade out','audio.fadeOut',a.fadeOut)}</div><button data-compose="remove-audio-clip">Remove recording</button>`:''}</details><details><summary>Reusable artwork</summary><div class="vs-actions"><select data-asset-library aria-label="Reusable artwork library"><option value="">Loading libraries…</option></select><button data-compose="load-asset-library">Load artwork library</button></div><p class="vs-help" data-asset-library-note>Choose a reusable artwork library, with source and rights notes. Choose formation artwork inside Edit scene.</p></details><div data-compose-review></div>`;
   for(const details of root.querySelectorAll('details'))if(openDetails.has(details.querySelector('summary')?.textContent))details.open=true;
   objects.sync();
@@ -88,7 +108,22 @@ export function mountAssembly(root,api){
    if(action==='maps'){const next=appendProjectMaps(m,getProject());review(next,`Append ${next.scenes.length-m.scenes.length} map scenes as independent copies?`);return;}
    if(action==='add'){const choice=root.querySelector('[data-add-kind]').value;
     const kind=choice==='parallax'?'graphic':choice;
-    const data=choice==='parallax'?{background:'#bad7e1',parallax:{...DEFAULT_PARALLAX}}:kind==='battlefield'?emptyBattlefield():kind==='map'?{project:{scenes:[{id:crypto.randomUUID(),duration:5}],historicalMap:createDefaultMap()},sourceStart:0}:{};const row={id:crypto.randomUUID(),name:choice==='parallax'?'2.5D train':kind==='battlefield'?'Battlefield':kind==='map'?'Map':'Title',startSeconds:0,durationSeconds:5,engineType:kind,engineData:data,overlays:choice==='parallax'?trainTemplate(5):kind==='graphic'?[{id:crypto.randomUUID(),type:'text',text:'Your story',fontSize:64}]:[]};selected=row.id;await apply(arrangeScenes(m,[...m.scenes,row],{mapAssets:mapAssets()}));return;}
+    const data=kind==='three'?trainStage():choice==='parallax'?{background:'#bad7e1',parallax:{...DEFAULT_PARALLAX}}:kind==='battlefield'?emptyBattlefield():kind==='map'?{project:{scenes:[{id:crypto.randomUUID(),duration:5}],historicalMap:createDefaultMap()},sourceStart:0}:{};const row={id:crypto.randomUUID(),name:kind==='three'?'3D train':choice==='parallax'?'2.5D train':kind==='battlefield'?'Battlefield':kind==='map'?'Map':'Title',startSeconds:0,durationSeconds:5,engineType:kind,engineData:data,overlays:choice==='parallax'?trainTemplate(5):kind==='graphic'?[{id:crypto.randomUUID(),type:'text',text:'Your story',fontSize:64}]:[]};const previous=selected,previousTime=getTime();
+    const next=arrangeScenes(m,[...m.scenes,row],{mapAssets:mapAssets()});
+    selected=row.id;if(kind==='three')setTime(next.scenes.at(-1).startSeconds);
+    try{await apply(next);}catch(error){selected=previous;setTime(previousTime);render();await previewManifest(getManifest()).catch(()=>{});throw error;}return;}
+   if(s?.engineType==='three'&&['stage-add','stage-remove'].includes(action)){
+    const stage=s.engineData;
+    if(action==='stage-add'){
+     const source=root.querySelector('[data-stage-source]').value;
+     const model=modelMotion(crypto.randomUUID(),source.startsWith('preset:')?{preset:source.slice(7)}:{assetId:source.slice(6)});
+     stage.models.push(model);modelId=model.id;
+    }else{
+     const target=root.querySelector('[data-stage-model]').value;
+     stage.models=stage.models.filter(model=>model.id!==target);modelId=stage.models[0]?.id||'';
+    }
+    await apply(m);return;
+   }
    if(action==='add-overlay'){if(!s)throw Error('Select a scene first.');const assetId=root.querySelector('[data-overlay-art]').value;if(!assetId)throw Error('Add artwork to your video from the shared library first.');s.overlays.push({id:crypto.randomUUID(),type:'image',assetId,x:.5,y:.5,width:.2,height:.2});await apply(m);return;}
    if(action==='remove-audio-clip'){m.audioClips=m.audioClips.filter(a=>a.id!==audioSelected);audioSelected='';review(m,'Remove this recording from the timeline?');return;}
    if(!s)return;
@@ -100,6 +135,7 @@ export function mountAssembly(root,api){
   });
  });
  root.addEventListener('change',e=>{if(e.target.closest('[data-focused-editor]'))return;const target=e.target,key=target.dataset.assemblyProp;
+  if(target.matches('[data-stage-model]')){modelId=target.value;render();return;}
   if(target.matches('[data-asset-library]')){populateLibrarySelect();return;}
   // A programmatic change followed by blur must not cancel the user's Apply click.
   if(key?.startsWith('audio.')&&pending?.audioClips?.find(a=>a.id===audioSelected)?.[key.slice(6)]===Number(target.value))return;
@@ -121,6 +157,12 @@ export function mountAssembly(root,api){
     const prevSelected=selected;m.assets.push({id,name:file.name,fileId:id});const row={id:crypto.randomUUID(),name:file.name,startSeconds:0,durationSeconds:duration,engineType:video?'video':'image',engineData:{assetId:id,fit:'contain',...(video?{trimStart:0}:{})},overlays:[]};selected=row.id;const next=arrangeScenes(m,[...m.scenes,row],{mapAssets:mapAssets()});putFile(id,file);try{await apply(next);}catch(error){selected=prevSelected;deleteFile?.(id);throw error;}status(video?'Clip added. Its original audio is muted; add a recording in Audio.':'Image added.');return;
    }
    if(key.startsWith('audio.')){const a=m.audioClips.find(a=>a.id===audioSelected);if(key==='audio.loop'){a.loop=target.value==='true';if(a.loop)a.sourceDurationSeconds=a.durationSeconds;else delete a.sourceDurationSeconds;}else a[key.slice(6)]=Number(target.value);review(m,'Change recording timing or volume?');return;}if(!s)return;
+   if(key.startsWith('stage.')&&s.engineType==='three'){
+    const [,kind,end,field]=key.split('.');
+    const motion=kind==='camera'?s.engineData.camera:s.engineData.models.find(model=>model.id===root.querySelector('[data-stage-model]').value);
+    motion[end][field]=target.valueAsNumber;
+    await apply(m);return;
+   }
    if(key==='name')s.name=target.value;else if(key==='duration')Object.assign(s,resizeScene(s,Number(target.value)));else if(key==='transition')s.transition={type:target.value,durationSeconds:target.value==='fade'?Math.min(.3,s.durationSeconds/2):0};else if(key==='fade')s.transition={type:'fade',durationSeconds:Number(target.value)};else if(key==='trim')s.engineData.trimStart=Number(target.value);else if(key==='sourceStart')s.engineData.sourceStart=Number(target.value);else if(key==='fit')s.engineData.fit=target.value;else if(key==='text'){const title=s.overlays.find(o=>o.type==='text');if(title)title.text=target.value;else s.overlays.push({id:crypto.randomUUID(),type:'text',text:target.value,fontSize:64});}
    review(arrangeScenes(m,m.scenes,{mapAssets:mapAssets()}),'Apply selected scene changes?');
   });

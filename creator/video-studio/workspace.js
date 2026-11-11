@@ -1,12 +1,13 @@
+import {checkStudioGlb, MAX_MODEL_BYTES} from './three-scene.js';
 import {mountConnectedImageGenerator} from '../image-generator.js?v=2026111205';
 import {callImageRelay,draftRemoteImagePrompt} from '../../shared/firebase-image-relay.js?v=2026111205';
 import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=2026111002';
-import {studioBrief} from './handoff.js?v=2026111206';
-import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111014';
-import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111206';
-import {createStudioRenderer} from './adapters.js?v=2026111206';
+import {studioBrief} from './handoff.js?v=2026111207';
+import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111207';
+import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111207';
+import {createStudioRenderer} from './adapters.js?v=2026111207';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111014';
-import {mountAssembly} from './assembly.js?v=2026111206';
+import {mountAssembly} from './assembly.js?v=2026111207';
 import {encodeStudioVideo} from './export.js?v=2026111014';
 import {openStudioStore} from './storage.js';
 import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111203';
@@ -56,10 +57,17 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  let renderer=null,timeline=null,audioBuffer=null,audioTracks=[],stopTracks=null,assembly=null,playing=false,raf=0,time=state.time||0,context=null,source=null,gainNode=null,clock=0,clockTime=0,disposed=false,busy=false,pending=null,controller=null,drawBusy=false,preparing=null;
  const status=text=>{if(!disposed)$('[data-vs-status]').textContent=text;};
  const getFile=async fileId=>{let file=state.files.get(fileId)||await store?.get('file:'+fileId);if(!file&&isCloudFile(fileId)){file=await media.file(fileId);if(disposed||getAccountId()!==account)throw Error('Project closed or account changed.');state.files.set(fileId,file);}return file;};
- function renderLibrary(){const query=$('[data-media-search]').value.trim().toLowerCase();$('[data-media-library]').innerHTML=catalogue.filter(a=>a.name.toLowerCase().includes(query)).map(a=>`<article><strong>${esc(a.name)}</strong><small>${esc(a.kind)}${a.width?' · '+a.width+' × '+a.height:''}${a.duration?' · '+a.duration.toFixed(2)+'s':''}</small><div class="vs-actions"><button data-vs="media-use" data-media-id="${esc(a.id)}">${a.kind==='audio'?'Add voiceover':'Use in video'}</button>${a.kind==='audio'?`<button data-vs="media-music" data-media-id="${esc(a.id)}">Music</button><button data-vs="media-effect" data-media-id="${esc(a.id)}">Sound effect</button>`:''}${['image','video'].includes(a.kind)?`<button data-vs="media-scene" data-media-id="${esc(a.id)}">Add as scene</button>`:''}</div></article>`).join('')||'<p class="vs-help">No matching assets. Add files above.</p>';};
+ function renderLibrary(){const query=$('[data-media-search]').value.trim().toLowerCase();$('[data-media-library]').innerHTML=catalogue.filter(a=>a.name.toLowerCase().includes(query)).map(a=>`<article><strong>${esc(a.name)}</strong><small>${esc(a.kind)}${a.width?' · '+a.width+' × '+a.height:''}${a.duration?' · '+a.duration.toFixed(2)+'s':''}</small><div class="vs-actions"><button data-vs="media-use" data-media-id="${esc(a.id)}">${a.kind==='audio'?'Add voiceover':a.kind==='glb'?'Register 3D model':'Use in video'}</button>${a.kind==='audio'?`<button data-vs="media-music" data-media-id="${esc(a.id)}">Music</button><button data-vs="media-effect" data-media-id="${esc(a.id)}">Sound effect</button>`:''}${['image','video'].includes(a.kind)?`<button data-vs="media-scene" data-media-id="${esc(a.id)}">Add as scene</button>`:''}</div></article>`).join('')||'<p class="vs-help">No matching assets. Add files above.</p>';};
  async function refreshLibrary(){catalogue=await media.list();if(disposed)return;renderLibrary();$('[data-media-status]').textContent=catalogue.length+' assets in your private cloud library.';}
  async function upgraded(){const original=state.manifest.audio&&await getFile(state.manifest.audio.fileId);return upgradeVideo(state.manifest,original?(await decodeVoiceover(original)).duration:0);}
- async function useMedia(a,{scene=false,role='voiceover'}={}){const next=await upgraded();if(a.kind==='audio'){next.audioClips.push({id:uid(),fileId:a.id,name:a.name,role,startSeconds:0,trimStart:0,durationSeconds:a.duration,gain:1,fadeIn:0,fadeOut:0});}else if(a.kind==='glb'){throw Error('GLB models are available from the shared library inside Edit map scene.');}else {if(!next.assets.some(x=>x.fileId===a.id))next.assets.push({id:a.id,name:a.name,fileId:a.id});if(scene){const row={id:uid(),name:a.name,startSeconds:0,durationSeconds:a.duration||5,engineType:a.kind,engineData:{assetId:next.assets.find(x=>x.fileId===a.id).id,fit:'contain',...(a.kind==='video'?{trimStart:0}:{})},overlays:[]};Object.assign(next,arrangeScenes(next,[...next.scenes,row],{mapAssets:mapAssets()}));}}await applyManifest(next);}
+ async function useMedia(a,{scene=false,role='voiceover'}={}){
+  if(a.kind==='glb'){
+   if(a.size>MAX_MODEL_BYTES)throw Error('Use GLB files up to 8 MB in 3D scenes.');
+   const file=await getFile(a.id);
+   if(!file||file.size>MAX_MODEL_BYTES)throw Error('Choose an available GLB file up to 8 MB.');
+   checkStudioGlb(await file.arrayBuffer());
+  }
+  const next=await upgraded();if(a.kind==='audio'){next.audioClips.push({id:uid(),fileId:a.id,name:a.name,role,startSeconds:0,trimStart:0,durationSeconds:a.duration,gain:1,fadeIn:0,fadeOut:0});}else {if(!next.assets.some(x=>x.fileId===a.id))next.assets.push({id:a.id,name:a.name,fileId:a.id,...(a.kind==='glb'?{kind:'glb'}:{})});if(scene&&a.kind!=='glb'){const row={id:uid(),name:a.name,startSeconds:0,durationSeconds:a.duration||5,engineType:a.kind,engineData:{assetId:next.assets.find(x=>x.fileId===a.id).id,fit:'contain',...(a.kind==='video'?{trimStart:0}:{})},overlays:[]};Object.assign(next,arrangeScenes(next,[...next.scenes,row],{mapAssets:mapAssets()}));}}await applyManifest(next);if(a.kind==='glb')status('Model registered. Add it from 3D models in a 3D scene.');}
  async function uploadFiles(files,{addScenes=false,role=null}={}){for(const file of files){status('Uploading '+file.name+'…');const info=await inspectMedia(file),a=await media.upload(file,info);if(disposed||getAccountId()!==account)return;state.files.set(a.id,file);await store?.put('file:'+a.id,file);if(!catalogue.some(x=>x.id===a.id))catalogue.unshift(a);renderLibrary();if(a.kind!=='glb')await useMedia(a,{scene:addScenes&&['image','video'].includes(a.kind),role:role||'voiceover'});}status('Files saved to your cloud library. Save your video draft after making changes.');$('[data-media-status]').textContent=catalogue.length+' assets in your private cloud library.';}
 
  const assetStep=setup.querySelector('.vs-step:not([data-ai-production]):not([data-flow-json])'),uploadPanel=document.createElement('div'),assetTabs=document.createElement('div'),imageRoot=document.createElement('section');
@@ -91,7 +99,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  async function prepare(){
   if(renderer)return;if(preparing)return preparing;
   preparing=(async()=>{
-   const m=validateManifest(state.manifest,{mapAssets:mapAssets()}),b=validateBrand(brand(),new Set(m.assets.map(a=>a.id)));
+   const m=validateManifest(state.manifest,{mapAssets:mapAssets()}),b=validateBrand(brand(),new Set(m.assets.filter(a=>a.kind!=='glb').map(a=>a.id)));
    if(m.audio){const file=await getFile(m.audio.fileId);if(!file)throw Error('Voiceover is missing on this device. Upload the original recording again.');audioBuffer??=await decodeVoiceover(file);}
    audioTracks=await loadAudioTracks(m,getFile);
    timeline=compileTimeline(m,b,audioBuffer?.duration||0);const size=exportDimensions(m.aspectRatio);canvas.width=size.width;canvas.height=size.height;
@@ -138,7 +146,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  async function save(){
   if(!store||!projectId)throw Error('Save and open the Creator project before saving its local video draft.');
   if(getProject()?.ownerUid===account||mediaService){const next=structuredClone(state.manifest),refs=[...next.assets,...(next.audioClips||[]),...(next.audio?[next.audio]:[])],converted=new Map();for(const ref of refs){if(!ref.fileId||isCloudFile(ref.fileId))continue;const old=ref.fileId;if(!converted.has(old)){const file=await getFile(old);if(!file)throw Error('Missing original: '+ref.name);const named=new File([file],ref.name,{type:file.type});const a=await media.upload(named,await inspectMedia(named));converted.set(old,a.id);state.files.set(a.id,file);}ref.fileId=converted.get(old);}await applyManifest(next);}
-  validateManifest(state.manifest,{mapAssets:mapAssets()});const assets=new Set([...state.brandAssets,...state.manifest.assets].map(a=>a.id));state.brands.forEach(b=>validateBrand(b,assets));
+  validateManifest(state.manifest,{mapAssets:mapAssets()});const assets=new Set([...state.brandAssets,...state.manifest.assets].filter(a=>a.kind!=='glb').map(a=>a.id));state.brands.forEach(b=>validateBrand(b,assets));
   // Preserve byte-identical originals. A failed quota write never updates the draft pointer.
   for(const [id,file] of state.files)await store.put('file:'+id,file);
   state.brandAssets=[...new Map([...state.brandAssets,...state.manifest.assets].map(a=>[a.id,a])).values()];await store.put('brands',{brands:state.brands,assets:state.brandAssets});
@@ -217,15 +225,15 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    if(action.startsWith('media-')){const a=catalogue.find(x=>x.id===button.dataset.mediaId);if(!a)throw Error('Choose an asset from your library.');await useMedia(a,{scene:action==='media-scene',role:action==='media-music'?'music':action==='media-effect'?'effect':'voiceover'});}
    if(action==='validate'){pendingCloud=null;
     pending=null;const next=validateManifest($('[data-vs-json]').value,{mapAssets:mapAssets()});if(!state.brands.some(b=>b.id===next.brandPresetId))throw Error('Choose or create the referenced brand profile first.');
-    validateBrand(state.brands.find(b=>b.id===next.brandPresetId),new Set(next.assets.map(a=>a.id)));pending=next;
+    validateBrand(state.brands.find(b=>b.id===next.brandPresetId),new Set(next.assets.filter(a=>a.kind!=='glb').map(a=>a.id)));pending=next;
     $('[data-vs-review]').textContent=`${next.scenes.length} scenes · ${next.aspectRatio} · ${next.audio?.name||(next.audioClips?.length?next.audioClips.length+' audio tracks':'no audio')} · applies only to the separate video draft.`;status('Import reviewed. Apply when ready.');
    }
    if(action==='apply'&&pending){const next=pending,cloud=pendingCloud;await applyManifest(next,{brands:cloud?.brands});if(cloud){state.cloudRevision=cloud.revision;pendingCloud=null;}status('Complete video applied. Preview your scenes and audio, then Save and Export MP4.');}
    if(action==='example'){
-    const next=emptyVideo();next.title='My first video';next.assets=state.manifest.assets;next.scenes=[{id:'explain',startSeconds:0,durationSeconds:5,engineType:'graphic',engineData:{},transition:{type:'fade',durationSeconds:.3},overlays:[{id:'heading',type:'text',text:'Your next story',fontSize:72,keyframes:[{timeSeconds:0,y:.65,opacity:0,easing:'smooth'},{timeSeconds:1,y:.5,opacity:1}]}]}];await applyManifest(next);$('[data-vs-json]').value=JSON.stringify(next,null,2);status('Example loaded in the video draft.');
+    const next=emptyVideo();next.title='My first video';next.assets=state.manifest.assets.filter(a=>a.kind!=='glb');next.scenes=[{id:'explain',startSeconds:0,durationSeconds:5,engineType:'graphic',engineData:{},transition:{type:'fade',durationSeconds:.3},overlays:[{id:'heading',type:'text',text:'Your next story',fontSize:72,keyframes:[{timeSeconds:0,y:.65,opacity:0,easing:'smooth'},{timeSeconds:1,y:.5,opacity:1}]}]}];await applyManifest(next);$('[data-vs-json]').value=JSON.stringify(next,null,2);status('Example loaded in the video draft.');
    }
    if(action==='brand-apply'){
-    const b=validateBrand(JSON.parse($('[data-vs-brand-json]').value),new Set(state.manifest.assets.map(a=>a.id)));
+    const b=validateBrand(JSON.parse($('[data-vs-brand-json]').value),new Set(state.manifest.assets.filter(a=>a.kind!=='glb').map(a=>a.id)));
     const nextBrands=structuredClone(state.brands),i=nextBrands.findIndex(x=>x.id===b.id);
     if(i<0){if(nextBrands.length>=20)throw Error('Use up to 20 profiles.');nextBrands.push(b);}else nextBrands[i]=b;
     const nextManifest={...structuredClone(state.manifest),brandPresetId:b.id};
