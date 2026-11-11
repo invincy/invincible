@@ -372,11 +372,16 @@ async function checkGlobeWithoutWebGL(browser,base) {
             const bounds=selector=>get(selector).getBoundingClientRect();
             const font=selector=>parseFloat(getComputedStyle(get(selector)).fontSize);
             return {focus:bounds('.v2-guide-mission').height,timer:bounds('.v2-guide-timer').height,
-              workspace:bounds('.v2-guide-work').height,gap:bounds('.v2-guide-work').top-bounds('.v2-guide-timer').bottom,
+              workspace:bounds('.v2-guide-work').height,
+              leftGap:bounds('.v2-guide-todos').top-bounds('.v2-guide-mission').bottom,
+              rightGap:bounds('.v2-guide-work').top-bounds('.v2-guide-timer').bottom,
+              topDifference:bounds('.v2-guide-mission').top-bounds('.v2-guide-timer').top,
               heading:font('.v2-guide-kicker'),label:font('.v2-guide-statuses'),control:font('.v2-guide-work-link')};
           });
           assert.ok(cards.focus>=128&&cards.timer>=148&&cards.workspace>=180,JSON.stringify(cards));
-          assert.ok(cards.gap>=24, 'Right-side cards stay separated on a short laptop screen');
+          assert.equal(cards.topDifference,0,'Both stacks start at the same height');
+          assert.ok(cards.leftGap>=12&&cards.leftGap<=20,'Left cards stack with a compact gap');
+          assert.ok(Math.abs(cards.leftGap-cards.rightGap)<1,'Both stacks use the same gap');
           assert.ok(cards.heading>=14&&cards.label>=14&&cards.control>=15, 'Card text stays readable at desktop widths');
         }
         await page.setViewportSize({width:1440,height:1000});

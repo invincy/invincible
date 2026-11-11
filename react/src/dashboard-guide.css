@@ -43,12 +43,6 @@
     --card-gutter: clamp(24px, 2.5vw, 48px);
     --card-inset: clamp(40px, 7.5dvh, 84px);
   }
-  .v2-guide-mission,.v2-guide-timer,.v2-guide-work { width: var(--card-width) }
-  .v2-guide-mission { top: var(--card-inset); left: var(--card-gutter) }
-  .v2-guide-timer,.v2-guide-work { right: var(--card-gutter) }
-  .v2-guide-timer { top: var(--card-inset) }
-  .v2-guide-work { bottom: var(--card-inset) }
-
 }
 /* Nine real pages appear as unboxed glows within the existing irregular Orb. */
 .v2-constellation{position:absolute;left:50%;top:50%;width:var(--orb-size);aspect-ratio:1;transform:translate(-50%,-50%);z-index:5;pointer-events:none}
@@ -228,7 +222,7 @@
   .v2-shell .v2-guide-work-link { margin-top: 13px }
 }
 .v2-guide-panel-links { display: none }
-.v2-guide-globe-panel,.v2-guide-session-panel { display: contents }
+.v2-guide-globe-panel { display: contents }
 @media (max-width: 900px) {
   .v2-guide-panel-links {
     display: grid;
@@ -292,19 +286,27 @@
 .v2-todo-schedule { grid-column: 1 / -1; padding-inline-start: 25px; display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 13px }
 .v2-todo-schedule a { color: #a8e8f4 }
 @media (width > 900px) {
-  .v2-guide-left {
+  .v2-guide-left,.v2-guide-session-panel {
     position: absolute;
-    inset: var(--card-inset) auto var(--card-inset) var(--card-gutter);
+    inset-block: var(--card-inset);
     width: var(--card-width);
     z-index: 4;
     display: flex;
     flex-direction: column;
-    gap: clamp(10px, 2dvh, 22px);
+    gap: clamp(12px, 1.8dvh, 20px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
   }
-  .v2-guide-left .v2-guide-mission { position: relative; inset: auto; width: 100%; flex: none }
+  .v2-guide-left { left: var(--card-gutter) }
+  .v2-guide-session-panel { right: var(--card-gutter) }
+  :is(.v2-guide-left,.v2-guide-session-panel) > * {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    flex: none;
+  }
   .v2-guide-todos {
-    min-height: 0;
-    margin-top: auto;
     border-left: 0;
     border-radius: 0 14px 14px 0;
   }
