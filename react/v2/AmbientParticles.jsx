@@ -8,7 +8,7 @@ export default function AmbientParticles({theme = 'gold'}) {
     const canvas = canvasRef.current, scene = canvas.parentElement, pointerSurface = canvas.closest('.v2-shell') || scene, context = canvas.getContext('2d');
     if (!context) return;
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-    const colour = {gold:'238, 200, 123', cyan:'115, 221, 244', emerald:'112, 230, 175'}[theme] || '238, 200, 123';
+    const colour = {gold:'118, 153, 202', cyan:'115, 221, 244', emerald:'112, 230, 175'}[theme] || '118, 153, 202';
     let width=0, height=0, frame=0, last=0, particles=[], inView=true;
     const pointer={x:0,y:0,active:false};
     const fractional=value=>value-Math.floor(value);

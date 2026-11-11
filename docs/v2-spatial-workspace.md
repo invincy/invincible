@@ -275,3 +275,5 @@ Local browser checks covered Dashboard touch navigation, Finance desktop and pho
 Release 2026.11.11.6 increases the desktop particle field by 10% around the existing shortcut positions. The phone layout uses its existing diameter.
 
 The Dashboard fades the ambient network behind the visible globe, using its current position on desktop and mobile. The gold filament heads are slightly brighter. Particle positions, counts, animation and shortcut positions are unchanged.
+
+Release 2026.11.12.2 gives the gold globe a muted blue background network. One in four supplemental globe dots is larger and brighter. The filament layer, total particle budget and motion are unchanged.

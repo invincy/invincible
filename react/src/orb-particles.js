@@ -28,9 +28,11 @@ function appendFineParticles(particles,offset){
   const latitude=Math.asin(lane*2-1);
   const radius=.99+.12*((index+.5)*.414213562%1);
   const radial=radius*Math.cos(latitude);
-  const size=1.15+.33*((index+.5)*.569840291%1);
+  const large=index%4===0;
+  const variation=(index+.5)*.569840291%1;
+  const size=(large?1.85:1.15)+.33*variation;
   // Negative opacity selects the inexpensive vertex path for added points.
-  const opacity=-(.16+.16*((index+.5)*.857726%1));
+  const opacity=-(.16+.16*((index+.5)*.857726%1))*(large?1.24:1);
   particles.set([radial*Math.cos(longitude),radius*Math.sin(latitude),radial*Math.sin(longitude),size,opacity],(offset+index)*5);
  }
 }

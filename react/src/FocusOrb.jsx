@@ -25,7 +25,8 @@ void main(){
   vec3 p=rotateByGesture(vec3(position.x*c+position.z*s,position.y,-position.x*s+position.z*c));
   vec4 projected=projection*vec4(p,1.0);
   gl_Position=projected;
-  gl_PointSize=max(1.5,appearance.x*pixelRatio*pointScale*4.6/projected.w);
+  float minimumSize=mix(1.5,1.85,step(1.75,appearance.x));
+  gl_PointSize=max(minimumSize,appearance.x*pixelRatio*pointScale*4.6/projected.w);
   opacity=-appearance.y*(.18+.82*smoothstep(-.75,1.0,p.z));
   return;
  }
