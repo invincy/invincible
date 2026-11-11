@@ -5,9 +5,15 @@ body{margin:0;background:#061217;color:#e5f3f5;font:14px/1.5 system-ui,sans-seri
 import {createLocalImageClient} from '/shared/local-image-client.js';
 import {mountImageGenerator} from '/creator/image-generator.js';
 const client=createLocalImageClient({origin:location.origin}),projects=document.querySelector('#projects'),log=document.querySelector('#log');
-const panel=mountImageGenerator(document.querySelector('#images'),{client,getProjectId:()=>projects.value,onAttach:async(file,job)=>{await client.request('/api/projects/'+encodeURIComponent(projects.value)+'/assets',{generationId:job.id});await refresh();}});
+let panel;
+function openImagePanel(){
+  panel?.destroy();
+  panel=mountImageGenerator(document.querySelector('#images'),{client,getProjectId:()=>projects.value,onAttach:async(file,job)=>{await client.request('/api/projects/'+encodeURIComponent(projects.value)+'/assets',{generationId:job.id});await refresh();}});
+}
+openImagePanel();
+projects.addEventListener('change',openImagePanel);
 async function refresh(){const selected=projects.value,{projects:rows}=await client.request('/api/projects');projects.replaceChildren(new Option('No project selected',''),...rows.map(p=>new Option(p.title+' · '+p.assets.length+' assets',p.id)));if(rows.some(p=>p.id===selected))projects.value=selected;}
 await panel.ready;try{const session=await client.connect();document.querySelector('#connection').textContent=session.storage.available?'Connected · files stay in your local workspace':session.storage.error;await refresh();}catch{}
-document.querySelector('#new-project').onclick=async()=>{try{const {project}=await client.request('/api/projects',{title:'Image generation test · '+new Date().toLocaleDateString(),idempotencyKey:crypto.randomUUID()});await refresh();projects.value=project.id;}catch(e){document.querySelector('#connection').textContent=e.message;}};
+document.querySelector('#new-project').onclick=async()=>{try{const {project}=await client.request('/api/projects',{title:'Image generation test · '+new Date().toLocaleDateString(),idempotencyKey:crypto.randomUUID()});await refresh();projects.value=project.id;openImagePanel();}catch(e){document.querySelector('#connection').textContent=e.message;}};
 document.querySelector('#chat-form').onsubmit=async event=>{event.preventDefault();const input=document.querySelector('#message'),message=input.value.trim();if(!message)return;document.querySelector('#send').disabled=true;log.textContent+='\nYou: '+message+'\nInvincible: working…';try{const result=await client.command(message,crypto.randomUUID());if(result.job){log.textContent+='\nImage request queued.';await panel.showJob(result.job);const last=(await client.job(result.job.id)).job;log.textContent+='\n'+(last.status==='completed'&&last.verified?'Image completed and verified.':'Image failed: '+(last.error?.message||last.status));}else log.textContent+='\n'+(result.text||result.result?.result?.action?.summary||'No action completed.');await refresh();}catch(e){log.textContent+='\nFailed: '+e.message;}finally{document.querySelector('#send').disabled=false;}};
 </script></body></html>

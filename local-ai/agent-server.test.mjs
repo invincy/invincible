@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { createLocalAgentServer } from './agent-server.mjs';
-import { fakeGpu } from '../tests/fixtures/imagegen-service.mjs';
+import { fakeGpu, fixturePng } from '../tests/fixtures/imagegen-service.mjs';
 const TOKEN='fixture-only-local-worker-pairing-token-12345';
 async function setup(t, options={}) {
   const directory=await fs.mkdtemp(path.join(process.env.INVINCIBLE_IMAGE_TEST_ROOT||os.tmpdir(),'invincible-http-fixture-'));
@@ -20,6 +20,10 @@ test('HTTP requires pairing, account ownership, exact origin and strict argument
  assert.equal((await call('/api/session',null,{Origin:'https://untrusted.example'})).status,403);
  assert.equal((await call('/api/generations',{arguments:{prompt:'hi',preset:'square',workflow:{}},idempotencyKey:'invalid-001'})).status,400);
  assert.equal((await call('/api/generations',{arguments:{prompt:'hi',preset:'square'},idempotencyKey:'invalid-001',outputPath:'C:\\out'})).status,400);
+ const reference = { arguments: { prompt: 'hi', preset: 'square' }, idempotencyKey: 'invalid-002' };
+ assert.equal((await call('/api/generations',{...reference, referencePng:'YWJj'})).status,400);
+ assert.equal((await call('/api/generations',{...reference, referencePng:fixturePng(384,640).toString('base64')})).status,400);
+ assert.equal((await call('/api/generations',{...reference, arguments:{...reference.arguments,preset:'portrait'}, referencePng:fixturePng(512,512).toString('base64')})).status,400);
  assert.equal((await call('/api/generations/agent_00000000000000000000000000000000')).status,404);
 });
 test('manual and Qwen routes invoke the same tool, attach once, and serve verified downloads',async t=>{

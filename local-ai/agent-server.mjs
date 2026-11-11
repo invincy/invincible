@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-import { askOllama, detectLocalIntent } from './invincible-local-controller.mjs';
+import { askOllama, detectLocalIntent, draftImagePrompt, imagePromptText } from './invincible-local-controller.mjs';
 import { createGpuCoordinator } from './gpu-coordinator.mjs';
 import { createImageWorker, safeDirectory, WORKSPACE_ROOT } from './image-worker.mjs';
 const require = createRequire(import.meta.url);
@@ -43,9 +43,9 @@ export async function createLocalAgentServer({ ownerUid, token = crypto.randomBy
     response.writeHead(status, { 'content-type': type + (type.startsWith('text/') || type === 'application/json' ? '; charset=utf-8' : ''), 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer' });
     response.end(type === 'application/json' ? JSON.stringify(body) : body);
   }
-  async function readBody(request) {
+  async function readBody(request, maxBytes = 12000) {
     const chunks = []; let size = 0;
-    for await (const chunk of request) { size += chunk.length; if (size > 12000) throw Error('Request too large.'); chunks.push(chunk); }
+    for await (const chunk of request) { size += chunk.length; if (size > maxBytes) throw Error('Request too large.'); chunks.push(chunk); }
     return JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
   }
   function strict(body, keys) { if (!body || Array.isArray(body) || typeof body !== 'object' || Object.keys(body).some(key => !keys.includes(key))) throw Error('Unexpected request fields.'); }
@@ -75,16 +75,29 @@ export async function createLocalAgentServer({ ownerUid, token = crypto.randomBy
       }
       if (url.pathname.startsWith('/api/')) {
         const actor = authenticate(request);
-        if (request.method === 'GET' && url.pathname === '/api/session') return send(response, 200, { uid: ownerUid, workspaceId: ownerUid, storage: images.storage(), presets: IMAGE_PRESETS });
+        if (request.method === 'GET' && url.pathname === '/api/session') return send(response, 200, { uid: ownerUid, workspaceId: ownerUid, storage: images.storage(), presets: IMAGE_PRESETS, capabilities: { draftPrompt: true, referenceImage: true } });
         if (request.method === 'GET' && url.pathname === '/api/projects') return send(response, 200, { projects: await projects() });
         if (request.method === 'POST' && url.pathname === '/api/projects') {
           const body = await readBody(request); strict(body, ['title','idempotencyKey']);
           const result = await api.execute({ principal: actor, workspaceId: ownerUid, tool: 'create_project', idempotencyKey: body.idempotencyKey, arguments: { title: body.title, description: 'Isolated local image-generation test', stages: ['Images'], current_stage: 'Images' } });
           return send(response, 200, { project: result.result.result, verified: result.verified });
         }
+        if (request.method === 'POST' && url.pathname === '/api/image-prompt') {
+          const body = await readBody(request);
+          strict(body, ['idea']);
+          const idea = imagePromptText(body.idea);
+          const signal = AbortSignal.timeout(90000);
+          const prompt = await gpu.run(async () => {
+            signal.throwIfAborted();
+            await images.unloadImages();
+            try { return await draftImagePrompt({ idea, fetchImpl, signal }); }
+            finally { await images.releaseQwen(); }
+          });
+          return send(response, 200, { prompt });
+        }
         if (request.method === 'POST' && url.pathname === '/api/generations') {
-          const body = await readBody(request); strict(body, ['arguments', 'idempotencyKey']);
-          const job = await images.submit(api, actor, body.idempotencyKey, imageSchema.parse(body.arguments));
+          const body = await readBody(request, 1_512_000); strict(body, ['arguments', 'idempotencyKey', 'referencePng']);
+          const job = await images.submit(api, actor, body.idempotencyKey, imageSchema.parse(body.arguments), body.referencePng);
           return send(response, 202, { job: view(job), verified: false });
         }
         const jobRoute = url.pathname.match(/^\/api\/generations\/(agent_[a-f0-9]{32})(\/image)?$/);
