@@ -255,3 +255,9 @@ The globe and shortcut layout use 75% of their previous desktop diameter. The to
 Dragging the globe with a mouse or finger rotates the particle field. Release speed controls how quickly it coasts, and mouse movement over the globe also leaves momentum when the pointer exits. The gesture surface sits beneath the shortcut and plan controls. Reduced motion keeps the field static between direct interactions.
 
 The production and V2 builds, site references, particle and startup tests, and Chromium mouse and emulated touch gestures were verified. Physical touch behavior and signed-in production remain unverified.
+
+## Larger shortcuts and faster globe flicks
+
+The globe, dashboard header, shared menus and Journal navigation use larger icons. The dashboard sphere uses a simpler renderer with 174,000 points on desktop and 114,000 on mobile. Lower-capability devices use 66,000 points. The globe diameter stays consistent with the previous desktop and mobile layouts.
+
+A dedicated circular surface accepts presses and swipes across empty areas of the globe. App shortcuts remain separate targets. Quick releases produce a stronger spin and longer coast, including on the fallback globe. Reduced motion suppresses automatic movement and keeps deliberate flicks available.

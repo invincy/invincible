@@ -133,7 +133,7 @@ async function checkOrbGestures(browser, base, touch) {
         const x=Math.round(rect.left+rect.width*column);
         const y=Math.round(rect.top+rect.height*row);
         if(Math.hypot(column-.5,row-.5)>=.44||![0,12,24,36,48,60,72].every(dx=>
-          document.elementFromPoint(x+dx,y)?.matches('.v2-guide-orb-anchor')))continue;
+          document.elementFromPoint(x+dx,y)?.matches('.v2-orb-grab')))continue;
         const clearance=Math.min(...controls.map(control=>Math.hypot(
           Math.max(control.left-x,x-control.right,0),Math.max(control.top-y,y-control.bottom,0))));
         if(!best||clearance>best.clearance)best={x,y,clearance};
@@ -143,7 +143,7 @@ async function checkOrbGestures(browser, base, touch) {
     });
     const dragState=()=>orb.getAttribute('data-dragging');
     const yaw=()=>page.evaluate(()=>window.orbYaw-window.orbInfluence);
-    const assertCoasts=async(threshold=.035)=>{
+    const assertCoasts=async(threshold=.25)=>{
       const start=await yaw();
       await page.waitForFunction(({start,threshold})=>{
         const delta=window.orbYaw-window.orbInfluence-start;
@@ -153,7 +153,7 @@ async function checkOrbGestures(browser, base, touch) {
     if(touch){
       const session=await context.newCDPSession(page);
       const send=(type,touchPoints)=>session.send('Input.dispatchTouchEvent',{type,touchPoints});
-      assert.equal(await page.locator('.v2-guide-orb-anchor').evaluate(element=>getComputedStyle(element).touchAction),'none');
+      assert.equal(await page.locator('.v2-orb-grab').evaluate(element=>getComputedStyle(element).touchAction),'none');
       await send('touchStart',[{x,y}]);
       assert.equal(await dragState(),'true');
       await send('touchMove',[{x:x+24,y}]);
@@ -172,7 +172,7 @@ async function checkOrbGestures(browser, base, touch) {
       await page.waitForTimeout(400);
       await page.mouse.move(x+72,y,{steps:4});
       await page.mouse.move(x+72,0);
-      await assertCoasts();
+      await assertCoasts(.035);
     }
     assert.equal(await dragState(),null);
     if(!touch){
@@ -185,6 +185,40 @@ async function checkOrbGestures(browser, base, touch) {
       await page.setViewportSize({width:1280,height:600});
       await assertWidth(393.75);
     }
+  }finally{await context.close();}
+}
+
+async function checkGlobeWithoutWebGL(browser,base) {
+  const context=await browser.newContext({viewport:{width:1280,height:720},reducedMotion:'reduce'});
+  try{
+    await context.addInitScript(()=>{
+      const getContext=HTMLCanvasElement.prototype.getContext;
+      HTMLCanvasElement.prototype.getContext=function(kind,...options){
+        return kind==='webgl'?null:getContext.call(this,kind,...options);
+      };
+    });
+    const page=await context.newPage();
+    await page.route('https://**/*',route=>route.abort());
+    await page.goto(base+'/fixture');
+    const grab=page.locator('.v2-orb-grab');
+    const point=await grab.evaluate(element=>{
+      const rect=element.getBoundingClientRect();
+      for(let row=.20;row<.8;row+=.05)for(let column=.25;column<.75;column+=.05){
+        const x=rect.left+rect.width*column,y=rect.top+rect.height*row;
+        if(document.elementFromPoint(x,y)===element)return {x,y};
+      }
+      throw new Error('No exposed globe drag target');
+    });
+    await page.mouse.move(point.x,point.y);
+    await page.mouse.down();
+    await page.locator('.v2-orb[data-dragging=true]').waitFor();
+    await page.mouse.move(point.x+95,point.y,{steps:2});
+    await page.mouse.up();
+    const angle=await page.locator('.focus-orb-3d').evaluate(element=>parseFloat(element.style.getPropertyValue('--fallback-turn')));
+    await page.waitForFunction(start=>{
+      const angle=parseFloat(document.querySelector('.focus-orb-3d').style.getPropertyValue('--fallback-turn'));
+      return Math.atan2(Math.sin(angle-start),Math.cos(angle-start))>.15;
+    },angle);
   }finally{await context.close();}
 }
 
@@ -221,6 +255,7 @@ async function checkOrbGestures(browser, base, touch) {
         if(name==='chromium'){
           await checkOrbGestures(browser,base,false);
           await checkOrbGestures(browser,base,true);
+          await checkGlobeWithoutWebGL(browser,base);
         }
         const context=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
         const page=await context.newPage(), errors=[];
@@ -235,7 +270,15 @@ async function checkOrbGestures(browser, base, touch) {
         await page.waitForTimeout(150);
         if(await page.locator('.focus-orb-3d').getAttribute('data-ready')==='true') {
           const orbRect=await page.locator('.v2-orb').boundingBox();
-          await page.mouse.move(orbRect.x+orbRect.width*.43,orbRect.y+orbRect.height*.34);
+          const point=await page.locator('.v2-orb-grab').evaluate(element=>{
+            const rect=element.getBoundingClientRect();
+            for(let row=.16;row<=.82;row+=.04)for(let column=.2;column<=.8;column+=.04){
+              const x=rect.left+rect.width*column,y=rect.top+rect.height*row;
+              if(document.elementFromPoint(x,y)===element)return {x,y};
+            }
+            throw new Error('No exposed globe drag target');
+          });
+          await page.mouse.move(point.x,point.y);
           await page.mouse.down();
           assert.equal(await page.locator('.v2-orb').getAttribute('data-dragging'),'true','dragging the particle field captures the pointer');
           await page.mouse.move(orbRect.x+orbRect.width/2+24,orbRect.y+orbRect.height*.12+15);

@@ -26,7 +26,9 @@ for(const route of ['garage/','creator/','creator/project.html','journal/','lic/
  }
  await page.locator('.desktop-nav a').first().waitFor();
  await page.getByRole('button',{name:'Profile and settings'}).click();await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('heading',{name:'App updates'}).waitFor();await page.keyboard.press('Escape');
- assert.equal(await page.locator('.desktop-nav a').count(),10);await page.waitForFunction(()=>{const image=document.querySelector('.nav-mark');return image?.complete&&image.naturalWidth>0});
+ assert.equal(await page.locator('.desktop-nav a').count(),10);
+ assert.ok(await page.locator('.desktop-nav .app-nav-icon svg').first().evaluate(svg=>svg.getBoundingClientRect().width>=27),'desktop app glyph is enlarged');
+ await page.waitForFunction(()=>{const image=document.querySelector('.nav-mark');return image?.complete&&image.naturalWidth>0});
  assert.equal(await page.locator('.global-ai-widget').count(),1);assert.equal(await page.locator('.mobile-tabbar').count(),1);
  if(compact){
   assert.equal(await page.locator('.global-nav').evaluate(el=>el.getBoundingClientRect().height),48);
@@ -37,13 +39,15 @@ for(const route of ['garage/','creator/','creator/project.html','journal/','lic/
  }
  await page.setViewportSize({width:390,height:844});
  if(compact){assert.equal(await page.locator('.desktop-nav').isVisible(),true);assert.equal(await page.locator('.desktop-nav a').count(),10);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);continue;}
+ assert.ok(await page.locator('.mobile-tabbar .app-nav-icon svg').first().evaluate(svg=>svg.getBoundingClientRect().width>=29),'mobile app glyph is enlarged');
  await page.locator('.mobile-more-trigger').click();
  assert.equal(await page.locator('#appMoreSheet').evaluate(element=>element.open),true);
  await page.keyboard.press('Escape');assert.equal(await page.locator('#appMoreSheet').evaluate(element=>element.open),false);
 }
 
+await page.setViewportSize({width:390,height:844});
 await page.goto('http://127.0.0.1:8767/invincible/garage/');await page.locator('.mobile-more-trigger').click();await page.locator('.customize-tabs-trigger').click();await page.locator('[data-page-id=ai]').click();await page.locator('[data-page-id=garage]').click();await page.locator('.tab-customizer-save').click();assert.deepEqual(await page.locator('.mobile-tabbar a').evaluateAll(links=>links.map(link=>link.dataset.page)),['dashboard','workday','journal','garage']);
-await page.goto('http://127.0.0.1:8767/invincible/garage/?nav-react');await page.locator('.react-mobile-tabs a').first().waitFor();await page.waitForFunction(()=>{const image=document.querySelector('.react-brand-mark');return image?.complete&&image.naturalWidth>0});assert.equal(await page.locator('.react-brand-mark').getAttribute('src'),'/invincible/assets/branding/invincible-cyan-orb-v1-512.png');await page.screenshot({path:output+'/navigation-brand-phone.png',fullPage:true});assert.deepEqual(await page.locator('.react-mobile-tabs a').evaluateAll(links=>links.map(link=>link.textContent.trim())),['Home','Workday','Journal','Garage']);await page.locator('.react-mobile-tabs button').click();await page.getByRole('button',{name:'Edit bottom tabs'}).click();await page.locator('.tab-picker button').filter({hasText:'Garage'}).click();await page.locator('.tab-picker button').filter({hasText:'Finance'}).click();await page.locator('.tab-picker-actions button').filter({hasText:'Save'}).click();
+await page.goto('http://127.0.0.1:8767/invincible/garage/?nav-react');await page.locator('.react-mobile-tabs a').first().waitFor();assert.equal(await page.locator('.react-mobile-tabs .react-nav-icon svg').first().evaluate(svg=>svg.getBoundingClientRect().width),30);await page.waitForFunction(()=>{const image=document.querySelector('.react-brand-mark');return image?.complete&&image.naturalWidth>0});assert.equal(await page.locator('.react-brand-mark').getAttribute('src'),'/invincible/assets/branding/invincible-cyan-orb-v1-512.png');await page.screenshot({path:output+'/navigation-brand-phone.png',fullPage:true});assert.deepEqual(await page.locator('.react-mobile-tabs a').evaluateAll(links=>links.map(link=>link.textContent.trim())),['Home','Workday','Journal','Garage']);await page.locator('.react-mobile-tabs button').click();await page.getByRole('button',{name:'Edit bottom tabs'}).click();await page.locator('.tab-picker button').filter({hasText:'Garage'}).click();await page.locator('.tab-picker button').filter({hasText:'Finance'}).click();await page.locator('.tab-picker-actions button').filter({hasText:'Save'}).click();
 await page.goto('http://127.0.0.1:8767/invincible/garage/');await page.locator('.mobile-tabbar a').first().waitFor();assert.deepEqual(await page.locator('.mobile-tabbar a').evaluateAll(links=>links.map(link=>link.dataset.page)),['dashboard','workday','journal','finance']);assert.deepEqual(errors,[]);console.log('Six standalone navigation mounts, presentation exit links and shared React/native tab preferences passed.');
 }finally{await browser.close();server.close()}
 })().catch(error=>{console.error(error);process.exitCode=1});

@@ -18,7 +18,7 @@ export default function DashboardRegion({data, plan, timer, onInspect, orbAnchor
   return <div className="v2-dashboard-body">
     <section className="v2-guide-scene" aria-label="Your focus and connected work">
       <div className="v2-guide-atmosphere" aria-hidden="true"/>
-      <div className="v2-guide-orb-anchor" ref={orbAnchor}><button className="v2-orb-plan" type="button" aria-label="Open today's plan" onClick={onPlan}><span>Today’s plan</span><strong>{plan.items.filter(item=>!item.done&&!item.missing).length} remaining</strong><span className="v2-orb-plan-preview">{next?.title||next?.text||focus?.title||'Choose your next task'}</span></button></div>
+      <div className="v2-guide-orb-anchor" ref={orbAnchor}><div className="v2-orb-grab" aria-hidden="true"/><button className="v2-orb-plan" type="button" aria-label="Open today's plan" onClick={onPlan}><span>Today’s plan</span><strong>{plan.items.filter(item=>!item.done&&!item.missing).length} remaining</strong><span className="v2-orb-plan-preview">{next?.title||next?.text||focus?.title||'Choose your next task'}</span></button></div>
       <ConstellationNav task={focus} onInspect={onInspect} onTravel={onTravel}/>
 
       <div className="v2-guide-mission">
