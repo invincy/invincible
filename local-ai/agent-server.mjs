@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-import { askOllama, detectLocalIntent } from './invincible-local-controller.mjs';
+import { askOllama, detectLocalIntent, draftImagePrompt, imagePromptText } from './invincible-local-controller.mjs';
 import { createGpuCoordinator } from './gpu-coordinator.mjs';
 import { createImageWorker, safeDirectory, WORKSPACE_ROOT } from './image-worker.mjs';
 import { buildCreativePlanPrompt, compileCreativePlan, assembleSceneDraft, loadCreatorAssetCatalog, toCreatorStudioImport, transcribeWithWhisper } from './voiceover-analysis.mjs';
@@ -81,7 +81,7 @@ export async function createLocalAgentServer({ ownerUid, token = crypto.randomBy
       }
       if (url.pathname.startsWith('/api/')) {
         const actor = authenticate(request);
-        if (request.method === 'GET' && url.pathname === '/api/session') return send(response, 200, { uid: ownerUid, workspaceId: ownerUid, storage: images.storage(), presets: IMAGE_PRESETS });
+        if (request.method === 'GET' && url.pathname === '/api/session') return send(response, 200, { uid: ownerUid, workspaceId: ownerUid, storage: images.storage(), presets: IMAGE_PRESETS, capabilities: { draftPrompt: true, referenceImage: true } });
         if (request.method === 'GET' && url.pathname === '/api/projects') return send(response, 200, { projects: await projects() });
         if (request.method === 'POST' && url.pathname === '/api/voiceover/analyze') {
           const body=await readBody(request,22*1024*1024);strict(body,['audioBase64','title','creativeInstructions']);
@@ -110,9 +110,22 @@ export async function createLocalAgentServer({ ownerUid, token = crypto.randomBy
           const result = await api.execute({ principal: actor, workspaceId: ownerUid, tool: 'create_project', idempotencyKey: body.idempotencyKey, arguments: { title: body.title, description: 'Isolated local image-generation test', stages: ['Images'], current_stage: 'Images' } });
           return send(response, 200, { project: result.result.result, verified: result.verified });
         }
+        if (request.method === 'POST' && url.pathname === '/api/image-prompt') {
+          const body = await readBody(request);
+          strict(body, ['idea']);
+          const idea = imagePromptText(body.idea);
+          const signal = AbortSignal.timeout(90000);
+          const prompt = await gpu.run(async () => {
+            signal.throwIfAborted();
+            await images.unloadImages();
+            try { return await draftImagePrompt({ idea, fetchImpl, signal }); }
+            finally { await images.releaseQwen(); }
+          });
+          return send(response, 200, { prompt });
+        }
         if (request.method === 'POST' && url.pathname === '/api/generations') {
-          const body = await readBody(request); strict(body, ['arguments', 'idempotencyKey']);
-          const job = await images.submit(api, actor, body.idempotencyKey, imageSchema.parse(body.arguments));
+          const body = await readBody(request, 1_512_000); strict(body, ['arguments', 'idempotencyKey', 'referencePng']);
+          const job = await images.submit(api, actor, body.idempotencyKey, imageSchema.parse(body.arguments), body.referencePng);
           return send(response, 202, { job: view(job), verified: false });
         }
         const jobRoute = url.pathname.match(/^\/api\/generations\/(agent_[a-f0-9]{32})(\/image)?$/);

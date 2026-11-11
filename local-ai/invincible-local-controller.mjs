@@ -56,6 +56,33 @@ export async function askOllama({ message, model = 'qwen3:4b', baseUrl = DEFAULT
   return extractJson(payload?.message?.content);
 }
 
+export async function draftImagePrompt({ idea, fetchImpl = fetch, signal }) {
+  const response = await fetchImpl(DEFAULT_OLLAMA_URL + '/api/chat', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    signal,
+    body: JSON.stringify({
+      model: 'qwen3:4b', stream: false, think: false, keep_alive: 0,
+      format: { type: 'object', properties: { prompt: { type: 'string' } }, required: ['prompt'], additionalProperties: false },
+      messages: [
+        { role: 'system', content: 'Write one precise, concise image prompt for Stable Diffusion 1.5. Preserve the supplied idea and historical details. Describe visible subject, action, setting, composition, lighting and style where relevant. Avoid invented factual details, commentary, and formatting. Return only a JSON object with a prompt field.' },
+        { role: 'user', content: idea },
+      ],
+      options: { temperature: 0.2, num_predict: 260 },
+    }),
+  });
+  if (!response.ok) throw Error('Local Qwen could not draft the image prompt.');
+  const { prompt } = extractJson((await response.json()).message?.content);
+  return imagePromptText(prompt);
+}
+
+export function imagePromptText(value) {
+  if (typeof value !== 'string' || !value.trim() || value.length > 1500 || /[\x00-\x08\x0b\x0c\x0e-\x1f]/.test(value)) {
+    throw Error('Enter text between 1 and 1500 characters without control characters.');
+  }
+  return value.trim();
+}
+
 export async function executeLocalCommand({ message, ask = askOllama, executeTool }) {
   if (typeof executeTool !== 'function') throw new TypeError('executeTool is required.');
   const intent = detectLocalIntent(message);

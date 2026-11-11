@@ -29,7 +29,7 @@ export async function safeDirectory(root, target) {
 export function createImageWorker({ workspaceRoot = WORKSPACE_ROOT, ownerUid, gpu, fetchImpl = fetch, pollMs = 750, timeoutMs = 180000, comfyOrigin = 'http://127.0.0.1:8188', ollamaOrigin = 'http://127.0.0.1:11434' }) {
   for (const origin of [comfyOrigin, ollamaOrigin]) { const u = new URL(origin); if (u.protocol !== 'http:' || u.hostname !== '127.0.0.1' || u.username || u.password || u.pathname !== '/') throw Error('GPU services must use loopback HTTP origins.'); }
   const directory = path.join(workspaceRoot, 'image-generation', hash(ownerUid).slice(0, 32));
-  const jobs = new Map(), operations = new Set(); let available = false, storageError = null;
+  const jobs = new Map(), operations = new Set(), references = new Map(); let available = false, storageError = null;
   const lockPath = path.join(workspaceRoot, 'image-generation', '.gpu-worker.lock'), lockNonce = crypto.randomUUID(); let lockHandle = null;
   const filePath = (job, suffix) => assertSafeWorkspacePath(path.join(directory, job.id + suffix), workspaceRoot);
   async function persist(job) {
@@ -107,6 +107,20 @@ export function createImageWorker({ workspaceRoot = WORKSPACE_ROOT, ownerUid, gp
     for await (const chunk of response.body) { size += chunk.length; if (size > 8 * 1024 * 1024) throw Error('PNG exceeds the output size limit.'); chunks.push(chunk); }
     return Buffer.concat(chunks);
   }
+  async function uploadReference(job, bytes) {
+    const name = 'Invincible-reference-' + job.id + '.png';
+    const body = new FormData();
+    body.set('image', new Blob([bytes], { type: 'image/png' }), name);
+    body.set('type', 'temp');
+    body.set('overwrite', 'true');
+    const response = await fetchImpl(comfyOrigin + '/upload/image', {
+      method: 'POST', body, signal: AbortSignal.timeout(15000), redirect: 'error',
+    });
+    if (!response.ok) throw Error('ComfyUI could not accept the reference image.');
+    const uploaded = await response.json();
+    if (uploaded.name !== name || uploaded.type !== 'temp' || uploaded.subfolder !== '') throw Error('Unexpected reference upload response.');
+    return name + ' [temp]';
+  }
   async function execute(context, rawArgs) {
     const args = imageSchema.parse(rawArgs);
     if (context.uid !== ownerUid || context.workspaceId !== ownerUid || !/^agent_[a-f0-9]{32}$/.test(context.taskId)) throw Error('Generation workspace is not authorized.');
@@ -130,7 +144,10 @@ export function createImageWorker({ workspaceRoot = WORKSPACE_ROOT, ownerUid, gp
         if (entries(await queue()).length) throw Object.assign(Error('ComfyUI is busy with another client. Retry when it is idle.'), { code: 'GPU_BUSY' });
         await releaseQwen();
         const prefix = 'Invincible_' + job.id;
-        const workflow = imageWorkflow({ ...args, seed: job.seed }, prefix);
+        const reference = references.get(job.id);
+        if (job.referenceSha256 && !reference) throw Error('The reference image is no longer available. Attach it and retry.');
+        const image = reference ? await uploadReference(job, reference) : undefined;
+        const workflow = imageWorkflow({ ...args, seed: job.seed }, prefix, image);
         // A timeout while submitting is ambiguous; never blindly resubmit it.
         submitted = true;
         const queued = await json(comfyOrigin, '/prompt', { prompt: workflow, client_id: job.id, extra_data: { invincible_job_id: job.id } });
@@ -176,22 +193,35 @@ export function createImageWorker({ workspaceRoot = WORKSPACE_ROOT, ownerUid, gp
       }
     });
   }
-  async function submit(api, principal, key, rawArgs) {
+  async function submit(api, principal, key, rawArgs, referencePng) {
     api.authorize(principal, ownerUid, 'generate_image');
     const args = imageSchema.parse(rawArgs);
     if (!/^[A-Za-z0-9._:-]{8,160}$/.test(key)) throw Error('A valid idempotency key is required.');
     if (!available) throw Object.assign(Error(storageError || 'Workspace is unavailable.'), { code: 'WORKSPACE_PERMISSION_DENIED' });
+    let reference, referenceSha256;
+    if (referencePng !== undefined) {
+      if (args.preset !== 'square') throw Error('Reference images require the square frame.');
+      if (typeof referencePng !== 'string' || referencePng.length > 1_500_000) throw Error('Reference PNG is too large or invalid.');
+      reference = Buffer.from(referencePng, 'base64');
+      if (reference.toString('base64') !== referencePng) throw Error('Invalid reference PNG encoding.');
+      referenceSha256 = verifyPng(reference, 512, 512).sha256;
+    }
     const id = taskIdFor(principal.uid, ownerUid, key), fingerprint = JSON.stringify(args), old = jobs.get(id);
-    if (old) { if (old.fingerprint !== fingerprint) throw Object.assign(Error('This request key was used for another prompt. Use Regenerate for a new image.'), { code: 'IDEMPOTENCY_CONFLICT' }); return { ...old, deduplicated: true }; }
+    if (old) { if (old.fingerprint !== fingerprint || old.referenceSha256 !== referenceSha256) throw Object.assign(Error('This request key was used for a different creation. Use Regenerate for a new image.'), { code: 'IDEMPOTENCY_CONFLICT' }); return { ...old, deduplicated: true }; }
     if ([...jobs.values()].filter(job => !['completed','failed'].includes(job.status)).length >= 4) throw Object.assign(Error('The local image queue is full.'), { code: 'QUEUE_FULL' });
     const job = makeJob(id, args);
+    if (reference) {
+      job.referenceSha256 = referenceSha256;
+      job.workflowVersion = 'sd15-img2img-euler20-v1';
+    }
     // Reserve before awaiting disk I/O, so concurrent retries cannot double-submit.
     jobs.set(id, job);
     try { await persist(job); } catch (error) { jobs.delete(id); throw error; }
+    if (reference) references.set(id, reference);
     const operation = api.execute({ principal, workspaceId: ownerUid, idempotencyKey: key, tool: 'generate_image', arguments: args, timeout: timeoutMs + 300000 }).catch(async error => {
       if (job.status !== 'failed') { try { await change(job, { status: 'failed', verified: false, error: { code: error.code || 'EXECUTION_FAILED', message: error.message } }); } catch {} }
     });
-    operations.add(operation); void operation.finally(() => operations.delete(operation));
+    operations.add(operation); void operation.finally(() => { references.delete(id); operations.delete(operation); });
     return { ...job };
   }
   function makeJob(id, args) { return { id, ownerUid, workspaceId: ownerUid, status: 'queued', stage: 'waiting-for-gpu', verified: false, prompt: args.prompt, preset: args.preset, seed: args.seed ?? crypto.randomInt(0, 4294967296), fingerprint: JSON.stringify(args), createdAt: new Date().toISOString(), workflowVersion: 'sd15-euler20-v1' }; }

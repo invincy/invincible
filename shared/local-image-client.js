@@ -25,7 +25,7 @@ export function createLocalImageClient({ origin = window.__INVINCIBLE_LOCAL_AI_O
     if (!response.ok) { if (response.status === 401) forget(account,token);const data = await response.json();throw Object.assign(Error(data.error || 'Local worker rejected this request.'), { definitive: true, status: response.status, code: data.code }); }
     return binary ? response.blob() : response.json();
   }
-  return { origin, request,connect,forget,hasPairing:()=>!!tokenFor(getAccountId()),get pairingKey(){return localPairingKey(origin,getAccountId())},
+  return { origin, request,connect,forget,supportsReference:true,hasPairing:()=>!!tokenFor(getAccountId()),get pairingKey(){return localPairingKey(origin,getAccountId())},
     pairInBrowser() {
       const uid = getAccountId();
       if (!uid) return Promise.reject(Error('Sign in to Invincible before connecting this laptop.'));
@@ -47,7 +47,8 @@ export function createLocalImageClient({ origin = window.__INVINCIBLE_LOCAL_AI_O
         closed = setInterval(() => { if (popup.closed) { cleanup(); reject(Error('The connection window closed before confirmation.')); } }, 500);
       });
     },
-    generate: (args, idempotencyKey) => request('/api/generations', { arguments: args, idempotencyKey }),
+    draftPrompt: idea => request('/api/image-prompt', { idea }, { timeoutMs: 120000 }),
+    generate: (args, idempotencyKey, referencePng) => request('/api/generations', { arguments: args, idempotencyKey, referencePng }),
     job: id => request('/api/generations/' + encodeURIComponent(id)),
     image: (id, download = false) => request('/api/generations/' + encodeURIComponent(id) + '/image' + (download ? '?download=1' : ''), undefined, { binary: true }),
     command: (message, idempotencyKey) => request('/api/command', { message, idempotencyKey }),

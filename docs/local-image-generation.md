@@ -195,6 +195,28 @@ configured owner rotates the key. The separate Windows worker login is unchanged
 The launcher starts the existing ComfyUI installation silently when needed; GPU
 model swapping remains the image worker's responsibility.
 
+## Draft prompts and reuse creations
+
+Use **Describe your idea** and **Generate prompt** on a paired laptop to draft
+with local Qwen. Review the result in **Prompt**, then click **Generate** to
+render. An in-flight draft never overwrites newer edits. The worker serializes
+drafting with GPU work and releases Qwen after the draft. Manual prompts still
+work without Qwen. Remote image generation can use manually entered prompts.
+
+**Image history** saves completed PNGs, prompts and settings in this browser,
+scoped to the signed-in account and current project or personal studio. Open a
+creation to restore its preview and settings, then generate a new version.
+Deleting a history entry removes its browser copy. Downloaded and attached
+copies remain available. History starts with creations saved by this version.
+
+On the paired laptop, **Reference image** accepts one JPEG or PNG up to 10 MB.
+The browser previews a 512 × 512 center crop and sends that crop to the worker
+when you click Generate. ComfyUI uses the same SD 1.5 checkpoint with a fixed
+image-to-image workflow at 0.45 denoise. The reference is uploaded into
+ComfyUI's temporary directory. Image history retains the finished PNG and
+records that a reference was used. Reattach the original to reuse it later.
+Mobile reference upload is pending. Qwen continues drafting from the written idea.
+
 ## Generate from a phone
 
 Open Invincible Image Studio on the Windows laptop and leave it awake and online.
