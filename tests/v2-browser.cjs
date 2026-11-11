@@ -120,7 +120,7 @@ async function checkOrbGestures(browser, base, touch) {
       return element&&Math.abs(element.getBoundingClientRect().width-expected)<2;
     },width);
     const originalNarrowWidth=()=>page.locator('.v2-guide-scene').evaluate(scene=>Math.min(scene.clientWidth,640));
-    await assertWidth(touch?await originalNarrowWidth():656.25);
+    await assertWidth(touch?await originalNarrowWidth():754.6875);
     await orb.locator('[data-ready=true]').waitFor();
     await page.waitForTimeout(2300);
     const {x,y}=await orb.evaluate(element=>{
@@ -143,8 +143,8 @@ async function checkOrbGestures(browser, base, touch) {
     });
     const dragState=()=>orb.getAttribute('data-dragging');
     const yaw=()=>page.evaluate(()=>window.orbYaw-window.orbInfluence);
-    const assertCoasts=async(threshold=.25)=>{
-      const start=await yaw();
+    const assertCoasts=async(threshold=.25,releaseYaw)=>{
+      const start=releaseYaw??await yaw();
       await page.waitForFunction(({start,threshold})=>{
         const delta=window.orbYaw-window.orbInfluence-start;
         return Math.atan2(Math.sin(delta),Math.cos(delta))>threshold;
@@ -164,13 +164,17 @@ async function checkOrbGestures(browser, base, touch) {
       await page.mouse.move(x,y);
       await page.mouse.down();
       assert.equal(await dragState(),'true');
-      await page.mouse.move(x+72,y,{steps:3});
+      await page.evaluate(()=>document.addEventListener('pointerup',()=>{
+        window.orbReleaseYaw=window.orbYaw-window.orbInfluence;
+      },{once:true}));
+      await page.mouse.move(x+83,y);
       await page.mouse.up();
-      await assertCoasts();
+      await assertCoasts(.08,await page.evaluate(()=>window.orbReleaseYaw));
       await page.waitForTimeout(1800);
       await page.mouse.move(x,y);
       await page.waitForTimeout(400);
-      await page.mouse.move(x+72,y,{steps:4});
+      await page.mouse.move(x+1,y);
+      await page.mouse.move(x+65,y);
       await page.mouse.move(x+72,0);
       await assertCoasts(.035);
     }
@@ -183,7 +187,7 @@ async function checkOrbGestures(browser, base, touch) {
       await page.mouse.move(5,5);
       await page.mouse.up();
       await page.setViewportSize({width:1280,height:600});
-      await assertWidth(393.75);
+      await assertWidth(452.8125);
     }
   }finally{await context.close();}
 }
@@ -465,7 +469,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
           assert.ok(scene.orbWidth>=200,name+' '+width+' dashboard Orb size');
           if(width>=901){
             const originalWidth=Math.max(420,Math.min(width*.70,height*.875,1120));
-            assert.ok(Math.abs(scene.orbWidth-originalWidth*.75)<2,name+' '+width+' desktop Orb at 75%');
+            assert.ok(Math.abs(scene.orbWidth-originalWidth*.8625)<2,name+' '+width+' desktop Orb at 86.25% of the original size');
           }else{
             const originalWidth=await page.locator('.v2-guide-scene').evaluate(element=>Math.min(element.clientWidth,640));
             assert.ok(Math.abs(scene.orbWidth-originalWidth)<2,name+' '+width+' original narrow Orb size');

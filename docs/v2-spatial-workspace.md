@@ -258,6 +258,6 @@ The production and V2 builds, site references, particle and startup tests, and C
 
 ## Larger shortcuts and faster globe flicks
 
-The globe, dashboard header, shared menus and Journal navigation use larger icons. The globe keeps its original animated filaments and flecks. Additional fine dots use simpler motion, bringing the total to 174,000 points on desktop and 114,000 on mobile. Lower-capability devices use 66,000 points. The globe diameter stays consistent with the previous desktop and mobile layouts.
+The globe, dashboard header, shared menus and Journal navigation use larger icons. The globe keeps its original animated filaments and flecks. Additional fine dots use simpler motion, bringing the total to 174,000 points on desktop and 114,000 on mobile. Lower-capability devices use 66,000 points. The desktop globe and its shortcut layout are 15% larger than the preceding release. The mobile diameter is unchanged.
 
 A dedicated circular surface accepts presses and swipes across empty areas of the globe. App shortcuts remain separate targets. Quick releases produce a stronger spin and longer coast, including on the fallback globe. Reduced motion suppresses automatic movement and keeps deliberate flicks available.
