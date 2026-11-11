@@ -40,7 +40,7 @@ export function ServiceConnections({ accountId, imageConnection, imageConnection
         <h2>{label}</h2>
         <p role="status">{connected && !checking && <span aria-hidden="true">✓ </span>}{status}</p>
         {accountId && !connected && !checking &&
-          <button type="button" aria-label={'Refresh ' + label} onClick={() => setCheck({ attempt: attempt + 1, pending: true, results: null })}>Refresh</button>}
+          <button type="button" aria-label={'Refresh ' + label} onClick={() => setCheck({ attempt: attempt + 1, pending: true, results: null })} title={"Refresh " + label}><span className="ai-service-refresh-icon" aria-hidden="true">↻</span><span className="ai-service-refresh-label">Refresh</span></button>}
       </article>;
     })}
   </section>;

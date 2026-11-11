@@ -263,8 +263,10 @@ async function checkGlobeWithoutWebGL(browser,base) {
       build.onLoad({filter:/.*/,namespace:'fixture'},args=>({contents:args.path==='auth'?authMock:firestoreMock,loader:'js'}));
     }}],
   });
+  const spaceFixture=require('./v2-connected-spaces.cjs');
   const server=http.createServer((req,res)=>{
     const url=new URL(req.url,'http://localhost');
+    if(spaceFixture.serve(url,res))return;
     if(url.pathname.endsWith('/'))url.pathname+='index.html';
     if(url.pathname==='/fixture'){res.setHeader('Content-Type','text/html');res.end('<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"></head><body><div id="root"></div><script src="/fixture.js"></script></body></html>');return;}
     const file=url.pathname==='/fixture.js'||url.pathname==='/fixture.css'?path.join(output,url.pathname.slice(1)):
@@ -280,6 +282,8 @@ async function checkGlobeWithoutWebGL(browser,base) {
     for(const [name,engine] of engines) {
       const browser=await engine.launch({headless:true});
       try {
+        await spaceFixture.check({browser,base,output,name});
+        if(process.env.V2_CONNECTED_ONLY)continue;
         if (!smokeOnly) await require('./v2-canvas-scenarios.cjs')({browser,base,output,name});
         if (process.env.V2_CANVAS_ONLY === '1') continue;
         if (process.env.V2_PLAN_ONLY === '1') {await require('./v2-plan-scenarios.cjs')({browser,base,output,name}); continue;}
@@ -294,7 +298,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
         await page.route('https://**/*',route=>route.abort());
         await page.goto(base+'/fixture');
         await page.locator('.v2-guide-mission h2').getByText('Build the living workspace').waitFor();
-        assert.equal(await page.getByRole('navigation',{name:'Explore spaces'}).getByRole('link').count(),2);
+        assert.equal(await page.getByRole('navigation',{name:'Explore spaces'}).getByRole('link').count(),13);
         assert.equal(await page.locator('.focus-orb-3d canvas').count(),1);
         await page.waitForFunction(()=>!document.querySelector('.v2-orb').classList.contains('is-compact'));
         await page.waitForFunction(()=>{
@@ -364,7 +368,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
         assert.ok([corners.leftMargin,...corners.rightMargins].every(margin=>margin>=24&&margin<=48));
         assert.ok(corners.widths.every(width=>width>=290),'Desktop cards have room for their content');
         assert.ok(corners.gaps.every(gap=>gap>=48),'Desktop cards clear the globe');
-        assert.deepEqual(corners.borders,[['1px','1px','1px','0px'],['1px','0px','1px','1px'],['1px','0px','1px','1px']]);
+        assert.deepEqual(corners.borders.map(sides=>sides.map(width=>parseFloat(width)>0)),[[true,true,true,false],[true,false,true,true],[true,false,true,true]]);
         for(const [width,height] of [[1920,900],[1024,600]]){
           await page.setViewportSize({width,height});
           const cards=await page.evaluate(()=>{
@@ -465,7 +469,8 @@ async function checkGlobeWithoutWebGL(browser,base) {
         const travelPage=await context.newPage();
         await travelPage.goto(base+'/fixture');
         await travelPage.locator('.v2-page-point[data-page="ai"]').click();
-        await travelPage.waitForURL(base+'/invincible/ai/');
+        await travelPage.waitForURL(/#ai/);
+        await travelPage.frameLocator('iframe[title="Invincible AI workspace"]').getByLabel('Draft').fill('Keep this AI draft');
         await travelPage.goBack();
         await travelPage.locator('.v2-page-point[data-page="ai"]').waitFor();
         assert.equal(await travelPage.locator('.v2-travel').count(),0);
@@ -475,34 +480,34 @@ async function checkGlobeWithoutWebGL(browser,base) {
         assert.equal(await page.locator('.v2-free-canvas,.v2-canvas-tools').count(),0);
 
         // A real seam, with both regions on-screen, remains at an arbitrary offset.
-        await page.locator('.v2-canvas').evaluate(element=>element.scrollTo({left:element.clientWidth*.43,behavior:'instant'}));
+        await page.locator('.v2-canvas').evaluate(element=>element.scrollTo({left:document.querySelector('#v2-region-dashboard').offsetLeft+element.clientWidth*.43,behavior:'instant'}));
         await page.waitForTimeout(350);
         const seam=await page.evaluate(()=>{
           const canvas=document.querySelector('.v2-canvas'), a=document.querySelector('#v2-region-dashboard').getBoundingClientRect(),b=document.querySelector('#v2-region-workspace').getBoundingClientRect();
-          return {fraction:canvas.scrollLeft/canvas.clientWidth,aRight:a.right,bLeft:b.left,snap:getComputedStyle(canvas).scrollSnapType};
+          return {fraction:(canvas.scrollLeft-document.querySelector('#v2-region-dashboard').offsetLeft)/canvas.clientWidth,aRight:a.right,bLeft:b.left,snap:getComputedStyle(canvas).scrollSnapType};
         });
         assert.ok(Math.abs(seam.fraction-.43)<.01);assert.ok(seam.aRight>0&&seam.bLeft<1440);assert.equal(seam.snap,'none');
         await page.screenshot({path:path.join(output,name+'-seam.png')});
         await page.setViewportSize({width:1024,height:900});
         await page.waitForTimeout(250);
-        assert.ok(Math.abs(await page.locator('.v2-canvas').evaluate(element=>element.scrollLeft/element.clientWidth)-.43)<.01,'resize preserves the free stopping position');
+        assert.ok(Math.abs(await page.locator('.v2-canvas').evaluate(element=>(element.scrollLeft-document.querySelector('#v2-region-dashboard').offsetLeft)/element.clientWidth)-.43)<.01,'resize preserves the free stopping position');
         await page.setViewportSize({width:1440,height:1000});
 
         await page.getByRole('link',{name:'02 My Workspace'}).click();
-        await page.waitForFunction(()=>Math.abs(document.querySelector('.v2-canvas').scrollLeft-document.querySelector('.v2-canvas').clientWidth)<2);
+        await page.waitForFunction(()=>Math.abs(document.querySelector('.v2-canvas').scrollLeft-document.querySelector('#v2-region-workspace').offsetLeft)<2);
         assert.equal(new URL(page.url()).hash,'#workspace');
         await page.goBack();
-        await page.waitForFunction(()=>Math.abs(document.querySelector('.v2-canvas').scrollLeft/document.querySelector('.v2-canvas').clientWidth-.43)<.01);
+        await page.waitForFunction(()=>Math.abs((document.querySelector('.v2-canvas').scrollLeft-document.querySelector('#v2-region-dashboard').offsetLeft)/document.querySelector('.v2-canvas').clientWidth-.43)<.01);
         await page.goForward();
-        await page.waitForFunction(()=>Math.abs(document.querySelector('.v2-canvas').scrollLeft/document.querySelector('.v2-canvas').clientWidth-1)<.01);
+        await page.waitForFunction(()=>Math.abs((document.querySelector('.v2-canvas').scrollLeft-document.querySelector('#v2-region-workspace').offsetLeft)/document.querySelector('.v2-canvas').clientWidth)<.01);
         await page.reload();
         await page.locator('.v2-workspace-intro h2').waitFor();
-        await page.waitForFunction(()=>Math.abs(document.querySelector('.v2-canvas').scrollLeft/document.querySelector('.v2-canvas').clientWidth-1)<.01);
+        await page.waitForFunction(()=>Math.abs((document.querySelector('.v2-canvas').scrollLeft-document.querySelector('#v2-region-workspace').offsetLeft)/document.querySelector('.v2-canvas').clientWidth)<.01);
         await page.screenshot({path:path.join(output,name+'-workspace.png')});
 
         await page.locator('.v2-canvas').focus();
-        await page.keyboard.press('Home');
-        await page.waitForFunction(()=>document.querySelector('.v2-canvas').scrollLeft<2);
+        await page.keyboard.press('ArrowLeft');
+        await page.waitForFunction(()=>Math.abs(document.querySelector('.v2-canvas').scrollLeft-document.querySelector('#v2-region-dashboard').offsetLeft)<2);
         assert.equal(await page.evaluate(()=>document.activeElement.getAttribute('href')),'#dashboard');
         await page.locator('#v2-region-dashboard').getByRole('button',{name:'Start focus',exact:true}).click();
         await page.waitForTimeout(1150);

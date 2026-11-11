@@ -1,11 +1,12 @@
 import {taskSteps} from '../src/task-model.js';
+import {desktopSpaces} from '../../shared/navigation.js';
 
 // Region URLs identify positions in one canvas, never separate page destinations.
 export const regions = [
   {id: 'dashboard', label: 'Main Dashboard', number: '01'},
   {id: 'workspace', label: 'My Workspace', number: '02'},
 ];
-export const regionFromHash = hash => regions.find(region => '#'+region.id === hash)?.id || 'dashboard';
+export const regionFromHash = hash => desktopSpaces.find(region => '#'+region.id === hash.split('?')[0])?.id || 'dashboard';
 export const localDayKey = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
 export function resolvePlan(tasks, plan) {
   // Match Dashboard's daily-plan selection; do not seed a plan or invent a focus.

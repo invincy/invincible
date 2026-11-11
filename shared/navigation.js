@@ -33,3 +33,25 @@ export function pageForPath(pathname){
  if(pathname.replace(/index\.html$/,'').startsWith(taskPage.href))return taskPage;
  return navigationPages.find(page=>isActivePage(page,pathname))||navigationPages[0];
 }
+
+// Desktop spatial order. Keep destinations in the shared navigation registry.
+const spatialExtras=[
+ {id:'workspace',label:'My Workspace',href:APP_BASE+'#workspace',icon:'▦'},
+ {id:'voiceover',label:'Voiceover',href:APP_BASE+'creator/tts.html',icon:'♫'},
+ {id:'images',label:'Images',href:APP_BASE+'creator/images.html',icon:'▧'}
+];
+export const desktopSpaces=['portfolio','lic','garage','workday','reminders','journal','finance','dashboard','workspace','creator','voiceover','images','ai'].map(id=>{
+ const page=[...navigationPages,...spatialExtras].find(item=>item.id===id);
+ return {...page,label:id==='dashboard'?'Main Dashboard':page.label,number:id==='dashboard'?'01':id==='workspace'?'02':''};
+});
+export function spatialDestination(href,base='https://invincy.github.io'+APP_BASE){
+ let url;try{url=new URL(href,base);}catch{return null;}
+ if(url.origin!==new URL(base).origin)return null;
+ const path=url.pathname.replace(/index\.html$/,'');
+ if(path===APP_BASE&&url.hash==='#workspace')return desktopSpaces.find(page=>page.id==='workspace');
+ if(path===APP_BASE||path===APP_BASE+'v2/')return desktopSpaces.find(page=>page.id==='dashboard');
+ if(path===APP_BASE+'creator/tts.html')return desktopSpaces.find(page=>page.id==='voiceover');
+ if(path===APP_BASE+'creator/images.html')return desktopSpaces.find(page=>page.id==='images');
+ if(path===APP_BASE+'journal/finance.html')return desktopSpaces.find(page=>page.id==='finance');
+ return desktopSpaces.find(page=>!['dashboard','workspace','voiceover','images','finance'].includes(page.id)&&isActivePage(page,path))||null;
+}

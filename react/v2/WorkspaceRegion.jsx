@@ -5,7 +5,7 @@ import KanbanBoard from './KanbanBoard';
 import {Journey, FocusSession} from './widgets';
 import {moveWorkspaceTask} from './move-task';
 
-export default function WorkspaceRegion({data, plan, timer, onInspect, uid, onCreate, onPaste}) {
+export default function WorkspaceRegion({desktop, data, plan, timer, onInspect, uid, onCreate, onPaste}) {
   const [pending, setPending] = useState({}), [message, setMessage] = useState(''), [error, setError] = useState('');
   const busy = useRef(new Set());
   const move = async (id, status) => {
@@ -31,11 +31,14 @@ export default function WorkspaceRegion({data, plan, timer, onInspect, uid, onCr
       </div>
       <div className="v2-workspace-actions"><span className="v2-workspace-total">{data.tasks.length} tasks</span><button type="button" onClick={onPaste}>Paste plan</button><button type="button" className="v2-primary" onClick={onCreate}>+ New project</button></div>
     </div>
-    <p className="v2-move-feedback" role={error ? 'alert' : 'status'}>{error || message || 'Drag a card or use Move to change its lane.'}</p>
-    <KanbanBoard tasks={data.tasks.map(task => pending[task.id] && pending[task.id] !== '__delete__' ? {...task, status: pending[task.id]} : task)} onInspect={onInspect} onMove={move} onDelete={remove} pending={pending}/>
-    <div className="v2-workspace-details">
+    <p className="v2-move-feedback" role={error ? 'alert' : 'status'}>{error || message || (!desktop?'Drag a card or use Move to change its lane.':'')}</p>
+    <KanbanBoard threePanels={desktop} panelExtras={[
+      <details><summary>Current project</summary><Journey task={plan.active?.task} onInspect={onInspect}/></details>,null,
+      <FocusSession timer={timer}/>
+    ]} tasks={data.tasks.map(task => pending[task.id] && pending[task.id] !== '__delete__' ? {...task, status: pending[task.id]} : task)} onInspect={onInspect} onMove={move} onDelete={remove} pending={pending}/>
+    {!desktop&&<div className="v2-workspace-details">
       <Journey task={plan.active?.task} onInspect={onInspect}/>
       <FocusSession timer={timer}/>
-    </div>
+    </div>}
   </div>;
 }

@@ -5,7 +5,10 @@ import React, {lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, 
 import {useAuth} from '../src/AuthContext';
 import {FocusOrb} from '../src/FocusOrb';
 import {newId} from '../src/task-model';
-import {regions, regionFromHash, resolvePlan} from './model';
+import {regions as mobileRegions, regionFromHash, resolvePlan} from './model';
+import {desktopSpaces, spatialDestination} from '../../shared/navigation';
+import ConnectedSpace from './ConnectedSpace';
+import PageIcon from './PageIcon';
 import {useWorkspaceData} from './useWorkspaceData';
 import {useFocusSession} from './useFocusSession';
 const Dashboard = lazy(() => import('./DashboardRegion'));
@@ -17,7 +20,7 @@ const DashboardTools = lazy(() => import('./DashboardTools'));
 const CanvasIdeas = lazy(() => import('./CanvasIdeas'));
 const TodayPlanPanel = lazy(() => import('./TodayPlanPanel'));
 
-function Region({region, viewport, children, onScroll}) {
+function Region({region, viewport, children, onScroll, active, connected}) {
   const element = useRef(null);
   const scrollTop = useRef(0);
   const contentHeight = useRef(600);
@@ -32,15 +35,24 @@ function Region({region, viewport, children, onScroll}) {
     return () => observer.disconnect();
   }, [viewport]);
   useLayoutEffect(() => {if (nearby && element.current) element.current.scrollTop = scrollTop.current;}, [nearby]);
-  return <section ref={element} className="v2-region" id={'v2-region-'+region.id} aria-labelledby={region.id+'-title'}
+  return <section ref={element} className={'v2-region'+(connected?' v2-region-connected':'')} id={'v2-region-'+region.id} aria-labelledby={region.id+'-title'} inert={connected&&!active?'':undefined}
     onScroll={event => {scrollTop.current = event.currentTarget.scrollTop; onScroll();}}>
     <header className="v2-region-heading"><span>{region.number} /</span><h1 id={region.id+'-title'} tabIndex={-1}>{region.label}</h1><span className="v2-region-tag">CONNECTED SPACE</span></header>
-    {nearby ? <Suspense fallback={<p role="status">Opening this space…</p>}>{children}</Suspense> : <div className="v2-region-placeholder" style={{minHeight:contentHeight.current}} aria-hidden="true"/>}
+    {connected||nearby ? <Suspense fallback={<p role="status">Opening this space…</p>}>{children}</Suspense> : <div className="v2-region-placeholder" style={{minHeight:contentHeight.current}} aria-hidden="true"/>}
   </section>;
 }
 function SignedInWorkspace({user, logout}) {
+  const [desktop,setDesktop]=useState(()=>matchMedia('(min-width: 901px)').matches);
+  const regions=desktop?desktopSpaces:mobileRegions;
+  const paths=useRef({});
+  const [requestedPaths,setRequestedPaths]=useState({});
+  if(!paths.current.initialized){
+    paths.current.initialized=true;
+    const candidate=new URLSearchParams(location.hash.split('?')[1]||'').get('path');
+    if(candidate&&spatialDestination(candidate,location.href)?.id===regionFromHash(location.hash))paths.current[regionFromHash(location.hash)]=candidate;
+  }
   const data = useWorkspaceData(user.uid), plan = resolvePlan(data.tasks, data.plan), timer = useFocusSession(user.uid);
-  const viewport = useRef(null), orbAnchor = useRef(null), lastFraction = useRef(0), idle = useRef(null);
+  const viewport = useRef(null), orbAnchor = useRef(null), lastFraction = useRef(0), canvasWidth=useRef(0), idle = useRef(null);
   const [active, setActive] = useState(regionFromHash(location.hash)), [selected, setSelected] = useState(null), [focusedTaskId, setFocusedTaskId] = useState(null);
   const [travelPage, setTravelPage] = useState(null);
   const [ideaPanel,setIdeaPanel]=useState(null),[todayOpen,setTodayOpen]=useState(false);
@@ -49,6 +61,10 @@ function SignedInWorkspace({user, logout}) {
   const [authError, setAuthError] = useState('');
   const [orbBox, setOrbBox] = useState({left: innerWidth-66, top: 12, width: 48, height: 48, compact: true});
   const [theme, setTheme] = useState(() => {try {return localStorage.getItem('invincible-orb-theme') || 'cyan';} catch {return 'cyan';}});
+  useEffect(()=>{
+    const media=matchMedia('(min-width: 901px)'),change=()=>setDesktop(media.matches);
+    media.addEventListener('change',change);return()=>media.removeEventListener('change',change);
+  },[]);
   useEffect(() => {
     const returnFromPage = () => setTravelPage(null);
     window.addEventListener('pageshow', returnFromPage);
@@ -66,46 +82,64 @@ function SignedInWorkspace({user, logout}) {
     const visibleHeight = rect && viewportRect
       ? Math.max(0, Math.min(rect.bottom, viewportRect.bottom) - Math.max(rect.top, viewportRect.top)) : 0;
     const prominent = rect && canvas && rect.right > viewportRect.left && rect.left < viewportRect.right && visibleHeight >= Math.min(rect.height * .35, 180)
-      && canvas.scrollLeft < canvas.clientWidth*.35;
+      && Math.abs(canvas.scrollLeft/canvas.clientWidth-regions.findIndex(region=>region.id==='dashboard')) < .35;
     const box = prominent ? {left: rect.left, top: rect.top, width: rect.width, height: rect.height, compact: false}
       : {left: innerWidth-66, top: 12, width: 48, height: 48, compact: true};
     setOrbBox(previous => Object.keys(box).every(key => box[key] === previous[key]) ? previous : box);
-  }, []);
+  }, [desktop]);
   const mountOrbAnchor = useCallback(node => {orbAnchor.current = node; if (node) requestAnimationFrame(moveOrb);}, [moveOrb]);
+  useEffect(()=>{
+    if(!desktop)return;
+    const canvas=viewport.current;
+    const wheel=event=>{
+      if(!event.shiftKey||!event.deltaY||event.ctrlKey||event.defaultPrevented)return;
+      for(let node=event.target;node&&node!==canvas;node=node.parentElement){
+        if(node.scrollWidth>node.clientWidth+2&&/auto|scroll/.test(getComputedStyle(node).overflowX))return;
+      }
+      event.preventDefault();canvas.scrollLeft+=event.deltaY;
+    };
+    canvas.addEventListener('wheel',wheel,{passive:false});
+    return()=>canvas.removeEventListener('wheel',wheel);
+  },[desktop]);
+  useEffect(()=>{
+    if(desktop)document.querySelector('.v2-topbar nav a[aria-current]')?.scrollIntoView({block:'nearest',inline:'nearest'});
+  },[active,desktop]);
+  const regionHash=id=>'#'+id+(paths.current[id]?'?'+new URLSearchParams({path:paths.current[id]}):'');
   const savePosition = () => {
     const canvas = viewport.current;
     if (!canvas) return;
     const fraction = canvas.scrollLeft/canvas.clientWidth;
-    const region = regions[Math.min(regions.length-1, Math.round(fraction))];
-    history.replaceState({...history.state, v2Position: fraction}, '', '#'+region.id);
+    const region = regions[Math.max(0,Math.min(regions.length-1, Math.round(fraction)))];
+    history.replaceState({...history.state, v2Position: fraction,v2Desktop:desktop}, '', regionHash(region.id));
   };
   const navigate = (id, {restore = false, fraction} = {}) => {
     const canvas = viewport.current, index = regions.findIndex(region => region.id === id);
     if (!canvas || index < 0) return;
-    if (!restore) {savePosition(); history.pushState({v2Position: index}, '', '#'+id);}
+    if (!restore) {savePosition(); history.pushState({v2Position: index,v2Desktop:desktop}, '', regionHash(id));}
+    if(restore){lastFraction.current=fraction??index;setActive(id);}
     canvas.scrollTo({left: (fraction ?? index)*canvas.clientWidth,
       behavior: restore || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'});
-    document.querySelector('.v2-topbar nav a[href="#'+id+'"]')?.focus({preventScroll: true});
+    if(!restore)document.querySelector('.v2-topbar nav a[href="#'+id+'"]')?.focus({preventScroll: true});
   };
   useEffect(() => {
     const canvas = viewport.current;
-    const restore = () => {clearTimeout(idle.current); navigate(regionFromHash(location.hash), {restore: true, fraction: typeof history.state?.v2Position === 'number' ? history.state.v2Position : undefined});};
+    canvasWidth.current=canvas.clientWidth;
+    const restore = () => {clearTimeout(idle.current); const requested=regionFromHash(location.hash);navigate(regions.some(region=>region.id===requested)?requested:'dashboard', {restore: true, fraction: history.state?.v2Desktop===desktop&&typeof history.state?.v2Position === 'number' ? history.state.v2Position : undefined});};
     restore();
-    let previousWidth = canvas.clientWidth;
     const resize = new ResizeObserver(() => {
-      if (canvas.clientWidth !== previousWidth) {
+      if (canvas.clientWidth !== canvasWidth.current) {
+        canvasWidth.current = canvas.clientWidth;
         canvas.scrollTo({left: lastFraction.current*canvas.clientWidth, behavior: 'instant'});
-        previousWidth = canvas.clientWidth;
       }
       moveOrb();
     });
     resize.observe(canvas);
     window.addEventListener('popstate', restore);
     // Hash edits and native anchor activation also remain valid direct links.
-    const hash = () => {if (!history.state?.v2Position) navigate(regionFromHash(location.hash), {restore: true});};
+    const hash = () => {if(!history.state?.v2Position)restore();};
     window.addEventListener('hashchange', hash);
     return () => {resize.disconnect(); clearTimeout(idle.current); window.removeEventListener('popstate', restore); window.removeEventListener('hashchange', hash);};
-  }, []);
+  }, [desktop]);
   useEffect(() => {
     // Observe lazy content mounting and vertical reflow without another Orb renderer.
     const observer = new ResizeObserver(moveOrb);
@@ -116,41 +150,58 @@ function SignedInWorkspace({user, logout}) {
   }, [active, data.tasksReady, data.planReady]);
   const scroll = () => {
     const canvas = viewport.current;
-    if (!canvas) return;
+    if (!canvas || canvas.clientWidth!==canvasWidth.current) return;
     lastFraction.current = canvas.scrollLeft/canvas.clientWidth;
-    setActive(regions[Math.min(regions.length-1, Math.round(lastFraction.current))].id);
+    setActive(regions[Math.max(0,Math.min(regions.length-1, Math.round(lastFraction.current)))].id);
     moveOrb(); clearTimeout(idle.current); idle.current = setTimeout(savePosition, 180);
   };
   const ready = data.tasksReady && data.planReady;
   const error = data.taskError || data.planError;
+  const activeIndex=regions.findIndex(region=>region.id===active);
+  const openSpace=(id,href)=>{
+    if(href&&spatialDestination(href,location.href)?.id===id&&id!=='dashboard'&&id!=='workspace'){
+      const url=new URL(href,location.href),path=url.pathname+url.search+url.hash;
+      if(url.search||url.hash){paths.current[id]=path;setRequestedPaths(previous=>({...previous,[id]:path}));}
+    }
+    navigate(id);
+  };
+  const rememberLocation=(id,path)=>{
+    paths.current[id]=path;
+    if(active===id)history.replaceState({...history.state},'',regionHash(id));
+  };
+  const travel=page=>{
+    const destination=desktop&&spatialDestination(page.href,location.href);
+    if(destination)openSpace(destination.id,page.href);else setTravelPage(page);
+  };
   const changeTheme = () => setTheme(current => {
     const themes = ['cyan','gold','emerald'], next = themes[(themes.indexOf(current)+1)%themes.length];
     try {localStorage.setItem('invincible-orb-theme', next);} catch {}
     return next;
   });
-  return <div className={'v2-shell'+(authError || error || !ready || data.tasksCached || data.planCached ? ' has-status' : '')}>
+  return <div className={'v2-shell'+(desktop?' v2-desktop-connected':'')+(authError || error || !ready || data.tasksCached || data.planCached ? ' has-status' : '')}>
     {active==='dashboard' && <div className={'v2-ambient-field'+(orbBox.compact?'':' has-globe')} aria-hidden="true"
       style={{'--globe-x':(orbBox.left+orbBox.width/2)+'px','--globe-y':(orbBox.top+orbBox.height/2)+'px','--globe-radius':(orbBox.width*.55)+'px'}}>
       <AmbientParticles theme={theme}/>
     </div>}
     <header className="v2-topbar"><a className="v2-brand" href="#dashboard" onClick={event => {event.preventDefault();navigate('dashboard');}}><img className="v2-brand-mark" src={APP_ICON_URL} alt="" width="36" height="36"/><span>INVINCIBLE<small>PERSONAL WORKSPACE</small></span></a>
-      <nav aria-label="Explore spaces"><span className="v2-nav-caption" aria-hidden="true">VIEWS</span>{regions.map(region => <a key={region.id} href={'#'+region.id} aria-current={active === region.id ? 'location' : undefined} onClick={event => {if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;event.preventDefault();navigate(region.id);}}><span>{region.number}</span>{region.label}</a>)}</nav>
+      <nav aria-label="Explore spaces"><span className="v2-nav-caption" aria-hidden="true">VIEWS</span>{regions.map(region => <a key={region.id} href={'#'+region.id} title={region.label} aria-label={(region.number?region.number+' ':'')+region.label} aria-current={active === region.id ? 'location' : undefined} onClick={event => {if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;event.preventDefault();navigate(region.id);}}>{desktop&&<PageIcon page={region.id}/>}<span className="v2-space-number">{region.number}</span><span className="v2-space-name">{region.label}</span></a>)}</nav>
       <div className="v2-account"><Suspense fallback={null}><DashboardTools/></Suspense><button type="button" className="v2-saved-ideas" aria-label="Saved ideas" title="Saved ideas" onClick={()=>setIdeaPanel({})}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg></button><AccountMenu user={user} logout={logout}/></div>
     </header>
     {(authError || error || !ready || data.tasksCached || data.planCached) && <div className="v2-connection" role="status"><span className={error ? 'v2-dot error' : 'v2-dot'}/>{authError || error || (!ready ? 'Loading workspace…' : 'Offline · Showing saved records')}{error && <button onClick={data.retry}>Retry sync</button>}</div>}
     <main ref={viewport} className="v2-canvas" aria-label="Continuous spatial workspace" tabIndex={0} onScroll={scroll}
       onKeyDown={event => {if (event.target !== event.currentTarget) return;let index = regions.findIndex(region => region.id === active);if (event.key === 'ArrowRight') index++;else if (event.key === 'ArrowLeft') index--;else if (event.key === 'Home') index=0;else if (event.key === 'End') index=regions.length-1;else return;event.preventDefault();navigate(regions[Math.max(0,Math.min(regions.length-1,index))].id);}}>
-      {regions.map(region => <Region key={region.id} region={region} viewport={viewport} onScroll={moveOrb}>
-        {!ready ? <div className="v2-panel v2-loading" role="status">Restoring tasks and your daily plan…</div> :
-          region.id === 'dashboard' ? <Dashboard uid={user.uid} data={data} plan={plan} timer={timer} onInspect={inspect} orbAnchor={mountOrbAnchor} theme={theme} onChangeTheme={changeTheme} onOpenWorkspace={() => navigate('workspace')} onTravel={setTravelPage} onPlan={()=>setTodayOpen(true)} onPanelScroll={moveOrb}/> :
-          <Workspace data={data} plan={plan} timer={timer} onInspect={inspect} uid={user.uid} onCreate={() => setSelected({id: newId('t'), create: true})} onPaste={() => setImportPlan({targetId: ''})}/>}
+      {regions.map(region => <Region key={region.id} region={region} viewport={viewport} onScroll={moveOrb} active={active===region.id} connected={!['dashboard','workspace'].includes(region.id)}>
+        {!['dashboard','workspace'].includes(region.id)?<ConnectedSpace region={region} active={active===region.id} initialPath={paths.current[region.id]} requestedPath={requestedPaths[region.id]} onNavigate={openSpace} onLocation={rememberLocation} onWheel={delta=>{if(viewport.current)viewport.current.scrollLeft+=delta;}}/>:
+          !ready ? <div className="v2-panel v2-loading" role="status">Restoring tasks and your daily plan…</div> :
+          region.id === 'dashboard' ? <Dashboard uid={user.uid} data={data} plan={plan} timer={timer} onInspect={inspect} orbAnchor={mountOrbAnchor} theme={theme} onChangeTheme={changeTheme} onOpenWorkspace={() => navigate('workspace')} onTravel={travel} onPlan={()=>setTodayOpen(true)} onPanelScroll={moveOrb}/> :
+          <Workspace desktop={desktop} data={data} plan={plan} timer={timer} onInspect={inspect} uid={user.uid} onCreate={() => setSelected({id: newId('t'), create: true})} onPaste={() => setImportPlan({targetId: ''})}/>}
       </Region>)}
     </main>
     <div className={'v2-orb '+(orbBox.compact ? 'is-compact' : travelPage && active === 'dashboard' ? 'is-approaching' : '')} style={{left: orbBox.left, top: orbBox.top, width: orbBox.width, height: orbBox.height}}
       onWheel={event => {const distance = event.deltaX + (event.shiftKey ? event.deltaY : 0); if (distance && viewport.current) {event.preventDefault(); viewport.current.scrollLeft += distance;}}}><FocusOrb theme={theme} spin={false} richParticles dashboardMotion interactionSurface={viewport}/>
       {orbBox.compact && <button className="v2-orb-theme" aria-label={'Orb theme: '+theme+'. Change theme'} onClick={changeTheme}>◐</button>}
     </div>
-    <footer className="v2-footer"><span>DASHBOARD MAP · PERSONAL WORKSPACE</span><span className="v2-footer-desktop">{active==='dashboard'?'Choose a page · Open today’s plan':'Drag cards to organise your work'}</span><span className="v2-footer-mobile">{active==='dashboard'?'Tap the centre for today’s plan':'Move cards or open a project'}</span><span>{active === 'dashboard' ? '01' : '02'} / 02</span></footer>
+    <footer className="v2-footer">{desktop?<><button type="button" disabled={activeIndex<=0} aria-label={'Previous space'+(activeIndex>0?' — '+regions[activeIndex-1].label:'')} onClick={()=>navigate(regions[activeIndex-1].id)}>← <span>{regions[activeIndex-1]?.label}</span></button><span className="v2-flow-position">{activeIndex+1} / {regions.length}<span> · Shift + scroll to move</span></span><button type="button" disabled={activeIndex>=regions.length-1} aria-label={'Next space'+(activeIndex<regions.length-1?' — '+regions[activeIndex+1].label:'')} onClick={()=>navigate(regions[activeIndex+1].id)}><span>{regions[activeIndex+1]?.label}</span> →</button></>:<><span>PERSONAL WORKSPACE</span><span>{active==='dashboard'?'Tap the centre for today’s plan':'Move cards or open a project'}</span><span>{active==='dashboard'?'01':'02'} / 02</span></>}</footer>
     {travelPage && <div className="v2-travel" role="status" aria-live="polite"><span>ENTERING</span><strong>{travelPage.label}</strong><i aria-hidden="true"/></div>}
     <Suspense fallback={<p className="v2-editor-loading" role="status">Opening editor…</p>}>
       {ideaPanel && <CanvasIdeas uid={user.uid} capture={ideaPanel.capture} onClose={()=>setIdeaPanel(null)} onRestore={idea=>{if(idea.source==='journal'){window.location.assign('/invincible/journal/?date='+encodeURIComponent(idea.journalDate)+'&view='+encodeURIComponent(JSON.stringify(idea.view)));return;}setIdeaPanel(null);navigate('dashboard');}}/>}

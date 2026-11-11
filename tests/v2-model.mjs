@@ -78,3 +78,16 @@ test('V2 data adapter is a read-only boundary and reuses the canonical Firebase 
   assert.equal(manifest.start_url,'/invincible/?source=pwa');
   assert.equal(fs.existsSync(new URL('../react/src/DashboardPage.jsx',import.meta.url)),false);
  });
+
+
+test('desktop spaces retain route identity and reject foreign destinations', async () => {
+  const {desktopSpaces,spatialDestination}=await import('../shared/navigation.js');
+  const ids=desktopSpaces.map(space=>space.id),start=ids.indexOf('finance');
+  assert.deepEqual(ids.slice(start),['finance','dashboard','workspace','creator','voiceover','images','ai']);
+  assert.equal(spatialDestination('/invincible/creator/project.html?id=p').id,'creator');
+  assert.equal(spatialDestination('/invincible/creator/tts.html').id,'voiceover');
+  assert.equal(spatialDestination('/invincible/journal/finance.html').id,'finance');
+  assert.equal(spatialDestination('https://other.example/invincible/creator/'),null);
+  assert.equal(spatialDestination('javascript:alert(1)'),null);
+  assert.equal(regionFromHash('#creator?path=%2Finvincible%2Fcreator%2Fproject.html%3Fid%3Dp'),'creator');
+});

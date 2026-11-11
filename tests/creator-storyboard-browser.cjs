@@ -14,6 +14,7 @@ const server=http.createServer((req,res)=>{
  const url=new URL(req.url,'http://localhost').pathname;
  res.setHeader('Content-Type',/\.m?js$/.test(url)?'text/javascript':url.endsWith('.css')?'text/css':'text/html');
  if(url==='/invincible/ai/'){res.end('<style>html,body{background:#0e111a;color-scheme:dark}</style><body></body>');return;}
+ if(url==='/invincible/creator/tts-api.js'){res.end('export const loadVoices=async()=>[];export const generateVoiceover=async()=>{throw Error("Voice generation is outside this fixture")};');return;}
  if(url==='/fixture.mjs'||url==='/invincible/shared/firebase-client.js'){res.end(fixture);return;}
  try{
   let file=path.join(root,url.replace(/^\/invincible\/?/,''));
@@ -28,13 +29,16 @@ const server=http.createServer((req,res)=>{
  const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE||undefined});
  try{
   const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];
-  page.on('pageerror',error=>errors.push(error.message));await page.route('https://**/*',route=>route.abort());
+  page.on('pageerror',error=>{errors.push(error.message);console.error('Creator page error',error.message)});await page.route('https://**/*',route=>route.abort());
   page.on('dialog',dialog=>dialog.accept());
   await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.copied=text}}}));
   const openArea=async name=>{const more=page.locator('.wb-more');if(await more.count())await more.evaluate(n=>n.open=true);await page.locator('[data-tab="'+name+'"]').click();};
   const stored=()=>page.evaluate(()=>Object.values(JSON.parse(localStorage.getItem('test.creator')||'{}')).find(item=>item.title==='Gaganyaan production'));
   // New Content opens the shared workbench; draft interactions never submit the form.
-  await page.goto(base);await page.locator('#addContent:enabled').click();
+  await page.goto(base);await page.locator('#app:not([hidden])').waitFor();
+  {const panelWidths=await page.locator('.creator-project-panels>.space-panel').evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().width));assert.equal(panelWidths.length,3);assert.ok(Math.max(...panelWidths)-Math.min(...panelWidths)<1);}
+  await page.screenshot({path:path.join(root,'.test-output/creator-three-panels.png')});
+  await page.locator('#addContent:enabled').click();
   const dialog=page.locator('#contentDialog');
   await page.locator('[name=title]').fill('Draft production');
   await dialog.locator('[data-filter-search]').fill('rocket');await dialog.locator('[data-filter-search]').press('Enter');
@@ -131,7 +135,10 @@ const server=http.createServer((req,res)=>{
   await dialog.locator('.close').last().click();
 
   // Creation still uses existing Creator pipeline, owner fields and acknowledgement.
-  await page.goto(base);await page.locator('#addContent:enabled').click();await page.locator('[name=title]').fill('Gaganyaan production');
+  await page.goto(base);await page.locator('#app:not([hidden])').waitFor();
+  {const panelWidths=await page.locator('.creator-project-panels>.space-panel').evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().width));assert.equal(panelWidths.length,3);assert.ok(Math.max(...panelWidths)-Math.min(...panelWidths)<1);}
+  await page.screenshot({path:path.join(root,'.test-output/creator-three-panels.png')});
+  await page.locator('#addContent:enabled').click();await page.locator('[name=title]').fill('Gaganyaan production');
   assert.equal(await page.locator('#contentDetails').evaluate(node=>node.open),false);
   assert.deepEqual(await page.locator('#contentStoryboard .wb-tabs button').evaluateAll(nodes=>nodes.map(node=>node.dataset.tab)),['Storyboard','Production','Assets','Overview','Maps','Clips']);
   assert.equal(await page.locator('#contentStoryboard [data-paste]').isVisible(),true);
@@ -413,7 +420,7 @@ const server=http.createServer((req,res)=>{
   assert.deepEqual(errors,[]);console.log('Creator creation, 16-scene import, queues, shared Blender tasks, independent completion, script review, assets, Markdown, reload/draft recovery, legacy compatibility and responsive layouts passed.');
  }catch(error){
   fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});
-  for(const page of browser.contexts().flatMap(context=>context.pages()))await page.screenshot({path:path.join(root,'.test-output/creator-failure.png'),fullPage:true}).catch(()=>{});
+  for(const page of browser.contexts().flatMap(context=>context.pages())){console.error(await page.locator('#status').innerText().catch(()=>''));await page.screenshot({path:path.join(root,'.test-output/creator-failure.png'),fullPage:true}).catch(()=>{});}
   throw error;
  }finally{await browser.close();server.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;server.close();});

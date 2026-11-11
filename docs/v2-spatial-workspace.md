@@ -284,3 +284,57 @@ Release 2026.11.12.4 lowers the globe and ambient particle counts by 25%. The gl
 The desktop focus, timer, and workspace cards use compact widths and consistent corner gutters to keep them clear of the globe.
 
 Release 2026.11.12.5 brings the desktop cards closer to the globe and increases their width. The side gutters follow the globe diameter so the layout stays grouped on wider and shorter displays.
+
+## Connected desktop spaces — release 2026.11.12.13
+
+Desktop (above 900 px) now has one horizontal workspace. The order is Portfolio,
+LIC, Garage, Workday, Reminders, Journal, Finance, Dashboard, Workspace, Creator
+Studio, Voiceover, Images and Invincible AI. The order and canonical destinations
+live in shared/navigation.js. Icon navigation, previous/next arrows, horizontal
+trackpad movement and Shift + scroll move through the spaces. Browser history,
+reload, direct region hashes and fractional scrolling remain supported. Resizing
+preserves the current position, including after crossing the mobile breakpoint.
+
+Existing native/React tools run in same-origin frames, loaded only when visited.
+Visited tools remain mounted to retain unfinished input while moving between
+spaces. The account-keyed shell destroys them on account changes. Cross-tool
+links enter their matching space, while project links continue inside the
+existing Creator runtime. The project path is retained in the shell hash for
+reload. Embedded pages hide duplicate global navigation and assistant launchers.
+Timelines, maps, horizontal editors, text fields and open dialogs keep their own
+wheel interaction. Original standalone URLs still work independently.
+
+Workspace uses three equal slabs: Backlog/current project, In progress/Today,
+and Completed/focus session. All four statuses, move menus, drag/drop, deletion,
+step editing and the shared timer remain available. Creator has Projects,
+Create with AI and Overview panels; existing search, filtering, project creation,
+sharing and production remain in their original implementations. AI gains an
+expanded composer, equal panels, compact icon actions and shorter desktop copy.
+Shared desktop panels have a 1560 px maximum width. The globe is unchanged.
+
+Mobile keeps its current Dashboard, Workspace and page layouts. The packaged
+Journal notebook and specialist LIC tools/presentations keep their existing
+internal layouts; they are reachable within the connected desktop shell.
+
+Validation: production build, V2 stage, site references and 19 V2 unit tests pass.
+The full V2 browser suite passes in Chromium and Firefox, including resize,
+history, fractional scrolling, task editing, moves, timer, account isolation and
+mobile layouts. New connected-space fixtures cover route order, lazy loading,
+equal panels, live drafts and project reload. Firefox typing checks explicitly
+click the input before typing to avoid its automation focus issue across frames.
+Root tests passed 254 with two skips before the added navigation unit test;
+Functions passed 15 and media passed five after installing its locked dependencies.
+
+Actual-page browser checks passed for Voiceover, Map Editor, Creator's complete
+upload/JSON/export flow (including an audio MP4), Portfolio, Garage, Reminders,
+shared navigation, task copy, Journal notebook, LIC hub, LIC follow-ups, Workday,
+account menu and the globe. Port-bound navigation/reminder/orb fixtures now use
+an available port. Creator storyboard fixtures now stub the imported TTS module
+and wait for authenticated content. Its creation, import and editing checks run,
+but the later no-page-scroll assertion still fails at 1440x1000. The identical
+failure was reproduced using the pre-change shared stylesheet from ca49ac6.
+Journal idea capture, LIC CRM and cashier browser fixtures time out; the CRM
+emulator command shut down before producing a test result. These remain open
+verification limits. No production Firebase writes, rules changes, migrations,
+backend deploys or service-key changes were made. Signed-in production and
+physical-device interactions are not established by local fixtures.

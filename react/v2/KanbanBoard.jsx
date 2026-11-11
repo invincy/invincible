@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import {taskProgress} from '../src/task-model';
 import {kanbanLanes as lanes} from './move-task';
 
-export default function KanbanBoard({tasks, onInspect, onMove, onDelete, pending = {}}) {
+export default function KanbanBoard({tasks, onInspect, onMove, onDelete, pending = {}, threePanels = false, panelExtras = []}) {
   const [dragId, setDragId] = useState(null), [target, setTarget] = useState(null), [ghost, setGhost] = useState(null);
   const pointer = useRef(null), dragged = useRef(null), suppressClick = useRef(0), restoreFocus = useRef(null), board = useRef(null);
   const clear = () => {pointer.current = null; dragged.current = null; setDragId(null); setTarget(null); setGhost(null);};
@@ -22,7 +22,7 @@ export default function KanbanBoard({tasks, onInspect, onMove, onDelete, pending
     const task = tasks.find(item => item.id === id);
     if (task && status && !pending[id] && (task.status || 'Backlog') !== status) onMove(id, status);
   };
-  return <div ref={board} className="v2-kanban-board" aria-label="Kanban board">{lanes.map(([status, label]) => {
+  const renderLane = ([status, label]) => {
     const cards = tasks.filter(task => (task.status || 'Backlog') === status);
     return <section className={'v2-lane' + (target === status ? ' is-drop-target' : '')} key={status} data-status={status} aria-label={label}
       onDragOver={event => {if (!dragged.current) return; event.preventDefault(); event.dataTransfer.dropEffect = 'move'; setTarget(status);}}
@@ -62,5 +62,7 @@ export default function KanbanBoard({tasks, onInspect, onMove, onDelete, pending
         </article>;
       }) : <p className="v2-lane-empty">{dragId ? 'Drop here' : 'Clear for now.'}</p>}</div>
     </section>;
-  })}{ghost && <div className="v2-drag-ghost" style={{left: ghost.x+12, top: ghost.y+12}} aria-hidden="true">{ghost.title}</div>}</div>;
+  };
+  const groups=[[lanes[0]],[lanes[1],lanes[2]],[lanes[3]]];
+  return <div ref={board} className={'v2-kanban-board'+(threePanels?' v2-three-panel-board':'')} aria-label="Kanban board">{threePanels?groups.map((group,index)=><div className="v2-work-slab" key={index}>{group.map(renderLane)}{panelExtras[index]&&<div className="v2-work-slab-detail">{panelExtras[index]}</div>}</div>):lanes.map(renderLane)}{ghost && <div className="v2-drag-ghost" style={{left: ghost.x+12, top: ghost.y+12}} aria-hidden="true">{ghost.title}</div>}</div>;
 }

@@ -1,0 +1,22 @@
+/* Loaded only inside the desktop connected workspace. Mobile routes stay intact. */
+.connected-space-document { color-scheme: dark; background: #03070b }
+.connected-space-document body { margin: 0; padding-top: 0!important; padding-bottom: 0!important; background-color: #03070b }
+.connected-space-document :is(.global-nav,.react-topbar,.react-mobile-tabs,.mobile-tabbar,.invincible-ai-dock,.invincible-ai-launcher,.global-ai-widget) { display:none!important }
+.connected-space-document .react-app-shell { min-height:100dvh; padding:0 }
+.connected-space-document .react-app-shell > main { padding-top:0; margin-top:0 }
+.connected-space-document :is(.studio-header,.project-header,.voiceover-page .page-header) { top:0 }
+.connected-space-document .voiceover-page .workspace.space-panels { height:calc(100dvh - 110px) }
+@media(min-width:901px) {
+  .connected-space-document .space-panels.space-panels { max-width:1560px; margin-inline:auto; grid-template-columns:repeat(3,minmax(0,1fr)); gap:clamp(12px,1.25vw,22px) }
+  .connected-space-document .space-panels > .space-panel { min-width:0; font-size:15px; border-radius:16px }
+  .connected-space-document .invincible-ai-page { max-width:1600px; padding:20px 24px }
+  .connected-space-document .ai-chat-panel.space-panels { min-height:calc(100dvh - 260px); align-items:stretch }
+  .connected-space-document .ai-chat-panel .ai-chat-stream { max-height:calc(100dvh - 260px) }
+  .connected-space-document .ai-chat-panel .ai-composer { display:flex; flex-direction:column; align-items:stretch; gap:16px }
+  .connected-space-document .ai-chat-panel .ai-composer textarea { flex:1; min-height:180px; font-size:16px; line-height:1.6 }
+  .connected-space-document :is(.ai-page-header>div>p,.ai-page-header .ai-eyebrow,.ai-welcome>.ai-eyebrow,.ai-welcome>p,.finance-hero-copy>p) { display:none }
+  .connected-space-document .ai-welcome { padding:20px 12px }
+  .connected-space-document .ai-page-header h1 { font-size:28px }
+  .connected-space-document .ai-chat-context { align-content:start }
+  .connected-space-document .finance-react { max-width:1600px; margin-inline:auto }
+}

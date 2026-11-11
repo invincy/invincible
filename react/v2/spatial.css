@@ -3,6 +3,7 @@
 @import '../src/dashboard-guide.css';
 @import './editor.css';
 @import './task-focus.css';
+@import '../../shared/spatial-workspace.css';
 /* dashboard.css owns dashboard/orb layout; this sheet owns only the spatial shell and workspace region. */
 .spatial-page{font-family:Inter,"Segoe UI",system-ui,sans-serif;color:#e4edf3;background:#080e16;font-synthesis:none;color-scheme:dark}
 .spatial-page *{box-sizing:border-box}.spatial-page{margin:0;padding:0}.spatial-page :is(button,a){-webkit-tap-highlight-color:transparent;touch-action:manipulation}.spatial-page :is(button,input){font:inherit}.spatial-page button{cursor:pointer}
@@ -203,3 +204,64 @@
 .v2-shell .v2-topbar nav a:focus-visible{text-decoration:underline;text-underline-offset:7px;text-decoration-thickness:2px}
 .v2-shell .v2-task-delete{position:absolute;left:9px;bottom:7px;min-height:44px;padding:3px 7px;border:0;background:transparent;color:#eaa79b;font-size:11px}
 .v2-task-delete:disabled{opacity:.5;cursor:wait}
+/* Connected desktop spaces. Preserve the existing mobile dashboard and workspace. */
+@media (min-width:901px) {
+  .v2-desktop-connected { grid-template-rows:auto minmax(0,1fr) 48px; background:#03070b }
+  .v2-desktop-connected.has-status { grid-template-rows:auto auto minmax(0,1fr) 48px }
+  .v2-desktop-connected .v2-topbar { flex-wrap:nowrap; gap:18px; padding-left:22px; min-width:0 }
+  .v2-desktop-connected .v2-brand { flex:none }
+  .v2-desktop-connected .v2-topbar nav { order:0; flex:1; min-width:0; width:auto; overflow-x:auto; scrollbar-width:none; gap:4px }
+  .v2-desktop-connected .v2-topbar nav a { flex:none; min-width:42px; padding:10px; gap:8px }
+  .v2-desktop-connected .v2-topbar nav a svg { width:22px; height:22px; flex:none }
+  .v2-desktop-connected .v2-topbar nav a .v2-space-number,.v2-desktop-connected .v2-nav-caption { display:none }
+  .v2-desktop-connected .v2-topbar nav a .v2-space-name { font-size:13px; color:inherit }
+  .v2-desktop-connected .v2-topbar nav a:not([aria-current]) .v2-space-name { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%) }
+  .v2-desktop-connected .v2-account { flex:none; gap:10px; margin-left:0 }
+  .v2-desktop-connected .v2-region-connected { padding:0; display:flex; flex-direction:column }
+  .v2-region-connected .v2-region-heading { padding:12px 24px; margin:0; border-bottom:1px solid #84d3db1c; flex:none }
+  .v2-region-connected .v2-region-heading>span { display:none }
+  .v2-region-connected .v2-region-heading h1 { font-size:14px }
+  .v2-connected-space { position:relative; flex:1; min-height:0; display:flex; flex-direction:column }
+  .v2-connected-space iframe { display:block; flex:1; min-height:0; width:100%; border:0; background:#03070b }
+  .v2-space-loading { position:absolute; top:14px; left:24px; z-index:1; color:#b8d9df; background:#07151d; padding:14px; border-radius:10px }
+  .v2-desktop-connected .v2-footer { padding:0 22px; font-size:12px; background:#060d13; letter-spacing:0 }
+  .v2-desktop-connected .v2-footer button { border:0; background:transparent; padding:6px 10px; min-height:40px; color:#b9dce0; display:flex; align-items:center; gap:10px }
+  .v2-desktop-connected .v2-footer button:disabled { opacity:.3; cursor:default }
+  .v2-flow-position { color:#91a7b3; font-variant-numeric:tabular-nums }
+}
+@media (min-width:901px) and (max-width:1100px) {
+  .v2-desktop-connected .v2-brand small { display:none }
+  .v2-desktop-connected .v2-brand { font-size:11px; gap:6px }
+  .v2-desktop-connected .v2-topbar { gap:10px; padding-left:12px }
+  .v2-desktop-connected .v2-flow-position>span { display:none }
+}
+@media (min-width:901px) {
+  .v2-desktop-connected .v2-workspace-body { max-width:1560px }
+  .v2-desktop-connected .v2-workspace-intro { margin-bottom:0 }
+  .v2-desktop-connected .v2-move-feedback:empty { display:none }
+  .v2-three-panel-board.v2-kanban-board { grid-template-columns:repeat(3,minmax(0,1fr)); height:calc(100dvh - 230px); min-height:330px; max-height:1080px }
+  .v2-work-slab { display:flex; flex-direction:column; gap:14px; min-width:0; min-height:0; padding:14px; border:1px solid #84cbd32e; border-radius:16px; background:linear-gradient(150deg,#111e28,#060d14); box-shadow:0 18px 36px #0008,inset 0 1px #bcebf515 }
+  .v2-work-slab>.v2-lane { flex:1; min-height:140px; height:auto; padding:0; background:none }
+  .v2-work-slab>.v2-lane+.v2-lane { border-top:1px solid #86c9d329; padding-top:10px }
+  .v2-work-slab-detail { flex:none; border-top:1px solid #86c9d329; padding-top:12px; max-height:45%; overflow-y:auto; scrollbar-width:thin }
+  .v2-work-slab-detail .v2-panel { border:0; background:none; padding:8px; box-shadow:none }
+  .v2-work-slab-detail summary { cursor:pointer; font-size:14px; color:#b3d7de; padding:8px }
+  .v2-work-slab-detail .v2-timer output { display:block; font:700 36px/1.2 Orbitron,monospace; margin:12px 0; color:#ffe09b }
+  .v2-work-slab .v2-lane-header h3 { font-size:16px }
+}
+@media(min-width:901px) {
+  .v2-desktop-connected .v2-topbar nav a::before { display:none }
+  .v2-desktop-connected .v2-topbar nav a[aria-current] { color:#aff4e8; background:#8bdedb15; box-shadow:inset 0 -2px #83cfcd }
+  .v2-work-slab-detail .v2-timer>.v2-muted { display:none }
+}
+@media(min-width:901px) and (max-height:700px) {
+  .v2-work-slab { padding:10px; gap:10px }
+  .v2-work-slab>.v2-lane { min-height:120px }
+  .v2-three-panel-board .v2-lane-header { padding:4px 6px 8px }
+  .v2-three-panel-board .v2-task-card { padding:8px 36px 40px 10px; min-height:0 }
+  .v2-three-panel-board .v2-task-card-title { font-size:13px; line-height:1.35 }
+  .v2-three-panel-board .v2-task-card-sub { font-size:11px; margin:4px 0 }
+  .v2-three-panel-board :is(.v2-task-delete,.v2-task-move) { min-height:28px; padding:4px 8px; font-size:11px; bottom:6px }
+  .v2-work-slab-detail .v2-timer output { font-size:28px; margin:6px 0 }
+  .v2-work-slab-detail .v2-panel { padding:0 }
+}

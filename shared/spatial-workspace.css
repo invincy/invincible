@@ -175,3 +175,42 @@ body:has(.space-panels) :is(.global-nav, .react-topbar) {
 .finance-overview-panel .finance-journey-steps { grid-template-columns: minmax(0,1fr) }
 .finance-overview-panel .finance-journey-steps > i { display: none }
 .finance-overview-panel .finance-panel-heading { flex-wrap: wrap }
+.creator-create-tools { display:none }
+@media (min-width:901px) {
+  .space-panels.space-panels { max-width:1560px; margin-inline:auto }
+  .creator-project-panels.space-panels { align-items:stretch; min-height:calc(100dvh - 230px) }
+  .creator-project-panels>.creator-project-overview { order:3 }
+  .creator-project-panels>.creator-project-create { order:2 }
+  .creator-project-panels>#board { order:1; align-content:start; max-height:calc(100dvh - 200px); overflow-y:auto }
+  .creator-project-panels>#board::before { content:'Projects'; font-size:22px; font-weight:650; color:#e1f1f4; margin-bottom:8px }
+  .creator-project-panels .column { min-height:0 }
+  .creator-project-panels .content-card h3 { font-size:16px; line-height:1.45 }
+  .creator-project-panels .toolbar { flex-direction:column; align-items:stretch; margin-top:28px }
+  .creator-project-panels .search input { width:100%; box-sizing:border-box }
+  .creator-create-tools { display:grid; gap:12px }
+  .creator-create-tools h2 { margin:4px 0 10px; font-size:22px; color:#e1f1f4 }
+  .creator-create-tools a { display:flex; align-items:center; gap:14px; min-height:80px; padding:16px; border:1px solid #8ad4dc30; border-radius:12px; color:#d0eff3; text-decoration:none; background:linear-gradient(130deg,#16303b,#0a151e) }
+  .creator-create-tools a:hover { border-color:#8ad4dc88; background:#183541 }
+  .creator-create-tools svg { width:28px; height:28px; flex:none }
+  .creator-create-tools a>span { flex:1; font-size:17px; font-weight:600 }
+  .creator-create-tools small { display:block; margin-top:6px; font-size:13px; color:#97b6c1; font-weight:400 }
+  .creator-project-overview .metric-card { min-height:150px }
+  .creator-project-overview .metrics strong { font-size:30px }
+  .invincible-ai-page .ai-page-header .ai-action-label { display:none }
+  .invincible-ai-page .ai-page-header button[aria-label='New chat'] { width:44px; height:44px; font-size:24px; padding:0 }
+  .invincible-ai-page .ai-chat-panel.space-panels { align-items:stretch; min-height:480px }
+  .invincible-ai-page .ai-chat-panel .ai-composer { display:flex; flex-direction:column; gap:16px; align-items:stretch }
+  .invincible-ai-page .ai-chat-panel .ai-composer textarea { flex:1; min-height:180px; font-size:16px; line-height:1.6 }
+  .invincible-ai-page :is(.ai-page-header>div>p,.ai-page-header .ai-eyebrow,.ai-welcome>.ai-eyebrow,.ai-welcome>p) { display:none }
+}
+.ai-service-refresh-icon { display:none }
+@media(min-width:901px) {
+  .ai-service-refresh-icon { display:inline; font-size:22px }
+  .ai-service-refresh-label { display:none }
+}
+@media(min-width:901px) {
+  .creator-project-panels>#board { display:flex; flex-direction:column }
+  .creator-project-panels .column { flex:none; min-height:58px }
+  .creator-project-panels .column .empty { display:none }
+  .creator-project-panels #metricView[hidden] { display:none }
+}
