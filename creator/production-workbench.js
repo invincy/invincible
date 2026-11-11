@@ -1,4 +1,4 @@
-import {mountVideoStudio} from './video-studio/workspace.js?v=2026111208';
+import {mountVideoStudio} from './video-studio/workspace.js?v=2026111209';
 import {mountHistoryWorkspace} from './history-workspace.js?v=2026111203';
 import {makeScene} from './storyboard-model.js?v=3';
 import {METHODS,IMPORT_FIELDS,uid,methodsOf,inspectImport,parseProductionImport,uniqueScenes,groupFor,taskFor,setTask,animationStage,requirements,sceneState,projectProgress,queueScenes,canonicalScript,scriptReview,filterScenes,productionReadiness} from './production-model.js?v=2026111112';
@@ -16,7 +16,7 @@ Object.assign(ICONS,{
 });
 const icon=name=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(ICONS[name]||ICONS.assets)+'</svg>';
 const action=(name,label,glyph,extra='')=>'<button type="button" class="wb-icon" data-action="'+name+'" title="'+esc(label)+'" aria-label="'+esc(label)+'" '+extra+'>'+icon(glyph)+'</button>';
-export function createProductionWorkbench(root,{getProject,onChange,onFocus,copyText,onCopyBrief,onSplitScript,getAccountId,enableVideoStudio=false,defaultArea='Storyboard',mediaService=null}){
+export function createProductionWorkbench(root,{getProject,onChange,onFocus,copyText,onCopyBrief,onSplitScript,getAccountId,getProductionReadiness,enableVideoStudio=false,defaultArea='Storyboard',mediaService=null}){
  let historyWorkspace=null,videoWorkspace=null,videoSession={};
  let tab=defaultArea,workspace='All',groupBy='project',assetFilter='All',completionFilter='All',searchQuery='',active='',pending=[],mapping=[],importTable=null,scriptChanges=null,dragId='',activeAsset='',expandAll=false,viewMode='focused',expandedScene='',sidebarCollapsed=false,editorPane='plan',filtersVisible=false,promptKey='blenderPrompt',messageTimer;
  root.classList.add('production-workbench');
@@ -188,7 +188,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   if(!active&&scenes().length)active=scenes()[0].id;
   root.querySelectorAll('[data-tab]').forEach(button=>button.setAttribute('aria-current',button.dataset.tab===tab?'page':'false'));
   panel.innerHTML=tab==='Video Studio'?'<section data-video-mount></section>':['Maps','Clips'].includes(tab)?'<section data-history-mount></section>':tab==='Storyboard'?storyboard():tab==='Production'?production():tab==='Assets'?assets():overview();
-  if(tab==='Video Studio')videoWorkspace=mountVideoStudio(panel.querySelector('[data-video-mount]'),{getProject,getAccountId,mediaService,session:videoSession});
+  if(tab==='Video Studio')videoWorkspace=mountVideoStudio(panel.querySelector('[data-video-mount]'),{getProject,getAccountId,mediaService,session:videoSession,readiness:getProductionReadiness?.()});
   if(['Maps','Clips'].includes(tab))historyWorkspace=mountHistoryWorkspace(panel.querySelector('[data-history-mount]'),{getProject,onChange:()=>changed(false),copyText,onRefresh:render,area:tab});
   const tools=root.querySelector('[data-command-actions]');tools.replaceChildren();
   const toolbar=panel.querySelector('.wb-toolbar');if(toolbar)tools.append(toolbar);

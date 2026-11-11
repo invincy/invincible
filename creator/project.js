@@ -1,13 +1,15 @@
 import{makeScene}from'./storyboard-model.js?v=3';
-import{createProductionWorkbench}from'./production-workbench.js?v=2026111208';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026111209';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{doc,getDoc,onSnapshot,runTransaction,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import{createProductionReadiness,mountProductionReadiness}from'./video-studio/production-readiness.js?v=2026111209';
 import{splitVoiceoverScript}from"./scene-tools.js?v=2";
 
 const $=id=>document.getElementById(id),projectId=new URLSearchParams(location.search).get("id");
 const tabId=(()=>{try{let id=sessionStorage.getItem("invincible.creatorTabId");if(!id){id=Math.random().toString(36).slice(2)+Date.now().toString(36);sessionStorage.setItem("invincible.creatorTabId",id);}return id;}catch{return "default";}})();
 let saveChain=Promise.resolve(),editVersion=0,cloudVersion=0,baseRevision=0;
+let productionReadiness;
 let user=null,project=null,projectRef=null,saveTimer=null,localDirty=false,pendingConflict=null,recoveredLegacyDraft=false;
 
 function esc(value){const node=document.createElement("div");node.textContent=value??"";return node.innerHTML;}
@@ -40,6 +42,7 @@ function onConflict(conflict){
 const storyboard=createProductionWorkbench($("projectStoryboard"),{
  getProject:()=>project,
  getAccountId:()=>user?.uid,
+ getProductionReadiness:()=>productionReadiness,
  enableVideoStudio:true,
  defaultArea:'Video Studio',
  onChange:()=>{queueSave();renderSceneWorkspace();},
@@ -367,6 +370,7 @@ async function load(){
     project.id=projectId;
     project.editorEmails=(project.editorEmails||[]).map(email=>email.toLowerCase());
     project.scenes=(project.scenes||[]).map(makeScene);
+    productionReadiness=mountProductionReadiness(document.querySelector(".project-readiness"),createProductionReadiness(()=>user?.uid));
     render();$("app").hidden=false;status("Synced","ok");
     if(recoveredStaleDraft){
       onConflict({source:'stale-draft',draft:recoveredStaleDraft,serverData:project,serverRevision:baseRevision,serverUpdatedAt:cloudVersion});

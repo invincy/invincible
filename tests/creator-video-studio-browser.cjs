@@ -2,12 +2,19 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const {handler:mediaHandler}=require('./fixtures/creator-media-service.cjs');
 const {chromium}=require('playwright'),root=path.resolve(__dirname,'..');
-const fixture=`<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/creator/production-workbench.css"><link rel="stylesheet" href="/creator/video-studio/studio.css"><link rel="stylesheet" href="/shared/spatial-workspace.css"><style>body{margin:0;background:#071426;font-family:system-ui}*{box-sizing:border-box}</style><div id="root"></div><script type="module">import {createProductionWorkbench} from '/creator/production-workbench.js';window.project={id:new URLSearchParams(location.search).get('project')||'test-video',title:'Original',scenes:[],historicalMap:{version:1,theme:'night',events:[],features:{type:'FeatureCollection',features:[]},camera:[]},unknown:{keep:true}};window.before=JSON.stringify(project);window.changes=0;const mediaService=(await import('/test-media-client.js')).testMedia(new URLSearchParams(location.search).get('account')||'owner');window.workbench=createProductionWorkbench(document.querySelector('#root'),{mediaService,getProject:()=>project,enableVideoStudio:true,getAccountId:()=>new URLSearchParams(location.search).get('account')||'owner',onChange:()=>changes++,copyText:async()=>{}});workbench.render();</script>`;
+const readinessMarkup=fs.readFileSync(path.join(root,'creator/project.html'),'utf8').match(/<section class="project-readiness"[^>]*>[\s\S]+?<\/section>/)[0];
+const fixture=`<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/creator/production-workbench.css"><link rel="stylesheet" href="/creator/video-studio/studio.css"><link rel="stylesheet" href="/shared/spatial-workspace.css"><style>body{margin:0;background:#071426;font-family:system-ui}*{box-sizing:border-box}</style><link rel="stylesheet" href="/creator/project.css">${readinessMarkup}<div id="root"></div><script type="module">import {createProductionWorkbench} from '/creator/production-workbench.js';window.project={id:new URLSearchParams(location.search).get('project')||'test-video',title:'Original',scenes:[],historicalMap:{version:1,theme:'night',events:[],features:{type:'FeatureCollection',features:[]},camera:[]},unknown:{keep:true}};window.before=JSON.stringify(project);window.changes=0;const mediaService=(await import('/test-media-client.js')).testMedia(new URLSearchParams(location.search).get('account')||'owner');const readinessRoot=document.querySelector('.project-readiness');let readiness;
+if(project.id==='automatic-video'){
+ const {createProductionReadiness,mountProductionReadiness}=await import('/creator/video-studio/production-readiness.js?v=2026111209');
+ readiness=mountProductionReadiness(readinessRoot,createProductionReadiness(()=> 'owner'));
+}else readinessRoot.remove();
+window.workbench=createProductionWorkbench(document.querySelector('#root'),{mediaService,getProject:()=>project,enableVideoStudio:true,getProductionReadiness:()=>readiness,getAccountId:()=>new URLSearchParams(location.search).get('account')||'owner',onChange:()=>changes++,copyText:async()=>{}});workbench.render();</script>`;
 const server=http.createServer((req,res)=>{if(mediaHandler(req,res))return;try{const route=new URL(req.url,'http://localhost').pathname;if(route==='/fixture'){res.setHeader('Content-Type','text/html');res.end(fixture);return;}const file=path.resolve(root,'.'+decodeURIComponent(route));if(!file.startsWith(root+path.sep))throw Error('path');res.setHeader('Content-Type',/\.m?js$/.test(file)?'text/javascript':file.endsWith('.css')?'text/css':/\.(json|geojson)$/.test(file)?'application/json':'application/octet-stream');res.end(fs.readFileSync(file));}catch{res.statusCode=404;res.end();}});
 const waitReady=async page=>{await page.waitForFunction(()=>{const n=document.querySelector('[data-vs=example]');return n&&!n.disabled;});await page.locator('.vs-advanced').evaluate(n=>n.open=true);};
 function wav(){const rate=48000,frames=rate,b=Buffer.alloc(44+frames*2);b.write('RIFF');b.writeUInt32LE(b.length-8,4);b.write('WAVEfmt ',8);b.writeUInt32LE(16,16);b.writeUInt16LE(1,20);b.writeUInt16LE(1,22);b.writeUInt32LE(rate,24);b.writeUInt32LE(rate*2,28);b.writeUInt16LE(2,32);b.writeUInt16LE(16,34);b.write('data',36);b.writeUInt32LE(frames*2,40);for(let i=0;i<frames;i++)b.writeInt16LE(i>rate*.05&&i<rate*.8?Math.round(Math.sin(i/rate*2*Math.PI*440)*16000):0,44+i*2);return b;}
 (async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;try{
  browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE||undefined,args:['--enable-unsafe-swiftshader']});const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(30000);const url=`http://127.0.0.1:${server.address().port}/fixture`;
+ if(process.env.STUDIO_READINESS_ONLY!=='1'){
  await page.goto(url);assert.equal(await page.locator('.video-studio').count(),0,'workspace opt-in');await page.getByRole('button',{name:'Video Studio',exact:true}).click();await waitReady(page);
  if(process.env.STUDIO_LAYOUT_ONLY==='1'){
   const track=page.locator('.vs-layout');
@@ -66,6 +73,7 @@ function wav(){const rate=48000,frames=rate,b=Buffer.alloc(44+frames*2);b.write(
  await page.getByRole('button',{name:'Storyboard',exact:true}).click();assert.equal(await page.locator('.video-studio').count(),0);await page.getByRole('button',{name:'Video Studio',exact:true}).click();await waitReady(page);assert.equal(await page.locator('[data-vs-title]').inputValue(),'Two engines');
  for(const width of [320,390,820,1440]){await page.setViewportSize({width,height:900});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`overflow at ${width}`);}
  await page.locator('[data-vs-seek]').evaluate(input=>{input.value='2.5';input.dispatchEvent(new Event('input',{bubbles:true}));});await page.waitForFunction(()=>document.querySelector('[data-vs-time]').textContent.startsWith('2.50'));await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:path.join(root,'.test-output/creator-video-studio.png'),fullPage:true});assert.deepEqual(errors,[]);console.log('Video Studio UI, safe import, byte-identical persistence, account isolation, branding, playback, export, cancellation and dimensions passed.',{decoded,direct});
+ }
  const mp3=fs.readFileSync(path.join(root,'lic/jeevan-lakshya/audio/intro.plan.mp3')).toString('base64');
  const automatic=await browser.newPage({acceptDownloads:true});
  let syntheses=0,offline=true;
@@ -79,6 +87,7 @@ function wav(){const rate=48000,frames=rate,b=Buffer.alloc(44+frames*2);b.write(
   if(req.method()==='OPTIONS')return route.fulfill({status:204,headers});
   if(endpoint==='/api/session')return route.fulfill({headers,json:{uid:'owner'}});
   if(endpoint.endsWith('/catalog-status'))return route.fulfill({headers,status:offline?400:200,json:offline?{error:'Local Whisper is offline'}:{automaticContext:true}});
+  if(endpoint==='/api/service-status')return route.fulfill({headers,json:{whisper:false,qwen:true}});
   assert.equal(endpoint,'/api/voiceover/analyze');
   assert.equal(req.postDataJSON().production,true);
   assert.equal(req.postDataJSON().audioBase64,mp3);
@@ -86,12 +95,18 @@ function wav(){const rate=48000,frames=rate,b=Buffer.alloc(44+frames*2);b.write(
   return route.fulfill({headers,json:{analysis:{valid:true,scenes:[]},creatorStudio:{scenes:[{id:'context',timeline:'0.1-1s',contextCard:true}]}}});
  });
  await automatic.goto(url+'?project=automatic-video');
+ const readiness=automatic.getByRole('region',{name:'Production readiness'});
+ await readiness.getByText('Start Whisper on the laptop').waitFor();
+ assert.match(await readiness.getByText('Qwen',{exact:true}).locator('..').innerText(),/✓ Ready/);
  await automatic.getByRole('button',{name:'Video Studio',exact:true}).click();await waitReady(automatic);
  await automatic.locator('[data-ai-script]').fill('A short narration test.');
  await automatic.getByRole('button',{name:'Generate video',exact:true}).click();
- await automatic.getByText('Local Whisper is offline',{exact:true}).first().waitFor();
+ await automatic.locator('[data-ai-status]').filter({hasText:'Narration generation has not started'}).waitFor();
  assert.equal(await automatic.evaluate(()=>Boolean(window.fixtureTts)),false);
  offline=false;
+ await readiness.getByRole('button',{name:'Refresh connections'}).click();
+ await readiness.getByText('Services ready for one-click video').waitFor();
+ assert.equal(await readiness.getByText('✓ Ready',{exact:true}).count(),5);
  const generated=automatic.waitForEvent('download',{timeout:120000});
  await automatic.getByRole('button',{name:'Generate video',exact:true}).click();
  const output=fs.readFileSync(await (await generated).path());
