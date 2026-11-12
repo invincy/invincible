@@ -103,3 +103,38 @@ body.creator-page{--bg:#0b141c;--panel:#14202a;--line:#293944;--line-strong:#2b8
  .pipeline-details>summary{padding-inline:4px}
 }
 @media(max-width:360px){.tool-grid{grid-template-columns:1fr}}
+
+/* The Creator landing page is a viewport workspace, not a scrolling document. */
+html:has(body.creator-page),body.creator-page{height:100%;overflow:hidden}
+body.creator-page{display:flex;min-height:0;flex-direction:column}
+.creator-page>.studio-header,.creator-page>.sync-status{flex:none}
+.creator-page>main#app:not([hidden]){display:flex;min-height:0;flex:1;flex-direction:column;overflow:hidden;padding-top:6px;padding-bottom:10px}
+.creator-page .creator-home{width:100%;max-width:none;min-height:0;flex:1;margin:4px 0 0}
+.creator-page .creator-projects,.creator-page .creator-toolbox{display:flex;height:100%;min-height:0;flex-direction:column;overflow:hidden}
+.creator-page .creator-section-head{flex:none}
+.creator-page .project-grid{min-height:0;flex:1;align-content:start;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;padding-right:4px}
+.creator-page .creator-toolbox .tool-grid{grid-template-rows:repeat(6,minmax(58px,1fr));min-height:0;flex:1}
+.creator-page .tool-grid>a,.creator-page .tool-grid>button{min-height:0}
+.creator-page .pipeline-details{width:100%;max-width:none;flex:none;margin:0}
+.creator-page .pipeline-details>summary{min-height:46px}
+.creator-page>main#app:has(.pipeline-details[open]) .creator-home{display:none}
+.creator-page .pipeline-details[open]{min-height:0;flex:1;overflow:auto}
+
+@media(max-width:900px){
+ .creator-page .creator-home{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:100%;gap:12px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-inline:contain}
+ .creator-page .creator-projects,.creator-page .creator-toolbox{order:0;scroll-snap-align:start;scroll-snap-stop:always}
+ .creator-page .creator-toolbox{order:-1}
+ .creator-page .tool-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(70px,1fr))}
+}
+@media(max-height:760px){
+ .creator-page .studio-header{padding-block:10px 8px}
+ .creator-page .studio-header p{display:none}
+ .creator-page .creator-projects,.creator-page .creator-toolbox{padding:14px}
+ .creator-page .creator-section-head{margin-bottom:10px}
+ .creator-page .creator-section-head h2{font-size:22px}
+ .creator-page .tool-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(54px,1fr));gap:7px}
+ .creator-page .tool-grid>a,.creator-page .tool-grid>button{padding:9px 11px}
+ .creator-page .tool-grid strong{font-size:14px}
+ .creator-page .tool-grid span{font-size:11px;line-height:1.25}
+ .creator-page .pipeline-details>summary{min-height:40px}
+}

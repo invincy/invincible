@@ -143,7 +143,10 @@ const server=http.createServer((req,res)=>{
   await page.screenshot({path:path.join(root,'.test-output/creator-three-panels.png')});
   for(const [width,height] of [[320,568],[390,844],[768,1024],[1280,720],[1440,900]]){
    await page.setViewportSize({width,height});
-   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Creator home has no horizontal overflow at '+width+'x'+height);
+   const homeBounds=await page.evaluate(()=>({pageHeight:document.documentElement.scrollHeight,pageWidth:document.documentElement.scrollWidth,viewportHeight:innerHeight,viewportWidth:innerWidth,home:(()=>{const box=document.querySelector('.creator-home').getBoundingClientRect();return{top:box.top,bottom:box.bottom,height:box.height}})(),panels:[...document.querySelectorAll('.creator-home>*')].map(node=>{const box=node.getBoundingClientRect();return{top:box.top,bottom:box.bottom,height:box.height,scrollHeight:node.scrollHeight}})}));
+   assert.ok(homeBounds.pageWidth<=homeBounds.viewportWidth+1,'Creator home has no horizontal page overflow at '+width+'x'+height+': '+JSON.stringify(homeBounds));
+   assert.ok(homeBounds.pageHeight<=homeBounds.viewportHeight+1,'Creator home has no vertical page overflow at '+width+'x'+height+': '+JSON.stringify(homeBounds));
+   assert.ok(homeBounds.home.bottom<=homeBounds.viewportHeight+1&&homeBounds.panels.every(panel=>panel.bottom<=homeBounds.viewportHeight+1),'Creator panels fit the current window at '+width+'x'+height+': '+JSON.stringify(homeBounds));
    assert.equal(await page.locator('#addContent').isVisible(),true);
    assert.equal(await page.locator('.tool-grid').isVisible(),true);
    if(width===390)await page.screenshot({path:path.join(root,'.test-output/creator-home-390.png'),fullPage:true});
