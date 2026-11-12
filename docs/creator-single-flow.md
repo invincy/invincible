@@ -1,5 +1,49 @@
 # Creator Studio: one video flow
 
+## Creator home and project entry
+
+Creator Studio opens on a project-first home. Existing projects are searchable
+and open directly; the publishing pipeline remains available as a secondary
+disclosure. Motion Studio, Map Editor, Battlefield Editor, Voiceover, Image
+Studio and Assets & 3D are visible from the home. Tools that edit project data
+ask the user to choose an existing project or create one, while Voiceover and
+Image Studio retain their standalone routes.
+
+New project creation asks only for a name, an optional MP3/WAV voiceover and
+optional creative instructions. The project record continues to use the
+existing Creator schema; instructions use the existing notes field. A starting
+voiceover is uploaded to the owner's existing private shared-media library and
+attached to the existing version-2 Studio draft. Advanced storyboard/project
+setup remains available without becoming a required step.
+
+Inside a project, a visible project toolbar links Motion Studio, Script &
+scenes, Map Editor, Battlefield Editor, Assets & 3D, Image Studio and
+Voiceover. Save now and Save & return use the existing revision-aware save
+path. Direct tool URLs retain the project ID and select the requested existing
+workbench area; no project, manifest, map or renderer schema is replaced.
+
+### UX overhaul verification — November 13, 2026
+
+The focused Creator browser scenario passed project creation, the project/tool
+picker, instructions persistence, direct project navigation, save controls,
+advanced setup, 16-scene import, reload/draft recovery and existing production
+workflows. Creator home layouts passed without horizontal overflow at 320×568,
+390×844, 768×1024, 1280×720 and 1440×900; the project editor also retained its
+existing phone and desktop responsive checks. The voiceover-start manifest
+contract and Studio/composition unit suites passed 30 cases. The focused Map
+Editor unit/browser suite passed, including native MapLibre editing and
+responsive layout. The complete repository unit run passed 264 tests with two
+existing fixture skips; all 15 Functions and all five creator-media backend
+tests passed. UI contracts, the production build, site references and diff
+whitespace checks passed.
+
+The full single-flow browser scenario reached native MP4 export but twice timed
+out waiting for Chromium's download event in this environment. The focused
+Studio unit contract for export capability passed, and this overhaul does not
+change the exporter; a new end-to-end encoded MP4 is therefore not claimed.
+Live signed-in Firebase upload, physical mobile/Safari and production
+publication were not exercised. No deployment was performed.
+
 ## User workflow
 
 Open a saved project in Studio. The opening screen has four steps:

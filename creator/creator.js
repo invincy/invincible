@@ -1,6 +1,8 @@
 import {initializeMapProject} from './map-defaults.js?v=2026110903';
 import {attachImportedGroups} from './production-model.js?v=2026111002';
 import{createProductionWorkbench}from'./production-workbench.js?v=2026111208';
+import{createMediaClient,createStartingVoiceoverManifest,inspectMedia}from'./media-library.js?v=2026111301';
+import{PRESETS}from'./video-studio/model.js?v=2026111207';
 import{db,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
@@ -9,7 +11,7 @@ const stages=["Ideas","Research","Script","Record","Edit","Scheduled","Published
 let subscriptions=[],authGeneration=0;
 let user=null,state={items:[]},ownedItems=new Map(),sharedItems=new Map(),editingId="",filter="All",queryText="",mobileStage="Ideas",metricFilter="";
 
-let dialogScenes=[],dialogProject=null,dialogId="",savingContent=false;
+let dialogScenes=[],dialogProject=null,dialogId="",savingContent=false,dialogWasNew=false,dialogVoiceoverAttached=false,pendingProjectArea="Video Studio",pendingToolMode="";
 const storyboard=createProductionWorkbench($("contentStoryboard"),{
  getProject:()=>dialogProject,
  onChange:()=>{
@@ -61,6 +63,9 @@ function render(){
   $("metricView").hidden=!metricFilter;$("metricViewLabel").textContent=metricLabels[metricFilter]||"";document.querySelectorAll("[data-metric]").forEach(card=>card.classList.toggle("active",card.dataset.metric===metricFilter));
   $("stageTabs").innerHTML=stages.map(stage=>'<button data-stage="'+stage+'" class="'+(mobileStage===stage?'active':'')+'">'+stage+' · '+items.filter(item=>item.stage===stage).length+'</button>').join("");
   $("board").innerHTML=stages.map(stage=>{const rows=items.filter(item=>item.stage===stage).sort((a,b)=>(a.publishDate||"9999").localeCompare(b.publishDate||"9999"));return '<section class="column '+(mobileStage===stage?'mobile-active':'')+'" data-stage="'+stage+'"><div class="column-head"><h2>'+stage+'</h2><span class="column-count">'+rows.length+'</span></div><div class="cards">'+(rows.length?rows.map(card).join(""):'<div class="empty">No content here</div>')+'</div></section>';}).join("");
+  const recent=[...items].sort((a,b)=>Number(b.updatedAt?.seconds||b.updatedAt||0)-Number(a.updatedAt?.seconds||a.updatedAt||0));
+  $("projectGrid").innerHTML=recent.map(card).join("");
+  $("projectEmpty").hidden=recent.length>0;
   bindDrag();
 }
 
@@ -139,7 +144,10 @@ function subscribeProjects(){
   if(email)subscriptions.push(onSnapshot(query(projects,where("editorEmails","array-contains",email)),snapshot=>{sharedItems=new Map(snapshot.docs.map(row=>[row.id,{...row.data(),id:row.id}]));mergeProjects();},error=>status("Could not load shared projects: "+error.message,"error")));
 }
 
-function openDialog(item=null){
+function openDialog(item=null,{area="Video Studio",mode=""}={}){
+  pendingProjectArea=area;pendingToolMode=mode;
+  dialogWasNew=!item;
+  dialogVoiceoverAttached=!!item;
   editingId=item?.id||"";dialogId=editingId||newId();
   const clone=value=>JSON.parse(JSON.stringify(value));
   dialogProject={...(item||{}),title:item?.title||"",script:item?.script||"",hook:item?.hook||"",notes:item?.notes||"",historicalMap:item?.historicalMap?clone(item.historicalMap):null,productionClips:clone(item?.productionClips||[]),scenes:clone(item?.scenes||[]),animationGroups:clone(item?.animationGroups||[]),assets:clone(item?.assets||[])};
@@ -151,6 +159,9 @@ function openDialog(item=null){
   $("deleteContent").hidden=!item||!isOwner(item);
   $("saveContent").textContent=item?"Save":"Create";
   $("contentDetails").open=false;
+  document.querySelector(".advanced-project-setup").open=false;
+  $("projectVoiceover").value="";
+  form.elements.instructions.value=item?.notes||"";
   if(item)Object.entries(item).forEach(([key,value])=>{if(form.elements[key])form.elements[key].value=value??"";});else form.elements.stage.value=mobileStage;
   storyboard.reset();updateShotSummary();
   $("contentDialog").showModal();form.scrollTop=0;setTimeout(()=>form.elements.title.focus(),0);
@@ -170,20 +181,43 @@ $("clearMetric").onclick=()=>{metricFilter="";render();};
 document.querySelector(".filter-group").onclick=event=>{const button=event.target.closest("[data-filter]");if(!button)return;filter=button.dataset.filter;document.querySelectorAll(".filter").forEach(item=>item.classList.toggle("active",item===button));render();};
 $("searchInput").oninput=event=>{queryText=event.target.value.trim().toLowerCase();render();};
 
-$("board").onclick=async event=>{
+async function handleProjectClick(event){
   const move=event.target.closest("[data-move]");
   if(move){event.stopPropagation();const item=state.items.find(row=>row.id===move.dataset.id),next=stages.indexOf(item.stage)+Number(move.dataset.move);if(stages[next]){const prevStage=item.stage,prevMobile=mobileStage;item.stage=stages[next];mobileStage=item.stage;render();try{await saveItem(item,{mustExist:true});}catch{item.stage=prevStage;mobileStage=prevMobile;render();}}return;}
   const edit=event.target.closest("[data-edit]");if(edit){event.stopPropagation();openDialog(state.items.find(row=>row.id===edit.dataset.edit));return;}
   const open=event.target.closest("[data-open]");if(open){event.stopPropagation();window.location.href="project.html?id="+encodeURIComponent(open.dataset.open);return;}
   const cardElement=event.target.closest(".content-card");if(cardElement)window.location.href="project.html?id="+encodeURIComponent(cardElement.dataset.id);
-};
+}
+$("board").onclick=handleProjectClick;
+$("projectGrid").onclick=handleProjectClick;
 
 $("board").onkeydown=event=>{if((event.key==="Enter"||event.key===" ")&&!event.target.closest("button")){event.preventDefault();const card=event.target.closest(".content-card");if(card)window.location.href="project.html?id="+encodeURIComponent(card.dataset.id);}};
+$("projectGrid").onkeydown=$("board").onkeydown;
+
+function openToolPicker(area,mode=""){
+  pendingProjectArea=area;pendingToolMode=mode;
+  $("toolDialogTitle").textContent="Choose a project for "+(mode==="battlefield"?"Battlefield Editor":area);
+  $("toolProjectList").innerHTML=state.items.length?state.items.map(item=>'<a href="project.html?id='+encodeURIComponent(item.id)+'&area='+encodeURIComponent(area)+(mode?'&tool='+encodeURIComponent(mode):'')+'"><strong>'+esc(item.title||"Untitled project")+'</strong><span>'+esc(item.stage||"Ideas")+' · '+(item.scenes?.length||0)+' scenes</span></a>').join(""):'<p class="project-empty">No projects yet. Start one to open this tool.</p>';
+  $("toolDialog").showModal();
+}
+document.querySelector(".tool-grid").onclick=event=>{const button=event.target.closest("[data-project-tool]");if(button)openToolPicker(button.dataset.projectTool,button.dataset.toolMode||"");};
+$("toolNewProject").onclick=()=>{$("toolDialog").close();openDialog(null,{area:pendingProjectArea,mode:pendingToolMode});};
+
+async function attachStartingVoiceover(projectId,file,title){
+  if(!file)return;
+  const info=await inspectMedia(file);
+  if(info.kind!=="audio")throw Error("Choose an MP3 or WAV voiceover.");
+  if(!Number.isFinite(info.duration)||info.duration<=0||info.duration>600)throw Error("Voiceover must be no longer than 10 minutes.");
+  const media=createMediaClient(user.uid),asset=await media.upload(file,info);
+  const manifest=createStartingVoiceoverManifest({title,asset,duration:info.duration,clipId:newId()});
+  await media.saveDraft(projectId,manifest,structuredClone(PRESETS),0);
+}
 
 $("contentForm").onsubmit=async event=>{
   event.preventDefault();if(savingContent||!user)return;
   const form=event.currentTarget,data=new FormData(form),existing=state.items.find(row=>row.id===editingId),generation=authGeneration;
-  const item={...(existing||{}),id:dialogId,title:data.get("title").trim(),format:data.get("format"),stage:data.get("stage"),series:data.get("series"),publishDate:data.get("publishDate"),hook:data.get("hook").trim(),script:data.get("script"),notes:data.get("notes"),visualStyle:dialogProject.visualStyle||"",aspectRatio:dialogProject.aspectRatio||"9:16",language:dialogProject.language||"",characterBible:dialogProject.characterBible||"",continuityNotes:dialogProject.continuityNotes||"",historicalMap:dialogProject.historicalMap||null,productionClips:dialogProject.productionClips||[],animationGroups:dialogProject.animationGroups||[],assets:dialogProject.assets||[],scenes:dialogScenes.map(scene=>({...scene})),ownerUid:existing?.ownerUid||user.uid,ownerEmail:existing?.ownerEmail||(user.email||"").toLowerCase(),editorEmails:existing?.editorEmails||[]};
+  const instructions=String(data.get("instructions")||"").trim();
+  const item={...(existing||{}),id:dialogId,title:data.get("title").trim(),format:data.get("format"),stage:data.get("stage"),series:data.get("series"),publishDate:data.get("publishDate"),hook:data.get("hook").trim(),script:data.get("script"),notes:instructions||data.get("notes"),visualStyle:dialogProject.visualStyle||"",aspectRatio:dialogProject.aspectRatio||"9:16",language:dialogProject.language||"",characterBible:dialogProject.characterBible||"",continuityNotes:dialogProject.continuityNotes||"",historicalMap:dialogProject.historicalMap||null,productionClips:dialogProject.productionClips||[],animationGroups:dialogProject.animationGroups||[],assets:dialogProject.assets||[],scenes:dialogScenes.map(scene=>({...scene})),ownerUid:existing?.ownerUid||user.uid,ownerEmail:existing?.ownerEmail||(user.email||"").toLowerCase(),editorEmails:existing?.editorEmails||[]};
   if(!item.title){form.elements.title.setCustomValidity("Enter a working title.");form.elements.title.reportValidity();return;}
   savingContent=true;$("contentSaveError").textContent="";
   const controls=[...form.querySelectorAll("button,input,select,textarea")],disabled=controls.map(control=>control.disabled);
@@ -191,9 +225,11 @@ $("contentForm").onsubmit=async event=>{
   try{
     await saveItem(item,{mustExist:!!editingId});if(generation!==authGeneration)return;
     const index=state.items.findIndex(row=>row.id===item.id);if(index>=0)state.items[index]=item;else state.items.push(item);
-    mobileStage=item.stage;render();$("contentDialog").close();if(!existing)window.location.href="project.html?id="+encodeURIComponent(item.id);
-  }catch(error){if(generation===authGeneration)$("contentSaveError").textContent=storageError(error)+" Your input is still here. Try saving again.";}
-  finally{savingContent=false;controls.forEach((control,index)=>control.disabled=disabled[index]);$("saveContent").textContent=existing?"Save":"Create";}
+    if(!existing)editingId=item.id;
+    if(form.elements.voiceoverFile.files[0]&&!dialogVoiceoverAttached){status("Uploading voiceover…");await attachStartingVoiceover(item.id,form.elements.voiceoverFile.files[0],item.title);dialogVoiceoverAttached=true;}
+    mobileStage=item.stage;render();$("contentDialog").close();if(dialogWasNew)window.location.href="project.html?id="+encodeURIComponent(item.id)+"&area="+encodeURIComponent(pendingProjectArea)+(pendingToolMode?"&tool="+encodeURIComponent(pendingToolMode):"");
+  }catch(error){if(generation===authGeneration)$("contentSaveError").textContent=dialogWasNew&&item.writeRevision&&!dialogVoiceoverAttached?"Project created, but the voiceover did not finish uploading. Your file is still selected; choose Save to retry.":storageError(error)+" Your input is still here. Try saving again.";}
+  finally{savingContent=false;controls.forEach((control,index)=>control.disabled=disabled[index]);$("saveContent").textContent=editingId?"Save":"Create";}
 };
 $("contentForm").elements.title.addEventListener("input",event=>event.target.setCustomValidity(""));
 $("contentDialog").addEventListener("cancel",event=>{if(savingContent)event.preventDefault();});

@@ -386,3 +386,18 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
 @media (max-width: 900px) {
   .project-readiness ul { grid-template-columns: repeat(2, minmax(0, 1fr)) }
 }
+
+.project-workspace-nav{display:flex;align-items:center;gap:6px;max-width:none;padding:10px clamp(12px,2vw,36px);overflow-x:auto;border-bottom:1px solid var(--studio-line);background:rgba(8,18,27,.94);scrollbar-width:thin}
+.project-workspace-nav :is(button,a){display:inline-flex;align-items:center;justify-content:center;min-height:44px;flex:none;padding:9px 13px;border:1px solid var(--studio-line);border-radius:9px;background:#112331;color:#c7d8e2;font-size:13px;text-decoration:none;white-space:nowrap}
+.project-workspace-nav :is(button,a):hover,.project-workspace-nav button[aria-current=page]{border-color:#478e93;background:#15313d;color:#d2f4ef}
+.project-workspace-nav .project-nav-spacer{flex:1;min-width:12px}
+.project-workspace-nav .primary{background:var(--studio-accent);border-color:transparent;color:#082025}
+.project-page.creator-focus-mode>.project-workspace-nav{flex:none}
+.project-page.creator-focus-mode #app{display:flex;flex-direction:column}
+.project-page.creator-focus-mode .project-readiness{display:none}
+.project-page.creator-focus-mode .project-storyboard-panel{flex:1;height:auto}
+@media(max-width:700px){
+ .project-workspace-nav{padding:8px 10px;scroll-snap-type:x proximity}
+ .project-workspace-nav :is(button,a){min-height:48px;scroll-snap-align:start}
+ .project-workspace-nav .project-nav-spacer{display:none}
+}

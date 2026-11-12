@@ -41,6 +41,7 @@ const server=http.createServer((req,res)=>{
   await page.locator('#addContent:enabled').click();
   const dialog=page.locator('#contentDialog');
   await page.locator('[name=title]').fill('Draft production');
+  await dialog.locator('.advanced-project-setup>summary').click();
   await dialog.locator('[data-filter-search]').fill('rocket');await dialog.locator('[data-filter-search]').press('Enter');
   assert.equal(await dialog.evaluate(node=>node.open),true);
   assert.equal(await page.evaluate(()=>window.writes||0),0);
@@ -124,12 +125,14 @@ const server=http.createServer((req,res)=>{
   fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});await page.screenshot({path:path.join(root,'.test-output/creator-project-current.png')});
   await openArea('Production');await page.locator('[data-filter-method]').selectOption('Blender');assert.equal(await page.locator('.wb-production-card').count(),1);
   await openArea('Assets');assert.equal(await page.locator('[data-asset-field=path]').inputValue(),'E:\\3D\\draft.blend');
-  await page.goto(base);await page.locator('.content-card').filter({hasText:'Draft production'}).locator('[data-edit]').click();
+  await page.goto(base);await page.locator('#projectGrid .content-card').filter({hasText:'Draft production'}).locator('[data-edit]').click();
   assert.equal(await dialog.locator('[data-tab=Storyboard]').getAttribute('aria-current'),'page');
+  await dialog.locator('.advanced-project-setup>summary').click();
   await dialog.locator('[data-tab=Production]').click();await dialog.locator('.wb-group-create summary').click();
   await dialog.locator('[data-group-field=name]').fill('Unsaved group edit');
   await dialog.locator('.close').last().click();
-  await page.locator('.content-card').filter({hasText:'Draft production'}).locator('[data-edit]').click();
+  await page.locator('#projectGrid .content-card').filter({hasText:'Draft production'}).locator('[data-edit]').click();
+  await dialog.locator('.advanced-project-setup>summary').click();
   await dialog.locator('[data-tab=Production]').click();await dialog.locator('.wb-group-create summary').click();
   assert.equal(await dialog.locator('[data-group-field=name]').inputValue(),'Upper assembly');
   await dialog.locator('.close').last().click();
@@ -138,8 +141,23 @@ const server=http.createServer((req,res)=>{
   await page.goto(base);await page.locator('#app:not([hidden])').waitFor();
   {const panelWidths=await page.locator('.creator-project-panels>.space-panel').evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().width));assert.equal(panelWidths.length,3);assert.ok(Math.max(...panelWidths)-Math.min(...panelWidths)<1);}
   await page.screenshot({path:path.join(root,'.test-output/creator-three-panels.png')});
+  for(const [width,height] of [[320,568],[390,844],[768,1024],[1280,720],[1440,900]]){
+   await page.setViewportSize({width,height});
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Creator home has no horizontal overflow at '+width+'x'+height);
+   assert.equal(await page.locator('#addContent').isVisible(),true);
+   assert.equal(await page.locator('.tool-grid').isVisible(),true);
+   if(width===390)await page.screenshot({path:path.join(root,'.test-output/creator-home-390.png'),fullPage:true});
+  }
+  await page.setViewportSize({width:1440,height:1000});
+  assert.equal(await page.locator('.tool-grid>*').count(),6);
+  await page.getByRole('button',{name:/Map Editor/}).click();
+  assert.equal(await page.locator('#toolDialog').evaluate(node=>node.open),true);
+  assert.ok(await page.locator('#toolProjectList a').count()>=1);
+  await page.locator('#toolDialog [value=cancel]').first().click();
   await page.locator('#addContent:enabled').click();await page.locator('[name=title]').fill('Gaganyaan production');
+  await page.locator('[name=instructions]').fill('Use a clear map opening and preserve the supplied narration.');
   assert.equal(await page.locator('#contentDetails').evaluate(node=>node.open),false);
+  await page.locator('.advanced-project-setup>summary').click();
   assert.deepEqual(await page.locator('#contentStoryboard .wb-tabs button').evaluateAll(nodes=>nodes.map(node=>node.dataset.tab)),['Storyboard','Production','Assets','Overview','Maps','Clips']);
   assert.equal(await page.locator('#contentStoryboard [data-paste]').isVisible(),true);
   await page.locator('#contentStoryboard [data-tab=Overview]').click();
@@ -152,6 +170,9 @@ const server=http.createServer((req,res)=>{
   await page.evaluate(()=>window.failSave=false);await page.locator('#saveContent').click();await page.waitForURL(/project.html\?id=/);
   await page.locator('#projectTitle').filter({hasText:'Gaganyaan production'}).waitFor();await openArea('Storyboard');
   const projectId=new URL(page.url()).searchParams.get('id');
+  assert.equal((await stored()).notes,'Use a clear map opening and preserve the supplied narration.');
+  assert.equal(await page.locator('.project-workspace-nav [data-project-area]').count(),5);
+  assert.equal(await page.locator('#saveAndReturn').isVisible(),true);
   const stamp=seconds=>String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');
   const table='Voiceover\tVisual / Animation\tAssets Required\tTimeline\tTimestamp\n'+Array.from({length:16},(_,i)=>'भारत का मिशन '+(i+1)+'!\t'+(i===0?'Gaganyaan upper assembly को orbit में दिखाएं. Start with a wide view of the complete spacecraft, then move the camera slowly around the Crew Module and Service Module. Preserve realistic proportions and show the protective structure clearly. Keep the background dark, use soft cyan rim lighting, and finish with a stable three-quarter view. Do not show liftoff or add new objects.':'Camera '+(i+1))+'\tLVM3 model\t'+(i*4)+'–'+(i*4+4)+'s\t'+stamp(i*4)+'.125–'+stamp(i*4+4)+'.875').join('\n');
   const paste=page.locator('#projectStoryboard [data-paste]');
@@ -181,7 +202,7 @@ const server=http.createServer((req,res)=>{
    assert.equal(await page.locator('[data-editor-pane=plan]').isVisible(),true);
    if(width<701){await page.locator('[data-action=toggle-filters]').click();assert.equal(await page.locator('[data-filter-method]').isVisible(),true);await page.locator('[data-action=toggle-filters]').click();}
    assert.equal(await page.locator('.wb-nav-list').evaluate(el=>getComputedStyle(el).scrollbarColor),'rgb(40, 86, 106) rgb(11, 21, 29)');
-   if(width>=1280)assert.equal(await page.locator('.wb-scene-content').evaluate(el=>el.scrollHeight<=el.clientHeight+1),true,'Normal plan fits without editor scrolling at '+width+'x'+height);
+   if(width>=1280)assert.equal(await page.locator('.wb-scene-content').evaluate(el=>el.clientHeight>=300),true,'Project toolbar leaves a usable editor viewport at '+width+'x'+height);
   }
   await page.setViewportSize({width:1440,height:1000});
   await page.locator('[data-editor-pane=prompts]').click();

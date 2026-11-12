@@ -30,6 +30,11 @@ export async function inspectMedia(file){
  return record;
 }
 export function mapAssetFromMedia(a){if(!['image','glb'].includes(a.kind))throw Error('Choose image or GLB artwork.');return {id:a.id,name:a.name,type:a.kind,cloudAssetId:a.id,credit:a.credit||''};}
+export function createStartingVoiceoverManifest({title,asset,duration,clipId}){
+ if(!asset?.id||!asset?.name)throw Error('The uploaded voiceover is missing.');
+ if(!Number.isFinite(duration)||duration<=0||duration>600)throw Error('Voiceover must be no longer than 10 minutes.');
+ return {schemaVersion:2,title:title||'Untitled video',aspectRatio:'9:16',fps:30,brandPresetId:'adichimp',scenes:[],assets:[],audio:null,audioClips:[{id:clipId,fileId:asset.id,name:asset.name,role:'voiceover',startSeconds:0,trimStart:0,durationSeconds:duration,gain:1,fadeIn:0,fadeOut:0}],mapSources:[],introEnabled:false,outroEnabled:false};
+}
 
 export async function uploadSharedMedia(file,extra={}){
  const {auth,authReady}=await import('../shared/firebase-client.js');await authReady;if(!auth.currentUser)throw Error('Sign in to upload to your shared library.');

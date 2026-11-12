@@ -6,7 +6,8 @@ import{doc,getDoc,onSnapshot,runTransaction,serverTimestamp}from"https://www.gst
 import{createProductionReadiness,mountProductionReadiness}from'./video-studio/production-readiness.js?v=2026111209';
 import{splitVoiceoverScript}from"./scene-tools.js?v=2";
 
-const $=id=>document.getElementById(id),projectId=new URLSearchParams(location.search).get("id");
+const queryParams=new URLSearchParams(location.search),$=id=>document.getElementById(id),projectId=queryParams.get("id");
+const requestedArea=queryParams.get("area"),requestedTool=queryParams.get("tool")||"";
 const tabId=(()=>{try{let id=sessionStorage.getItem("invincible.creatorTabId");if(!id){id=Math.random().toString(36).slice(2)+Date.now().toString(36);sessionStorage.setItem("invincible.creatorTabId",id);}return id;}catch{return "default";}})();
 let saveChain=Promise.resolve(),editVersion=0,cloudVersion=0,baseRevision=0;
 let productionReadiness;
@@ -76,6 +77,12 @@ function render(){
   $("accessIndicator").title=access;$("accessIndicator").setAttribute("aria-label",access);
   storyboard.render();
   renderSceneWorkspace();
+}
+
+function selectProjectArea(area,mode=""){
+  storyboard.open({area});
+  document.querySelectorAll("[data-project-area]").forEach(button=>button.setAttribute("aria-current",button.dataset.projectArea===area&&(!button.dataset.toolMode||button.dataset.toolMode===mode)?"page":"false"));
+  if(mode==="battlefield")document.querySelector('[data-project-area="Video Studio"][data-tool-mode="battlefield"]')?.setAttribute("aria-current","page");
 }
 
 function renderSceneWorkspace(){
@@ -273,6 +280,14 @@ $("copyProjectLink").onclick=async()=>{
   catch(error){$("shareFeedback").textContent=error.message;}
 };
 
+document.querySelector(".project-workspace-nav").addEventListener("click",event=>{
+  const button=event.target.closest("[data-project-area]");
+  if(!button)return;
+  selectProjectArea(button.dataset.projectArea,button.dataset.toolMode||"");
+});
+$("saveProjectNow").onclick=async()=>{if(await save())status("Saved to Firebase","ok");};
+$("saveAndReturn").onclick=async()=>{const button=$("saveAndReturn");button.disabled=true;button.textContent="Saving…";if(await save())location.href="/invincible/creator/";else{button.disabled=false;button.textContent="Save & return";}};
+
 function applyIncomingProject(data){
   const incoming={...data,id:projectId};
   incoming.editorEmails=(incoming.editorEmails||[]).map(email=>email.toLowerCase());
@@ -376,7 +391,9 @@ async function load(){
       onConflict({source:'stale-draft',draft:recoveredStaleDraft,serverData:project,serverRevision:baseRevision,serverUpdatedAt:cloudVersion});
       status(storageError({code:'revision-conflict'})+" An earlier local draft is waiting for your decision.","error");
     }
-    if(project.productionState?.open)storyboard.open({area:"Production",sceneId:project.productionState.sceneId});
+    if(requestedArea)selectProjectArea(requestedArea,requestedTool);
+    else if(project.productionState?.open)storyboard.open({area:"Production",sceneId:project.productionState.sceneId});
+    else selectProjectArea("Video Studio");
     onSnapshot(projectRef,{includeMetadataChanges:true},live=>{
       if(live.metadata.hasPendingWrites)return;
       if(!live.exists()){

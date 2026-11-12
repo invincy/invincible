@@ -5,9 +5,15 @@ import {DEFAULT_PARALLAX,parallaxTransform,projectLayer,trainTemplate} from '../
 import {audioChunk} from '../creator/video-studio/audio.js';
 import {encodeStudioVideo} from '../creator/video-studio/export.js';
 import {compileAiStoryboardManifest} from '../creator/ai-preview.js';
+import {createStartingVoiceoverManifest} from '../creator/media-library.js';
 const graphic=(id,start=0,duration=2)=>({id,startSeconds:start,durationSeconds:duration,engineType:'graphic',engineData:{},overlays:[]});
 const video=()=>({...emptyVideo(),scenes:[graphic('one'),graphic('two',2)]});
 test('portrait defaults and exported dimensions reuse the existing map contract',()=>{assert.equal(emptyVideo().aspectRatio,'9:16');assert.deepEqual(exportDimensions('9:16'),{width:1080,height:1920});assert.deepEqual(exportDimensions('16:9'),{width:1920,height:1080});});
+test('simple project creation attaches its uploaded voiceover to a valid existing Studio draft',()=>{
+ const manifest=createStartingVoiceoverManifest({title:'New film',asset:{id:'cloud-'+'a'.repeat(64),name:'narration.mp3'},duration:42.5,clipId:'voice-1'}),valid=validateManifest(manifest);
+ assert.equal(valid.title,'New film');assert.equal(valid.audioClips[0].role,'voiceover');assert.equal(valid.audioClips[0].durationSeconds,42.5);assert.equal(valid.scenes.length,0);
+ assert.throws(()=>createStartingVoiceoverManifest({title:'Too long',asset:{id:'voice',name:'voice.wav'},duration:601,clipId:'voice-2'}),/10 minutes/);
+});
 test('AI storyboard compiles to one timestamped Video Studio v2 manifest with its original audio reference',()=>{
  const mapAnimation={format:'invincible-map-animation',version:1,title:'Panipat label',duration:3,aspectRatio:'9:16',basemap:'terrain',terrain:false,overlayPreset:'documentary',camera:[{time:0,center:[76.96,29.39],zoom:4.9,pitch:0,bearing:0,easing:'smooth'},{time:3,center:[76.96,29.39],zoom:5.2,pitch:0,bearing:0,easing:'smooth'}],assets:[],layers:[{id:'panipat',type:'label',name:'Panipat',start:0,end:3,position:[76.96,29.39],color:'#F4F5F7',scale:1}]};
  const manifest=compileAiStoryboardManifest([{id:'scene-1',timeline:'0.000-3.000s',visual:'Panipat',mapAnimation}],{audioFileId:'voice-file',audioName:'voiceover.mp3',audioDuration:3});
