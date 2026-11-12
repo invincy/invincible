@@ -401,8 +401,12 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
 }
 .project-page.studio-ui:has(> .dashboard-backdrop)::before { display: none; }
 .project-page .dashboard-backdrop::before {
-  background: radial-gradient(ellipse at 50% 46%, #a4caff30, transparent 44%);
+  background: radial-gradient(circle at 50% 50%,
+    transparent 0 15vmin, var(--project-halo-rim, #ffcc7560) 19vmin,
+    var(--project-halo-glow, #ffb34d38) 23vmin, transparent 38vmin);
 }
+[data-visual-theme="two"] .project-page { --project-halo-rim: #a9ef8060; --project-halo-glow: #7de26338; }
+[data-visual-theme="three"] .project-page { --project-halo-rim: #60dbff70; --project-halo-glow: #18bfff42; }
 .project-page .dashboard-backdrop svg { position: relative; }
 .project-voiceover-active .project-services { display: none; }
 .project-voiceover-actions {
@@ -435,7 +439,13 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
   font-size: 14px;
 }
 .creator-focus-mode .project-services { display: none; }
-.project-page .vs-editing-first:not(.vs-focusing) { background: #0a121bb8; }
+.project-page #projectEditingStep:has(.vs-editing-first:not(.vs-focusing)) {
+  background: transparent !important;
+}
+.project-page .vs-editing-first:not(.vs-focusing) { background: transparent; }
+.project-page .vs-editing-first:not(.vs-focusing) .vs-preview {
+  background: #09131f55;
+}
 .vs-editing-first .vs-create { position: relative; margin: 0; padding: 0; border: 0; }
 .vs-editing-first .vs-create > summary {
   display: flex;
@@ -517,7 +527,7 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
     overflow: auto;
     padding: 12px;
     border-radius: 10px;
-    background: #101923d9;
+    background: #101923ae;
   }
   .vs-editing-first:not(.vs-focusing) .vs-preview canvas {
     max-height: max(196px, calc(40dvh - 24px));
