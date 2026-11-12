@@ -2,6 +2,13 @@
 
 ## UI/UX design agent foundation — November 12, 2026
 
+Follow-up correction: the repository contract now explicitly encodes the three
+standards agreed in the design conversation—Nielsen Norman Group's 10 Usability
+Heuristics, Apple Human Interface Guidelines and Google Material Design 3. Every
+screen requires a four-part scorecard (NN/G, Apple HIG, Material 3, Invincible
+decision) before editing. The references guide usability, interaction and
+responsive component quality without replacing Invincible's visual identity.
+
 Added a repository UI/UX agent rule and a single design-system/audit contract
 covering shared foundations, responsive acceptance viewports, incremental
 verification and the approved rollout order: shared components, Dashboard and
