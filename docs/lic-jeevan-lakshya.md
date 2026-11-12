@@ -173,3 +173,7 @@ The goal selection and profile instructions now play at 1.4×. The narrator appl
 ### Closing scene (11 November 2026)
 
 After the family maturity step, Continue opens the closing scene with the same goal coin and gold path. The approved Hindi-English narration plays in the existing Kore voice at 1.2×. The on-screen words follow the closing phrases, and View plan details appears after playback finishes or the visual fallback completes. The closing scene can be replayed, and Back returns to the maturity step.
+
+### Portrait story polish
+
+The profile fields are highlighted in the order named by the narration. The premium payment animates before the annual amount appears. In the normal maturity beat, a gold pulse runs to the goal coin, then the amount appears. The approved line appears as a caption with a five-second fallback hold. The former survival wording is no longer played. The family benefits use individual icons and compact markers. The closing pairs the planning phrase with a calendar and the LIC phrase with a shield.

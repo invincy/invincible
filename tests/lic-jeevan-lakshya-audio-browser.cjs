@@ -60,10 +60,12 @@ const server=http.createServer((req,res)=>{
   await page.locator('#openPreviewBtn').click();await cue('plan.premium');assert.equal(await page.locator('#maturityPill').isVisible(),false);
   assert.equal(await page.locator('.story-family').evaluate(image=>getComputedStyle(image).opacity),'1');
   await page.locator('#storyModeToggle').click();const frozen=await page.locator('#storyNarration').evaluate(a=>a.currentTime);await page.waitForTimeout(600);assert.ok(Math.abs(await page.locator('#storyNarration').evaluate(a=>a.currentTime)-frozen)<.05);assert.equal(await page.locator('#storyNarration').evaluate(a=>a.paused),true);
-  await page.locator('#storyModeToggle').click();await page.waitForFunction(()=>!document.querySelector('#storyNarration').paused);await finish();await cue('plan.maturity');assert.equal(await page.locator('#maturityPill').isVisible(),true);
+  await page.locator('#storyModeToggle').click();await page.waitForFunction(()=>!document.querySelector('#storyNarration').paused);await finish();await page.locator('#maturityPill').waitFor();
+  assert.equal(await page.locator('#stageContainer').getAttribute('data-flow-step'),'preview');
+  assert.equal(await page.locator('#maturityMessage').isVisible(),true);
   assert.match(await page.locator('#maturityPill').innerText(),/declared bonuses/i);
   assert.equal(await page.locator('#previewBonusNote').isVisible(),true);
-  await page.locator('#advisorAudioBtn').click();assert.equal(await page.locator('#storyNarration').evaluate(a=>a.muted),true);await finish();await cue('family.whatif');
+  await page.locator('#advisorAudioBtn').click();assert.equal(await page.locator('#storyNarration').evaluate(a=>a.muted),true);await cue('family.whatif');
   await page.waitForTimeout(4800);await finish();await cue('family.rider');
   assert.equal(await page.locator('.story-family').evaluate(image=>getComputedStyle(image).opacity),'0');
   assert.match(await page.locator('#riderPill').innerText(),/Term Rider payout/);
@@ -86,7 +88,7 @@ const server=http.createServer((req,res)=>{
   await page.locator('#ctaPrevBtn').click();await cue('story.close');
   await page.locator('#ctaPrevBtn').click();await cue('family.maturity');
   assert.equal(await page.locator('#stageContainer').getAttribute('data-benefit-step'),'4');
-  await page.locator('#storyModeToggle').click();await cue('family.rider');await page.locator('#ctaPrevBtn').click();await cue('family.whatif');assert.match(await page.locator('#storyNarration').getAttribute('src'),/family\.whatif\.mp3\?v=18$/);assert.equal(await page.locator('#stageContainer').getAttribute('data-flow-step'),'whatif');
+  await page.locator('#storyModeToggle').click();await cue('family.rider');await page.locator('#ctaPrevBtn').click();await cue('family.whatif');assert.match(await page.locator('#storyNarration').getAttribute('src'),/family\.whatif\.mp3\?v=19$/);assert.equal(await page.locator('#stageContainer').getAttribute('data-flow-step'),'whatif');
   assert.deepEqual(errors,[]);console.log('PASS 16 recordings, automatic sound from plan card, four goals, Other Goal narration, pause/resume, mute, cancellation and maturity');
  }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1;});

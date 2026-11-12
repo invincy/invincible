@@ -1,5 +1,5 @@
 import {eligibleTerms,computePlan} from './benefits.mjs';
-import {createNarrator} from './narration.mjs?v=18';
+import {createNarrator} from './narration.mjs?v=19';
 const $=id=>document.getElementById(id),stage=$('stageContainer');
 const money=n=>n===null?'LIC quote required':'₹'+n.toLocaleString('en-IN');
 const shortMoney=n=>'₹'+Number((n/100000).toFixed(2)).toLocaleString('en-IN')+' lakh';
@@ -111,11 +111,11 @@ function setState(next,options={}){
 function renderState(next,{focus=true,restartOpening=false,benefitStart=0}={}){
  cancelSequence();paused=false;stopVoice();openGoals(false);state=next;ready=true;beatMoving=false;
  stage.dataset.flowStep=state;stage.dataset.storyStep=({intro:1,selected:1,configure:1,preview:2,whatif:3,protection:3,closing:3,details:4})[state];
- stage.classList.remove('pills-out','family-away','child-in','path-restored','goal-restored');benefitIndex=-1;delete stage.dataset.benefitStep;stage.style.setProperty('--journey-progress','0');
+ stage.classList.remove('pills-out','family-away','child-in','path-restored','goal-restored');benefitIndex=-1;delete stage.dataset.benefitStep;delete stage.dataset.previewBeat;stage.style.setProperty('--journey-progress','0');
  for(const id of panels)$(id).hidden=true;
- for(const id of ['maturityPill','previewBonusNote','familyBonusNote','whatIfCaption','assurancePill','riderPill','ceasesPill','incomePill','deathMaturityPill'])$(id).hidden=true;
+ for(const id of ['maturityPill','maturityMessage','paymentMotion','previewBonusNote','familyBonusNote','whatIfCaption','assurancePill','riderPill','ceasesPill','incomePill','deathMaturityPill'])$(id).hidden=true;
  const visible=({intro:['scene1'],selected:['scene1','selectionPanel'],configure:['configurationPanel'],preview:['previewPanel'],whatif:['previewPanel','whatIfPanel'],protection:['protectionPanel'],closing:['closingPanel'],details:['detailsPanel']})[state];visible.forEach(id=>$(id).hidden=false);
- const data=copy[state];$('eyebrowChip').textContent=state==='closing'?goal:data[0];$('headlineMain').innerHTML=data[1];$('headlineIndic').textContent=data[2];$('subtitleText').textContent=data[3];$('subtitleText').hidden=!data[3];
+ const data=copy[state];$('eyebrowChip').textContent=data[0];$('headlineMain').innerHTML=data[1];$('headlineIndic').textContent=data[2];$('subtitleText').textContent=data[3];$('subtitleText').hidden=!data[3];
  const storyGoal=$('storyGoal');
  storyGoal.src=hasGoal?goalSrc:'assets/jeevan-lakshya.png';
  storyGoal.alt=hasGoal?goal:'LIC Jeevan Lakshya';
@@ -136,9 +136,31 @@ function renderState(next,{focus=true,restartOpening=false,benefitStart=0}={}){
   });
  }
  if(state==='selected'){voiceCue('goal.'+goalKey,()=>setState('configure'),1800);}
- if(state==='configure')voiceCue('profile.choose');
+ if(state==='configure'){
+  voiceCue('profile.choose',null,undefined,()=>{
+   if(reduced())return;
+   ['profileAgeLabel','profileTermLabel','profileCoverLabel'].forEach((id,index)=>{
+    later([180,900,1560][index],()=>$(id).closest('.input-row').animate(
+     [{backgroundColor:'#ffe28b00'},{backgroundColor:'#ffe28b29'},{backgroundColor:'#ffe28b00'}],
+     {duration:650,easing:'ease-out'}
+    ));
+   });
+  });
+ }
  if(state==='preview'){
-  ready=false;reveal('premiumPill');voiceCue('plan.premium',()=>{reveal('maturityPill');ready=true;control();voiceCue('plan.maturity',()=>setState('whatif'),5000);},1500);
+  ready=false;
+  voiceCue('plan.premium',()=>{
+   $('paymentMotion').hidden=true;
+   stage.dataset.previewBeat='maturity';
+   if(reduced())reveal('maturityPill');
+   else later(850,()=>reveal('maturityPill'));
+   $('maturityMessage').hidden=false;
+   voiceCue('plan.goal-maturity',()=>setState('whatif'),5000);
+  },1500,()=>{
+   reveal('paymentMotion');
+   if(reduced())reveal('premiumPill');
+   else later(550,()=>reveal('premiumPill'));
+  });
  }
  if(state==='whatif'){
   ready=false;reveal('premiumPill');reveal('maturityPill');voiceCue('family.whatif',()=>setState('protection'),7200);
