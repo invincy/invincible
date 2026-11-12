@@ -94,6 +94,11 @@ ambient details. Keep the background free of page-specific artwork and use
 translucent surfaces where the backdrop would compete with text. Media inside
 the video preview belongs to the project.
 
+The Electric Blue halo is the broken cyan ring from the dashboard. Keep it
+centered in the shared Electric backdrop with the circuit grid and lines.
+The ring is decorative on Creator pages. Gold and Forest keep their own
+backgrounds.
+
 Open on the editing workspace: scenes on the left, preview in the center,
 selected-scene controls on the right, and the timeline below. Keep Save and
 Export in one compact toolbar. Place AI generation, media, JSON import, and

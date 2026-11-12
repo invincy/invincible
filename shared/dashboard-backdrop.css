@@ -11,21 +11,18 @@
 }
 
 .dashboard-backdrop svg { display: none; }
-.dashboard-backdrop::before {
+[data-visual-theme="three"] .dashboard-backdrop::before {
   content: "";
   position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 50% 50%,
-    transparent 0 15vmin, var(--backdrop-halo-rim, #ffcc7560) 19vmin,
-    var(--backdrop-halo-glow, #ffb34d38) 23vmin, transparent 38vmin);
-}
-[data-visual-theme="two"] .dashboard-backdrop {
-  --backdrop-halo-rim: #a9ef8060;
-  --backdrop-halo-glow: #7de26338;
+  top: 50%;
+  left: 50%;
+  width: min(62vmin, 680px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background: url("./electric-backdrop-ring.svg") center / contain no-repeat;
+  filter: drop-shadow(0 0 4px #00dfff70);
 }
 [data-visual-theme="three"] .dashboard-backdrop {
-  --backdrop-halo-rim: #60dbff70;
-  --backdrop-halo-glow: #18bfff42;
   background-color: #060b14;
   background-image: radial-gradient(ellipse at 50% 44%, #09213b88, transparent 46%),
     radial-gradient(ellipse at 8% 96%, #07284455, transparent 40%),
