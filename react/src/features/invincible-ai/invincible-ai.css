@@ -14,36 +14,81 @@
 
 .ai-service-connections {
   position: relative;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  z-index: 1;
   max-width: 1180px;
   margin: 20px auto 0;
 }
-.ai-service-card {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+.ai-service-header {
+  display: flex;
   align-items: center;
-  gap: 6px 12px;
-  padding: 12px 14px;
-  border: 1px solid #70e6f22e;
-  border-radius: 12px;
-  background: #0b1c22;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
 }
-.ai-service-card h2 { margin: 0; font-size: 1rem; grid-column: 1 / -1 }
-.ai-service-card p { margin: 0; color: #bbd3d8; font-size: .85rem }
-.ai-service-card p span { color: #8fe2ad; font-weight: 800 }
-.ai-service-card button {
-  min-height: 38px;
-  padding: 5px 10px;
-  border: 1px solid #70e6f24d;
-  border-radius: 8px;
-  background: #132f37;
+.ai-service-header h2 {
+  margin: 0;
+  color: #c4dce0;
+  font-size: .9rem;
+}
+.ai-service-header button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #37626d;
+  border-radius: 10px;
+  background: #122a32;
   color: #e0f8fa;
-  font: inherit;
+  font: 700 .85rem Inter, system-ui, sans-serif;
   cursor: pointer;
 }
+.ai-service-header button:hover:not([aria-disabled="true"]) { background: #1b3b45 }
+.ai-service-header button:focus-visible { outline: 2px solid #89e3e9; outline-offset: 3px }
+.ai-service-header button[aria-disabled="true"] { color: #a5bec4; cursor: wait }
+.ai-service-header button span { margin-right: 4px; font-size: 1.1rem }
+.ai-service-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.ai-service-card {
+  --service-status: #b9cbd0;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid #28434b;
+  border-radius: 12px;
+  background: #0d1e25;
+}
+.ai-service-card[data-state="ready"] { --service-status: #92e6ae }
+.ai-service-card[data-state="checking"] { --service-status: #91dce8 }
+.ai-service-card[data-state="partial"] { --service-status: #f1cf82 }
+.ai-service-card[data-state="offline"] { --service-status: #ffabab }
+.ai-service-card h3 { margin: 0 0 7px; font-size: .9rem }
+.ai-service-card p {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  color: var(--service-status);
+  font-size: .82rem;
+  line-height: 1.45;
+}
+.ai-service-dot {
+  flex: 0 0 7px;
+  height: 7px;
+  align-self: start;
+  margin-top: .45em;
+  border-radius: 50%;
+  background: currentColor;
+}
+.ai-service-card small { display: block; color: #b9cbd0; font-size: inherit }
 .ai-image-studio :is(.image-connection-bar,.image-connection-options)[hidden] { display: none }
 @media (max-width: 620px) {
-  .ai-service-connections { grid-template-columns: minmax(0, 1fr) }
+  .ai-service-grid { grid-template-columns: minmax(0, 1fr) }
+  .ai-service-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+    padding-block: 10px;
+  }
+  .ai-service-card h3 { margin: 0 }
 }

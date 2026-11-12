@@ -247,3 +247,7 @@ same Invincible local AI connection and reopen Image Studio.
 The relay tests exercise ownership, idempotency, leases, offline handling and
 PNG validation. The mobile-size browser fixture checks preview, download, the
 attachment callback and failure with loopback blocked.
+
+### Invincible AI service checks
+
+The Local AI services panel uses one Check all button to refresh Whisper, Qwen and the image connection. A connected image relay can still show Engine status unknown until the engine is verified from the laptop. The status labels and keyboard refresh were checked in Chromium with simulated service responses at widths from 320 to 1440 pixels. The production build passed. The broader personal-image browser test stopped at its disabled Generate button before reaching the service checks.

@@ -30,15 +30,17 @@ try{
  for(const width of [320,393,820,1440]){await page.setViewportSize({width,height:950});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'No personal studio overflow at '+width);}
  assert.equal(gpu.loads,1);
  await page.goto(service.origin+'/personal-images');
- const whisper=page.locator('.ai-service-card').filter({has:page.getByRole('heading',{name:'Whisper transcription',level:2})});
- const qwen=page.locator('.ai-service-card').filter({has:page.getByRole('heading',{name:'Qwen3 4B',level:2})});
- const images=page.locator('.ai-service-card').filter({has:page.getByRole('heading',{name:'Image generator',level:2})});
+ const whisper=page.locator('.ai-service-card').filter({has:page.getByRole('heading',{name:'Whisper transcription',level:3})});
+ const qwen=page.locator('.ai-service-card').filter({has:page.getByRole('heading',{name:'Qwen3 4B',level:3})});
+ const images=page.locator('.ai-service-card').filter({has:page.getByRole('heading',{name:'Image generator',level:3})});
  await whisper.getByRole('status').filter({hasText:'Unavailable'}).waitFor();
- await images.getByRole('status').filter({hasText:'✓ Connected'}).waitFor();
- await whisper.getByRole('button',{name:'Refresh Whisper transcription'}).click();
- await whisper.getByRole('status').filter({hasText:'✓ Connected'}).waitFor();
+ await images.getByRole('status').filter({hasText:'Connected'}).waitFor();
+ const checkAll=page.getByRole('button',{name:'Check all',exact:true});
+ await checkAll.focus();
+ await checkAll.press('Enter');
+ await whisper.getByRole('status').filter({hasText:'Connected'}).waitFor();
  await qwen.getByRole('status').filter({hasText:'Unavailable'}).waitFor();
- assert.equal(await whisper.getByRole('button').count(),0);
+ assert.ok(await checkAll.evaluate(button=>button===document.activeElement),'Rechecking keeps keyboard focus');
  assert.equal(await page.getByText('Laptop settings',{exact:true}).count(),0);
  await page.getByRole('tab',{name:'Images',exact:true}).click();
  assert.equal(await page.getByText('Manual pairing',{exact:true}).isVisible(),false);

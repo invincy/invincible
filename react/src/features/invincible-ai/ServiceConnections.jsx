@@ -7,6 +7,20 @@ const services = [
   ['images', 'Image generator'],
 ];
 
+function getServiceStatus(id, accountId, pending, results, imageConnection) {
+  if (!accountId) return ['idle', 'Sign in to check'];
+  const image = id === 'images';
+  if (pending || (image && (!imageConnection || imageConnection.state === 'checking'))) {
+    return ['checking', 'Checking…'];
+  }
+  if (image && !imageConnection.connected) return ['offline', 'Unavailable'];
+  if (image && imageConnection.remote) return ['partial', 'Relay connected', 'Engine status unknown'];
+  if (results?.[id] === true) return ['ready', 'Connected'];
+  if (results?.[id] === false) return ['offline', 'Unavailable'];
+  if (image && results === null) return ['partial', 'Laptop connected', 'Engine status unknown'];
+  return ['idle', 'Check on laptop'];
+}
+
 export function ServiceConnections({ accountId, imageConnection, imageConnectionRef }) {
   const [check, setCheck] = useState({ attempt: 0, pending: true, results: null });
   const { attempt, pending, results } = check;
@@ -14,7 +28,7 @@ export function ServiceConnections({ accountId, imageConnection, imageConnection
   useEffect(() => {
     if (!accountId) return;
     let current = true;
-    const localCheck = checkLocalServices().catch(() => null);
+    const localCheck = checkLocalServices();
     const imageRefresh = attempt ? imageConnectionRef.current?.refresh() : undefined;
     Promise.allSettled([localCheck, imageRefresh]).then(([local]) => {
       if (current) setCheck({ attempt, pending: false, results: local.value ?? null });
@@ -22,26 +36,26 @@ export function ServiceConnections({ accountId, imageConnection, imageConnection
     return () => { current = false; };
   }, [accountId, attempt, imageConnectionRef]);
 
-  return <section className="ai-service-connections" aria-label="Service connections">
-    {services.map(([id, label]) => {
-      const image = id === 'images';
-      const connected = results?.[id] === true && (!image || (imageConnection?.connected && !imageConnection.remote));
-      const checking = accountId && (pending || (image && (!imageConnection || imageConnection.state === 'checking')));
-      let status = 'Sign in to check';
-      if (accountId) {
-        if (checking) status = 'Checking…';
-        else if (connected) status = 'Connected';
-        else if (image && imageConnection?.connected && imageConnection.remote) status = 'Relay connected · engine unverified';
-        else if (image && imageConnection?.connected && results === null) status = 'Laptop connected · engine unverified';
-        else if (results?.[id] === false || (image && !imageConnection?.connected)) status = 'Unavailable';
-        else status = 'Check from a connected laptop';
-      }
-      return <article key={id} className="ai-service-card">
-        <h2>{label}</h2>
-        <p role="status">{connected && !checking && <span aria-hidden="true">✓ </span>}{status}</p>
-        {accountId && !connected && !checking &&
-          <button type="button" aria-label={'Refresh ' + label} onClick={() => setCheck({ attempt: attempt + 1, pending: true, results: null })} title={"Refresh " + label}><span className="ai-service-refresh-icon" aria-hidden="true">↻</span><span className="ai-service-refresh-label">Refresh</span></button>}
-      </article>;
-    })}
+  return <section className="ai-service-connections" aria-labelledby="ai-service-heading">
+    <header className="ai-service-header">
+      <h2 id="ai-service-heading">Local AI services</h2>
+      {accountId && <button type="button" aria-disabled={pending} onClick={() => {
+        if (!pending) setCheck({ attempt: attempt + 1, pending: true, results: null });
+      }}>
+        <span aria-hidden="true">↻</span> {pending ? 'Checking…' : 'Check all'}
+      </button>}
+    </header>
+    <div className="ai-service-grid">
+      {services.map(([id, label]) => {
+        const [state, status, detail] = getServiceStatus(id, accountId, pending, results, imageConnection);
+        return <article key={id} className="ai-service-card" data-state={state}>
+          <h3>{label}</h3>
+          <p role="status">
+            <span className="ai-service-dot" aria-hidden="true" />
+            <span>{status}{detail && <small>{detail}</small>}</span>
+          </p>
+        </article>;
+      })}
+    </div>
   </section>;
 }
