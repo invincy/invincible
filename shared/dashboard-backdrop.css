@@ -11,6 +11,12 @@
 }
 
 .dashboard-backdrop svg { display: none; }
+.dashboard-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 46%, #b7cde914, transparent 46%);
+}
 [data-visual-theme="three"] .dashboard-backdrop {
   background-color: #060b14;
   background-image: radial-gradient(ellipse at 50% 44%, #09213b88, transparent 46%),

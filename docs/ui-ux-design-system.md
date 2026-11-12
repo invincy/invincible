@@ -77,6 +77,12 @@ cannot support the horizontal composition.
 
 ### Responsive behavior
 
+Use Creator Studio home as the approved reference for paired work areas:
+one plain heading per section, matching translucent borderless panels over
+the theme backdrop, and readable flat rows with unboxed icons. Page headers
+need the page title and primary action. Surface sync problems when they
+require attention and keep routine success messages out of the visual layout.
+
 Mobile is not a scaled-down desktop. Multi-column cards stack, secondary actions
 move into menus or disclosures, long labels wrap, and primary actions remain
 reachable. Desktop uses additional width for hierarchy and parallel information,

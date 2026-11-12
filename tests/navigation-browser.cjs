@@ -27,7 +27,12 @@ for(const route of ['garage/','creator/','creator/project.html','journal/','lic/
  await page.locator('.desktop-nav a').first().waitFor();
  await page.getByRole('button',{name:'Profile and settings'}).click();await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('heading',{name:'App updates'}).waitFor();await page.keyboard.press('Escape');
  assert.equal(await page.locator('.desktop-nav a').count(),10);
- assert.ok(await page.locator('.desktop-nav .app-nav-icon svg').first().evaluate(svg=>svg.getBoundingClientRect().width>=27),'desktop app glyph is enlarged');
+ const creatorHome=await page.locator('body').evaluate(body=>body.classList.contains('creator-page'));
+ if(creatorHome){
+  assert.ok(await page.locator('.desktop-nav').evaluate(nav=>Math.abs(nav.getBoundingClientRect().bottom-innerHeight)<2),'Creator navigation is at the bottom');
+ }else{
+  assert.ok(await page.locator('.desktop-nav .app-nav-icon svg').first().evaluate(svg=>svg.getBoundingClientRect().width>=27),'desktop app glyph is enlarged');
+ }
  await page.waitForFunction(()=>{const image=document.querySelector('.nav-mark');return image?.complete&&image.naturalWidth>0});
  assert.equal(await page.locator('.global-ai-widget').count(),1);assert.equal(await page.locator('.mobile-tabbar').count(),1);
  if(compact){

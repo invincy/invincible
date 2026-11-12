@@ -4,6 +4,13 @@
 @import './editor.css';
 @import './task-focus.css';
 @import '../../shared/spatial-workspace.css';
+.v2-shell .v2-arc-nav .v2-arc-stop[data-destination="dashboard"] {
+  color: #ffd27e;
+}
+.v2-shell .v2-arc-nav .v2-arc-stop[data-destination="dashboard"] svg {
+  color: #ffd27e;
+  filter: drop-shadow(0 0 7px #ffbf55a0);
+}
 /* dashboard.css owns dashboard/orb layout; this sheet owns only the spatial shell and workspace region. */
 .spatial-page{font-family:Inter,"Segoe UI",system-ui,sans-serif;color:#e4edf3;background:#080e16;font-synthesis:none;color-scheme:dark}
 .spatial-page *{box-sizing:border-box}.spatial-page{margin:0;padding:0}.spatial-page :is(button,a){-webkit-tap-highlight-color:transparent;touch-action:manipulation}.spatial-page :is(button,input){font:inherit}.spatial-page button{cursor:pointer}

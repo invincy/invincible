@@ -328,6 +328,19 @@ body.creator-page.studio-ui::before { display: none; }
 .creator-page .project-home-meta > span:first-child { display: none; }
 .creator-page .project-home-meta { justify-content: flex-end; }
 .creator-page .project-home-actions { padding-top: 6px; }
+.creator-page .studio-header {
+  justify-content: space-between;
+  padding: 12px 24px;
+}
+.creator-page .studio-header h1 { margin: 0; }
+.creator-page > .sync-status.ok {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
 @media (max-width: 700px) {
+  .creator-page .studio-header { padding-inline: 16px; }
   .creator-page .creator-projects .creator-section-head { align-items: flex-start; }
 }

@@ -43,12 +43,12 @@ function Region({region, viewport, children, onScroll, active, connected}) {
 }
 
 function ArcNavigation({regions, activeIndex, onNavigate}) {
-  const spacing=Math.min(138,Math.max(68,innerWidth*.07));
+  const spacing=Math.min(138,innerWidth/(regions.length+1));
   return <nav className="v2-arc-nav" aria-label="Explore spaces" style={{'--arc-step':spacing+'px'}}>
     <svg className="v2-arc-trail" viewBox="0 0 1000 150" preserveAspectRatio="none" aria-hidden="true"><path d="M 8 74 Q 500 6 992 74"/></svg>
     {regions.map((region,index)=>{
       const count=regions.length,rawOffset=index-activeIndex,offset=((rawOffset+count/2)%count+count)%count-count/2,active=offset===0,vertical=Math.min(34,Math.abs(offset)*Math.abs(offset));
-      return <button key={region.id} type="button" className={'v2-arc-stop'+(active?' is-active':'')} style={{left:`calc(50% + ${offset*spacing}px)`,top:`${15+vertical}px`}}
+      return <button key={region.id} type="button" data-destination={region.id} className={'v2-arc-stop'+(active?' is-active':'')} style={{left:`calc(50% + ${offset*spacing}px)`,top:`${15+vertical}px`}}
         aria-label={(region.number?region.number+' ':'')+region.label} aria-current={active?'page':undefined} title={region.label} onClick={()=>onNavigate(region.id)}>
         <PageIcon page={region.id}/><span>{region.label}</span>
       </button>;

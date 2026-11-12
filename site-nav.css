@@ -408,4 +408,32 @@ body:has(.global-nav[data-compact-nav]) .app-more-sheet{inset:52px 8px auto auto
 html:has(.global-nav[data-icon-nav]){scrollbar-width:thin;scrollbar-color:#28566a #0b151d}
 html:has(.global-nav[data-icon-nav])::-webkit-scrollbar{width:6px;height:5px}
 html:has(.global-nav[data-icon-nav])::-webkit-scrollbar-track{background:#0b151d}
+
+body.creator-page:has(.global-nav[data-icon-nav]) {
+  box-sizing: border-box;
+  padding-bottom: calc(50px + env(safe-area-inset-bottom)) !important;
+}
+.creator-page .global-nav[data-icon-nav] {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.creator-page .global-nav[data-icon-nav] .desktop-nav {
+  position: fixed;
+  inset: auto 0 0;
+  justify-content: safe center;
+  padding: 2px 8px calc(2px + env(safe-area-inset-bottom));
+  border-top: 1px solid #36474e;
+  background: #0b141c;
+}
+.creator-page .global-nav[data-icon-nav] .desktop-nav [data-page="dashboard"] {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  color: #ffd27e;
+  background: #302514;
+}
+.creator-page .global-nav[data-icon-nav] .desktop-nav .app-nav-icon svg {
+  width: 23px;
+  height: 23px;
+}
 html:has(.global-nav[data-icon-nav])::-webkit-scrollbar-thumb{background:#28566a;border-radius:8px}
