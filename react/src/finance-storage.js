@@ -10,5 +10,6 @@ export function mergeFinanceChange(remote,before,after){
   merged[key]=[...rows.values()];
  }
  if(after.initializedFrom!==before.initializedFrom)merged.initializedFrom=after.initializedFrom||'';
+ if(after.billCycleVersion!==before.billCycleVersion)merged.billCycleVersion=Number(after.billCycleVersion||0);
  return merged;
 }

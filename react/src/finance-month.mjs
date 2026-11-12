@@ -4,6 +4,7 @@ export function carryFinanceMonthForward(source,sourceKey='') {
     bills:(source.bills||[]).map(bill=>({...bill,amount:0,paid:false})),
     transactions:[],
     checklist:(source.checklist||[]).map(item=>({...item,done:false})),
-    initializedFrom:sourceKey
+    initializedFrom:sourceKey,
+    billCycleVersion:2
   };
 }

@@ -17,6 +17,7 @@ test('a new finance month keeps card identity but clears the prior bill',()=>{
   assert.equal(november.accounts[0].openingBalance,42500);
   assert.equal(november.checklist[0].done,false);
   assert.equal(november.initializedFrom,'2026-10');
+  assert.equal(november.billCycleVersion,2);
   assert.equal(october.bills[0].amount,18750,'the historical month remains unchanged');
   assert.equal(october.bills[0].paid,true,'the historical paid state remains unchanged');
 });
