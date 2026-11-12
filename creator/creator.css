@@ -302,3 +302,32 @@ body.creator-page.studio-ui::before { display: none; }
 }
 .creator-page .tool-grid .tool-icon svg { width: 34px; height: 34px; }
 .creator-page .project-home-top .project-mark { width: 48px; }
+
+.creator-page .creator-home > :is(.creator-projects, .creator-toolbox) {
+  background: color-mix(in srgb, var(--creator-panel) 74%, transparent);
+  border: 0;
+  box-shadow: none;
+}
+.creator-page .creator-section-head h2 { font-size: clamp(24px, 2vw, 32px); }
+.creator-page .creator-toolbox .tool-grid {
+  flex: 0 1 83%;
+  grid-auto-rows: minmax(62px, 1fr);
+  align-content: stretch;
+  padding-inline: 4px;
+}
+.creator-page .tool-grid .tool-copy > strong { font-size: clamp(19px, 1.4vw, 25px); }
+.creator-page .tool-grid .tool-copy > span {
+  display: block;
+  font-size: clamp(15px, 1.05vw, 18px);
+  color: #d6e1e8;
+}
+.creator-page .project-grid .project-home-card {
+  padding: 12px;
+  row-gap: 6px;
+}
+.creator-page .project-home-meta > span:first-child { display: none; }
+.creator-page .project-home-meta { justify-content: flex-end; }
+.creator-page .project-home-actions { padding-top: 6px; }
+@media (max-width: 700px) {
+  .creator-page .creator-projects .creator-section-head { align-items: flex-start; }
+}

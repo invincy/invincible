@@ -22,7 +22,7 @@
     } catch {}
   </script>
   <link rel="stylesheet" href="../shared/dashboard-backdrop.css?v=1">
-  <link rel="stylesheet" href="creator.css?v=2026111307">
+  <link rel="stylesheet" href="creator.css?v=2026111308">
   <link rel="stylesheet" href="production-workbench.css?v=12">
 <meta name="theme-color" content="#000000">  <link rel="stylesheet" href="history-workspace.css?v=2026110903">
   <link rel="stylesheet" href="video-studio/studio.css?v=2026111003">
@@ -50,12 +50,12 @@
   <main id="app" hidden>
     <section class="creator-home" aria-label="Creator Studio home">
       <section class="creator-projects" aria-labelledby="projectsHeading">
-        <div class="creator-section-head"><div><span class="eyebrow">PROJECTS</span><div class="creator-heading-line"><h2 id="projectsHeading">Continue creating</h2><span id="projectCount" class="creator-count">0</span></div></div><label class="search"><span>Search projects</span><input id="searchInput" type="search" placeholder="Search by title or series"></label></div>
+        <div class="creator-section-head"><h2 id="projectsHeading">Projects</h2><span id="projectCount" hidden>0</span><label class="search"><span>Search projects</span><input id="searchInput" type="search" placeholder="Search by title or series"></label></div>
         <div id="projectGrid" class="project-grid"></div>
         <p id="projectEmpty" class="project-empty" hidden>No projects match this view.</p>
       </section>
       <aside class="creator-toolbox" aria-labelledby="toolsHeading">
-        <div class="creator-section-head"><div><span class="eyebrow">TOOLS</span><h2 id="toolsHeading">Open a studio</h2><p>Jump straight into the part of production you need.</p></div></div>
+        <div class="creator-section-head"><h2 id="toolsHeading">Tools</h2></div>
         <div class="tool-grid">
           <button type="button" data-project-tool="Video Studio"><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5zM9 8l7 4-7 4z"/></svg></span><span class="tool-copy"><strong>Motion Studio</strong><span>Scenes, timeline and export</span></span><i aria-hidden="true">→</i></button>
           <button type="button" data-project-tool="Maps"><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m4 6 5-2 6 2 5-2v14l-5 2-6-2-5 2zM9 4v14m6-12v14"/></svg></span><span class="tool-copy"><strong>Map Editor</strong><span>Routes and camera motion</span></span><i aria-hidden="true">→</i></button>
