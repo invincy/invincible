@@ -377,3 +377,14 @@ the same previously documented interactions; these are not claimed as passing.
 The CRM emulator's existing incomplete verification remains open. The initial
 production-auth smoke used stale generated assets; rebuilding both published
 entries and selecting the staged V2 directory resolved that check.
+
+## Theme One — November 12, 2026
+
+The desktop spatial app presents the canvas full-window. Its header strip is
+removed; account, reminders, daily tools and saved ideas remain available in a
+small floating corner control. All desktop spaces use one shallow, wide arc at
+the bottom. The active page icon moves to the center and grows; selecting an
+icon navigates to that space, and horizontal canvas movement recenters the arc
+automatically. Labels remain visible for the current icon and accessible names
+remain on every icon. This replaces the former thin page counter and top-row
+space links. Mobile keeps its established header and two-space layout.
