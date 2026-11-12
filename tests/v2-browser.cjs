@@ -327,6 +327,11 @@ async function checkGlobeWithoutWebGL(browser,base) {
         await page.getByRole('checkbox',{name:'Buy feedstock'}).waitFor();
         assert.equal(await page.locator('.v2-orb-task').isVisible(),false,'Forest does not stack the current task over Today’s plan');
         assert.equal(await page.locator('.v2-orb-plan-preview').isVisible(),false,'Forest keeps secondary plan text out of the center');
+        assert.equal(await page.locator('.v2-orb-plan strong').count(),0,'Dashboard center does not repeat an unexplained remaining count');
+        assert.equal(await page.locator('.v2-theme-three-timer-ring').isVisible(),false,'Forest does not leak the Electric timer ring');
+        const forestPortal=await page.locator('.v2-forest-portal').evaluate(node=>{const portal=node.getBoundingClientRect(),anchor=document.querySelector('.v2-guide-orb-anchor').getBoundingClientRect();return {width:portal.width/innerWidth,height:portal.height/innerWidth,portalCenter:portal.top+portal.height/2,anchorCenter:anchor.top+anchor.height/2};});
+        assert.ok(forestPortal.width>=.36&&forestPortal.width<=.39&&forestPortal.height>=.31&&forestPortal.height<=.35,'Forest portal fills the stone arch opening');
+        assert.ok(forestPortal.portalCenter<forestPortal.anchorCenter-25,'Forest portal aligns behind the higher stone arch instead of floating on the navigation ring');
         assert.equal(await page.locator('.v2-theme-two-brand span').evaluate(node=>node.scrollWidth<=node.clientWidth),true,'Forest tagline stays on one line');
         assert.equal(await page.evaluate(()=>{const labels=[...document.querySelectorAll('.v2-page-name')].map(node=>node.getBoundingClientRect()),parts=[...document.querySelectorAll('.v2-orb-plan>span:first-child,.v2-orb-plan>strong')].map(node=>node.getBoundingClientRect());return parts.every(part=>labels.every(label=>part.right+4<=label.left||label.right+4<=part.left||part.bottom+4<=label.top||label.bottom+4<=part.top));}),true,'Forest plan text clears every destination label');
         const forestLeft=await page.locator('.v2-guide-left').evaluate(node=>({scrollHeight:node.scrollHeight,clientHeight:node.clientHeight,children:[...node.children].map(child=>Math.round(child.getBoundingClientRect().height))}));

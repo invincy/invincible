@@ -75,8 +75,8 @@
 .v2-orb{position:fixed;z-index:3;pointer-events:auto;touch-action:pan-x pan-y;background:radial-gradient(ellipse,#2f9eb40b 0%,transparent 70%);transition:left .28s cubic-bezier(.2,.8,.2,1),top .28s cubic-bezier(.2,.8,.2,1),width .28s ease,height .28s ease}
 .v2-orb::before{content:"";position:absolute;inset:0;border-radius:50%;box-shadow:0 0 75px #41b3c608;pointer-events:none}
 .v2-orb-two,.v2-orb-three{z-index:0;pointer-events:none;background:none}
-.v2-forest-portal,.v2-electric-core{position:absolute;inset:7%;pointer-events:none}
-.v2-forest-portal{overflow:hidden;border:2px solid #caffac8a;border-radius:50%;background:radial-gradient(circle,transparent 0 54%,#88ef5b18 55% 58%,transparent 59%),conic-gradient(from 220deg,transparent 0 8%,#d9ffc487 10%,transparent 13% 35%,#80ef5366 38%,transparent 41% 70%,#e5ffd28a 73%,transparent 77%);box-shadow:0 0 24px #9cff6666,0 0 70px #55c84435,inset 0 0 28px #c8ffab2e;backdrop-filter:blur(2px) saturate(1.2)}
+.v2-forest-portal,.v2-electric-core{position:absolute;pointer-events:none}
+.v2-forest-portal{left:50%;top:50%;width:37.5vw;height:33vw;overflow:hidden;border:0;border-radius:50%;clip-path:ellipse(49% 49% at 50% 50%);transform:translate(-50%,calc(-50% - 3vw));background:radial-gradient(ellipse,transparent 0 54%,#88ef5b18 55% 58%,transparent 59%),conic-gradient(from 220deg,transparent 0 8%,#d9ffc487 10%,transparent 13% 35%,#80ef5366 38%,transparent 41% 70%,#e5ffd28a 73%,transparent 77%);box-shadow:inset 0 0 34px #c8ffab3b;backdrop-filter:blur(2px) saturate(1.2)}
 .v2-forest-portal::before{content:"";position:absolute;inset:5%;border:1px solid #e4ffd188;border-radius:50%;background:transparent;box-shadow:inset 0 0 18px #b7ff8c35,0 0 18px #7fdf5140;transform:rotate(-8deg)}
 .v2-forest-portal::after{content:"";position:absolute;inset:15%;border:1px solid #b9ff8a4f;border-radius:50%;background:radial-gradient(circle at 35% 27%,#f3ffe445 0 2%,transparent 15%),transparent;box-shadow:inset 0 0 24px #c5ffa325}
 .v2-forest-portal span{position:absolute;inset:var(--portal-inset,4%);border:1px solid #baff8a47;border-radius:50%;transform:rotate(var(--portal-rotate,12deg));box-shadow:0 0 10px #9cff6f30}
@@ -326,7 +326,7 @@
   .v2-theme-two .v2-todo-priority { color:#c5ed9d; border-bottom-color:#8dce6360 }
   .v2-theme-two .v2-todo-list li { border-top-color:#a0dc7a35 }
   .v2-theme-two .v2-todo-schedule a,.v2-theme-two .v2-reminders-open { color:#c2f08e!important }
-  .v2-theme-two .v2-orb-grab,.v2-theme-two .v2-orb-task { display:none!important }
+  .v2-theme-two .v2-orb-grab,.v2-theme-two .v2-orb-task,.v2-theme-two .v2-theme-three-timer-ring { display:none!important }
   .v2-theme-two .v2-theme-two-emblem { position:absolute; z-index:2; left:50%; top:29%; width:clamp(42px,4vw,68px); height:clamp(42px,4vw,68px); transform:translateX(-50%); fill:#9af45f; stroke:#c8ffa0; stroke-width:1.2; filter:drop-shadow(0 0 18px #8df6549c); pointer-events:none }
   .v2-theme-two .v2-orb-plan { top:58%; width:72%; max-width:430px; background:radial-gradient(ellipse,#07170d86,transparent 74%); color:#f5f7e8; text-shadow:0 3px 20px #010602,0 0 28px #111b0c }
   .v2-theme-two .v2-orb-plan strong { color:#d2f4b7; font:500 clamp(14px,1.15vw,18px)/1.2 'Exo 2',sans-serif }
