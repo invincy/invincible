@@ -76,8 +76,9 @@ function SignedInWorkspace({user, logout}) {
   const [authError, setAuthError] = useState('');
   const [orbBox, setOrbBox] = useState({left: innerWidth-66, top: 12, width: 48, height: 48, compact: true});
   const [theme, setTheme] = useState(() => {try {return localStorage.getItem('invincible-orb-theme') || 'cyan';} catch {return 'cyan';}});
-  const [visualTheme, setVisualTheme] = useState(() => {try {return localStorage.getItem('invincible-visual-theme') === 'two' ? 'two' : 'one';} catch {return 'one';}});
-  const activeOrbTheme=desktop&&visualTheme==='two'?'emerald':theme;
+  const [visualTheme, setVisualTheme] = useState(() => {try {const value=localStorage.getItem('invincible-visual-theme');return value==='two'||value==='three'?value:'one';} catch {return 'one';}});
+  const [animationIntensity,setAnimationIntensity]=useState(()=>{try{return ['off','subtle','full'].includes(localStorage.getItem('invincible-electric-motion'))?localStorage.getItem('invincible-electric-motion'):'subtle';}catch{return 'subtle';}});
+  const activeOrbTheme=desktop&&visualTheme==='two'?'emerald':desktop&&visualTheme==='three'?'cyan':theme;
   useEffect(()=>{
     const media=matchMedia('(min-width: 901px)'),change=()=>setDesktop(media.matches);
     media.addEventListener('change',change);return()=>media.removeEventListener('change',change);
@@ -196,24 +197,36 @@ function SignedInWorkspace({user, logout}) {
     return next;
   });
   const toggleVisualTheme=()=>setVisualTheme(current=>{
-    const next=current==='two'?'one':'two';
+    const next={one:'two',two:'three',three:'one'}[current]||'two';
     try {localStorage.setItem('invincible-visual-theme',next);} catch {}
     return next;
   });
-  return <div className={'v2-shell'+(desktop?' v2-desktop-connected v2-theme-'+visualTheme:'')+(authError || error || !ready || data.tasksCached || data.planCached ? ' has-status' : '')}>
-    {desktop&&visualTheme==='two'&&<div className="v2-theme-two-scene" aria-hidden="true"/>}
+  const setMotionIntensity=value=>{setAnimationIntensity(value);try{localStorage.setItem('invincible-electric-motion',value);}catch{}};
+  useEffect(()=>{
+    const update=()=>document.documentElement.classList.toggle('v2-page-hidden',document.hidden);
+    update();document.addEventListener('visibilitychange',update);
+    return()=>{document.removeEventListener('visibilitychange',update);document.documentElement.classList.remove('v2-page-hidden');};
+  },[]);
+  const themeNames={one:'Theme One',two:'Theme Two',three:'Electric HUD'};
+  const nextTheme={one:'two',two:'three',three:'one'}[visualTheme]||'two';
+  const planTotal=plan.items.filter(item=>!item.missing).length,planDone=plan.items.filter(item=>item.done&&!item.missing).length;
+  return <div className={'v2-shell'+(desktop?' v2-desktop-connected v2-theme-'+visualTheme:'')+(authError || error || !ready || data.tasksCached || data.planCached ? ' has-status' : '')} data-motion={animationIntensity}>
+    {desktop&&visualTheme==='two'&&<div className="v2-theme-two-scene" style={{'--theme-two-forest-background':"url('/invincible/assets/theme-two-forest.webp')"}} aria-hidden="true"/>}
+    {desktop&&visualTheme==='three'&&<><div className="v2-theme-three-scene" aria-hidden="true"/><svg className="v2-theme-three-circuits" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true"><path d="M0 142H142l32 30h156l38 37h90M0 460h196l39-38h114l32-33h59M1000 245H872l-35 34H716l-32 32h-66M1000 512H848l-42-42H676l-28-28h-32"/><path className="is-live" d="M0 142H142l32 30h156l38 37h90M0 460h196l39-38h114l32-33h59M1000 245H872l-35 34H716l-32 32h-66M1000 512H848l-42-42H676l-28-28h-32"/></svg></>}
     {active==='dashboard' && <div className={'v2-ambient-field'+(orbBox.compact?'':' has-globe')} aria-hidden="true"
       style={{'--globe-x':(orbBox.left+orbBox.width/2)+'px','--globe-y':(orbBox.top+orbBox.height/2)+'px','--globe-radius':(orbBox.width*.55)+'px'}}>
-      <AmbientParticles theme={activeOrbTheme}/>
+      <AmbientParticles theme={activeOrbTheme} intensity={desktop&&visualTheme==='three'?animationIntensity:'full'}/>
     </div>}
     {desktop&&visualTheme==='two'&&<div className="v2-theme-two-brand" role="img" aria-label="Invincible. Plan, create, track, grow.">
       <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M39 6C23 7 10 13 9 25c-.5 6 3 10 8 11 11 2 20-12 22-30ZM8 42c5-12 13-20 25-29"/></svg>
       <strong>INVINCIBLE</strong><span>PLAN <i>•</i> CREATE <i>•</i> TRACK <i>•</i> GROW</span>
     </div>}
+    {desktop&&visualTheme==='three'&&<div className="v2-theme-three-brand" aria-label="Invincible"><svg viewBox="0 0 24 32" aria-hidden="true"><path d="M14 1 4 18h7l-1 13 10-18h-7z"/></svg><strong>INVINCIBLE</strong><span>PLAN <i>•</i> CREATE <i>•</i> TRACK <i>•</i> GROW</span></div>}
+    {desktop&&visualTheme==='three'&&active==='dashboard'&&!orbBox.compact&&<svg className="v2-theme-three-plan-ring" aria-hidden="true" viewBox="0 0 100 100" style={{left:orbBox.left,top:orbBox.top,width:orbBox.width,height:orbBox.height}}><circle className="plan-ring-track" cx="50" cy="50" r="47"/><circle className="plan-ring-progress" cx="50" cy="50" r="47" pathLength="100" strokeDasharray="100" strokeDashoffset={100-(planTotal?planDone/planTotal*100:0)}/><circle key={planDone+'-'+planTotal} className="plan-ring-pulse" cx="50" cy="50" r="47" pathLength="100" strokeDasharray="12 88"/></svg>}
     <header className="v2-topbar"><a className="v2-brand" href="#dashboard" onClick={event => {event.preventDefault();navigate('dashboard');}}><img className="v2-brand-mark" src={APP_ICON_URL} alt="" width="36" height="36"/><span>INVINCIBLE<small>PERSONAL WORKSPACE</small></span></a>
       <nav aria-label="Explore spaces">{regions.map(region => <a key={region.id} href={'#'+region.id} title={region.label} aria-label={(region.number?region.number+' ':'')+region.label} aria-current={active === region.id ? 'location' : undefined} onClick={event => {if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;event.preventDefault();navigate(region.id);}}>{desktop&&<PageIcon page={region.id}/>}<span className="v2-space-number">{region.number}</span><span className="v2-space-name">{region.label}</span></a>)}</nav>
     </header>
-    <div className="v2-hud">{desktop&&<button type="button" className="v2-theme-switch" aria-label={'Switch to Theme '+(visualTheme==='one'?'Two':'One')} title={'Switch to Theme '+(visualTheme==='one'?'Two':'One')} aria-pressed={visualTheme==='two'} onClick={toggleVisualTheme}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M20 4C11 4 5 8 5 14c0 3 2 5 5 5 6 0 9-8 10-15ZM4 21c3-7 7-11 13-15"/></svg><span>Theme {visualTheme==='one'?'One':'Two'}</span></button>}<div className="v2-account"><Suspense fallback={null}><DashboardTools/></Suspense><button type="button" className="v2-saved-ideas" aria-label="Saved ideas" title="Saved ideas" onClick={()=>setIdeaPanel({})}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg></button><AccountMenu user={user} logout={logout}/></div></div>
+    <div className="v2-hud">{desktop&&<><button type="button" className="v2-theme-switch" aria-label={'Switch to '+themeNames[nextTheme]} title={'Switch to '+themeNames[nextTheme]} aria-pressed={visualTheme!=='one'} onClick={toggleVisualTheme}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">{visualTheme==='three'?<path d="M13 2 5 13h6l-1 9 9-13h-6z"/>:<path d="M20 4C11 4 5 8 5 14c0 3 2 5 5 5 6 0 9-8 10-15ZM4 21c3-7 7-11 13-15"/>}</svg><span>{themeNames[visualTheme]}</span></button>{visualTheme==='three'&&<label className="v2-motion-setting">Motion<select aria-label="Animation intensity" value={animationIntensity} onChange={event=>setMotionIntensity(event.target.value)}><option value="off">Off</option><option value="subtle">Subtle</option><option value="full">Full</option></select></label>}</>}<div className="v2-account"><Suspense fallback={null}><DashboardTools/></Suspense><button type="button" className="v2-saved-ideas" aria-label="Saved ideas" title="Saved ideas" onClick={()=>setIdeaPanel({})}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg></button><AccountMenu user={user} logout={logout}/></div></div>
     {(authError || error || !ready || data.tasksCached || data.planCached) && <div className="v2-connection" role="status"><span className={error ? 'v2-dot error' : 'v2-dot'}/>{authError || error || (!ready ? 'Loading workspace…' : 'Offline · Showing saved records')}{error && <button onClick={data.retry}>Retry sync</button>}</div>}
     <main ref={viewport} className="v2-canvas" aria-label="Continuous spatial workspace" tabIndex={0} onScroll={scroll}
       onKeyDown={event => {if (event.target !== event.currentTarget) return;let index = regions.findIndex(region => region.id === active);if (event.key === 'ArrowRight') index++;else if (event.key === 'ArrowLeft') index--;else if (event.key === 'Home') index=0;else if (event.key === 'End') index=regions.length-1;else return;event.preventDefault();navigate(regions[Math.max(0,Math.min(regions.length-1,index))].id);}}>

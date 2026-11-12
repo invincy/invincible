@@ -20,12 +20,12 @@ export default function DashboardRegion({uid, data, plan, timer, onInspect, orbA
   return <div className="v2-dashboard-body">
     <nav className="v2-guide-panel-links" aria-label="Dashboard panels">
       {['Globe','Focus & reminders','Session'].map((label,index)=><button key={label} type="button"
-        onClick={()=>scene.current.children[index].scrollIntoView({block:'nearest',inline:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})}>{label}</button>)}
+        onClick={()=>scene.current.scrollTo({left:index*scene.current.clientWidth,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})}>{label}</button>)}
     </nav>
     <section ref={scene} className="v2-guide-scene" aria-label="Your focus and connected work" onScroll={onPanelScroll}>
       <div className="v2-guide-globe-panel">
       <div className="v2-guide-atmosphere" aria-hidden="true"/>
-      <div className="v2-guide-orb-anchor" ref={orbAnchor}><div className="v2-orb-grab" aria-hidden="true"/><svg className="v2-theme-two-emblem" viewBox="0 0 48 48" aria-hidden="true"><path d="M39 6C23 7 10 13 9 25c-.5 6 3 10 8 11 11 2 20-12 22-30ZM8 42c5-12 13-20 25-29"/></svg><button className="v2-orb-plan" type="button" aria-label="Open today's plan" onClick={onPlan}><span>Today’s plan</span><strong>{plan.items.filter(item=>!item.done&&!item.missing).length} remaining</strong><span className="v2-orb-plan-preview">{plan.active?.step?.title||plan.active?.step?.text||focus?.title||'Choose your next task'}</span></button></div>
+      <div className="v2-guide-orb-anchor" ref={orbAnchor}><div className="v2-orb-grab" aria-hidden="true"/><svg className="v2-theme-two-emblem" viewBox="0 0 48 48" aria-hidden="true"><path d="M39 6C23 7 10 13 9 25c-.5 6 3 10 8 11 11 2 20-12 22-30ZM8 42c5-12 13-20 25-29"/></svg><svg className="v2-theme-three-emblem" viewBox="0 0 24 32" aria-hidden="true"><path d="M14 1 4 18h7l-1 13 10-18h-7z"/></svg><button className="v2-orb-plan" type="button" aria-label="Open today's plan" onClick={onPlan}><span>Today’s plan</span><strong>{plan.items.filter(item=>!item.done&&!item.missing).length} remaining</strong><span className="v2-orb-plan-preview">{plan.active?.step?.title||plan.active?.step?.text||focus?.title||'Choose your next task'}</span></button></div>
       <ConstellationNav task={focus} onInspect={onInspect} onTravel={onTravel}/>
       <div className="v2-guide-orb-label">
         <button onClick={onChangeTheme} aria-label={'Orb theme: '+theme+'. Change theme'}>◐ {theme}</button>
@@ -48,7 +48,8 @@ export default function DashboardRegion({uid, data, plan, timer, onInspect, orbA
       </div>
 
       <div className="v2-guide-session-panel">
-      <div className="v2-guide-timer" aria-label="Focus session">
+      <div className={'v2-guide-timer'+(timer.running?' is-running':'')+(timer.seconds===0?' is-complete':'')} aria-label="Focus session">
+        <svg className="v2-theme-three-timer-ring" viewBox="0 0 100 100" aria-hidden="true"><circle className="timer-track" cx="50" cy="50" r="45"/><circle className="timer-progress" cx="50" cy="50" r="45" pathLength="283" strokeDasharray="283" strokeDashoffset={283*timer.seconds/1500}/></svg>
         <span className="v2-guide-kicker">FOCUS SESSION</span>
         <output aria-label="Time remaining">{formatTimer(timer.seconds)}</output>
         <div className="v2-guide-timer-controls">

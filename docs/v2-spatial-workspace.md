@@ -408,3 +408,13 @@ looping dock while adding a compressed forest-portal backdrop, emerald orb and
 layered glass cards. The backdrop is a single optimized 164 KB WebP; motion and
 depth use the existing orb renderer and lightweight CSS layers. Theme One stays
 the default, and the selection is remembered on the device.
+
+Theme Three, Electric HUD, is another selectable desktop treatment. It uses a
+quiet navy technical grid, thin cyan circuit traces, precise glass panels and
+the existing animated globe and navigation. Its outer plan arc reflects
+completed items in the current daily plan, and the focus timer ring follows the
+actual 25-minute countdown. Ambient effects default to Subtle; Off/Subtle/Full
+is saved per device. Effects pause when the page is hidden and stop for reduced
+motion preferences. No additional particle engine or heavy background artwork
+is used. Themes One and Two remain available, and mobile retains its existing
+layout.

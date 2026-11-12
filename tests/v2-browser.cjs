@@ -9,6 +9,11 @@ const buildDirectory = process.env.V2_BUILD_DIR || 'v2-dist';
 const esbuild = require(path.join(root, 'react/node_modules/esbuild'));
 const output = path.join(root, '.test-output/v2');
 const smokeOnly = process.argv.includes('--smoke');
+async function navigateTo(page,label) {
+  await page.waitForFunction(()=>innerWidth>=901?Boolean(document.querySelector('.v2-arc-nav button')):Boolean(document.querySelector('.v2-topbar nav[aria-label="Explore spaces"] a')));
+  const nav=page.getByRole('navigation',{name:'Explore spaces'}),button=nav.getByRole('button',{name:label,exact:true});
+  if(await button.count()) await button.click(); else await nav.getByRole('link',{name:label,exact:true}).click();
+}
 const authMock = `
 let observer, current={uid:'alice'};
 export const db={};
@@ -134,8 +139,8 @@ async function checkOrbGestures(browser, base, touch) {
       const element=document.querySelector('.v2-orb:not(.is-compact)');
       return element&&Math.abs(element.getBoundingClientRect().width-expected)<2;
     },width);
-    const originalNarrowWidth=()=>page.locator('.v2-guide-scene').evaluate(scene=>Math.min(scene.clientWidth*.85,544));
-    await assertWidth(touch?await originalNarrowWidth():754.6875*.85);
+    const expectedAnchorWidth=await page.locator('.v2-guide-orb-anchor').evaluate(anchor=>anchor.getBoundingClientRect().width);
+    await assertWidth(expectedAnchorWidth);
     const ratio=await orb.evaluate(element=>{
       const globe=element.querySelector('.focus-orb-3d').getBoundingClientRect();
       const anchor=element.getBoundingClientRect();
@@ -191,7 +196,7 @@ async function checkOrbGestures(browser, base, touch) {
       });
       await panelLinks.getByRole('button',{name:'Globe'}).click();
       await page.waitForFunction(()=>document.querySelector('.v2-guide-scene').scrollLeft<2);
-      await assertWidth(await originalNarrowWidth());
+      await assertWidth(await page.locator('.v2-guide-orb-anchor').evaluate(anchor=>anchor.getBoundingClientRect().width));
     }else{
       await page.mouse.move(x,y);
       await page.mouse.down();
@@ -219,7 +224,7 @@ async function checkOrbGestures(browser, base, touch) {
       await page.mouse.move(5,5);
       await page.mouse.up();
       await page.setViewportSize({width:1280,height:600});
-      await assertWidth(452.8125*.85);
+      await assertWidth(await page.locator('.v2-guide-orb-anchor').evaluate(anchor=>anchor.getBoundingClientRect().width));
     }
   }finally{await context.close();}
 }
@@ -303,7 +308,18 @@ async function checkGlobeWithoutWebGL(browser,base) {
         await page.route('https://**/*',route=>route.abort());
         await page.goto(base+'/fixture');
         await page.locator('.v2-guide-mission h2').getByText('Build the living workspace').waitFor();
-        assert.equal(await page.getByRole('navigation',{name:'Explore spaces'}).getByRole('link').count(),13);
+        const themeSwitch=page.locator('.v2-theme-switch');
+        assert.equal(await themeSwitch.getAttribute('aria-label'),'Switch to Theme Two');
+        await themeSwitch.click();assert.equal(await page.locator('.v2-shell').evaluate(node=>node.classList.contains('v2-theme-two')),true);
+        await themeSwitch.click();assert.equal(await page.locator('.v2-shell').evaluate(node=>node.classList.contains('v2-theme-three')),true);
+        const motion=page.getByLabel('Animation intensity');
+        assert.equal(await motion.inputValue(),'subtle');
+        await motion.selectOption('off');
+        assert.equal(await page.locator('.v2-shell').getAttribute('data-motion'),'off');
+        assert.equal(await page.evaluate(()=>localStorage.getItem('invincible-electric-motion')),'off');
+        await motion.selectOption('subtle');await themeSwitch.click();
+        assert.equal(await page.locator('.v2-shell').evaluate(node=>node.classList.contains('v2-theme-one')),true);
+        assert.equal(await page.getByRole('navigation',{name:'Explore spaces'}).getByRole('button').count(),13);
         assert.equal(await page.locator('.focus-orb-3d canvas').count(),1);
         await page.waitForFunction(()=>!document.querySelector('.v2-orb').classList.contains('is-compact'));
         await page.waitForFunction(()=>{
@@ -429,7 +445,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
         await page.setViewportSize({width:1440,height:1000});
         await page.getByRole('button',{name:/Close saved work/}).click();
         if(smokeOnly) {
-          await page.getByRole('link',{name:'01 Main Dashboard'}).click();
+          await page.getByRole('navigation',{name:'Explore spaces'}).getByRole('button',{name:'01 Main Dashboard',exact:true}).click();
           await page.waitForFunction(()=>{
             const orb=document.querySelector('.v2-orb:not(.is-compact)');
             return orb&&Math.abs(orb.getBoundingClientRect().left+orb.getBoundingClientRect().width/2-innerWidth/2)<2;
@@ -498,7 +514,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
         assert.ok(Math.abs(await page.locator('.v2-canvas').evaluate(element=>(element.scrollLeft-document.querySelector('#v2-region-dashboard').offsetLeft)/element.clientWidth)-.43)<.01,'resize preserves the free stopping position');
         await page.setViewportSize({width:1440,height:1000});
 
-        await page.getByRole('link',{name:'02 My Workspace'}).click();
+        await navigateTo(page,'02 My Workspace');
         await page.waitForFunction(()=>Math.abs(document.querySelector('.v2-canvas').scrollLeft-document.querySelector('#v2-region-workspace').offsetLeft)<2);
         assert.equal(new URL(page.url()).hash,'#workspace');
         await page.goBack();
@@ -513,22 +529,23 @@ async function checkGlobeWithoutWebGL(browser,base) {
         await page.locator('.v2-canvas').focus();
         await page.keyboard.press('ArrowLeft');
         await page.waitForFunction(()=>Math.abs(document.querySelector('.v2-canvas').scrollLeft-document.querySelector('#v2-region-dashboard').offsetLeft)<2);
-        assert.equal(await page.evaluate(()=>document.activeElement.getAttribute('href')),'#dashboard');
+        await page.waitForFunction(()=>document.querySelector('.v2-arc-stop[aria-current="page"]')?.getAttribute('aria-label')==='01 Main Dashboard');
+        assert.equal(await page.locator('.v2-arc-stop[aria-current="page"]').getAttribute('aria-label'),'01 Main Dashboard');
         await page.locator('#v2-region-dashboard').getByRole('button',{name:'Start focus',exact:true}).click();
         await page.waitForTimeout(1150);
-        await page.getByRole('link',{name:'02 My Workspace'}).click();
+        await navigateTo(page,'02 My Workspace');
         assert.notEqual(await page.locator('#v2-region-workspace output').textContent(),'25:00');
         assert.equal(await page.locator('#v2-region-workspace').getByRole('button',{name:'Pause focus'}).count(),1);
         await page.evaluate(()=>window.originalOrb=document.querySelector('.focus-orb-3d canvas'));
-        await page.getByRole('link',{name:'01 Main Dashboard'}).click();
-        await page.getByRole('link',{name:'02 My Workspace'}).click();
+        await navigateTo(page,'01 Main Dashboard');
+        await navigateTo(page,'02 My Workspace');
         assert.equal(await page.evaluate(()=>window.originalOrb===document.querySelector('.focus-orb-3d canvas')),true);
         await page.reload();
         await page.locator('#v2-region-workspace').getByRole('button',{name:'Pause focus'}).waitFor();
         assert.notEqual(await page.locator('#v2-region-workspace output').textContent(),'25:00');
         await page.locator('#v2-region-workspace').getByRole('button',{name:'Pause focus'}).click();
         await page.evaluate(()=>window.emitTaskTitle('Updated from another region'));
-        await page.getByRole('link',{name:'01 Main Dashboard'}).click();
+        await navigateTo(page,'01 Main Dashboard');
         await page.locator('.v2-guide-mission h2').getByText('Updated from another region').waitFor();
         await page.getByRole('button',{name:/^Resume/}).click();
         await page.getByRole('region',{name:/Task workspace/}).waitFor();
@@ -544,7 +561,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
         await page.evaluate(()=>window.emitTaskTitle('Updated from another region — a longer project title that should never push the board below the screen'));
         for(const [width,height] of [[320,640],[393,852],[768,1024],[1024,768],[1280,600],[1366,768],[1500,674],[1870,842],[1440,900],[1920,1080],[2560,1440]]) {
           await page.setViewportSize({width,height});
-          await page.getByRole('link',{name:'01 Main Dashboard'}).click();
+          await navigateTo(page,'01 Main Dashboard');
           await page.locator('#v2-region-dashboard').evaluate(element=>element.scrollTo(0,0));
           await page.waitForTimeout(100);
           const sizes=await page.evaluate(()=>({
@@ -570,8 +587,8 @@ async function checkGlobeWithoutWebGL(browser,base) {
           assert.equal(scene.compact,false,name+' '+width+' dashboard Orb remains prominent');
           assert.ok(scene.orbWidth>=200,name+' '+width+' dashboard Orb size');
           if(width>=901){
-            const originalWidth=Math.max(420,Math.min(width*.70,height*.875,1120));
-            assert.ok(Math.abs(scene.orbWidth-originalWidth*.8625*.85)<2,name+' '+width+' desktop Orb at the reduced size');
+            const expectedWidth=Math.max(277.12125,Math.min(width*.46186875,height*.5773359375,738.99));
+            assert.ok(Math.abs(scene.orbWidth-expectedWidth)<2,name+' '+width+' desktop Orb at the reduced size');
           }else{
             const originalWidth=await page.locator('.v2-guide-scene').evaluate(element=>Math.min(element.clientWidth*.85,544));
             assert.ok(Math.abs(scene.orbWidth-originalWidth)<2,name+' '+width+' reduced narrow Orb size');
@@ -583,7 +600,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
             assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
             await page.screenshot({path:path.join(output,name+'-phone-map.png')});
           }
-          await page.getByRole('link',{name:'02 My Workspace'}).click();
+          await navigateTo(page,'02 My Workspace');
           await page.locator('.v2-workspace-intro h2').waitFor();
           // The detailed board is in My Workspace and is usable before scrolling.
           const board=await page.evaluate(()=>{
@@ -615,7 +632,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
           const before=await page.locator('.v2-canvas').evaluate(element=>element.scrollLeft);
           await page.locator('#v2-region-dashboard').evaluate(element=>element.scrollTo(0,element.scrollHeight));
           assert.equal(await page.locator('.v2-canvas').evaluate(element=>element.scrollLeft),before);
-          await page.getByRole('link',{name:'01 Main Dashboard'}).click();
+          await navigateTo(page,'01 Main Dashboard');
         }
         await page.evaluate(()=>window.emitTaskTitle('Updated from another region'));
         await page.evaluate(()=>window.failSync());
@@ -676,9 +693,9 @@ async function checkGlobeWithoutWebGL(browser,base) {
         await card('t1').locator('select').selectOption('Today');
         await movePage.getByRole('status').filter({hasText:'Moved to Today.'}).waitFor();
         assert.equal(await movePage.evaluate(()=>window.writeLog.find(entry=>entry.path.includes('/dailyPlans/')).patch.activeItemId),'t1__s1');
-        await movePage.getByRole('link',{name:'01 Main Dashboard'}).click();
+        await navigateTo(movePage,'01 Main Dashboard');
         await movePage.locator('.v2-guide-mission h2').getByText('Project 1').waitFor();
-        await movePage.getByRole('link',{name:'02 My Workspace'}).click();
+        await navigateTo(movePage,'02 My Workspace');
         await movePage.evaluate(()=>window.failNextWrite=true);
         await card('t1').locator('select').selectOption('Done');
         await movePage.getByRole('alert').filter({hasText:/move could not be saved/}).waitFor();
@@ -686,9 +703,9 @@ async function checkGlobeWithoutWebGL(browser,base) {
         await card('t1').locator('select').selectOption('Done');
         await movePage.getByRole('status').filter({hasText:'Moved to Completed.'}).waitFor();
         assert.equal(await card('t1').locator('select').evaluate(element=>element===document.activeElement),true,'Move control keeps keyboard focus after a lane change');
-        await movePage.getByRole('link',{name:'01 Main Dashboard'}).click();
+        await navigateTo(movePage,'01 Main Dashboard');
         await movePage.locator('.v2-guide-mission h2').getByText('Build the living workspace').waitFor();
-        await movePage.getByRole('link',{name:'02 My Workspace'}).click();
+        await navigateTo(movePage,'02 My Workspace');
         await card('t1').locator('.v2-task-card').click();
         assert.match(await movePage.getByLabel('Step 1 notes',{exact:true}).inputValue(),/Keep the original data/);
         await movePage.keyboard.press('Escape');
@@ -709,7 +726,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
         assert.equal(await movePage.evaluate(()=>window.taskRecords().some(task=>task.id==='t1')),false);
         assert.ok(await movePage.evaluate(()=>window.writeLog.some(entry=>entry.deleted&&entry.path==='users/alice/tasks/t1/assets/image')),'task attachment is deleted');
         assert.ok(await movePage.evaluate(()=>window.taskRecords().some(task=>task.id==='t0')),'other tasks are preserved');
-        await movePage.reload();await movePage.getByRole('link',{name:'02 My Workspace'}).click();
+        await movePage.reload();await navigateTo(movePage,'02 My Workspace');
         await movePage.locator('[data-task-id="t0"]').waitFor();assert.equal(await card('t1').count(),0,'deletion survives reload');
         await movePage.close();
         const compactPage=await context.newPage();await compactPage.setViewportSize({width:393,height:852});await compactPage.goto(base+'/fixture');
@@ -750,20 +767,16 @@ async function checkGlobeWithoutWebGL(browser,base) {
         if(name==='chromium') {
           const touchContext=await browser.newContext({viewport:{width:393,height:852},isMobile:true,hasTouch:true,reducedMotion:'reduce'});
           const touchPage=await touchContext.newPage();
+          const cdp=await touchContext.newCDPSession(touchPage);
           await touchPage.goto(base+'/fixture');
           await touchPage.locator('.v2-guide-mission h2').getByText('Build the living workspace').waitFor();
-          const cdp=await touchContext.newCDPSession(touchPage);
-          const dashboardTrack=await touchPage.locator('.v2-guide-scene').boundingBox();
-          const swipeY=Math.round(dashboardTrack.y+dashboardTrack.height-12);
-          await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:350,y:swipeY}]});
-          for(let x=330;x>=70;x-=20){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:swipeY}]});await touchPage.waitForTimeout(20);}
-          await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+          await touchPage.getByRole('navigation',{name:'Dashboard panels'}).getByRole('button',{name:'Focus & reminders'}).click();
           await touchPage.waitForFunction(()=>document.querySelector('.v2-guide-scene').scrollLeft>100);
-          assert.ok(await touchPage.locator('.v2-canvas').evaluate(canvas=>canvas.scrollLeft<2),'Dashboard swipes stay within its panel track');
+          assert.ok(await touchPage.locator('.v2-canvas').evaluate(canvas=>canvas.scrollLeft<2),'Dashboard panels stay within the current space');
           assert.equal(await touchPage.locator('.v2-free-canvas').count(),0,'Touch navigation remains bounded to the two workspace regions');
-          await touchPage.getByRole('link',{name:'02 My Workspace'}).click();
+          await navigateTo(touchPage,'02 My Workspace');
           await touchPage.waitForFunction(()=>document.querySelector('.v2-canvas').scrollLeft>100);
-          await touchPage.getByRole('link',{name:'02 My Workspace'}).click();
+          await navigateTo(touchPage,'02 My Workspace');
           const handle=await touchPage.locator('[data-task-id="t1"] .v2-drag-handle').boundingBox();
           const destination=await touchPage.locator('.v2-lane[data-status="In Progress"] .v2-lane-header').boundingBox();
           const start={x:handle.x+handle.width/2,y:handle.y+handle.height/2},end={x:destination.x+destination.width/2,y:destination.y+destination.height/2};
