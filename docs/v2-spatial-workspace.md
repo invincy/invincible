@@ -389,3 +389,8 @@ automatically. The icon positions wrap around, so a space leaving one end of
 the dial reappears at the other end. The arc has no straight top divider.
 Labels remain visible for the current icon and accessible names remain on every icon. This replaces the former thin page counter and top-row
 space links. Mobile keeps its established header and two-space layout.
+
+For the full-window desktop dashboard, the globe anchor is 10% smaller across
+the desktop breakpoints. The particle tier, count and source detail stay fixed;
+the smaller footprint brings the existing particles closer together. Mobile
+globe sizing is unchanged.
