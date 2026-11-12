@@ -493,11 +493,12 @@
   .v2-hud .v2-theme-option[data-theme="two"] { --theme-color: #b9f495; --theme-wash: #163a24 }
   .v2-hud .v2-theme-option[data-theme="three"] { --theme-color: #85ebff; --theme-wash: #10354c }
   .v2-hud .v2-theme-option[data-theme] {
+    position: relative;
     display: grid;
-    grid-template-columns: 24px auto 10px;
-    align-items: center;
-    gap: 7px;
-    min-height: 40px;
+    place-items: center;
+    width: 44px;
+    min-height: 44px;
+    padding: 0;
     color: #d9e6ed;
     background: #101b23;
     border-color: #34454e;
@@ -530,7 +531,6 @@
     background: #99f2ff;
     clip-path: polygon(68% 0,12% 56%,46% 56%,32% 100%,90% 37%,55% 37%);
   }
-  .v2-theme-selected { color: var(--theme-color); font-weight: 800; }
   .v2-hud .v2-theme-option[data-theme]:is(:hover,[aria-pressed="true"]) {
     color: var(--theme-color);
     background: var(--theme-wash);
