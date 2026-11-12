@@ -89,3 +89,16 @@ test('failure and expired leases never return a PNG or report completion', async
   assert.equal((await call('job', job)).job.status, 'failed');
   assert.equal((await call('enqueue', request)).job.status, 'failed');
 });
+
+test('laptop engine health is account scoped, updates immediately and expires with presence', async () => {
+  const { call, advance } = harness();
+  const services = { whisper: true, qwen: false, images: true };
+  await call('claim', { services });
+  assert.deepEqual(await call('status'), { online: true, services });
+  assert.deepEqual(await call('status', {}, 'other-owner'), { online: false });
+  services.qwen = true;
+  await call('heartbeat', { services });
+  assert.deepEqual(await call('status'), { online: true, services });
+  advance(120_000);
+  assert.deepEqual(await call('status'), { online: false });
+});

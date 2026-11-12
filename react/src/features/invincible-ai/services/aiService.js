@@ -38,8 +38,12 @@ export async function checkLaptopConnection(){
 }
 export async function checkLocalServices(){
  const origin=getLocalOrigin();
- if(!origin)return null;
- return laptopClient(origin).request('/api/service-status',undefined,{timeoutMs:8000});
+ if(origin){
+  try{return await laptopClient(origin).request('/api/service-status',undefined,{timeoutMs:3500});}catch(error){if(!localBridgeEnabled)throw error;}
+ }
+ if(!localBridgeEnabled)return null;
+ const {data}=await imageRelay({action:'status'});
+ return data?.online===false?{whisper:false,qwen:false,images:false}:data?.services??null;
 }
 export async function createLocalAgentPairing(agentId){const response=await pairAgent({agentId});return response.data}
 

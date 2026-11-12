@@ -20,7 +20,15 @@ try{
  await service.listen();browser=await chromium.launch({headless:true});const page=await browser.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
  await page.route(url=>url.origin===service.origin&&url.pathname==='/personal-images',route=>route.fulfill({contentType:'text/html',body:`<!doctype html><meta name="viewport" content="width=device-width"><div id="root"></div><link rel="stylesheet" href="/personal.css"><script>window.__INVINCIBLE_LOCAL_AI_ORIGIN__=location.origin;sessionStorage.setItem('invincible.local-worker.'+location.origin,${JSON.stringify(service.token)});</script><script type="module" src="/personal.js"></script>`}));
  for(const extension of ['js','css'])await page.route(service.origin+'/personal.'+extension,route=>route.fulfill({contentType:extension==='js'?'text/javascript':'text/css',body:compiled.outputFiles.find(file=>file.path.endsWith('.'+extension)).text}));
+ await page.setViewportSize({width:1440,height:900});
+ await page.route('**/invincible/creator/tts.html?embed=ai', route=>route.fulfill({contentType:'text/html',body:'<h1>Voiceover fixture</h1>'}));
  await page.goto(service.origin+'/personal-images');
+ const desktopCards=page.locator('.ai-workspace-card');
+ assert.equal(await desktopCards.count(),3);
+ await desktopCards.last().waitFor();
+ const columns=await desktopCards.evaluateAll(cards=>cards.map(card=>card.getBoundingClientRect().x));
+ assert.ok(columns[0]<columns[1]&&columns[1]<columns[2],'Desktop shows Chat, Images and Voiceover side by side');
+ await page.setViewportSize({width:393,height:850});
  const statuses=page.getByRole('region',{name:'Local AI services'}).getByRole('status');
  await statuses.filter({hasText:'Whisper · Offline'}).waitFor();
  await statuses.filter({hasText:'Image generator · Online'}).waitFor();
@@ -34,7 +42,7 @@ try{
  const chat=page.getByRole('tabpanel',{name:'Chat',exact:true});
  assert.equal(await chat.getByLabel('Chat context').count(),0);
  await chat.getByRole('textbox',{name:'Message'}).fill('A draft kept while switching tools');
- await page.route('**/invincible/creator/tts.html?embed=ai', route=>route.fulfill({contentType:'text/html',body:'<h1>Voiceover fixture</h1>'}));
+
  await page.getByRole('tab',{name:'Chat',exact:true}).press('End');
  await page.frameLocator('iframe[title="Voiceover Studio"]').getByRole('heading',{name:'Voiceover fixture'}).waitFor();
  await page.getByRole('tab',{name:'Voiceover',exact:true}).press('Home');
@@ -45,6 +53,7 @@ try{
   assert.ok(await refresh.isVisible(),'Service refresh is visible at '+width);
  }
 
+ await page.setViewportSize({width:393,height:850});
  await page.getByRole('tab',{name:'Images',exact:true}).click();assert.equal(await page.getByRole('tabpanel',{name:'Chat',exact:true}).isVisible(),false);
  await page.getByRole('textbox',{name:'Prompt',exact:true}).fill('A personal illustration without a video project');await page.getByRole('button',{name:'Generate',exact:true}).click();await page.getByText(/^Completed ·/).waitFor();
  assert.equal(await page.getByRole('button',{name:'Attach to current project',exact:true}).isVisible(),false,'Personal images do not need a project');

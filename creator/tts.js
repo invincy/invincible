@@ -14,8 +14,9 @@ const encoder=new TextEncoder();
 // One settings form and one transport across layouts. Remember the phone's
 // disclosure choice when rotating or moving back from a desktop-sized window.
 const desktopLayout=matchMedia('(min-width:901px)'),voiceSettings=$('voiceSettings');
+const basicVoiceover=document.documentElement.classList.contains('ai-voiceover-embed');
 let mobileSettingsOpen=false;
-function arrangeSettings(){voiceSettings.open=desktopLayout.matches||mobileSettingsOpen;}
+function arrangeSettings(){voiceSettings.open=basicVoiceover||desktopLayout.matches||mobileSettingsOpen;}
 voiceSettings.addEventListener('toggle',()=>{if(!desktopLayout.matches)mobileSettingsOpen=voiceSettings.open;});
 desktopLayout.addEventListener('change',arrangeSettings);
 arrangeSettings();
@@ -90,7 +91,7 @@ function families(preferred=$('family').value){
  setOptions($('family'),[{value:'',label:'All families'},...values.map(value=>({value,label:value}))],preferred);
  filterVoices();
 }
-function key(){return 'invincible.creator.tts.draft.v1.'+user.uid;}
+function key(){return (basicVoiceover?'invincible.ai.tts.draft.v1.':'invincible.creator.tts.draft.v1.')+user.uid;}
 function remember(){
  if(!user)return;
  const snapshot=Object.fromEntries(fields.map(id=>[id,$(id).value]));
@@ -99,16 +100,16 @@ function remember(){
 }
 function restore(saved){
  let draft=saved||{};if(!saved)try{draft=JSON.parse(localStorage.getItem(key())||'{}');}catch{}
- $('title').value=draft.title||'My voiceover';$('script').value=draft.script||'';$('mode').value=draft.mode==='ssml'?'ssml':'text';
+ $('title').value=draft.title||'My voiceover';$('script').value=draft.script||'';$('mode').value=!basicVoiceover&&draft.mode==='ssml'?'ssml':'text';
  const hasGemini=voices.some(v=>v.family==='Gemini');
  $('engine').querySelector('[value=gemini]').disabled=!hasGemini;
  $('engine').value=hasGemini?(draft.engine||(draft.voice?'classic':'gemini')):'classic';
  $('model').value=['gemini-2.5-flash-tts','gemini-2.5-pro-tts'].includes(draft.model)?draft.model:'gemini-2.5-flash-tts';
- $('direction').value=draft.direction||'';$('creativeInstructions').value=draft.creativeInstructions||'';
+ $('direction').value=basicVoiceover?'':draft.direction||'';$('creativeInstructions').value=basicVoiceover?'':draft.creativeInstructions||'';
  for(const id of ['speed','pitch','volume','pause','preset'])if(typeof draft[id]==='string')$(id).value=draft[id];
  languages(draft.language||'hi-IN');
- $('gender').value=draft.gender??'MALE';
- families(draft.family??'Neural2');
+ $('gender').value=basicVoiceover?'':draft.gender??'MALE';
+ families(basicVoiceover?'':draft.family??'Neural2');
  if(draft.voice&&Array.from($('voice').options).some(o=>o.value===draft.voice))$('voice').value=draft.voice;
  for(const id of ['speed','pitch','volume','pause','preset'])if(typeof draft[id]==='string')$(id).value=draft[id];
  voiceDetails();

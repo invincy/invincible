@@ -85,3 +85,80 @@
   border-radius: 16px;
 }
 .ai-image-studio :is(.image-connection-bar,.image-connection-options)[hidden] { display: none }
+
+.invincible-ai-page,
+html.connected-space-document body.invincible-ai-body .invincible-ai-page { max-width: none; margin: 0; }
+.ai-page-header,
+.ai-service-connections { max-width: none; }
+.ai-workspace { position: relative; z-index: 1; }
+.ai-workspace-card {
+  min-width: 0;
+  background: #0a151b;
+  border: 1px solid #28434b;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.ai-workspace-card[hidden] { display: none }
+.ai-card-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 56px;
+  padding: 8px 14px;
+  background: #0e2029;
+  border-bottom: 1px solid #28434b;
+}
+.ai-card-heading h2 { margin: 0; font-size: 1rem; }
+.ai-card-heading .ai-page-actions { align-items: center; margin-left: auto }
+.ai-card-heading .ai-provider-picker { gap: 2px }
+.ai-card-heading .ai-provider-picker select { min-height: 30px; max-width: 160px }
+.ai-card-heading button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid #37626d;
+  border-radius: 9px;
+  background: #132d37;
+  color: #ddf5f8;
+  font: 700 20px Inter, sans-serif;
+  cursor: pointer;
+}
+.ai-card-heading button:focus-visible { outline: 2px solid #89e3e9; outline-offset: 2px }
+.ai-chat-panel { grid-template-rows: auto minmax(0,1fr) auto; margin: 0; max-width: none }
+.ai-chat-panel .ai-welcome { margin-top: clamp(12px,6vh,52px); padding: 0 }
+.ai-chat-panel .ai-welcome h2 { font-size: clamp(18px,2vw,24px) }
+.ai-chat-panel .ai-welcome > div:last-child { display: grid; justify-items: stretch; margin-top: 12px }
+.ai-chat-panel .ai-welcome button { justify-content: space-between; text-align: left }
+.ai-chat-panel .ai-composer button { min-width: 54px }
+html.connected-space-document .invincible-ai-page .ai-chat-panel > form.ai-composer {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+}
+html.connected-space-document .invincible-ai-page .ai-chat-panel > form.ai-composer textarea { min-height: 52px; }
+.ai-voiceover-frame { flex: 1; height: auto; min-height: 560px; border: 0; border-radius: 0 }
+.ai-voiceover-panel { display: flex; flex-direction: column }
+.ai-images-panel .ai-image-studio { margin: 0; padding: 12px }
+.ai-images-panel .image-generator.space-panels,
+.ai-images-panel .image-generator {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.ai-images-panel .image-generator .space-panel { min-width: 0; max-height: none; padding: 0; border: 0; background: transparent }
+.ai-images-panel .image-generator header:first-child { display: none }
+.ai-images-panel .image-generator textarea { min-height: 88px }
+@media (min-width: 900px) {
+  .ai-workspace {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1.35fr);
+    gap: clamp(10px,1vw,20px);
+    margin-top: 12px;
+  }
+  .ai-workspace-card { min-height: 570px; height: calc(100dvh - 125px) }
+  .ai-images-panel { overflow-y: auto }
+  .ai-voiceover-frame { min-height: 0 }
+}

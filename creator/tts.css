@@ -280,3 +280,65 @@ audio{width:100%;height:36px}
 @media(max-width:600px) and (max-height:700px){
  .voiceover-page .result-panel,.voiceover-page .result-panel:has(#recording:not([hidden])){position:static}
 }
+
+/* Basic Voiceover inside Invincible AI. Creator Studio uses the full workspace. */
+.ai-voiceover-embed,
+.ai-voiceover-embed body { background: #0a151b; }
+.ai-voiceover-embed body { padding: 0 !important; }
+.ai-voiceover-embed main { padding: 12px; }
+.ai-voiceover-embed :is(.global-nav,.heading,.tts-forest,.voice-panel-links,
+  .script-heading-actions,.mode-label,[for="title"],#title,[for="creativeInstructions"],
+  #creativeInstructions,#inputHelp,#ssmlGuide,#analyzeLocal,#localAnalysisStatus,
+  #localAnalysisResult,#reloadVoices,#familyRow,.two > div:has(#gender),
+  #voiceDemoStatus,#voiceHelp,#deliveryHelp,#expressiveControls,
+  [for="speed"],#speed,#speedHelp,.advanced,#resultHeading,.history-heading-actions .editor-link,
+  #voiceSettings > summary,.playback-controls,.quota-note) { display: none !important }
+.ai-voiceover-embed .workspace.space-panels:not([hidden]) {
+  display: grid;
+  grid-template-columns: minmax(0,1fr);
+  grid-template-rows: none;
+  grid-auto-flow: row;
+  grid-auto-columns: minmax(0,1fr);
+  align-items: start;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  gap: 10px;
+  padding: 0;
+}
+.ai-voiceover-embed .workspace.space-panels > .space-panel {
+  min-width: 0;
+  min-height: 0;
+  max-height: none;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  overflow: visible;
+}
+.ai-voiceover-embed .voice-script-pane { display: contents }
+
+.ai-voiceover-embed .script-panel { order: 0 }
+.ai-voiceover-embed .controls-panel { order: 1 }
+.ai-voiceover-embed .result-panel { order: 2 }
+.ai-voiceover-embed .history-panel { order: 3; margin-top: 0; }
+.ai-voiceover-embed .panel,
+.ai-voiceover-embed .voice-settings { padding: 10px; margin: 0; }
+.ai-voiceover-embed #script { min-height: 100px; height: 110px; }
+.ai-voiceover-embed .settings-body { padding: 0; }
+.ai-voiceover-embed #voiceFields { display: grid; gap: 5px; }
+.ai-voiceover-embed #voiceFields .two { display: block; }
+.ai-voiceover-embed #accountStatus { margin: 0 0 8px; }
+.ai-voiceover-embed #historyList { max-height: 300px; overflow-y: auto; }
+@media (min-width: 510px) {
+  .ai-voiceover-embed .workspace.space-panels:not([hidden]) {
+    grid-template-columns: minmax(0,1.2fr) minmax(0,1fr);
+  }
+  .ai-voiceover-embed :is(.script-panel,.controls-panel,.result-panel) { grid-column: 1 }
+  .ai-voiceover-embed .workspace.space-panels > .history-panel {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    padding: 10px;
+    background: #101e29;
+    border: 1px solid #2a4154;
+  }
+}

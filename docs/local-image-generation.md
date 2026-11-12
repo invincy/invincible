@@ -248,10 +248,8 @@ The relay tests exercise ownership, idempotency, leases, offline handling and
 PNG validation. The mobile-size browser fixture checks preview, download, the
 attachment callback and failure with loopback blocked.
 
-### Invincible AI service checks
+### Invincible AI workspace
 
-The compact service indicators use a green check for verified online services and a red dot for known offline services. A gray dot indicates that the browser has no engine result. The refresh button checks all three services. The remote image relay can confirm its own connection, while the paired laptop endpoint checks the engines.
+Desktop shows Chat, Images and basic Voiceover side by side. Smaller screens use tabs. Basic Voiceover uses the existing speech engines and recording history, with an independent local draft. The full Creator Studio voiceover editor retains creative instructions, analysis and advanced controls.
 
-Chat uses a single panel with the composer below the conversation. Images and Voiceover have separate tabs. The Voiceover tab opens the existing Creator voiceover workspace in an embedded view. Theme One hides the blue Focus Session timer ring while keeping the timer controls.
-
-The production build and focused browser checks cover timer ring visibility, service refresh, keyboard tab navigation, draft retention and responsive chat. The broader browser runs stopped at the disabled image Generate button and the missing Dashboard panels Session control, respectively. Signed-in voiceover generation and remote engine health still require a live check.
+The paired local endpoint checks engines directly. Remote clients fall back to the account-scoped image relay, whose authenticated laptop heartbeat reports Whisper, Qwen and ComfyUI readiness. Service results expire with the relay heartbeat. The laptop must be running the updated image connector to report remote health.

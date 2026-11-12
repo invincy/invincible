@@ -37,6 +37,25 @@ const assertOwner = async uid => {
   if (session.uid !== uid || !session.storage?.available) throw Error('The Firebase account does not match the available image workspace.');
 };
 
+async function serviceHealth() {
+  async function probe(url, verify = () => true) {
+    try {
+      const response = await fetch(url, { signal: AbortSignal.timeout(2500), redirect: 'error' });
+      return response.ok && Boolean(await verify(response));
+    } catch { return false; }
+  }
+  const [whisper, qwen, images] = await Promise.all([
+    probe('http://127.0.0.1:8790/health'),
+    probe('http://127.0.0.1:11434/api/tags', async response =>
+      (await response.json()).models?.some(({ name }) => ['qwen3:4b', 'qwen3:4b-instruct'].includes(name))),
+    probe('http://127.0.0.1:8188/queue', async response => {
+      const queue = await response.json();
+      return Array.isArray(queue.queue_running) && Array.isArray(queue.queue_pending);
+    }),
+  ]);
+  return { whisper, qwen, images };
+}
+
 async function publish(action, data) {
   for (let attempt = 0; ; attempt++) {
     try { return await relay(action, data); }
@@ -51,7 +70,7 @@ async function run(task, uid) {
   const receipt = { id: task.id, lease: task.lease };
   let reason = 'worker';
   const heartbeat = setInterval(() => {
-    void assertOwner(uid).then(() => relay('heartbeat')).catch(() => {});
+    void assertOwner(uid).then(serviceHealth).then(services => relay('heartbeat', { services })).catch(() => {});
   }, 20_000);
   try {
     const route = '/api/generations';
@@ -94,7 +113,7 @@ let lastError;
 while (true) {
   try {
     await assertOwner(uid);
-    const { task } = await relay('claim');
+    const { task } = await relay('claim', { services: await serviceHealth() });
     if (task) await run(task, uid);
     lastError = undefined;
   } catch (error) {

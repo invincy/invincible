@@ -49,9 +49,14 @@ async function imageRelay({ db, uid, agentId, data, now = Date.now() }) {
   const slot = number => ref.collection('results').doc(String(number));
   const part = (number, index) => slot(number).collection('parts').doc(String(index));
   const { action, id } = data;
+  const serviceKeys = ['whisper', 'qwen', 'images'];
+  const services = data.services && serviceKeys.every(key => typeof data.services[key] === 'boolean')
+    ? Object.fromEntries(serviceKeys.map(key => [key, data.services[key]]))
+    : null;
   if (action === 'status') {
     const laptop = (await heartbeat.get()).data();
-    return { online: now - (laptop?.seenAt || 0) <= ONLINE_MS };
+    const online = now - (laptop?.seenAt || 0) <= ONLINE_MS;
+    return { online, ...(online && laptop?.services && { services: laptop.services }) };
   }
   const args = action === 'enqueue' ? parseArguments(data.arguments) : null;
   const argsHash = args && digest(JSON.stringify(args));
@@ -117,7 +122,10 @@ async function imageRelay({ db, uid, agentId, data, now = Date.now() }) {
 
     if (action === 'claim' || action === 'heartbeat') {
       const laptop = (await tx.get(heartbeat)).data();
-      if (laptop?.agentId !== agentId || now - laptop.seenAt >= 20_000) tx.set(heartbeat, { agentId, seenAt: now });
+      if (laptop?.agentId !== agentId || now - laptop.seenAt >= 20_000 ||
+          (services && serviceKeys.some(key => laptop?.services?.[key] !== services[key]))) {
+        tx.set(heartbeat, { agentId, seenAt: now, ...(services && { services }) });
+      }
       if (action === 'heartbeat' || job?.status !== 'queued' || job.lease) {
         if (job !== original) save({ job });
         return { task: null };
