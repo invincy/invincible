@@ -25,13 +25,34 @@
   <script type="module" src="../site-nav.js?v=8"></script>
 
   <header class="studio-header">
-    <div><h1>Creator Studio</h1></div>
-    <div class="header-actions"><a class="tts-launch" href="tts.html">Voiceover</a><a class="tts-launch" href="images.html">Image generator</a><button id="addContent" class="primary" disabled>+ New</button></div>
+    <div><span class="eyebrow">YOUR VIDEO WORKSPACE</span><h1>Creator Studio</h1><p>Start a video, continue a project, or open a production tool.</p></div>
+    <div class="header-actions"><button id="addContent" class="primary" disabled>New project</button></div>
   </header>
   <div id="status" class="sync-status" role="status" aria-live="polite">Connecting to Firebase…</div>
 
   <main id="app" hidden>
-    <div class="space-panels creator-project-panels" tabindex="0" aria-label="Creator project panels"><div class="space-panel creator-project-overview"><section class="metrics" aria-label="Content overview">
+    <section class="creator-home" aria-label="Creator Studio home">
+      <section class="creator-projects" aria-labelledby="projectsHeading">
+        <div class="creator-section-head"><div><span class="eyebrow">PROJECTS</span><h2 id="projectsHeading">Continue creating</h2></div><label class="search"><span>Search projects</span><input id="searchInput" type="search" placeholder="Search by title or series"></label></div>
+        <div id="projectGrid" class="project-grid"></div>
+        <p id="projectEmpty" class="project-empty" hidden>No projects match this view.</p>
+      </section>
+      <aside class="creator-toolbox" aria-labelledby="toolsHeading">
+        <div class="creator-section-head"><div><span class="eyebrow">TOOLS</span><h2 id="toolsHeading">Open a studio</h2></div></div>
+        <div class="tool-grid">
+          <button type="button" data-project-tool="Video Studio"><strong>Motion Studio</strong><span>Scenes, timeline and MP4 export</span></button>
+          <button type="button" data-project-tool="Maps"><strong>Map Editor</strong><span>Maps, routes and camera motion</span></button>
+          <button type="button" data-project-tool="Video Studio" data-tool-mode="battlefield"><strong>Battlefield Editor</strong><span>Formations, paths and effects</span></button>
+          <a href="tts.html"><strong>Voiceover</strong><span>Generate or download narration</span></a>
+          <a href="images.html"><strong>Image Studio</strong><span>Create artwork and references</span></a>
+          <button type="button" data-project-tool="Assets"><strong>Assets &amp; 3D</strong><span>Shared media and project assets</span></button>
+        </div>
+      </aside>
+    </section>
+
+    <details class="pipeline-details">
+      <summary>Publishing pipeline and project filters</summary>
+      <div class="space-panels creator-project-panels" tabindex="0" aria-label="Creator project panels"><div class="space-panel creator-project-overview"><section class="metrics" aria-label="Content overview">
       <button class="metric-card" type="button" data-metric="pipeline"><span>In pipeline</span><strong id="inPipeline">0</strong></button>
       <button class="metric-card" type="button" data-metric="record"><span>Ready to record</span><strong id="readyCount">0</strong></button>
       <button class="metric-card" type="button" data-metric="next"><span>Next release</span><strong id="nextRelease">—</strong><small id="nextReleaseTitle">nothing scheduled</small></button>
@@ -39,25 +60,28 @@
     </section>
     <div id="metricView" class="metric-view" hidden><span id="metricViewLabel"></span><button id="clearMetric" type="button">Show everything ×</button></div>
 
-    </div><div class="space-panel creator-project-create"><div class="creator-create-tools"><h2>Create with AI</h2><a href="tts.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3"/></svg><span>Voiceover<small>Script → narration</small></span><b aria-hidden="true">→</b></a><a href="images.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m3 17 5-5 4 4 4-6 5 7"/></svg><span>Images<small>Idea → artwork</small></span><b aria-hidden="true">→</b></a><a href="../ai/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/></svg><span>Invincible AI<small>Plan your next step</small></span><b aria-hidden="true">→</b></a></div><section class="toolbar">
+    </div><div class="space-panel creator-project-create"><section class="toolbar">
       <div class="filter-group" aria-label="Filter content">
-        <button class="filter active" data-filter="All">All</button>
+        <button class="filter active" data-filter="All">All projects</button>
         <button class="filter" data-filter="Short">Shorts</button>
         <button class="filter" data-filter="Long">Long-form</button>
       </div>
-      <label class="search"><span>Search</span><input id="searchInput" type="search" placeholder="Title, hook or series"></label>
     </section>
 
     <nav id="stageTabs" class="stage-tabs" aria-label="Workflow stage"></nav>
     </div><section id="board" class="board space-panel" aria-label="Content workflow"></section></div>
+    </details>
   </main>
 
   <dialog id="contentDialog">
     <form id="contentForm">
       <div class="dialog-title"><div><h2 id="dialogHeading">New project</h2></div><button type="button" class="icon close" aria-label="Close">×</button></div>
-      <label class="content-title-field">Title<input name="title" maxlength="120" required placeholder="Gaganyaan — India's human spaceflight mission"></label>
+      <p class="new-project-intro">Add the essentials now. You can change everything later inside the project.</p>
+      <label class="content-title-field">Project name<input name="title" maxlength="120" required placeholder="For example: The Battle of Panipat"></label>
+      <label class="project-start-field">Voiceover <span>Optional · MP3 or WAV, up to 10 minutes</span><input id="projectVoiceover" name="voiceoverFile" type="file" accept=".mp3,.wav,audio/mpeg,audio/wav"></label>
+      <label class="project-start-field">Instructions <span>Optional · describe the story, look, maps or scenes you need</span><textarea name="instructions" rows="5" maxlength="12000" placeholder="Create a cinematic historical short. Use a clear map opening, then move into the battlefield…"></textarea></label>
 
-      <section id="contentStoryboard" aria-label="Project production workbench"></section>
+      <details class="advanced-project-setup"><summary>Advanced project setup</summary><section id="contentStoryboard" aria-label="Project production workbench"></section></details>
       <details id="contentDetails" class="content-project-details">
         <summary>Details</summary>
         <div class="two"><label>Format<select name="format"><option>Short</option><option>Long</option></select></label><label>Workflow stage<select name="stage" id="stageSelect"></select></label></div>
@@ -66,6 +90,14 @@
       </details>
       <p id="contentSaveError" role="alert"></p>
       <div class="dialog-actions"><button id="deleteContent" type="button" class="danger">Delete</button><span id="contentShotSummary" role="status" aria-live="polite">No scenes</span><button type="button" class="secondary close">Cancel</button><button id="saveContent" class="primary">Create</button></div>
+    </form>
+  </dialog>
+  <dialog id="toolDialog" class="tool-dialog">
+    <form method="dialog">
+      <div class="dialog-title"><div><span class="eyebrow">OPEN TOOL</span><h2 id="toolDialogTitle">Choose a project</h2></div><button value="cancel" class="icon" aria-label="Close">×</button></div>
+      <p>Select the project this tool should edit, or start a new project.</p>
+      <div id="toolProjectList" class="tool-project-list"></div>
+      <div class="dialog-actions"><button value="cancel" class="secondary">Cancel</button><button id="toolNewProject" type="button" class="primary">New project</button></div>
     </form>
   </dialog>
   <script type="module" src="creator.js?v=2026111208"></script>

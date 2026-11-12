@@ -39,6 +39,18 @@
     <span id="syncIndicator" class="project-icon" role="img" data-state="pending" title="Connecting" aria-label="Connecting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10a9 9 0 0 1 15-5l3 3M21 3v5h-5M21 14A9 9 0 0 1 6 19l-3-3m0 5v-5h5"/></svg></span>
   </header>
   <div class="project-progress" aria-hidden="true"><span id="projectProgressBar"></span></div>
+  <nav class="project-workspace-nav" aria-label="Project tools">
+    <button type="button" data-project-area="Video Studio">Motion Studio</button>
+    <button type="button" data-project-area="Storyboard">Script &amp; scenes</button>
+    <button type="button" data-project-area="Maps">Map Editor</button>
+    <button type="button" data-project-area="Video Studio" data-tool-mode="battlefield">Battlefield Editor</button>
+    <button type="button" data-project-area="Assets">Assets &amp; 3D</button>
+    <a href="images.html">Image Studio</a>
+    <a href="tts.html">Voiceover</a>
+    <span class="project-nav-spacer"></span>
+    <button id="saveProjectNow" type="button">Save now</button>
+    <button id="saveAndReturn" type="button" class="primary">Save &amp; return</button>
+  </nav>
   <div id="status" class="sync-status" role="status" aria-live="polite" hidden></div>
   <aside id="conflictBanner" class="conflict-banner" role="alert" hidden>
     <div class="conflict-copy">
