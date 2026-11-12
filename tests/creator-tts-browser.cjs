@@ -46,7 +46,18 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   const demoRequests=[];let demoFailure=false;const demoWav=makeWav([Buffer.alloc(24000*2*3)]);
   await page.route('https://docs.cloud.google.com/static/text-to-speech/docs/audio/**',route=>{demoRequests.push(new URL(route.request().url()).pathname);return demoFailure?route.fulfill({status:404,body:'Missing sample'}):route.fulfill({status:200,contentType:'audio/wav',body:demoWav});});
   const base='http://127.0.0.1:'+server.address().port+'/invincible/creator/tts.html';
-  await page.addInitScript(()=>{if(!localStorage.getItem('invincible.creator.tts.draft.v1.owner'))localStorage.setItem('invincible.creator.tts.draft.v1.owner',JSON.stringify({engine:'classic'}));});
+  await page.addInitScript(()=>{if(!localStorage.getItem('invincible.creator.tts.draft.v1.owner'))localStorage.setItem('invincible.creator.tts.draft.v1.owner',JSON.stringify({engine:'classic'}));localStorage.setItem('invincible.local-worker.remembered.v1.http://127.0.0.1:8788.owner','fixture-local-worker-token-1234567890');});
+  let plannedTranscript=null;
+  await page.route('http://127.0.0.1:8788/**',route=>{
+   const request=route.request(),url=new URL(request.url());
+   if(url.pathname==='/api/voiceover/transcribe')return route.fulfill({contentType:'application/json',body:JSON.stringify({transcript:{text:'Warm air rises.',language:'en',duration:1,segments:[{id:'segment-1',start:0,end:1,text:'Warm air rises.',words:[{word:'Warm',start:0,end:.3},{word:'air',start:.3,end:.55},{word:'rises.',start:.55,end:1}]}]}})});
+   if(url.pathname==='/api/voiceover/plan'){
+    const body=request.postDataJSON();plannedTranscript=body.transcript;assert.equal(body.creativeInstructions,'Show red arrows rising above the Equator.');
+    const scene={id:'scene-1',startSeconds:0,endSeconds:1,durationSeconds:1,voiceover:body.transcript.segments[0].text,voiceoverTimestamp:'0.000-1.000s',visual:'Rising air',animation:'reveal',assets:'',assetIds:[],assetReferences:'',sourceSegmentIds:['segment-1'],missingInfo:['No verified geography supplied.'],mapAnimation:null};
+    return route.fulfill({contentType:'application/json',body:JSON.stringify({analysis:{format:'invincible-voiceover-analysis',version:1,transcript:body.transcript,scenes:[scene],errors:[],valid:true},creatorStudio:{schemaVersion:1,title:'ITCZ',aspectRatio:'9:16',assets:[],audio:null,scenes:[{id:'scene-1',timeline:'0.000-1.000s',voiceover:scene.voiceover,voiceoverTimestamp:scene.voiceoverTimestamp,visual:scene.visual,assets:'',assetReferences:'',mapAnimation:null}]},mapAnimations:[]})});
+   }
+   return route.fulfill({status:404,contentType:'application/json',body:'{"error":"Not found"}'});
+  });
   await page.goto(base);await page.locator('#accountStatus').filter({hasText:'voices available'}).waitFor();
   for (const [width,height] of [[1024,800],[1280,600],[1280,800],[1600,800]]) {
     await page.setViewportSize({width,height});
@@ -95,6 +106,10 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   await page.locator('#speed').fill('1.15');
   await page.locator('#generate').click();await page.locator('#generationStatus').filter({hasText:'MP3 ready'}).waitFor();
   const full=await page.evaluate(()=>window.lastTtsRequest);assert.equal(full.text,await page.locator('#script').inputValue());
+  assert.equal(await page.locator('#analyzeLocal').innerText(),'Scripting · Step 2');await page.locator('#analyzeLocal').click();await page.locator('#transcriptReview').waitFor();
+  assert.match(await page.locator('#transcriptDuration').innerText(),/00:01\.000/);assert.equal(await page.locator('.transcript-segment').count(),1);
+  await page.locator('#creativeInstructions').fill('Show red arrows rising above the Equator.');await page.locator('.transcript-segment textarea').fill('Warm air rises above the Equator.');assert.equal(await page.locator('#generateScenePlan').isEnabled(),true);
+  await page.locator('#generateScenePlan').click();await page.locator('#scenePlanReview').waitFor();assert.equal(plannedTranscript.segments[0].text,'Warm air rises above the Equator.');assert.match(await page.locator('.scene-plan-scenes').innerText(),/Needs selection/);assert.match(await page.locator('.scene-plan-scenes').innerText(),/No verified geography supplied/);assert.ok(await page.evaluate(()=>JSON.parse(localStorage.getItem('invincible.creator.ai.pending.v1')).audioAvailable));await page.locator('#openMotionStudio').scrollIntoViewIfNeeded();assert.equal(await page.locator('#openMotionStudio').isVisible(),true);await page.screenshot({path:path.join(out,'script-scene-plan.png'),fullPage:true});
   const downloadPromise=page.waitForEvent('download');await page.locator('#download').click();const download=await downloadPromise;await download.saveAs(path.join(out,'download.mp3'));assert.ok(fs.statSync(path.join(out,'download.mp3')).size>10000);
   await page.locator('#historyStatus').filter({hasText:'saved to your account'}).waitFor();
   assert.equal(historyDb.size,1);assert.equal(await page.locator('.history-entry').count(),1);

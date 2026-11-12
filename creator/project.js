@@ -1,5 +1,5 @@
 import{makeScene}from'./storyboard-model.js?v=3';
-import{createProductionWorkbench}from'./production-workbench.js?v=2026111302';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026111303';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -65,6 +65,12 @@ const storyboard=createProductionWorkbench($("projectStoryboard"),{
   project.scenes.forEach(scene=>{scene.imagePrompt=starterPrompt(scene,"image");scene.videoPrompt=starterPrompt(scene,"video");});
   queueSave();render();
  }
+});
+window.addEventListener("message",async event=>{
+  const frame=$("projectVoiceoverFrame");
+  if(event.origin!==location.origin||event.source!==frame?.contentWindow||event.data?.type!=="invincible-apply-ai-draft")return;
+  try{await storyboard.openAiDraft();selectProjectArea("Video Studio");}
+  catch(error){status(error.message||"The reviewed scene plan could not be opened.","error");}
 });
 
 function projectCompletion(){
@@ -228,7 +234,7 @@ async function save(options={}){
      tx.set(ref,buildProjectWrite(payload,server,nextRev));
      return {nextRev};
     }
-    if(isNewDraft&&expectedBase===0){
+    if(typeof isNewDraft!=='undefined'&&isNewDraft&&expectedBase===0){
      tx.set(ref,buildProjectWrite(payload,{},1,{isCreate:true}));
      return {nextRev:1,created:true};
     }

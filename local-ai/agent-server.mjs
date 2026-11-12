@@ -7,7 +7,7 @@ import { createRequire } from 'node:module';
 import { askOllama, detectLocalIntent, draftImagePrompt, imagePromptText } from './invincible-local-controller.mjs';
 import { createGpuCoordinator } from './gpu-coordinator.mjs';
 import { createImageWorker, safeDirectory, WORKSPACE_ROOT } from './image-worker.mjs';
-import { buildCreativePlanPrompt, compileCreativePlan, assembleSceneDraft, loadCreatorAssetCatalog, toCreatorStudioImport, transcribeWithWhisper, whisperEndpoint } from './voiceover-analysis.mjs';
+import { buildCreativePlanPrompt, compileCreativePlan, assembleSceneDraft, loadCreatorAssetCatalog, normalizeTranscript, toCreatorStudioImport, transcribeWithWhisper, whisperEndpoint } from './voiceover-analysis.mjs';
 const require = createRequire(import.meta.url);
 const { createUniversalAgent } = require('../functions/src/local-ai/universal-agent-api.js');
 const { executeInvincibleTool } = require('../functions/src/tools/invincible-tools.js');
@@ -26,6 +26,34 @@ export async function createLocalAgentServer({ ownerUid, token = crypto.randomBy
   const principal = { uid: ownerUid, workspaceIds: [ownerUid] };
   const projectsFile = path.join(images.directory, 'projects.json'); let projectTail = Promise.resolve();
   const voiceoverDirectory=path.join(workspaceRoot,'voiceover-analysis');
+  function voiceoverAudio(body){
+    const encoded=String(body.audioBase64||'').replace(/^data:audio\/[^;]+;base64,/i,'');
+    if(!encoded||encoded.length>20*1024*1024||!/^[A-Za-z0-9+/]*={0,2}$/.test(encoded))throw Error('Audio must be a valid MP3 under 15 MB.');
+    const bytes=Buffer.from(encoded,'base64'),isMp3=bytes.subarray(0,3).toString()==='ID3'||(bytes[0]===0xff&&(bytes[1]&0xe0)===0xe0);
+    if(!bytes.length||bytes.length>15*1024*1024||!isMp3||bytes.toString('base64').replace(/=+$/,'')!==encoded.replace(/=+$/,''))throw Error('Only a valid MP3 under 15 MB is accepted.');
+    return bytes;
+  }
+  async function transcribeBytes(bytes){
+    await safeDirectory(workspaceRoot,voiceoverDirectory);
+    const audioPath=path.join(voiceoverDirectory,'voiceover-'+crypto.randomUUID()+'.mp3');
+    await fs.writeFile(audioPath,bytes,{flag:'wx'});
+    try{return normalizeTranscript(await gpu.run(async()=>{await images.unloadImages();return transcribeVoiceover({path:audioPath,workspaceRoot});}));}
+    finally{await fs.rm(audioPath,{force:true});}
+  }
+  async function planTranscript({transcript,title,creativeInstructions='',production=false,requireInstructions=false}){
+    const timedTranscript=normalizeTranscript(transcript),direction=String(creativeInstructions||'').trim();
+    if(direction.length>4000)throw Error('Creative instructions must be 4,000 characters or fewer.');
+    if(requireInstructions&&!direction)throw Error('Add animation instructions before generating the scene plan.');
+    if(requireInstructions&&Math.abs(timedTranscript.duration-timedTranscript.segments.at(-1).end)>.25)throw Error('The final transcript timestamp must agree with the MP3 duration within 0.25 seconds.');
+    const catalog=await loadVoiceoverCatalog(root,{includeHistory:production===true});let draft,failure;
+    for(let attempt=0;attempt<2;attempt++){
+      try{const prompt=buildCreativePlanPrompt(timedTranscript,catalog,direction),intentions=await gpu.run(async()=>{await images.unloadImages();return structuredVoiceoverAsk(prompt);});draft=compileCreativePlan(timedTranscript,intentions,catalog,{production:production===true,creativeInstructions:direction});failure=null;break;}
+      catch(error){failure=error;}
+    }
+    if(failure)throw Error('Map planning failed after 2 targeted attempts: '+failure.message);
+    const analysis=assembleSceneDraft(timedTranscript,draft,catalog);
+    return {status:analysis.valid?200:422,body:{analysis,creatorStudio:analysis.valid?toCreatorStudioImport(analysis,String(title||'AI voiceover draft').slice(0,200)):null,mapAnimations:analysis.valid?analysis.scenes.map(scene=>({sceneId:scene.id,voiceoverTimestamp:scene.voiceoverTimestamp,plan:scene.mapAnimation,missingInfo:scene.missingInfo.filter(item=>item.includes('geometry')||item.includes('placement'))})):[]}};
+  }
   async function installedQwenModel(preferredModels = ['qwen3:4b-instruct', 'qwen3:4b']){
     const response=await fetchImpl('http://127.0.0.1:11434/api/tags',{signal:AbortSignal.timeout(3000),redirect:'error'});
     if(!response.ok)throw Error('Ollama did not report installed models.');
@@ -117,25 +145,19 @@ export async function createLocalAgentServer({ ownerUid, token = crypto.randomBy
         if (request.method === 'POST' && url.pathname === '/api/voiceover/analyze') {
           const body=await readBody(request,22*1024*1024);strict(body,['audioBase64','title','creativeInstructions','production']);
           if(body.production!==undefined&&typeof body.production!=='boolean')throw Error('Production must be a boolean.');
-          const encoded=String(body.audioBase64||'').replace(/^data:audio\/[^;]+;base64,/i,'');
-          if(!encoded||encoded.length>20*1024*1024||!/^[A-Za-z0-9+/]*={0,2}$/.test(encoded))throw Error('Audio must be a valid MP3 under 15 MB.');
-          const bytes=Buffer.from(encoded,'base64'),isMp3=bytes.subarray(0,3).toString()==='ID3'||(bytes[0]===0xff&&(bytes[1]&0xe0)===0xe0);
-          if(!bytes.length||bytes.length>15*1024*1024||!isMp3||bytes.toString('base64').replace(/=+$/,'')!==encoded.replace(/=+$/,''))throw Error('Only a valid MP3 under 15 MB is accepted.');
-          const title=String(body.title||'AI voiceover draft').slice(0,200),creativeInstructions=String(body.creativeInstructions||'');if(creativeInstructions.length>4000)throw Error('Creative instructions must be 4,000 characters or fewer.');
-          await safeDirectory(workspaceRoot,voiceoverDirectory);const audioPath=path.join(voiceoverDirectory,'voiceover-'+crypto.randomUUID()+'.mp3');await fs.writeFile(audioPath,bytes,{flag:'wx'});
-          let responseBody,status=200;
-          try{
-            const transcript=await gpu.run(async()=>{await images.unloadImages();return transcribeVoiceover({path:audioPath,workspaceRoot});}),catalog=await loadVoiceoverCatalog(root,{includeHistory:body.production===true});
-            let draft,failure;
-            for(let attempt=0;attempt<2;attempt++){
-              try{const prompt=buildCreativePlanPrompt(transcript,catalog,creativeInstructions),intentions=await gpu.run(async()=>{await images.unloadImages();return structuredVoiceoverAsk(prompt);});draft=compileCreativePlan(transcript,intentions,catalog,{production:body.production===true,creativeInstructions});failure=null;break;}
-              catch(error){failure=error;}
-            }
-            if(failure)throw Error('Map planning failed after 2 targeted attempts: '+failure.message);
-            const analysis=assembleSceneDraft(transcript,draft,catalog);
-            status=analysis.valid?200:422;responseBody={analysis,creatorStudio:analysis.valid?toCreatorStudioImport(analysis,title):null,mapAnimations:analysis.valid?analysis.scenes.map(scene=>({sceneId:scene.id,voiceoverTimestamp:scene.voiceoverTimestamp,plan:scene.mapAnimation,missingInfo:scene.missingInfo.filter(item=>item.includes('geometry')||item.includes('placement'))})):[]};
-          }finally{await fs.rm(audioPath,{force:true});}
-          return send(response,status,responseBody);
+          const transcript=await transcribeBytes(voiceoverAudio(body));
+          const result=await planTranscript({...body,transcript});
+          return send(response,result.status,result.body);
+        }
+        if(request.method==='POST'&&url.pathname==='/api/voiceover/transcribe'){
+          const body=await readBody(request,22*1024*1024);strict(body,['audioBase64']);
+          return send(response,200,{transcript:await transcribeBytes(voiceoverAudio(body))});
+        }
+        if(request.method==='POST'&&url.pathname==='/api/voiceover/plan'){
+          const body=await readBody(request,1_200_000);strict(body,['transcript','title','creativeInstructions','production']);
+          if(body.production!==undefined&&typeof body.production!=='boolean')throw Error('Production must be a boolean.');
+          const result=await planTranscript({...body,requireInstructions:true});
+          return send(response,result.status,result.body);
         }
         if (request.method === 'POST' && url.pathname === '/api/projects') {
           const body = await readBody(request); strict(body, ['title','idempotencyKey']);

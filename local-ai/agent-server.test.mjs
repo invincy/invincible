@@ -85,3 +85,15 @@ test('voiceover analysis requires pairing, confines MP3 to the workspace, and re
  assert.equal(response.status,200,JSON.stringify(await response.clone().json()));const result=await response.json();assert.equal(result.analysis.valid,true);assert.equal(result.creatorStudio.title,'Fixture voiceover');assert.equal(result.analysis.transcript.segments[0].words.length,2);assert.equal(planned,1);assert.equal(catalogPath,path.resolve(import.meta.dirname,'..'));
  const workspace=path.join(serviceWorkspace,'voiceover-analysis');assert.deepEqual((await fs.readdir(workspace)).filter(name=>name.endsWith('.mp3')),[]);assert.equal(path.dirname(transcribedPath),workspace);
 });
+test('voiceover timing and planning can run as separate reviewed steps',async t=>{
+ let transcriptions=0,plans=0;
+ const transcript={text:'Warm air rises.',language:'en',duration:1,segments:[{id:'segment-1',start:0,end:1,text:'Warm air rises.',words:[{word:'Warm',start:0,end:.3},{word:'air',start:.3,end:.55},{word:'rises.',start:.55,end:1}]}]};
+ const {call}=await setup(t,{serverOptions:{transcribeVoiceover:async()=>{transcriptions++;return transcript;},loadVoiceoverCatalog:async()=>({assets:[],verifiedLocations:[],verifiedRoutes:[]}),askVoiceoverJson:async prompt=>{plans++;assert.match(prompt,/red arrows/i);return{scenes:[{sourceSegmentId:'segment-1',intent:'hold',title:'Rising air',assetId:'',locationId:'',routeId:''}]};}}});
+ const audioBase64=Buffer.from('ID3fixture-audio').toString('base64');
+ const timedResponse=await call('/api/voiceover/transcribe',{audioBase64});assert.equal(timedResponse.status,200);const timed=await timedResponse.json();assert.equal(timed.transcript.segments[0].words.length,3);assert.equal(transcriptions,1);assert.equal(plans,0);
+ const missing=await call('/api/voiceover/plan',{title:'ITCZ',creativeInstructions:'',transcript:timed.transcript});assert.equal(missing.status,400);
+ const mismatched=structuredClone(timed.transcript);mismatched.duration=2;assert.equal((await call('/api/voiceover/plan',{title:'ITCZ',creativeInstructions:'Show arrows.',transcript:mismatched})).status,400);
+ timed.transcript.segments[0].text='Warm air rises above the Equator.';timed.transcript.text=timed.transcript.segments[0].text;
+ const plannedResponse=await call('/api/voiceover/plan',{title:'ITCZ',creativeInstructions:'Show red arrows as warm air rises.',transcript:timed.transcript});assert.equal(plannedResponse.status,200,JSON.stringify(await plannedResponse.clone().json()));const planned=await plannedResponse.json();
+ assert.equal(planned.analysis.transcript.segments[0].text,'Warm air rises above the Equator.');assert.equal(planned.analysis.scenes[0].startSeconds,0);assert.equal(planned.analysis.scenes[0].endSeconds,1);assert.equal(planned.creatorStudio.scenes.length,1);assert.equal(transcriptions,1);assert.equal(plans,1);
+});

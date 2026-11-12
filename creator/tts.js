@@ -6,6 +6,7 @@ import {savePendingAiDraft} from './ai-draft.js?v=2026111112';
 import {createLocalImageClient} from '../shared/local-image-client.js?v=2026111112';
 const $=id=>document.getElementById(id),fields=['title','script','creativeInstructions','mode','engine','model','direction','language','gender','family','voice','preset','speed','pitch','volume','pause'];
 let user=null,voices=[],busy=false,loading=false,epoch=0,voiceEpoch=0,audioUrl=null,audioBytes=null,saveTimer;
+let timedTranscript=null,analysisBusy=false,scenePlanBusy=false;
 let historyClient=null,historyEntries=[],historyCursor=null,historyEpoch=0,historyLoading=false;
 const localWorker=createLocalImageClient({getAccountId:()=>user?.uid||null,requireAccount:true});
 let pendingHistory=new Map(),historyWrites=new Set();
@@ -51,7 +52,7 @@ if(projectVoiceoverId){
   scriptPanel.querySelector('label[for="title"]'),$('title'),
   scriptPanel.querySelector('.mode-label'),$('ssmlGuide'),
   scriptPanel.querySelector('label[for="creativeInstructions"]'),$('creativeInstructions'),
-  $('sample'),$('analyzeLocal'),$('localAnalysisStatus'),$('localAnalysisResult')
+  $('sample'),document.querySelector('.ai-script-flow')
  );
  scriptPanel.append(options);
  $('scriptHeading').textContent='Script';
@@ -80,7 +81,8 @@ function refreshAvailability(){
  $('reloadVoices').disabled=busy||loading||!user;
  $('voiceDemo').disabled=busy||loading||!user||!voiceDemo.available();
  $('voiceFields').disabled=busy||loading||!user||!voices.length;
- $('generate').disabled=!ready||!$('script').value.trim();$('analyzeLocal').disabled=!audioBytes||busy||loading||!user;
+ $('generate').disabled=!ready||!$('script').value.trim();$('analyzeLocal').disabled=!audioBytes||busy||loading||analysisBusy||scenePlanBusy||!user;
+ $('generateScenePlan').disabled=!timedTranscript||!validTimedTranscript().valid||!$('creativeInstructions').value.trim()||analysisBusy||scenePlanBusy||!user;
  $('preview').disabled=!ready||!$('script').value.trim()||$('mode').value==='ssml';
  $('pitch').disabled=!voice?.capabilities.pitch;
  $('speed').disabled=!voice?.capabilities.speed;
@@ -258,7 +260,8 @@ function languages(preferred=$('language').value){
  const matching=voices.filter(v=>(v.family==='Gemini')===expressive());
  setOptions($('language'),[...new Set(matching.flatMap(v=>v.languageCodes))].sort().map(value=>({value,label:new Intl.DisplayNames(['en'],{type:'language'}).of(value)+' · '+value+(expressive()&&value==='gu-IN'?' · Preview':'')})),preferred);
 }
-function clearAudio(){if(audioUrl)URL.revokeObjectURL(audioUrl);audioUrl=null;audioBytes=null;$('player').pause();$('player').removeAttribute('src');$('player').load();$('download').removeAttribute('href');$('recording').hidden=true;$('localAnalysisResult').hidden=true;$('localAnalysisResult').textContent='';$('localAnalysisStatus').textContent='';}
+function resetAiFlow(){timedTranscript=null;analysisBusy=false;scenePlanBusy=false;$('transcriptReview').hidden=true;$('transcriptSegments').replaceChildren();$('scenePlanReview').hidden=true;$('scenePlanScenes').replaceChildren();$('localAnalysisResult').hidden=true;$('localAnalysisResult').textContent='';$('localAnalysisStatus').textContent='Generate the final MP3, then let Whisper create its transcript and timestamps.';}
+function clearAudio(){if(audioUrl)URL.revokeObjectURL(audioUrl);audioUrl=null;audioBytes=null;$('player').pause();$('player').removeAttribute('src');$('player').load();$('download').removeAttribute('href');$('recording').hidden=true;resetAiFlow();}
 function friendly(error){
  if(error?.code==='functions/not-found')return 'Voiceover generation has not been deployed to Invincible yet. Your script is kept here.';
  if(/unauthenticated/.test(error?.code||''))return 'Sign in to Invincible again. Your script is kept here.';
@@ -310,11 +313,50 @@ async function record(preview){
  }catch(error){if(current===epoch)status(friendly(error),true);}
  finally{if(current===epoch){busy=false;refreshAvailability();}}
 }
+function audioBase64(){let binary='';for(let i=0;i<audioBytes.length;i+=0x8000)binary+=String.fromCharCode(...audioBytes.subarray(i,i+0x8000));return btoa(binary);}
+function clock(seconds){const value=Math.max(0,Number(seconds)||0),minutes=Math.floor(value/60),rest=(value-minutes*60).toFixed(3).padStart(6,'0');return `${String(minutes).padStart(2,'0')}:${rest}`;}
+function validTimedTranscript(){
+ if(!timedTranscript?.segments?.length)return{valid:false,message:'Whisper timing is not ready.'};
+ let previous=0;
+ for(const [index,segment] of timedTranscript.segments.entries()){
+  if(!segment.text.trim())return{valid:false,message:`Segment ${index+1} needs transcript text.`};
+  if(!Number.isFinite(segment.start)||!Number.isFinite(segment.end)||segment.start<previous||segment.end<=segment.start)return{valid:false,message:`Segment ${index+1} has invalid timing.`};
+  previous=segment.end;
+ }
+ const difference=Math.abs(Number(timedTranscript.duration)-previous);
+ if(!Number.isFinite(timedTranscript.duration)||difference>.25)return{valid:false,message:`The final timestamp differs from the ${clock(timedTranscript.duration)} MP3 duration by ${difference.toFixed(3)} seconds.`};
+ return{valid:true,message:`${timedTranscript.segments.length} segments · ${clock(timedTranscript.duration)} · timing locked`};
+}
+function updateScenePlanGate(){const check=validTimedTranscript();$('scenePlanGate').textContent=!check.valid?check.message:!$('creativeInstructions').value.trim()?'Paste animation instructions to continue.':check.message;refreshAvailability();}
+function renderTranscript(){
+ $('transcriptReview').hidden=false;$('transcriptDuration').textContent=`${clock(timedTranscript.duration)} total`;
+ $('transcriptSegments').replaceChildren(...timedTranscript.segments.map((segment,index)=>{
+  const row=document.createElement('label');row.className='transcript-segment';
+  const time=document.createElement('span');time.textContent=`${clock(segment.start)}–${clock(segment.end)}`;
+  const input=document.createElement('textarea');input.rows=2;input.value=segment.text;input.setAttribute('aria-label',`Transcript segment ${index+1}`);input.addEventListener('input',()=>{segment.text=input.value;timedTranscript.text=timedTranscript.segments.map(item=>item.text.trim()).filter(Boolean).join(' ');updateScenePlanGate();});
+  row.append(time,input);return row;
+ }));updateScenePlanGate();
+}
+function sceneEngine(scene){return scene.mapAnimation?'Map':scene.contextCard?'Canvas':'Needs selection';}
+function safeText(value){return String(value??'').replace(/[&<>"']/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));}
+function renderScenePlan(payload){
+ const scenes=payload.analysis.scenes;$('scenePlanReview').hidden=false;$('scenePlanSummary').textContent=`${scenes.length} scenes · ${clock(payload.analysis.transcript.duration)}`;
+ $('scenePlanScenes').replaceChildren(...scenes.map((scene,index)=>{const card=document.createElement('article');card.innerHTML=`<header><strong>Scene ${index+1}</strong><span>${clock(scene.startSeconds)}–${clock(scene.endSeconds)}</span></header><p>${safeText(scene.voiceover)}</p><dl><div><dt>Visual</dt><dd>${safeText(scene.visual||'Not specified')}</dd></div><div><dt>Engine</dt><dd>${safeText(sceneEngine(scene))}</dd></div><div><dt>Assets</dt><dd>${safeText(scene.assets||'None selected')}</dd></div><div><dt>Missing / unverified</dt><dd>${safeText(scene.missingInfo?.join(' ')||'None reported')}</dd></div></dl>`;return card;}));
+ $('localAnalysisResult').textContent=JSON.stringify(payload.creatorStudio,null,2);
+ const link=$('openMotionStudio');link.href=projectVoiceoverId?`project.html?${new URLSearchParams({id:projectVoiceoverId,area:'Storyboard'})}`:'./';
+ requestAnimationFrame(()=>$('scenePlanReview').scrollIntoView({behavior:'smooth',block:'start'}));
+}
 async function analyzeLocal(){
- if(!audioBytes||busy||loading)return; const started=Date.now();$('analyzeLocal').disabled=true;$('localAnalysisStatus').textContent='Sending MP3 to the local Whisper/Qwen pipeline…';$('localAnalysisResult').hidden=true;
- try { let binary='';for(let i=0;i<audioBytes.length;i+=0x8000)binary+=String.fromCharCode(...audioBytes.subarray(i,i+0x8000)); const payload=await localWorker.request('/api/voiceover/analyze',{title:$('title').value,creativeInstructions:$('creativeInstructions').value,audioBase64:btoa(binary)},{timeoutMs:180000});await savePendingAiDraft({title:$('title').value,creativeInstructions:$('creativeInstructions').value,analysis:payload.analysis,creatorStudio:payload.creatorStudio},new Blob([audioBytes],{type:'audio/mpeg'}));$('localAnalysisResult').textContent=JSON.stringify(payload.creatorStudio,null,2);$('localAnalysisResult').hidden=false;$('localAnalysisStatus').textContent=`Local analysis ready: ${payload.analysis.scenes.length} scenes in ${((Date.now()-started)/1000).toFixed(1)}s. Open Creator Studio and choose “Review AI draft” to inspect and import it.`; }
- catch(error){$('localAnalysisStatus').textContent=error.message||'Local analysis failed.';}
- finally{refreshAvailability();}
+ if(!audioBytes||analysisBusy||scenePlanBusy)return;analysisBusy=true;$('localAnalysisStatus').textContent='Analysing voiceover… Creating transcript and timestamps.';$('transcriptReview').hidden=true;$('scenePlanReview').hidden=true;refreshAvailability();
+ try{const payload=await localWorker.request('/api/voiceover/transcribe',{audioBase64:audioBase64()},{timeoutMs:180000});timedTranscript=payload.transcript;renderTranscript();$('localAnalysisStatus').textContent='Whisper timing is ready. Review the words, then add animation instructions.';}
+ catch(error){timedTranscript=null;$('localAnalysisStatus').textContent=error.message||'Whisper analysis failed.';}
+ finally{analysisBusy=false;updateScenePlanGate();}
+}
+async function generateScenePlan(){
+ const check=validTimedTranscript();if(!check.valid||!$('creativeInstructions').value.trim()||scenePlanBusy)return;scenePlanBusy=true;$('localAnalysisStatus').textContent='Generating scenes from the locked timestamps and your animation instructions…';$('scenePlanReview').hidden=true;refreshAvailability();
+ try{const payload=await localWorker.request('/api/voiceover/plan',{title:$('title').value,creativeInstructions:$('creativeInstructions').value,transcript:timedTranscript},{timeoutMs:180000});await savePendingAiDraft({title:$('title').value,creativeInstructions:$('creativeInstructions').value,analysis:payload.analysis,creatorStudio:payload.creatorStudio},new Blob([audioBytes],{type:'audio/mpeg'}));renderScenePlan(payload);$('localAnalysisStatus').textContent='Scene plan ready. Review every scene before applying it to the project.';}
+ catch(error){$('localAnalysisStatus').textContent=error.message||'Scene planning failed.';}
+ finally{scenePlanBusy=false;refreshAvailability();}
 }
 function applyPlaybackSpeed(){
  const speed=Number($('playbackSpeed').value);
@@ -325,9 +367,11 @@ $('playbackSpeed').addEventListener('change',applyPlaybackSpeed);
 $('player').addEventListener('loadedmetadata',applyPlaybackSpeed);
 $('generate').addEventListener('click',()=>record(false));$('preview').addEventListener('click',()=>record(true));
 $('analyzeLocal').addEventListener('click',analyzeLocal);
+$('generateScenePlan').addEventListener('click',generateScenePlan);
+$('openMotionStudio').addEventListener('click',event=>{if(!projectVoiceoverId)return;event.preventDefault();window.parent.postMessage({type:'invincible-apply-ai-draft'},location.origin);});
 $('reloadVoices').addEventListener('click',()=>fetchVoices());
  $('engine').addEventListener('change',()=>{voiceDemo.stop();languages();families();remember();});
- for(const id of ['model','direction','creativeInstructions'])$(id).addEventListener('input',remember);
+ for(const id of ['model','direction','creativeInstructions'])$(id).addEventListener('input',()=>{remember();if(id==='creativeInstructions'){if(!$('scenePlanReview').hidden){$('scenePlanReview').hidden=true;$('localAnalysisStatus').textContent='Animation instructions changed. Generate the scene plan again.';}updateScenePlanGate();}});
 $('language').addEventListener('change',()=>{families();remember();});
 $('gender').addEventListener('change',()=>{families();remember();});
 $('family').addEventListener('change',()=>{filterVoices();remember();});

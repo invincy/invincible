@@ -5,7 +5,7 @@
 <title>Voiceover · Invincible</title>
 <link rel="icon" href="/invincible/favicon.ico" sizes="any">
 <link rel="stylesheet" href="../site-nav.css?v=19">
-<link rel="stylesheet" href="tts.css?v=2026111304">
+<link rel="stylesheet" href="tts.css?v=2026111305">
 <link rel="stylesheet" href="studio-ui.css?v=3">
 <link rel="stylesheet" href="tts-forest.css?v=1">
 <link rel="stylesheet" href="../shared/spatial-workspace.css?v=4">
@@ -42,7 +42,22 @@ if (window.parent !== window) {
 <details id="ssmlGuide" class="ssml-guide"><summary>Fine control with SSML</summary><p>Use SSML to set pauses, emphasis and pronunciation. Available tags depend on the selected voice. External audio and voice-switching tags are not accepted.</p><pre>&lt;speak&gt;21 अप्रैल, 1526! &lt;break time="500ms"/&gt;पानीपत की कहानी।&lt;/speak&gt;</pre></details>
 </section>
 <section class="panel result-panel" aria-labelledby="resultHeading"><div class="result-status"><h2 id="resultHeading">Listen &amp; export</h2><p id="generationStatus" role="status" aria-live="polite">Your recording will appear here.</p></div><div class="transport-actions"><div class="generate-actions"><button id="preview" type="button" class="secondary" disabled>Preview opening</button><button id="generate" type="button" class="primary" disabled>Generate MP3</button></div><p class="help quota-note">Uses paid Google TTS quota.</p></div><div id="recording" hidden><audio id="player" controls preload="metadata" aria-label="Generated voiceover"></audio><div class="playback-controls"><label for="playbackSpeed">Playback speed</label><select id="playbackSpeed" aria-describedby="playbackHelp"><option value="0.75">0.75×</option><option value="1" selected>1.00×</option><option value="1.2">1.20×</option><option value="1.4">1.40×</option><option value="1.55">1.55×</option><option value="1.6">1.60×</option><option value="1.75">1.75×</option><option value="2">2.00×</option></select><span id="playbackHelp" class="help">Changes listening speed only. The MP3 download keeps its original pace.</span></div><div class="download-row"><span id="recordingInfo"></span><a id="download" class="secondary" download>Download MP3 ↓</a></div></div></section>
-<button id="analyzeLocal" type="button" class="secondary" disabled>Analyze with Local AI</button><p id="localAnalysisStatus" class="help" role="status" aria-live="polite"></p><pre id="localAnalysisResult" hidden></pre>
+<section class="ai-script-flow" aria-labelledby="timingHeading">
+<div class="ai-step-heading"><div><span>Step 2</span><h2 id="timingHeading">Time the voiceover</h2></div><button id="analyzeLocal" type="button" class="secondary" disabled>Scripting · Step 2</button></div>
+<p id="localAnalysisStatus" class="help" role="status" aria-live="polite">Generate the final MP3, then let Whisper create its transcript and timestamps.</p>
+<div id="transcriptReview" class="transcript-review" hidden>
+<div class="review-summary"><strong>Timed transcript</strong><span id="transcriptDuration"></span></div>
+<p class="help">Correct only the words. Original start and end times stay locked.</p>
+<div id="transcriptSegments" class="transcript-segments"></div>
+<div class="ai-next-row"><button id="generateScenePlan" type="button" class="primary" disabled>Next · Generate scene plan</button><span id="scenePlanGate" class="help"></span></div>
+</div>
+<div id="scenePlanReview" class="scene-plan-review" hidden>
+<div class="review-summary"><strong>Review scene plan</strong><span id="scenePlanSummary"></span></div>
+<div id="scenePlanScenes" class="scene-plan-scenes"></div>
+<pre id="localAnalysisResult" hidden></pre>
+<a id="openMotionStudio" class="primary" href="./" target="_top">Apply to project → Open Motion Studio</a>
+</div>
+</section>
 </div>
 <section class="space-panel panel controls-panel" aria-labelledby="voiceHeading">
 <details id="voiceSettings" class="voice-settings" open><summary><h2 id="voiceHeading">Voice &amp; delivery</h2><span class="settings-hint">Settings</span></summary>
@@ -70,6 +85,6 @@ if (window.parent !== window) {
 </section>
 </div>
 </main>
-<script type="module" src="tts.js?v=2026111304"></script>
+<script type="module" src="tts.js?v=2026111305"></script>
 <script type="module" src="tts-forest.js?v=1"></script>
 </body></html>

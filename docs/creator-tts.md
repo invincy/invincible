@@ -171,6 +171,34 @@ Fixtures do not establish deployed Firestore permissions or real speech quality.
 The browser's download settings choose the destination folder. The site cannot
 silently choose a drive on the user's computer.
 
+## Script timing and scene planning — November 13, 2026
+
+The Script page now separates local voiceover analysis into two reviewed operations.
+**Scripting · Step 2** sends the fixed generated MP3 to the paired localhost worker;
+Whisper alone returns the transcript, segment boundaries, available word timestamps
+and measured duration. Animation instructions are not sent to Whisper and remain
+editable while transcription runs. The timed transcript displays locked start/end
+values beside editable text, so spelling can be corrected without silently changing
+the audio clock.
+
+**Next · Generate scene plan** is enabled only when instructions are present, every
+segment has valid ordered timing and the last timestamp agrees with the measured MP3
+duration within 0.25 seconds. It sends the reviewed transcript and instructions to
+the existing constrained Qwen planner. The resulting review lists narration, timing,
+visual direction, selected engine, required assets and missing or unverified data.
+Only after this review is the existing pending AI draft and exact MP3 saved for the
+Creator Studio import path. Changing instructions hides the stale review and requires
+planning again. The legacy combined `/api/voiceover/analyze` endpoint remains for the
+existing one-click Video Studio coordinator; the new UI uses `/transcribe` followed by
+`/plan`. Both routes retain pairing, account, localhost, MP3-size, cleanup, bounded
+instructions, verified-geometry and no-invented-assets checks.
+
+Focused service tests cover the independent calls, editable transcript text with
+unchanged timing, instruction gating and the importable result. The Voiceover browser
+fixture covers the full Step 2 → transcript correction → scene review path, including
+phone/desktop overflow checks. These fixtures do not establish real Whisper accuracy,
+local GPU availability, production pairing or subjective synchronization quality.
+
 ## Secure backend activation
 
 The creator-tts backend was deployed successfully on November 9, 2026. The configured owner account completed a real browser paste → live voice catalogue → male Hindi generation → MP3 download check. The catalogue returned 2,066 voices and the downloaded recording was approximately 3.5 seconds. No local Python process or uploaded key is needed for normal site use.
