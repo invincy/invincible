@@ -419,5 +419,6 @@ actual 25-minute countdown. Ambient effects default to Subtle; Off/Subtle/Full
 is saved per device. Effects pause when the page is hidden and stop for reduced
 motion preferences. No additional particle engine or heavy background artwork
 is used. Themes One and Two remain available. Theme One's mobile dashboard
-keeps the globe in its own screen and puts focus/reminders and session/workspace
-on adjacent horizontal screens, avoiding page-level vertical scrolling.
+uses its original single-flow layout: an independently sized full-width globe
+followed by focus, reminders, timer and workspace controls. The three-panel
+dashboard treatment remains desktop-only for this theme.
