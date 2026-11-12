@@ -152,13 +152,33 @@ html.connected-space-document .invincible-ai-page .ai-chat-panel > form.ai-compo
 .ai-images-panel .image-generator header:first-child { display: none }
 .ai-images-panel .image-generator textarea { min-height: 88px }
 @media (min-width: 900px) {
+  .invincible-ai-page {
+    display: grid;
+    grid-template-rows: auto auto minmax(0,1fr);
+    height: calc(100dvh - var(--app-top,0px));
+    min-height: 270px;
+    box-sizing: border-box;
+    padding-block: 12px;
+  }
+  html.connected-space-document body.invincible-ai-body .invincible-ai-page {
+    height: 100dvh;
+    padding-block: 12px;
+  }
   .ai-workspace {
     display: grid;
-    grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1.35fr);
+    grid-template-columns: minmax(0,1fr) minmax(0,1.15fr) minmax(0,1.35fr);
     gap: clamp(10px,1vw,20px);
-    margin-top: 12px;
+    margin-top: 10px;
+    min-height: 0;
   }
-  .ai-workspace-card { min-height: 570px; height: calc(100dvh - 125px) }
+  .ai-workspace-card { height: auto; min-height: 0 }
+  .ai-chat-panel .ai-chat-stream { min-height: 0; overflow-y: auto }
+  .ai-chat-panel .ai-composer textarea { resize: none }
   .ai-images-panel { overflow-y: auto }
   .ai-voiceover-frame { min-height: 0 }
+}
+@media (min-width: 900px) and (max-width: 1100px) {
+  html:not(.connected-space-document) .invincible-ai-page {
+    height: calc(100dvh - var(--app-top,0px) - var(--app-bottom,0px) - env(safe-area-inset-bottom));
+  }
 }

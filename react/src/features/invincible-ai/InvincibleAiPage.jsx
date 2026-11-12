@@ -60,6 +60,10 @@ export function InvincibleAiPage(){
   </nav>}
 
   <div className="ai-workspace">
+   <section id="ai-panel-images" className="ai-workspace-card ai-images-panel" role={desktop?undefined:'tabpanel'} aria-labelledby={desktop?'ai-images-title':'ai-tool-images'} hidden={!desktop&&mode!=='images'}>
+    <header className="ai-card-heading"><h2 id="ai-images-title">Images</h2></header>
+    <ImageStudio accountId={user?.uid||null} connectionRef={imageConnectionRef} onConnectionChange={setImageConnection}/>
+   </section>
    <section id="ai-panel-chat" role={desktop?undefined:'tabpanel'} aria-labelledby={desktop?'ai-chat-title':'ai-tool-chat'} className="ai-workspace-card ai-chat-panel" hidden={!desktop&&mode!=='chat'}>
     <header className="ai-card-heading"><h2 id="ai-chat-title">Chat</h2><div className="ai-page-actions"><label className="ai-provider-picker">PROVIDER<select aria-label="AI provider" value={provider} onChange={event=>setProvider(event.target.value)}><option value={PROVIDERS.cloud}>Cloud · OpenAI</option><option value={PROVIDERS.local} disabled={!isLocalAiAvailable}>Local · Qwen3 4B</option></select></label><button type="button" onClick={newConversation} aria-label="New chat" title="New chat"><span aria-hidden="true">＋</span></button></div></header>
    <div className="ai-chat-stream" aria-live="polite">
@@ -71,11 +75,7 @@ export function InvincibleAiPage(){
     {error&&<div className="ai-error" role="alert"><strong>Request stopped</strong><span>{error}</span></div>}
     <div ref={end}/>
    </div>
-   <form className="ai-composer" onSubmit={submit}><textarea aria-label="Message" ref={input} rows="1" value={draft} onChange={event=>setDraft(event.target.value)} onKeyDown={event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.nativeEvent.isComposing){event.preventDefault();submit(event)}}} placeholder="Tell Invincible what you want to create, finish, or do next…" maxLength="4000"/><button type="submit" disabled={sending||!draft.trim()} aria-label="Send message"><span>Send</span>↗</button></form>
-   </section>
-   <section id="ai-panel-images" className="ai-workspace-card ai-images-panel" role={desktop?undefined:'tabpanel'} aria-labelledby={desktop?'ai-images-title':'ai-tool-images'} hidden={!desktop&&mode!=='images'}>
-    <header className="ai-card-heading"><h2 id="ai-images-title">Images</h2></header>
-    <ImageStudio accountId={user?.uid||null} connectionRef={imageConnectionRef} onConnectionChange={setImageConnection}/>
+   <form className="ai-composer" onSubmit={submit}><textarea aria-label="Message" ref={input} rows="1" value={draft} onChange={event=>setDraft(event.target.value)} onKeyDown={event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.nativeEvent.isComposing){event.preventDefault();submit(event)}}} placeholder="Type a message…" maxLength="4000"/><button type="submit" disabled={sending||!draft.trim()} aria-label="Send message"><span>Send</span>↗</button></form>
    </section>
    <section id="ai-panel-voiceover" className="ai-workspace-card ai-voiceover-panel" role={desktop?undefined:'tabpanel'} aria-labelledby={desktop?'ai-voiceover-title':'ai-tool-voiceover'} hidden={!desktop&&mode!=='voiceover'}>
     <header className="ai-card-heading"><h2 id="ai-voiceover-title">Voiceover</h2></header>

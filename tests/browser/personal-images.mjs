@@ -14,11 +14,11 @@ const fixtures={
  conversation:"import{useState}from'react';export function useAiConversation(){const [provider,setProvider]=useState('cloud');return {messages:[],actions:[],sending:false,send:()=>{throw Error('Chat must not be used to generate an image')},newConversation:()=>{},provider,setProvider};}",
  service:"export const PROVIDERS={cloud:'cloud',local:'local'},isLocalAiAvailable=true,mobileLaptop=location.search.includes('mobile=1');export async function draftRemoteImagePrompt(){throw Error('Use the real local prompt drafting endpoint');}export async function checkLocalServices(){window.connectionChecks=(window.connectionChecks||0)+1;return {whisper:window.hasRefreshed===true,qwen:false,images:true};}"
 };
-const compiled=await build({absWorkingDir:path.join(root,'react'),stdin:{contents:"import React from 'react';import{createRoot}from'react-dom/client';import{InvincibleAiPage}from'./src/features/invincible-ai/InvincibleAiPage.jsx';createRoot(document.getElementById('root')).render(<InvincibleAiPage/>);",resolveDir:path.join(root,'react'),loader:'jsx'},bundle:true,write:false,outdir:'fixture',jsx:'automatic',plugins:[{name:'isolated-app-state',setup(b){b.onResolve({filter:/(useTasks|AuthContext|useAiConversation|aiService)$/},args=>({path:args.path.includes('useTasks')?'tasks':args.path.includes('AuthContext')?'auth':args.path.includes('useAiConversation')?'conversation':'service',namespace:'fixture'}));b.onLoad({filter:/.*/,namespace:'fixture'},args=>({contents:fixtures[args.path],loader:'js',resolveDir:path.join(root,'react')}));}}]});
+const compiled=await build({absWorkingDir:path.join(root,'react'),stdin:{contents:"import '../shared/spatial-workspace.css';import '../shared/spatial-desktop.css';import React from 'react';import{createRoot}from'react-dom/client';import{InvincibleAiPage}from'./src/features/invincible-ai/InvincibleAiPage.jsx';createRoot(document.getElementById('root')).render(<InvincibleAiPage/>);",resolveDir:path.join(root,'react'),loader:'jsx'},bundle:true,write:false,outdir:'fixture',jsx:'automatic',plugins:[{name:'isolated-app-state',setup(b){b.onResolve({filter:/(useTasks|AuthContext|useAiConversation|aiService)$/},args=>({path:args.path.includes('useTasks')?'tasks':args.path.includes('AuthContext')?'auth':args.path.includes('useAiConversation')?'conversation':'service',namespace:'fixture'}));b.onLoad({filter:/.*/,namespace:'fixture'},args=>({contents:fixtures[args.path],loader:'js',resolveDir:path.join(root,'react')}));}}]});
 let browser;
 try{
  await service.listen();browser=await chromium.launch({headless:true});const page=await browser.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
- await page.route(url=>url.origin===service.origin&&url.pathname==='/personal-images',route=>route.fulfill({contentType:'text/html',body:`<!doctype html><meta name="viewport" content="width=device-width"><div id="root"></div><link rel="stylesheet" href="/personal.css"><script>window.__INVINCIBLE_LOCAL_AI_ORIGIN__=location.origin;sessionStorage.setItem('invincible.local-worker.'+location.origin,${JSON.stringify(service.token)});</script><script type="module" src="/personal.js"></script>`}));
+ await page.route(url=>url.origin===service.origin&&url.pathname==='/personal-images',route=>route.fulfill({contentType:'text/html',body:`<!doctype html><meta name="viewport" content="width=device-width"><body class="invincible-ai-body"><div id="root"></div><link rel="stylesheet" href="/personal.css"><script>window.__INVINCIBLE_LOCAL_AI_ORIGIN__=location.origin;sessionStorage.setItem('invincible.local-worker.'+location.origin,${JSON.stringify(service.token)});</script><script type="module" src="/personal.js"></script>`}));
  for(const extension of ['js','css'])await page.route(service.origin+'/personal.'+extension,route=>route.fulfill({contentType:extension==='js'?'text/javascript':'text/css',body:compiled.outputFiles.find(file=>file.path.endsWith('.'+extension)).text}));
  await page.setViewportSize({width:1440,height:900});
  await page.route('**/invincible/creator/tts.html?embed=ai', route=>route.fulfill({contentType:'text/html',body:'<h1>Voiceover fixture</h1>'}));
@@ -26,8 +26,17 @@ try{
  const desktopCards=page.locator('.ai-workspace-card');
  assert.equal(await desktopCards.count(),3);
  await desktopCards.last().waitFor();
+ assert.deepEqual(await desktopCards.locator(':scope > .ai-card-heading > h2').allTextContents(),['Images','Chat','Voiceover']);
  const columns=await desktopCards.evaluateAll(cards=>cards.map(card=>card.getBoundingClientRect().x));
- assert.ok(columns[0]<columns[1]&&columns[1]<columns[2],'Desktop shows Chat, Images and Voiceover side by side');
+ assert.ok(columns[0]<columns[1]&&columns[1]<columns[2],'Desktop shows Images, Chat and Voiceover side by side');
+ await page.setViewportSize({width:1100,height:470});
+ await page.evaluate(()=>document.documentElement.classList.add('connected-space-document'));
+ const composer=page.getByRole('textbox',{name:'Message'});
+ const composerBounds=await composer.boundingBox();
+ assert.ok(composerBounds.y+composerBounds.height<470,'Chat input fits in a short desktop frame');
+ await composer.fill('Desktop composer test');
+ assert.ok(await page.getByRole('button',{name:'Send message'}).isEnabled());
+ await composer.clear();
  await page.setViewportSize({width:393,height:850});
  const statuses=page.getByRole('region',{name:'Local AI services'}).getByRole('status');
  await statuses.filter({hasText:'Whisper · Offline'}).waitFor();
@@ -49,7 +58,7 @@ try{
  assert.equal(await chat.getByRole('textbox',{name:'Message'}).inputValue(),'A draft kept while switching tools');
  for(const width of [320,393,820,1440]){
   await page.setViewportSize({width,height:850});
-  assert.ok(await chat.evaluate(panel=>panel.scrollWidth<=panel.clientWidth+1),'No chat overflow at '+width);
+  assert.ok(await page.locator('#ai-panel-chat').evaluate(panel=>panel.scrollWidth<=panel.clientWidth+1),'No chat overflow at '+width);
   assert.ok(await refresh.isVisible(),'Service refresh is visible at '+width);
  }
 

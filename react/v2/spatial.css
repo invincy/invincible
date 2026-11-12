@@ -487,23 +487,54 @@
 }
 
 @media (min-width: 901px) {
+  .v2-desktop-connected #v2-region-ai { padding-bottom: 160px }
+  .v2-theme-three #v2-region-ai { padding-bottom: 130px }
   .v2-hud .v2-theme-option[data-theme="one"] { --theme-color: #ffcf76; --theme-wash: #3e2a13 }
   .v2-hud .v2-theme-option[data-theme="two"] { --theme-color: #b9f495; --theme-wash: #163a24 }
   .v2-hud .v2-theme-option[data-theme="three"] { --theme-color: #85ebff; --theme-wash: #10354c }
   .v2-hud .v2-theme-option[data-theme] {
-    display: inline-flex;
+    display: grid;
+    grid-template-columns: 24px auto 10px;
     align-items: center;
-    gap: 6px;
-    min-height: 36px;
-    color: var(--theme-color);
-    background: color-mix(in srgb,var(--theme-wash) 60%,transparent);
-    border-color: color-mix(in srgb,var(--theme-color) 24%,transparent);
+    gap: 7px;
+    min-height: 40px;
+    color: #d9e6ed;
+    background: #101b23;
+    border-color: #34454e;
   }
-  .v2-hud .v2-theme-option[data-theme] span { font-size: 15px; line-height: 1 }
+  .v2-theme-preview {
+    position: relative;
+    display: block;
+    width: 24px;
+    height: 24px;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb,var(--theme-color) 45%,transparent);
+    border-radius: 7px;
+    background: var(--theme-wash);
+  }
+  .v2-theme-preview::before { content: ''; position: absolute; }
+  [data-theme="one"] .v2-theme-preview::before {
+    inset: 5px 3px;
+    border: 1px solid #ffd884;
+    border-radius: 50%;
+    transform: rotate(-32deg);
+    background: radial-gradient(circle,#ffd884 12%,#936124 20%,transparent 32%);
+  }
+  [data-theme="two"] .v2-theme-preview::before {
+    inset: 3px;
+    background: linear-gradient(130deg,#c9f99c,#44814d);
+    clip-path: polygon(50% 0,75% 35%,63% 35%,88% 67%,70% 67%,96% 93%,4% 93%,30% 67%,12% 67%,37% 35%,25% 35%);
+  }
+  [data-theme="three"] .v2-theme-preview::before {
+    inset: 2px 5px;
+    background: #99f2ff;
+    clip-path: polygon(68% 0,12% 56%,46% 56%,32% 100%,90% 37%,55% 37%);
+  }
+  .v2-theme-selected { color: var(--theme-color); font-weight: 800; }
   .v2-hud .v2-theme-option[data-theme]:is(:hover,[aria-pressed="true"]) {
+    color: var(--theme-color);
     background: var(--theme-wash);
     border-color: var(--theme-color);
-    box-shadow: inset 0 0 10px color-mix(in srgb,var(--theme-color) 20%,transparent);
   }
   .v2-hud .v2-theme-option[data-theme]:focus-visible { outline-color: var(--theme-color) }
 }

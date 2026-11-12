@@ -308,7 +308,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
         await page.route('https://**/*',route=>route.abort());
         await page.goto(base+'/fixture');
         await page.locator('.v2-guide-mission h2').getByText('Build the living workspace').waitFor();
-        const themeTwo=page.getByRole('button',{name:'Theme Two'}),themeThree=page.getByRole('button',{name:'Theme Three'}),themeOne=page.getByRole('button',{name:'Theme One'});
+        const themeTwo=page.getByRole('button',{name:'Emerald Forest'}),themeThree=page.getByRole('button',{name:'Electric Blue'}),themeOne=page.getByRole('button',{name:'Golden Orbit'});
         assert.equal(await themeTwo.getAttribute('aria-pressed'),'false');
         await themeTwo.click();assert.equal(await page.locator('.v2-shell').evaluate(node=>node.classList.contains('v2-theme-two')),true);
         await themeThree.click();assert.equal(await page.locator('.v2-shell').evaluate(node=>node.classList.contains('v2-theme-three')),true);

@@ -250,6 +250,6 @@ attachment callback and failure with loopback blocked.
 
 ### Invincible AI workspace
 
-Desktop shows Chat, Images and basic Voiceover side by side. Smaller screens use tabs. Basic Voiceover uses the existing speech engines and recording history, with an independent local draft. The full Creator Studio voiceover editor retains creative instructions, analysis and advanced controls.
+Desktop shows Images, Chat and basic Voiceover side by side. Chat keeps its message box below the scrollable conversation and above the dashboard navigation. Smaller screens use tabs. Basic Voiceover uses the existing speech engines and recording history, with an independent local draft. The full Creator Studio voiceover editor retains creative instructions, analysis and advanced controls.
 
 The paired local endpoint checks engines directly. Remote clients fall back to the account-scoped image relay, whose authenticated laptop heartbeat reports Whisper, Qwen and ComfyUI readiness. Service results expire with the relay heartbeat. The laptop must be running the updated image connector to report remote health.
