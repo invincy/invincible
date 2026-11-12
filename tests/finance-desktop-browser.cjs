@@ -34,7 +34,7 @@ export const runTransaction=async(_,callback)=>{const writes=[];const result=awa
     console.log('  tab:',String(name));
     await page.getByRole('button',{name,exact:true}).click();
     await page.waitForTimeout(100);
-    const alternateBounds=await page.evaluate(()=>({page:document.documentElement.scrollHeight,viewport:innerHeight,panels:[...document.querySelectorAll('.finance-desktop-card')].map(node=>({label:node.getAttribute('aria-label'),content:node.scrollHeight,inner:node.clientHeight}))}));
+    const alternateBounds=await page.evaluate(()=>({page:document.documentElement.scrollHeight,viewport:innerHeight,panels:[...document.querySelectorAll('.finance-desktop-card')].map(node=>({label:node.getAttribute('aria-label'),content:node.scrollHeight,inner:node.clientHeight,children:[...node.children].map(child=>({className:child.className,height:child.getBoundingClientRect().height}))}))}));
     assert.ok(alternateBounds.page<=alternateBounds.viewport+1&&alternateBounds.panels.every(panel=>panel.content<=panel.inner+1),`Alternate tab fits viewport: ${JSON.stringify(alternateBounds)}`);
    }
   }

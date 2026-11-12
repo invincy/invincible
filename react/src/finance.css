@@ -162,6 +162,9 @@ body.finance-page .react-desktop-nav button{font-size:15px}
 /* Mobile finance cockpit: one viewport with layered detail sheets. */
 @media(max-width:650px){
   body.finance-page{overflow:hidden}
+  .finance-react>.space-panel-links{display:none}
+  .finance-react .finance-main.space-panels{height:100%;grid-template-columns:minmax(0,1fr)}
+  .finance-react .finance-main.space-panels>.space-panel:not(:first-child){display:none}
   .finance-react{height:calc(100dvh - 62px - var(--app-bottom) - env(safe-area-inset-bottom));min-height:0;overflow:hidden}
   .finance-hero,.finance-main{display:none}
   .finance-background-art{inset:62px 0 calc(var(--app-bottom) + env(safe-area-inset-bottom));opacity:.8}

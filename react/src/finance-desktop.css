@@ -24,6 +24,7 @@
   .finance-cash-summary h3 { font-size:18px; margin:0; color:#d7ece3 }
   .finance-cash-summary>div { display:flex; justify-content:space-between; gap:8px; font-size:16px; color:#a5bfb5 }
   .finance-cash-summary b { color:#deede6; font-variant-numeric:tabular-nums }
+  .finance-cash-summary :is(span,b) { white-space:nowrap }
   .finance-desktop-card .income { color:#91e0b6 }
   .finance-desktop-card .finance-compact-reconcile { font-size:15px; color:#ffdfa2; border-color:#d8ad5340; background:#48382130; text-align:left }
   .finance-overview-bottom { margin-top:auto; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; color:#9dbcae; font-size:14px }
@@ -65,6 +66,8 @@
 @media(min-width:901px) and (max-width:1100px) {
   .finance-react { height:calc(100dvh - 138px) }
   .finance-compact-row { gap:4px; padding-inline:2px }
+  .finance-overview-bottom { justify-content:flex-end }
+  .finance-overview-bottom>span { display:none }
 }
 @media(min-width:901px) and (max-height:650px) {
   .finance-desktop-card { gap:4px; padding:6px 10px }
