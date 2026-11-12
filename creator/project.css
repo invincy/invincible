@@ -395,6 +395,115 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
 .project-page.creator-focus-mode>.project-workspace-nav{flex:none}
 .project-page.creator-focus-mode #app{display:flex;flex-direction:column}
 .project-page.creator-focus-mode .project-readiness{display:none}
+
+.project-page .dashboard-backdrop { display: none; }
+.project-page.studio-ui:has(.vs-editing-first:not(.vs-focusing)) {
+  background: transparent !important;
+}
+.project-page.studio-ui:has(.vs-editing-first:not(.vs-focusing))::before { display: none; }
+.project-page:has(.vs-editing-first:not(.vs-focusing)) .dashboard-backdrop { display: block; }
+.project-services { margin: 0 0 8px; }
+.project-services > summary {
+  width: max-content;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.creator-focus-mode .project-services { display: none; }
+.project-page .vs-editing-first:not(.vs-focusing) { background: #0a121bb8; }
+.vs-editing-first .vs-create { position: relative; margin: 0; padding: 0; border: 0; }
+.vs-editing-first .vs-create > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #435764;
+  border-radius: 8px;
+  font-size: 15px;
+}
+.vs-editing-first .vs-create > .vs-flow {
+  position: absolute;
+  z-index: 15;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(780px, 86vw);
+  max-height: 65dvh;
+  overflow: auto;
+  padding: 12px;
+  background: #101923;
+  border: 1px solid #435764;
+  border-radius: 12px;
+}
+.vs-editing-first .vs-editing-empty { display: none; }
+.vs-editing-first[data-empty-scenes]:not(.vs-focusing) .vs-editing-empty {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  min-height: 220px;
+  width: 100%;
+  font-size: 18px;
+}
+.vs-editing-first[data-empty-scenes]:not(.vs-focusing) .vs-preview canvas { display: none; }
+.vs-editing-first .vs-editing-timeline {
+  padding: 8px 14px;
+  margin-top: 12px;
+  border-radius: 10px;
+  background: #101923d9;
+}
+.vs-editing-first .vs-editing-timeline h3 { margin: 0; font-size: 17px; }
+.vs-editing-first .vs-editing-timeline input { min-height: 28px; }
+.vs-editing-first .vs-editing-empty { flex: 1; }
+.vs-editing-first .vs-scene-rail .vs-assembly-header > strong,
+.vs-editing-first .vs-inspector h3 { font-size: 18px; }
+.vs-editing-first.vs-focusing :is(.vs-create,.vs-editing-timeline) { display: none; }
+.vs-editing-first button, .vs-editing-first label { font-size: 14px; }
+@media (min-width: 1050px) {
+  .project-page .vs-editing-first .vs-studio-header { margin-bottom: 10px; }
+  .vs-editing-first .vs-editing-timeline {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 4px 12px;
+  }
+  .vs-editing-first .vs-editing-timeline :is(.vs-track,.vs-audio-track,progress) {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+  .vs-editing-first .vs-editing-timeline :is(.vs-track,.vs-audio-track):empty { display: none; }
+  .vs-editing-first .vs-editing-timeline h3 { grid-row: 1; }
+  .vs-editing-first .vs-editing-timeline input { grid-area: 1 / 2; }
+  .vs-editing-first .vs-editing-timeline output { grid-area: 1 / 3; margin: 0; }
+  .project-page .vs-editing-first:not(.vs-focusing) .vs-layout {
+    display: grid;
+    grid-template-columns: minmax(205px, 1fr) minmax(0, 2.5fr);
+    gap: 12px;
+    align-items: stretch;
+  }
+  .project-page .vs-editing-first:not(.vs-focusing) .vs-layout:has(.vs-inspector) {
+    grid-template-columns: minmax(205px, 1fr) minmax(0, 2.5fr) minmax(230px, 1.15fr);
+  }
+  .vs-editing-first:not(.vs-focusing) .vs-assembly { display: contents; }
+  .vs-editing-first:not(.vs-focusing) .vs-scene-rail { grid-area: 1 / 1; }
+  .vs-editing-first:not(.vs-focusing) .vs-preview { grid-area: 1 / 2; position: static; }
+  .vs-editing-first:not(.vs-focusing) .vs-inspector { grid-area: 1 / 3; margin: 0; border: 0; }
+  .vs-editing-first:not(.vs-focusing) :is(.vs-scene-rail,.vs-preview,.vs-inspector) {
+    min-width: 0;
+    max-height: clamp(220px, 40dvh, 560px);
+    overflow: auto;
+    padding: 12px;
+    border-radius: 10px;
+    background: #101923d9;
+  }
+  .vs-editing-first:not(.vs-focusing) .vs-preview canvas {
+    max-height: max(196px, calc(40dvh - 24px));
+    margin-block: auto;
+  }
+}
+@media (max-width: 700px) {
+  .vs-editing-first .vs-create { position: static; }
+  .vs-editing-first .vs-studio-header { position: relative; flex-wrap: wrap; }
+  .vs-editing-first .vs-create > .vs-flow { left: 0; right: 0; width: auto; }
+}
 .project-page.creator-focus-mode .project-storyboard-panel{flex:1;height:auto}
 @media(max-width:700px){
  .project-workspace-nav{padding:8px 10px;scroll-snap-type:x proximity}

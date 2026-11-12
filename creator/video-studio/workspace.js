@@ -7,7 +7,7 @@ import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111207';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111207';
 import {createStudioRenderer} from './adapters.js?v=2026111207';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111014';
-import {mountAssembly} from './assembly.js?v=2026111208';
+import {mountAssembly} from './assembly.js?v=2026111301';
 import {encodeStudioVideo} from './export.js?v=2026111209';
 import {openStudioStore} from './storage.js';
 import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111203';
@@ -59,6 +59,38 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  header.after(setup);const jsonPanel=$('[data-vs-json]').closest('details');jsonPanel.open=true;setup.querySelector('[data-flow-json]').append(jsonPanel);setup.querySelector('[data-flow-json]').append($('[data-vs=download]'));
  $('.vs-layout').before(Object.assign(document.createElement('h3'),{textContent:'3 · Review scenes & audio',className:'vs-review-heading'}));
  const exportNote=document.createElement('p');exportNote.className='vs-help';exportNote.textContent='4 · Export your complete MP4 with audio';$('.vs-preview').prepend(exportNote);
+ if(root.closest('.project-page')){
+  root.classList.add('vs-editing-first');
+  header.querySelector('.vs-eyebrow').remove();
+  $('.vs-review-heading').remove();
+  exportNote.remove();
+  $('.vs-preview .vs-help').remove();
+
+  const create=document.createElement('details');
+  create.className='vs-create';
+  create.innerHTML='<summary>Create &amp; import</summary>';
+  create.append(setup);
+  header.querySelector('[data-studio-actions]').prepend(create);
+  aiCreate.querySelector('h3').textContent='Create with AI';
+  setup.querySelector('.vs-step:not([data-ai-production]) h3').textContent='Media';
+  setup.querySelector('[data-flow-json] h3').textContent='Import JSON';
+
+  const timelinePanel=document.createElement('section');
+  timelinePanel.className='vs-editing-timeline';
+  timelinePanel.setAttribute('aria-label','Timeline');
+  timelinePanel.innerHTML='<h3>Timeline</h3>';
+  const preview=$('.vs-preview');
+  for(const child of [...preview.children])if(child!==canvas)timelinePanel.append(child);
+  $('.vs-layout').after(timelinePanel);
+  timelinePanel.after(advanced);
+
+  const empty=document.createElement('div');
+  empty.className='vs-editing-empty';
+  empty.innerHTML='<p>No scenes yet</p><div class="vs-actions"><button type="button" data-empty-add>+ Add scene</button><button type="button" data-empty-create>Create or import</button></div>';
+  preview.append(empty);
+  empty.querySelector('[data-empty-add]').onclick=()=>assemblyRoot.querySelector('[data-compose=add]')?.click();
+  empty.querySelector('[data-empty-create]').onclick=()=>{create.open=true;create.querySelector('summary').focus();};
+ }
  setup.ondragover=e=>{e.preventDefault();};setup.ondrop=e=>{e.preventDefault();if(e.dataTransfer.files.length)run(()=>uploadFiles([...e.dataTransfer.files]));};
  const lifecycle=new AbortController();
  let drawing=null;

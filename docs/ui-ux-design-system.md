@@ -83,6 +83,23 @@ the theme backdrop, and readable flat rows with unboxed icons. Page headers
 need the page title and primary action. Surface sync problems when they
 require attention and keep routine success messages out of the visual layout.
 
+### Motion Studio desktop
+
+Carry the selected Invincible theme backdrop into the editor, including its
+ambient details. Keep the background free of page-specific artwork and use
+translucent surfaces where the backdrop would compete with text. Media inside
+the video preview belongs to the project.
+
+Open on the editing workspace: scenes on the left, preview in the center,
+selected-scene controls on the right, and the timeline below. Keep Save and
+Export in one compact toolbar. Place AI generation, media, JSON import, and
+service status behind clearly named controls that open when needed.
+
+Use readable labels, generously sized line icons, and one heading per area.
+Keep the desktop workspace inside the window and scroll the panel that owns
+overflow. On narrow screens, reflow the panels while keeping the main editing
+actions reachable.
+
 Mobile is not a scaled-down desktop. Multi-column cards stack, secondary actions
 move into menus or disclosures, long labels wrap, and primary actions remain
 reachable. Desktop uses additional width for hierarchy and parallel information,

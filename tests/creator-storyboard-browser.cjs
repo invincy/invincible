@@ -19,6 +19,11 @@ const server=http.createServer((req,res)=>{
  try{
   let file=path.join(root,url.replace(/^\/invincible\/?/,''));
   if(fs.statSync(file).isDirectory())file=path.join(file,'index.html');
+  if(file.endsWith('.ttf')){
+   res.setHeader('Content-Type','font/ttf');
+   res.end(fs.readFileSync(file));
+   return;
+  }
   let content=fs.readFileSync(file,'utf8').replaceAll('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js','/fixture.mjs');
   res.end(content);
  }catch{res.statusCode=404;res.end('Missing');}
@@ -108,7 +113,30 @@ const server=http.createServer((req,res)=>{
   }
   await page.setViewportSize({width:1440,height:1000});
   await dialog.locator('#saveContent').click();await page.waitForURL(/project.html\?id=/);
-  await page.locator('#projectTitle').filter({hasText:'Draft production'}).waitFor();assert.equal(await page.locator('[data-tab="Video Studio"]').getAttribute('aria-current'),'page');await page.screenshot({path:path.join(root,'.test-output/creator-project-studio.png'),fullPage:true});for(const w of [320,390]){await page.setViewportSize({width:w,height:852});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Project Studio mobile overflow');}await page.setViewportSize({width:1440,height:1000});await openArea('Storyboard');
+  await page.locator('#projectTitle').filter({hasText:'Draft production'}).waitFor();
+  assert.equal(await page.locator('[data-tab="Video Studio"]').getAttribute('aria-current'),'page');
+  const studio=page.locator('.vs-editing-first');
+  await studio.getByText('No scenes yet',{exact:true}).waitFor();
+  assert.equal(await studio.locator('[data-vs-json]').isVisible(),false);
+  await studio.getByRole('button',{name:'Create or import',exact:true}).click();
+  assert.equal(await studio.locator('[data-vs-json]').isVisible(),true);
+  await studio.getByText('Create & import',{exact:true}).click();
+  await page.screenshot({path:path.join(root,'.test-output/creator-project-studio.png'),fullPage:true});
+  await studio.locator('[data-empty-add]').click();
+  await studio.locator('.vs-inspector').waitFor();
+  assert.equal(await studio.evaluate(root=>{
+   const rail=root.querySelector('.vs-scene-rail').getBoundingClientRect();
+   const preview=root.querySelector('.vs-preview').getBoundingClientRect();
+   const inspector=root.querySelector('.vs-inspector').getBoundingClientRect();
+   const timeline=root.querySelector('.vs-editing-timeline').getBoundingClientRect();
+   return rail.right<=preview.left && preview.right<=inspector.left && timeline.top>=preview.bottom;
+  }),true,'Motion Studio places scenes, preview, inspector and timeline in editing order');
+  for(const width of [320,390]){
+   await page.setViewportSize({width,height:852});
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Project Studio mobile overflow');
+  }
+  await page.setViewportSize({width:1440,height:1000});
+  await openArea('Storyboard');
   assert.equal(await page.locator('.wb-scene').count(),1);
   assert.equal(await page.locator('[data-field=voiceoverTimestamp]').inputValue(),'00:00.125–00:04.875');
   await page.reload();await openArea('Storyboard');await page.locator('.wb-scene').waitFor();
