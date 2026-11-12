@@ -19,6 +19,15 @@ const projectVoiceoverId=document.documentElement.classList.contains('project-vo
  ? new URLSearchParams(location.search).get('project') : null;
 if(projectVoiceoverId){
  const scriptPanel=document.querySelector('.script-panel');
+ const recordingPanel=document.querySelector('.result-panel');
+ scriptPanel.before(recordingPanel);
+ const direction=$('expressiveControls');
+ const directionOptions=document.createElement('details');
+ directionOptions.className='project-voice-direction';
+ directionOptions.innerHTML='<summary>Voice direction <span class="optional">optional</span></summary>';
+ directionOptions.append(...direction.children);
+ direction.append(directionOptions);
+ $('voiceFields').append(direction);
  const history=$('voiceoverHistory');
  const historyDialog=document.createElement('dialog');
  historyDialog.className='project-script-history';
@@ -90,7 +99,9 @@ function refreshAvailability(){
  $('ssmlGuide').hidden=expressive();
  $('deliveryHelp').textContent=expressive()?'Style and voice direction are sent to Gemini as performance instructions.':'These presets adjust speed and pitch only.';
  $('speedLabel').textContent=expressive()?'Gemini pace request':'Generation speed';
- $('speedHelp').textContent=expressive()?'Applies to your next preview or MP3. Gemini aims for this pace, so the result may be slower or faster. Use Playback speed to hear an exact speed change.':'Applies to the Google sample and to your next preview or MP3. Use Playback speed for the current recording.';
+ $('speedHelp').textContent=projectVoiceoverId
+  ? (expressive()?'Approximate pace for the next recording. Playback speed is exact.':'Applies to the next preview or MP3.')
+  : (expressive()?'Applies to your next preview or MP3. Gemini aims for this pace, so the result may be slower or faster. Use Playback speed to hear an exact speed change.':'Applies to the Google sample and to your next preview or MP3. Use Playback speed for the current recording.');
  for(const value of ['sales','social','empathetic','calm'])$('preset').querySelector('[value='+value+']').disabled=!expressive();
  $('preset').querySelector('[value=custom]').disabled=expressive();
  for(const button of $('historyList').querySelectorAll('button'))button.disabled=busy||loading||historyLoading||!user||(historyWrites.has(button.dataset.id)&&!['restore','export'].includes(button.dataset.action));
@@ -117,7 +128,7 @@ function voiceDetails(){
  if(!cap.ssml||$('mode').value==='ssml')$('pause').value='0';
  if(!expressive()&&['sales','social','empathetic','calm'].includes($('preset').value))$('preset').value='natural';
  if(expressive()&&$('preset').value==='custom')$('preset').value='natural';
- $('voiceHelp').textContent=cap.direction?'Use Preview opening to hear this voice with your directions.':cap.supported
+ $('voiceHelp').textContent=cap.direction?(projectVoiceoverId?'Preview this voice with your settings.':'Use Preview opening to hear this voice with your directions.'):cap.supported
   ?[cap.speed?'Speed':'',cap.pitch?'pitch':'',cap.ssml?'SSML':'',cap.emphasis?'emphasis':''].filter(Boolean).join(' · ')+(cap.pitch?'':' · Direct pitch control unavailable.')
   :'This Google voice family is listed, but generation is not supported here yet.';
  meters();

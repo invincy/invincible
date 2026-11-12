@@ -129,6 +129,15 @@ const server=http.createServer((req,res)=>{
   const scriptFrame=page.frameLocator('#projectVoiceoverFrame');
   const narration=scriptFrame.getByRole('textbox',{name:'Your script',exact:true});
   await narration.waitFor();
+  assert.equal(await narration.evaluate(input=>{
+   const doc=input.ownerDocument;
+   const recording=doc.querySelector('.result-panel').getBoundingClientRect();
+   const script=doc.querySelector('.script-panel').getBoundingClientRect();
+   const voice=doc.querySelector('.controls-panel').getBoundingClientRect();
+   return recording.bottom<=script.top&&recording.bottom<=voice.top&&
+    doc.querySelector('#voiceFields').lastElementChild.id==='expressiveControls'&&
+    !doc.querySelector('.project-voice-direction').open;
+  }),true,'Recording leads and optional Voice direction is collapsed below pace');
   assert.equal(await scriptFrame.getByRole('dialog',{name:'Voiceover history'}).count(),0);
   await scriptFrame.getByRole('button',{name:'History',exact:true}).click();
   await scriptFrame.getByRole('dialog',{name:'Voiceover history'}).waitFor();
