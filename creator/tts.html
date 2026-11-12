@@ -5,14 +5,16 @@
 <title>Voiceover · Invincible</title>
 <link rel="icon" href="/invincible/favicon.ico" sizes="any">
 <link rel="stylesheet" href="../site-nav.css?v=19">
-<link rel="stylesheet" href="tts.css?v=2026111201">
+<link rel="stylesheet" href="tts.css?v=2026111301">
 <link rel="stylesheet" href="studio-ui.css?v=3">
 <link rel="stylesheet" href="tts-forest.css?v=1">
 <link rel="stylesheet" href="../shared/spatial-workspace.css?v=4">
 <link rel="stylesheet" href="image-generator.css?v=2026111103"><meta name="theme-color" content="#080f1b">
 <script>
-if (window.parent !== window && new URLSearchParams(location.search).get('embed') === 'ai') {
- document.documentElement.classList.add('ai-voiceover-embed');
+if (window.parent !== window) {
+ const embed = new URLSearchParams(location.search).get('embed');
+ if (embed === 'ai') document.documentElement.classList.add('ai-voiceover-embed');
+ if (embed === 'project') document.documentElement.classList.add('project-voiceover-embed');
 }
 </script>
 </head>
@@ -65,6 +67,6 @@ if (window.parent !== window && new URLSearchParams(location.search).get('embed'
 </section>
 </div>
 </main>
-<script type="module" src="tts.js?v=2026111201"></script>
+<script type="module" src="tts.js?v=2026111301"></script>
 <script type="module" src="tts-forest.js?v=1"></script>
 </body></html>

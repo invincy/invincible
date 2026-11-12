@@ -150,7 +150,7 @@ function subscribeProjects(){
   if(email)subscriptions.push(onSnapshot(query(projects,where("editorEmails","array-contains",email)),snapshot=>{sharedItems=new Map(snapshot.docs.map(row=>[row.id,{...row.data(),id:row.id}]));mergeProjects();},error=>status("Could not load shared projects: "+error.message,"error")));
 }
 
-function openDialog(item=null,{area="Video Studio",mode=""}={}){
+function openDialog(item=null,{area="Voiceover",mode=""}={}){
   pendingProjectArea=area;pendingToolMode=mode;
   dialogWasNew=!item;
   dialogVoiceoverAttached=!!item;

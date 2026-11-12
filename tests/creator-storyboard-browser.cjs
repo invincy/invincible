@@ -9,6 +9,7 @@ const fixture=[
 "export async function getDoc(ref){return snapshot(ref)}export async function getDocs(ref){return snapshot(ref)}",
 "export function onSnapshot(ref,...args){const callback=args.find(item=>typeof item==='function');const listener=()=>callback(snapshot(ref));listeners.push(listener);queueMicrotask(listener);return()=>listeners=listeners.filter(item=>item!==listener)}",
 "export async function runTransaction(db,fn){window.writes=(window.writes||0)+1;await new Promise(resolve=>setTimeout(resolve,window.saveDelay||20));if(window.failSave)throw Object.assign(Error('denied'),{code:'permission-denied'});const reads=new Map(),writes=[];const result=await fn({async get(ref){const snap=snapshot(ref);reads.set(ref,snap.exists()?JSON.stringify(snap.data()):null);return snap;},set(ref,value){writes.push([ref,value]);}});const all=read();for(const [ref,expected] of reads){const current=Object.prototype.hasOwnProperty.call(all,ref)?JSON.stringify(all[ref]):null;if(current!==expected)throw Object.assign(Error('aborted'),{code:'aborted'});}for(const [ref,value] of writes)all[ref]=value;localStorage.setItem('test.creator',JSON.stringify(all));listeners.forEach(fn=>fn());return result;}export async function setDoc(ref,value){window.writes=(window.writes||0)+1;await new Promise(resolve=>setTimeout(resolve,window.saveDelay||20));if(window.failSave)throw Error('denied');const all=read();all[ref]={...all[ref],...value};localStorage.setItem('test.creator',JSON.stringify(all));listeners.forEach(fn=>fn())}export async function deleteDoc(ref){const all=read();delete all[ref];localStorage.setItem('test.creator',JSON.stringify(all));listeners.forEach(fn=>fn())}"
+ ,"export const orderBy=()=>({}),limit=()=>({}),startAfter=()=>({});"
 ].join('\n');
 const server=http.createServer((req,res)=>{
  const url=new URL(req.url,'http://localhost').pathname;
@@ -37,7 +38,16 @@ const server=http.createServer((req,res)=>{
   page.on('pageerror',error=>{errors.push(error.message);console.error('Creator page error',error.message)});await page.route('https://**/*',route=>route.abort());
   page.on('dialog',dialog=>dialog.accept());
   await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.copied=text}}}));
-  const openArea=async name=>{const more=page.locator('.wb-more');if(await more.count())await more.evaluate(n=>n.open=true);await page.locator('[data-tab="'+name+'"]').click();};
+  const openArea=async name=>{
+   if(await page.locator('#projectVoiceoverStep').isVisible()){
+    const button=page.locator('[data-project-area="'+name+'"]:not([data-tool-mode])');
+    if(await button.count()){await button.click();return;}
+    await page.locator('[data-project-area="Storyboard"]').click();
+   }
+   const more=page.locator('.wb-more');
+   if(await more.count())await more.evaluate(n=>n.open=true);
+   await page.locator('[data-tab="'+name+'"]').click();
+  };
   const stored=()=>page.evaluate(()=>Object.values(JSON.parse(localStorage.getItem('test.creator')||'{}')).find(item=>item.title==='Gaganyaan production'));
   // New Content opens the shared workbench; draft interactions never submit the form.
   await page.goto(base);await page.locator('#app:not([hidden])').waitFor();
@@ -114,6 +124,16 @@ const server=http.createServer((req,res)=>{
   await page.setViewportSize({width:1440,height:1000});
   await dialog.locator('#saveContent').click();await page.waitForURL(/project.html\?id=/);
   await page.locator('#projectTitle').filter({hasText:'Draft production'}).waitFor();
+  await page.locator('#projectVoiceoverStep:not([hidden])').waitFor();
+  assert.equal(await page.locator('[data-project-area="Voiceover"]').getAttribute('aria-current'),'step');
+  const narration=page.frameLocator('#projectVoiceoverFrame').locator('#script');
+  await narration.fill('A narration for this project.');
+  await page.locator('#useNarration').click();
+  await page.locator('[data-project-area="Storyboard"][aria-current="step"]').waitFor();
+  await openArea('Overview');
+  await page.locator('.wb-script summary').click();
+  assert.equal(await page.locator('[data-script-draft]').inputValue(),'A narration for this project.');
+  await openArea('Video Studio');
   assert.equal(await page.locator('[data-tab="Video Studio"]').getAttribute('aria-current'),'page');
   const studio=page.locator('.vs-editing-first');
   await studio.getByText('No scenes yet',{exact:true}).waitFor();
@@ -206,7 +226,7 @@ const server=http.createServer((req,res)=>{
   await page.locator('#projectTitle').filter({hasText:'Gaganyaan production'}).waitFor();await openArea('Storyboard');
   const projectId=new URL(page.url()).searchParams.get('id');
   assert.equal((await stored()).notes,'Use a clear map opening and preserve the supplied narration.');
-  assert.equal(await page.locator('.project-workspace-nav [data-project-area]').count(),5);
+  assert.equal(await page.locator('.project-workspace-nav [data-project-area]').count(),6);
   assert.equal(await page.locator('#saveAndReturn').isVisible(),true);
   const stamp=seconds=>String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');
   const table='Voiceover\tVisual / Animation\tAssets Required\tTimeline\tTimestamp\n'+Array.from({length:16},(_,i)=>'भारत का मिशन '+(i+1)+'!\t'+(i===0?'Gaganyaan upper assembly को orbit में दिखाएं. Start with a wide view of the complete spacecraft, then move the camera slowly around the Crew Module and Service Module. Preserve realistic proportions and show the protective structure clearly. Keep the background dark, use soft cyan rim lighting, and finish with a stable three-quarter view. Do not show liftoff or add new objects.':'Camera '+(i+1))+'\tLVM3 model\t'+(i*4)+'–'+(i*4+4)+'s\t'+stamp(i*4)+'.125–'+stamp(i*4+4)+'.875').join('\n');

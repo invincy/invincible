@@ -15,6 +15,8 @@ const encoder=new TextEncoder();
 // disclosure choice when rotating or moving back from a desktop-sized window.
 const desktopLayout=matchMedia('(min-width:901px)'),voiceSettings=$('voiceSettings');
 const basicVoiceover=document.documentElement.classList.contains('ai-voiceover-embed');
+const projectVoiceoverId=document.documentElement.classList.contains('project-voiceover-embed')
+ ? new URLSearchParams(location.search).get('project') : null;
 let mobileSettingsOpen=false;
 function arrangeSettings(){voiceSettings.open=basicVoiceover||desktopLayout.matches||mobileSettingsOpen;}
 voiceSettings.addEventListener('toggle',()=>{if(!desktopLayout.matches)mobileSettingsOpen=voiceSettings.open;});
@@ -91,7 +93,10 @@ function families(preferred=$('family').value){
  setOptions($('family'),[{value:'',label:'All families'},...values.map(value=>({value,label:value}))],preferred);
  filterVoices();
 }
-function key(){return (basicVoiceover?'invincible.ai.tts.draft.v1.':'invincible.creator.tts.draft.v1.')+user.uid;}
+function key(){
+ const prefix=basicVoiceover?'invincible.ai.tts.draft.v1.':'invincible.creator.tts.draft.v1.';
+ return prefix+user.uid+(projectVoiceoverId?'.project.'+projectVoiceoverId:'');
+}
 function remember(){
  if(!user)return;
  const snapshot=Object.fromEntries(fields.map(id=>[id,$(id).value]));

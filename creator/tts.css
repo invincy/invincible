@@ -285,6 +285,12 @@ audio{width:100%;height:36px}
 .ai-voiceover-embed,
 .ai-voiceover-embed body { background: #0a151b; }
 .ai-voiceover-embed body { padding: 0 !important; }
+.project-voiceover-embed,
+.project-voiceover-embed body.studio-ui { background: transparent !important; }
+.project-voiceover-embed body { padding: 0 !important; }
+.project-voiceover-embed body.studio-ui::before,
+.project-voiceover-embed :is(.global-nav,.mobile-tabbar,.heading,.tts-forest,.global-ai-widget) { display: none !important; }
+.project-voiceover-embed main { padding-top: 4px; }
 .ai-voiceover-embed main { padding: 12px; }
 .ai-voiceover-embed :is(.global-nav,.heading,.tts-forest,.voice-panel-links,
   .script-heading-actions,.mode-label,[for="title"],#title,[for="creativeInstructions"],

@@ -1,5 +1,5 @@
 import{makeScene}from'./storyboard-model.js?v=3';
-import{createProductionWorkbench}from'./production-workbench.js?v=2026111301';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026111302';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{doc,getDoc,onSnapshot,runTransaction,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -45,7 +45,7 @@ const storyboard=createProductionWorkbench($("projectStoryboard"),{
  getAccountId:()=>user?.uid,
  getProductionReadiness:()=>productionReadiness,
  enableVideoStudio:true,
- defaultArea:'Video Studio',
+ defaultArea:'Storyboard',
  onChange:()=>{queueSave();renderSceneWorkspace();},
  copyText,
  onCopyBrief:async()=>{
@@ -80,10 +80,35 @@ function render(){
 }
 
 function selectProjectArea(area,mode=""){
-  storyboard.open({area});
-  document.querySelectorAll("[data-project-area]").forEach(button=>button.setAttribute("aria-current",button.dataset.projectArea===area&&(!button.dataset.toolMode||button.dataset.toolMode===mode)?"page":"false"));
-  if(mode==="battlefield")document.querySelector('[data-project-area="Video Studio"][data-tool-mode="battlefield"]')?.setAttribute("aria-current","page");
+  const isVoiceover=area==="Voiceover";
+  $("projectVoiceoverStep").hidden=!isVoiceover;
+  $("projectEditingStep").hidden=isVoiceover;
+  document.body.classList.toggle("project-voiceover-active",isVoiceover);
+  if(isVoiceover){
+    const frame=$("projectVoiceoverFrame");
+    if(!frame.hasAttribute("src"))frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId});
+  }else storyboard.open({area});
+  document.querySelectorAll("[data-project-area]").forEach(button=>{
+    const active=button.dataset.projectArea===area&&(button.dataset.toolMode||"")===mode;
+    button.setAttribute("aria-current",active?"step":"false");
+  });
 }
+
+$("useNarration").onclick=()=>{
+  const voiceover=$("projectVoiceoverFrame").contentDocument;
+  const input=voiceover?.getElementById("script"),workspace=voiceover?.getElementById("workspace");
+  const message=$("projectVoiceoverStatus");
+  const script=input?.value.trim();
+  if(!workspace||workspace.hidden||!script){message.textContent="Paste your script in Voiceover first.";return;}
+  if(voiceover.getElementById("mode")?.value==="ssml"){message.textContent="Choose Plain text to send your script to Step 2.";return;}
+  if(project.script?.trim()&&project.script.trim()!==script&&!confirm("Replace the current project script draft with this narration?"))return;
+  if(project.script!==script){
+    project.script=script;
+    queueSave();
+  }
+  message.textContent="";
+  selectProjectArea("Storyboard");
+};
 
 function renderSceneWorkspace(){
   const scenes=project.scenes||[];
@@ -392,8 +417,7 @@ async function load(){
       status(storageError({code:'revision-conflict'})+" An earlier local draft is waiting for your decision.","error");
     }
     if(requestedArea)selectProjectArea(requestedArea,requestedTool);
-    else if(project.productionState?.open)storyboard.open({area:"Production",sceneId:project.productionState.sceneId});
-    else selectProjectArea("Video Studio");
+    else selectProjectArea("Voiceover");
     onSnapshot(projectRef,{includeMetadataChanges:true},live=>{
       if(live.metadata.hasPendingWrites)return;
       if(!live.exists()){

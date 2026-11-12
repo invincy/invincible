@@ -20,10 +20,11 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  let historyWorkspace=null,videoWorkspace=null,videoSession={};
  let tab=defaultArea,workspace='All',groupBy='project',assetFilter='All',completionFilter='All',searchQuery='',active='',pending=[],mapping=[],importTable=null,scriptChanges=null,dragId='',activeAsset='',expandAll=false,viewMode='focused',expandedScene='',sidebarCollapsed=false,editorPane='plan',filtersVisible=false,promptKey='blenderPrompt',messageTimer;
  root.classList.add('production-workbench');
- root.classList.toggle('wb-studio-home',enableVideoStudio&&defaultArea==='Video Studio');
+ const projectStudio=enableVideoStudio&&(defaultArea==='Video Studio'||!!root.closest('.project-page'));
+ root.classList.toggle('wb-studio-home',projectStudio);
  root.innerHTML='<div class="wb-commandbar"><nav class="wb-tabs" aria-label="Project areas">'+['Storyboard','Production','Assets','Overview','Maps','Clips',...(enableVideoStudio?['Video Studio']:[])].map((name,index)=>'<button type="button" data-tab="'+name+'" title="'+name+'" aria-label="'+name+'">'+icon(['board','production','assets','overview','map','clips','production'][index])+'<span>'+name+'</span></button>').join('')+'</nav><div data-command-actions></div></div><div class="wb-status" role="status" aria-live="polite"></div><div data-workbench></div>';
  const panel=root.querySelector('[data-workbench]'),message=text=>{clearTimeout(messageTimer);const node=root.querySelector('.wb-status');node.textContent=text;if(/copied|appended|applied|Filled blank|Preview only/.test(text))messageTimer=setTimeout(()=>node.textContent='',3000);};
- if(enableVideoStudio&&defaultArea==='Video Studio'){
+ if(projectStudio){
  const nav=root.querySelector('.wb-tabs'),more=document.createElement('details');more.className='wb-more';more.innerHTML='<summary>More</summary><div></div>';
  for(const name of ['Video Studio','Storyboard']){const b=nav.querySelector('[data-tab="'+name+'"]');if(b){b.querySelector('span').textContent=name==='Video Studio'?'Studio':name==='Storyboard'?'Script':name;nav.append(b);}}
  for(const name of ['Assets','Production','Overview','Maps','Clips'])more.querySelector('div').append(nav.querySelector('[data-tab="'+name+'"]'));nav.append(more);
@@ -181,7 +182,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  const editorObserver=new ResizeObserver(()=>{if(root.clientWidth!==lastWidth){lastWidth=root.clientWidth;sizeEditors();}});
  editorObserver.observe(root);
  function render(){
-  root.classList.toggle('wb-studio-view',enableVideoStudio&&tab==='Video Studio'&&defaultArea==='Video Studio');
+  root.classList.toggle('wb-studio-view',projectStudio&&tab==='Video Studio');
   if(!project())return;
   historyWorkspace?.destroy();historyWorkspace=null;videoWorkspace?.destroy();videoWorkspace=null;
   const navScroll=root.querySelector('.wb-nav-list')?.scrollTop||0;

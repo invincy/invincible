@@ -85,6 +85,10 @@ require attention and keep routine success messages out of the visual layout.
 
 ### Motion Studio desktop
 
+Open a project on Voiceover. The project workflow runs from Voiceover to
+Script & scenes, then Map Editor when visuals need maps, and finally Motion
+Studio for assembly. Explicit tool shortcuts still open their own tool.
+
 Carry the selected Invincible theme backdrop into the editor, including its
 ambient details. Keep the background free of page-specific artwork and use
 translucent surfaces where the backdrop would compete with text. Media inside
