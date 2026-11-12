@@ -315,7 +315,14 @@ async function checkGlobeWithoutWebGL(browser,base) {
         const themeTwo=page.getByRole('button',{name:'Emerald Forest'}),themeThree=page.getByRole('button',{name:'Electric Blue'}),themeOne=page.getByRole('button',{name:'Golden Orbit'});
         assert.equal(await themeTwo.getAttribute('aria-pressed'),'false');
         await themeTwo.click();assert.equal(await page.locator('.v2-shell').evaluate(node=>node.classList.contains('v2-theme-two')),true);
+        assert.equal(await page.locator('.v2-forest-portal').count(),1,'Forest has a glass portal');
+        assert.equal(await page.locator('.focus-orb-3d').count(),0,'Forest does not reuse the particle globe');
+        assert.equal(await page.getByRole('button',{name:/Orb theme:/}).count(),0,'Duplicate orb theme control is removed');
+        await page.screenshot({path:path.join(output,'dashboard-theme-forest-1440.png')});
         await themeThree.click();assert.equal(await page.locator('.v2-shell').evaluate(node=>node.classList.contains('v2-theme-three')),true);
+        assert.equal(await page.locator('.v2-electric-core').count(),1,'Electric has its own energy core');
+        assert.equal(await page.locator('.focus-orb-3d').count(),0,'Electric does not reuse the particle globe');
+        await page.screenshot({path:path.join(output,'dashboard-theme-electric-1440.png')});
         assert.equal(await page.locator('.v2-theme-three-timer-ring').isVisible(),true);
         const motion=page.getByLabel('Animation intensity');
         assert.equal(await motion.inputValue(),'subtle');
@@ -325,6 +332,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
         await motion.selectOption('subtle');await themeOne.click();
         assert.equal(await page.locator('.v2-shell').evaluate(node=>node.classList.contains('v2-theme-one')),true);
         assert.equal(await page.locator('.v2-theme-three-timer-ring').isVisible(),false);
+        await page.screenshot({path:path.join(output,'dashboard-theme-golden-1440.png')});
         assert.equal(await page.getByRole('navigation',{name:'Explore spaces'}).getByRole('button').count(),13);
         assert.equal(await page.locator('.focus-orb-3d canvas').count(),1);
         await page.waitForFunction(()=>!document.querySelector('.v2-orb').classList.contains('is-compact'));
@@ -380,7 +388,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
         assert.ok(positions.workday.x>.2&&positions.workday.x<.5&&positions.workday.y>.5);
         assert.ok(positions.journal.x<.35&&positions.creator.x>.7);
         assert.ok(Object.values(positions).every(({x,y})=>Math.hypot(x-.5,y-.5)<.35),'Shortcut centers stay inside the rim');
-        assert.equal(await page.locator('.focus-orb-3d.orb-theme-cyan').count(),1,'Fresh preferences default to cyan');
+        assert.equal(await page.locator('.focus-orb-3d.orb-theme-gold').count(),1,'Golden Orbit uses the gold particle globe');
         const corners=await page.evaluate(()=>{
           const bounds=selector=>document.querySelector(selector).getBoundingClientRect();
           const orb=bounds('.v2-orb');
@@ -605,7 +613,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
           if(width===393){
             assert.equal(await page.locator('.v2-page-point').count(),9);
             assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
-            assert.equal(await page.locator('.v2-guide-timer-controls button,.v2-guide-work-link,.v2-guide-orb-label button').evaluateAll(items=>items.every(item=>item.getBoundingClientRect().height>=44)),true,'Dashboard controls keep 44px touch targets');
+            assert.equal(await page.locator('.v2-guide-timer-controls button,.v2-guide-work-link').evaluateAll(items=>items.every(item=>item.getBoundingClientRect().height>=44)),true,'Dashboard controls keep 44px touch targets');
             await page.screenshot({path:path.join(output,name+'-phone-map.png')});
           }
           await navigateTo(page,'02 My Workspace');
@@ -743,7 +751,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
         await compactPage.evaluate(()=>window.switchAccount('bob'));
         await compactPage.locator('.v2-guide-empty').waitFor();
         assert.equal(await compactPage.getByText('Make space for your next move.',{exact:true}).count(),0);
-        assert.ok(await compactPage.locator('.v2-guide-orb-label').evaluate(e=>e.getBoundingClientRect().top-document.querySelector('.v2-guide-scene').getBoundingClientRect().top<50),'colour selector stays at the top');
+        assert.equal(await compactPage.getByRole('button',{name:/Orb theme:/}).count(),0,'obsolete colour selector stays removed');
         await compactPage.screenshot({path:path.join(output,'compact-empty-phone.png'),fullPage:true});await compactPage.close();
         const toolsPage=await context.newPage();await toolsPage.goto(base+'/fixture');
         await toolsPage.getByRole('button',{name:'Notifications: no pending reminders',exact:true}).click();

@@ -75,10 +75,8 @@ function SignedInWorkspace({user, logout}) {
   const inspect = id => setFocusedTaskId(id);
   const [authError, setAuthError] = useState('');
   const [orbBox, setOrbBox] = useState({left: innerWidth-66, top: 12, width: 48, height: 48, compact: true});
-  const [theme, setTheme] = useState(() => {try {return localStorage.getItem('invincible-orb-theme') || 'cyan';} catch {return 'cyan';}});
   const [visualTheme, setVisualTheme] = useState(() => {try {const value=localStorage.getItem('invincible-visual-theme');return value==='two'||value==='three'?value:'one';} catch {return 'one';}});
   const [animationIntensity,setAnimationIntensity]=useState(()=>{try{return ['off','subtle','full'].includes(localStorage.getItem('invincible-electric-motion'))?localStorage.getItem('invincible-electric-motion'):'subtle';}catch{return 'subtle';}});
-  const activeOrbTheme=desktop&&visualTheme==='two'?'emerald':desktop&&visualTheme==='three'?'cyan':theme;
   useEffect(()=>{
     const media=matchMedia('(min-width: 901px)'),change=()=>setDesktop(media.matches);
     media.addEventListener('change',change);return()=>media.removeEventListener('change',change);
@@ -191,11 +189,6 @@ function SignedInWorkspace({user, logout}) {
     const destination=desktop&&spatialDestination(page.href,location.href);
     if(destination)openSpace(destination.id,page.href);else setTravelPage(page);
   };
-  const changeTheme = () => setTheme(current => {
-    const themes = ['cyan','gold','emerald'], next = themes[(themes.indexOf(current)+1)%themes.length];
-    try {localStorage.setItem('invincible-orb-theme', next);} catch {}
-    return next;
-  });
   const chooseVisualTheme=next=>setVisualTheme(current=>{
     if(current===next)return current;
     try {localStorage.setItem('invincible-visual-theme',next);} catch {}
@@ -212,9 +205,9 @@ function SignedInWorkspace({user, logout}) {
   return <div className={'v2-shell'+(desktop?' v2-desktop-connected v2-theme-'+visualTheme:' v2-mobile-theme-'+visualTheme)+(authError || error || !ready || data.tasksCached || data.planCached ? ' has-status' : '')} data-motion={animationIntensity}>
     {desktop&&visualTheme==='two'&&<div className="v2-theme-two-scene" style={{'--theme-two-forest-background':"url('/invincible/assets/theme-two-forest.webp')"}} aria-hidden="true"/>}
     {desktop&&visualTheme==='three'&&<><div className="v2-theme-three-scene" aria-hidden="true"/><svg className="v2-theme-three-circuits" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true"><path d="M0 142H142l32 30h156l38 37h90M0 460h196l39-38h114l32-33h59M1000 245H872l-35 34H716l-32 32h-66M1000 512H848l-42-42H676l-28-28h-32"/><path className="is-live" d="M0 142H142l32 30h156l38 37h90M0 460h196l39-38h114l32-33h59M1000 245H872l-35 34H716l-32 32h-66M1000 512H848l-42-42H676l-28-28h-32"/></svg></>}
-    {active==='dashboard' && <div className={'v2-ambient-field'+(orbBox.compact?'':' has-globe')} aria-hidden="true"
+    {active==='dashboard'&&(!desktop||visualTheme==='one') && <div className={'v2-ambient-field'+(orbBox.compact?'':' has-globe')} aria-hidden="true"
       style={{'--globe-x':(orbBox.left+orbBox.width/2)+'px','--globe-y':(orbBox.top+orbBox.height/2)+'px','--globe-radius':(orbBox.width*.55)+'px'}}>
-      <AmbientParticles theme={activeOrbTheme} intensity={desktop&&visualTheme==='three'?animationIntensity:'full'}/>
+      <AmbientParticles theme="gold" intensity="full"/>
     </div>}
     {desktop&&visualTheme==='two'&&<div className="v2-theme-two-brand" role="img" aria-label="Invincible. Plan, create, track, grow.">
       <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M39 6C23 7 10 13 9 25c-.5 6 3 10 8 11 11 2 20-12 22-30ZM8 42c5-12 13-20 25-29"/></svg>
@@ -232,13 +225,15 @@ function SignedInWorkspace({user, logout}) {
       {regions.map(region => <Region key={region.id} region={region} viewport={viewport} onScroll={moveOrb} active={active===region.id} connected={!['dashboard','workspace'].includes(region.id)}>
         {!['dashboard','workspace'].includes(region.id)?<ConnectedSpace region={region} active={active===region.id} initialPath={paths.current[region.id]} requestedPath={requestedPaths[region.id]} onNavigate={openSpace} onLocation={rememberLocation} onWheel={delta=>{if(viewport.current)viewport.current.scrollLeft+=delta;}}/>:
           !ready ? <div className="v2-panel v2-loading" role="status">Restoring tasks and your daily plan…</div> :
-          region.id === 'dashboard' ? <Dashboard uid={user.uid} data={data} plan={plan} timer={timer} onInspect={inspect} orbAnchor={mountOrbAnchor} theme={activeOrbTheme} onChangeTheme={changeTheme} onOpenWorkspace={() => navigate('workspace')} onTravel={travel} onPlan={()=>setTodayOpen(true)} onPanelScroll={moveOrb}/> :
+          region.id === 'dashboard' ? <Dashboard uid={user.uid} data={data} plan={plan} timer={timer} onInspect={inspect} orbAnchor={mountOrbAnchor} onOpenWorkspace={() => navigate('workspace')} onTravel={travel} onPlan={()=>setTodayOpen(true)} onPanelScroll={moveOrb}/> :
           <Workspace desktop={desktop} data={data} plan={plan} timer={timer} onInspect={inspect} uid={user.uid} onCreate={() => setSelected({id: newId('t'), create: true})} onPaste={() => setImportPlan({targetId: ''})}/>}
       </Region>)}
     </main>
-    <div className={'v2-orb '+(orbBox.compact ? 'is-compact' : travelPage && active === 'dashboard' ? 'is-approaching' : '')} style={{left: orbBox.left, top: orbBox.top, width: orbBox.width, height: orbBox.height}}
-      onWheel={event => {const distance = event.deltaX + (event.shiftKey ? event.deltaY : 0); if (distance && viewport.current) {event.preventDefault(); viewport.current.scrollLeft += distance;}}}><FocusOrb theme={activeOrbTheme} spin={false} richParticles dashboardMotion interactionSurface={viewport}/>
-      {orbBox.compact && <button className="v2-orb-theme" aria-label={'Orb theme: '+theme+'. Change theme'} onClick={changeTheme}>◐</button>}
+    <div className={'v2-orb v2-orb-'+(!desktop?'golden':visualTheme)+(orbBox.compact ? ' is-compact' : travelPage && active === 'dashboard' ? ' is-approaching' : '')} style={{left: orbBox.left, top: orbBox.top, width: orbBox.width, height: orbBox.height}}
+      onWheel={event => {const distance = event.deltaX + (event.shiftKey ? event.deltaY : 0); if (distance && viewport.current) {event.preventDefault(); viewport.current.scrollLeft += distance;}}}>
+      {(!desktop||visualTheme==='one')&&<FocusOrb theme="gold" spin={false} richParticles dashboardMotion interactionSurface={viewport}/>}
+      {desktop&&visualTheme==='two'&&<div className="v2-forest-portal" aria-hidden="true"><span/><span/><span/><i/></div>}
+      {desktop&&visualTheme==='three'&&<div className="v2-electric-core" aria-hidden="true"><svg viewBox="0 0 100 100"><path d="M50 7 43 28 51 37 39 51 49 59 42 75 50 93"/><path d="M22 19 35 35 31 47 43 55 34 70 22 81"/><path d="M78 19 65 35 69 47 57 55 66 70 78 81"/></svg><span/><i/></div>}
     </div>
     {desktop?<ArcNavigation regions={regions} activeIndex={activeIndex} onNavigate={navigate}/>:<footer className="v2-footer"><><span>PERSONAL WORKSPACE</span><span>{active==='dashboard'?'Tap the centre for today’s plan':'Move cards or open a project'}</span><span>{active==='dashboard'?'01':'02'} / 02</span></></footer>}
     {travelPage && <div className="v2-travel" role="status" aria-live="polite"><span>ENTERING</span><strong>{travelPage.label}</strong><i aria-hidden="true"/></div>}
