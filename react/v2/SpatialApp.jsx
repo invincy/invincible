@@ -76,6 +76,8 @@ function SignedInWorkspace({user, logout}) {
   const [authError, setAuthError] = useState('');
   const [orbBox, setOrbBox] = useState({left: innerWidth-66, top: 12, width: 48, height: 48, compact: true});
   const [theme, setTheme] = useState(() => {try {return localStorage.getItem('invincible-orb-theme') || 'cyan';} catch {return 'cyan';}});
+  const [visualTheme, setVisualTheme] = useState(() => {try {return localStorage.getItem('invincible-visual-theme') === 'two' ? 'two' : 'one';} catch {return 'one';}});
+  const activeOrbTheme=desktop&&visualTheme==='two'?'emerald':theme;
   useEffect(()=>{
     const media=matchMedia('(min-width: 901px)'),change=()=>setDesktop(media.matches);
     media.addEventListener('change',change);return()=>media.removeEventListener('change',change);
@@ -193,27 +195,37 @@ function SignedInWorkspace({user, logout}) {
     try {localStorage.setItem('invincible-orb-theme', next);} catch {}
     return next;
   });
-  return <div className={'v2-shell'+(desktop?' v2-desktop-connected v2-theme-one':'')+(authError || error || !ready || data.tasksCached || data.planCached ? ' has-status' : '')}>
+  const toggleVisualTheme=()=>setVisualTheme(current=>{
+    const next=current==='two'?'one':'two';
+    try {localStorage.setItem('invincible-visual-theme',next);} catch {}
+    return next;
+  });
+  return <div className={'v2-shell'+(desktop?' v2-desktop-connected v2-theme-'+visualTheme:'')+(authError || error || !ready || data.tasksCached || data.planCached ? ' has-status' : '')}>
+    {desktop&&visualTheme==='two'&&<div className="v2-theme-two-scene" aria-hidden="true"/>}
     {active==='dashboard' && <div className={'v2-ambient-field'+(orbBox.compact?'':' has-globe')} aria-hidden="true"
       style={{'--globe-x':(orbBox.left+orbBox.width/2)+'px','--globe-y':(orbBox.top+orbBox.height/2)+'px','--globe-radius':(orbBox.width*.55)+'px'}}>
-      <AmbientParticles theme={theme}/>
+      <AmbientParticles theme={activeOrbTheme}/>
+    </div>}
+    {desktop&&visualTheme==='two'&&<div className="v2-theme-two-brand" role="img" aria-label="Invincible. Plan, create, track, grow.">
+      <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M39 6C23 7 10 13 9 25c-.5 6 3 10 8 11 11 2 20-12 22-30ZM8 42c5-12 13-20 25-29"/></svg>
+      <strong>INVINCIBLE</strong><span>PLAN <i>•</i> CREATE <i>•</i> TRACK <i>•</i> GROW</span>
     </div>}
     <header className="v2-topbar"><a className="v2-brand" href="#dashboard" onClick={event => {event.preventDefault();navigate('dashboard');}}><img className="v2-brand-mark" src={APP_ICON_URL} alt="" width="36" height="36"/><span>INVINCIBLE<small>PERSONAL WORKSPACE</small></span></a>
       <nav aria-label="Explore spaces">{regions.map(region => <a key={region.id} href={'#'+region.id} title={region.label} aria-label={(region.number?region.number+' ':'')+region.label} aria-current={active === region.id ? 'location' : undefined} onClick={event => {if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;event.preventDefault();navigate(region.id);}}>{desktop&&<PageIcon page={region.id}/>}<span className="v2-space-number">{region.number}</span><span className="v2-space-name">{region.label}</span></a>)}</nav>
     </header>
-    <div className="v2-hud"><div className="v2-account"><Suspense fallback={null}><DashboardTools/></Suspense><button type="button" className="v2-saved-ideas" aria-label="Saved ideas" title="Saved ideas" onClick={()=>setIdeaPanel({})}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg></button><AccountMenu user={user} logout={logout}/></div></div>
+    <div className="v2-hud">{desktop&&<button type="button" className="v2-theme-switch" aria-label={'Switch to Theme '+(visualTheme==='one'?'Two':'One')} title={'Switch to Theme '+(visualTheme==='one'?'Two':'One')} aria-pressed={visualTheme==='two'} onClick={toggleVisualTheme}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M20 4C11 4 5 8 5 14c0 3 2 5 5 5 6 0 9-8 10-15ZM4 21c3-7 7-11 13-15"/></svg><span>Theme {visualTheme==='one'?'One':'Two'}</span></button>}<div className="v2-account"><Suspense fallback={null}><DashboardTools/></Suspense><button type="button" className="v2-saved-ideas" aria-label="Saved ideas" title="Saved ideas" onClick={()=>setIdeaPanel({})}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg></button><AccountMenu user={user} logout={logout}/></div></div>
     {(authError || error || !ready || data.tasksCached || data.planCached) && <div className="v2-connection" role="status"><span className={error ? 'v2-dot error' : 'v2-dot'}/>{authError || error || (!ready ? 'Loading workspace…' : 'Offline · Showing saved records')}{error && <button onClick={data.retry}>Retry sync</button>}</div>}
     <main ref={viewport} className="v2-canvas" aria-label="Continuous spatial workspace" tabIndex={0} onScroll={scroll}
       onKeyDown={event => {if (event.target !== event.currentTarget) return;let index = regions.findIndex(region => region.id === active);if (event.key === 'ArrowRight') index++;else if (event.key === 'ArrowLeft') index--;else if (event.key === 'Home') index=0;else if (event.key === 'End') index=regions.length-1;else return;event.preventDefault();navigate(regions[Math.max(0,Math.min(regions.length-1,index))].id);}}>
       {regions.map(region => <Region key={region.id} region={region} viewport={viewport} onScroll={moveOrb} active={active===region.id} connected={!['dashboard','workspace'].includes(region.id)}>
         {!['dashboard','workspace'].includes(region.id)?<ConnectedSpace region={region} active={active===region.id} initialPath={paths.current[region.id]} requestedPath={requestedPaths[region.id]} onNavigate={openSpace} onLocation={rememberLocation} onWheel={delta=>{if(viewport.current)viewport.current.scrollLeft+=delta;}}/>:
           !ready ? <div className="v2-panel v2-loading" role="status">Restoring tasks and your daily plan…</div> :
-          region.id === 'dashboard' ? <Dashboard uid={user.uid} data={data} plan={plan} timer={timer} onInspect={inspect} orbAnchor={mountOrbAnchor} theme={theme} onChangeTheme={changeTheme} onOpenWorkspace={() => navigate('workspace')} onTravel={travel} onPlan={()=>setTodayOpen(true)} onPanelScroll={moveOrb}/> :
+          region.id === 'dashboard' ? <Dashboard uid={user.uid} data={data} plan={plan} timer={timer} onInspect={inspect} orbAnchor={mountOrbAnchor} theme={activeOrbTheme} onChangeTheme={changeTheme} onOpenWorkspace={() => navigate('workspace')} onTravel={travel} onPlan={()=>setTodayOpen(true)} onPanelScroll={moveOrb}/> :
           <Workspace desktop={desktop} data={data} plan={plan} timer={timer} onInspect={inspect} uid={user.uid} onCreate={() => setSelected({id: newId('t'), create: true})} onPaste={() => setImportPlan({targetId: ''})}/>}
       </Region>)}
     </main>
     <div className={'v2-orb '+(orbBox.compact ? 'is-compact' : travelPage && active === 'dashboard' ? 'is-approaching' : '')} style={{left: orbBox.left, top: orbBox.top, width: orbBox.width, height: orbBox.height}}
-      onWheel={event => {const distance = event.deltaX + (event.shiftKey ? event.deltaY : 0); if (distance && viewport.current) {event.preventDefault(); viewport.current.scrollLeft += distance;}}}><FocusOrb theme={theme} spin={false} richParticles dashboardMotion interactionSurface={viewport}/>
+      onWheel={event => {const distance = event.deltaX + (event.shiftKey ? event.deltaY : 0); if (distance && viewport.current) {event.preventDefault(); viewport.current.scrollLeft += distance;}}}><FocusOrb theme={activeOrbTheme} spin={false} richParticles dashboardMotion interactionSurface={viewport}/>
       {orbBox.compact && <button className="v2-orb-theme" aria-label={'Orb theme: '+theme+'. Change theme'} onClick={changeTheme}>◐</button>}
     </div>
     {desktop?<ArcNavigation regions={regions} activeIndex={activeIndex} onNavigate={navigate}/>:<footer className="v2-footer"><><span>PERSONAL WORKSPACE</span><span>{active==='dashboard'?'Tap the centre for today’s plan':'Move cards or open a project'}</span><span>{active==='dashboard'?'01':'02'} / 02</span></></footer>}

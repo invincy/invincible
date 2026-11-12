@@ -402,3 +402,9 @@ window or device viewport changes; display calibration can still vary by screen.
 Particle motion is bounded to a 1.13-unit radius after all deformations and
 pointer forces, limiting the animated shell to roughly 10% beyond its nominal
 radius while preserving its rotation and irregular motion.
+
+Theme Two is a selectable desktop treatment that keeps the spatial pages and
+looping dock while adding a compressed forest-portal backdrop, emerald orb and
+layered glass cards. The backdrop is a single optimized 164 KB WebP; motion and
+depth use the existing orb renderer and lightweight CSS layers. Theme One stays
+the default, and the selection is remembered on the device.

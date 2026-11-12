@@ -260,6 +260,69 @@
   .v2-theme-one .v2-three-panel-board.v2-kanban-board { height:calc(100dvh - 330px); min-height:300px }
   .v2-theme-one .v2-guide-work { bottom:auto }
 }
+/* Theme Two: forest portal scene with low-cost layered depth. */
+@media (min-width:901px) {
+  .v2-desktop-connected.v2-theme-two { display:block; overflow:hidden; background:#06110c }
+  .v2-theme-two>.v2-topbar { display:none }
+  .v2-theme-two>.v2-canvas { position:fixed; inset:0; width:100vw; height:100dvh; z-index:1; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; background:transparent }
+  .v2-theme-two>.v2-canvas::-webkit-scrollbar { display:none }
+  .v2-theme-two .v2-region { height:100dvh; padding:18px clamp(18px,2vw,36px) 170px; border:0; background:transparent }
+  .v2-theme-two .v2-region-connected { padding:0 }
+  .v2-theme-two>.v2-ambient-field { background:transparent!important }
+  .v2-theme-two-scene { position:fixed; z-index:0; inset:0; overflow:hidden; pointer-events:none; background:#06110c url('/invincible/assets/theme-two-forest.webp') center top / 100% auto no-repeat }
+  .v2-theme-two-scene::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg,#03100cbd 0%,#03100c75 23%,#03100c08 43%,#03100c08 57%,#03100c70 78%,#03100cba 100%),linear-gradient(0deg,#03100ce8 0%,#03100c22 25%,#03100c15 69%,#03100c48 100%),radial-gradient(ellipse at 50% 42%,transparent 20%,#020a0770 100%); box-shadow:inset 0 0 130px #010604a8 }
+  .v2-theme-two>.v2-hud { position:fixed; z-index:15; top:18px; right:24px; display:flex; align-items:center; gap:10px; pointer-events:none }
+  .v2-theme-two .v2-account { gap:8px; padding:5px 7px; border:1px solid #a7ed823d; border-radius:18px; background:#06150dc9; box-shadow:0 16px 36px #02080399,inset 0 1px #d8ffbd22; backdrop-filter:blur(12px); pointer-events:auto }
+  .v2-theme-two .v2-account .dashboard-notification-button { color:#d9f5b1 }
+  .v2-theme-two .v2-theme-switch { display:flex; align-items:center; gap:8px; min-height:42px; padding:7px 12px; border:1px solid #a7ed823d; border-radius:14px; background:#06150dc9; color:#d9f5b1; box-shadow:0 16px 36px #02080399,inset 0 1px #d8ffbd22; pointer-events:auto; backdrop-filter:blur(12px) }
+  .v2-theme-switch svg { width:20px; height:20px; stroke:#a9fb69 }
+  .v2-theme-two-brand { position:fixed; z-index:14; top:14px; left:50%; display:grid; justify-items:center; gap:3px; width:270px; transform:translateX(-50%); color:#eff9e7; text-shadow:0 2px 16px #001006 }
+  .v2-theme-two-brand svg { width:38px; height:38px; fill:#93ef57; stroke:#c6ff9d; stroke-width:1.5; filter:drop-shadow(0 0 12px #8cf54d80) }
+  .v2-theme-two-brand strong { font:650 19px/1 'Exo 2',sans-serif; letter-spacing:.34em; padding-left:.34em }
+  .v2-theme-two-brand span { margin-top:7px; color:#d3e7c8; font-size:12px; letter-spacing:.08em }
+  .v2-theme-two-brand i { padding:0 7px; color:#a8ec72; font-style:normal }
+  .v2-theme-two.has-status>.v2-connection { position:fixed; z-index:16; top:12px; left:18px; max-width:min(520px,40vw); padding:8px 12px; border:1px solid #a7ed823d; border-radius:12px; background:#06150de8; backdrop-filter:blur(12px) }
+  .v2-theme-two .v2-guide-scene { --card-width:min(24vw,430px); --card-gutter:clamp(30px,5vw,88px); --card-inset:17dvh }
+  .v2-theme-two .v2-guide-left { left:var(--card-gutter); inset-block:var(--card-inset) 30%; width:var(--card-width); gap:clamp(12px,1.5dvh,18px); overflow-y:auto; overflow-x:hidden; scrollbar-width:thin }
+  .v2-theme-two .v2-guide-session-panel { position:static; display:contents }
+  .v2-theme-two .v2-guide-timer { position:absolute; top:72%; right:auto; bottom:auto; left:var(--card-gutter); width:var(--card-width) }
+  .v2-theme-two .v2-guide-work { position:absolute; top:34%; right:var(--card-gutter); bottom:auto; width:var(--card-width) }
+  .v2-theme-two :is(.v2-guide-mission,.v2-guide-timer,.v2-guide-work,.v2-guide-todos) { border:1px solid #a9e87955; border-radius:20px; background:linear-gradient(145deg,#10251bd9 0%,#07140eee 72%,#0b2016e8 100%); box-shadow:0 26px 58px #020804a8,0 0 26px #9cff4c17,inset 0 1px #dcffc32b,inset 0 -1px #071008; backdrop-filter:blur(9px) saturate(1.12) }
+  .v2-theme-two .v2-guide-mission { border-left:2px solid #a5ed68aa; transform:perspective(900px) rotateY(2.5deg) translateZ(5px) }
+  .v2-theme-two .v2-guide-todos { border-left:2px solid #a5ed68aa; transform:perspective(900px) rotateY(2.5deg) translateZ(3px) }
+  .v2-theme-two .v2-guide-timer,.v2-theme-two .v2-guide-work { border-right:2px solid #a5ed68aa; transform:perspective(900px) rotateY(-2.5deg) translateZ(5px) }
+  .v2-theme-two :is(.v2-guide-mission,.v2-guide-timer,.v2-guide-work,.v2-guide-todos):hover { box-shadow:0 32px 70px #020804bd,0 0 32px #9cff4c24,inset 0 1px #e1ffc93a,inset 0 -1px #071008 }
+  .v2-theme-two .v2-guide-kicker { color:#c1eaa8; letter-spacing:.1em }
+  .v2-theme-two .v2-guide-empty,.v2-theme-two .v2-guide-nextline { color:#e0eed8 }
+  .v2-theme-two .v2-guide-nextline span { color:#b7f374 }
+  .v2-theme-two .v2-guide-primary { border-color:#9ff061; background:linear-gradient(120deg,#c5f394,#7fca47); color:#10200d; box-shadow:0 12px 26px #6cae2838 }
+  .v2-theme-two .v2-guide-todos input[type="checkbox"] { accent-color:#9ff061 }
+  .v2-theme-two .v2-guide-todos button { border-color:#9be46a66; background:#153321; color:#e0f5d4 }
+  .v2-theme-two .v2-guide-timer output { color:#a8f568; text-shadow:0 0 20px #8cf34a54 }
+  .v2-theme-two .v2-guide-statuses [data-status="Today"] b,.v2-theme-two .v2-guide-statuses [data-status="Done"] b { color:#a8f568 }
+  .v2-theme-two .v2-guide-work-link { border-top-color:#a5ed6855; color:#c4f394 }
+  .v2-theme-two .v2-guide-todos input:not([type="checkbox"]) { background:#05110b; border-color:#83be634f }
+  .v2-theme-two .v2-todo-priority { color:#c5ed9d; border-bottom-color:#8dce6360 }
+  .v2-theme-two .v2-todo-list li { border-top-color:#a0dc7a35 }
+  .v2-theme-two .v2-todo-schedule a,.v2-theme-two .v2-reminders-open { color:#c2f08e!important }
+  .v2-theme-two .v2-guide-orb-label,.v2-theme-two .v2-orb-theme { display:none!important }
+  .v2-theme-two .v2-theme-two-emblem { position:absolute; z-index:2; left:50%; top:29%; width:clamp(42px,4vw,68px); height:clamp(42px,4vw,68px); transform:translateX(-50%); fill:#9af45f; stroke:#c8ffa0; stroke-width:1.2; filter:drop-shadow(0 0 18px #8df6549c); pointer-events:none }
+  .v2-theme-two .v2-orb-plan { top:58%; width:72%; max-width:430px; background:radial-gradient(ellipse,#07170d86,transparent 74%); color:#f5f7e8; text-shadow:0 3px 20px #010602,0 0 28px #111b0c }
+  .v2-theme-two .v2-orb-plan strong { color:#d2f4b7; font:500 clamp(14px,1.15vw,18px)/1.2 'Exo 2',sans-serif }
+  .v2-theme-two .v2-orb-plan-preview { color:#e1f2cf; font-size:clamp(14px,1.15vw,18px) }
+  .v2-theme-two .v2-arc-nav { position:fixed; z-index:10; inset:auto 0 0; height:160px; overflow:hidden; isolation:isolate; background:linear-gradient(0deg,#06130dea 0%,#071a12c7 56%,#071a1200 100%); backdrop-filter:blur(10px) }
+  .v2-theme-two .v2-arc-trail { position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none }
+  .v2-theme-two .v2-arc-trail path { fill:none; stroke:#abf77479; stroke-width:1.4; vector-effect:non-scaling-stroke; filter:drop-shadow(0 0 8px #9eff6299) }
+  .v2-theme-two .v2-arc-stop { position:absolute; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:4px; width:100px; min-height:72px; padding:0; transform:translateX(-50%); border:0; border-radius:14px; background:transparent; color:#b6caa7; transition:top .38s cubic-bezier(.2,.8,.2,1),color .25s,filter .25s,transform .25s; cursor:pointer }
+  .v2-theme-two .v2-arc-stop svg { flex:none; width:35px; height:35px; stroke:currentColor; opacity:.8; transition:width .25s,height .25s,opacity .25s,filter .25s }
+  .v2-theme-two .v2-arc-stop span { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; line-height:1.2; opacity:.82 }
+  .v2-theme-two .v2-arc-stop:hover { color:#ecffd8; filter:drop-shadow(0 0 13px #9eff62aa) }
+  .v2-theme-two .v2-arc-stop.is-active { width:168px; color:#f0ffdc; filter:drop-shadow(0 0 19px #9cff62c9) }
+  .v2-theme-two .v2-arc-stop.is-active svg { width:52px; height:52px; opacity:1; filter:drop-shadow(0 0 10px currentColor) }
+  .v2-theme-two .v2-arc-stop.is-active span { color:#f0ffdc; opacity:1; font-size:12px; font-weight:700 }
+  .v2-theme-two .v2-arc-stop:focus-visible { outline:2px solid #c2f08e; outline-offset:2px }
+  .v2-theme-two .v2-arc-stop[aria-current="page"]::before { content:""; position:absolute; z-index:-1; inset:-14px 3px 8px; border-radius:50%; background:radial-gradient(ellipse,#8ff44142,transparent 72%) }
+}
 @media (min-width:901px) and (max-width:1100px) {
   .v2-desktop-connected .v2-brand small { display:none }
   .v2-desktop-connected .v2-brand { font-size:11px; gap:6px }
