@@ -1,12 +1,12 @@
 import{useEffect,useRef,useState}from'react';
-import{useTasks}from'../../useTasks';
 import{useAuth}from'../../AuthContext';
 import{ImageStudio}from'./ImageStudio';
-import{chooseFocusTask,taskSteps}from'../../task-model';
 import{useAiConversation}from'./hooks/useAiConversation';
 import{isLocalAiAvailable,PROVIDERS}from'./services/aiService';
 import{ServiceConnections}from'./ServiceConnections';
 import'./invincible-ai.css';
+
+const tools = [['chat', 'Chat'], ['images', 'Images'], ['voiceover', 'Voiceover']];
 
 const starterPrompts=[
  'Create a project for my next video',
@@ -23,34 +23,49 @@ function Message({message}){
 }
 
 export function InvincibleAiPage(){
- const{user}=useAuth(),[mode,setMode]=useState(()=>new URLSearchParams(window.location.search).get('tool')==='images'?'images':'chat');
+ const{user}=useAuth(),[mode,setMode]=useState(()=>{const tool=new URLSearchParams(window.location.search).get('tool');return tools.some(([id])=>id===tool)?tool:'chat'});
  const imageConnectionRef=useRef(null),[imageConnection,setImageConnection]=useState(null);
- const{tasks}=useTasks(),focus=chooseFocusTask(tasks),next=taskSteps(focus).find(step=>!step.done&&step.status!=='Done');
  const{messages,pending,actions,sending,error,send,newConversation,provider,setProvider}=useAiConversation(),[draft,setDraft]=useState(''),end=useRef(null),input=useRef(null);
  useEffect(()=>{const stream=end.current?.parentElement;if(stream)stream.scrollTop=stream.scrollHeight},[messages,pending,sending]);
  useEffect(()=>{const showImages=()=>setMode('images');window.addEventListener('invincible-image-job',showImages);return()=>window.removeEventListener('invincible-image-job',showImages)},[]);
+ const [voiceoverOpened,setVoiceoverOpened]=useState(mode==='voiceover');
+ const selectTool=tool=>{
+  if(tool==='voiceover')setVoiceoverOpened(true);
+  setMode(tool);
+ };
+ const handleTabKey=(event,index)=>{
+  const offsets={ArrowLeft:-1,ArrowRight:1};
+  if(!(event.key in offsets)&&event.key!=='Home'&&event.key!=='End')return;
+  event.preventDefault();
+  const nextIndex=event.key==='Home'?0:event.key==='End'?tools.length-1:(index+offsets[event.key]+tools.length)%tools.length;
+  const [next]=tools[nextIndex];
+  selectTool(next);
+  document.getElementById('ai-tool-'+next)?.focus();
+ };
  const submit=event=>{event.preventDefault();const text=draft.trim();if(!text)return;setDraft('');send(text)};
  const ask=text=>{setDraft(text);if(typeof requestAnimationFrame==='function')requestAnimationFrame(()=>input.current?.focus());else input.current?.focus()};
  return <div className="invincible-ai-page">
-  <div className="ai-ambient" aria-hidden="true"><i/><i/><i/></div>
-  <header className="ai-page-header"><div><span className="ai-eyebrow">INTENT → ACTION</span><h1>Invincible <em>AI</em></h1><p>Tell it what you want. Plan your next step or create something of your own.</p></div><div className="ai-page-actions" hidden={mode!=='chat'}><label className="ai-provider-picker">PROVIDER<select aria-label="AI provider" value={provider} onChange={event=>setProvider(event.target.value)}><option value={PROVIDERS.cloud}>Cloud · OpenAI</option><option value={PROVIDERS.local} disabled={!isLocalAiAvailable}>Local · Qwen3 4B</option></select></label><button type="button" onClick={newConversation} aria-label="New chat" title="New chat"><span aria-hidden="true">＋</span><span className="ai-action-label"> New chat</span></button></div></header>
+  <div className="ai-ambient" aria-hidden="true"></div>
+  <header className="ai-page-header"><div><h1>Invincible <em>AI</em></h1></div><div className="ai-page-actions" hidden={mode!=='chat'}><label className="ai-provider-picker">PROVIDER<select aria-label="AI provider" value={provider} onChange={event=>setProvider(event.target.value)}><option value={PROVIDERS.cloud}>Cloud · OpenAI</option><option value={PROVIDERS.local} disabled={!isLocalAiAvailable}>Local · Qwen3 4B</option></select></label><button type="button" onClick={newConversation} aria-label="New chat" title="New chat"><span aria-hidden="true">＋</span><span className="ai-action-label"> New chat</span></button></div></header>
   <ServiceConnections key={user?.uid} accountId={user?.uid} imageConnection={imageConnection?.accountId===user?.uid ? imageConnection : null} imageConnectionRef={imageConnectionRef}/>
-  <nav className="ai-tool-tabs" role="tablist" aria-label="Invincible AI tools">{[['chat','Chat'],['images','Images']].map(([value,label],index)=><button key={value} type="button" id={'ai-tool-'+value} role="tab" aria-selected={mode===value} aria-controls={'ai-panel-'+value} tabIndex={mode===value?0:-1} onClick={()=>setMode(value)} onKeyDown={event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const next=event.key==='Home'?'chat':event.key==='End'?'images':index===0?'images':'chat';setMode(next);document.getElementById('ai-tool-'+next)?.focus()}}>{label}</button>)}</nav>
+  <nav className="ai-tool-tabs" role="tablist" aria-label="Invincible AI tools">
+   {tools.map(([value,label],index)=><button key={value} type="button" id={'ai-tool-'+value} role="tab" aria-selected={mode===value} aria-controls={'ai-panel-'+value} tabIndex={mode===value?0:-1} onClick={()=>selectTool(value)} onKeyDown={event=>handleTabKey(event,index)}>{label}</button>)}
+  </nav>
   <div id="ai-panel-images" className="ai-tool-panel" role="tabpanel" aria-labelledby="ai-tool-images" hidden={mode!=='images'}><ImageStudio accountId={user?.uid||null} connectionRef={imageConnectionRef} onConnectionChange={setImageConnection}/></div>
-  <main id="ai-panel-chat" role="tabpanel" aria-labelledby="ai-tool-chat" className="ai-chat-panel space-panels" tabIndex={0} hidden={mode!=='chat'}>
-   <aside className="space-panel ai-chat-context" aria-label="Chat context">
-  <section className="ai-context-bar" aria-label="Current Invincible context"><div className="ai-core-pulse" aria-hidden="true"><span/></div><div><small>CURRENT FOCUS</small><strong>{focus?.title||'No active focus'}</strong></div><div><small>{provider===PROVIDERS.local?'LOCAL PROVIDER':'NEXT ACTION'}</small><strong>{provider===PROVIDERS.local?'Qwen3 4B':next?.title||next?.text||(focus?'Add the first clear stage':'Create or choose a project')}</strong></div><a href={focus?`/invincible/task/?id=${encodeURIComponent(focus.id)}`:'/invincible/'}>{focus?'Open project':'Open dashboard'} →</a></section>
-   </aside>
-   <div className="ai-chat-stream space-panel" aria-live="polite">
-    {!messages.length&&!pending&&<section className="ai-welcome"><div className="ai-brain-orbit"><span>✦</span></div><span className="ai-eyebrow">PHASE 1 · SAFE APP ACTIONS</span><h2>What are we moving forward?</h2><p>I can create Dashboard projects, turn plans into stages, update tasks, and choose the next action using the same Firestore data as Invincible.</p><div>{starterPrompts.map(prompt=><button key={prompt} onClick={()=>ask(prompt)}>{prompt}<span>→</span></button>)}</div></section>}
+  <main id="ai-panel-chat" role="tabpanel" aria-labelledby="ai-tool-chat" className="ai-chat-panel" tabIndex={0} hidden={mode!=='chat'}>
+   <div className="ai-chat-stream" aria-live="polite">
+    {!messages.length&&!pending&&<section className="ai-welcome"><div className="ai-brain-orbit"><span>✦</span></div><h2>What are we moving forward?</h2><div>{starterPrompts.map(prompt=><button key={prompt} onClick={()=>ask(prompt)}>{prompt}<span>→</span></button>)}</div></section>}
     {messages.map(message=><Message key={message.id} message={message}/>)}
     {pending&&<Message message={{role:'user',content:pending}}/>}
-    {sending&&<article className="ai-message assistant thinking"><div className="ai-message-mark">I</div><div className="ai-message-body"><div className="ai-thinking-dots"><i/><i/><i/></div><span>Reading the relevant Invincible state…</span></div></article>}
+    {sending&&<article className="ai-message assistant thinking"><div className="ai-message-mark">I</div><div className="ai-message-body"><div className="ai-thinking-dots" aria-hidden="true"><i/><i/><i/></div><span>Reading the relevant Invincible state…</span></div></article>}
     {!sending&&actions.length>0&&<div className="ai-latest-actions">{actions.map((action,index)=><ActionStatus key={`${action.tool}-${index}`} action={action}/>)}</div>}
     {error&&<div className="ai-error" role="alert"><strong>Request stopped</strong><span>{error}</span></div>}
     <div ref={end}/>
    </div>
-   <form className="ai-composer space-panel" onSubmit={submit}><textarea ref={input} rows="1" value={draft} onChange={event=>setDraft(event.target.value)} onKeyDown={event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submit(event)}}} placeholder="Tell Invincible what you want to create, finish, or do next…" maxLength="4000"/><button type="submit" disabled={sending||!draft.trim()} aria-label="Send message"><span>Send</span>↗</button><small>Invincible AI can change tasks and projects. Finance writes and destructive actions are disabled in Phase 1.</small></form>
+   <form className="ai-composer" onSubmit={submit}><textarea aria-label="Message" ref={input} rows="1" value={draft} onChange={event=>setDraft(event.target.value)} onKeyDown={event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.nativeEvent.isComposing){event.preventDefault();submit(event)}}} placeholder="Tell Invincible what you want to create, finish, or do next…" maxLength="4000"/><button type="submit" disabled={sending||!draft.trim()} aria-label="Send message"><span>Send</span>↗</button></form>
   </main>
+  <div id="ai-panel-voiceover" className="ai-tool-panel" role="tabpanel" aria-labelledby="ai-tool-voiceover" hidden={mode!=='voiceover'}>
+   {voiceoverOpened&&<iframe className="ai-voiceover-frame" title="Voiceover Studio" src="/invincible/creator/tts.html?embed=ai"/>}
+  </div>
  </div>;
 }

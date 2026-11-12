@@ -312,6 +312,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
         assert.equal(await themeTwo.getAttribute('aria-pressed'),'false');
         await themeTwo.click();assert.equal(await page.locator('.v2-shell').evaluate(node=>node.classList.contains('v2-theme-two')),true);
         await themeThree.click();assert.equal(await page.locator('.v2-shell').evaluate(node=>node.classList.contains('v2-theme-three')),true);
+        assert.equal(await page.locator('.v2-theme-three-timer-ring').isVisible(),true);
         const motion=page.getByLabel('Animation intensity');
         assert.equal(await motion.inputValue(),'subtle');
         await motion.selectOption('off');
@@ -319,6 +320,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
         assert.equal(await page.evaluate(()=>localStorage.getItem('invincible-electric-motion')),'off');
         await motion.selectOption('subtle');await themeOne.click();
         assert.equal(await page.locator('.v2-shell').evaluate(node=>node.classList.contains('v2-theme-one')),true);
+        assert.equal(await page.locator('.v2-theme-three-timer-ring').isVisible(),false);
         assert.equal(await page.getByRole('navigation',{name:'Explore spaces'}).getByRole('button').count(),13);
         assert.equal(await page.locator('.focus-orb-3d canvas').count(),1);
         await page.waitForFunction(()=>!document.querySelector('.v2-orb').classList.contains('is-compact'));

@@ -250,4 +250,8 @@ attachment callback and failure with loopback blocked.
 
 ### Invincible AI service checks
 
-The Local AI services panel uses one Check all button to refresh Whisper, Qwen and the image connection. A connected image relay can still show Engine status unknown until the engine is verified from the laptop. The status labels and keyboard refresh were checked in Chromium with simulated service responses at widths from 320 to 1440 pixels. The production build passed. The broader personal-image browser test stopped at its disabled Generate button before reaching the service checks.
+The compact service indicators use a green check for verified online services and a red dot for known offline services. A gray dot indicates that the browser has no engine result. The refresh button checks all three services. The remote image relay can confirm its own connection, while the paired laptop endpoint checks the engines.
+
+Chat uses a single panel with the composer below the conversation. Images and Voiceover have separate tabs. The Voiceover tab opens the existing Creator voiceover workspace in an embedded view. Theme One hides the blue Focus Session timer ring while keeping the timer controls.
+
+The production build and focused browser checks cover timer ring visibility, service refresh, keyboard tab navigation, draft retention and responsive chat. The broader browser runs stopped at the disabled image Generate button and the missing Dashboard panels Session control, respectively. Signed-in voiceover generation and remote engine health still require a live check.

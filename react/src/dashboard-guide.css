@@ -400,3 +400,5 @@
   .v2-mobile-theme-one .v2-guide-timer { grid-row:4; width:auto }
   .v2-mobile-theme-one .v2-guide-work { grid-row:5 }
 }
+
+.v2-theme-one .v2-theme-three-timer-ring { display: none }

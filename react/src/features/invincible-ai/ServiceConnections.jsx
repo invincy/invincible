@@ -2,60 +2,49 @@ import { useEffect, useState } from 'react';
 import { checkLocalServices } from './services/aiService';
 
 const services = [
-  ['whisper', 'Whisper transcription'],
+  ['whisper', 'Whisper'],
   ['qwen', 'Qwen3 4B'],
   ['images', 'Image generator'],
 ];
 
 function getServiceStatus(id, accountId, pending, results, imageConnection) {
   if (!accountId) return ['idle', 'Sign in to check'];
-  const image = id === 'images';
-  if (pending || (image && (!imageConnection || imageConnection.state === 'checking'))) {
-    return ['checking', 'Checking…'];
-  }
-  if (image && !imageConnection.connected) return ['offline', 'Unavailable'];
-  if (image && imageConnection.remote) return ['partial', 'Relay connected', 'Engine status unknown'];
-  if (results?.[id] === true) return ['ready', 'Connected'];
-  if (results?.[id] === false) return ['offline', 'Unavailable'];
-  if (image && results === null) return ['partial', 'Laptop connected', 'Engine status unknown'];
-  return ['idle', 'Check on laptop'];
+  if (pending || (id === 'images' && imageConnection?.state === 'checking')) return ['checking', 'Checking'];
+  if (results?.[id] === true) return ['online', 'Online'];
+  if (results?.[id] === false || (id === 'images' && imageConnection?.state === 'offline')) return ['offline', 'Offline'];
+  if (id === 'images' && imageConnection?.connected) return ['idle', 'Connection available · engine unverified'];
+  return ['idle', 'Status unknown'];
 }
 
 export function ServiceConnections({ accountId, imageConnection, imageConnectionRef }) {
   const [check, setCheck] = useState({ attempt: 0, pending: true, results: null });
   const { attempt, pending, results } = check;
+  const locallyPaired = Boolean(imageConnection?.connected && !imageConnection.remote);
 
   useEffect(() => {
     if (!accountId) return;
     let current = true;
-    const localCheck = checkLocalServices();
-    const imageRefresh = attempt ? imageConnectionRef.current?.refresh() : undefined;
-    Promise.allSettled([localCheck, imageRefresh]).then(([local]) => {
-      if (current) setCheck({ attempt, pending: false, results: local.value ?? null });
-    });
+    async function refresh() {
+      if (attempt) await imageConnectionRef.current?.refresh().catch(() => {});
+      const results = await checkLocalServices().catch(() => null);
+      if (current) setCheck({ attempt, pending: false, results });
+    }
+    void refresh();
     return () => { current = false; };
-  }, [accountId, attempt, imageConnectionRef]);
+  }, [accountId, attempt, imageConnectionRef, locallyPaired]);
 
-  return <section className="ai-service-connections" aria-labelledby="ai-service-heading">
-    <header className="ai-service-header">
-      <h2 id="ai-service-heading">Local AI services</h2>
-      {accountId && <button type="button" aria-disabled={pending} onClick={() => {
-        if (!pending) setCheck({ attempt: attempt + 1, pending: true, results: null });
-      }}>
-        <span aria-hidden="true">↻</span> {pending ? 'Checking…' : 'Check all'}
-      </button>}
-    </header>
-    <div className="ai-service-grid">
+  return <section className="ai-service-connections" aria-label="Local AI services">
+    <ul>
       {services.map(([id, label]) => {
-        const [state, status, detail] = getServiceStatus(id, accountId, pending, results, imageConnection);
-        return <article key={id} className="ai-service-card" data-state={state}>
-          <h3>{label}</h3>
-          <p role="status">
-            <span className="ai-service-dot" aria-hidden="true" />
-            <span>{status}{detail && <small>{detail}</small>}</span>
-          </p>
-        </article>;
+        const [state, status] = getServiceStatus(id, accountId, pending, results, imageConnection);
+        return <li key={id} data-state={state} title={label + ' · ' + status}>
+          <span className="ai-service-dot" aria-hidden="true">{state === 'online' ? '✓' : ''}</span>
+          <span role="status">{label}<span className="ai-service-status"> · {status}</span></span>
+        </li>;
       })}
-    </div>
+    </ul>
+    {accountId && <button type="button" aria-label="Refresh service status" title="Refresh service status" aria-disabled={pending} onClick={() => {
+      if (!pending) setCheck({ attempt: attempt + 1, pending: true, results: null });
+    }}>↻</button>}
   </section>;
 }

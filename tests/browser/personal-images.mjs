@@ -12,7 +12,7 @@ const fixtures={
  tasks:"export const useTasks=()=>({tasks:[]});",
  auth:"export const useAuth=()=>({user:{uid:'test-owner'}});",
  conversation:"import{useState}from'react';export function useAiConversation(){const [provider,setProvider]=useState('cloud');return {messages:[],actions:[],sending:false,send:()=>{throw Error('Chat must not be used to generate an image')},newConversation:()=>{},provider,setProvider};}",
- service:"export const PROVIDERS={cloud:'cloud',local:'local'},isLocalAiAvailable=true,mobileLaptop=location.search.includes('mobile=1');export async function draftRemoteImagePrompt(){throw Error('Use the real local prompt drafting endpoint');}export async function checkLocalServices(){window.connectionChecks=(window.connectionChecks||0)+1;return {whisper:window.connectionChecks>1,qwen:false,images:true};}"
+ service:"export const PROVIDERS={cloud:'cloud',local:'local'},isLocalAiAvailable=true,mobileLaptop=location.search.includes('mobile=1');export async function draftRemoteImagePrompt(){throw Error('Use the real local prompt drafting endpoint');}export async function checkLocalServices(){window.connectionChecks=(window.connectionChecks||0)+1;return {whisper:window.hasRefreshed===true,qwen:false,images:true};}"
 };
 const compiled=await build({absWorkingDir:path.join(root,'react'),stdin:{contents:"import React from 'react';import{createRoot}from'react-dom/client';import{InvincibleAiPage}from'./src/features/invincible-ai/InvincibleAiPage.jsx';createRoot(document.getElementById('root')).render(<InvincibleAiPage/>);",resolveDir:path.join(root,'react'),loader:'jsx'},bundle:true,write:false,outdir:'fixture',jsx:'automatic',plugins:[{name:'isolated-app-state',setup(b){b.onResolve({filter:/(useTasks|AuthContext|useAiConversation|aiService)$/},args=>({path:args.path.includes('useTasks')?'tasks':args.path.includes('AuthContext')?'auth':args.path.includes('useAiConversation')?'conversation':'service',namespace:'fixture'}));b.onLoad({filter:/.*/,namespace:'fixture'},args=>({contents:fixtures[args.path],loader:'js',resolveDir:path.join(root,'react')}));}}]});
 let browser;
@@ -21,6 +21,30 @@ try{
  await page.route(url=>url.origin===service.origin&&url.pathname==='/personal-images',route=>route.fulfill({contentType:'text/html',body:`<!doctype html><meta name="viewport" content="width=device-width"><div id="root"></div><link rel="stylesheet" href="/personal.css"><script>window.__INVINCIBLE_LOCAL_AI_ORIGIN__=location.origin;sessionStorage.setItem('invincible.local-worker.'+location.origin,${JSON.stringify(service.token)});</script><script type="module" src="/personal.js"></script>`}));
  for(const extension of ['js','css'])await page.route(service.origin+'/personal.'+extension,route=>route.fulfill({contentType:extension==='js'?'text/javascript':'text/css',body:compiled.outputFiles.find(file=>file.path.endsWith('.'+extension)).text}));
  await page.goto(service.origin+'/personal-images');
+ const statuses=page.getByRole('region',{name:'Local AI services'}).getByRole('status');
+ await statuses.filter({hasText:'Whisper · Offline'}).waitFor();
+ await statuses.filter({hasText:'Image generator · Online'}).waitFor();
+ const refresh=page.getByRole('button',{name:'Refresh service status'});
+ await refresh.focus();
+ await page.evaluate(()=>{window.hasRefreshed=true});
+ await refresh.press('Enter');
+ await statuses.filter({hasText:'Whisper · Online'}).waitFor();
+ await statuses.filter({hasText:'Qwen3 4B · Offline'}).waitFor();
+ assert.ok(await refresh.evaluate(button=>button===document.activeElement),'Rechecking keeps keyboard focus');
+ const chat=page.getByRole('tabpanel',{name:'Chat',exact:true});
+ assert.equal(await chat.getByLabel('Chat context').count(),0);
+ await chat.getByRole('textbox',{name:'Message'}).fill('A draft kept while switching tools');
+ await page.route('**/invincible/creator/tts.html?embed=ai', route=>route.fulfill({contentType:'text/html',body:'<h1>Voiceover fixture</h1>'}));
+ await page.getByRole('tab',{name:'Chat',exact:true}).press('End');
+ await page.frameLocator('iframe[title="Voiceover Studio"]').getByRole('heading',{name:'Voiceover fixture'}).waitFor();
+ await page.getByRole('tab',{name:'Voiceover',exact:true}).press('Home');
+ assert.equal(await chat.getByRole('textbox',{name:'Message'}).inputValue(),'A draft kept while switching tools');
+ for(const width of [320,393,820,1440]){
+  await page.setViewportSize({width,height:850});
+  assert.ok(await chat.evaluate(panel=>panel.scrollWidth<=panel.clientWidth+1),'No chat overflow at '+width);
+  assert.ok(await refresh.isVisible(),'Service refresh is visible at '+width);
+ }
+
  await page.getByRole('tab',{name:'Images',exact:true}).click();assert.equal(await page.getByRole('tabpanel',{name:'Chat',exact:true}).isVisible(),false);
  await page.getByRole('textbox',{name:'Prompt',exact:true}).fill('A personal illustration without a video project');await page.getByRole('button',{name:'Generate',exact:true}).click();await page.getByText(/^Completed ·/).waitFor();
  assert.equal(await page.getByRole('button',{name:'Attach to current project',exact:true}).isVisible(),false,'Personal images do not need a project');
@@ -29,22 +53,6 @@ try{
  await page.getByRole('tab',{name:'Chat',exact:true}).click();await page.getByRole('tab',{name:'Chat',exact:true}).press('ArrowRight');assert.equal(await page.getByRole('tab',{name:'Images',exact:true}).getAttribute('aria-selected'),'true');assert.ok(await page.getByRole('img',{name:'Generated image',exact:true}).isVisible(),'Tab switches retain the completed image');
  for(const width of [320,393,820,1440]){await page.setViewportSize({width,height:950});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'No personal studio overflow at '+width);}
  assert.equal(gpu.loads,1);
- await page.goto(service.origin+'/personal-images');
- const whisper=page.locator('.ai-service-card').filter({has:page.getByRole('heading',{name:'Whisper transcription',level:3})});
- const qwen=page.locator('.ai-service-card').filter({has:page.getByRole('heading',{name:'Qwen3 4B',level:3})});
- const images=page.locator('.ai-service-card').filter({has:page.getByRole('heading',{name:'Image generator',level:3})});
- await whisper.getByRole('status').filter({hasText:'Unavailable'}).waitFor();
- await images.getByRole('status').filter({hasText:'Connected'}).waitFor();
- const checkAll=page.getByRole('button',{name:'Check all',exact:true});
- await checkAll.focus();
- await checkAll.press('Enter');
- await whisper.getByRole('status').filter({hasText:'Connected'}).waitFor();
- await qwen.getByRole('status').filter({hasText:'Unavailable'}).waitFor();
- assert.ok(await checkAll.evaluate(button=>button===document.activeElement),'Rechecking keeps keyboard focus');
- assert.equal(await page.getByText('Laptop settings',{exact:true}).count(),0);
- await page.getByRole('tab',{name:'Images',exact:true}).click();
- assert.equal(await page.getByText('Manual pairing',{exact:true}).isVisible(),false);
- assert.equal(await page.getByRole('button',{name:'Pair this browser'}).isVisible(),false);
  await page.route(/\/(?:creator\/[^?]+\.(?:html|css|js)|site-nav\.(?:js|css)|shared\/firebase-client\.js)(?:\?.*)?$/,async route=>{
   const name=new URL(route.request().url()).pathname.slice(1);
   if(name==='site-nav.js'||name==='creator/creator.js')return route.fulfill({contentType:'text/javascript',body:''});

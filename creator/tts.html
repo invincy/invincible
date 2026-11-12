@@ -10,6 +10,17 @@
 <link rel="stylesheet" href="tts-forest.css?v=1">
 <link rel="stylesheet" href="../shared/spatial-workspace.css?v=4">
 <link rel="stylesheet" href="image-generator.css?v=2026111103"><meta name="theme-color" content="#080f1b">
+<script>
+if (window.parent !== window && new URLSearchParams(location.search).get('embed') === 'ai') {
+ document.documentElement.classList.add('ai-voiceover-embed');
+}
+</script>
+<style>
+.ai-voiceover-embed .global-nav,
+.ai-voiceover-embed .heading,
+.ai-voiceover-embed .tts-forest { display: none }
+.ai-voiceover-embed body { padding-top: 0 }
+</style>
 </head>
 <body class="voiceover-page studio-ui">
 <canvas class="tts-forest" aria-hidden="true"></canvas>
