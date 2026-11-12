@@ -126,7 +126,14 @@ const server=http.createServer((req,res)=>{
   await page.locator('#projectTitle').filter({hasText:'Draft production'}).waitFor();
   await page.locator('#projectVoiceoverStep:not([hidden])').waitFor();
   assert.equal(await page.locator('[data-project-area="Voiceover"]').getAttribute('aria-current'),'step');
-  const narration=page.frameLocator('#projectVoiceoverFrame').locator('#script');
+  const scriptFrame=page.frameLocator('#projectVoiceoverFrame');
+  const narration=scriptFrame.getByRole('textbox',{name:'Your script',exact:true});
+  await narration.waitFor();
+  assert.equal(await scriptFrame.getByRole('dialog',{name:'Voiceover history'}).count(),0);
+  await scriptFrame.getByRole('button',{name:'History',exact:true}).click();
+  await scriptFrame.getByRole('dialog',{name:'Voiceover history'}).waitFor();
+  await scriptFrame.getByRole('button',{name:'Close voiceover history'}).click();
+  assert.equal(await narration.isVisible(),true);
   await narration.fill('A narration for this project.');
   await page.locator('#useNarration').click();
   await page.locator('[data-project-area="Storyboard"][aria-current="step"]').waitFor();
@@ -166,7 +173,7 @@ const server=http.createServer((req,res)=>{
   assert.equal(await page.locator('#status').isVisible(),false);
   assert.equal(await page.locator('.project-header').innerText().then(text=>text.includes('@')),false);
   assert.equal(await page.locator('#shareProject').innerText(),'');
-  assert.equal(await page.locator('#syncIndicator').getAttribute('aria-label'),'Synced');
+  assert.equal(await page.locator('#syncIndicator').getAttribute('data-state'),'ok');
   await page.locator('#shareProject').click();
   assert.equal(await page.locator('#shareDialog').evaluate(el=>el.open),true);
   await page.locator('#shareDialog [aria-label="Close sharing"]').click();

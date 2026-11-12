@@ -17,6 +17,46 @@ const desktopLayout=matchMedia('(min-width:901px)'),voiceSettings=$('voiceSettin
 const basicVoiceover=document.documentElement.classList.contains('ai-voiceover-embed');
 const projectVoiceoverId=document.documentElement.classList.contains('project-voiceover-embed')
  ? new URLSearchParams(location.search).get('project') : null;
+if(projectVoiceoverId){
+ const scriptPanel=document.querySelector('.script-panel');
+ const history=$('voiceoverHistory');
+ const historyDialog=document.createElement('dialog');
+ historyDialog.className='project-script-history';
+ historyDialog.setAttribute('aria-labelledby','historyHeading');
+ const closeForm=document.createElement('form');
+ closeForm.method='dialog';
+ closeForm.innerHTML='<button type="submit" aria-label="Close voiceover history">Close</button>';
+ history.querySelector('.history-heading-actions').append(closeForm);
+ historyDialog.append(history);
+ document.body.append(historyDialog);
+
+ const historyButton=document.createElement('button');
+ historyButton.type='button';
+ historyButton.className='quiet';
+ historyButton.textContent='History';
+ historyButton.onclick=()=>historyDialog.showModal();
+ scriptPanel.querySelector('.script-heading-actions').append(historyButton);
+
+ const options=document.createElement('details');
+ options.className='project-script-options';
+ options.innerHTML='<summary>Script options</summary>';
+ options.append(
+  scriptPanel.querySelector('label[for="title"]'),$('title'),
+  scriptPanel.querySelector('.mode-label'),$('ssmlGuide'),
+  scriptPanel.querySelector('label[for="creativeInstructions"]'),$('creativeInstructions'),
+  $('sample'),$('analyzeLocal'),$('localAnalysisStatus'),$('localAnalysisResult')
+ );
+ scriptPanel.append(options);
+ $('scriptHeading').textContent='Script';
+ const scriptLabel=scriptPanel.querySelector('label[for="script"]');
+ scriptLabel.classList.add('sr-only');
+ $('script').before(scriptLabel);
+ $('script').placeholder='Paste your narration here…';
+ $('voiceHeading').textContent='Voice';
+ $('resultHeading').textContent='Recording';
+ $('preview').textContent='Preview';
+ $('inputHelp').textContent='Paragraph breaks can become pauses.';
+}
 let mobileSettingsOpen=false;
 function arrangeSettings(){voiceSettings.open=basicVoiceover||desktopLayout.matches||mobileSettingsOpen;}
 voiceSettings.addEventListener('toggle',()=>{if(!desktopLayout.matches)mobileSettingsOpen=voiceSettings.open;});
