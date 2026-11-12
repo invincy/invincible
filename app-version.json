@@ -1,1 +1,1 @@
-{"version":"2026.11.12.20","notes":"Limit globe particle excursion beyond the sphere."}
+{"version":"2026.11.12.21","notes":"Limit globe particle excursion to about 10 percent beyond its nominal radius."}
