@@ -20,16 +20,22 @@ export const runTransaction=async(_,callback)=>{const writes=[];const result=awa
   const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('https://**/*',r=>r.abort());const base='http://127.0.0.1:'+server.address().port;
   for(const embedded of [false,true])for(const [width,height] of [[1920,1080],[1366,768],[1280,600],[1024,600],[1366,602],[1024,434]]){
    if(!embedded&&height===434)continue;
+   console.log(`Checking Finance at ${width}x${height} (${embedded?'embedded':'standalone'})`);
    await page.setViewportSize({width,height});await page.goto(base+'/finance'+(embedded?'?embedded':''));await page.getByRole('button',{name:'Update Credit card 0',exact:true}).waitFor();
    const bounds=await page.evaluate(()=>({scroll:document.documentElement.scrollHeight,width:document.documentElement.scrollWidth,panels:[...document.querySelectorAll('.finance-desktop-card')].map(node=>({w:node.getBoundingClientRect().width,bottom:node.getBoundingClientRect().bottom,content:node.scrollHeight,inner:node.clientHeight})),cards:[...document.querySelectorAll('.finance-compact-row')].map(node=>node.getBoundingClientRect().bottom)}));
    assert.ok(bounds.scroll<=height+1,`${width}x${height} ${embedded?'embedded':'standalone'} page scroll: ${JSON.stringify(bounds)}`);
    assert.ok(bounds.width<=width+1);assert.equal(bounds.panels.length,3);assert.ok(Math.max(...bounds.panels.map(p=>p.w))-Math.min(...bounds.panels.map(p=>p.w))<1);
    assert.ok(bounds.panels.every(p=>p.bottom<=height+1&&p.content<=p.inner+1),'All panel contents fit '+JSON.stringify(bounds));assert.ok(bounds.cards.every(bottom=>bottom<height));
+   const readability=await page.evaluate(()=>{const size=selector=>parseFloat(getComputedStyle(document.querySelector(selector)).fontSize),controls=[...document.querySelectorAll('.finance-desktop-card button,.finance-desktop-card .finance-row-icon')].map(node=>{const box=node.getBoundingClientRect();return Math.min(box.width,box.height)}).filter(Boolean);return{heading:size('.finance-desktop-card h2'),rowTitle:size('.finance-row-copy strong'),rowMeta:size('.finance-row-copy small'),amount:size('.finance-compact-row>b'),smallestControl:Math.min(...controls)}});
+   assert.ok(readability.heading>=20&&readability.rowTitle>=16&&readability.rowMeta>=13&&readability.amount>=16,`Readable desktop type: ${JSON.stringify(readability)}`);
+   assert.ok(readability.smallestControl>=43.5,`Desktop controls are at least 44px: ${JSON.stringify(readability)}`);
    await page.screenshot({path:path.join(out,`${embedded?'embedded':'standalone'}-${width}-${height}.png`)});
    for(const name of ['Cash flow',/Checklist ·/,'Activity']) {
+    console.log('  tab:',String(name));
     await page.getByRole('button',{name,exact:true}).click();
-    await page.waitForFunction(()=>[...document.querySelectorAll('.finance-desktop-card')].every(node=>node.scrollHeight<=node.clientHeight+1));
-    assert.ok(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight+1),'Alternate tab fits viewport');
+    await page.waitForTimeout(100);
+    const alternateBounds=await page.evaluate(()=>({page:document.documentElement.scrollHeight,viewport:innerHeight,panels:[...document.querySelectorAll('.finance-desktop-card')].map(node=>({label:node.getAttribute('aria-label'),content:node.scrollHeight,inner:node.clientHeight}))}));
+    assert.ok(alternateBounds.page<=alternateBounds.viewport+1&&alternateBounds.panels.every(panel=>panel.content<=panel.inner+1),`Alternate tab fits viewport: ${JSON.stringify(alternateBounds)}`);
    }
   }
   await page.setViewportSize({width:1366,height:768});await page.goto(base+'/finance?embedded');await page.getByRole('button',{name:'Mark paid Credit card 0',exact:true}).click();await page.waitForFunction(()=>window.financeRecords().bills[0].paid);
@@ -40,7 +46,7 @@ export const runTransaction=async(_,callback)=>{const writes=[];const result=awa
   await page.getByRole('button',{name:/Checklist ·/}).click();await page.getByRole('checkbox',{name:'Bill checklist 0',exact:true}).check();await page.waitForFunction(()=>window.financeRecords().checklist[0].done);
   await page.getByRole('textbox',{name:'New checklist item'}).fill('New obligation');await page.getByRole('button',{name:'Add checklist item'}).click();await page.waitForFunction(()=>window.financeRecords().checklist.some(item=>item.label==='New obligation'));
   await page.getByRole('button',{name:'Open wealth trend'}).click();await page.getByRole('dialog',{name:'Wealth trend'}).waitFor();await page.getByRole('button',{name:'Close',exact:true}).click();
-  await page.setViewportSize({width:393,height:852});await page.goto(base+'/finance');await page.locator('.finance-mobile-cockpit').waitFor();assert.equal(await page.locator('.finance-desktop-panels').count(),0);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+  await page.setViewportSize({width:393,height:852});await page.goto(base+'/finance');await page.locator('.finance-mobile-cockpit').waitFor();assert.equal(await page.locator('.finance-desktop-panels').count(),0);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));const mobileReadability=await page.evaluate(()=>{const controls=[...document.querySelectorAll('.finance-mobile-month button,.finance-mobile-sync,.finance-mobile-checklist-button,.finance-mobile-action-dock button')].map(node=>{const box=node.getBoundingClientRect();return Math.min(box.width,box.height)});const size=selector=>parseFloat(getComputedStyle(document.querySelector(selector)).fontSize);return{smallestControl:Math.min(...controls),tileLabel:size('.finance-mobile-tiles small'),tileAmount:size('.finance-mobile-tiles strong'),tileMeta:size('.finance-mobile-tiles em')}});assert.ok(mobileReadability.smallestControl>=47.5&&mobileReadability.tileLabel>=11&&mobileReadability.tileAmount>=14&&mobileReadability.tileMeta>=11,`Readable mobile Finance controls and type: ${JSON.stringify(mobileReadability)}`);await page.screenshot({path:path.join(out,'mobile-393-852.png')});
   assert.deepEqual(errors,[]);console.log('Finance: bounded three-panel desktop, embedded laptop sizes, paging, bill/checklist saves, denied-save recovery, trend and mobile passed.');
  }finally{await browser.close();await new Promise(r=>server.close(r));}
 })().catch(error=>{console.error(error);process.exitCode=1;});

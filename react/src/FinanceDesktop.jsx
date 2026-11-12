@@ -3,7 +3,7 @@ import {useEffect,useLayoutEffect,useRef,useState} from 'react';
 function Pages({items,label,children,empty}) {
   const host=useRef(null),[capacity,setCapacity]=useState(4),[page,setPage]=useState(0);
   useLayoutEffect(()=>{
-    const measure=()=>setCapacity(Math.max(1,Math.floor((host.current.clientHeight-46)/76)));
+    const measure=()=>setCapacity(Math.max(1,Math.floor((host.current.clientHeight-48)/84)));
     const observer=new ResizeObserver(measure);observer.observe(host.current);measure();return()=>observer.disconnect();
   },[]);
   const count=Math.max(1,Math.ceil(items.length/capacity)),current=Math.min(page,count-1);
