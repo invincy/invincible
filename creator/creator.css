@@ -226,3 +226,38 @@ body.creator-page{display:flex;min-height:0;flex-direction:column}
 @media(max-width:360px), (max-height:620px){
  .creator-page .tool-grid .tool-copy>span{display:none}
 }
+
+/* Creator home follows the dashboard's chosen visual theme. */
+html[data-visual-theme="one"]{--creator-accent:#f1c578;--creator-muted:#d3bd95;--creator-surface:#211b12;--creator-panel:#17140e;--creator-border:#705633}
+html[data-visual-theme="two"]{--creator-accent:#b4ee88;--creator-muted:#b5caa9;--creator-surface:#12251b;--creator-panel:#0a1b13;--creator-border:#43663a}
+html[data-visual-theme="three"]{--creator-accent:#69def0;--creator-muted:#aac5ce;--creator-surface:#102a38;--creator-panel:#091a25;--creator-border:#326476}
+.creator-page .creator-projects,.creator-page .creator-toolbox{background:var(--creator-panel);border-color:var(--creator-border)}
+.creator-page .project-grid .project-home-card,.creator-page .tool-grid>a,.creator-page .tool-grid>button{background:var(--creator-surface);border-color:var(--creator-border)}
+.creator-page .tool-grid>a:hover,.creator-page .tool-grid>button:hover,.creator-page .project-grid .project-home-card:hover{border-color:var(--creator-accent);background:var(--creator-surface)}
+.creator-page .studio-header .eyebrow,.creator-page .creator-section-head .eyebrow,.creator-page .tool-grid>*>i{color:var(--creator-accent)}
+.creator-page .project-mark,.creator-page .tool-icon,.creator-page .creator-count,.creator-page .project-stage{color:var(--creator-accent);border-color:var(--creator-border);background:var(--creator-panel)}
+.creator-page .primary{background:var(--creator-accent);border-color:var(--creator-accent);color:#101712}
+.creator-page .project-home-actions .open-project{background:var(--creator-panel);border-color:var(--creator-border);color:var(--creator-accent)}
+.creator-page .project-home-actions .card-actions button{background:var(--creator-panel);border-color:var(--creator-border)}
+.creator-page .project-progress-bar>span{background:var(--creator-accent)}
+.creator-page .creator-toolbox .tool-grid{align-content:stretch;grid-auto-rows:minmax(0,1fr);grid-template-rows:none;overflow-y:auto}
+.creator-page .tool-grid>a,.creator-page .tool-grid>button{grid-template-columns:68px minmax(0,1fr) 20px;min-height:80px;gap:16px;padding:12px 16px}
+.creator-page .tool-grid .tool-icon{width:68px;height:68px}
+.creator-page .tool-grid .tool-icon svg{width:34px;height:34px}
+.creator-page .tool-grid .tool-copy>strong{font-size:18px}
+.creator-page .tool-grid .tool-copy>span{font-size:14px;color:var(--creator-muted)}
+.creator-page .project-grid .project-home-card{grid-template-columns:48px minmax(0,1fr);grid-template-rows:auto auto auto auto;column-gap:14px;min-height:0;padding:18px;align-content:start}
+.creator-page .project-home-top{display:contents}
+.creator-page .project-home-top .project-mark{grid-column:1;grid-row:1 / span 2;width:48px;height:48px}
+.creator-page .project-home-top>div{grid-column:2;grid-row:2;justify-content:flex-start;flex-wrap:wrap}
+.creator-page .project-grid .project-home-card h3{grid-column:2;grid-row:1;min-height:0;font-size:18px}
+.creator-page .project-grid .project-home-card .hook,.creator-page .project-home-meta,.creator-page .project-progress-copy,.creator-page .project-progress-bar,.creator-page .project-home-actions{grid-column:1 / -1}
+.creator-page .project-home-meta,.creator-page .project-progress-copy,.creator-page .project-progress-copy strong{font-size:14px}
+.creator-page .project-stage{font-size:12px}
+.creator-page .project-home-actions .open-project{font-size:14px}
+@media(max-width:1150px){.creator-page .creator-toolbox .tool-grid{grid-template-columns:1fr}.creator-page .tool-grid>a,.creator-page .tool-grid>button{grid-template-columns:56px minmax(0,1fr) 20px;min-height:88px}.creator-page .tool-grid .tool-icon{width:56px;height:56px}.creator-page .tool-grid .tool-icon svg{width:30px;height:30px}}
+@media(max-height:680px){.creator-page .creator-toolbox .tool-grid{grid-auto-rows:minmax(64px,auto)}.creator-page .tool-grid>a,.creator-page .tool-grid>button{min-height:64px;padding:8px 12px}.creator-page .tool-grid .tool-copy>span{display:block}.creator-page .project-home-meta{display:flex}}
+@media(max-width:480px){.creator-page .creator-toolbox .tool-grid{grid-template-columns:1fr}.creator-page .tool-grid>a,.creator-page .tool-grid>button{min-height:76px}.creator-page .tool-grid .tool-copy>span{display:block}}
+.creator-page .project-grid .project-home-card{background:var(--creator-surface)!important}
+.creator-page .creator-new-project{background:var(--creator-accent)!important;border-color:var(--creator-accent)!important;color:#101712!important}
+.creator-page .creator-new-project>span{border-color:currentColor}
