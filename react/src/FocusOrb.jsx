@@ -137,7 +137,7 @@ export function FocusOrb({theme='cyan',spin=true,allowDrag=true,richParticles=fa
    const rect=container.getBoundingClientRect();if(!rect.width||!rect.height||disposed||contextLost)return;
    stop();const ratio=Math.min(devicePixelRatio||1,mobile.matches?1:1.25);
    c.width=Math.round(rect.width*ratio);c.height=Math.round(rect.height*ratio);
-   gl.viewport(0,0,c.width,c.height);gl.uniformMatrix4fv(uniforms.projection,false,perspective(rect.width/rect.height));gl.uniform1f(uniforms.pixelRatio,ratio);gl.uniform1f(uniforms.pointScale,Math.max(.85,Math.min(1.5,rect.width/480)));
+   gl.viewport(0,0,c.width,c.height);gl.uniformMatrix4fv(uniforms.projection,false,perspective(rect.width/rect.height));gl.uniform1f(uniforms.pixelRatio,ratio);gl.uniform1f(uniforms.pointScale,1.5);
    const compact=rect.width<100;
    const tier=orbParticleTier(mobile.matches||compact,lightweight||compact,richParticles&&!compact,dashboardMotion&&!compact);
    tier.highlightTrails=dashboardMotion&&!compact&&theme==='gold';

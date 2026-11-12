@@ -394,3 +394,8 @@ For the full-window desktop dashboard, the globe anchor is 10% smaller across
 the desktop breakpoints. The particle tier, count and source detail stay fixed;
 the smaller footprint brings the existing particles closer together. Mobile
 globe sizing is unchanged.
+
+Globe particle points use a fixed screen-space scale across window dimensions,
+while the renderer still caps pixel density for performance. This keeps the
+particle marks' on-screen size and apparent intensity more consistent when the
+window or device viewport changes; display calibration can still vary by screen.
