@@ -1,1 +1,1 @@
-{"version":"2026.11.12.19","notes":"Keep globe particle point size consistent across window dimensions."}
+{"version":"2026.11.12.20","notes":"Limit globe particle excursion beyond the sphere."}

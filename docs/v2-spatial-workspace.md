@@ -399,3 +399,6 @@ Globe particle points use a fixed screen-space scale across window dimensions,
 while the renderer still caps pixel density for performance. This keeps the
 particle marks' on-screen size and apparent intensity more consistent when the
 window or device viewport changes; display calibration can still vary by screen.
+Particle motion is bounded to a 1.23-unit radius after all deformations and
+pointer forces, limiting the animated shell to roughly 20% beyond its nominal
+radius while preserving its rotation and irregular motion.
