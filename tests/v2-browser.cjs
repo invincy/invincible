@@ -341,11 +341,10 @@ async function checkGlobeWithoutWebGL(browser,base) {
         assert.ok(forestVertical.timer.top-forestVertical.work.bottom>=16,'Forest right-side cards keep a visible gap');
         await page.screenshot({path:path.join(output,'dashboard-theme-forest-1536x788.png')});
         await themeThree.click();assert.equal(await page.locator('.v2-shell').evaluate(node=>node.classList.contains('v2-theme-three')),true);
-        assert.equal(await page.locator('.v2-electric-core').count(),1,'Electric has its own energy core');
+        assert.equal(await page.locator('.v2-electric-core').count(),0,'Electric keeps the center free of decorative artwork');
         assert.equal(await page.locator('.focus-orb-3d').count(),0,'Electric does not reuse the particle globe');
         assert.equal(await page.locator('.v2-orb-task').isVisible(),false,'Electric does not stack the current task over Today’s plan');
         assert.equal(await page.locator('.v2-orb-plan-preview').isVisible(),false,'Electric keeps secondary plan text out of the center');
-        assert.equal(await page.locator('.v2-electric-core span').evaluate(node=>getComputedStyle(node).clipPath.startsWith('polygon(')),true,'Electric uses an angular core instead of a sphere');
         assert.equal(await page.evaluate(()=>{const labels=[...document.querySelectorAll('.v2-page-name')].map(node=>node.getBoundingClientRect()),parts=[...document.querySelectorAll('.v2-orb-plan>span:first-child,.v2-orb-plan>strong')].map(node=>node.getBoundingClientRect());return parts.every(part=>labels.every(label=>part.right+4<=label.left||label.right+4<=part.left||part.bottom+4<=label.top||label.bottom+4<=part.top));}),true,'Electric plan text clears every destination label');
         const electricLeft=await page.locator('.v2-guide-left').evaluate(node=>({scrollHeight:node.scrollHeight,clientHeight:node.clientHeight}));
         assert.ok(electricLeft.scrollHeight<=electricLeft.clientHeight+1,`Electric cards fit without a needless scrollbar: ${JSON.stringify(electricLeft)}`);

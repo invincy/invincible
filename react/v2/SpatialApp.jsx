@@ -233,7 +233,6 @@ function SignedInWorkspace({user, logout}) {
       onWheel={event => {const distance = event.deltaX + (event.shiftKey ? event.deltaY : 0); if (distance && viewport.current) {event.preventDefault(); viewport.current.scrollLeft += distance;}}}>
       {(!desktop||visualTheme==='one')&&<FocusOrb theme="gold" spin={false} richParticles dashboardMotion interactionSurface={viewport}/>}
       {desktop&&visualTheme==='two'&&<div className="v2-forest-portal" aria-hidden="true"><span/><span/><span/><i/></div>}
-      {desktop&&visualTheme==='three'&&<div className="v2-electric-core" aria-hidden="true"><svg viewBox="0 0 100 100"><path d="M50 7 43 28 51 37 39 51 49 59 42 75 50 93"/><path d="M22 19 35 35 31 47 43 55 34 70 22 81"/><path d="M78 19 65 35 69 47 57 55 66 70 78 81"/></svg><span/><i/></div>}
     </div>
     {desktop?<ArcNavigation regions={regions} activeIndex={activeIndex} onNavigate={navigate}/>:<footer className="v2-footer"><><span>PERSONAL WORKSPACE</span><span>{active==='dashboard'?'Tap the centre for today’s plan':'Move cards or open a project'}</span><span>{active==='dashboard'?'01':'02'} / 02</span></></footer>}
     {travelPage && <div className="v2-travel" role="status" aria-live="polite"><span>ENTERING</span><strong>{travelPage.label}</strong><i aria-hidden="true"/></div>}
