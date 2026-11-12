@@ -12,8 +12,17 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../site-nav.css?v=19">
-  <script>try{document.documentElement.dataset.visualTheme=localStorage.getItem('invincible-visual-theme')||'one'}catch(e){document.documentElement.dataset.visualTheme='one'}</script>
-  <link rel="stylesheet" href="creator.css?v=2026111306">
+  <script>
+    const root = document.documentElement;
+    root.dataset.visualTheme = 'one';
+    try {
+      const theme = localStorage.getItem('invincible-visual-theme');
+      if (theme === 'two' || theme === 'three') root.dataset.visualTheme = theme;
+      root.dataset.backdropMotion = localStorage.getItem('invincible-electric-motion') || 'subtle';
+    } catch {}
+  </script>
+  <link rel="stylesheet" href="../shared/dashboard-backdrop.css?v=1">
+  <link rel="stylesheet" href="creator.css?v=2026111307">
   <link rel="stylesheet" href="production-workbench.css?v=12">
 <meta name="theme-color" content="#000000">  <link rel="stylesheet" href="history-workspace.css?v=2026110903">
   <link rel="stylesheet" href="video-studio/studio.css?v=2026111003">
@@ -22,6 +31,13 @@
 <link rel="stylesheet" href="../shared/spatial-workspace.css?v=4">
 </head>
 <body class="creator-page studio-ui">
+  <div class="dashboard-backdrop" aria-hidden="true">
+    <svg viewBox="0 0 1000 600" preserveAspectRatio="none">
+      <defs><path id="backdrop-circuit" d="M0 142H142l32 30h156l38 37h90M0 460h196l39-38h114l32-33h59M1000 245H872l-35 34H716l-32 32h-66M1000 512H848l-42-42H676l-28-28h-32"/></defs>
+      <use href="#backdrop-circuit"/>
+      <use class="circuit-particles" href="#backdrop-circuit"/>
+    </svg>
+  </div>
   <nav class="global-nav" data-compact-nav data-icon-nav aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
   <script type="module" src="../site-nav.js?v=8"></script>
 

@@ -1,0 +1,49 @@
+.dashboard-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 42%, #211a12, #080706 72%);
+}
+
+[data-visual-theme="two"] .dashboard-backdrop {
+  background: linear-gradient(#06110c35, #06110c90), url("../assets/theme-two-forest.webp") center top / cover no-repeat #06110c;
+}
+
+.dashboard-backdrop svg { display: none; }
+[data-visual-theme="three"] .dashboard-backdrop {
+  background-color: #060b14;
+  background-image: radial-gradient(ellipse at 50% 44%, #09213b88, transparent 46%),
+    radial-gradient(ellipse at 8% 96%, #07284455, transparent 40%),
+    radial-gradient(ellipse at 92% 22%, #07304a38, transparent 42%),
+    linear-gradient(#42bce00a 1px, transparent 1px),
+    linear-gradient(90deg, #42bce00a 1px, transparent 1px);
+  background-size: auto, auto, auto, 44px 44px, 44px 44px;
+  box-shadow: inset 0 0 150px #02060c;
+}
+
+[data-visual-theme="three"] .dashboard-backdrop svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.dashboard-backdrop use {
+  fill: none;
+  stroke: #1b91c07a;
+  vector-effect: non-scaling-stroke;
+}
+
+.dashboard-backdrop .circuit-particles {
+  stroke: #00dfff;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: 2 150;
+  animation: backdrop-circuit-flow 18s linear infinite;
+}
+[data-backdrop-motion="full"] .circuit-particles { animation-duration: 7s; }
+[data-backdrop-motion="off"] .circuit-particles { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-backdrop .circuit-particles { animation: none; }
+}
+@keyframes backdrop-circuit-flow { to { stroke-dashoffset: -608; } }
