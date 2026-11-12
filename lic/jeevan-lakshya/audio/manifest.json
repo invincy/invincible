@@ -29,11 +29,15 @@
     },
     "goal.choose": {
       "file": "goal.choose.mp3",
-      "spokenText": "Please, अपना goal चुनिए।",
-      "duration": 2.251,
-      "bytes": 46604,
-      "direction": "Say exactly the supplied sentence in a warm, direct tone. Give the last word चुनिए its full three natural syllables, chu-ni-ye, ending clearly on ye. Leave a short pause after it. Do not say the pronunciation guide out loud.",
-      "sha256": "c5fb36f00728c8a5981ce6184231c201395896d0f1398defbfc72b61b464c511"
+      "duration": 1.531,
+      "bytes": 32205,
+      "sha256": "f8648c2404a80dfef63bee3a328b35e5e7d88e5aaee6daa4b5a767867e20721a",
+      "spokenText": "अपना goal चुनिए।",
+      "voice": "hi-IN-Gemini-Aoede",
+      "delivery": "social",
+      "speed": 1.4,
+      "playbackRate": 1.4,
+      "direction": "Brisk social delivery. Say the final word in three clear syllables, chu-ni-ye, with a full ending and a short silent beat. Read only the supplied words."
     },
     "goal.education": {
       "file": "goal.education.mp3",
@@ -69,11 +73,15 @@
     },
     "profile.choose": {
       "file": "profile.choose.mp3",
+      "duration": 4.131,
+      "bytes": 84525,
+      "sha256": "584742aee9becb19e88b48f16af2cc5643bb19c27b422c4002652d9fce065170",
       "spokenText": "अपनी age, policy term और Basic Sum Assured चुनिए।",
-      "duration": 3.931,
-      "bytes": 80204,
-      "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
-      "sha256": "5c9778310c64a59754be9c5eacf11a92097f1da63a8aa7eca1de9f2b14b15e9a"
+      "voice": "hi-IN-Gemini-Aoede",
+      "delivery": "social",
+      "speed": 1.4,
+      "playbackRate": 1.4,
+      "direction": "Brisk, upbeat Indian Hindi-English social delivery. Start immediately, finish clearly and read only the supplied words."
     },
     "plan.premium": {
       "file": "plan.premium.mp3",
@@ -82,14 +90,6 @@
       "bytes": 162764,
       "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
       "sha256": "fc39e43d65567d07572187ad769d199d56761c2fae2833be97203edf32419861"
-    },
-    "plan.maturity": {
-      "file": "plan.maturity.mp3",
-      "spokenText": "अगर insured parent maturity तक जीवित रहते हैं और policy in force है, तो Basic Sum Assured के साथ LIC के घोषित bonuses मिलते हैं।",
-      "duration": 7.811,
-      "bytes": 157964,
-      "direction": "Bright, energetic Indian Hindi-English female social media narrator. Brisk, conversational delivery, crisp emphasis, and very short natural pauses. Keep Hindi and English pronunciation clear. Read only the supplied words. For the family-loss section, keep the same brisk pace with respectful warmth.",
-      "sha256": "1ebd70ed35f59285193f500e855dcf9bd34b950d05ca3816eef45de16cb84bee"
     },
     "family.whatif": {
       "file": "family.whatif.mp3",
@@ -138,6 +138,26 @@
       "bytes": 217005,
       "direction": "Read the supplied text exactly, in a warm, confident Indian Hindi-English voice. Keep the pace conversational and brisk, with a brief reflective pause after the second clause. Land clearly on the LIC phrase and finish the last syllable completely. Pronounce LIC as L I C. No extra words.",
       "sha256": "67f73a8f426798dd36cacf366106859fb04f919d758052559e32525645551108"
+    },
+    "plan.goal-maturity": {
+      "file": "plan.maturity.mp3",
+      "duration": 4.691,
+      "bytes": 95565,
+      "sha256": "d73a5258a8abbae37193a6b47ea2a6b98a036459897bc6916524042c214a40cf",
+      "spokenText": "और जब maturity का दिन आता है, तो आपके बच्चे के goal के लिए ये रकम मिलती है।",
+      "voice": "hi-IN-Gemini-Aoede",
+      "delivery": "social",
+      "speed": 1.4,
+      "playbackRate": 1.4,
+      "direction": "Brisk, upbeat Indian Hindi-English social delivery. Start immediately, finish clearly and read only the supplied words."
+    },
+    "intro.chime": {
+      "file": "intro.chime.mp3",
+      "duration": 1.9,
+      "bytes": 23949,
+      "sha256": "59e652736adfd99a54437c9be3554618cb446ad7d91326acaa444a67e93067aa",
+      "playbackRate": 1,
+      "kind": "sound-effect"
     }
   }
 }

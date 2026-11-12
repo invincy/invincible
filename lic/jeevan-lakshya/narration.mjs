@@ -18,7 +18,7 @@ export function createNarrator({schedule,onStatus}){
   })
   .then(data=>{
    clips=data.clips;
-   if(clips['intro.dreams'])audio.src=clipUrl(clips['intro.dreams']);
+   if(clips['intro.chime'])audio.src=clipUrl(clips['intro.chime']);
   })
   .catch(()=>{});
 
@@ -38,7 +38,7 @@ export function createNarrator({schedule,onStatus}){
  function cue(key,done,fallback=4800,onStart){
   cancel();
   const token=active,clip=clips[key];
-  const playbackSpeed=key==='goal.choose'||key==='profile.choose'?1.4:defaultPlaybackSpeed;
+  const playbackSpeed=clip?.playbackRate??defaultPlaybackSpeed;
   let settled=false,started=false,attempt=0,lastFailedAttempt=-1;
 
   function startVisuals(){

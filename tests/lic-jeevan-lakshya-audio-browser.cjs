@@ -16,23 +16,17 @@ const server=http.createServer((req,res)=>{
   await page.route('**/*',route=>new URL(route.request().url()).origin===new URL(lic).origin?route.continue():route.abort());
   await page.goto(lic+'agent/',{waitUntil:'domcontentloaded'});
   await page.getByRole('link',{name:'Open Jeevan Lakshya presentation'}).click();
-  const durations=await page.evaluate(async()=>{
-   const manifest=await fetch('./audio/manifest.json').then(r=>r.json()),context=new AudioContext(),out=[];
-   for(const [key,clip] of Object.entries(manifest.clips)){
-    const response=await fetch('./audio/'+clip.file);if(!response.ok)throw Error('Missing '+key);
-    const buffer=await context.decodeAudioData(await response.arrayBuffer());out.push({key,duration:buffer.duration,expected:clip.duration});
-   }
-   await context.close();return out;
-  });
-  assert.equal(durations.length,16);for(const d of durations){assert.ok(d.duration>1,d.key+' audible duration');assert.ok(Math.abs(d.duration-d.expected)<.15,d.key+' measured duration');}
   const cue=async key=>{
    await page.waitForFunction(k=>document.querySelector('#stageContainer').dataset.voiceCue===k&&document.querySelector('#stageContainer').dataset.audioStatus==='playing',key,{timeout:15000});
-   const expectedRate=key==='goal.choose'||key==='profile.choose'?1.4:1.2;
+   const expectedRate=key==='intro.chime'?1:['goal.choose','profile.choose','plan.goal-maturity'].includes(key)?1.4:1.2;
    assert.equal(await page.locator('#storyNarration').evaluate(audio=>audio.playbackRate),expectedRate,key);
   };
   const finish=async()=>{await page.evaluate(()=>{const a=document.querySelector('#storyNarration');a.currentTime=a.duration-.08;});};
   // Seeking only accelerates this test; native media ended events still drive transitions.
+  await cue('intro.chime');
+  assert.equal(await page.locator('#stageContainer').getAttribute('data-opening'),'path');
   await cue('intro.dreams');
+  assert.equal(await page.locator('#stageContainer').getAttribute('data-opening'),'dreams');
   const openingEnd=page.locator('#storyNarration').evaluate(audio=>new Promise(resolve=>{
    audio.addEventListener('ended',()=>resolve({time:audio.currentTime,duration:audio.duration}),{once:true});
   }));
@@ -60,12 +54,12 @@ const server=http.createServer((req,res)=>{
   await page.locator('#openPreviewBtn').click();await cue('plan.premium');assert.equal(await page.locator('#maturityPill').isVisible(),false);
   assert.equal(await page.locator('.story-family').evaluate(image=>getComputedStyle(image).opacity),'1');
   await page.locator('#storyModeToggle').click();const frozen=await page.locator('#storyNarration').evaluate(a=>a.currentTime);await page.waitForTimeout(600);assert.ok(Math.abs(await page.locator('#storyNarration').evaluate(a=>a.currentTime)-frozen)<.05);assert.equal(await page.locator('#storyNarration').evaluate(a=>a.paused),true);
-  await page.locator('#storyModeToggle').click();await page.waitForFunction(()=>!document.querySelector('#storyNarration').paused);await finish();await page.locator('#maturityPill').waitFor();
+  await page.locator('#storyModeToggle').click();await page.waitForFunction(()=>!document.querySelector('#storyNarration').paused);await finish();await cue('plan.goal-maturity');await page.locator('#maturityPill').waitFor();
   assert.equal(await page.locator('#stageContainer').getAttribute('data-flow-step'),'preview');
   assert.equal(await page.locator('#maturityMessage').isVisible(),true);
   assert.match(await page.locator('#maturityPill').innerText(),/declared bonuses/i);
   assert.equal(await page.locator('#previewBonusNote').isVisible(),true);
-  await page.locator('#advisorAudioBtn').click();assert.equal(await page.locator('#storyNarration').evaluate(a=>a.muted),true);await cue('family.whatif');
+  await page.locator('#advisorAudioBtn').click();assert.equal(await page.locator('#storyNarration').evaluate(a=>a.muted),true);await finish();await cue('family.whatif');
   await page.waitForTimeout(4800);await finish();await cue('family.rider');
   assert.equal(await page.locator('.story-family').evaluate(image=>getComputedStyle(image).opacity),'0');
   assert.match(await page.locator('#riderPill').innerText(),/Term Rider payout/);
@@ -88,7 +82,16 @@ const server=http.createServer((req,res)=>{
   await page.locator('#ctaPrevBtn').click();await cue('story.close');
   await page.locator('#ctaPrevBtn').click();await cue('family.maturity');
   assert.equal(await page.locator('#stageContainer').getAttribute('data-benefit-step'),'4');
-  await page.locator('#storyModeToggle').click();await cue('family.rider');await page.locator('#ctaPrevBtn').click();await cue('family.whatif');assert.match(await page.locator('#storyNarration').getAttribute('src'),/family\.whatif\.mp3\?v=19$/);assert.equal(await page.locator('#stageContainer').getAttribute('data-flow-step'),'whatif');
-  assert.deepEqual(errors,[]);console.log('PASS 16 recordings, automatic sound from plan card, four goals, Other Goal narration, pause/resume, mute, cancellation and maturity');
+  await page.locator('#storyModeToggle').click();await cue('family.rider');await page.locator('#ctaPrevBtn').click();await cue('family.whatif');assert.match(await page.locator('#storyNarration').getAttribute('src'),/family\.whatif\.mp3\?v=20$/);assert.equal(await page.locator('#stageContainer').getAttribute('data-flow-step'),'whatif');
+  const durations=await page.evaluate(async()=>{
+   const manifest=await fetch('./audio/manifest.json').then(r=>r.json()),context=new AudioContext(),out=[];
+   for(const [key,clip] of Object.entries(manifest.clips)){
+    const response=await fetch('./audio/'+clip.file);if(!response.ok)throw Error('Missing '+key);
+    const buffer=await context.decodeAudioData(await response.arrayBuffer());out.push({key,duration:buffer.duration,expected:clip.duration});
+   }
+   await context.close();return out;
+  });
+  assert.equal(durations.length,17);for(const d of durations){assert.ok(d.duration>1,d.key+' audible duration');assert.ok(Math.abs(d.duration-d.expected)<.15,d.key+' measured duration');}
+  assert.deepEqual(errors,[]);console.log('PASS 17 audio clips, automatic sound from plan card, four goals, Other Goal narration, pause/resume, mute, cancellation and maturity');
  }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1;});

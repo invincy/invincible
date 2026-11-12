@@ -177,3 +177,7 @@ After the family maturity step, Continue opens the closing scene with the same g
 ### Portrait story polish
 
 The profile fields are highlighted in the order named by the narration. The premium payment animates before the annual amount appears. In the normal maturity beat, a gold pulse runs to the goal coin, then the amount appears. The approved line appears as a caption with a five-second fallback hold. The former survival wording is no longer played. The family benefits use individual icons and compact markers. The closing pairs the planning phrase with a calendar and the LIC phrase with a shield.
+
+### Opening chime and Aoede narration
+
+The arrow starts with a short chime, then the 733 coin and the four goal coins appear before the opening speech. The same order runs when autoplay is blocked. Creator Studio exported the goal and profile prompts and the normal-maturity line in Gemini Aoede with Social delivery at the 1.40x directed setting. The presentation plays those three clips at 1.40x and advances from normal maturity on the recording end. The family maturity clip is separate.
