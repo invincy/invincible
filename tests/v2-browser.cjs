@@ -189,13 +189,17 @@ async function checkOrbGestures(browser, base, touch) {
       await send('touchEnd',[]);
       await assertCoasts();
       const panelLinks=page.getByRole('navigation',{name:'Dashboard panels'});
-      await panelLinks.getByRole('button',{name:'Session'}).click();
-      await page.waitForFunction(()=>{
-        const track=document.querySelector('.v2-guide-scene');
-        return track.scrollLeft>track.clientWidth*1.8;
-      });
-      await panelLinks.getByRole('button',{name:'Globe'}).click();
-      await page.waitForFunction(()=>document.querySelector('.v2-guide-scene').scrollLeft<2);
+      if(await panelLinks.isVisible()){
+        await panelLinks.getByRole('button',{name:'Session'}).click();
+        await page.waitForFunction(()=>{
+          const track=document.querySelector('.v2-guide-scene');
+          return track.scrollLeft>track.clientWidth*1.8;
+        });
+        await panelLinks.getByRole('button',{name:'Globe'}).click();
+        await page.waitForFunction(()=>document.querySelector('.v2-guide-scene').scrollLeft<2);
+      }else{
+        assert.equal(await page.locator('.v2-guide-scene').evaluate(track=>track.scrollWidth<=track.clientWidth+1),true,'stacked mobile Dashboard has no horizontal spill');
+      }
       await assertWidth(await page.locator('.v2-guide-orb-anchor').evaluate(anchor=>anchor.getBoundingClientRect().width));
     }else{
       await page.mouse.move(x,y);
@@ -473,7 +477,8 @@ async function checkGlobeWithoutWebGL(browser,base) {
           await todos.getByRole('checkbox',{name:'Review the spatial canvas'}).click();
           await page.waitForFunction(()=>window.taskRecords().find(task=>task.id==='t0').steps[0].done);
           await page.setViewportSize({width:393,height:852});
-          await page.getByRole('button',{name:'Focus & reminders'}).click();
+          const focusPanelButton=page.getByRole('button',{name:'Focus & reminders'});
+          if(await focusPanelButton.isVisible())await focusPanelButton.click();
           await todos.getByRole('textbox',{name:'New reminder'}).fill('Phone checklist');
           await page.setViewportSize({width:1440,height:1000});
           await page.screenshot({path:path.join(output,name+'-map.png')});
@@ -592,7 +597,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
             const expectedWidth=Math.max(277.12125,Math.min(width*.46186875,height*.5773359375,738.99));
             assert.ok(Math.abs(scene.orbWidth-expectedWidth)<2,name+' '+width+' desktop Orb at the reduced size');
           }else{
-            const originalWidth=await page.locator('.v2-guide-scene').evaluate(element=>Math.min(element.clientWidth*.85,544));
+            const originalWidth=await page.locator('.v2-guide-scene').evaluate(element=>document.querySelector('.v2-shell').classList.contains('v2-mobile-theme-one')?Math.min(element.clientWidth,640):Math.min(element.clientWidth*.85,544));
             assert.ok(Math.abs(scene.orbWidth-originalWidth)<2,name+' '+width+' reduced narrow Orb size');
           }
           if(width>=1101) assert.ok(scene.missionRight<scene.orbLeft+scene.orbWidth*.25,name+' '+width+' mission keeps clear space for Orb');
@@ -600,6 +605,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
           if(width===393){
             assert.equal(await page.locator('.v2-page-point').count(),9);
             assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
+            assert.equal(await page.locator('.v2-guide-timer-controls button,.v2-guide-work-link,.v2-guide-orb-label button').evaluateAll(items=>items.every(item=>item.getBoundingClientRect().height>=44)),true,'Dashboard controls keep 44px touch targets');
             await page.screenshot({path:path.join(output,name+'-phone-map.png')});
           }
           await navigateTo(page,'02 My Workspace');

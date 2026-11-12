@@ -2,6 +2,23 @@
    Explicit surfaces keep media, charts, drawing paper and status colors intact. */
 :root {
   color-scheme: dark;
+  /* Shared UI foundations. Feature palettes can change the accent, but these
+     interaction, spacing and surface contracts stay consistent across apps. */
+  --ui-control-min: 44px;
+  --ui-touch-min: 44px;
+  --ui-focus-ring: #8ceddf;
+  --ui-focus-offset: 3px;
+  --ui-text: #eef7f8;
+  --ui-text-muted: #aabdc2;
+  --ui-border: rgba(140, 221, 223, .2);
+  --ui-radius-control: 10px;
+  --ui-radius-card: 16px;
+  --ui-space-1: 4px;
+  --ui-space-2: 8px;
+  --ui-space-3: 12px;
+  --ui-space-4: 16px;
+  --ui-space-6: 24px;
+  --ui-space-8: 32px;
   --app-canvas: #000;
   --app-surface: #080808;
   --app-surface-raised: #111;

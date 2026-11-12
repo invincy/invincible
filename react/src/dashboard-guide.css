@@ -22,14 +22,14 @@
 .v2-guide-progress progress{display:block;width:100%;height:4px;margin-top:8px;accent-color:#90e2cd}
 .v2-guide-timer output{display:block;margin:9px 0 10px;font:700 clamp(29px,2.7vw,48px)/1 Orbitron,monospace;letter-spacing:-.06em;color:#ffe1a0;font-variant-numeric:tabular-nums}
 .v2-guide-timer-controls{display:flex;gap:8px;flex-wrap:wrap}
-.v2-shell .v2-guide-timer-controls button{min-height:38px;padding:6px 13px;border:1px solid #78939e45;background:#12212a8a;color:#d6e6eb;font-size:12px}
+.v2-shell .v2-guide-timer-controls button{min-height:var(--ui-control-min);padding:6px 13px;border:1px solid #78939e45;background:#12212a8a;color:#d6e6eb;font-size:12px}
 .v2-shell .v2-guide-timer-controls button:hover{background:#1c3641}
 .v2-guide-statuses{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 14px;margin-top:13px;color:#a9bdc6;font-size:clamp(11px,.85vw,13px)}
 .v2-guide-statuses span{white-space:nowrap}.v2-guide-statuses b{color:#e3f5f5;font-size:16px}
 .v2-guide-statuses [data-status="Today"] b{color:#f7d287}.v2-guide-statuses [data-status="Done"] b{color:#8fe2c3}
-.v2-shell .v2-guide-work-link{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;max-width:290px;margin-top:18px;padding:9px 0;min-height:42px;border:0;border-top:1px solid #61d5df5a;border-radius:0;background:transparent;color:#a8f1e9;font-weight:700;text-align:left}
+.v2-shell .v2-guide-work-link{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;max-width:290px;margin-top:18px;padding:9px 0;min-height:var(--ui-control-min);border:0;border-top:1px solid #61d5df5a;border-radius:0;background:transparent;color:#a8f1e9;font-weight:700;text-align:left}
 .v2-shell .v2-guide-work-link:hover{background:transparent;color:#e0fffa;border-top-color:#b9fff4}
-.v2-shell .v2-guide-orb-label button{min-height:34px;padding:4px 12px;border:0;background:#07131aac;color:#b4cbd1;font-size:11px}
+.v2-shell .v2-guide-orb-label button{min-height:var(--ui-control-min);padding:4px 12px;border:0;background:#07131aac;color:#b4cbd1;font-size:11px}
 .v2-shell .v2-guide-orb-label button:hover{background:#102733;color:#dceeee}
 @media(max-height:710px) and (min-width:901px){
   .v2-guide-mission{top:4%}.v2-guide-timer{top:4%}.v2-guide-work{bottom:4%}
@@ -230,6 +230,7 @@
     gap: 5px;
     padding: 6px;
   }
+  .v2-guide-panel-links button { min-height: var(--ui-touch-min) }
   .v2-guide-scene {
     grid-template: auto / repeat(3,100%);
     gap: 0;

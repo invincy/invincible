@@ -4,6 +4,10 @@ Invincible is a personal dashboard for projects, focus sessions, work, finance, 
 
 This document is the starting point for understanding what runs today, where to edit it, and what we are doing next. The React migration is **partial**.
 
+UI work follows the [UI/UX design system and audit workflow](docs/ui-ux-design-system.md),
+including shared interaction tokens, desktop/mobile acceptance viewports and
+incremental verification gates.
+
 ## Current structure
 
 | Area | Entry point | Code to edit | Runtime |

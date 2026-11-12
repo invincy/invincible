@@ -38,10 +38,12 @@ for(const route of ['garage/','creator/','creator/project.html','journal/','lic/
   assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).scrollbarColor),'rgb(40, 86, 106) rgb(11, 21, 29)');
  }
  await page.setViewportSize({width:390,height:844});
- if(compact){assert.equal(await page.locator('.desktop-nav').isVisible(),true);assert.equal(await page.locator('.desktop-nav a').count(),10);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);continue;}
+  if(compact){assert.equal(await page.locator('.desktop-nav').isVisible(),true);assert.equal(await page.locator('.desktop-nav a').count(),10);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);assert.equal(await page.locator('.desktop-nav a').evaluateAll(links=>links.every(link=>{const rect=link.getBoundingClientRect();return rect.width>=44&&rect.height>=44})),true,'compact navigation keeps 44px touch targets');continue;}
  assert.ok(await page.locator('.mobile-tabbar .app-nav-icon svg').first().evaluate(svg=>svg.getBoundingClientRect().width>=29),'mobile app glyph is enlarged');
+  assert.equal(await page.locator('.mobile-tabbar a,.mobile-more-trigger').evaluateAll(items=>items.every(item=>item.getBoundingClientRect().height>=44)),true,'mobile navigation keeps 44px touch targets');
  await page.locator('.mobile-more-trigger').click();
  assert.equal(await page.locator('#appMoreSheet').evaluate(element=>element.open),true);
+  assert.ok(await page.locator('.more-sheet-close').evaluate(button=>button.getBoundingClientRect().width>=44&&button.getBoundingClientRect().height>=44),'sheet close control keeps a 44px target');
  await page.keyboard.press('Escape');assert.equal(await page.locator('#appMoreSheet').evaluate(element=>element.open),false);
 }
 
