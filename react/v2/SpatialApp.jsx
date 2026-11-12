@@ -47,7 +47,7 @@ function ArcNavigation({regions, activeIndex, onNavigate}) {
   return <nav className="v2-arc-nav" aria-label="Explore spaces" style={{'--arc-step':spacing+'px'}}>
     <svg className="v2-arc-trail" viewBox="0 0 1000 150" preserveAspectRatio="none" aria-hidden="true"><path d="M 8 132 Q 500 -92 992 132"/></svg>
     {regions.map((region,index)=>{
-      const offset=index-activeIndex,active=offset===0,vertical=Math.min(74,Math.abs(offset)*Math.abs(offset)*2);
+      const offset=index-activeIndex,active=offset===0,vertical=Math.min(34,Math.abs(offset)*Math.abs(offset));
       return <button key={region.id} type="button" className={'v2-arc-stop'+(active?' is-active':'')} style={{left:`calc(50% + ${offset*spacing}px)`,top:`${15+vertical}px`}}
         aria-label={(region.number?region.number+' ':'')+region.label} aria-current={active?'page':undefined} title={region.label} onClick={()=>onNavigate(region.id)}>
         <PageIcon page={region.id}/><span>{region.label}</span>
