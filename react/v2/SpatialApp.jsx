@@ -209,7 +209,7 @@ function SignedInWorkspace({user, logout}) {
   },[]);
   const themeNames={one:'Theme One',two:'Theme Two',three:'Theme Three'};
   const planTotal=plan.items.filter(item=>!item.missing).length,planDone=plan.items.filter(item=>item.done&&!item.missing).length;
-  return <div className={'v2-shell'+(desktop?' v2-desktop-connected v2-theme-'+visualTheme:'')+(authError || error || !ready || data.tasksCached || data.planCached ? ' has-status' : '')} data-motion={animationIntensity}>
+  return <div className={'v2-shell'+(desktop?' v2-desktop-connected v2-theme-'+visualTheme:' v2-mobile-theme-'+visualTheme)+(authError || error || !ready || data.tasksCached || data.planCached ? ' has-status' : '')} data-motion={animationIntensity}>
     {desktop&&visualTheme==='two'&&<div className="v2-theme-two-scene" style={{'--theme-two-forest-background':"url('/invincible/assets/theme-two-forest.webp')"}} aria-hidden="true"/>}
     {desktop&&visualTheme==='three'&&<><div className="v2-theme-three-scene" aria-hidden="true"/><svg className="v2-theme-three-circuits" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true"><path d="M0 142H142l32 30h156l38 37h90M0 460h196l39-38h114l32-33h59M1000 245H872l-35 34H716l-32 32h-66M1000 512H848l-42-42H676l-28-28h-32"/><path className="is-live" d="M0 142H142l32 30h156l38 37h90M0 460h196l39-38h114l32-33h59M1000 245H872l-35 34H716l-32 32h-66M1000 512H848l-42-42H676l-28-28h-32"/></svg></>}
     {active==='dashboard' && <div className={'v2-ambient-field'+(orbBox.compact?'':' has-globe')} aria-hidden="true"
