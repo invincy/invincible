@@ -14,7 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../site-nav.css?v=19">
   <link rel="stylesheet" href="../shared/dashboard-backdrop.css?v=4">
-  <link rel="stylesheet" href="project.css?v=2026111305">
+  <link rel="stylesheet" href="project.css?v=2026111306">
   <link rel="stylesheet" href="storyboard.css?v=5">
   <link rel="stylesheet" href="production-workbench.css?v=12">
   <link rel="stylesheet" href="history-workspace.css?v=2026110903">
@@ -44,7 +44,20 @@
 
   <header class="project-header">
     <a class="project-icon back" href="/invincible/creator/" title="Back to projects" aria-label="Back to projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12H4m6-6-6 6 6 6"/></svg></a>
-    <h1 id="projectTitle">Loading…</h1>
+    <div class="project-title-controls">
+      <h1><button id="projectTitle" type="button" title="Rename project" disabled>Loading…</button></h1>
+      <form id="renameProjectForm" hidden>
+        <input id="projectTitleInput" aria-label="Project name" maxlength="300" required>
+        <button type="submit">Save name</button>
+      </form>
+      <details id="recentProjects">
+        <summary aria-label="Recent projects" title="Recent projects">▾</summary>
+        <div class="project-recent-menu">
+          <a href="project.html?draft=1">New untitled project</a>
+          <div id="recentProjectList" aria-live="polite"></div>
+        </div>
+      </details>
+    </div>
     <div class="project-stats" aria-label="Project progress">
       <span title="Scenes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg><strong id="sceneCount" aria-label="Scene count">0</strong></span>
       <span title="Runtime"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><strong id="totalDuration" aria-label="Runtime">0s</strong></span>
@@ -56,7 +69,7 @@
   </header>
   <div class="project-progress" aria-hidden="true"><span id="projectProgressBar"></span></div>
   <nav class="project-workspace-nav" aria-label="Project tools">
-    <button type="button" data-project-area="Voiceover"><span aria-hidden="true">1</span> Voiceover</button>
+    <button type="button" data-project-area="Voiceover"><span aria-hidden="true">1</span> Script</button>
     <button type="button" data-project-area="Storyboard"><span aria-hidden="true">2</span> Script &amp; scenes</button>
     <button type="button" data-project-area="Maps"><span aria-hidden="true">3</span> Map Editor</button>
     <button type="button" data-project-area="Video Studio"><span aria-hidden="true">4</span> Motion Studio</button>
@@ -80,12 +93,12 @@
   </aside>
 
   <main id="app" hidden>
-    <section id="projectVoiceoverStep" aria-label="Voiceover" hidden>
+    <section id="projectVoiceoverStep" aria-label="Script" hidden>
       <div class="project-voiceover-actions">
         <p id="projectVoiceoverStatus" role="status"></p>
         <button id="useNarration" type="button">Use script in Step 2 →</button>
       </div>
-      <iframe id="projectVoiceoverFrame" title="Project voiceover editor"></iframe>
+      <iframe id="projectVoiceoverFrame" title="Project script editor"></iframe>
     </section>
     <details class="project-services">
     <summary>Connections</summary>
@@ -113,6 +126,6 @@
       <div class="share-footer"><button id="copyProjectLink" type="button" class="secondary">Copy project link</button><button value="cancel" class="primary">Done</button></div>
     </form>
   </dialog>
-  <script type="module" src="project.js?v=2026111303"></script>
+  <script type="module" src="project.js?v=2026111304"></script>
 </body>
 </html>

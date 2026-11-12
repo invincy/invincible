@@ -14,7 +14,10 @@
 if (window.parent !== window) {
  const embed = new URLSearchParams(location.search).get('embed');
  if (embed === 'ai') document.documentElement.classList.add('ai-voiceover-embed');
- if (embed === 'project') document.documentElement.classList.add('project-voiceover-embed');
+ if (embed === 'project') {
+  document.documentElement.classList.add('project-voiceover-embed');
+  document.title = 'Script · Invincible';
+ }
 }
 </script>
 </head>

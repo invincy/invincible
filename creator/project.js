@@ -2,11 +2,17 @@ import{makeScene}from'./storyboard-model.js?v=3';
 import{createProductionWorkbench}from'./production-workbench.js?v=2026111302';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
-import{doc,getDoc,onSnapshot,runTransaction,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import{collection,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{createProductionReadiness,mountProductionReadiness}from'./video-studio/production-readiness.js?v=2026111209';
 import{splitVoiceoverScript}from"./scene-tools.js?v=2";
 
-const queryParams=new URLSearchParams(location.search),$=id=>document.getElementById(id),projectId=queryParams.get("id");
+const queryParams=new URLSearchParams(location.search),$=id=>document.getElementById(id);
+let isNewDraft=queryParams.get("draft")==="1";
+const projectId=queryParams.get("id")||(isNewDraft?crypto.randomUUID():null);
+if(isNewDraft&&!queryParams.has("id")){
+  queryParams.set("id",projectId);
+  history.replaceState(history.state,"",location.pathname+"?"+queryParams);
+}
 const requestedArea=queryParams.get("area"),requestedTool=queryParams.get("tool")||"";
 const tabId=(()=>{try{let id=sessionStorage.getItem("invincible.creatorTabId");if(!id){id=Math.random().toString(36).slice(2)+Date.now().toString(36);sessionStorage.setItem("invincible.creatorTabId",id);}return id;}catch{return "default";}})();
 let saveChain=Promise.resolve(),editVersion=0,cloudVersion=0,baseRevision=0;
@@ -69,9 +75,10 @@ function projectCompletion(){
 function render(){
   if(!project)return;
   $("projectTitle").textContent=project.title||"Untitled project";
+  $("projectTitle").disabled=false;
   document.title=(project.title||"Content Project")+" · Invincible";
   const owner=project.ownerUid===user.uid,editors=project.editorEmails||[];
-  $("shareProject").hidden=!owner;
+  $("shareProject").hidden=!owner||isNewDraft;
   const access=owner?(editors.length?"Shared project":"Private project"):"Shared with you";
   $("shareProject").title="Share project";
   $("accessIndicator").title=access;$("accessIndicator").setAttribute("aria-label",access);
@@ -99,7 +106,7 @@ $("useNarration").onclick=()=>{
   const input=voiceover?.getElementById("script"),workspace=voiceover?.getElementById("workspace");
   const message=$("projectVoiceoverStatus");
   const script=input?.value.trim();
-  if(!workspace||workspace.hidden||!script){message.textContent="Paste your script in Voiceover first.";return;}
+  if(!workspace||workspace.hidden||!script){message.textContent="Paste your script first.";return;}
   if(voiceover.getElementById("mode")?.value==="ssml"){message.textContent="Choose Plain text to send your script to Step 2.";return;}
   if(project.script?.trim()&&project.script.trim()!==script&&!confirm("Replace the current project script draft with this narration?"))return;
   if(project.script!==script){
@@ -109,6 +116,63 @@ $("useNarration").onclick=()=>{
   message.textContent="";
   selectProjectArea("Storyboard");
 };
+
+const renameForm=$("renameProjectForm"), titleInput=$("projectTitleInput");
+function closeRename(){
+  renameForm.hidden=true;
+  $("projectTitle").hidden=false;
+  $("projectTitle").focus();
+}
+$("projectTitle").onclick=()=>{
+  titleInput.value=project.title||"Untitled project";
+  $("projectTitle").hidden=true;
+  $("recentProjects").open=false;
+  renameForm.hidden=false;
+  titleInput.select();
+};
+renameForm.onkeydown=event=>{if(event.key==="Escape"){event.preventDefault();closeRename();}};
+renameForm.onsubmit=async event=>{
+  event.preventDefault();
+  const title=titleInput.value.trim();
+  if(!title){titleInput.focus();return;}
+  closeRename();
+  if(title===project.title&&!isNewDraft)return;
+  project.title=title;
+  $("projectTitle").textContent=title;
+  document.title=title+" · Invincible";
+  await save();
+};
+
+$("recentProjects").ontoggle=async()=>{
+  if(!$("recentProjects").open||!user)return;
+  const uid=user.uid,email=(user.email||"").toLowerCase(),list=$("recentProjectList");
+  list.textContent="Loading projects…";
+  const projects=collection(db,"creatorProjects");
+  const reads=[getDocs(query(projects,where("ownerUid","==",uid)))];
+  if(email)reads.push(getDocs(query(projects,where("editorEmails","array-contains",email))));
+  const results=await Promise.allSettled(reads);
+  if(user?.uid!==uid)return;
+  const recent=new Map();
+  for(const result of results)if(result.status==="fulfilled"){
+    for(const row of result.value.docs)recent.set(row.id,{...row.data(),id:row.id});
+  }
+  const updated=item=>item.updatedAt?.toMillis?.()??(item.updatedAt?.seconds!=null?item.updatedAt.seconds*1000:Number(item.updatedAt)||0);
+  list.replaceChildren();
+  for(const item of [...recent.values()].sort((a,b)=>updated(b)-updated(a))){
+    const link=document.createElement("a");
+    link.href="project.html?"+new URLSearchParams({id:item.id});
+    link.textContent=item.title||"Untitled project";
+    if(item.id===projectId)link.setAttribute("aria-current","page");
+    list.append(link);
+  }
+  if(!list.children.length)list.textContent=results.some(result=>result.status==="rejected")?"Could not load projects.":"No saved projects yet.";
+};
+$("recentProjects").addEventListener("click",async event=>{
+  const link=event.target.closest("a[href]");
+  if(!link||!localDirty||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+  event.preventDefault();
+  if(await save())location.assign(link.href);
+});
 
 function renderSceneWorkspace(){
   const scenes=project.scenes||[];
@@ -164,12 +228,21 @@ async function save(options={}){
      tx.set(ref,buildProjectWrite(payload,server,nextRev));
      return {nextRev};
     }
+    if(isNewDraft&&expectedBase===0){
+     tx.set(ref,buildProjectWrite(payload,{},1,{isCreate:true}));
+     return {nextRev:1,created:true};
+    }
     const err=new Error('This project was deleted or is no longer available in Firebase.');
     err.code='revision-conflict';err.serverDeleted=true;throw err;
    });
    if(user?.uid!==writerUid||ref!==projectRef)return false;
    baseRevision=txResult.nextRev;
    if(project)project.writeRevision=txResult.nextRev;
+   if(txResult.created){
+    finishDraft();
+    $("shareProject").hidden=false;
+    watchProject();
+   }
    if(typeof onConflict==='function')onConflict(null);
    if(version===editVersion){localDirty=false;clearLocalDraft();status("Saved to Firebase","ok")}
    else{keepDraft();}
@@ -364,6 +437,13 @@ $("conflictKeepOverwrite").onclick=async()=>{
 
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&saveTimer)save();});
 
+function finishDraft(){
+  if(!isNewDraft)return;
+  isNewDraft=false;
+  queryParams.delete("draft");
+  history.replaceState(history.state,"",location.pathname+"?"+queryParams);
+}
+
 async function load(){
   if(!projectId){status("No project was selected.","error");return;}
   await authReady;user=auth.currentUser;
@@ -384,6 +464,10 @@ async function load(){
       });
     }
     if(snapshot?.exists())project=snapshot.data();
+    if(project)finishDraft();
+    else if(isNewDraft){
+      project={id:projectId,title:"Untitled project",stage:"Ideas",format:"Short",aspectRatio:"9:16",script:"",scenes:[],ownerUid:user.uid,ownerEmail:(user.email||"").toLowerCase(),editorEmails:[]};
+    }
     else if(!project){status("This project was not found or has not been shared with your account.","error");return;}
     cloudVersion=project.updatedAt?.toMillis?.()||0;
     baseRevision=Number.isInteger(project.writeRevision)?project.writeRevision:0;
@@ -411,14 +495,19 @@ async function load(){
     project.editorEmails=(project.editorEmails||[]).map(email=>email.toLowerCase());
     project.scenes=(project.scenes||[]).map(makeScene);
     productionReadiness=mountProductionReadiness(document.querySelector(".project-readiness"),createProductionReadiness(()=>user?.uid));
-    render();$("app").hidden=false;status("Synced","ok");
+    render();$("app").hidden=false;status(isNewDraft?"Unsaved project":"Synced",isNewDraft?"":"ok");
     if(recoveredStaleDraft){
       onConflict({source:'stale-draft',draft:recoveredStaleDraft,serverData:project,serverRevision:baseRevision,serverUpdatedAt:cloudVersion});
       status(storageError({code:'revision-conflict'})+" An earlier local draft is waiting for your decision.","error");
     }
     if(requestedArea)selectProjectArea(requestedArea,requestedTool);
     else selectProjectArea("Voiceover");
-    onSnapshot(projectRef,{includeMetadataChanges:true},live=>{
+    if(!isNewDraft)watchProject();
+  }catch(error){status("Could not load project: "+error.message,"error");}
+}
+
+function watchProject(){
+  onSnapshot(projectRef,{includeMetadataChanges:true},live=>{
       if(live.metadata.hasPendingWrites)return;
       if(!live.exists()){
         if(localDirty||pendingConflict?.source==='stale-draft'){
@@ -453,8 +542,7 @@ async function load(){
       cloudVersion=remoteUpdatedAt||cloudVersion;
       applyIncomingProject(data);
       status("Synced","ok");
-    },error=>status("Collaboration access changed: "+error.message,"error"));
-  }catch(error){status("Could not load project: "+error.message,"error");}
+  },error=>status("Collaboration access changed: "+error.message,"error"));
 }
 
 load();

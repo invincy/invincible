@@ -493,6 +493,31 @@ const server=http.createServer((req,res)=>{
   fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});
   await page.screenshot({path:path.join(root,'.test-output/creator-workbench-desktop.png'),fullPage:true});
   await page.setViewportSize({width:393,height:852});await page.screenshot({path:path.join(root,'.test-output/creator-workbench-mobile.png'),fullPage:true});
+  await page.goto(base);
+  await page.getByRole('link',{name:/^Motion Studio/}).click();
+  await page.getByRole('button',{name:'Untitled project',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Script',exact:true}).waitFor();
+  assert.equal(await page.locator('[data-project-area="Voiceover"]').getAttribute('aria-current'),'step');
+  assert.equal(await page.locator('#toolDialog').count(),0,'Motion Studio opens the project workspace directly');
+  const untitledId=new URL(page.url()).searchParams.get('id');
+  assert.equal(await page.evaluate(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id],untitledId),undefined);
+  await page.getByRole('button',{name:'Untitled project',exact:true}).click();
+  await page.getByRole('textbox',{name:'Project name',exact:true}).fill('Named from Motion Studio');
+  await page.getByRole('button',{name:'Save name',exact:true}).click();
+  await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.title==='Named from Motion Studio',untitledId);
+  await page.evaluate(id=>{
+   const data=JSON.parse(localStorage.getItem('test.creator'));
+   data['creatorProjects/'+id].updatedAt=100;
+   data['creatorProjects/legacy'].updatedAt=90;
+   localStorage.setItem('test.creator',JSON.stringify(data));
+  },untitledId);
+  await page.getByLabel('Recent projects',{exact:true}).click();
+  const recent=page.locator('#recentProjectList a');
+  await recent.first().waitFor();
+  assert.deepEqual((await recent.allTextContents()).slice(0,2),['Named from Motion Studio','Legacy']);
+  await page.locator('#recentProjectList').getByRole('link',{name:'Legacy',exact:true}).click();
+  await page.getByRole('button',{name:'Legacy',exact:true}).waitFor();
+  assert.equal(await page.locator('[data-project-area="Voiceover"]').getAttribute('aria-current'),'step');
   assert.deepEqual(errors,[]);console.log('Creator creation, 16-scene import, queues, shared Blender tasks, independent completion, script review, assets, Markdown, reload/draft recovery, legacy compatibility and responsive layouts passed.');
  }catch(error){
   fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});

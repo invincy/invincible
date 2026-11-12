@@ -85,9 +85,11 @@ require attention and keep routine success messages out of the visual layout.
 
 ### Motion Studio desktop
 
-Open a project on Voiceover. The project workflow runs from Voiceover to
+Open a project on Script. The Motion Studio launcher opens the same project
+workspace with an unsaved untitled project, a rename control, and recent
+projects ordered by their last saved update. The workflow runs from Script to
 Script & scenes, then Map Editor when visuals need maps, and finally Motion
-Studio for assembly. Explicit tool shortcuts still open their own tool.
+Studio for assembly. The separate Invincible AI Voiceover tool keeps its name.
 
 Carry the selected Invincible theme backdrop into the editor, including its
 ambient details. Keep the background free of page-specific artwork and use

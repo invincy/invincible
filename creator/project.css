@@ -423,6 +423,67 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
   color: var(--studio-accent);
 }
 .project-workspace-nav button > span { margin-right: 6px; }
+.project-title-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.project-title-controls h1 {
+  min-width: 0;
+  margin: 0;
+  font: 600 clamp(19px,2vw,28px)/1.2 Roboto,system-ui,sans-serif;
+}
+#projectTitle, #recentProjects > summary {
+  min-height: 44px;
+  padding: 4px 6px;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+#projectTitle {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: inherit;
+  text-align: left;
+}
+#projectTitle[hidden], #renameProjectForm[hidden] { display: none; }
+#renameProjectForm { display: flex; gap: 4px; min-width: 0; }
+#renameProjectForm input { min-width: 0; width: min(270px,100%); font-size: 16px; }
+#renameProjectForm button { min-height: 44px; white-space: nowrap; }
+#recentProjects { position: relative; flex: none; }
+#recentProjects > summary { display: grid; place-items: center; width: 44px; list-style: none; }
+#recentProjects > summary::-webkit-details-marker { display: none; }
+.project-recent-menu {
+  position: absolute;
+  z-index: 30;
+  inset: 100% auto auto 0;
+  width: min(300px, calc(100vw - 24px));
+  max-height: min(50dvh,360px);
+  overflow: auto;
+  padding: 6px;
+  border: 1px solid var(--studio-line);
+  border-radius: 10px;
+  background: #101923;
+}
+.project-recent-menu a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px;
+  color: var(--text);
+  text-decoration: none;
+}
+.project-recent-menu a:is(:hover,[aria-current]) { background: #1b3341; }
+@media (max-width: 700px) {
+  .project-title-controls { grid-column: 2; grid-row: 1; }
+  #recentProjects { position: static; }
+  .project-recent-menu { inset: auto 8px auto auto; }
+}
 .project-services { margin: 0 0 8px; }
 .project-services > summary {
   width: max-content;
