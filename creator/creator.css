@@ -304,7 +304,7 @@ body.creator-page.studio-ui::before { display: none; }
 .creator-page .project-home-top .project-mark { width: 48px; }
 
 .creator-page .creator-home > :is(.creator-projects, .creator-toolbox) {
-  background: color-mix(in srgb, var(--creator-panel) 74%, transparent);
+  background: color-mix(in srgb, var(--creator-panel) 52%, transparent);
   border: 0;
   box-shadow: none;
 }

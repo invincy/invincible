@@ -400,14 +400,6 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
   background: transparent !important;
 }
 .project-page.studio-ui:has(> .dashboard-backdrop)::before { display: none; }
-.project-page .dashboard-backdrop::before {
-  background: radial-gradient(circle at 50% 50%,
-    transparent 0 15vmin, var(--project-halo-rim, #ffcc7560) 19vmin,
-    var(--project-halo-glow, #ffb34d38) 23vmin, transparent 38vmin);
-}
-[data-visual-theme="two"] .project-page { --project-halo-rim: #a9ef8060; --project-halo-glow: #7de26338; }
-[data-visual-theme="three"] .project-page { --project-halo-rim: #60dbff70; --project-halo-glow: #18bfff42; }
-.project-page .dashboard-backdrop svg { position: relative; }
 .project-voiceover-active .project-services { display: none; }
 .project-voiceover-actions {
   display: flex;
