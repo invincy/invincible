@@ -181,3 +181,7 @@ The profile fields are highlighted in the order named by the narration. The prem
 ### Opening chime and Aoede narration
 
 The arrow starts with a short chime, then the 733 coin and the four goal coins appear before the opening speech. The same order runs when autoplay is blocked. Creator Studio exported the goal and profile prompts and the normal-maturity line in Gemini Aoede with Social delivery at the 1.40x directed setting. The presentation plays those three clips at 1.40x and advances from normal maturity on the recording end. The family maturity clip is separate.
+
+### Unified narration
+
+The 16 main recordings now use Gemini 2.5 Pro Aoede with Social delivery. Gemini Charon voices the one normal-maturity question before Aoede answers. All speech uses the 1.2x Studio pace setting and 1.2x playback, with the opening chime at its original pitch and playback rate. The opening voice is cued 2 seconds into the opening timeline, after the path and goal reveal begin. The closing calendar and shield are timed to the new recording.

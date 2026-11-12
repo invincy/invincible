@@ -24,7 +24,7 @@ const server=http.createServer((req,res)=>{const u=decodeURIComponent(new URL(re
   }
   await page.screenshot({path:out+'/'+w+'x'+h+'-four-goals.png'});
   await page.locator('[data-goal="career"]').click();await state('selected');assert.equal(await page.locator('#stageContainer').getAttribute('data-voice-cue'),'goal.career');assert.equal(await page.locator('#configurationPanel').isVisible(),false);await page.clock.fastForward(1800);await state('configure');assert.equal(await page.locator('#stageContainer').getAttribute('data-voice-cue'),'profile.choose');assert.match(await page.locator('#riderScenarioAmount').innerText(),/2,00,000/);await page.locator('[data-age="50"]').click();assert.equal(await page.locator('[data-term="25"]').isDisabled(),true);await page.locator('[data-age="30"]').click();await page.locator('[data-term="25"]').click();await geometry('configure');
-  await page.locator('#openPreviewBtn').click();await state('preview');assert.equal(await page.locator('#maturityPill').isVisible(),false);assert.match(await page.locator('#previewPremium').innerText(),/9,222/);await page.clock.fastForward(1499);assert.equal(await page.locator('#maturityPill').isVisible(),false);await page.clock.fastForward(1);assert.equal(await page.locator('#maturityPill').isVisible(),true);await geometry('preview');
+  await page.locator('#openPreviewBtn').click();await state('preview');assert.equal(await page.locator('#maturityPill').isVisible(),false);assert.match(await page.locator('#previewPremium').innerText(),/9,222/);await page.clock.fastForward(1499);assert.equal(await page.locator('#maturityPill').isVisible(),false);await page.clock.fastForward(1);assert.equal(await page.locator('#stageContainer').getAttribute('data-voice-cue'),'plan.maturity-question');assert.equal(await page.locator('#maturityPill').isVisible(),false);await page.clock.fastForward(1800);assert.equal(await page.locator('#maturityPill').isVisible(),true);await geometry('preview');
   await page.locator('#storyModeToggle').click();await page.clock.fastForward(20000);await state('preview');assert.equal(await page.locator('#stageContainer').getAttribute('data-paused'),'true');await page.locator('#storyModeToggle').click();await page.clock.fastForward(4999);await state('preview');await page.clock.fastForward(1);await state('whatif');assert.equal(await page.locator('#whatIfCaption').isVisible(),false);
   await page.clock.fastForward(1200);assert.equal(await page.locator('#whatIfCaption').isVisible(),true);await page.clock.fastForward(3500);assert.equal(await page.locator('#stageContainer').getAttribute('data-sequence-ready'),'true');assert.match(await page.locator('.story-road').evaluate(e=>getComputedStyle(e).filter),/grayscale\(1\)/);await geometry('whatif');
   await page.clock.fastForward(2500);await state('protection');const coinStart=await page.locator('#storyGoal').boundingBox();assert.equal(await page.locator('#stageContainer').getAttribute('data-benefit-step'),'1');assert.equal(await page.locator('#riderPill').isVisible(),true);assert.match(await page.locator('#riderAmount').innerText(),/2,00,000/);for(const id of ['ceasesPill','incomePill','deathMaturityPill'])assert.equal(await page.locator('#'+id).isVisible(),false);
@@ -44,13 +44,13 @@ const server=http.createServer((req,res)=>{const u=decodeURIComponent(new URL(re
   await page.locator('#ctaNextBtn').click();assert.equal(await page.locator('#stageContainer').getAttribute('data-benefit-step'),'3');await page.locator('#ctaNextBtn').click();assert.equal(await page.locator('#stageContainer').getAttribute('data-benefit-step'),'4');await page.locator('#ctaNextBtn').click();await state('closing');
   assert.equal(await page.locator('#ctaNextBtn').isVisible(),false);
   await geometry('closing');assert.deepEqual(await page.locator('#storyGoal').boundingBox(),coinEnd);
-  await page.clock.fastForward(6540);assert.equal(await page.locator('#closingMessage').isVisible(),true);assert.equal(await page.locator('#closingTrust').isVisible(),false);
-  await page.clock.fastForward(1140);assert.equal(await page.locator('#closingTrust').isVisible(),true);assert.equal(await page.locator('#ctaNextBtn').isVisible(),false);
-  await page.clock.fastForward(1320);
+  await page.clock.fastForward(6280);assert.equal(await page.locator('#closingMessage').isVisible(),true);assert.equal(await page.locator('#closingTrust').isVisible(),false);
+  await page.clock.fastForward(920);assert.equal(await page.locator('#closingTrust').isVisible(),true);assert.equal(await page.locator('#ctaNextBtn').isVisible(),false);
+  await page.clock.fastForward(1800);
   await page.screenshot({path:out+'/'+w+'x'+h+'-closing.png'});
   await page.getByRole('button',{name:'View plan details →'}).click();await state('details');await page.locator('#replayBtn').click();await state('intro');await page.getByRole('button',{name:'Skip introduction'}).click();
   // Back removes every pending automatic callback; restarting uses the new profile.
-  await page.locator('[data-goal="career"]').click();await page.clock.fastForward(1800);await page.locator('#openPreviewBtn').click();await page.locator('#ctaPrevBtn').click();await page.clock.fastForward(30000);await state('configure');await page.locator('[data-age="50"]').click();await page.locator('[data-sa="200000"]').click();await page.locator('#openPreviewBtn').click();await page.clock.fastForward(1500);await page.clock.fastForward(5000);await state('whatif');await page.clock.fastForward(7200);await state('protection');await page.clock.fastForward(4800);await page.clock.fastForward(4800);await page.clock.fastForward(4800);await page.locator('#ctaNextBtn').click();await page.clock.fastForward(9000);await page.locator('#ctaNextBtn').click();await page.locator('#ctaNextBtn').click();await page.clock.resume();
+  await page.locator('[data-goal="career"]').click();await page.clock.fastForward(1800);await page.locator('#openPreviewBtn').click();await page.locator('#ctaPrevBtn').click();await page.clock.fastForward(30000);await state('configure');await page.locator('[data-age="50"]').click();await page.locator('[data-sa="200000"]').click();await page.locator('#openPreviewBtn').click();await page.clock.fastForward(1500);await page.clock.fastForward(1800);await page.clock.fastForward(5000);await state('whatif');await page.clock.fastForward(7200);await state('protection');await page.clock.fastForward(4800);await page.clock.fastForward(4800);await page.clock.fastForward(4800);await page.locator('#ctaNextBtn').click();await page.clock.fastForward(9000);await page.locator('#ctaNextBtn').click();await page.locator('#ctaNextBtn').click();await page.clock.resume();
 await page.waitForFunction(()=>document.body.dataset.ready==='true');
 assert.equal(await page.locator('#customerAge').inputValue(),'50');assert.equal(await page.locator('#policyTerm').inputValue(),'15');assert.equal(await page.locator('#childGoal').inputValue(),'Career');
 assert.match(await page.locator('#premiumValue').innerText(),/18,698/);
@@ -73,7 +73,7 @@ await page.screenshot({path:`${out}/${w}x${h}-calculator.png`,fullPage:true});
   assert.deepEqual(errors,[]);assert.deepEqual(missing,[]);await page.close();console.log('PASS '+w+'x'+h+': 9:16 bounds, rider-first auto order, reading holds, pause/resume, replay, manual next, Back and calculator');
  }
 
- const edge=await browser.newPage({viewport:{width:320,height:568},reducedMotion:'reduce'});await edge.clock.install({time:new Date('2026-11-10T00:00:00Z')});await edge.clock.pauseAt(new Date('2026-11-10T00:00:01Z'));await edge.goto(base+'/lic/jeevan-lakshya/');await edge.getByRole('button',{name:'Skip introduction'}).click();await edge.locator('[data-goal="marriage"]').click();await edge.clock.fastForward(1800);await edge.locator('[data-sa="2000000"]').click();await edge.locator('#openPreviewBtn').click();await edge.clock.fastForward(1500);await edge.clock.fastForward(5000);await edge.clock.fastForward(7200);await edge.clock.fastForward(4800);await edge.clock.fastForward(4800);await edge.clock.fastForward(4800);
+ const edge=await browser.newPage({viewport:{width:320,height:568},reducedMotion:'reduce'});await edge.clock.install({time:new Date('2026-11-10T00:00:00Z')});await edge.clock.pauseAt(new Date('2026-11-10T00:00:01Z'));await edge.goto(base+'/lic/jeevan-lakshya/');await edge.getByRole('button',{name:'Skip introduction'}).click();await edge.locator('[data-goal="marriage"]').click();await edge.clock.fastForward(1800);await edge.locator('[data-sa="2000000"]').click();await edge.locator('#openPreviewBtn').click();await edge.clock.fastForward(1500);await edge.clock.fastForward(1800);await edge.clock.fastForward(5000);await edge.clock.fastForward(7200);await edge.clock.fastForward(4800);await edge.clock.fastForward(4800);await edge.clock.fastForward(4800);
  assert.equal(await edge.locator('#deathMaturityAmount').innerText(),'₹22 lakh');assert.equal(await edge.locator('#deathMaturityAmount').getAttribute('aria-label'),'₹22,00,000');
  const edgeBounds=await edge.evaluate(()=>{const coin=document.querySelector('#storyGoal').getBoundingClientRect(),badge=document.querySelector('#deathMaturityPill').getBoundingClientRect(),amount=document.querySelector('#deathMaturityAmount');return{coinRight:coin.x+coin.width*.89,badgeLeft:badge.x,badgeRight:badge.right,width:innerWidth,textFits:amount.scrollWidth<=amount.clientWidth};});assert.ok(edgeBounds.badgeLeft>edgeBounds.coinRight+3);assert.ok(edgeBounds.badgeRight<=edgeBounds.width);assert.ok(edgeBounds.textFits,'Largest amount fits beside the widest goal coin');await edge.close();console.log('PASS small-phone marriage coin: persistent, separate maturity pill, largest amount unclipped');
 
@@ -91,14 +91,16 @@ await page.screenshot({path:`${out}/${w}x${h}-calculator.png`,fullPage:true});
  await opening.locator('[data-audio-status="blocked"]').waitFor();
  assert.equal(await opening.locator('#advisorAudioBtn').getAttribute('aria-label'),'Enable narration');
  assert.equal(await openingPhase(),'path');
- await opening.clock.fastForward(1050);
+ await opening.clock.fastForward(700);
  assert.equal(await openingPhase(),'coin');
- await opening.clock.fastForward(200);
+ await opening.clock.fastForward(100);
  assert.equal(await openingPhase(),'dreams');
  assert.equal(await opening.locator('#goalChoices button').count(),4);
  assert.equal(await opening.locator('#goalChoices').evaluate(e=>e.inert),true);
  assert.equal(await opening.locator('#stageContainer').getAttribute('data-voice-cue'),'intro.chime');
- await opening.clock.fastForward(950);
+ await opening.clock.fastForward(899);
+ assert.equal(await opening.locator('#stageContainer').getAttribute('data-voice-cue'),'intro.chime');
+ await opening.clock.fastForward(1);
  assert.equal(await opening.locator('#stageContainer').getAttribute('data-voice-cue'),'intro.dreams');
  await opening.clock.fastForward(4200);
  assert.equal(await openingPhase(),'plan');
