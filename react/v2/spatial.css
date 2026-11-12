@@ -233,7 +233,8 @@
 
 /* Theme One: full-window game canvas with a centered, curved space selector. */
 @media (min-width:901px) {
-  .v2-desktop-connected.v2-theme-one { display:block; overflow:hidden; background:#03070b }
+  .v2-desktop-connected.v2-theme-one { display:block; isolation:isolate; overflow:hidden; color-scheme:dark; background:#03070b }
+  .v2-theme-one :is(.v2-theme-two-scene,.v2-theme-two-brand,.v2-theme-two-emblem,.v2-theme-three-emblem,.v2-theme-three-scene,.v2-theme-three-circuits,.v2-theme-three-brand,.v2-theme-three-plan-ring) { display:none!important }
   .v2-theme-one>.v2-topbar { display:none }
   .v2-theme-one>.v2-canvas { position:fixed; inset:0; width:100vw; height:100dvh; z-index:1; overflow-x:auto; overflow-y:hidden; scrollbar-width:none }
   .v2-theme-one>.v2-canvas::-webkit-scrollbar { display:none }
@@ -241,8 +242,11 @@
   .v2-theme-one .v2-region-connected { padding:0 }
   .v2-theme-one.has-status>.v2-connection { position:fixed; z-index:9; top:10px; left:16px; max-width:min(520px,60vw); padding:8px 12px; border:1px solid #50717b55; border-radius:12px; background:#061019dd; backdrop-filter:blur(12px) }
   .v2-theme-one>.v2-hud { position:fixed; z-index:12; top:12px; right:18px; display:flex; align-items:center; gap:10px; pointer-events:none }
-  .v2-theme-one .v2-theme-switch { display:flex; align-items:center; gap:8px; min-height:42px; padding:7px 12px; border:1px solid #73939a2b; border-radius:12px; background:#06101985; color:#c7ebf1; box-shadow:0 8px 28px #0005; pointer-events:auto; backdrop-filter:blur(12px); font-size:12px }
-  .v2-theme-one .v2-theme-switch svg { width:19px; height:19px; stroke:#84d9e7 }
+  .v2-theme-picker { display:flex; align-items:center; gap:3px; padding:4px; border:1px solid #73939a2b; border-radius:12px; background:#061019d9; box-shadow:0 8px 28px #0005; pointer-events:auto; backdrop-filter:blur(12px) }
+  .v2-theme-option { min-height:34px; padding:6px 9px; border:1px solid transparent; border-radius:8px; background:transparent; color:#c7ebf1; font-family:inherit; font-size:11px; font-weight:600; line-height:1.1; white-space:nowrap; cursor:pointer; transition:background .18s,border-color .18s,color .18s }
+  .v2-theme-option:hover { background:#8bddeb12; color:#effcff }
+  .v2-theme-option:focus-visible { outline:2px solid #84d9e7; outline-offset:2px }
+  .v2-theme-option[aria-pressed="true"] { border-color:#84d9e755; background:#52c3d21c; color:#e7fcff; box-shadow:inset 0 0 12px #52c3d20f }
   .v2-theme-one .v2-account { gap:8px; padding:5px 7px; border:1px solid #73939a2b; border-radius:15px; background:#06101985; box-shadow:0 8px 28px #0005; backdrop-filter:blur(14px); pointer-events:auto }
   .v2-theme-one .v2-guide-work { bottom:16% }
   .v2-theme-one .v2-arc-nav { position:fixed; z-index:10; inset:auto 0 0; height:160px; overflow:hidden; isolation:isolate; background:linear-gradient(0deg,#050b12f2 0%,#07111ac9 45%,#07111a00 100%); border:0; backdrop-filter:blur(10px) }
@@ -264,7 +268,8 @@
 }
 /* Theme Two: forest portal scene with low-cost layered depth. */
 @media (min-width:901px) {
-  .v2-desktop-connected.v2-theme-two { display:block; overflow:hidden; background:#06110c }
+  .v2-desktop-connected.v2-theme-two { display:block; isolation:isolate; overflow:hidden; color-scheme:dark; background:#06110c }
+  .v2-theme-two :is(.v2-theme-three-emblem,.v2-theme-three-scene,.v2-theme-three-circuits,.v2-theme-three-brand,.v2-theme-three-plan-ring) { display:none!important }
   .v2-theme-two>.v2-topbar { display:none }
   .v2-theme-two>.v2-canvas { position:fixed; inset:0; width:100vw; height:100dvh; z-index:1; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; background:transparent }
   .v2-theme-two>.v2-canvas::-webkit-scrollbar { display:none }
@@ -276,8 +281,11 @@
   .v2-theme-two>.v2-hud { position:fixed; z-index:15; top:18px; right:24px; display:flex; align-items:center; gap:10px; pointer-events:none }
   .v2-theme-two .v2-account { gap:8px; padding:5px 7px; border:1px solid #a7ed823d; border-radius:18px; background:#06150dc9; box-shadow:0 16px 36px #02080399,inset 0 1px #d8ffbd22; backdrop-filter:blur(12px); pointer-events:auto }
   .v2-theme-two .v2-account .dashboard-notification-button { color:#d9f5b1 }
-  .v2-theme-two .v2-theme-switch { display:flex; align-items:center; gap:8px; min-height:42px; padding:7px 12px; border:1px solid #a7ed823d; border-radius:14px; background:#06150dc9; color:#d9f5b1; box-shadow:0 16px 36px #02080399,inset 0 1px #d8ffbd22; pointer-events:auto; backdrop-filter:blur(12px) }
-  .v2-theme-switch svg { width:20px; height:20px; stroke:#a9fb69 }
+  .v2-theme-two .v2-theme-picker { border-color:#a7ed823d; border-radius:14px; background:#06150dc9; box-shadow:0 16px 36px #02080399,inset 0 1px #d8ffbd22; backdrop-filter:blur(12px) }
+  .v2-theme-two .v2-theme-option { color:#d9f5b1 }
+  .v2-theme-two .v2-theme-option:hover { background:#a8ec7218; color:#f0ffdc }
+  .v2-theme-two .v2-theme-option:focus-visible { outline-color:#a9fb69 }
+  .v2-theme-two .v2-theme-option[aria-pressed="true"] { border-color:#a9fb695e; background:#a8ec7224; color:#f0ffdc; box-shadow:inset 0 0 12px #a8ec7214 }
   .v2-theme-two-brand { position:fixed; z-index:14; top:14px; left:50%; display:grid; justify-items:center; gap:3px; width:270px; transform:translateX(-50%); color:#eff9e7; text-shadow:0 2px 16px #001006 }
   .v2-theme-two-brand svg { width:38px; height:38px; fill:#93ef57; stroke:#c6ff9d; stroke-width:1.5; filter:drop-shadow(0 0 12px #8cf54d80) }
   .v2-theme-two-brand strong { font:650 19px/1 'Exo 2',sans-serif; letter-spacing:.34em; padding-left:.34em }
@@ -368,8 +376,12 @@
   .v2-theme-three>.v2-hud { position:fixed; z-index:15; top:12px; right:18px; display:flex; align-items:center; gap:10px; pointer-events:none }
   .v2-theme-three .v2-account { gap:8px; padding:5px 7px; border:1px solid #38bdf83d; border-radius:15px; background:#07121fd9; box-shadow:0 12px 30px #0008,inset 0 1px #c8f5ff19; backdrop-filter:blur(10px); pointer-events:auto }
   .v2-theme-three .v2-account .dashboard-notification-button { color:#c4eaff }
-  .v2-theme-three .v2-theme-switch,.v2-theme-three .v2-motion-setting { display:flex; align-items:center; gap:8px; min-height:42px; padding:6px 11px; border:1px solid #38bdf83d; border-radius:11px; background:#07121fd9; color:#c4eaff; box-shadow:0 12px 30px #0008,inset 0 1px #c8f5ff19; pointer-events:auto; backdrop-filter:blur(10px); font-size:12px }
-  .v2-theme-three .v2-theme-switch svg { width:19px; height:19px; stroke:#00dfff; filter:drop-shadow(0 0 5px #00dfff88) }
+  .v2-theme-three .v2-theme-picker { border-color:#38bdf83d; border-radius:11px; background:#07121fd9; box-shadow:0 12px 30px #0008,inset 0 1px #c8f5ff19; backdrop-filter:blur(10px) }
+  .v2-theme-three .v2-theme-option,.v2-theme-three .v2-motion-setting { color:#c4eaff }
+  .v2-theme-three .v2-theme-option:hover { background:#00dfff14; color:#edfbff }
+  .v2-theme-three .v2-theme-option:focus-visible { outline-color:#00dfff }
+  .v2-theme-three .v2-theme-option[aria-pressed="true"] { border-color:#00dfff66; background:#00dfff1e; color:#edfbff; box-shadow:inset 0 0 12px #00dfff14 }
+  .v2-theme-three .v2-motion-setting { display:flex; align-items:center; gap:8px; min-height:42px; padding:6px 11px; border:1px solid #38bdf83d; border-radius:11px; background:#07121fd9; box-shadow:0 12px 30px #0008,inset 0 1px #c8f5ff19; pointer-events:auto; backdrop-filter:blur(10px); font-size:12px }
   .v2-theme-three .v2-motion-setting { gap:6px; color:#83a6bb }
   .v2-theme-three .v2-motion-setting select { min-height:30px; padding:3px 22px 3px 8px; border:1px solid #38bdf83d; border-radius:7px; background:#081626; color:#d9efff; font:inherit }
   .v2-theme-three-brand { position:fixed; z-index:14; top:8px; left:50%; display:flex; align-items:center; gap:10px; width:max-content; transform:translateX(-50%); color:#f2faff; text-shadow:0 0 14px #00cfff39 }

@@ -406,8 +406,10 @@ radius while preserving its rotation and irregular motion.
 Theme Two is a selectable desktop treatment that keeps the spatial pages and
 looping dock while adding a compressed forest-portal backdrop, emerald orb and
 layered glass cards. The backdrop is a single optimized 164 KB WebP; motion and
-depth use the existing orb renderer and lightweight CSS layers. Theme One stays
-the default, and the selection is remembered on the device.
+depth use the existing orb renderer and lightweight CSS layers. A persistent
+three-button picker switches directly between Themes One, Two and Three, and
+the selected theme is remembered on the device. Each desktop theme scopes its
+own scene, palette and panels so theme-specific visuals stay contained.
 
 Theme Three, Electric HUD, is another selectable desktop treatment. It uses a
 quiet navy technical grid, thin cyan circuit traces, precise glass panels and
