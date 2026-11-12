@@ -41,6 +41,21 @@ function Region({region, viewport, children, onScroll, active, connected}) {
     {connected||nearby ? <Suspense fallback={<p role="status">Opening this space…</p>}>{children}</Suspense> : <div className="v2-region-placeholder" style={{minHeight:contentHeight.current}} aria-hidden="true"/>}
   </section>;
 }
+
+function ArcNavigation({regions, activeIndex, onNavigate}) {
+  const spacing=Math.min(138,Math.max(68,innerWidth*.07));
+  return <nav className="v2-arc-nav" aria-label="Explore spaces" style={{'--arc-step':spacing+'px'}}>
+    <svg className="v2-arc-trail" viewBox="0 0 1000 150" preserveAspectRatio="none" aria-hidden="true"><path d="M 8 132 Q 500 -92 992 132"/></svg>
+    {regions.map((region,index)=>{
+      const offset=index-activeIndex,active=offset===0,vertical=Math.min(74,Math.abs(offset)*Math.abs(offset)*2);
+      return <button key={region.id} type="button" className={'v2-arc-stop'+(active?' is-active':'')} style={{left:`calc(50% + ${offset*spacing}px)`,top:`${15+vertical}px`}}
+        aria-label={(region.number?region.number+' ':'')+region.label} aria-current={active?'page':undefined} title={region.label} onClick={()=>onNavigate(region.id)}>
+        <PageIcon page={region.id}/><span>{region.label}</span>
+      </button>;
+    })}
+  </nav>;
+}
+
 function SignedInWorkspace({user, logout}) {
   const [desktop,setDesktop]=useState(()=>matchMedia('(min-width: 901px)').matches);
   const regions=desktop?desktopSpaces:mobileRegions;
@@ -178,15 +193,15 @@ function SignedInWorkspace({user, logout}) {
     try {localStorage.setItem('invincible-orb-theme', next);} catch {}
     return next;
   });
-  return <div className={'v2-shell'+(desktop?' v2-desktop-connected':'')+(authError || error || !ready || data.tasksCached || data.planCached ? ' has-status' : '')}>
+  return <div className={'v2-shell'+(desktop?' v2-desktop-connected v2-theme-one':'')+(authError || error || !ready || data.tasksCached || data.planCached ? ' has-status' : '')}>
     {active==='dashboard' && <div className={'v2-ambient-field'+(orbBox.compact?'':' has-globe')} aria-hidden="true"
       style={{'--globe-x':(orbBox.left+orbBox.width/2)+'px','--globe-y':(orbBox.top+orbBox.height/2)+'px','--globe-radius':(orbBox.width*.55)+'px'}}>
       <AmbientParticles theme={theme}/>
     </div>}
     <header className="v2-topbar"><a className="v2-brand" href="#dashboard" onClick={event => {event.preventDefault();navigate('dashboard');}}><img className="v2-brand-mark" src={APP_ICON_URL} alt="" width="36" height="36"/><span>INVINCIBLE<small>PERSONAL WORKSPACE</small></span></a>
-      <nav aria-label="Explore spaces"><span className="v2-nav-caption" aria-hidden="true">VIEWS</span>{regions.map(region => <a key={region.id} href={'#'+region.id} title={region.label} aria-label={(region.number?region.number+' ':'')+region.label} aria-current={active === region.id ? 'location' : undefined} onClick={event => {if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;event.preventDefault();navigate(region.id);}}>{desktop&&<PageIcon page={region.id}/>}<span className="v2-space-number">{region.number}</span><span className="v2-space-name">{region.label}</span></a>)}</nav>
-      <div className="v2-account"><Suspense fallback={null}><DashboardTools/></Suspense><button type="button" className="v2-saved-ideas" aria-label="Saved ideas" title="Saved ideas" onClick={()=>setIdeaPanel({})}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg></button><AccountMenu user={user} logout={logout}/></div>
+      <nav aria-label="Explore spaces">{regions.map(region => <a key={region.id} href={'#'+region.id} title={region.label} aria-label={(region.number?region.number+' ':'')+region.label} aria-current={active === region.id ? 'location' : undefined} onClick={event => {if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;event.preventDefault();navigate(region.id);}}>{desktop&&<PageIcon page={region.id}/>}<span className="v2-space-number">{region.number}</span><span className="v2-space-name">{region.label}</span></a>)}</nav>
     </header>
+    <div className="v2-hud"><div className="v2-account"><Suspense fallback={null}><DashboardTools/></Suspense><button type="button" className="v2-saved-ideas" aria-label="Saved ideas" title="Saved ideas" onClick={()=>setIdeaPanel({})}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg></button><AccountMenu user={user} logout={logout}/></div></div>
     {(authError || error || !ready || data.tasksCached || data.planCached) && <div className="v2-connection" role="status"><span className={error ? 'v2-dot error' : 'v2-dot'}/>{authError || error || (!ready ? 'Loading workspace…' : 'Offline · Showing saved records')}{error && <button onClick={data.retry}>Retry sync</button>}</div>}
     <main ref={viewport} className="v2-canvas" aria-label="Continuous spatial workspace" tabIndex={0} onScroll={scroll}
       onKeyDown={event => {if (event.target !== event.currentTarget) return;let index = regions.findIndex(region => region.id === active);if (event.key === 'ArrowRight') index++;else if (event.key === 'ArrowLeft') index--;else if (event.key === 'Home') index=0;else if (event.key === 'End') index=regions.length-1;else return;event.preventDefault();navigate(regions[Math.max(0,Math.min(regions.length-1,index))].id);}}>
@@ -201,7 +216,7 @@ function SignedInWorkspace({user, logout}) {
       onWheel={event => {const distance = event.deltaX + (event.shiftKey ? event.deltaY : 0); if (distance && viewport.current) {event.preventDefault(); viewport.current.scrollLeft += distance;}}}><FocusOrb theme={theme} spin={false} richParticles dashboardMotion interactionSurface={viewport}/>
       {orbBox.compact && <button className="v2-orb-theme" aria-label={'Orb theme: '+theme+'. Change theme'} onClick={changeTheme}>◐</button>}
     </div>
-    <footer className="v2-footer">{desktop?<><button type="button" disabled={activeIndex<=0} aria-label={'Previous space'+(activeIndex>0?' — '+regions[activeIndex-1].label:'')} onClick={()=>navigate(regions[activeIndex-1].id)}>← <span>{regions[activeIndex-1]?.label}</span></button><span className="v2-flow-position">{activeIndex+1} / {regions.length}<span> · Shift + scroll to move</span></span><button type="button" disabled={activeIndex>=regions.length-1} aria-label={'Next space'+(activeIndex<regions.length-1?' — '+regions[activeIndex+1].label:'')} onClick={()=>navigate(regions[activeIndex+1].id)}><span>{regions[activeIndex+1]?.label}</span> →</button></>:<><span>PERSONAL WORKSPACE</span><span>{active==='dashboard'?'Tap the centre for today’s plan':'Move cards or open a project'}</span><span>{active==='dashboard'?'01':'02'} / 02</span></>}</footer>
+    {desktop?<ArcNavigation regions={regions} activeIndex={activeIndex} onNavigate={navigate}/>:<footer className="v2-footer"><><span>PERSONAL WORKSPACE</span><span>{active==='dashboard'?'Tap the centre for today’s plan':'Move cards or open a project'}</span><span>{active==='dashboard'?'01':'02'} / 02</span></></footer>}
     {travelPage && <div className="v2-travel" role="status" aria-live="polite"><span>ENTERING</span><strong>{travelPage.label}</strong><i aria-hidden="true"/></div>}
     <Suspense fallback={<p className="v2-editor-loading" role="status">Opening editor…</p>}>
       {ideaPanel && <CanvasIdeas uid={user.uid} capture={ideaPanel.capture} onClose={()=>setIdeaPanel(null)} onRestore={idea=>{if(idea.source==='journal'){window.location.assign('/invincible/journal/?date='+encodeURIComponent(idea.journalDate)+'&view='+encodeURIComponent(JSON.stringify(idea.view)));return;}setIdeaPanel(null);navigate('dashboard');}}/>}

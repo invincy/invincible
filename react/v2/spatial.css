@@ -86,6 +86,7 @@
 @media(max-width:900px){.v2-footer-desktop{display:none}.v2-footer-mobile{display:inline}}
 
 .v2-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 30px;color:#7b959f;font-size:10px;border-top:1px solid #83b5bd20;letter-spacing:.06em}
+.v2-shell:not(.v2-desktop-connected)>.v2-hud{position:absolute;z-index:7;top:0;right:0;height:76px;display:flex;align-items:center}
 .v2-inspector{width:min(720px,calc(100% - 28px));max-height:85dvh;border:1px solid #83b5bd50;border-radius:16px;padding:28px;color:#dbe9ef;background:#111f29;overflow:auto}
 .v2-inspector::backdrop{background:#030a10bf;backdrop-filter:blur(6px)}
 .v2-inspector h2{font-size:26px;font-weight:450;overflow-wrap:anywhere}
@@ -228,6 +229,34 @@
   .v2-desktop-connected .v2-footer button { border:0; background:transparent; padding:6px 10px; min-height:40px; color:#b9dce0; display:flex; align-items:center; gap:10px }
   .v2-desktop-connected .v2-footer button:disabled { opacity:.3; cursor:default }
   .v2-flow-position { color:#91a7b3; font-variant-numeric:tabular-nums }
+}
+
+/* Theme One: full-window game canvas with a centered, curved space selector. */
+@media (min-width:901px) {
+  .v2-desktop-connected.v2-theme-one { display:block; overflow:hidden; background:#03070b }
+  .v2-theme-one>.v2-topbar { display:none }
+  .v2-theme-one>.v2-canvas { position:fixed; inset:0; width:100vw; height:100dvh; z-index:1; overflow-x:auto; overflow-y:hidden; scrollbar-width:none }
+  .v2-theme-one>.v2-canvas::-webkit-scrollbar { display:none }
+  .v2-theme-one .v2-region { height:100dvh; padding:18px clamp(18px,2vw,36px) 170px; border:0 }
+  .v2-theme-one .v2-region-connected { padding:0 }
+  .v2-theme-one.has-status>.v2-connection { position:fixed; z-index:9; top:10px; left:16px; max-width:min(520px,60vw); padding:8px 12px; border:1px solid #50717b55; border-radius:12px; background:#061019dd; backdrop-filter:blur(12px) }
+  .v2-theme-one>.v2-hud { position:fixed; z-index:12; top:12px; right:18px; pointer-events:none }
+  .v2-theme-one .v2-account { gap:8px; padding:5px 7px; border:1px solid #73939a2b; border-radius:15px; background:#06101985; box-shadow:0 8px 28px #0005; backdrop-filter:blur(14px); pointer-events:auto }
+  .v2-theme-one .v2-guide-work { bottom:16% }
+  .v2-theme-one .v2-arc-nav { position:fixed; z-index:10; inset:auto 0 0; height:160px; overflow:hidden; isolation:isolate; background:linear-gradient(0deg,#050b12f2 0%,#07111ac9 45%,#07111a00 100%); border-top:1px solid #82dce32b; backdrop-filter:blur(10px) }
+  .v2-theme-one .v2-arc-trail { position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none }
+  .v2-theme-one .v2-arc-trail path { fill:none; stroke:url(#v2-arc-gradient); stroke:#7de6ef55; stroke-width:1.4; vector-effect:non-scaling-stroke; filter:drop-shadow(0 0 7px #44e6f04d) }
+  .v2-theme-one .v2-arc-stop { position:absolute; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:4px; width:90px; min-height:72px; padding:0; transform:translateX(-50%); border:0; border-radius:14px; background:transparent; color:#829ba4; transition:top .38s cubic-bezier(.2,.8,.2,1),color .25s,filter .25s,transform .25s; cursor:pointer }
+  .v2-theme-one .v2-arc-stop svg { flex:none; width:35px; height:35px; stroke:currentColor; opacity:.72; transition:width .25s,height .25s,opacity .25s,filter .25s }
+  .v2-theme-one .v2-arc-stop span { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; line-height:1.2; opacity:.72 }
+  .v2-theme-one .v2-arc-stop:hover { color:#cdfaff; filter:drop-shadow(0 0 12px #67eefa85) }
+  .v2-theme-one .v2-arc-stop.is-active { z-index:2; color:#c7fbff; filter:drop-shadow(0 0 18px #5cecf8a8) }
+  .v2-theme-one .v2-arc-stop.is-active svg { width:52px; height:52px; opacity:1; filter:drop-shadow(0 0 10px currentColor) }
+  .v2-theme-one .v2-arc-stop.is-active span { color:#c8fcff; opacity:1; font-size:12px; font-weight:700 }
+  .v2-theme-one .v2-arc-stop:focus-visible { outline:2px solid #9ff7f2; outline-offset:2px }
+  .v2-theme-one .v2-arc-stop[aria-current="page"]::before { content:""; position:absolute; z-index:-1; inset:-14px 3px 8px; border-radius:50%; background:radial-gradient(ellipse,#46e9f32b,transparent 72%) }
+  .v2-theme-one.v2-shell.has-status { padding-top:0 }
+  .v2-theme-one .v2-three-panel-board.v2-kanban-board { height:calc(100dvh - 330px); min-height:300px }
 }
 @media (min-width:901px) and (max-width:1100px) {
   .v2-desktop-connected .v2-brand small { display:none }
