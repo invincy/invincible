@@ -68,6 +68,12 @@ The main content area is normally capped around 1200–1440 px on large displays
 unless the feature is intentionally spatial, timeline-based or canvas-based.
 Cards need a visible title, a clear primary value/action, and no explanatory
 paragraph when a label, preview, icon or state can communicate the same meaning.
+When a desktop card has enough width, use that width to create a horizontal
+scan path: a meaningful large icon or visual may sit on the left, with the title
+and supporting text beside it and the action at the far edge. Do not stack a
+small icon, title and description into one narrow column while leaving the other
+half of the card empty. Reflow to a compact stack only when the available width
+cannot support the horizontal composition.
 
 ### Responsive behavior
 
