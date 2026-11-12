@@ -134,10 +134,12 @@ const server=http.createServer((req,res)=>{
    const recording=doc.querySelector('.result-panel').getBoundingClientRect();
    const script=doc.querySelector('.script-panel').getBoundingClientRect();
    const voice=doc.querySelector('.controls-panel').getBoundingClientRect();
-   return recording.bottom<=script.top&&recording.bottom<=voice.top&&
+   return recording.top>=script.bottom&&recording.top-script.bottom<=14&&
+    Math.abs(recording.left-script.left)<=1&&Math.abs(recording.width-script.width)<=1&&
+    Math.abs(voice.top-script.top)<=1&&
     doc.querySelector('#voiceFields').lastElementChild.id==='expressiveControls'&&
     !doc.querySelector('.project-voice-direction').open;
-  }),true,'Recording leads and optional Voice direction is collapsed below pace');
+  }),true,'Recording sits directly below Script and optional Voice direction stays collapsed');
   assert.equal(await scriptFrame.getByRole('dialog',{name:'Voiceover history'}).count(),0);
   await scriptFrame.getByRole('button',{name:'History',exact:true}).click();
   await scriptFrame.getByRole('dialog',{name:'Voiceover history'}).waitFor();

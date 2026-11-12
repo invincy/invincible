@@ -19,8 +19,6 @@ const projectVoiceoverId=document.documentElement.classList.contains('project-vo
  ? new URLSearchParams(location.search).get('project') : null;
 if(projectVoiceoverId){
  const scriptPanel=document.querySelector('.script-panel');
- const recordingPanel=document.querySelector('.result-panel');
- scriptPanel.before(recordingPanel);
  const direction=$('expressiveControls');
  const directionOptions=document.createElement('details');
  directionOptions.className='project-voice-direction';
