@@ -153,6 +153,9 @@ const server=http.createServer((req,res)=>{
   }
   await page.setViewportSize({width:1440,height:1000});
   assert.equal(await page.locator('.tool-grid>*').count(),6);
+  assert.equal(await page.locator('.tool-grid .tool-icon').count(),6);
+  assert.ok(await page.locator('.project-home-card .project-progress-bar').count()>=1);
+  {const uiQuality=await page.evaluate(()=>({toolNames:[...document.querySelectorAll('.tool-copy>strong')].every(node=>node.scrollWidth<=node.clientWidth+1),controls:[...document.querySelectorAll('.creator-home button,.creator-home a')].map(node=>Math.min(node.getBoundingClientRect().width,node.getBoundingClientRect().height)),projectTitle:parseFloat(getComputedStyle(document.querySelector('.project-home-card h3')).fontSize)}));assert.equal(uiQuality.toolNames,true,'Creator tool names remain readable');assert.ok(Math.min(...uiQuality.controls)>=43.5,'Creator home controls meet the 44px target');assert.ok(uiQuality.projectTitle>=16,'Project titles remain readable');}
   await page.getByRole('button',{name:/Map Editor/}).click();
   assert.equal(await page.locator('#toolDialog').evaluate(node=>node.open),true);
   assert.ok(await page.locator('#toolProjectList a').count()>=1);
