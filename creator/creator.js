@@ -7,11 +7,17 @@ import{db,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const $=id=>document.getElementById(id);
+const routeParams=new URLSearchParams(location.search),motionStudioMode=routeParams.get("studio")==="motion";
 const stages=["Ideas","Research","Script","Record","Edit","Scheduled","Published"];
 let subscriptions=[],authGeneration=0;
 let user=null,state={items:[]},ownedItems=new Map(),sharedItems=new Map(),editingId="",filter="All",queryText="",mobileStage="Ideas",metricFilter="";
 
 let dialogScenes=[],dialogProject=null,dialogId="",savingContent=false,dialogWasNew=false,dialogVoiceoverAttached=false,pendingProjectArea="Video Studio",pendingToolMode="";
+if(motionStudioMode){
+ document.body.classList.add("motion-studio-home");document.title="Motion Studio · Invincible";
+ $("creatorPageTitle").textContent="Motion Studio";$("creatorHomeBack").hidden=false;$("addContent").hidden=true;
+ $("projectsHeading").textContent="Choose a project";$("searchInput").placeholder="Search Motion Studio projects";
+}
 const storyboard=createProductionWorkbench($("contentStoryboard"),{
  getProject:()=>dialogProject,
  onChange:()=>{
@@ -54,8 +60,11 @@ function card(item){
 
 function homeCard(item){
   const overdue=item.publishDate&&item.publishDate<today()&&item.stage!=="Published",sceneCount=item.scenes?.length||0,completeCount=item.scenes?.filter(scene=>scene.completed).length||0,shared=!isOwner(item),editorCount=item.editorEmails?.length||0,accessLabel=shared?"Shared with you":editorCount?"Shared · "+editorCount:"Private",progress=sceneCount?Math.round(completeCount/sceneCount*100):0;
-  return '<article class="content-card project-home-card" draggable="true" data-id="'+item.id+'" tabindex="0" aria-label="Open '+attr(item.title)+'"><div class="project-home-top"><span class="project-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5zM9 8l7 4-7 4z"/></svg></span><div><span class="project-stage">'+esc(item.stage||"Ideas")+'</span><span class="due '+(overdue?'overdue':'')+'">'+(item.publishDate?dateLabel(item.publishDate):"No date")+'</span></div></div><h3>'+esc(item.title)+'</h3>'+(item.hook?'<p class="hook">'+esc(item.hook)+'</p>':'')+'<div class="project-home-meta"><span>'+esc(item.series||"General")+'</span><span class="access-tag '+(shared?'shared':'')+'">'+accessLabel+'</span></div><div class="project-progress-copy"><span>'+(sceneCount?sceneCount+' scenes':'Storyboard not started')+'</span><strong>'+(sceneCount?completeCount+' ready':item.format||'Project')+'</strong></div><div class="project-progress-bar" aria-label="'+progress+' percent of scenes ready"><span style="width:'+progress+'%"></span></div><div class="project-home-actions"><button class="open-project" data-open="'+item.id+'">Open Project <span>→</span></button><div class="card-actions"><button data-edit="'+item.id+'" aria-label="Edit '+attr(item.title)+'">Edit</button>'+moveButton(item,-1)+moveButton(item,1)+'</div></div></article>';
+  const actionLabel=motionStudioMode?'Open in Motion Studio':'Open Project';
+  return '<article class="content-card project-home-card" draggable="'+(!motionStudioMode)+'" data-id="'+item.id+'" tabindex="0" aria-label="'+actionLabel+' · '+attr(item.title)+'"><div class="project-home-top"><span class="project-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5zM9 8l7 4-7 4z"/></svg></span><div><span class="project-stage">'+esc(item.stage||"Ideas")+'</span><span class="due '+(overdue?'overdue':'')+'">'+(item.publishDate?dateLabel(item.publishDate):"No date")+'</span></div></div><h3>'+esc(item.title)+'</h3>'+(item.hook?'<p class="hook">'+esc(item.hook)+'</p>':'')+'<div class="project-home-meta"><span>'+esc(item.series||"General")+'</span><span class="access-tag '+(shared?'shared':'')+'">'+accessLabel+'</span></div><div class="project-progress-copy"><span>'+(sceneCount?sceneCount+' scenes':'Storyboard not started')+'</span><strong>'+(sceneCount?completeCount+' ready':item.format||'Project')+'</strong></div><div class="project-progress-bar" aria-label="'+progress+' percent of scenes ready"><span style="width:'+progress+'%"></span></div><div class="project-home-actions"><button class="open-project" data-open="'+item.id+'">'+actionLabel+' <span>→</span></button>'+(motionStudioMode?'':'<div class="card-actions"><button data-edit="'+item.id+'" aria-label="Edit '+attr(item.title)+'">Edit</button>'+moveButton(item,-1)+moveButton(item,1)+'</div>')+'</div></article>';
 }
+
+function projectDestination(id){return "project.html?"+new URLSearchParams({id,...(motionStudioMode?{area:"Video Studio"}:{})});}
 
 function renderMetrics(){
   const active=state.items.filter(item=>item.stage!=="Published"),scheduled=state.items.filter(item=>item.stage==="Scheduled"&&item.publishDate).sort((a,b)=>a.publishDate.localeCompare(b.publishDate));
@@ -191,14 +200,14 @@ async function handleProjectClick(event){
   const move=event.target.closest("[data-move]");
   if(move){event.stopPropagation();const item=state.items.find(row=>row.id===move.dataset.id),next=stages.indexOf(item.stage)+Number(move.dataset.move);if(stages[next]){const prevStage=item.stage,prevMobile=mobileStage;item.stage=stages[next];mobileStage=item.stage;render();try{await saveItem(item,{mustExist:true});}catch{item.stage=prevStage;mobileStage=prevMobile;render();}}return;}
   const edit=event.target.closest("[data-edit]");if(edit){event.stopPropagation();openDialog(state.items.find(row=>row.id===edit.dataset.edit));return;}
-  const open=event.target.closest("[data-open]");if(open){event.stopPropagation();window.location.href="project.html?id="+encodeURIComponent(open.dataset.open);return;}
-  const cardElement=event.target.closest(".content-card");if(cardElement)window.location.href="project.html?id="+encodeURIComponent(cardElement.dataset.id);
+  const open=event.target.closest("[data-open]");if(open){event.stopPropagation();window.location.href=projectDestination(open.dataset.open);return;}
+  const cardElement=event.target.closest(".content-card");if(cardElement)window.location.href=projectDestination(cardElement.dataset.id);
 }
 $("board").onclick=handleProjectClick;
 $("projectGrid").onclick=handleProjectClick;
 
 $("board").onkeydown=event=>{if((event.key==="Enter"||event.key===" ")&&!event.target.closest("button")){event.preventDefault();const card=event.target.closest(".content-card");if(card)window.location.href="project.html?id="+encodeURIComponent(card.dataset.id);}};
-$("projectGrid").onkeydown=$("board").onkeydown;
+$("projectGrid").onkeydown=event=>{if((event.key==="Enter"||event.key===" ")&&!event.target.closest("button")){event.preventDefault();const card=event.target.closest(".content-card");if(card)window.location.href=projectDestination(card.dataset.id);}};
 
 function openToolPicker(area,mode=""){
   pendingProjectArea=area;pendingToolMode=mode;

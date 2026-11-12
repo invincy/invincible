@@ -22,7 +22,7 @@
     } catch {}
   </script>
   <link rel="stylesheet" href="../shared/dashboard-backdrop.css?v=4">
-  <link rel="stylesheet" href="creator.css?v=2026111310">
+  <link rel="stylesheet" href="creator.css?v=2026111311">
   <link rel="stylesheet" href="production-workbench.css?v=12">
 <meta name="theme-color" content="#000000">  <link rel="stylesheet" href="history-workspace.css?v=2026110903">
   <link rel="stylesheet" href="video-studio/studio.css?v=2026111003">
@@ -42,7 +42,7 @@
   <script type="module" src="../site-nav.js?v=8"></script>
 
   <header class="studio-header">
-    <h1>Creator Studio</h1>
+    <div class="studio-header-title"><a id="creatorHomeBack" href="./" hidden>← Creator Studio</a><h1 id="creatorPageTitle">Creator Studio</h1></div>
     <div class="header-actions"><button id="addContent" class="primary creator-new-project" disabled><span aria-hidden="true">+</span> New project</button></div>
   </header>
   <div id="status" class="sync-status" role="status" aria-live="polite">Connecting to Firebase…</div>
@@ -57,7 +57,7 @@
       <aside class="creator-toolbox" aria-labelledby="toolsHeading">
         <div class="creator-section-head"><h2 id="toolsHeading">Tools</h2></div>
         <div class="tool-grid">
-          <a href="project.html?draft=1"><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5zM9 8l7 4-7 4z"/></svg></span><span class="tool-copy"><strong>Motion Studio</strong><span>Script, scenes and export</span></span><i aria-hidden="true">→</i></a>
+          <a href="?studio=motion"><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5zM9 8l7 4-7 4z"/></svg></span><span class="tool-copy"><strong>Motion Studio</strong><span>Select a project and edit the video</span></span><i aria-hidden="true">→</i></a>
           <button type="button" data-project-tool="Maps"><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m4 6 5-2 6 2 5-2v14l-5 2-6-2-5 2zM9 4v14m6-12v14"/></svg></span><span class="tool-copy"><strong>Map Editor</strong><span>Routes and camera motion</span></span><i aria-hidden="true">→</i></button>
           <button type="button" data-project-tool="Video Studio" data-tool-mode="battlefield"><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M12 2v5m0 10v5M2 12h5m10 0h5"/></svg></span><span class="tool-copy"><strong>Battlefield</strong><span>Formations, paths and effects</span></span><i aria-hidden="true">→</i></button>
           <a href="tts.html"><span class="tool-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3m-4 0h8"/></svg></span><span class="tool-copy"><strong>Voiceover</strong><span>Narration and audio</span></span><i aria-hidden="true">→</i></a>
@@ -117,6 +117,6 @@
       <div class="dialog-actions"><button value="cancel" class="secondary">Cancel</button><button id="toolNewProject" type="button" class="primary">New project</button></div>
     </form>
   </dialog>
-  <script type="module" src="creator.js?v=2026111303"></script>
+  <script type="module" src="creator.js?v=2026111304"></script>
 </body>
 </html>

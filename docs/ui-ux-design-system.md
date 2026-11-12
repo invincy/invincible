@@ -85,9 +85,11 @@ require attention and keep routine success messages out of the visual layout.
 
 ### Motion Studio desktop
 
-Open a project on Script. The Motion Studio launcher opens the same project
-workspace with an unsaved untitled project, a rename control, and recent
-projects ordered by their last saved update. The workflow runs from Script to
+The Motion Studio launcher opens a dedicated project selector without creating
+or saving an untitled project. Selecting a project opens that same project's
+Motion Studio workspace; the in-project Recent projects menu preserves Motion
+Studio while switching. New projects begin only through Creator Studio's guided
+New project action and open on Script. The workflow runs from Script to
 Script & scenes, then Map Editor when visuals need maps, and finally Motion
 Studio for assembly. The separate Invincible AI Voiceover tool keeps its name.
 

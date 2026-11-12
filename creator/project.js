@@ -18,6 +18,7 @@ const tabId=(()=>{try{let id=sessionStorage.getItem("invincible.creatorTabId");i
 let saveChain=Promise.resolve(),editVersion=0,cloudVersion=0,baseRevision=0;
 let productionReadiness;
 let user=null,project=null,projectRef=null,saveTimer=null,localDirty=false,pendingConflict=null,recoveredLegacyDraft=false;
+let selectedArea=requestedArea||"Voiceover",selectedTool=requestedTool;
 
 function esc(value){const node=document.createElement("div");node.textContent=value??"";return node.innerHTML;}
 function attr(value){return esc(value).replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
@@ -93,6 +94,7 @@ function render(){
 }
 
 function selectProjectArea(area,mode=""){
+  selectedArea=area;selectedTool=mode;
   const isVoiceover=area==="Voiceover";
   $("projectVoiceoverStep").hidden=!isVoiceover;
   $("projectEditingStep").hidden=isVoiceover;
@@ -166,7 +168,7 @@ $("recentProjects").ontoggle=async()=>{
   list.replaceChildren();
   for(const item of [...recent.values()].sort((a,b)=>updated(b)-updated(a))){
     const link=document.createElement("a");
-    link.href="project.html?"+new URLSearchParams({id:item.id});
+    link.href="project.html?"+new URLSearchParams({id:item.id,area:selectedArea,...(selectedTool?{tool:selectedTool}:{})});
     link.textContent=item.title||"Untitled project";
     if(item.id===projectId)link.setAttribute("aria-current","page");
     list.append(link);

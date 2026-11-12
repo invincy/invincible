@@ -5,9 +5,12 @@
 Creator Studio opens on a project-first home. Existing projects are searchable
 and open directly; the publishing pipeline remains available as a secondary
 disclosure. Motion Studio, Map Editor, Battlefield Editor, Voiceover, Image
-Studio and Assets & 3D are visible from the home. Tools that edit project data
-ask the user to choose an existing project or create one, while Voiceover and
-Image Studio retain their standalone routes.
+Studio and Assets & 3D are visible from the home. Motion Studio opens its own
+project-selection view and never creates an untitled project. Choosing a saved
+project opens that project's existing Motion Studio workspace; its Recent
+projects selector keeps Motion Studio active when switching projects. Other
+project tools retain their existing project picker, while Voiceover and Image
+Studio retain their standalone routes.
 
 New project creation asks only for a name, an optional MP3/WAV voiceover and
 optional creative instructions. The project record continues to use the
@@ -15,6 +18,8 @@ existing Creator schema; instructions use the existing notes field. A starting
 voiceover is uploaded to the owner's existing private shared-media library and
 attached to the existing version-2 Studio draft. Advanced storyboard/project
 setup remains available without becoming a required step.
+The Creator Studio **New project** action is the only guided creation entry;
+after creation it opens the normal Script-first project sequence.
 
 Inside a project, a visible project toolbar links Motion Studio, Script &
 scenes, Map Editor, Battlefield Editor, Assets & 3D, Image Studio and

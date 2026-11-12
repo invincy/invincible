@@ -513,29 +513,28 @@ const server=http.createServer((req,res)=>{
   await page.setViewportSize({width:393,height:852});await page.screenshot({path:path.join(root,'.test-output/creator-workbench-mobile.png'),fullPage:true});
   await page.goto(base);
   await page.getByRole('link',{name:/^Motion Studio/}).click();
-  await page.getByRole('button',{name:'Untitled project',exact:true}).waitFor();
-  await page.getByRole('button',{name:'Script',exact:true}).waitFor();
-  assert.equal(await page.locator('[data-project-area="Voiceover"]').getAttribute('aria-current'),'step');
-  assert.equal(await page.locator('#toolDialog').count(),0,'Motion Studio opens the project workspace directly');
-  const untitledId=new URL(page.url()).searchParams.get('id');
-  assert.equal(await page.evaluate(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id],untitledId),undefined);
-  await page.getByRole('button',{name:'Untitled project',exact:true}).click();
-  await page.getByRole('textbox',{name:'Project name',exact:true}).fill('Named from Motion Studio');
-  await page.getByRole('button',{name:'Save name',exact:true}).click();
-  await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.title==='Named from Motion Studio',untitledId);
-  await page.evaluate(id=>{
+  await page.getByRole('heading',{name:'Motion Studio',exact:true}).waitFor();
+  assert.equal(new URL(page.url()).searchParams.get('studio'),'motion');
+  assert.equal(await page.locator('#contentDialog').evaluate(node=>node.open),false,'Motion Studio does not start a new project');
+  assert.equal(await page.locator('#addContent').isHidden(),true,'Only Creator Studio exposes the guided New project action');
+  const legacyCard=page.locator('#projectGrid .project-home-card').filter({hasText:'Legacy'});await legacyCard.waitFor();
+  for(const width of [320,393,1280]){await page.setViewportSize({width,height:850});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'Motion Studio project picker fits at '+width);}
+  await page.setViewportSize({width:1280,height:850});await page.screenshot({path:path.join(root,'.test-output/motion-studio-project-picker.png'),fullPage:true});
+  await legacyCard.getByRole('button',{name:/Open in Motion Studio/}).click();
+  await page.getByRole('button',{name:'Legacy',exact:true}).waitFor();
+  await page.getByRole('heading',{name:'Motion Studio',exact:true}).waitFor();
+  assert.equal(await page.locator('[data-project-area="Video Studio"]:not([data-tool-mode])').getAttribute('aria-current'),'step');
+  await page.evaluate(()=>{
    const data=JSON.parse(localStorage.getItem('test.creator'));
-   data['creatorProjects/'+id].updatedAt=100;
-   data['creatorProjects/legacy'].updatedAt=90;
+   data['creatorProjects/legacy'].updatedAt=100;
+   const draft=Object.values(data).find(item=>item.title==='Draft production');if(draft)draft.updatedAt=90;
    localStorage.setItem('test.creator',JSON.stringify(data));
-  },untitledId);
+  });
   await page.getByLabel('Recent projects',{exact:true}).click();
   const recent=page.locator('#recentProjectList a');
   await recent.first().waitFor();
-  assert.deepEqual((await recent.allTextContents()).slice(0,2),['Named from Motion Studio','Legacy']);
-  await page.locator('#recentProjectList').getByRole('link',{name:'Legacy',exact:true}).click();
-  await page.getByRole('button',{name:'Legacy',exact:true}).waitFor();
-  assert.equal(await page.locator('[data-project-area="Voiceover"]').getAttribute('aria-current'),'step');
+  assert.equal(await recent.first().getAttribute('href'),'project.html?id=legacy&area=Video+Studio');
+  const other=recent.filter({hasText:'Draft production'});if(await other.count()){await other.click();await page.getByRole('button',{name:'Draft production',exact:true}).waitFor();assert.equal(await page.locator('[data-project-area="Video Studio"]:not([data-tool-mode])').getAttribute('aria-current'),'step');}
   assert.deepEqual(errors,[]);console.log('Creator creation, 16-scene import, queues, shared Blender tasks, independent completion, script review, assets, Markdown, reload/draft recovery, legacy compatibility and responsive layouts passed.');
  }catch(error){
   fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});
