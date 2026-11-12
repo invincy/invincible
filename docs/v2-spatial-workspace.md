@@ -385,6 +385,7 @@ removed; account, reminders, daily tools and saved ideas remain available in a
 small floating corner control. All desktop spaces use one shallow, wide arc at
 the bottom. The active page icon moves to the center and grows; selecting an
 icon navigates to that space, and horizontal canvas movement recenters the arc
-automatically. Labels remain visible for the current icon and accessible names
-remain on every icon. This replaces the former thin page counter and top-row
+automatically. The icon positions wrap around, so a space leaving one end of
+the dial reappears at the other end. The arc has no straight top divider.
+Labels remain visible for the current icon and accessible names remain on every icon. This replaces the former thin page counter and top-row
 space links. Mobile keeps its established header and two-space layout.
