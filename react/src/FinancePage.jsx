@@ -8,6 +8,7 @@ import './finance.css';
 import FinanceDesktop from './FinanceDesktop';
 import './finance-desktop.css';
 import {mergeFinanceChange} from './finance-storage';
+import {carryFinanceMonthForward} from './finance-month.mjs';
 
 const defaultChecklist=[['rent','Rent'],['maid','Maid'],['internet','Internet'],['electricity','Electricity']].map(([id,label])=>({id,label,done:false}));
 const wealthSeries={
@@ -31,7 +32,7 @@ function totalsFor(accounts=[]){
  result.netWorth=result.assets-result.liabilities;
  return result;
 }
-function carryForward(data,sourceKey){const source=normalizeState(data);return{accounts:source.accounts.map(account=>({...account,openingBalance:Number(account.balance||0)})),bills:source.bills.map(bill=>({...bill,paid:false})),transactions:[],checklist:source.checklist.map(item=>({...item,done:false})),initializedFrom:sourceKey}}
+function carryForward(data,sourceKey){return carryFinanceMonthForward(normalizeState(data),sourceKey)}
 async function previousMonthTemplate(uid,cursor){for(let distance=1;distance<=24;distance+=1){const date=new Date(cursor.getFullYear(),cursor.getMonth()-distance,1),key=monthKey(date),snapshot=await getDoc(doc(db,'users',uid,'finance',key));if(snapshot.exists())return carryForward(snapshot.data(),key)}return freshState()}
 function getSavedSeries(){try{const saved=JSON.parse(localStorage.getItem('invincible.wealthSeries'));if(Array.isArray(saved)&&saved.some(key=>wealthSeries[key]))return saved.filter(key=>wealthSeries[key])}catch{}return Object.keys(wealthSeries)}
 function defaultTransactionDate(cursor){const today=new Date();return monthKey(today)===monthKey(cursor)?`${monthKey(today)}-${String(today.getDate()).padStart(2,'0')}`:`${monthKey(cursor)}-01`}
