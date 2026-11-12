@@ -21,7 +21,7 @@ test('the shared navigation registry has complete, unique destinations', () => {
 
 test('shared interaction tokens and consumers remain wired', () => {
   const theme = read('shared/app-theme.css');
-  for (const token of ['--ui-control-min: 44px', '--ui-touch-min: 44px', '--ui-focus-ring', '--ui-space-4', '--ui-radius-card']) {
+  for (const token of ['--ui-control-min: 44px', '--ui-control-mobile: 48px', '--ui-font-body: 16px', '--ui-font-card-title: 20px', '--ui-card-padding-mobile: 16px', '--ui-content-max: 1440px', '--ui-focus-ring', '--ui-space-4', '--ui-radius-card']) {
     assert.ok(theme.includes(token), `missing shared token ${token}`);
   }
   assert.match(read('site-nav.css'), /var\(--ui-control-min\)/);
@@ -40,14 +40,11 @@ test('the UI agent rule points to the complete review and verification contract'
   for (const viewport of ['320×568', '390×844', '768×1024', '1024×768', '1440×900']) {
     assert.ok(guide.includes(viewport), `missing responsive checkpoint ${viewport}`);
   }
-  for (const standard of ['Nielsen Norman Group', 'Apple Human Interface Guidelines', 'Google Material Design 3']) {
-    assert.ok(rule.includes(standard), `agent rule must require ${standard}`);
-    assert.ok(guide.includes(standard), `design guide must apply ${standard}`);
-  }
   for (const source of ['https://www.nngroup.com/articles/ten-usability-heuristics/', 'https://developer.apple.com/design/human-interface-guidelines/', 'https://m3.material.io/']) {
     assert.ok(guide.includes(source), `missing primary design source ${source}`);
   }
-  for (const auditHeading of ['**NN/G:**', '**Apple HIG:**', '**Material 3:**', '**Invincible decision:**']) {
-    assert.ok(guide.includes(auditHeading), `missing required audit field ${auditHeading}`);
+  for (const requirement of ['learning references only', '## Invincible sizing system', '### Typography', '### Buttons and icons', '### Cards and panels', '48–52 px', '280–360 px', '360–480 px']) {
+    assert.ok(guide.includes(requirement), `missing concrete Invincible sizing rule ${requirement}`);
   }
+  assert.match(rule, /do not copy their visual UI/i);
 });

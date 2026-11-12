@@ -11,10 +11,11 @@ desktop and mobile states first. Reuse `shared/navigation.js`, the shared theme
 tokens and existing components; do not create a competing page registry or a
 one-screen style system.
 
-Every screen audit must explicitly use the three agreed references: Nielsen Norman Group's 10 Usability Heuristics, Apple Human Interface Guidelines and
-Google Material Design 3. Use their usability, clarity, responsive-component
-and interaction guidance; do not copy Apple or Google's visual branding. Record
-the findings under all three headings before choosing changes.
+Nielsen Norman Group, Apple HIG and Material Design are background references
+for understanding usability and ergonomics only. Do not copy their visual UI,
+components or brand language, and do not produce a three-framework scorecard.
+Apply the concrete Invincible typography, control, icon, card and responsive
+measurements in the design-system guide.
 
 Work in small reviewable slices. Preserve data, URLs, authentication,
 persistence and feature behavior. Run `npm run check:ui` for every UI change,

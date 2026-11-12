@@ -4,38 +4,77 @@ This is the operating contract for the Invincible UI/UX Design Agent. It turns
 visual work into small, testable changes across the hybrid React and native-page
 architecture without changing stored data or feature behavior.
 
-## The three required standards
+## Reference knowledge, not borrowed UI
 
-Every audit and design proposal must use all three references below. They serve
-different jobs; they are not three visual themes to mix together.
+The agent may consult [Nielsen Norman Group's usability heuristics](https://www.nngroup.com/articles/ten-usability-heuristics/),
+[Apple Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/)
+and [Google Material Design 3](https://m3.material.io/) to understand human
+factors: clarity, recognition, feedback, touch ergonomics, hierarchy,
+accessibility, responsive behavior and complete interaction states.
 
-1. **[Nielsen Norman Group — 10 Usability Heuristics](https://www.nngroup.com/articles/ten-usability-heuristics/):** the evaluation framework. Check system status, familiar language, user control, consistency, error prevention, recognition over recall, efficiency, focused/minimal content, error recovery and contextual help.
-2. **[Apple Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/):** the clarity and interaction-quality reference. Check simplicity, hierarchy, concise wording, familiar behavior, feedback, adaptable layouts, safe areas, touch ergonomics, keyboard/input support and accessibility.
-3. **[Google Material Design 3](https://m3.material.io/):** the responsive component and state reference. Check component choice, navigation patterns, layout adaptation and complete default/hover/focus/pressed/selected/disabled/loading/error states.
-
-Invincible keeps its own dark, spatial visual identity. These standards decide
-whether an experience is understandable, usable and complete; they do not make
-the product look like an Apple or Google app. When guidance differs, prioritise
-safety and accessibility, then the user's platform/input expectations, then the
-Invincible visual language.
-
-### Required audit scorecard
-
-For each screen, record concrete findings under these headings before editing:
-
-- **NN/G:** which of the 10 heuristics pass, fail or are not applicable, with
-  the affected control or workflow named.
-- **Apple HIG:** clarity/hierarchy, wording, touch and keyboard ergonomics,
-  feedback, adaptability and accessibility.
-- **Material 3:** component suitability, responsive behavior and missing
-  interaction states.
-- **Invincible decision:** keep, simplify, replace or defer; include risk and
-  the desktop/mobile acceptance check.
+These are learning references only. Invincible does **not** adopt their visual
+design, component library, branding or page templates. Reviews do not need three
+separate framework reports. The authority for implementation is the concrete
+Invincible sizing and behavior system below.
 
 For example, a theme selector should normally show meaningful visual previews
 with selected/focus states and accessible names. It should not repeat “Theme 1”
 beside an unexplained icon merely to fill space. A visible label remains when
 the choice or consequence would otherwise be ambiguous.
+
+## Invincible sizing system
+
+### Typography
+
+| Role | Phone | Desktop | Use |
+| --- | ---: | ---: | --- |
+| Supporting caption | 12 px minimum | 12–13 px | timestamps, compact metadata; never primary instructions |
+| Secondary text | 14 px | 14–15 px | labels and supporting information |
+| Body text | 16 px | 16 px | normal readable content and form values |
+| Card title | 18–20 px | 18–22 px | one clear title per card |
+| Section title | 22–26 px | 24–32 px | major content groups |
+| Page title | 28–34 px | 32–48 px | one primary page heading |
+
+Do not use text below 12 px. Do not solve crowded cards by shrinking type; remove
+redundant wording, increase the card, reflow content or move secondary details
+behind disclosure. Body copy uses roughly 1.45–1.6 line height and stays near
+45–75 characters per line.
+
+### Buttons and icons
+
+- Standard desktop buttons are 44–48 px tall; phone primary buttons are 48–52 px.
+- Button text is at least 14 px; primary actions normally use 15–16 px semibold.
+- Icon-only controls keep a 44 px desktop and 48 px phone hit area even when the
+  visible glyph is 20–24 px.
+- Use an icon when it improves recognition or scanning. Familiar icon-only
+  actions need an accessible name and tooltip. Unfamiliar, destructive or
+  consequential actions keep a short visible label.
+- Do not combine an icon and text that merely repeat each other. Combine them
+  when the icon aids scanning and the label prevents ambiguity.
+
+### Cards and panels
+
+Cards size to their content and grid rather than using arbitrary fixed heights.
+
+| Context | Width | Internal padding | Gap |
+| --- | --- | ---: | ---: |
+| Phone | full available width | 16 px | 12–16 px |
+| Tablet | one or two columns, minimum 280 px each | 18–20 px | 16–20 px |
+| Desktop compact card | 280–360 px | 20 px | 20–24 px |
+| Desktop standard card | 360–480 px | 20–24 px | 20–24 px |
+| Desktop wide panel | 560–720 px | 24–32 px | 24–32 px |
+
+The main content area is normally capped around 1200–1440 px on large displays,
+unless the feature is intentionally spatial, timeline-based or canvas-based.
+Cards need a visible title, a clear primary value/action, and no explanatory
+paragraph when a label, preview, icon or state can communicate the same meaning.
+
+### Responsive behavior
+
+Mobile is not a scaled-down desktop. Multi-column cards stack, secondary actions
+move into menus or disclosures, long labels wrap, and primary actions remain
+reachable. Desktop uses additional width for hierarchy and parallel information,
+not for stretching text or filling space with oversized empty cards.
 
 ## Product principles
 
@@ -93,8 +132,8 @@ states whenever the changed component owns them.
 
 1. **Inventory:** identify the route, runtime (React/native), source owner,
    shared dependencies, data boundary and focused tests.
-2. **Baseline:** capture desktop and mobile screenshots, complete the required
-   NN/G + Apple HIG + Material 3 scorecard, and record overflow, hierarchy,
+2. **Baseline:** capture desktop and mobile screenshots and record undersized
+   type, missing/unclear icons, poor card proportions, overflow, hierarchy,
    target-size, focus, contrast and content issues. Do not infer a problem from
    CSS alone when a dynamic state can be inspected.
 3. **Prioritise:** fix blockers and accessibility first, then responsive

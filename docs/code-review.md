@@ -2,12 +2,12 @@
 
 ## UI/UX design agent foundation — November 12, 2026
 
-Follow-up correction: the repository contract now explicitly encodes the three
-standards agreed in the design conversation—Nielsen Norman Group's 10 Usability
-Heuristics, Apple Human Interface Guidelines and Google Material Design 3. Every
-screen requires a four-part scorecard (NN/G, Apple HIG, Material 3, Invincible
-decision) before editing. The references guide usability, interaction and
-responsive component quality without replacing Invincible's visual identity.
+Follow-up clarification: Nielsen Norman Group, Apple HIG and Material Design are
+learning references, not UI systems to copy and not a mandatory three-framework
+report. Invincible now owns concrete phone/desktop measurements for typography,
+buttons, icon hit areas, card widths/padding, spacing and maximum content width.
+The agent applies those measurements while using the external references only
+to understand usability and ergonomics.
 
 Added a repository UI/UX agent rule and a single design-system/audit contract
 covering shared foundations, responsive acceptance viewports, incremental

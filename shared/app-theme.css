@@ -6,6 +6,17 @@
      interaction, spacing and surface contracts stay consistent across apps. */
   --ui-control-min: 44px;
   --ui-touch-min: 44px;
+  --ui-control-mobile: 48px;
+  --ui-icon-sm: 20px;
+  --ui-icon-md: 24px;
+  --ui-font-caption: 12px;
+  --ui-font-secondary: 14px;
+  --ui-font-body: 16px;
+  --ui-font-card-title: 20px;
+  --ui-font-section-title: 28px;
+  --ui-card-padding: 24px;
+  --ui-card-padding-mobile: 16px;
+  --ui-content-max: 1440px;
   --ui-focus-ring: #8ceddf;
   --ui-focus-offset: 3px;
   --ui-text: #eef7f8;
