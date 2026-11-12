@@ -48,7 +48,7 @@ export default function ConnectedSpace({region, active, onNavigate, onLocation, 
     } catch {setFailed(true);setLoading(false);}
   };
   return <div className="v2-connected-space">
-    {loading&&active&&<p className="v2-space-loading" role="status">Opening {region.label}…</p>}
+    {loading&&active&&<p className="v2-space-loading" role="status">Opening {region.label}…{region.id==='finance'&&<> <a href={region.href} target="_blank" rel="noopener">Open Finance in a new tab ↗</a></>}</p>}
     {failed&&<p role="alert">This space could not open. <a href={region.href} target="_blank" rel="noopener">Open {region.label} in a new tab ↗</a></p>}
     {visited&&<iframe ref={frame} src={src} tabIndex={active?0:-1} style={{pointerEvents:active?undefined:'none'}} title={region.label+' workspace'} onLoad={loaded} allow="clipboard-write; microphone; fullscreen"/>}
   </div>;

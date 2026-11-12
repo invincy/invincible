@@ -4,6 +4,35 @@
 @import './editor.css';
 @import './task-focus.css';
 @import '../../shared/spatial-workspace.css';
+.v2-controls, .v2-hud > .inv-account-host { pointer-events: auto; }
+.v2-controls { position: relative; }
+.v2-controls > summary {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  list-style: none;
+  border-radius: 50%;
+  background: #08121bd9;
+  color: #d5e6ed;
+  font-size: 21px;
+  cursor: pointer;
+}
+.v2-controls > summary::-webkit-details-marker { display: none; }
+.v2-controls > summary:focus-visible { outline: 2px solid var(--ui-focus-ring); }
+.v2-controls-panel {
+  position: absolute;
+  inset: calc(100% + 8px) 0 auto auto;
+  display: grid;
+  gap: 8px;
+  min-width: 182px;
+  padding: 8px;
+  border: 1px solid #73939a55;
+  border-radius: 14px;
+  background: #08121bf5;
+}
+.v2-controls-panel .v2-account { justify-content: space-between; }
+.v2-space-loading a { color: #b6edff; }
 .v2-shell .v2-arc-nav .v2-arc-stop[data-destination="dashboard"] {
   color: #ffd27e;
 }

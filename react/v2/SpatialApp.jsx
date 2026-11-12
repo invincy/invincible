@@ -134,7 +134,7 @@ function SignedInWorkspace({user, logout}) {
     if (!restore) {savePosition(); history.pushState({v2Position: index,v2Desktop:desktop}, '', regionHash(id));}
     if(restore){lastFraction.current=fraction??index;setActive(id);}
     canvas.scrollTo({left: (fraction ?? index)*canvas.clientWidth,
-      behavior: restore || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'});
+      behavior: restore || id === 'finance' || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'});
     if(!restore)document.querySelector('.v2-topbar nav a[href="#'+id+'"]')?.focus({preventScroll: true});
   };
   useEffect(() => {
@@ -219,7 +219,15 @@ function SignedInWorkspace({user, logout}) {
     <header className="v2-topbar"><a className="v2-brand" href="#dashboard" onClick={event => {event.preventDefault();navigate('dashboard');}}><img className="v2-brand-mark" src={APP_ICON_URL} alt="" width="36" height="36"/><span>INVINCIBLE<small>PERSONAL WORKSPACE</small></span></a>
       <nav aria-label="Explore spaces">{regions.map(region => <a key={region.id} href={'#'+region.id} title={region.label} aria-label={(region.number?region.number+' ':'')+region.label} aria-current={active === region.id ? 'location' : undefined} onClick={event => {if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;event.preventDefault();navigate(region.id);}}>{desktop&&<PageIcon page={region.id}/>}<span className="v2-space-number">{region.number}</span><span className="v2-space-name">{region.label}</span></a>)}</nav>
     </header>
-    <div className="v2-hud">{desktop&&<><div className="v2-theme-picker" role="group" aria-label="Dashboard theme">{Object.entries(themeNames).map(([id,label])=><button key={id} type="button" className="v2-theme-option" data-theme={id} aria-label={label} title={label} aria-pressed={visualTheme===id} onClick={()=>chooseVisualTheme(id)}><span className="v2-theme-preview" aria-hidden="true"/></button>)}</div>{visualTheme==='three'&&<label className="v2-motion-setting">Motion<select aria-label="Animation intensity" value={animationIntensity} onChange={event=>setMotionIntensity(event.target.value)}><option value="off">Off</option><option value="subtle">Subtle</option><option value="full">Full</option></select></label>}</>}<div className="v2-account"><Suspense fallback={null}><DashboardTools/></Suspense><button type="button" className="v2-saved-ideas" aria-label="Saved ideas" title="Saved ideas" onClick={()=>setIdeaPanel({})}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg></button><AccountMenu user={user} logout={logout}/></div></div>
+    <div className="v2-hud">
+      <details className="v2-controls">
+        <summary aria-label="Workspace controls" title="Workspace controls"><span aria-hidden="true">⚙</span></summary>
+        <div className="v2-controls-panel">
+          {desktop&&<><div className="v2-theme-picker" role="group" aria-label="Dashboard theme">{Object.entries(themeNames).map(([id,label])=><button key={id} type="button" className="v2-theme-option" data-theme={id} aria-label={label} title={label} aria-pressed={visualTheme===id} onClick={()=>chooseVisualTheme(id)}><span className="v2-theme-preview" aria-hidden="true"/></button>)}</div>{visualTheme==='three'&&<label className="v2-motion-setting">Motion<select aria-label="Animation intensity" value={animationIntensity} onChange={event=>setMotionIntensity(event.target.value)}><option value="off">Off</option><option value="subtle">Subtle</option><option value="full">Full</option></select></label>}</>}
+          <div className="v2-account"><Suspense fallback={null}><DashboardTools/></Suspense><button type="button" className="v2-saved-ideas" aria-label="Saved ideas" title="Saved ideas" onClick={()=>setIdeaPanel({})}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg></button></div>
+        </div>
+      </details>
+      <AccountMenu user={user} logout={logout}/></div>
     {(authError || error || !ready || data.tasksCached || data.planCached) && <div className="v2-connection" role="status"><span className={error ? 'v2-dot error' : 'v2-dot'}/>{authError || error || (!ready ? 'Loading workspace…' : 'Offline · Showing saved records')}{error && <button onClick={data.retry}>Retry sync</button>}</div>}
     <main ref={viewport} className="v2-canvas" aria-label="Continuous spatial workspace" tabIndex={0} onScroll={scroll}
       onKeyDown={event => {if (event.target !== event.currentTarget) return;let index = regions.findIndex(region => region.id === active);if (event.key === 'ArrowRight') index++;else if (event.key === 'ArrowLeft') index--;else if (event.key === 'Home') index=0;else if (event.key === 'End') index=regions.length-1;else return;event.preventDefault();navigate(regions[Math.max(0,Math.min(regions.length-1,index))].id);}}>

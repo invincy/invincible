@@ -316,6 +316,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
         await page.route('https://**/*',route=>route.abort());
         await page.goto(base+'/fixture');
         await page.locator('.v2-guide-mission h2').getByText('Build the living workspace').waitFor();
+        await page.getByLabel('Workspace controls',{exact:true}).click();
         const themeTwo=page.getByRole('button',{name:'Emerald Forest'}),themeThree=page.getByRole('button',{name:'Electric Blue'}),themeOne=page.getByRole('button',{name:'Golden Orbit'});
         assert.equal(await themeTwo.getAttribute('aria-pressed'),'false');
         await themeTwo.click();assert.equal(await page.locator('.v2-shell').evaluate(node=>node.classList.contains('v2-theme-two')),true);
@@ -784,6 +785,7 @@ async function checkGlobeWithoutWebGL(browser,base) {
         assert.equal(await compactPage.getByRole('button',{name:/Orb theme:/}).count(),0,'obsolete colour selector stays removed');
         await compactPage.screenshot({path:path.join(output,'compact-empty-phone.png'),fullPage:true});await compactPage.close();
         const toolsPage=await context.newPage();await toolsPage.goto(base+'/fixture');
+        await toolsPage.getByLabel('Workspace controls',{exact:true}).click();
         await toolsPage.getByRole('button',{name:'Notifications: no pending reminders',exact:true}).click();
         await toolsPage.getByRole('dialog',{name:'You’re all caught up.'}).waitFor();
         await toolsPage.getByRole('button',{name:'Close',exact:true}).click();
