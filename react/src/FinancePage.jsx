@@ -22,6 +22,7 @@ const accountCategory=account=>account.category||(account.type==='liability'?'li
 const money=(value,decimals=0)=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',minimumFractionDigits:decimals,maximumFractionDigits:decimals}).format(Number(value)||0);
 const compact=value=>{const amount=Math.abs(value);return `${value<0?'−':''}₹${amount>=1e7?(amount/1e7).toFixed(1)+'Cr':amount>=1e5?(amount/1e5).toFixed(1)+'L':amount>=1e3?Math.round(amount/1e3)+'K':Math.round(amount)}`};
 const itemHasNumber=value=>value!==null&&value!==''&&Number.isFinite(Number(value));
+const readVisualTheme=()=>{try{const value=localStorage.getItem('invincible-visual-theme');return value==='two'||value==='three'?value:'one'}catch{return'one'}};
 
 function totalsFor(accounts=[]){
  const result={cash:0,portfolio:0,mutualFunds:0,nps:0,pf:0,other:0,liabilities:0};
@@ -50,6 +51,9 @@ function WealthTrend({history,selected,onSelected}){
 
 export function FinancePage(){
  const {user}=useAuth();
+ const [visualTheme,setVisualTheme]=useState(readVisualTheme);
+ useEffect(()=>{const sync=event=>{if(!event||event.key===null||event.key==='invincible-visual-theme')setVisualTheme(readVisualTheme())};window.addEventListener('storage',sync);window.addEventListener('invincible-theme-change',sync);return()=>{window.removeEventListener('storage',sync);window.removeEventListener('invincible-theme-change',sync)}},[]);
+ useEffect(()=>{document.body.dataset.invincibleTheme=visualTheme;return()=>{delete document.body.dataset.invincibleTheme}},[visualTheme]);
  const [desktop,setDesktop]=useState(()=>matchMedia('(min-width:901px)').matches);
  useEffect(()=>{const media=matchMedia('(min-width:901px)'),change=()=>setDesktop(media.matches);media.addEventListener('change',change);return()=>media.removeEventListener('change',change);},[]);
  const {state:portfolioState}=usePortfolio();
@@ -95,7 +99,7 @@ export function FinancePage(){
  const investmentAccounts=displayedAccounts.filter(account=>accountCategory(account)!=='cash'&&accountCategory(account)!=='liabilities');
  const paidBillCount=state.bills.filter(item=>item.paid).length;
 
- return <div className="finance-react"><div className="finance-background-art" aria-hidden="true"><svg viewBox="0 0 1200 700" preserveAspectRatio="none"><path className="finance-art-gridline" d="M0 580 C180 535 260 600 420 470 S680 440 790 315 S1030 330 1200 155"/><path className="finance-art-glow" d="M0 580 C180 535 260 600 420 470 S680 440 790 315 S1030 330 1200 155"/></svg><span className="finance-art-rupee">₹</span><span className="finance-art-coin coin-one">₹</span><span className="finance-art-coin coin-two">₹</span></div>
+ return <div className={`finance-react finance-theme-${visualTheme}`} data-visual-theme={visualTheme}><div className="finance-background-art" aria-hidden="true"><svg viewBox="0 0 1200 700" preserveAspectRatio="none"><path className="finance-art-gridline" d="M0 580 C180 535 260 600 420 470 S680 440 790 315 S1030 330 1200 155"/><path className="finance-art-glow" d="M0 580 C180 535 260 600 420 470 S680 440 790 315 S1030 330 1200 155"/></svg><span className="finance-art-rupee">₹</span><span className="finance-art-coin coin-one">₹</span><span className="finance-art-coin coin-two">₹</span></div>
   <header className="finance-hero"><div className="finance-hero-copy"><span className="finance-eyebrow">MONTHLY OPERATING CHECK</span><h1>{monthLabel} finances</h1><p>Record salary, close the bills due around month-end, and see exactly what remains.</p></div><div className="finance-period-control"><div className="finance-month-nav"><button type="button" onClick={()=>moveMonth(-1)} aria-label="Previous month">‹</button><strong>{monthLabel}</strong><button type="button" onClick={()=>moveMonth(1)} aria-label="Next month">›</button></div><div className={`finance-sync ${statusType}`} title={status} aria-label={status}><i className="fas fa-cloud" aria-hidden="true"/>{statusType==='ok'?<i className="fas fa-check finance-sync-check" aria-hidden="true"/>:<span>{status}</span>}</div></div><div className="finance-hero-actions"><button type="button" className="finance-secondary" onClick={()=>openAccount()}>+ Account</button><button type="button" className="finance-primary" onClick={()=>openTransaction('income','Salary')}>+ Salary</button><button type="button" className="finance-primary finance-cyan" onClick={()=>openTransaction()}>+ Cash flow</button></div></header>
   {desktop&&<FinanceDesktop totals={totals} accounts={displayedAccounts} bills={state.bills} transactions={state.transactions} checklist={state.checklist} money={money} categoryOf={accountCategory} categories={wealthSeries} onAccount={openAccount} onBill={openBill} onTransaction={openTransaction} onRemove={remove} onToggleBill={toggleBill} onToggleCheck={id=>save({...state,checklist:state.checklist.map(item=>item.id===id?{...item,done:!item.done}:item)})} onAddCheck={label=>save({...state,checklist:[...state.checklist,{id:newId(),label,done:false}]})} onImport={()=>{setImportError('');setImportText('');setModal('import')}} onTrend={()=>setModal('trend')} onReconcile={openReconciliation}/>}
   {!desktop&&<><nav className="space-panel-links" aria-label="Finance panels">

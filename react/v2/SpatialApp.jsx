@@ -192,6 +192,7 @@ function SignedInWorkspace({user, logout}) {
   const chooseVisualTheme=next=>setVisualTheme(current=>{
     if(current===next)return current;
     try {localStorage.setItem('invincible-visual-theme',next);} catch {}
+    window.dispatchEvent(new CustomEvent('invincible-theme-change',{detail:{theme:next}}));
     return next;
   });
   const setMotionIntensity=value=>{setAnimationIntensity(value);try{localStorage.setItem('invincible-electric-motion',value);}catch{}};
