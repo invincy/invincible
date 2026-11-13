@@ -34,6 +34,11 @@ test('one-click production can keep original narration timing with a context car
  assert.equal(manifest.audioClips[0].durationSeconds,2.5);
  assert.throws(()=>compileAiStoryboardManifest(rows),/timeline gap/);
 });
+test('OpenAI scene plans become editable Canvas scenes without changing locked timing',()=>{
+ const rows=[{id:'scene-1',timeline:'0.000-2.000s',visual:'Rising air',canvasScene:{title:'Warm air rises',subtitle:'Low pressure forms',visual:'Particles rise above the Equator',backgroundStyle:'blueprint',accentColor:'#42D6D0',motion:'rise'}}];
+ const manifest=compileAiStoryboardManifest(rows,{audioFileId:'voice-file',audioDuration:2});
+ assert.equal(manifest.scenes[0].engineType,'graphic');assert.equal(manifest.scenes[0].durationSeconds,2);assert.equal(manifest.scenes[0].overlays[1].text,'Warm air rises');assert.equal(manifest.audioClips[0].durationSeconds,2);
+});
 test('scene order, overlap, duration, duplicate IDs and nonfinite timing are rejected',()=>{
  for(const scenes of [[graphic('a',0,3),graphic('b',2)],[graphic('a'),graphic('a',2)],[graphic('a',0,0)],[graphic('a',599,2)],[graphic('a',NaN)]])assert.throws(()=>validateManifest({...emptyVideo(),scenes}));
 });

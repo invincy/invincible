@@ -23,6 +23,16 @@ export function compileAiStoryboardManifest(storyboard,{aspectRatio='9:16',audio
    {id:'caption',type:'text',text:'Historical context',x:.5,y:.55,fontSize:30,color:'#E1C65B'}
   ]});
  }
+ function addCanvas(id,startSeconds,durationSeconds,row){
+  const idea=row.canvasScene,accent=/^#[0-9a-f]{6}$/i.test(idea.accentColor||'')?idea.accentColor:'#61D6D1',enter=Math.min(.8,Math.max(1/60,durationSeconds*.35));
+  const first={timeSeconds:0,opacity:0,easing:'smooth'},last={timeSeconds:enter,opacity:1,easing:'smooth'};
+  if(idea.motion==='rise'){first.y=.58;last.y=.48;}else if(idea.motion==='pan-left'){first.x=.65;last.x=.5;}else if(idea.motion==='pan-right'){first.x=.35;last.x=.5;}else if(idea.motion==='zoom-in'){first.scale=.72;last.scale=1;}
+  manifest.scenes.push({id,name:String(idea.title||row.visual||'Canvas scene').slice(0,200),startSeconds,durationSeconds,engineType:'graphic',engineData:{background:'#071426',backgroundStyle:idea.backgroundStyle||'plain',gridColor:accent,gridSpacing:54},transition,overlays:[
+   {id:'accent',type:'circle',x:.5,y:.38,width:.28,height:.28,color:accent,opacity:.22,keyframes:[first,last]},
+   {id:'title',type:'text',text:String(idea.title||'').slice(0,200),x:.5,y:.48,width:.86,fontSize:62,fontWeight:700,color:'#F4F5F7',keyframes:[first,last]},
+   {id:'subtitle',type:'text',text:String(idea.subtitle||'').slice(0,240),x:.5,y:.59,width:.82,fontSize:32,fontWeight:600,color:accent,keyframes:[first,last]}
+  ]});
+ }
  for(const [index,row] of storyboard.entries()){
   const {start,seconds}=timing(row);const sceneStart=start===null?cursor:start;
   if(seconds<=0||sceneStart<cursor-1e-6)throw Error(`Scene ${index+1} has invalid or overlapping timing.`);
@@ -32,6 +42,7 @@ export function compileAiStoryboardManifest(storyboard,{aspectRatio='9:16',audio
    cursor=sceneStart+seconds;
    continue;
   }
+  if(row.canvasScene&&!row.mapAnimation){if(seconds>=1/30)addCanvas(String(row.id||`ai-scene-${index+1}`),sceneStart,seconds,row);cursor=sceneStart+seconds;continue;}
   if(seconds<1/30)throw Error(`Scene ${index+1} has invalid timing.`);
   if(!row.mapAnimation)throw Error(`Scene ${index+1} has no executable map animation. Descriptive scenes cannot be exported.`);
   if(row.mapAnimation.aspectRatio!==aspectRatio)throw Error(`Scene ${index+1} aspect ratio differs from the production format.`);

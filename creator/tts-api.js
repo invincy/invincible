@@ -4,6 +4,8 @@ const functions=getFunctions(firebaseApp,'asia-south1');
 const voices=httpsCallable(functions,'creatorTtsVoices',{timeout:120000});
 const generate=httpsCallable(functions,'creatorTtsGenerate',{timeout:540000});
 const retime=httpsCallable(functions,'creatorTtsRetime',{timeout:540000});
+const creatorAi=httpsCallable(functions,'creatorOpenAiVideo',{timeout:300000});
 export const loadVoices=async()=>(await voices({})).data.voices;
 export const generateVoiceover=async data=>(await generate(data)).data;
 export const retimeVoiceover=async data=>(await retime(data)).data;
+export const runCreatorOpenAi=async data=>(await creatorAi(data)).data;

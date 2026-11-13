@@ -140,6 +140,7 @@ audio{width:100%;height:36px}
 .history-entry summary{cursor:pointer;font-size:12px;min-height:36px;display:flex;align-items:center}.history-script{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.8}.history-entry details .help{overflow-wrap:anywhere}.history-actions{margin-top:8px}
 
 .ai-script-flow{border:1px solid var(--voice-line,var(--line));border-radius:14px;background:#081722d9;padding:14px;margin-top:12px}
+.ai-provider-choice{display:flex;gap:8px;border:0;padding:0;margin:10px 0 2px}.ai-provider-choice legend{font-size:11px;color:var(--muted);margin-bottom:5px}.ai-provider-choice label{flex:1;display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:10px;padding:8px;cursor:pointer}.ai-provider-choice label:has(input:checked){border-color:var(--cyan);background:#113239}.ai-provider-choice span,.ai-provider-choice small{display:block}.ai-provider-choice small{color:var(--muted);font-size:10px;margin-top:2px}
 .ai-step-heading,.review-summary,.ai-next-row,.scene-plan-review header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .ai-step-heading>div{display:flex;align-items:center;gap:9px}.ai-step-heading>div>span{color:var(--cyan);font-size:11px;text-transform:uppercase;letter-spacing:.08em}.ai-step-heading h2{font-size:15px}
 .ai-flow-progress{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0;padding:0;list-style:none}.ai-flow-progress li{display:flex;align-items:center;gap:7px;min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;color:var(--muted);font-size:11px}.ai-flow-progress li span{display:grid;place-items:center;width:23px;height:23px;border:1px solid currentColor;border-radius:50%;font-variant-numeric:tabular-nums}.ai-flow-progress li.current{border-color:var(--cyan);color:var(--text);background:#12313a}.ai-flow-progress li.done{color:var(--cyan);background:#0d282f}.ai-flow-progress li.done span{color:#082025;background:var(--cyan);border-color:var(--cyan)}
@@ -232,6 +233,8 @@ audio{width:100%;height:36px}
  .voiceover-page:has(.controls-panel :is(input,select,textarea):focus) .result-panel{position:static}
 }
 @media(max-width:900px) and (max-height:700px){
+ .ai-provider-choice{margin:1px 0;gap:5px}.ai-provider-choice legend,.ai-provider-choice small{display:none}.ai-provider-choice label{padding:3px 7px;min-height:30px}.ai-provider-choice strong{font-size:11px}
+ .voiceover-page .result-panel:has(#recording:not([hidden])) .ai-provider-choice{display:none}
  .voiceover-page #recording{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:'player actions' 'playback playback' 'info info';gap:2px 8px;align-items:center}
  .voiceover-page #player{grid-area:player;min-width:0}
  .voiceover-page .playback-controls{grid-area:playback}

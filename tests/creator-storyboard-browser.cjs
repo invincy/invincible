@@ -15,7 +15,7 @@ const server=http.createServer((req,res)=>{
  const url=new URL(req.url,'http://localhost').pathname;
  res.setHeader('Content-Type',/\.m?js$/.test(url)?'text/javascript':url.endsWith('.css')?'text/css':'text/html');
  if(url==='/invincible/ai/'){res.end('<style>html,body{background:#0e111a;color-scheme:dark}</style><body></body>');return;}
- if(url==='/invincible/creator/tts-api.js'){res.end('export const loadVoices=async()=>[];export const generateVoiceover=async()=>{throw Error("Voice generation is outside this fixture")};export const retimeVoiceover=async()=>{throw Error("Voice speed processing is outside this fixture")};');return;}
+ if(url==='/invincible/creator/tts-api.js'){res.end('export const loadVoices=async()=>[];export const generateVoiceover=async()=>{throw Error("Voice generation is outside this fixture")};export const retimeVoiceover=async()=>{throw Error("Voice speed processing is outside this fixture")};export const runCreatorOpenAi=async()=>{throw Error("Cloud AI is outside this fixture")};');return;}
  if(url==='/fixture.mjs'||url==='/invincible/shared/firebase-client.js'){res.end(fixture);return;}
  try{
   let file=path.join(root,url.replace(/^\/invincible\/?/,''));
@@ -56,6 +56,8 @@ const server=http.createServer((req,res)=>{
   await page.locator('#projectTitle').filter({hasText:'Untitled project'}).waitFor();
   await page.locator('#projectVoiceoverStep:not([hidden])').waitFor();
   assert.equal(await page.locator('[data-project-area="Voiceover"]').getAttribute('aria-current'),'step');
+  assert.deepEqual(await page.locator('.project-workspace-nav [data-project-area]').allTextContents(),['1 Script','2 Script & scenes','3 Motion Studio','4 Map Editor','Battlefield Editor','Assets & 3D']);
+  assert.equal(await page.frameLocator('#projectVoiceoverFrame').locator('[name="aiProvider"][value="cloud"]').isChecked(),true,'Creator Studio reuses OpenAI by default while keeping Local AI selectable');
   assert.equal(await page.evaluate(()=>window.writes||0),0,'Opening an untitled project does not save it before the user edits it');
   await page.goto(base);await page.locator('#app:not([hidden])').waitFor();
   await page.evaluate(()=>{const data=JSON.parse(localStorage.getItem('test.creator')||'{}');data['creatorProjects/draft-production']={id:'draft-production',title:'Draft production',ownerUid:'owner',ownerEmail:'owner@example.com',editorEmails:[],stage:'Ideas',format:'Short',scenes:[],assets:[],animationGroups:[]};localStorage.setItem('test.creator',JSON.stringify(data));});
