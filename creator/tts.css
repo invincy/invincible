@@ -147,7 +147,7 @@ audio{width:100%;height:36px}
 .timing-columns{display:block}.timing-instructions-card:empty{display:none}.timing-card{min-width:0}.transcript-review,.scene-plan-review{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}.review-summary span,.transcript-segment>span,.scene-plan-review header span{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
 .transcript-segments,.scene-plan-scenes{display:grid;gap:8px;margin-top:10px}.transcript-segment{display:grid;grid-template-columns:150px minmax(0,1fr);align-items:start;gap:10px;margin:0}.transcript-segment>span{padding-top:10px}.transcript-segment textarea{min-height:58px;height:auto;padding:9px 11px;font-size:14px;line-height:1.45;resize:vertical}
 .ai-next-row{margin-top:12px;align-items:flex-start}.ai-next-row .help{margin:7px 0;flex:1}.scene-plan-scenes article{border:1px solid var(--line);border-radius:11px;background:#0c1d29;padding:12px}.scene-plan-scenes article>p{margin:8px 0;color:#dce9ed}.scene-plan-scenes dl{display:grid;gap:5px;margin:0}.scene-plan-scenes dl>div{display:grid;grid-template-columns:120px minmax(0,1fr);gap:8px}.scene-plan-scenes dt{color:var(--muted);font-size:11px}.scene-plan-scenes dd{margin:0;overflow-wrap:anywhere}.scene-plan-review>.primary{margin-top:12px;width:100%}.scene-plan-review>.primary[aria-disabled="true"]{opacity:.5;pointer-events:none}
-.scene-plan-progress{margin:12px 0;padding:16px;border:1px solid #55d5dc;border-radius:12px;background:#10303a;color:#e8ffff}.scene-plan-progress strong{display:block;font-size:16px}.scene-plan-progress span{display:block;margin-top:5px;color:#8ff3eb;font-variant-numeric:tabular-nums}.scene-plan-progress p{margin:8px 0 0;color:#c7dce1;line-height:1.45}.ai-script-flow.plan-generating .timing-columns{opacity:.42;pointer-events:none}.ai-script-flow.plan-review-active .timing-columns{display:none}.ai-script-flow.plan-review-active .scene-plan-review{margin-top:14px;border-top:0}.scene-plan-review .review-summary{flex-wrap:wrap}.scene-plan-review .review-summary button{margin-left:auto}
+.scene-plan-progress{margin:12px 0;padding:16px;border:1px solid #55d5dc;border-radius:12px;background:#10303a;color:#e8ffff}.scene-plan-progress strong{display:block;font-size:16px}.scene-plan-progress span{display:block;margin-top:5px;color:#8ff3eb;font-variant-numeric:tabular-nums}.scene-plan-progress p{margin:8px 0 0;color:#c7dce1;line-height:1.45}.ai-script-flow.plan-generating .timing-columns{opacity:.42;pointer-events:none}.ai-script-flow.plan-review-active .transcript-review{display:none}.ai-script-flow.plan-review-active .scene-plan-review{margin-top:12px}.scene-plan-review .review-summary{flex-wrap:wrap}.scene-plan-review .review-summary button{margin-left:auto}
 .project-voiceover-embed.project-timing-view .scene-plan-review>.primary{position:sticky;bottom:0;z-index:3;padding-block:13px;box-shadow:0 -12px 28px #06121dcc}
 .scene-plan-next{margin:14px 0 8px}.scene-plan-next strong{color:#e8ffff}
 @media(max-width:600px){.ai-flow-progress{grid-template-columns:1fr}.transcript-segment{grid-template-columns:1fr;gap:2px}.transcript-segment>span{padding:0}.ai-next-row{align-items:stretch;flex-direction:column}.ai-next-row button{width:100%}.scene-plan-scenes dl>div{grid-template-columns:1fr;gap:1px}}
@@ -355,7 +355,7 @@ audio{width:100%;height:36px}
 }
 .project-voiceover-embed.project-timing-view .timing-instructions-card label { display: block; margin-bottom: 8px; font-weight: 650; }
 .project-voiceover-embed.project-timing-view #creativeInstructions { min-height: clamp(280px, 53dvh, 580px); resize: vertical; }
-.project-voiceover-embed.project-timing-view .transcript-review { max-height: 68dvh; overflow-y: auto; }
+.project-voiceover-embed.project-timing-view :is(.transcript-review,.scene-plan-review) { max-height: 68dvh; overflow-y: auto; }
 .project-voiceover-embed.project-timing-view .transcript-segment { grid-template-columns: 1fr; gap: 3px; }
 .project-voiceover-embed.project-timing-view .transcript-segment>span { padding-top: 0; }
 .project-voiceover-embed.project-timing-view .ai-next-row { position: sticky; bottom: 0; padding-top: 10px; background: linear-gradient(transparent,#0a1a25 18%); }
@@ -426,7 +426,7 @@ audio{width:100%;height:36px}
   .project-voiceover-embed.project-timing-view .voiceover-page .workspace .ai-script-flow { max-height: none; }
   .project-voiceover-embed.project-timing-view .timing-columns { grid-template-columns: minmax(0,1fr); }
   .project-voiceover-embed.project-timing-view #creativeInstructions { min-height: 220px; }
-  .project-voiceover-embed.project-timing-view .transcript-review { max-height: none; overflow: visible; }
+  .project-voiceover-embed.project-timing-view :is(.transcript-review,.scene-plan-review) { max-height: none; overflow: visible; }
 }
 .ai-voiceover-embed main { padding: 12px; }
 .ai-voiceover-embed :is(.global-nav,.heading,.tts-forest,.voice-panel-links,
