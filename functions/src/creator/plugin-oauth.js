@@ -22,14 +22,15 @@ function normalizeScope(value=DEFAULT_SCOPE){
 function allowedRedirectUri(value){
  try{
   const url=new URL(value);
-  if(url.protocol!=='https:')return false;
   const host=url.hostname.toLowerCase();
+  if(url.protocol==='http:'&&['127.0.0.1','[::1]','localhost'].includes(host))return true;
+  if(url.protocol!=='https:')return false;
   return host==='chatgpt.com'||host.endsWith('.chatgpt.com')||host==='openai.com'||host.endsWith('.openai.com');
  }catch{return false;}
 }
 function validateClientRegistration(input={}){
  const redirectUris=Array.isArray(input.redirect_uris)?input.redirect_uris.map(value=>clean(value,1000)):[];
- if(!redirectUris.length||redirectUris.length>10||redirectUris.some(value=>!allowedRedirectUri(value)))throw Error('Only supported ChatGPT or OpenAI HTTPS redirect URLs may be registered.');
+ if(!redirectUris.length||redirectUris.length>10||redirectUris.some(value=>!allowedRedirectUri(value)))throw Error('Only supported OpenAI HTTPS or local Codex callback URLs may be registered.');
  if(input.token_endpoint_auth_method&&input.token_endpoint_auth_method!=='none')throw Error('Only public PKCE clients are supported.');
  const grantTypes=input.grant_types||['authorization_code','refresh_token'];
  if(!Array.isArray(grantTypes)||grantTypes.some(value=>!['authorization_code','refresh_token'].includes(value)))throw Error('Unsupported grant type.');
@@ -48,7 +49,7 @@ function validateAuthorizationRequest(input,{client,resourceUrl}={}){
 }
 function authorizationServerMetadata(issuer){return{
  issuer,authorization_endpoint:`${issuer}/authorize`,token_endpoint:`${issuer}/token`,registration_endpoint:`${issuer}/register`,revocation_endpoint:`${issuer}/revoke`,
- response_types_supported:['code'],grant_types_supported:['authorization_code','refresh_token'],token_endpoint_auth_methods_supported:['none'],code_challenge_methods_supported:['S256'],scopes_supported:SCOPES,
+ response_types_supported:['code'],grant_types_supported:['authorization_code','refresh_token'],token_endpoint_auth_methods_supported:['none'],code_challenge_methods_supported:['S256'],scopes_supported:SCOPES,authorization_response_iss_parameter_supported:true,
 };}
 function protectedResourceMetadata(resource,issuer){return{resource,authorization_servers:[issuer],scopes_supported:SCOPES,bearer_methods_supported:['header'],resource_name:'Invincible Video Director'};}
 

@@ -5,6 +5,8 @@ const oauth=require('../src/creator/plugin-oauth');
 test('plugin OAuth accepts only supported ChatGPT redirect hosts',()=>{
  assert.equal(oauth.allowedRedirectUri('https://chatgpt.com/connector/callback'),true);
  assert.equal(oauth.allowedRedirectUri('https://sub.openai.com/oauth/callback'),true);
+ assert.equal(oauth.allowedRedirectUri('http://127.0.0.1:49152/callback'),true);
+ assert.equal(oauth.allowedRedirectUri('http://[::1]:49152/callback'),true);
  assert.equal(oauth.allowedRedirectUri('https://chatgpt.com.evil.example/callback'),false);
  assert.equal(oauth.allowedRedirectUri('http://chatgpt.com/callback'),false);
 });
@@ -23,4 +25,5 @@ test('plugin OAuth metadata advertises authorization code with refresh and PKCE'
  assert.deepEqual(metadata.grant_types_supported,['authorization_code','refresh_token']);
  assert.deepEqual(metadata.code_challenge_methods_supported,['S256']);
  assert.deepEqual(metadata.scopes_supported,['creator.read','creator.compile']);
+ assert.equal(metadata.authorization_response_iss_parameter_supported,true);
 });
