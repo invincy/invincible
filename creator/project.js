@@ -69,7 +69,15 @@ const storyboard=createProductionWorkbench($("projectStoryboard"),{
 });
 window.addEventListener("message",async event=>{
   const frame=$("projectVoiceoverFrame");
-  if(event.origin!==location.origin||event.source!==frame?.contentWindow||event.data?.type!=="invincible-apply-ai-draft")return;
+  if(event.origin!==location.origin||event.source!==frame?.contentWindow)return;
+  if(event.data?.type==="invincible-sync-project-script"){
+    const script=String(event.data.script||"").trim(),instructions=String(event.data.creativeInstructions||"").trim();
+    if(script&&project.script!==script)project.script=script;
+    if(instructions&&project.notes!==instructions)project.notes=instructions;
+    queueSave();
+    return;
+  }
+  if(event.data?.type!=="invincible-apply-ai-draft")return;
   try{await storyboard.openAiDraft();selectProjectArea("Video Studio");}
   catch(error){status(error.message||"The reviewed scene plan could not be opened.","error");}
 });
@@ -108,22 +116,6 @@ function selectProjectArea(area,mode=""){
     button.setAttribute("aria-current",active?"step":"false");
   });
 }
-
-$("useNarration").onclick=()=>{
-  const voiceover=$("projectVoiceoverFrame").contentDocument;
-  const input=voiceover?.getElementById("script"),workspace=voiceover?.getElementById("workspace");
-  const message=$("projectVoiceoverStatus");
-  const script=input?.value.trim();
-  if(!workspace||workspace.hidden||!script){message.textContent="Paste your script first.";return;}
-  if(voiceover.getElementById("mode")?.value==="ssml"){message.textContent="Choose Plain text to send your script to Step 2.";return;}
-  if(project.script?.trim()&&project.script.trim()!==script&&!confirm("Replace the current project script draft with this narration?"))return;
-  if(project.script!==script){
-    project.script=script;
-    queueSave();
-  }
-  message.textContent="";
-  selectProjectArea("Storyboard");
-};
 
 const renameForm=$("renameProjectForm"), titleInput=$("projectTitleInput");
 function closeRename(){

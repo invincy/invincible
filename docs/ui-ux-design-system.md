@@ -93,6 +93,10 @@ Untitled project directly on Script, without showing the compact setup dialog.
 The workflow runs from Script to
 Script & scenes, then Map Editor when visuals need maps, and finally Motion
 Studio for assembly. The separate Invincible AI Voiceover tool keeps its name.
+Within Script, keep MP3 generation, Download MP3 and Scripting · Step 2 in one
+continuous surface. Step 2 must not navigate away: reveal the MP3 ready,
+Whisper timing and Scene plan progression in place, with transcript correction
+and animation instructions visible before scene generation.
 
 Carry the selected Invincible theme backdrop into the editor, including its
 ambient details. Keep the background free of page-specific artwork and use

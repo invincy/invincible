@@ -52,7 +52,7 @@ audio{width:100%;height:36px}
 .playback-controls select{width:auto;min-height:32px;padding:4px 8px;font-size:12px}
 .download-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:5px}
 .download-row span{color:var(--muted);font-size:10px;overflow-wrap:anywhere;min-width:0}
-.download-row a{font-size:12px;flex-shrink:0}
+.recording-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;flex-shrink:0}.recording-actions a,.recording-actions button{font-size:12px;white-space:nowrap}
 .ssml-guide{color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:8px;margin-top:12px}
 .ssml-guide summary{cursor:pointer;min-height:44px;display:flex;align-items:center}
 .ssml-guide pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;background:#09131f;padding:12px;border-radius:8px}
@@ -130,7 +130,7 @@ audio{width:100%;height:36px}
  .panel{padding-inline:12px}
  .intro{font-size:11px}
  .download-row{flex-wrap:wrap}
- .download-row a{margin-left:auto}
+ .recording-actions{margin-left:auto}
 }
 
 
@@ -140,10 +140,11 @@ audio{width:100%;height:36px}
 .ai-script-flow{border:1px solid var(--voice-line,var(--line));border-radius:14px;background:#081722d9;padding:14px;margin-top:12px}
 .ai-step-heading,.review-summary,.ai-next-row,.scene-plan-review header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .ai-step-heading>div{display:flex;align-items:center;gap:9px}.ai-step-heading>div>span{color:var(--cyan);font-size:11px;text-transform:uppercase;letter-spacing:.08em}.ai-step-heading h2{font-size:15px}
+.ai-flow-progress{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0;padding:0;list-style:none}.ai-flow-progress li{display:flex;align-items:center;gap:7px;min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;color:var(--muted);font-size:11px}.ai-flow-progress li span{display:grid;place-items:center;width:23px;height:23px;border:1px solid currentColor;border-radius:50%;font-variant-numeric:tabular-nums}.ai-flow-progress li.current{border-color:var(--cyan);color:var(--text);background:#12313a}.ai-flow-progress li.done{color:var(--cyan);background:#0d282f}.ai-flow-progress li.done span{color:#082025;background:var(--cyan);border-color:var(--cyan)}
 .transcript-review,.scene-plan-review{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}.review-summary span,.transcript-segment>span,.scene-plan-review header span{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
 .transcript-segments,.scene-plan-scenes{display:grid;gap:8px;margin-top:10px}.transcript-segment{display:grid;grid-template-columns:150px minmax(0,1fr);align-items:start;gap:10px;margin:0}.transcript-segment>span{padding-top:10px}.transcript-segment textarea{min-height:58px;height:auto;padding:9px 11px;font-size:14px;line-height:1.45;resize:vertical}
 .ai-next-row{margin-top:12px;align-items:flex-start}.ai-next-row .help{margin:7px 0;flex:1}.scene-plan-scenes article{border:1px solid var(--line);border-radius:11px;background:#0c1d29;padding:12px}.scene-plan-scenes article>p{margin:8px 0;color:#dce9ed}.scene-plan-scenes dl{display:grid;gap:5px;margin:0}.scene-plan-scenes dl>div{display:grid;grid-template-columns:120px minmax(0,1fr);gap:8px}.scene-plan-scenes dt{color:var(--muted);font-size:11px}.scene-plan-scenes dd{margin:0;overflow-wrap:anywhere}.scene-plan-review>.primary{margin-top:12px;width:100%}
-@media(max-width:600px){.ai-step-heading{align-items:flex-start;flex-direction:column}.ai-step-heading button{width:100%}.transcript-segment{grid-template-columns:1fr;gap:2px}.transcript-segment>span{padding:0}.ai-next-row{align-items:stretch;flex-direction:column}.ai-next-row button{width:100%}.scene-plan-scenes dl>div{grid-template-columns:1fr;gap:1px}}
+@media(max-width:600px){.ai-flow-progress{grid-template-columns:1fr}.transcript-segment{grid-template-columns:1fr;gap:2px}.transcript-segment>span{padding:0}.ai-next-row{align-items:stretch;flex-direction:column}.ai-next-row button{width:100%}.scene-plan-scenes dl>div{grid-template-columns:1fr;gap:1px}}
 
 /* Voiceover workbench: quiet translucent surfaces leave the Studio water visible. */
 .voiceover-page{--voice-line:#56818b80;--voice-surface:#091b27d9;--voice-field:#071620ed}
@@ -226,18 +227,18 @@ audio{width:100%;height:36px}
  .voiceover-page:has(.controls-panel :is(input,select,textarea):focus) .result-panel{position:static}
 }
 @media(max-width:900px) and (max-height:700px){
- .voiceover-page #recording{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:'player download' 'playback playback' 'info info';gap:2px 8px;align-items:center}
+ .voiceover-page #recording{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:'player actions' 'playback playback' 'info info';gap:2px 8px;align-items:center}
  .voiceover-page #player{grid-area:player;min-width:0}
  .voiceover-page .playback-controls{grid-area:playback}
  .voiceover-page .download-row{display:contents}
  .voiceover-page #recordingInfo{grid-area:info}
- .voiceover-page #download{grid-area:download}
+ .voiceover-page .recording-actions{grid-area:actions}
 }
 @media(max-width:360px){
  .voiceover-page .heading{gap:6px 10px}
  .voiceover-page .intro{font-size:11px}
  .voiceover-page .download-row{flex-wrap:nowrap}
- .voiceover-page .download-row a{margin-left:0}
+ .voiceover-page .recording-actions{margin-left:0}
 }
 
 /* A single workbench keeps history close without changing its account lifecycle. */
@@ -263,12 +264,12 @@ audio{width:100%;height:36px}
  .voiceover-page .transport-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
  .voiceover-page .generate-actions button{flex:none}
  .voiceover-page .quota-note{text-align:left}
- .voiceover-page #recording{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:'player download' 'playback playback' 'info info';align-items:center;gap:2px 8px}
+ .voiceover-page #recording{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:'player actions' 'playback playback' 'info info';align-items:center;gap:2px 8px}
  .voiceover-page #player{grid-area:player;min-width:0}
  .voiceover-page .playback-controls{grid-area:playback}
  .voiceover-page .download-row{display:contents}
  .voiceover-page #recordingInfo{grid-area:info}
- .voiceover-page #download{grid-area:download}
+ .voiceover-page .recording-actions{grid-area:actions}
  .voiceover-page .history-link{display:none}
 }
 @media(min-width:1000px) and (min-height:650px){
@@ -287,6 +288,10 @@ audio{width:100%;height:36px}
 }
 @media(max-width:600px) and (max-height:700px){
  .voiceover-page .result-panel,.voiceover-page .result-panel:has(#recording:not([hidden])){position:static}
+}
+@media(max-width:360px){
+ .voiceover-page #recording{grid-template-columns:minmax(0,1fr);grid-template-areas:'player' 'actions' 'playback' 'info'}
+ .voiceover-page .recording-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}
 }
 
 /* Basic Voiceover inside Invincible AI. Creator Studio uses the full workspace. */

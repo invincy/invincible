@@ -155,8 +155,13 @@ const server=http.createServer((req,res)=>{
   await scriptFrame.getByRole('button',{name:'Close voiceover history'}).click();
   assert.equal(await narration.isVisible(),true);
   await narration.fill('A narration for this project.');
-  await page.locator('#useNarration').click();
-  await page.locator('[data-project-area="Storyboard"][aria-current="step"]').waitFor();
+  assert.equal(await page.locator('#useNarration').count(),0,'The misleading outer Step 2 button is removed');
+  assert.equal(await scriptFrame.locator('.recording-actions #analyzeLocal').count(),1,'Scripting sits beside the finished MP3 actions');
+  assert.equal(await scriptFrame.locator('.ai-script-flow').isVisible(),true,'The timing and scene-plan flow remains on the Script page');
+  await page.screenshot({path:path.join(root,'.test-output/creator-project-script-flow.png'),fullPage:true});
+  await narration.evaluate(()=>window.parent.postMessage({type:'invincible-sync-project-script',script:document.querySelector('#script').value,creativeInstructions:''},location.origin));
+  await page.waitForFunction(()=>Object.values(JSON.parse(localStorage.getItem('test.creator')||'{}')).some(item=>item.title==='Draft production'&&item.script==='A narration for this project.'));
+  await page.locator('[data-project-area="Storyboard"]').click();
   await openArea('Overview');
   await page.locator('.wb-script summary').click();
   assert.equal(await page.locator('[data-script-draft]').inputValue(),'A narration for this project.');

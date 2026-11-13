@@ -401,16 +401,6 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
 }
 .project-page.studio-ui:has(> .dashboard-backdrop)::before { display: none; }
 .project-voiceover-active .project-services { display: none; }
-.project-voiceover-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 0 10px 6px;
-}
-.project-voiceover-actions p:empty { display: none; }
-.project-voiceover-actions button { min-height: 44px; }
 #projectVoiceoverFrame {
   display: block;
   width: 100%;

@@ -25,6 +25,15 @@ Voiceover. Save now and Save & return use the existing revision-aware save
 path. Direct tool URLs retain the project ID and select the requested existing
 workbench area; no project, manifest, map or renderer schema is replaced.
 
+The Script step is one continuous visual flow. After the final MP3 is generated,
+**Scripting · Step 2** appears beside Download MP3. It stays on the same page,
+saves the current project script, and sends the in-memory final MP3 to Whisper.
+Opening previews cannot be analysed as the final recording. The visible
+MP3 ready → Whisper timing → Scene plan progress leads into locked timestamps,
+animation instructions, scene-plan review, and finally Apply to project → Open
+Motion Studio. The old outer button that jumped to an empty storyboard is not
+part of this flow.
+
 ### UX overhaul verification — November 13, 2026
 
 The focused Creator browser scenario passed project creation, the project/tool
