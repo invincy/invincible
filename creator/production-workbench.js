@@ -1,4 +1,4 @@
-import {mountVideoStudio} from './video-studio/workspace.js?v=2026111322';
+import {mountVideoStudio} from './video-studio/workspace.js?v=2026111323';
 import {mountHistoryWorkspace} from './history-workspace.js?v=2026111203';
 import {makeScene} from './storyboard-model.js?v=3';
 import {METHODS,IMPORT_FIELDS,uid,methodsOf,inspectImport,parseProductionImport,uniqueScenes,groupFor,taskFor,setTask,animationStage,requirements,sceneState,projectProgress,queueScenes,canonicalScript,scriptReview,filterScenes,productionReadiness} from './production-model.js?v=2026111112';
