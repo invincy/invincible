@@ -39,14 +39,12 @@ const server=http.createServer((req,res)=>{
   page.on('dialog',dialog=>dialog.accept());
   await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.copied=text}}}));
   const openArea=async name=>{
-   if(await page.locator('#projectVoiceoverStep').isVisible()){
-    const button=page.locator('[data-project-area="'+name+'"]:not([data-tool-mode])');
-    if(await button.count()){await button.click();return;}
-    await page.locator('[data-project-area="Storyboard"]').click();
-   }
-   const more=page.locator('.wb-more');
-   if(await more.count())await more.evaluate(n=>n.open=true);
-   await page.locator('[data-tab="'+name+'"]').click();
+   const direct=page.locator('[data-project-area="'+name+'"]:not([data-tool-mode])');
+   if(name!=='Storyboard'&&await direct.count()){await direct.click();return;}
+   // The old workbench remains covered for data compatibility, but it is no longer
+   // exposed by the user-facing Script & scenes step.
+   if(await page.locator('#projectVoiceoverStep').isVisible())await page.locator('[data-project-area="Assets"]:not([data-tool-mode])').click();
+   await page.locator('#projectStoryboard [data-tab="'+name+'"]').evaluate(button=>button.click());
   };
   const stored=()=>page.evaluate(()=>Object.values(JSON.parse(localStorage.getItem('test.creator')||'{}')).find(item=>item.title==='Gaganyaan production'));
   // Creator Studio's New project action opens an untitled Script-first project directly.
@@ -177,6 +175,10 @@ const server=http.createServer((req,res)=>{
   await page.reload();await page.locator('#projectTitle').filter({hasText:'Draft production'}).waitFor();
   await page.locator('[data-project-area="Storyboard"]').click();await scriptFrame.locator('html.project-timing-view').waitFor();assert.equal(await page.locator('#projectVoiceoverStep').isVisible(),true,'A saved Whisper checkpoint opens directly from Script & scenes');
   await page.evaluate(()=>localStorage.removeItem('invincible.creator.script-sync.v1.owner.draft-production'));
+  await page.locator('[data-project-area="Voiceover"]').click();
+  await page.locator('[data-project-area="Storyboard"]').click();await scriptFrame.locator('html.project-timing-view').waitFor();
+  assert.equal(await page.locator('#projectVoiceoverStep').isVisible(),true,'Script & scenes always opens the timing and scene-plan flow, even before a checkpoint exists');
+  assert.equal(await page.locator('.project-header').getByText(/^(Studio|Script|More)$/).count(),0,'Old workbench buttons are not shown beside the project title');
   await page.locator('[data-project-area="Voiceover"]').click();
   await openArea('Overview');
   await page.locator('.wb-script summary').click();
@@ -342,7 +344,7 @@ const server=http.createServer((req,res)=>{
   await nav().nth(1).locator('[data-drag]').dragTo(nav().nth(0).locator('[data-drag]'));
   await page.locator('[data-action=view-mode]').click();
   assert.equal(await page.locator('.wb-scene').count(),16);
-  const scene=i=>page.locator('.wb-scene').nth(i);
+  const scene=i=>page.locator('#projectStoryboard .wb-scene').nth(i);
   assert.equal(await scene(0).locator('[data-field=voiceover]').inputValue(),'भारत का मिशन 1!');
   assert.equal(await scene(15).locator('[data-field=timing]').inputValue(),'60–64s');
   assert.equal(await page.locator('.setup-stack,.importer,#fullScript').count(),0);
@@ -357,7 +359,7 @@ const server=http.createServer((req,res)=>{
    assert.match(await page.locator('.wb-status').innerText(),/Generator brief copied/);
    await page.waitForFunction(()=>window.copied?.includes('FULL RECORDING VOICEOVER'));
   assert.match(await page.evaluate(()=>window.copied),/FULL RECORDING VOICEOVER\nभारत का मिशन 1!/);
-  await page.locator('[data-tab=Storyboard]').click();
+  await openArea('Storyboard');
   assert.match(await page.evaluate(()=>window.copied),/Video Prompt \| Timestamp \|/);
   assert.match(await page.evaluate(()=>window.copied),/00:00.250–00:04.900/);
   // Duplicate paste is reviewed but cannot append identical rows.
@@ -428,7 +430,7 @@ const server=http.createServer((req,res)=>{
   const mixed=page.locator('.wb-production-card[data-scene="'+firstId+'"]');if(await mixed.locator('[data-action=expand]').getAttribute('aria-expanded')!=='true')await mixed.locator('[data-action=expand]').click();await mixed.locator('[data-task=ready]').click();
   if(await mixed.locator('[data-action=expand]').getAttribute('aria-expanded')!=='true')await mixed.locator('[data-action=expand]').click();await mixed.locator('[data-check=voiceoverReady]').check();await mixed.locator('[data-check=editingDone]').check();
   await mixed.locator('[data-field=sceneState]').count().then(count=>assert.equal(count,1)); // completion is now editable directly in the production table
-  await page.locator('[data-tab=Storyboard]').click();await scene(0).locator('[data-field=sceneState]').selectOption('Completed');
+  await openArea('Storyboard');await scene(0).locator('[data-field=sceneState]').selectOption('Completed');
   await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.scenes[0].completed,projectId);
   await page.reload();await openArea('Storyboard');await page.locator('.wb-scene').first().waitFor();assert.equal(await scene(0).locator('[data-field=sceneState]').inputValue(),'Completed');
   assert.equal(await page.locator('.wb-nav-entry [data-select-scene]').first().getAttribute('data-scene-status'),'completed');
@@ -452,7 +454,7 @@ const server=http.createServer((req,res)=>{
   await page.waitForFunction(id=>JSON.parse(localStorage.getItem('test.creator'))['creatorProjects/'+id]?.assets?.[0]?.status==='Ready',projectId);
   await page.reload();await openArea('Storyboard');await openArea('Assets');assert.equal(await page.locator('[data-asset-field=name]').inputValue(),'Crew Module');
   // Markdown, mapping, voiceover only, inline edits, reorder, duplication and insertion.
-  await page.locator('[data-tab=Storyboard]').click();
+  await openArea('Storyboard');
   if(await page.locator('.wb-focus-layout').count())await page.locator('[data-action=view-mode]').click();
   await page.locator('.wb-import summary').click();
   await paste.fill('| Scene | Duration | Voiceover | Character Prompt | Image Prompt | Video Prompt | Timestamp |\n|---|---|---|---|---|---|---|\n| 17 | 7 | Markdown voice | Person | Still | Motion | 01:04.875–01:11.875 |');
@@ -526,7 +528,7 @@ const server=http.createServer((req,res)=>{
   assert.equal(await scene(0).locator('[data-field=imagePrompt]').inputValue(),'Original prompt');
   await openArea('Overview');await page.locator('.wb-script summary').click();
   assert.equal(await page.locator('[data-script-draft]').inputValue(),'Keep draft');
-  await page.locator('[data-tab=Storyboard]').click();
+  await openArea('Storyboard');
   for(const width of [320,393,768,1280,1920]){
    await page.setViewportSize({width,height:900});
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'No horizontal overflow at '+width);
@@ -536,7 +538,7 @@ const server=http.createServer((req,res)=>{
    await page.locator('[data-filter-method]').selectOption('All');
    if(width<701){await page.locator('[data-action=toggle-filters]').click();assert.equal(await page.locator('[data-field=sceneState]').isVisible(),true);}
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
-   await page.locator('[data-tab=Storyboard]').click();
+   await openArea('Storyboard');
   }
   fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});
   await page.screenshot({path:path.join(root,'.test-output/creator-workbench-desktop.png'),fullPage:true});

@@ -5,7 +5,6 @@ import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client
 import{collection,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{createProductionReadiness,mountProductionReadiness}from'./video-studio/production-readiness.js?v=2026111209';
 import{splitVoiceoverScript}from"./scene-tools.js?v=2";
-import{hasScriptSyncCheckpoint}from'./ai-draft.js?v=2026111312';
 
 const queryParams=new URLSearchParams(location.search),$=id=>document.getElementById(id);
 let isNewDraft=queryParams.get("draft")==="1";
@@ -20,7 +19,6 @@ let saveChain=Promise.resolve(),editVersion=0,cloudVersion=0,baseRevision=0;
 let productionReadiness;
 let user=null,project=null,projectRef=null,saveTimer=null,localDirty=false,pendingConflict=null,recoveredLegacyDraft=false;
 let selectedArea=requestedArea||"Voiceover",selectedTool=requestedTool;
-let scriptTimingActive=false;
 
 function esc(value){const node=document.createElement("div");node.textContent=value??"";return node.innerHTML;}
 function attr(value){return esc(value).replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
@@ -80,12 +78,11 @@ window.addEventListener("message",async event=>{
     return;
   }
   if(event.data?.type==="invincible-open-script-timing"){
-    scriptTimingActive=true;
     selectProjectArea("Storyboard");
     return;
   }
   if(event.data?.type!=="invincible-apply-ai-draft")return;
-  try{scriptTimingActive=false;await storyboard.openAiDraft();selectProjectArea("Video Studio");}
+  try{await storyboard.openAiDraft();selectProjectArea("Video Studio");}
   catch(error){status(error.message||"The reviewed scene plan could not be opened.","error");}
 });
 
@@ -110,7 +107,7 @@ function render(){
 
 function selectProjectArea(area,mode=""){
   selectedArea=area;selectedTool=mode;
-  const isVoiceover=area==="Voiceover",isTiming=area==="Storyboard"&&(scriptTimingActive||hasScriptSyncCheckpoint(user?.uid,projectId)),showScriptWorkspace=isVoiceover||isTiming;
+  const isVoiceover=area==="Voiceover",isTiming=area==="Storyboard",showScriptWorkspace=isVoiceover||isTiming;
   $("projectVoiceoverStep").hidden=!showScriptWorkspace;
   $("projectEditingStep").hidden=showScriptWorkspace;
   document.body.classList.toggle("project-voiceover-active",showScriptWorkspace);

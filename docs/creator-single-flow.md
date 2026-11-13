@@ -48,8 +48,10 @@ account and project. After an app restart, selecting Script & scenes opens this
 checkpoint directly and re-enables Generate sync plan without repeating Script,
 MP3 generation or Whisper. An interrupted Qwen request is not treated as a
 completed plan; the saved inputs remain ready for a deliberate retry.
-The old outer button that jumped to an empty storyboard is not
-part of this flow.
+Step 2 always opens this Whisper / sync-plan workspace. Without a checkpoint it
+shows the truthful ready-for-a-final-MP3 state; it never falls back to the old
+empty storyboard. The old Studio / Script / More workbench strip is likewise
+not part of the Step 2 header.
 
 On wide project screens, Script and Recording share the main column and Voice
 uses the side column. Script & scenes gives the Whisper / sync-plan workspace
