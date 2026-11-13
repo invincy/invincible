@@ -34,6 +34,13 @@ animation instructions, scene-plan review, and finally Apply to project → Open
 Motion Studio. The old outer button that jumped to an empty storyboard is not
 part of this flow.
 
+On wide project screens, the Script workspace uses the available width as three
+columns: Script and Recording on the left, Voice in the centre, and Whisper
+timing / scene planning on the right. The timing card begins at the top, so the
+user does not scroll below the narration merely to reach Step 2. Medium screens
+move timing beneath the editing row; phones preserve the order Script,
+Recording, Voice, then timing without horizontal overflow.
+
 ### UX overhaul verification — November 13, 2026
 
 The focused Creator browser scenario passed project creation, the project/tool

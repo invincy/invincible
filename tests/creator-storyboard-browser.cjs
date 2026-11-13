@@ -35,7 +35,7 @@ const server=http.createServer((req,res)=>{
  const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE||undefined});
  try{
   const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];
-  page.on('pageerror',error=>{errors.push(error.message);console.error('Creator page error',error.message)});await page.route('https://**/*',route=>route.abort());
+  page.on('pageerror',error=>{errors.push(error.message);console.error('Creator page error',error.message)});await page.route('https://**/*',route=>new URL(route.request().url()).hostname==='gibs.earthdata.nasa.gov'?route.fulfill({contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=','base64')}):route.abort());
   page.on('dialog',dialog=>dialog.accept());
   await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.copied=text}}}));
   const openArea=async name=>{
@@ -158,7 +158,16 @@ const server=http.createServer((req,res)=>{
   assert.equal(await page.locator('#useNarration').count(),0,'The misleading outer Step 2 button is removed');
   assert.equal(await scriptFrame.locator('.recording-actions #analyzeLocal').count(),1,'Scripting sits beside the finished MP3 actions');
   assert.equal(await scriptFrame.locator('.ai-script-flow').isVisible(),true,'The timing and scene-plan flow remains on the Script page');
+  const scriptDesktop=await scriptFrame.locator('#workspace').evaluate(workspace=>{const rect=name=>{const box=workspace.querySelector(name).getBoundingClientRect();return{left:box.left,top:box.top,right:box.right,bottom:box.bottom,width:box.width}};return{workspace:workspace.getBoundingClientRect().width,script:rect('.script-panel'),voice:rect('.controls-panel'),timing:rect('.ai-script-flow'),recording:rect('.result-panel'),overflow:document.documentElement.scrollWidth<=innerWidth+1}});
+  assert.equal(scriptDesktop.overflow,true,'The three-column Script workspace has no horizontal overflow');
+  assert.ok(scriptDesktop.script.left<scriptDesktop.voice.left&&scriptDesktop.voice.left<scriptDesktop.timing.left,'Desktop uses Script, Voice and Whisper columns');
+  assert.ok(Math.abs(scriptDesktop.script.top-scriptDesktop.voice.top)<2&&Math.abs(scriptDesktop.script.top-scriptDesktop.timing.top)<2,'All three desktop cards begin together');
+  assert.ok(scriptDesktop.recording.top>=scriptDesktop.script.bottom&&scriptDesktop.timing.width>=340,'Recording stays below Script and Whisper has a useful right column');
   await page.screenshot({path:path.join(root,'.test-output/creator-project-script-flow.png'),fullPage:true});
+  await page.setViewportSize({width:393,height:852});
+  const scriptMobile=await scriptFrame.locator('#workspace').evaluate(workspace=>{const top=name=>workspace.querySelector(name).getBoundingClientRect().top;return{script:top('.script-panel'),recording:top('.result-panel'),voice:top('.controls-panel'),timing:top('.ai-script-flow'),overflow:document.documentElement.scrollWidth<=innerWidth+1}});
+  assert.equal(scriptMobile.overflow,true,'The collapsed Script workspace has no phone overflow');assert.ok(scriptMobile.script<scriptMobile.recording&&scriptMobile.recording<scriptMobile.voice&&scriptMobile.voice<scriptMobile.timing,'Phone flow remains Script, Recording, Voice, then Whisper');
+  await page.setViewportSize({width:1440,height:1000});
   await narration.evaluate(()=>window.parent.postMessage({type:'invincible-sync-project-script',script:document.querySelector('#script').value,creativeInstructions:''},location.origin));
   await page.waitForFunction(()=>Object.values(JSON.parse(localStorage.getItem('test.creator')||'{}')).some(item=>item.title==='Draft production'&&item.script==='A narration for this project.'));
   await page.locator('[data-project-area="Storyboard"]').click();

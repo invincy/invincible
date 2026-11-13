@@ -57,6 +57,7 @@ if(projectVoiceoverId){
  const flow=document.querySelector('.ai-script-flow'),review=$('transcriptReview');
  flow.insertBefore(scriptPanel.querySelector('label[for="creativeInstructions"]'),review);
  flow.insertBefore($('creativeInstructions'),review);
+ $('workspace').insertBefore(flow,document.querySelector('.controls-panel'));
  $('scriptHeading').textContent='Script';
  const scriptLabel=scriptPanel.querySelector('label[for="script"]');
  scriptLabel.classList.add('sr-only');

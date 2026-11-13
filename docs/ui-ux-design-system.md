@@ -97,6 +97,10 @@ Within Script, keep MP3 generation, Download MP3 and Scripting · Step 2 in one
 continuous surface. Step 2 must not navigate away: reveal the MP3 ready,
 Whisper timing and Scene plan progression in place, with transcript correction
 and animation instructions visible before scene generation.
+Use a three-column project layout when desktop width allows: Script/Recording,
+Voice, and Whisper/Scene plan. Do not leave Step 2 below the desktop fold while
+unused horizontal space remains. Collapse to two columns and then one column at
+narrower widths without introducing horizontal scrolling.
 
 Carry the selected Invincible theme backdrop into the editor, including its
 ambient details. Keep the background free of page-specific artwork and use
