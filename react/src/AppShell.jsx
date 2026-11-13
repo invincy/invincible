@@ -1,4 +1,5 @@
 import {AccountMenu} from './AccountMenu';
+import {mountPageChrome} from '../../shared/page-chrome';
 import{APP_ICON_URL}from'../../shared/branding';
 import{useEffect,useMemo,useState}from'react';
 import{useAuth}from'./AuthContext';
@@ -9,6 +10,7 @@ function NavIcon({id}){const paths={dashboard:'m3 10 9-7 9 7v10h-6v-7H9v7H3Z',ai
 function NavLink({page,mobile=false}){return <a className={'react-nav-link'+(active(page)?' active':'')} href={page.href} target={page.external?'_blank':undefined} rel={page.external?'noopener':undefined} aria-current={active(page)?'page':undefined}><span className="react-nav-icon"><NavIcon id={page.id}/></span><span>{mobile?page.short||page.label:page.label}</span>{page.external&&<span aria-hidden="true">↗</span>}</a>}
 export function AppShell({children,pageTitle}){
  const{user,ready,error,login,logout}=useAuth();
+ useEffect(()=>mountPageChrome(base),[]);
  const[moreOpen,setMoreOpen]=useState(false),[editing,setEditing]=useState(false),[tabs,setTabs]=useState(readMobileTabs),[draft,setDraft]=useState(tabs);
  useEffect(()=>{
   const viewport=window.matchMedia('(max-width: 1100px)');

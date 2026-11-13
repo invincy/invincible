@@ -1,4 +1,5 @@
 import {mountAccountMenu} from './shared/account-menu.js';
+import {mountPageChrome} from './shared/page-chrome.js';
 import{APP_ICON_URL}from'./shared/branding.js';
 import{APP_BASE as BASE,navigationPages as pages,mobilePages as selectableMobilePages,MOBILE_TABS_KEY,readMobileTabs,isActivePage}from'./shared/navigation.js';
 (() => {
@@ -37,6 +38,7 @@ import{APP_BASE as BASE,navigationPages as pages,mobilePages as selectableMobile
 
   const globalNav = document.querySelector('.global-nav');
   if (!globalNav) return;
+  if(activePage.id!=='journal')mountPageChrome(BASE);
 
   const compactNav=globalNav.hasAttribute('data-compact-nav');
   globalNav.innerHTML =

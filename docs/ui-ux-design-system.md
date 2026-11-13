@@ -77,6 +77,11 @@ cannot support the horizontal composition.
 
 ### Responsive behavior
 
+App pages share the selected dashboard backdrop and bottom destination tray.
+Journal keeps its own canvas and navigation. Keep one clear title for each
+area. Use supporting text only when it helps someone act or understand a
+status. Keep it readable at the design system's text sizes.
+
 Use Creator Studio home as the approved reference for paired work areas:
 one plain heading per section, matching translucent borderless panels over
 the theme backdrop, and readable flat rows with unboxed icons. Page headers
