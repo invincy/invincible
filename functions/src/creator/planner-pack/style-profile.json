@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "id": "invincible-reference-films-v1",
+  "name": "Invincible framed documentary",
+  "referenceFilms": ["panipat-1526-v17", "monsoon-flat-map-polished", "monsoon-globe-final"],
+  "composition": {
+    "aspectRatio": "9:16",
+    "safeMargin": 64,
+    "safeTop": 120,
+    "safeRight": 172,
+    "safeBottom": 330,
+    "frame": "thin restrained documentary border with corner details",
+    "titlePlacement": "top plaque inside the safe frame",
+    "sourcePlacement": "small persistent footer"
+  },
+  "palette": {
+    "background": "#071426",
+    "foreground": "#F4F5F7",
+    "accent": "#E1C65B",
+    "muted": "#A9B5C3",
+    "coolFlow": "#65B7E6",
+    "warmZone": "#E77A62",
+    "friendlyForce": "#3F8A62",
+    "opposingForce": "#A84F45"
+  },
+  "typography": {
+    "fontFamily": "Invincible Sans, Invincible Hindi, sans-serif",
+    "titleWeight": 700,
+    "labelWeight": 600,
+    "minimumLabelSize": 26,
+    "maximumTitleLines": 2,
+    "labelStyle": "rounded pill or plaque",
+    "uppercaseEnglishTitles": true
+  },
+  "editorialRules": [
+    "Show one dominant explanatory idea per scene.",
+    "Keep the map or diagram as the visual subject; text only identifies essential facts.",
+    "Use semantic colour consistently instead of choosing decorative colours per scene.",
+    "Reveal layers in narration order rather than displaying everything at once.",
+    "Move from global context to regional mechanism to local consequence when geography requires it.",
+    "Mark illustrative flows, formations and historic boundaries as illustrative or approximate."
+  ],
+  "camera": {
+    "movement": "continuous-subtle",
+    "preferredEasing": "smooth",
+    "minimumKeys": 2,
+    "avoidAbruptJumps": true,
+    "maxZoomDeltaPerSecond": 0.8,
+    "maxBearingDeltaPerSecond": 20
+  },
+  "animation": {
+    "overlayPreset": "documentary",
+    "routeReveal": true,
+    "troopMovement": "sequential-timed-layers",
+    "maximumSimultaneousLayers": 8,
+    "avoidCrowding": true,
+    "transitions": ["fade", "cut"]
+  },
+  "historicalIntegrity": {
+    "useVerifiedAssetsOnly": true,
+    "doNotInventCoordinates": true,
+    "doNotInventBoundaries": true,
+    "doNotInventRoutes": true,
+    "illustrativeAssetsMustBeLabeled": true,
+    "missingInformationAction": "flag-for-review"
+  }
+}

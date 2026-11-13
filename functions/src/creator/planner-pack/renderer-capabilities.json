@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "engines": [
+    { "id": "map", "status": "automatic", "useFor": ["locator-map", "route-map", "terrain-explanation"] },
+    { "id": "canvas", "status": "automatic", "useFor": ["title", "comparison", "documentary-diagram", "hold"] },
+    { "id": "battlefield", "status": "review-required", "useFor": ["battle-formation"] },
+    { "id": "motion", "status": "review-required", "useFor": ["atmospheric-system", "comparison"] },
+    { "id": "image", "status": "review-required", "useFor": ["source-image"] },
+    { "id": "video", "status": "review-required", "useFor": ["source-image"] },
+    { "id": "three", "status": "review-required", "useFor": ["documentary-diagram"] }
+  ],
+  "automaticPresets": ["framed-title", "geographic-locator", "revealed-route", "documentary-diagram", "source-image", "safe-hold"],
+  "reviewPresets": ["opposing-formations", "pressure-driven-flow", "shifting-zone", "terrain-barrier", "temperature-comparison"],
+  "rules": [
+    "The planner chooses semantic intent only; it never emits coordinates, colours, font sizes or keyframes.",
+    "Map scenes require a supplied locationId or reviewed routeId before compilation.",
+    "Unsupported or ungrounded selections compile to a visible review card without losing narration timing.",
+    "Every locked transcript segment produces exactly one scene."
+  ]
+}

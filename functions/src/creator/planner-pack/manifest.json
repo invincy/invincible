@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "id": "invincible-creator-planner-v1",
+  "schemaVersion": "creator-semantic-plan-v1",
+  "schema": "semantic-plan.schema.json",
+  "styleProfile": "style-profile.json",
+  "rendererCapabilities": "renderer-capabilities.json",
+  "approvedExamples": "approved-examples.json",
+  "sourceReferences": [
+    "First Battle of Panipat · INVINCIBLE Panipat 1526 v17",
+    "Indian Monsoon · Flat Map Polished",
+    "Indian Monsoon · Globe Final"
+  ]
+}

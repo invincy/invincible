@@ -1,7 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { createRequire } from 'node:module';
 import { readAnimation } from '../creator/map-animation-import.js?v=2026111112';
 import { findSceneGeography, contextMap } from './history-context.mjs';
+
+const require = createRequire(import.meta.url);
+const { plannerPack, normalizeSemanticPlan, buildSemanticPlannerPrompt, semanticCanvasScene } = require('../functions/src/creator/semantic-plan.js');
 
 const AUDIO_EXTENSIONS = new Set(['.mp3', '.wav']);
 
@@ -31,7 +35,8 @@ export async function loadCreatorAssetCatalog(repoRoot, { includeHistory = false
   const readJson = async relative => JSON.parse(await fs.readFile(path.join(root, relative), 'utf8'));
   const army = await readJson('creator/asset-libraries/historical-army-commanders-v1.json');
   const flags = await readJson('creator/history-data/border-flags-v3/manifest.json');
-  const styleProfile = await readJson('creator/creative-style-profile.json');
+  const planning = plannerPack();
+  const styleProfile = planning.styleProfile;
   const verifiedExample = await readJson('creator/map-animation-example.json');
   const history = includeHistory ? await readJson('creator/history-data/cliopatria-south-asia-v021.json') : null;
   const assets = [
@@ -42,6 +47,7 @@ export async function loadCreatorAssetCatalog(repoRoot, { includeHistory = false
     version: 1,
     assets,
     styleProfile,
+    plannerPack: planning,
     verifiedExample,
     ...(history ? { territoryRecords: history.records } : {}),
     animationPresets: [
@@ -82,13 +88,15 @@ export async function analyzeVoiceover({ audioPath, workspaceRoot, assetCatalog 
 }
 
 export function buildCreativePlanPrompt(transcript, assetCatalog, creativeInstructions = '') {
-  const t=normalizeTranscript(transcript), assets=(assetCatalog.assets||[]).filter(a=>/commander|troop|infantry|cavalry|elephant|cannon/i.test(a.name)).map(({id,name,type})=>({id,name,type}));
+  const t=normalizeTranscript(transcript), assets=(assetCatalog.assets||[]).map(({id,name,type,description})=>({id,name,type,description}));
   const locations=Array.isArray(assetCatalog.verifiedLocations)?assetCatalog.verifiedLocations:[],routes=Array.isArray(assetCatalog.verifiedRoutes)?assetCatalog.verifiedRoutes:[];
-  return `Return JSON only. Choose one compact animation intention for each segment. Never invent positions, routes or asset IDs. Use only the verified locations and routes supplied here; if the catalog has no suitable geometry, keep the intent descriptive and explain what is missing. Output {"scenes":[{"sourceSegmentId":"segment-1","intent":"advance|reveal|hold|title","assetId":"catalog id or empty","locationId":"verified location ID or empty","routeId":"verified route ID or empty","title":"short label"}]}. Segments: ${JSON.stringify(t.segments.map(s=>({id:s.id,text:s.text,start:s.start,end:s.end})))}. Verified locations: ${JSON.stringify(locations.map(({id,name,coordinates,sourceUrl,sourceDate,precisionNote})=>({id,name,coordinates,sourceUrl,sourceDate,precisionNote})))}. Verified routes: ${JSON.stringify(routes.map(({id,name,coordinates,sourceUrl,sourceDate,precisionNote,reviewed})=>({id,name,coordinates,sourceUrl,sourceDate,precisionNote,reviewed})))}. Approved assets: ${JSON.stringify(assets)}. Creative direction: ${normalizeCreativeInstructions(creativeInstructions)}`;
+  return buildSemanticPlannerPrompt({segments:t.segments.map(s=>({id:s.id,narration:s.text})),creativeInstructions:normalizeCreativeInstructions(creativeInstructions),assets,locations,routes:routes.filter(route=>route.reviewed===true)});
 }
 
 export function compileCreativePlan(transcript, plan, assetCatalog, { production = false, creativeInstructions = '' } = {}) {
-  const t=normalizeTranscript(transcript),segments=new Map(t.segments.map(s=>[s.id,s])),assets=catalogMap(assetCatalog),received=Array.isArray(plan?.scenes)?plan.scenes:[];
+  const t=normalizeTranscript(transcript),segments=new Map(t.segments.map(s=>[s.id,s])),assets=catalogMap(assetCatalog),locationsList=assetCatalog.verifiedLocations||[],routesList=(assetCatalog.verifiedRoutes||[]).filter(route=>route.reviewed===true);
+  const semantic=plan?.schemaVersion==='creator-semantic-plan-v1'?normalizeSemanticPlan(plan,{segmentIds:t.segments.map(s=>s.id),assetIds:[...assets.keys()],locationIds:locationsList.map(item=>item.id),routeIds:routesList.map(item=>item.id)}):null;
+  const received=Array.isArray(semantic?.scenes)?semantic.scenes:Array.isArray(plan?.scenes)?plan.scenes:[];
   const bySegment=new Map();
   for(const [index,row] of received.entries()){
     const id=String(row?.sourceSegmentId||'');
@@ -103,6 +111,10 @@ export function compileCreativePlan(transcript, plan, assetCatalog, { production
   const rows=t.segments.map(seg=>{
     const row=bySegment.get(seg.id);
     if(!row)return {sourceSegmentId:seg.id,intent:'hold',assetId:'',locationId:'',routeId:'',title:seg.text.slice(0,96),plannerFallback:'omitted'};
+    if(semantic){
+      const intent=row.routeId?'advance':row.locationId?'reveal':row.sceneKind==='title'?'title':'hold';
+      return{...row,intent,assetId:row.assetIds[0]||'',title:row.title||seg.text.slice(0,96)};
+    }
     if(production&&!allowedIntents.has(row.intent))return {...row,intent:'hold',plannerFallback:'unsupported-intent'};
     return row;
   });
@@ -128,7 +140,8 @@ export function compileCreativePlan(transcript, plan, assetCatalog, { production
       mapAnimation = contextMap(places, duration);
       if (mapAnimation) contextSources = places.map(({name, source}) => ({name, source}));
     }
-    const checked=mapAnimation?readAnimation(mapAnimation):null;return {id:`scene-${i+1}`,sourceSegmentIds:[seg.id],visual:String(row.title||seg.text),animation:String(row.intent),assetIds:assetId?[assetId]:[],missingInfo,mapAnimation:checked,...(production&&!checked?{contextCard:true}:{}),...(contextSources.length?{contextSources}:{})};
+    const checked=mapAnimation?readAnimation(mapAnimation):null,semanticPlan=semantic?row:null,canvasScene=semantic&&!checked?semanticCanvasScene(row):null;
+    return {id:`scene-${i+1}`,sourceSegmentIds:[seg.id],visual:String(row.visualIntent||row.title||seg.text),animation:String(row.intent),assetIds:assetId?[assetId]:[],missingInfo,mapAnimation:checked,...(canvasScene?{canvasScene}:{}),...(semanticPlan?{semanticPlan}:{}),...(production&&!checked&&!canvasScene?{contextCard:true}:{}),...(contextSources.length?{contextSources}:{})};
   });return {scenes};
 }
 
@@ -238,7 +251,7 @@ export function assembleSceneDraft(transcript, qwenDraft, assetCatalog = []) {
     return {
       id: String(draft.id || `scene-${index + 1}`), startSeconds: start, endSeconds: end, durationSeconds: Number((end - start).toFixed(3)),
       voiceover, voiceoverTimestamp: `${start.toFixed(3)}-${end.toFixed(3)}s`, visual: String(draft.visual ?? '').trim(), mapAnimation,
-      ...(draft.contextCard===true?{contextCard:true}:{}), ...(draft.contextSources?.length?{contextSources:draft.contextSources}:{}),
+      ...(draft.contextCard===true?{contextCard:true}:{}), ...(draft.contextSources?.length?{contextSources:draft.contextSources}:{}), ...(draft.canvasScene?{canvasScene:draft.canvasScene}:{}), ...(draft.semanticPlan?{semanticPlan:draft.semanticPlan}:{}),
       animation: String(draft.animation ?? '').trim(), assets: assetIds.map(id => assets.get(id)?.name || id).join('; '), assetIds,
       assetReferences: assetIds.join('; '), sourceSegmentIds: source.map(segment => segment.id), missingInfo: [...new Set(missingInfo)]
     };
@@ -265,5 +278,5 @@ export function toCreatorStudioImport(result, title = 'Voiceover analysis draft'
   if (!validation.valid) throw new Error(`Draft is not importable: ${validation.errors.join(' ')}`);
   // `animation` is kept in technicalNotes because Creator Studio's importer
   // aliases both `animation` and `visual` to the same field.
-  return { schemaVersion: 1, title, aspectRatio: '9:16', assets: [], audio: null, scenes: result.scenes.map(scene => ({ id: scene.id, timeline: `${scene.startSeconds.toFixed(3)}-${scene.endSeconds.toFixed(3)}s`, voiceover: scene.voiceover, voiceoverTimestamp: scene.voiceoverTimestamp, visual: scene.visual, assets: scene.assets, assetReferences: scene.assetReferences, mapAnimation: scene.mapAnimation || null, ...(scene.contextCard===true?{contextCard:true}:{}),...(scene.contextSources?.length?{contextSources:scene.contextSources}:{}),technicalNotes: scene.animation ? `Suggested animation: ${scene.animation}` : '' })) };
+  return { schemaVersion: 1, title, aspectRatio: '9:16', assets: [], audio: null, scenes: result.scenes.map(scene => ({ id: scene.id, timeline: `${scene.startSeconds.toFixed(3)}-${scene.endSeconds.toFixed(3)}s`, voiceover: scene.voiceover, voiceoverTimestamp: scene.voiceoverTimestamp, visual: scene.visual, assets: scene.assets, assetReferences: scene.assetReferences, mapAnimation: scene.mapAnimation || null, ...(scene.canvasScene?{canvasScene:scene.canvasScene}:{}),...(scene.semanticPlan?{semanticPlan:scene.semanticPlan}:{}), ...(scene.contextCard===true?{contextCard:true}:{}),...(scene.contextSources?.length?{contextSources:scene.contextSources}:{}),technicalNotes: scene.semanticPlan?`${scene.semanticPlan.engine} · ${scene.semanticPlan.presetId} · ${scene.semanticPlan.cameraIntent}`:scene.animation ? `Suggested animation: ${scene.animation}` : '' })) };
 }

@@ -1,0 +1,104 @@
+{
+  "title": "Invincible Creator semantic plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "scenes"],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "creator-semantic-plan-v1"
+    },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sourceSegmentId",
+          "engine",
+          "sceneKind",
+          "presetId",
+          "title",
+          "visualIntent",
+          "labelTreatment",
+          "cameraIntent",
+          "assetIds",
+          "locationId",
+          "routeId",
+          "emphasis",
+          "missingInfo"
+        ],
+        "properties": {
+          "sourceSegmentId": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "engine": {
+            "type": "string",
+            "enum": ["map", "battlefield", "motion", "canvas", "image", "video", "three"]
+          },
+          "sceneKind": {
+            "type": "string",
+            "enum": [
+              "title",
+              "locator-map",
+              "route-map",
+              "battle-formation",
+              "atmospheric-system",
+              "terrain-explanation",
+              "comparison",
+              "documentary-diagram",
+              "source-image",
+              "hold"
+            ]
+          },
+          "presetId": {
+            "type": "string",
+            "enum": [
+              "framed-title",
+              "geographic-locator",
+              "revealed-route",
+              "opposing-formations",
+              "pressure-driven-flow",
+              "shifting-zone",
+              "terrain-barrier",
+              "temperature-comparison",
+              "documentary-diagram",
+              "source-image",
+              "safe-hold"
+            ]
+          },
+          "title": { "type": "string", "maxLength": 120 },
+          "visualIntent": { "type": "string", "minLength": 1, "maxLength": 600 },
+          "labelTreatment": {
+            "type": "string",
+            "enum": ["none", "title-plaque", "primary-pill", "commander-pill", "map-label", "comparison-card"]
+          },
+          "cameraIntent": {
+            "type": "string",
+            "enum": ["hold", "slow-push", "slow-pull", "pan-left", "pan-right", "follow-route", "global-to-local"]
+          },
+          "assetIds": {
+            "type": "array",
+            "maxItems": 12,
+            "items": { "type": "string", "maxLength": 160 }
+          },
+          "locationId": { "type": "string", "maxLength": 160 },
+          "routeId": { "type": "string", "maxLength": 160 },
+          "emphasis": {
+            "type": "array",
+            "maxItems": 6,
+            "items": {
+              "type": "string",
+              "enum": ["geography", "route", "formation", "pressure", "wind", "moisture", "temperature", "terrain", "comparison", "person", "date", "definition"]
+            }
+          },
+          "missingInfo": {
+            "type": "array",
+            "maxItems": 8,
+            "items": { "type": "string", "maxLength": 240 }
+          }
+        }
+      }
+    }
+  }
+}

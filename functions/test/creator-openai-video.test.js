@@ -10,23 +10,24 @@ test('extends the final locked segment through trailing MP3 silence',()=>{
  const transcript=normalizeTranscript({text:'Done.',language:'en',duration:2.5,segments:[{start:0,end:2,text:'Done.'}],words:[]});assert.equal(transcript.segments[0].end,2.5);
 });
 
-const at=(longitude,latitude)=>({longitude,latitude});
-const canvas=(segmentNumber,title)=>({segmentNumber,engine:'canvas',title,subtitle:'Convection',visual:'Show rising particles.',backgroundStyle:'blueprint',accentColor:'#42D6D0',motion:'rise',mapBasemap:'satellite',mapCenter:at(0,0),mapEndCenter:at(0,0),mapZoom:2,mapEndZoom:2,mapLabels:[],mapRoutes:[],assets:'',missingInfo:[]});
-const map=(segmentNumber,title)=>({segmentNumber,engine:'map',title,subtitle:'Geography',visual:'Show the region on the map.',backgroundStyle:'plain',accentColor:'#E1C65B',motion:'hold',mapBasemap:'satellite',mapCenter:at(78,18),mapEndCenter:at(80,22),mapZoom:3.2,mapEndZoom:3.8,mapLabels:[{name:'India',position:at(78,22),role:'primary'}],mapRoutes:[{name:'Illustrative monsoon wind',coordinates:[at(55,-5),at(72,8),at(78,18)],color:'#65B7E6',arrowhead:true}],assets:'',missingInfo:[]});
+const semantic=(sourceSegmentId,overrides={})=>({sourceSegmentId,engine:'canvas',sceneKind:'documentary-diagram',presetId:'documentary-diagram',title:'Air rises',visualIntent:'Show warm air rising in a restrained diagram.',labelTreatment:'title-plaque',cameraIntent:'slow-push',assetIds:[],locationId:'',routeId:'',emphasis:['definition'],missingInfo:[],...overrides});
 
-test('builds real Map Editor scenes and retains Canvas only when requested',()=>{
+test('builds the same semantic plan shape used by the local planner',()=>{
  const transcript={duration:4,segments:[{id:'segment-1',start:0,end:2,text:'First.'},{id:'segment-2',start:2,end:4,text:'Second.'}]};
- const payload=buildPlan({scenes:[map(1,'Monsoon map'),canvas(2,'Air rises')]},transcript,'ITCZ');
- assert.equal(payload.analysis.scenes.length,2);assert.equal(payload.creatorStudio.scenes[1].timeline,'2.000-4.000s');assert.equal(payload.creatorStudio.scenes[0].mapAnimation.format,'invincible-map-animation');assert.equal(payload.creatorStudio.scenes[0].mapAnimation.layers[0].type,'route');assert.equal(payload.creatorStudio.scenes[1].canvasScene.title,'Air rises');assert.equal(payload.mapAnimations.length,1);
+ const payload=buildPlan({schemaVersion:'creator-semantic-plan-v1',scenes:[semantic('segment-1'),semantic('segment-2',{engine:'motion',sceneKind:'atmospheric-system',presetId:'pressure-driven-flow',title:'Monsoon flow',visualIntent:'Show pressure driving moist winds.',labelTreatment:'map-label',cameraIntent:'global-to-local',emphasis:['pressure','wind','moisture']})]},transcript,'ITCZ');
+ assert.equal(payload.analysis.scenes.length,2);
+ assert.equal(payload.creatorStudio.scenes[1].timeline,'2.000-4.000s');
+ assert.equal(payload.creatorStudio.scenes[1].semanticPlan.presetId,'pressure-driven-flow');
+ assert.equal(payload.creatorStudio.scenes[1].canvasScene.backgroundStyle,'blueprint');
+ assert.equal(payload.mapAnimations.length,0);
 });
 
-test('generated map plan passes the native Map Editor instruction validator',async()=>{
- const {readAnimation}=await import('../../creator/map-animation-import.js');
- const payload=buildPlan({scenes:[map(1,'Monsoon map')]},{duration:2,segments:[{id:'segment-1',start:0,end:2,text:'Monsoon.'}]},'ITCZ');
- assert.doesNotThrow(()=>readAnimation(payload.creatorStudio.scenes[0].mapAnimation));
-});
-
-test('rejects a plan that drops a timestamp',()=>{
+test('rejects a semantic plan that drops a locked timestamp',()=>{
  const transcript={segments:[{id:'a',start:0,end:1,text:'A'},{id:'b',start:1,end:2,text:'B'}]};
- assert.throws(()=>buildPlan({scenes:[canvas(1,'A')]},transcript,'x'),/expected 2, received 1/);
+ assert.throws(()=>buildPlan({schemaVersion:'creator-semantic-plan-v1',scenes:[semantic('a')]},transcript,'x'),/expected 2, received 1/);
+});
+
+test('rejects model-authored values outside the shared vocabulary',()=>{
+ const transcript={segments:[{id:'a',start:0,end:1,text:'A'}]};
+ assert.throws(()=>buildPlan({schemaVersion:'creator-semantic-plan-v1',scenes:[semantic('a',{presetId:'invented-panipat-preset'})]},transcript,'x'),/unsupported presetId/);
 });

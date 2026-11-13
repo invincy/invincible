@@ -405,14 +405,14 @@ function renderTranscript(){
   row.append(time,input);return row;
  }));updateScenePlanGate();updateAiFlow();
 }
-function sceneEngine(scene){return scene.mapAnimation?'Map':scene.canvasScene||scene.contextCard?'Canvas':'Needs selection';}
+function sceneEngine(scene){return scene.semanticPlan?.engine?scene.semanticPlan.engine.replace(/^./,letter=>letter.toUpperCase()):scene.mapAnimation?'Map':scene.canvasScene||scene.contextCard?'Canvas':'Needs selection';}
 function safeText(value){return String(value??'').replace(/[&<>"']/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));}
 function renderScenePlan(payload){
  scenePlanSaved=false;
  scenePlanPayload=structuredClone(payload);
  const flow=document.querySelector('.ai-script-flow');flow.classList.remove('plan-generating');flow.classList.add('plan-review-active');$('scenePlanProgress').hidden=true;
  const scenes=payload.analysis.scenes;$('scenePlanReview').hidden=false;$('scenePlanSummary').textContent=`${scenes.length} scenes · ${clock(payload.analysis.transcript.duration)}`;
- $('scenePlanScenes').replaceChildren(...scenes.map((scene,index)=>{const card=document.createElement('article');card.innerHTML=`<header><strong>Scene ${index+1}</strong><span>${clock(scene.startSeconds)}–${clock(scene.endSeconds)}</span></header><p>${safeText(scene.voiceover)}</p><dl><div><dt>Visual</dt><dd>${safeText(scene.visual||'Not specified')}</dd></div><div><dt>Engine</dt><dd>${safeText(sceneEngine(scene))}</dd></div><div><dt>Assets</dt><dd>${safeText(scene.assets||'None selected')}</dd></div><div><dt>Missing / unverified</dt><dd>${safeText(scene.missingInfo?.join(' ')||'None reported')}</dd></div></dl>`;return card;}));
+ $('scenePlanScenes').replaceChildren(...scenes.map((scene,index)=>{const card=document.createElement('article'),preset=scene.semanticPlan?.presetId?.replaceAll('-',' ')||'Manual selection';card.innerHTML=`<header><strong>Scene ${index+1}</strong><span>${clock(scene.startSeconds)}–${clock(scene.endSeconds)}</span></header><p>${safeText(scene.voiceover)}</p><dl><div><dt>Visual</dt><dd>${safeText(scene.visual||'Not specified')}</dd></div><div><dt>Engine</dt><dd>${safeText(sceneEngine(scene))}</dd></div><div><dt>Invincible preset</dt><dd>${safeText(preset)}</dd></div><div><dt>Assets</dt><dd>${safeText(scene.assets||'None selected')}</dd></div><div><dt>Missing / unverified</dt><dd>${safeText(scene.missingInfo?.join(' ')||'None reported')}</dd></div></dl>`;return card;}));
  $('localAnalysisResult').textContent=JSON.stringify(payload.creatorStudio,null,2);
  const hasMaps=scenes.some(scene=>scene.mapAnimation),link=$('openMotionStudio');link.href=projectVoiceoverId?`project.html?${new URLSearchParams({id:projectVoiceoverId,area:'Storyboard'})}`:'./';link.textContent=hasMaps?'Next · Review generated maps':'Next · Motion & export';link.dataset.hasMaps=String(hasMaps);
  updateAiFlow();requestAnimationFrame(()=>$('scenePlanReview').scrollIntoView({behavior:'smooth',block:'start'}));

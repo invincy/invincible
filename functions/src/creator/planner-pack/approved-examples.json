@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "examples": [
+    {
+      "name": "Panipat geographic context",
+      "when": "Narration introduces where Panipat is or why its geography matters.",
+      "plan": {
+        "engine": "map",
+        "sceneKind": "locator-map",
+        "presetId": "geographic-locator",
+        "labelTreatment": "primary-pill",
+        "cameraIntent": "slow-push",
+        "emphasis": ["geography"]
+      }
+    },
+    {
+      "name": "Panipat opposing armies",
+      "when": "Narration compares Babur and Ibrahim Lodi or explains battlefield formation.",
+      "plan": {
+        "engine": "battlefield",
+        "sceneKind": "battle-formation",
+        "presetId": "opposing-formations",
+        "labelTreatment": "commander-pill",
+        "cameraIntent": "slow-pull",
+        "emphasis": ["formation", "person"]
+      }
+    },
+    {
+      "name": "Monsoon pressure and wind",
+      "when": "Narration explains air moving from a high-pressure region toward a low-pressure region.",
+      "plan": {
+        "engine": "motion",
+        "sceneKind": "atmospheric-system",
+        "presetId": "pressure-driven-flow",
+        "labelTreatment": "map-label",
+        "cameraIntent": "global-to-local",
+        "emphasis": ["pressure", "wind", "moisture"]
+      }
+    },
+    {
+      "name": "Monsoon temperature comparison",
+      "when": "Narration contrasts El Nino and La Nina or warmer and cooler ocean regions.",
+      "plan": {
+        "engine": "motion",
+        "sceneKind": "comparison",
+        "presetId": "temperature-comparison",
+        "labelTreatment": "comparison-card",
+        "cameraIntent": "hold",
+        "emphasis": ["temperature", "comparison"]
+      }
+    }
+  ]
+}

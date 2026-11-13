@@ -37,7 +37,16 @@ test('one-click production can keep original narration timing with a context car
 test('OpenAI scene plans become editable Canvas scenes without changing locked timing',()=>{
  const rows=[{id:'scene-1',timeline:'0.000-2.000s',visual:'Rising air',canvasScene:{title:'Warm air rises',subtitle:'Low pressure forms',visual:'Particles rise above the Equator',backgroundStyle:'blueprint',accentColor:'#42D6D0',motion:'rise'}}];
  const manifest=compileAiStoryboardManifest(rows,{audioFileId:'voice-file',audioDuration:2});
- assert.equal(manifest.scenes[0].engineType,'graphic');assert.equal(manifest.scenes[0].durationSeconds,2);assert.equal(manifest.scenes[0].overlays[1].text,'Warm air rises');assert.equal(manifest.audioClips[0].durationSeconds,2);
+ assert.equal(manifest.scenes[0].engineType,'graphic');assert.equal(manifest.scenes[0].durationSeconds,2);assert.equal(manifest.scenes[0].overlays.find(layer=>layer.id==='title').text,'Warm air rises');assert.equal(manifest.audioClips[0].durationSeconds,2);
+ assert.deepEqual(manifest.scenes[0].overlays.slice(0,4).map(layer=>layer.id),['frame-top','frame-bottom','frame-left','frame-right']);
+});
+test('reference-film semantic presets compile to editable visual primitives instead of generic cards',()=>{
+ const row={id:'monsoon-flow',timeline:'0-4s',visual:'Pressure drives the monsoon',canvasScene:{title:'HOW MONSOON WINDS FORM',visual:'High pressure drives moist air toward seasonal low pressure.',backgroundStyle:'blueprint',accentColor:'#65B7E6',motion:'zoom-in',presetId:'pressure-driven-flow'}};
+ const manifest=compileAiStoryboardManifest([row]);const overlays=manifest.scenes[0].overlays;
+ assert.ok(overlays.some(layer=>layer.id==='high-zone'&&layer.type==='circle'));
+ assert.ok(overlays.some(layer=>layer.id==='low-zone'&&layer.type==='circle'));
+ assert.equal(overlays.filter(layer=>layer.type==='arrow').length,3);
+ assert.doesNotThrow(()=>validateManifest(manifest));
 });
 test('scene order, overlap, duration, duplicate IDs and nonfinite timing are rejected',()=>{
  for(const scenes of [[graphic('a',0,3),graphic('b',2)],[graphic('a'),graphic('a',2)],[graphic('a',0,0)],[graphic('a',599,2)],[graphic('a',NaN)]])assert.throws(()=>validateManifest({...emptyVideo(),scenes}));

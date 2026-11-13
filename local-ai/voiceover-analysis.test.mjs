@@ -36,6 +36,8 @@ test('loads real Creator Studio assets and animation presets', async () => {
   assert.ok(catalog.animationPresets.some(preset => preset.id === 'documentary'));
   assert.equal(catalog.styleProfile.composition.aspectRatio, '9:16');
   assert.equal(catalog.styleProfile.animation.troopMovement, 'sequential-timed-layers');
+  assert.equal(catalog.plannerPack.manifest.schemaVersion, 'creator-semantic-plan-v1');
+  assert.ok(catalog.plannerPack.approvedExamples.examples.some(example => /Panipat/.test(example.name)));
 });
 
 test('uses transcript timing as source of truth and accepts catalog assets', () => {
@@ -69,12 +71,28 @@ test('accepts executable map animation instructions and rejects unsupported refe
 test('does not invent Panipat positions or routes when the approved catalog has no geometry', () => {
   const transcript = { segments: [{ id: 'segment-1', start: 0, end: 3, text: 'Babur advanced toward Panipat.' }] };
   const prompt = buildCreativePlanPrompt(transcript, { assets: [], verifiedLocations: [], verifiedRoutes: [] });
-  assert.match(prompt, /Never invent positions, routes or asset IDs/);
-  assert.match(prompt, /Verified locations: \[\]/);
+  assert.match(prompt, /Never output coordinates/);
+  assert.match(prompt, /creator-semantic-plan-v1/);
+  assert.match(prompt, /"locations":\[\]/);
   assert.doesNotMatch(prompt, /76\.96|29\.39|Panipat \[/);
   const draft = compileCreativePlan(transcript, { scenes: [{ sourceSegmentId: 'segment-1', intent: 'advance', location: 'Panipat', routeId: 'invented' }] }, { assets: [], verifiedLocations: [], verifiedRoutes: [] });
   assert.equal(draft.scenes[0].mapAnimation, null);
   assert.match(draft.scenes[0].missingInfo.join(' '), /no route was invented/);
+});
+
+test('compiles the shared semantic plan without allowing the model to author renderer internals', () => {
+  const plan={schemaVersion:'creator-semantic-plan-v1',scenes:[
+    {sourceSegmentId:'s1',engine:'map',sceneKind:'locator-map',presetId:'geographic-locator',title:'Panipat',visualIntent:'Locate Panipat on restrained terrain.',labelTreatment:'primary-pill',cameraIntent:'slow-push',assetIds:[],locationId:'',routeId:'',emphasis:['geography'],missingInfo:['Verified locator required.']},
+    {sourceSegmentId:'s2',engine:'motion',sceneKind:'comparison',presetId:'temperature-comparison',title:'The result',visualIntent:'Compare the two outcomes.',labelTreatment:'comparison-card',cameraIntent:'hold',assetIds:[],locationId:'',routeId:'',emphasis:['comparison'],missingInfo:[]}
+  ]};
+  const draft=compileCreativePlan(transcript,plan,{assets:[],verifiedLocations:[],verifiedRoutes:[]},{production:true});
+  assert.equal(draft.scenes.length,2);
+  assert.equal(draft.scenes[0].semanticPlan.presetId,'geographic-locator');
+  assert.equal(draft.scenes[1].canvasScene.backgroundStyle,'grid');
+  assert.equal(draft.scenes[1].mapAnimation,null);
+  const imported=toCreatorStudioImport(assembleSceneDraft(transcript,draft,{assets:[]}));
+  assert.equal(imported.scenes[1].semanticPlan.engine,'motion');
+  assert.equal(imported.scenes[1].canvasScene.presetId,'temperature-comparison');
 });
 
 test('repairs an omitted Qwen row without merging or losing locked Whisper segments', () => {

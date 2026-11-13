@@ -47,7 +47,7 @@ export async function createLocalAgentServer({ ownerUid, token = crypto.randomBy
     if(requireInstructions&&Math.abs(timedTranscript.duration-timedTranscript.segments.at(-1).end)>.25)throw Error('The final transcript timestamp must agree with the MP3 duration within 0.25 seconds.');
     const catalog=await loadVoiceoverCatalog(root,{includeHistory:production===true});let draft,failure;
     for(let attempt=0;attempt<2;attempt++){
-      try{const prompt=buildCreativePlanPrompt(timedTranscript,catalog,direction),intentions=await gpu.run(async()=>{await images.unloadImages();return structuredVoiceoverAsk(prompt);});draft=compileCreativePlan(timedTranscript,intentions,catalog,{production:production===true,creativeInstructions:direction});failure=null;break;}
+      try{const prompt=buildCreativePlanPrompt(timedTranscript,catalog,direction),intentions=await gpu.run(async()=>{await images.unloadImages();return structuredVoiceoverAsk(prompt,catalog.plannerPack?.schema);});draft=compileCreativePlan(timedTranscript,intentions,catalog,{production:production===true,creativeInstructions:direction});failure=null;break;}
       catch(error){failure=error;}
     }
     if(failure)throw Error('Map planning failed after 2 targeted attempts: '+failure.message);
@@ -66,9 +66,9 @@ export async function createLocalAgentServer({ ownerUid, token = crypto.randomBy
     const response = await fetchImpl(new URL('/health', whisperEndpoint()), { signal: AbortSignal.timeout(3000), redirect: 'error' });
     if (!response.ok) throw Error('Local Whisper is offline.');
   }
-  const structuredVoiceoverAsk=askVoiceoverJson|| (async prompt=>{
+  const structuredVoiceoverAsk=askVoiceoverJson|| (async (prompt,schema)=>{
     const model=await installedQwenModel();
-    const response=await fetchImpl('http://127.0.0.1:11434/api/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({model,stream:false,think:false,format:'json',options:{temperature:0},messages:[{role:'user',content:prompt}]}),signal:AbortSignal.timeout(120000),redirect:'error'});
+    const response=await fetchImpl('http://127.0.0.1:11434/api/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({model,stream:false,think:false,format:schema||'json',options:{temperature:0},messages:[{role:'user',content:prompt}]}),signal:AbortSignal.timeout(120000),redirect:'error'});
     if(!response.ok)throw Error(`Ollama request failed (${response.status}).`);return JSON.parse((await response.json())?.message?.content||'{}');
   });
   async function projects() { try { if ((await fs.lstat(projectsFile)).isSymbolicLink()) throw Error('Project storage must not be a link.'); return JSON.parse(await fs.readFile(projectsFile, 'utf8')); } catch (error) { if (error.code === 'ENOENT') return []; throw error; } }
