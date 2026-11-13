@@ -144,9 +144,9 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   if(!Array.isArray(aiScenes)||!aiScenes.length)throw Error('This AI draft has no executable scene plan yet. Generate an animation-ready draft first.');
   if(!aiScenes.every(scene=>scene.mapAnimation||scene.canvasScene||scene.contextCard===true))throw Error('Review the missing or unverified scene information before applying this draft.');
   if(!audio)throw Error('The original MP3 is missing from this device. Run AI timing again to attach it.');
-  const current=videoWorkspace?.manifest,hasDraft=current&&(current.scenes.length||(current.audioClips||[]).length||current.audio);
-  if(hasDraft&&!confirm('Replace the current Motion Studio draft with this reviewed sync plan? The existing local video draft will be replaced; the Creator project and source MP3 remain saved.')){message('Existing Motion Studio draft kept. The reviewed sync plan is still available in Script & scenes.');return;}
   tab='Video Studio';render();await videoWorkspace?.ready;if(!videoWorkspace)throw Error('Video Studio could not be opened.');
+  const current=videoWorkspace.manifest,hasDraft=current&&(current.scenes.length||(current.audioClips||[]).length||current.audio);
+  if(hasDraft&&!confirm('Replace the current Motion Studio draft with this reviewed sync plan? The existing local video draft will be replaced; the Creator project and source MP3 remain saved.')){message('Existing Motion Studio draft kept. The reviewed sync plan is still available in Script & scenes.');return;}
   await videoWorkspace.importAiProduction(aiScenes,audio,{title:draft.title||'Invincible AI production',allowContextCards:true,replaceExisting:!!hasDraft});message(`${aiScenes.length} scenes and the exact MP3 are saved in Motion Studio. Preview the full timeline, then Export MP4.`);
  }
  function groupEditor(group){
