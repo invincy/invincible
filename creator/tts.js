@@ -395,7 +395,7 @@ function validTimedTranscript(){
   previous=segment.end;
  }
  const difference=Math.abs(Number(timedTranscript.duration)-previous);
- if(!Number.isFinite(timedTranscript.duration)||difference>.25)return{valid:false,message:`The final timestamp differs from the ${clock(timedTranscript.duration)} MP3 duration by ${difference.toFixed(3)} seconds.`};
+ if(!Number.isFinite(timedTranscript.duration)||difference>.5)return{valid:false,message:`The final timestamp differs from the ${clock(timedTranscript.duration)} MP3 duration by ${difference.toFixed(3)} seconds.`};
  return{valid:true,message:`${timedTranscript.segments.length} segments · ${clock(timedTranscript.duration)} · timing locked`};
 }
 function updateScenePlanGate(){const check=validTimedTranscript();$('scenePlanGate').textContent=!check.valid?check.message:!$('creativeInstructions').value.trim()?'Paste animation instructions to continue.':check.message;refreshAvailability();}

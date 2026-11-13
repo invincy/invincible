@@ -183,7 +183,8 @@ the audio clock.
 
 **Next · Generate scene plan** is enabled only when instructions are present, every
 segment has valid ordered timing and the last timestamp agrees with the measured MP3
-duration within 0.25 seconds. It sends the reviewed transcript and instructions to
+duration within 0.5 seconds, allowing ordinary trailing silence without accepting a
+material timing mismatch. It sends the reviewed transcript and instructions to
 the existing constrained Qwen planner. The resulting review lists narration, timing,
 visual direction, selected engine, required assets and missing or unverified data.
 Only after this review is the existing pending AI draft and exact MP3 saved for the
