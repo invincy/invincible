@@ -56,7 +56,7 @@ const server=http.createServer((req,res)=>{
   await page.locator('#projectTitle').filter({hasText:'Untitled project'}).waitFor();
   await page.locator('#projectVoiceoverStep:not([hidden])').waitFor();
   assert.equal(await page.locator('[data-project-area="Voiceover"]').getAttribute('aria-current'),'step');
-  assert.deepEqual(await page.locator('.project-workspace-nav [data-project-area]').allTextContents(),['1 Script','2 Script & scenes','3 Motion Studio','4 Map Editor','Battlefield Editor','Assets & 3D']);
+  assert.deepEqual(await page.locator('.project-workspace-nav [data-project-area]').allTextContents(),['1 Script','2 Script & scenes','3 Map Editor','4 Motion Studio','Battlefield Editor','Assets & 3D']);
   assert.equal(await page.frameLocator('#projectVoiceoverFrame').locator('[name="aiProvider"][value="cloud"]').isChecked(),true,'Creator Studio reuses OpenAI by default while keeping Local AI selectable');
   assert.equal(await page.evaluate(()=>window.writes||0),0,'Opening an untitled project does not save it before the user edits it');
   await page.goto(base);await page.locator('#app:not([hidden])').waitFor();

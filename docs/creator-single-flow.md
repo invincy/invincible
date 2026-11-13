@@ -51,6 +51,13 @@ fallbacks, so missing verified geography becomes an explicit Canvas context
 scene instead of a dead handoff. Applying immediately saves a recoverable local
 Motion Studio draft. The remaining user choice is Preview full video, optionally
 edit a scene, then Export MP4; do not send the user through another importer.
+OpenAI planning now selects the existing native Map Editor engine for geographic
+segments and supplies its validated version-1 camera, label and illustrative
+route instructions. Motion Studio receives those scenes as `map`, not Canvas,
+and Edit scene opens the real Map Editor on an isolated copy before Save scene &
+return. Canvas remains available for non-geographic diagrams. The project steps
+therefore read Script → Script & scenes → Map Editor → Motion Studio; this does
+not add a second renderer or replace a saved project's map schema.
 As soon as Whisper finishes, Creator Studio checkpoints the final MP3, original
 source MP3, locked transcript and current animation instructions for that
 account and project. After an app restart, selecting Script & scenes opens this
