@@ -236,6 +236,13 @@ body.project-page.creator-focus-mode{height:100dvh;overflow:hidden;display:flex;
 .creator-focus-mode .wb-scene-content{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
 .creator-focus-mode .wb-pane{min-height:0}
 .creator-focus-mode .wb-status:not(:empty){position:fixed;left:24px;bottom:16px;z-index:20;max-width:calc(100vw - 48px);margin:0;padding:7px 12px;border:1px solid #286375;border-radius:8px;background:#102630;font-size:12px;pointer-events:none}
+/* The shared app dock overlays focused editors. Keep the full editor viewport and
+   reserve its height inside the editor's own scroll area instead of shrinking it. */
+html.invincible-page-chrome body.project-page.creator-focus-mode:has(.global-nav){padding-bottom:0!important}
+html.invincible-page-chrome .creator-focus-mode .wb-scene-content{padding-bottom:calc(62px + env(safe-area-inset-bottom));scroll-padding-bottom:calc(62px + env(safe-area-inset-bottom))}
+html.invincible-page-chrome .creator-focus-mode .wb-scene-content :is(button,input,select,textarea,summary){scroll-margin-bottom:calc(62px + env(safe-area-inset-bottom))}
+html.invincible-page-chrome .creator-focus-mode .wb-scene-footer{position:relative;z-index:2;transform:translateY(calc(-90px - env(safe-area-inset-bottom)));margin-bottom:calc(-50px - env(safe-area-inset-bottom))}
+html.invincible-page-chrome .creator-focus-mode .wb-status:not(:empty){bottom:calc(62px + env(safe-area-inset-bottom))}
 /* A thin cyan thumb replaces native grey scrollbars, including horizontal lists. */
 .production-workbench,.production-workbench *{scrollbar-width:thin;scrollbar-color:#28566a #0b151d}
 .production-workbench ::-webkit-scrollbar{width:6px;height:5px}.production-workbench ::-webkit-scrollbar-track{background:#0b151d;border-radius:8px}.production-workbench ::-webkit-scrollbar-thumb{background:#28566a;border-radius:8px}.production-workbench ::-webkit-scrollbar-thumb:hover{background:#3a93ad}

@@ -2,11 +2,12 @@ import {observeAuth} from '../shared/firebase-client.js';
 import {loadVoices,generateVoiceover,retimeVoiceover} from './tts-api.js';
 import {createVoiceDemoPlayer} from './tts-voice-demo-player.js?v=2026111113';
 import {createTtsHistoryClient} from './tts-history-api.js?v=2026111004';
-import {savePendingAiDraft} from './ai-draft.js?v=2026111311';
+import {savePendingAiDraft,saveScriptSyncCheckpoint,loadScriptSyncCheckpoint,clearScriptSyncCheckpoint} from './ai-draft.js?v=2026111312';
 import {createLocalImageClient} from '../shared/local-image-client.js?v=2026111112';
 const $=id=>document.getElementById(id),fields=['title','script','creativeInstructions','mode','engine','model','direction','language','gender','family','voice','preset','speed','pitch','volume','pause'];
 let user=null,voices=[],busy=false,loading=false,epoch=0,voiceEpoch=0,audioUrl=null,audioBytes=null,sourceAudioBytes=null,sourceDuration=0,sourceFilename='',recordingLabel='',appliedSpeed=1,audioIsPreview=true,speedBusy=false,saveTimer;
 let timedTranscript=null,analysisBusy=false,scenePlanBusy=false,scenePlanSaved=false,scenePlanProgressTimer=null;
+let scriptSyncSaveTimer=null;
 let historyClient=null,historyEntries=[],historyCursor=null,historyEpoch=0,historyLoading=false;
 const localWorker=createLocalImageClient({getAccountId:()=>user?.uid||null,requireAccount:true});
 let pendingHistory=new Map(),historyWrites=new Set();
@@ -16,8 +17,9 @@ const encoder=new TextEncoder();
 // disclosure choice when rotating or moving back from a desktop-sized window.
 const desktopLayout=matchMedia('(min-width:901px)'),voiceSettings=$('voiceSettings');
 const basicVoiceover=document.documentElement.classList.contains('ai-voiceover-embed');
+const embedParams=new URLSearchParams(location.search);
 const projectVoiceoverId=document.documentElement.classList.contains('project-voiceover-embed')
- ? new URLSearchParams(location.search).get('project') : null;
+ ? embedParams.get('project') : null;
 if(projectVoiceoverId){
  const scriptPanel=document.querySelector('.script-panel');
  const direction=$('expressiveControls');
@@ -323,6 +325,7 @@ async function record(preview){
   if(current!==epoch||user?.uid!==owner)return;
   if(typeof result.audioBase64!=='string'||result.mimeType!=='audio/mpeg')throw Error('The server returned no MP3.');
   const decoded=atob(result.audioBase64),buffer=Uint8Array.from(decoded,c=>c.charCodeAt(0));
+  if(!preview&&projectVoiceoverId)clearScriptSyncCheckpoint(owner,projectVoiceoverId);
   clearAudio();audioBytes=buffer;sourceAudioBytes=buffer;sourceDuration=result.durationSeconds;sourceFilename=result.filename;appliedSpeed=1;audioIsPreview=preview;audioUrl=URL.createObjectURL(new Blob([buffer],{type:result.mimeType}));
   $('player').src=audioUrl;applyPlaybackSpeed();$('download').href=audioUrl;$('download').download=result.filename;
   recordingLabel=result.voiceName+(preview?' · opening preview':'')+(data.engine==='gemini'?' · '+data.delivery+' · requested pace ≈ '+data.speed+'×':'');
@@ -334,6 +337,29 @@ async function record(preview){
 }
 function bytesBase64(bytes){let binary='';for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000));return btoa(binary);}
 function audioBase64(){return bytesBase64(audioBytes);}
+function scriptSyncSnapshot(){return{script:$('script').value,title:$('title').value,creativeInstructions:$('creativeInstructions').value,transcript:structuredClone(timedTranscript),appliedSpeed,playbackSpeed:$('playbackSpeed').value,sourceDuration,sourceFilename,recordingLabel,finalDuration:Number(timedTranscript?.duration)||0,downloadFilename:$('download').download||sourceFilename};}
+async function persistScriptSync({includeAudio=false}={}){
+ if(!projectVoiceoverId||!user||!timedTranscript)return;
+ const finalAudio=includeAudio&&audioBytes?new Blob([audioBytes],{type:'audio/mpeg'}):null,sourceAudio=includeAudio&&sourceAudioBytes?new Blob([sourceAudioBytes],{type:'audio/mpeg'}):null;
+ return saveScriptSyncCheckpoint({accountId:user.uid,projectId:projectVoiceoverId,checkpoint:scriptSyncSnapshot(),finalAudio,sourceAudio});
+}
+function scheduleScriptSyncSave(){
+ if(!projectVoiceoverId||!user||!timedTranscript)return;clearTimeout(scriptSyncSaveTimer);const owner=user.uid,current=epoch;
+ scriptSyncSaveTimer=setTimeout(()=>{scriptSyncSaveTimer=null;if(user?.uid!==owner||epoch!==current)return;persistScriptSync().catch(error=>{$('localAnalysisStatus').textContent='Your changes are still on this page, but the Script & scenes checkpoint could not update: '+error.message;});},300);
+}
+async function restoreScriptSync(){
+ if(!projectVoiceoverId||!user)return;const owner=user.uid,current=epoch;
+ try{
+  const checkpoint=await loadScriptSyncCheckpoint(owner,projectVoiceoverId);if(!checkpoint||user?.uid!==owner||epoch!==current)return;
+  const currentScript=$('script').value.trim();if(currentScript&&checkpoint.script?.trim()&&currentScript!==checkpoint.script.trim()){$('localAnalysisStatus').textContent='A saved Whisper timing belongs to an earlier script. Open Script to review it or generate a new final MP3.';return;}
+  const finalBytes=new Uint8Array(await checkpoint.finalAudio.arrayBuffer()),sourceBytes=new Uint8Array(await checkpoint.sourceAudio.arrayBuffer());if(!finalBytes.length||!sourceBytes.length)throw Error('The saved final MP3 is empty.');
+  clearAudio();$('script').value=checkpoint.script||$('script').value;$('title').value=checkpoint.title||$('title').value;$('creativeInstructions').value=checkpoint.creativeInstructions||'';
+  audioBytes=finalBytes;sourceAudioBytes=sourceBytes;sourceDuration=Number(checkpoint.sourceDuration)||Number(checkpoint.finalDuration)||Number(checkpoint.transcript.duration);sourceFilename=checkpoint.sourceFilename||'voiceover.mp3';recordingLabel=checkpoint.recordingLabel||'saved voiceover';appliedSpeed=Number(checkpoint.appliedSpeed)||1;audioIsPreview=false;
+  const wanted=String(checkpoint.playbackSpeed||appliedSpeed);if([...$('playbackSpeed').options].some(option=>option.value===wanted))$('playbackSpeed').value=wanted;
+  audioUrl=URL.createObjectURL(new Blob([audioBytes],{type:'audio/mpeg'}));$('player').src=audioUrl;$('download').href=audioUrl;$('download').download=checkpoint.downloadFilename||sourceFilename;$('recording').hidden=false;$('recordingInfo').textContent=`${Number(checkpoint.finalDuration||checkpoint.transcript.duration).toFixed(1)} sec · ${recordingLabel} · restored checkpoint`;applyPlaybackSpeed();
+  timedTranscript=structuredClone(checkpoint.transcript);renderTranscript();status('Final MP3 restored from this project.');$('localAnalysisStatus').textContent='Whisper timing and animation instructions restored. You can generate the sync plan directly.';meters();
+ }catch(error){if(user?.uid===owner&&epoch===current)$('localAnalysisStatus').textContent='The saved Script & scenes checkpoint could not be restored: '+error.message;}
+}
 async function ensureFinalSpeed(){
  const target=Number($('playbackSpeed').value);if(!audioBytes||!sourceAudioBytes||target===appliedSpeed)return;
  speedBusy=true;refreshAvailability();status('Preparing the final '+target.toFixed(2)+'× MP3…');
@@ -363,7 +389,7 @@ function renderTranscript(){
  $('transcriptSegments').replaceChildren(...timedTranscript.segments.map((segment,index)=>{
   const row=document.createElement('label');row.className='transcript-segment';
   const time=document.createElement('span');time.textContent=`${clock(segment.start)}–${clock(segment.end)}`;
-  const input=document.createElement('textarea');input.rows=2;input.value=segment.text;input.setAttribute('aria-label',`Transcript segment ${index+1}`);input.addEventListener('input',()=>{segment.text=input.value;timedTranscript.text=timedTranscript.segments.map(item=>item.text.trim()).filter(Boolean).join(' ');updateScenePlanGate();});
+  const input=document.createElement('textarea');input.rows=2;input.value=segment.text;input.setAttribute('aria-label',`Transcript segment ${index+1}`);input.addEventListener('input',()=>{segment.text=input.value;timedTranscript.text=timedTranscript.segments.map(item=>item.text.trim()).filter(Boolean).join(' ');updateScenePlanGate();scheduleScriptSyncSave();});
   row.append(time,input);return row;
  }));updateScenePlanGate();updateAiFlow();
 }
@@ -383,7 +409,7 @@ async function analyzeLocal(){
  if(projectVoiceoverId){window.parent.postMessage({type:'invincible-sync-project-script',script:$('script').value,creativeInstructions:$('creativeInstructions').value},location.origin);window.parent.postMessage({type:'invincible-open-script-timing'},location.origin);}
  analysisBusy=true;$('retryAnalysis').hidden=true;$('localAnalysisStatus').textContent='Analysing voiceover… Creating transcript and timestamps.';$('transcriptReview').hidden=true;$('scenePlanReview').hidden=true;updateAiFlow();refreshAvailability();
  requestAnimationFrame(()=>$('timingHeading').scrollIntoView({behavior:'smooth',block:'start'}));
- try{const payload=await localWorker.request('/api/voiceover/transcribe',{audioBase64:audioBase64()},{timeoutMs:180000});timedTranscript=payload.transcript;renderTranscript();$('localAnalysisStatus').textContent='Whisper timing is ready. Review the words, then add animation instructions.';}
+ try{const payload=await localWorker.request('/api/voiceover/transcribe',{audioBase64:audioBase64()},{timeoutMs:180000});timedTranscript=payload.transcript;renderTranscript();$('localAnalysisStatus').textContent='Whisper timing is ready. Saving this project checkpoint…';try{await persistScriptSync({includeAudio:true});$('localAnalysisStatus').textContent='Whisper timing is saved. Review the words, add animation instructions, or return here later.';}catch(saveError){$('localAnalysisStatus').textContent='Whisper timing is ready, but its project checkpoint could not be saved: '+saveError.message;}}
  catch(error){timedTranscript=null;$('retryAnalysis').hidden=false;$('localAnalysisStatus').textContent=localVoiceoverError(error,'Scripting · Step 2');}
  finally{analysisBusy=false;updateScenePlanGate();updateAiFlow();}
 }
@@ -391,6 +417,7 @@ async function generateScenePlan(){
  const check=validTimedTranscript();if(!check.valid||!$('creativeInstructions').value.trim()||scenePlanBusy)return;scenePlanBusy=true;scenePlanSaved=false;$('scenePlanReview').hidden=true;const started=Date.now();
  const showProgress=()=>{$('localAnalysisStatus').textContent=`Qwen is matching ${timedTranscript.segments.length} locked timestamp${timedTranscript.segments.length===1?'':'s'} with your animation instructions… ${Math.max(1,Math.round((Date.now()-started)/1000))} sec`;};showProgress();scenePlanProgressTimer=setInterval(showProgress,1000);refreshAvailability();
  try{
+  await persistScriptSync();
   const payload=await localWorker.request('/api/voiceover/plan',{title:$('title').value,creativeInstructions:$('creativeInstructions').value,transcript:timedTranscript},{timeoutMs:180000});
   clearInterval(scenePlanProgressTimer);scenePlanProgressTimer=null;renderScenePlan(payload);$('localAnalysisStatus').textContent='Sync plan generated. Saving it with the final MP3…';refreshAvailability();
   await savePendingAiDraft({title:$('title').value,creativeInstructions:$('creativeInstructions').value,analysis:payload.analysis,creatorStudio:payload.creatorStudio},new Blob([audioBytes],{type:'audio/mpeg'}));
@@ -404,7 +431,7 @@ function applyPlaybackSpeed(){
  $('player').defaultPlaybackRate=rate;
  $('player').playbackRate=rate;
 }
-$('playbackSpeed').addEventListener('change',()=>{applyPlaybackSpeed();if(timedTranscript)resetAiFlow();if(audioBytes)status('Final speed set to '+Number($('playbackSpeed').value).toFixed(2)+'×. Download or Next will prepare this exact-speed MP3.');});
+$('playbackSpeed').addEventListener('change',()=>{applyPlaybackSpeed();if(timedTranscript){if(projectVoiceoverId&&user)clearScriptSyncCheckpoint(user.uid,projectVoiceoverId);resetAiFlow();}if(audioBytes)status('Final speed set to '+Number($('playbackSpeed').value).toFixed(2)+'×. Download or Next will prepare this exact-speed MP3.');});
 $('player').addEventListener('loadedmetadata',applyPlaybackSpeed);
 $('download').addEventListener('click',async event=>{event.preventDefault();if(!audioBytes||speedBusy)return;try{await ensureFinalSpeed();const link=document.createElement('a');link.href=$('download').href;link.download=$('download').download;link.click();}catch{}});
 $('generate').addEventListener('click',()=>record(false));$('preview').addEventListener('click',()=>record(true));
@@ -414,7 +441,7 @@ $('generateScenePlan').addEventListener('click',generateScenePlan);
 $('openMotionStudio').addEventListener('click',event=>{if(!scenePlanSaved){event.preventDefault();$('localAnalysisStatus').textContent='Wait for the generated sync plan and MP3 to finish saving, then open Motion Studio.';return;}if(!projectVoiceoverId)return;event.preventDefault();window.parent.postMessage({type:'invincible-apply-ai-draft'},location.origin);});
 $('reloadVoices').addEventListener('click',()=>fetchVoices());
  $('engine').addEventListener('change',()=>{voiceDemo.stop();languages();families();remember();});
- for(const id of ['model','direction','creativeInstructions'])$(id).addEventListener('input',()=>{remember();if(id==='creativeInstructions'){scenePlanSaved=false;if(!$('scenePlanReview').hidden){$('scenePlanReview').hidden=true;$('localAnalysisStatus').textContent='Animation instructions changed. Generate the sync plan again.';}updateScenePlanGate();}});
+ for(const id of ['model','direction','creativeInstructions'])$(id).addEventListener('input',()=>{remember();if(id==='creativeInstructions'){scenePlanSaved=false;scheduleScriptSyncSave();if(!$('scenePlanReview').hidden){$('scenePlanReview').hidden=true;$('localAnalysisStatus').textContent='Animation instructions changed. Generate the sync plan again.';}updateScenePlanGate();}});
 $('language').addEventListener('change',()=>{families();remember();});
 $('gender').addEventListener('change',()=>{families();remember();});
 $('family').addEventListener('change',()=>{filterVoices();remember();});
@@ -433,7 +460,7 @@ $('sample').addEventListener('click',()=>{
  meters();remember();
 });
 observeAuth(next=>{
- epoch++;voiceEpoch++;clearTimeout(saveTimer);voiceDemo.stop();busy=false;loading=false;voices=[];clearAudio();user=next;
+ epoch++;voiceEpoch++;clearTimeout(saveTimer);clearTimeout(scriptSyncSaveTimer);scriptSyncSaveTimer=null;voiceDemo.stop();busy=false;loading=false;voices=[];clearAudio();user=next;
  historyEpoch++;historyClient=null;historyEntries=[];historyCursor=null;historyLoading=false;pendingHistory=new Map();historyWrites=new Set();
  $('historyStatus').textContent='';renderHistory();
  $('workspace').hidden=!next;$('signedOut').hidden=!!next;
@@ -449,6 +476,6 @@ observeAuth(next=>{
  renderHistory();loadHistory();
  // Restore narration even if the backend has not been activated yet.
  try{const draft=JSON.parse(localStorage.getItem(key())||'{}');$('script').value=draft.script||'';$('title').value=draft.title||'My voiceover';}catch{}
- meters();fetchVoices({initial:true});
+ meters();fetchVoices({initial:true}).finally(()=>restoreScriptSync());
 });
-window.addEventListener('beforeunload',()=>{voiceDemo.stop();if(audioUrl)URL.revokeObjectURL(audioUrl);});
+window.addEventListener('beforeunload',()=>{voiceDemo.stop();clearTimeout(scriptSyncSaveTimer);if(timedTranscript)persistScriptSync().catch(()=>{});if(audioUrl)URL.revokeObjectURL(audioUrl);});

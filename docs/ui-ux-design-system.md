@@ -113,6 +113,11 @@ separate cards, with the instruction card wider. During local planning, show
 elapsed progress instead of a silent disabled button. The final transition is
 Review sync plan → Apply to project → Open Motion Studio; keep it unavailable
 until both the plan and its final MP3 have been saved locally.
+Script & scenes is a resumable project stage, not a transient reveal controlled
+only by the Step 1 button. Persist its final audio, Whisper timestamps and
+animation instructions per account and project immediately after transcription.
+When that checkpoint exists, direct navigation to step 2 restores it; do not
+force the user through Script, MP3 generation or Whisper again after a restart.
 
 Carry the selected Invincible theme backdrop into the editor, including its
 ambient details. Keep the background free of page-specific artwork and use

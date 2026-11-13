@@ -14,7 +14,7 @@ import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111203';
 import {runAiProduction} from '../ai-production-runner.mjs?v=2026111203';
 import {generateVoiceover} from '../tts-api.js';
 import {createProductionReadiness,selectProductionVoice} from './production-readiness.js?v=2026111209';
-import {loadPendingAiDraft,loadPendingAiAudio,savePendingAiDraft} from '../ai-draft.js?v=2026111311';
+import {loadPendingAiDraft,loadPendingAiAudio,savePendingAiDraft} from '../ai-draft.js?v=2026111312';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>crypto.randomUUID();
 const template=(name,text)=>({id:name,startSeconds:0,durationSeconds:2,engineType:'graphic',engineData:{},transition:{type:'fade',durationSeconds:.3},overlays:[{id:'title',type:'text',text,x:.5,y:.5,fontSize:64}]});

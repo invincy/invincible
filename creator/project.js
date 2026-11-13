@@ -5,6 +5,7 @@ import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client
 import{collection,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{createProductionReadiness,mountProductionReadiness}from'./video-studio/production-readiness.js?v=2026111209';
 import{splitVoiceoverScript}from"./scene-tools.js?v=2";
+import{hasScriptSyncCheckpoint}from'./ai-draft.js?v=2026111312';
 
 const queryParams=new URLSearchParams(location.search),$=id=>document.getElementById(id);
 let isNewDraft=queryParams.get("draft")==="1";
@@ -109,13 +110,13 @@ function render(){
 
 function selectProjectArea(area,mode=""){
   selectedArea=area;selectedTool=mode;
-  const isVoiceover=area==="Voiceover",isTiming=area==="Storyboard"&&scriptTimingActive,showScriptWorkspace=isVoiceover||isTiming;
+  const isVoiceover=area==="Voiceover",isTiming=area==="Storyboard"&&(scriptTimingActive||hasScriptSyncCheckpoint(user?.uid,projectId)),showScriptWorkspace=isVoiceover||isTiming;
   $("projectVoiceoverStep").hidden=!showScriptWorkspace;
   $("projectEditingStep").hidden=showScriptWorkspace;
   document.body.classList.toggle("project-voiceover-active",showScriptWorkspace);
   if(showScriptWorkspace){
     const frame=$("projectVoiceoverFrame");
-    if(!frame.hasAttribute("src"))frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId});
+    if(!frame.hasAttribute("src"))frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId,view:isTiming?"timing":"script"});
     else frame.contentWindow?.postMessage({type:"invincible-project-script-view",view:isTiming?"timing":"script"},location.origin);
   }else storyboard.open({area});
   document.querySelectorAll("[data-project-area]").forEach(button=>{

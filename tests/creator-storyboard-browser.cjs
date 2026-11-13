@@ -173,8 +173,11 @@ const server=http.createServer((req,res)=>{
   await page.screenshot({path:path.join(root,'.test-output/creator-project-timing-flow.png'),fullPage:true});
   await scriptFrame.locator('#script').evaluate(()=>window.parent.postMessage({type:'invincible-sync-project-script',script:document.querySelector('#script').value,creativeInstructions:''},location.origin));
   await page.waitForFunction(()=>Object.values(JSON.parse(localStorage.getItem('test.creator')||'{}')).some(item=>item.title==='Draft production'&&item.script==='A narration for this project.'));
+  await page.evaluate(()=>localStorage.setItem('invincible.creator.script-sync.v1.owner.draft-production',JSON.stringify({version:1,accountId:'owner',projectId:'draft-production',audioAvailable:true,transcript:{duration:1,segments:[{start:0,end:1,text:'Saved timing'}]}})));
   await page.reload();await page.locator('#projectTitle').filter({hasText:'Draft production'}).waitFor();
-  await page.locator('[data-project-area="Storyboard"]').click();
+  await page.locator('[data-project-area="Storyboard"]').click();await scriptFrame.locator('html.project-timing-view').waitFor();assert.equal(await page.locator('#projectVoiceoverStep').isVisible(),true,'A saved Whisper checkpoint opens directly from Script & scenes');
+  await page.evaluate(()=>localStorage.removeItem('invincible.creator.script-sync.v1.owner.draft-production'));
+  await page.locator('[data-project-area="Voiceover"]').click();
   await openArea('Overview');
   await page.locator('.wb-script summary').click();
   assert.equal(await page.locator('[data-script-draft]').inputValue(),'A narration for this project.');

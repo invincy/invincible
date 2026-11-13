@@ -31,6 +31,7 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
    res.end(JSON.stringify([...historyDb].filter(([path])=>path.startsWith(key+'/')).map(([path,data])=>({id:path.split('/').at(-1),data}))));return;
   }
   res.setHeader('Content-Type',relative.endsWith('.js')?'text/javascript':relative.endsWith('.css')?'text/css':relative.endsWith('.svg')?'image/svg+xml':'text/html');
+  if(relative==='test-project-host.html'){const timing=url.searchParams.get('timing')==='1';res.end(`<style>html,body{margin:0}iframe{width:100vw;height:100vh;border:0}</style><iframe id="voice" src="/invincible/creator/tts.html?embed=project&project=checkpoint-project${timing?'&view=timing':''}"></iframe><script>addEventListener('message',event=>{if(event.data?.type==='invincible-open-script-timing')document.querySelector('#voice').contentWindow.postMessage({type:'invincible-project-script-view',view:'timing'},location.origin)})</script>`);return;}
   if(relative==='ai/'){res.end('<style>html,body{margin:0;background:transparent;color-scheme:dark}</style>');return;}
   if(relative==='shared/firebase-client.js'){res.end(fixtureAuth);return;}
   if(relative==='creator/tts-api.js'){res.end(fixtureApi);return;}
@@ -48,15 +49,15 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   await page.route('https://docs.cloud.google.com/static/text-to-speech/docs/audio/**',route=>{demoRequests.push(new URL(route.request().url()).pathname);return demoFailure?route.fulfill({status:404,body:'Missing sample'}):route.fulfill({status:200,contentType:'audio/wav',body:demoWav});});
   const base='http://127.0.0.1:'+server.address().port+'/invincible/creator/tts.html';
   await page.addInitScript(()=>{if(!localStorage.getItem('invincible.creator.tts.draft.v1.owner'))localStorage.setItem('invincible.creator.tts.draft.v1.owner',JSON.stringify({engine:'classic'}));localStorage.setItem('invincible.local-worker.remembered.v1.http://127.0.0.1:8788.owner','fixture-local-worker-token-1234567890');});
-  let plannedTranscript=null,transcribeMissing=false,planDelay=0;
+  let plannedTranscript=null,transcribeMissing=false,planDelay=0,expectedPlanInstructions='Show red arrows rising above the Equator.';
   await page.route('http://127.0.0.1:8788/**',async route=>{
    const request=route.request(),url=new URL(request.url());
    if(url.pathname==='/api/voiceover/transcribe')return transcribeMissing?route.fulfill({status:404,contentType:'application/json',body:'{"error":"Not found."}'}):route.fulfill({contentType:'application/json',body:JSON.stringify({transcript:{text:'Warm air rises.',language:'en',duration:1,segments:[{id:'segment-1',start:0,end:1,text:'Warm air rises.',words:[{word:'Warm',start:0,end:.3},{word:'air',start:.3,end:.55},{word:'rises.',start:.55,end:1}]}]}})});
    if(url.pathname==='/api/voiceover/plan'){
-    const body=request.postDataJSON();plannedTranscript=body.transcript;assert.equal(body.creativeInstructions,'Show red arrows rising above the Equator.');
+    const body=request.postDataJSON();plannedTranscript=body.transcript;assert.equal(body.creativeInstructions,expectedPlanInstructions);
     const scene={id:'scene-1',startSeconds:0,endSeconds:1,durationSeconds:1,voiceover:body.transcript.segments[0].text,voiceoverTimestamp:'0.000-1.000s',visual:'Rising air',animation:'reveal',assets:'',assetIds:[],assetReferences:'',sourceSegmentIds:['segment-1'],missingInfo:['No verified geography supplied.'],mapAnimation:null};
     if(planDelay)await new Promise(resolve=>setTimeout(resolve,planDelay));
-    return route.fulfill({contentType:'application/json',body:JSON.stringify({analysis:{format:'invincible-voiceover-analysis',version:1,transcript:body.transcript,scenes:[scene],errors:[],valid:true},creatorStudio:{schemaVersion:1,title:'ITCZ',aspectRatio:'9:16',assets:[],audio:null,scenes:[{id:'scene-1',timeline:'0.000-1.000s',voiceover:scene.voiceover,voiceoverTimestamp:scene.voiceoverTimestamp,visual:scene.visual,assets:'',assetReferences:'',mapAnimation:null}]},mapAnimations:[]})});
+    try{return await route.fulfill({contentType:'application/json',body:JSON.stringify({analysis:{format:'invincible-voiceover-analysis',version:1,transcript:body.transcript,scenes:[scene],errors:[],valid:true},creatorStudio:{schemaVersion:1,title:'ITCZ',aspectRatio:'9:16',assets:[],audio:null,scenes:[{id:'scene-1',timeline:'0.000-1.000s',voiceover:scene.voiceover,voiceoverTimestamp:scene.voiceoverTimestamp,visual:scene.visual,assets:'',assetReferences:'',mapAnimation:null}]},mapAnimations:[]})});}catch{return;}
    }
    return route.fulfill({status:404,contentType:'application/json',body:'{"error":"Not found"}'});
   });
@@ -251,6 +252,12 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   await page.locator('#engine').selectOption('classic');await page.locator('#family').selectOption('Neural2');
   assert.equal(await page.locator('#preset').inputValue(),'natural');
   for(const delivery of ['social','empathetic'])assert.equal(await page.locator('#preset option[value='+delivery+']').evaluate(el=>el.disabled),true);
+  const projectHost=new URL('../test-project-host.html',base).href;
+  await page.goto(projectHost);const projectFrame=page.frameLocator('#voice');await projectFrame.locator('#accountStatus').filter({hasText:'voices available'}).waitFor();
+  await projectFrame.locator('#engine').selectOption('classic');await projectFrame.locator('#family').selectOption('Neural2');await projectFrame.locator('#script').fill('Saved project timing survives an app restart.');await projectFrame.locator('#generate').click();await projectFrame.locator('#generationStatus').filter({hasText:'MP3 ready'}).waitFor();await projectFrame.locator('#analyzeLocal').click();await projectFrame.locator('#transcriptReview').waitFor();await projectFrame.locator('#creativeInstructions').fill('Keep the atmosphere restrained and reveal the title slowly.');await page.waitForTimeout(400);
+  await page.waitForFunction(()=>JSON.parse(localStorage.getItem('invincible.creator.script-sync.v1.owner.checkpoint-project')||'null')?.audioAvailable===true);
+  expectedPlanInstructions='Keep the atmosphere restrained and reveal the title slowly.';planDelay=5000;await projectFrame.locator('#generateScenePlan').click();await projectFrame.locator('#localAnalysisStatus').filter({hasText:/Qwen is matching/}).waitFor();await page.goto(projectHost+'?timing=1');planDelay=0;const restoredFrame=page.frameLocator('#voice');await restoredFrame.locator('#localAnalysisStatus').filter({hasText:'Whisper timing and animation instructions restored'}).waitFor();assert.equal(await restoredFrame.locator('#creativeInstructions').inputValue(),expectedPlanInstructions);assert.equal(await restoredFrame.locator('.transcript-segment').count(),1);assert.match(await restoredFrame.locator('#player').getAttribute('src'),/^blob:/);assert.equal(await restoredFrame.locator('#generateScenePlan').isEnabled(),true,'A restored checkpoint can generate the sync plan without repeating Whisper');
+  await page.goto(base);await page.locator('#accountStatus').filter({hasText:'voices available'}).waitFor();
     await page.evaluate(()=>{window.failGenerate=false;window.generationGate=new Promise(resolve=>{window.releaseGeneration=resolve;});});await page.locator('#generate').click();
     assert.equal(await page.locator('#generate').isDisabled(),true,'Generation disables duplicate requests');
     assert.equal(await page.locator('#preview').isDisabled(),true,'Preview is disabled while generating');
