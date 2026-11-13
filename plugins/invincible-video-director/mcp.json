@@ -3,7 +3,19 @@
   "mcpServers": {
     "invincible-creator": {
       "type": "streamable-http",
-      "url": "https://asia-south1-life-by-adichimp.cloudfunctions.net/creatorPluginMcp/mcp"
+      "url": "https://asia-south1-life-by-adichimp.cloudfunctions.net/creatorPluginMcp/mcp",
+      "extensions": {
+        "com.openai": {
+          "auth": {
+            "type": "oauth",
+            "client": {
+              "mode": "dcr"
+            },
+            "baseScopes": ["creator.read", "creator.compile"],
+            "defaultScopes": ["creator.read", "creator.compile", "creator.write"]
+          }
+        }
+      }
     }
   }
 }
