@@ -404,6 +404,11 @@ function renderScenePlan(payload){
  const link=$('openMotionStudio');link.href=projectVoiceoverId?`project.html?${new URLSearchParams({id:projectVoiceoverId,area:'Storyboard'})}`:'./';
  updateAiFlow();requestAnimationFrame(()=>$('scenePlanReview').scrollIntoView({behavior:'smooth',block:'start'}));
 }
+function safeScenePlanFallback(transcript,title){
+ const scenes=transcript.segments.map((segment,index)=>({id:`scene-${index+1}`,startSeconds:segment.start,endSeconds:segment.end,durationSeconds:Number((segment.end-segment.start).toFixed(3)),voiceover:segment.text,voiceoverTimestamp:`${segment.start.toFixed(3)}-${segment.end.toFixed(3)}s`,visual:segment.text,animation:'hold',assets:'',assetIds:[],assetReferences:'',sourceSegmentIds:[segment.id],missingInfo:['Qwen returned an unsupported animation intent; a safe Canvas scene was created for review.'],mapAnimation:null,contextCard:true}));
+ const analysis={format:'invincible-voiceover-analysis',version:1,transcript:structuredClone(transcript),scenes,errors:[],valid:true};
+ return{analysis,creatorStudio:{schemaVersion:1,title:title||'Voiceover sync plan',aspectRatio:'9:16',assets:[],audio:null,scenes:scenes.map(scene=>({id:scene.id,timeline:`${scene.startSeconds.toFixed(3)}-${scene.endSeconds.toFixed(3)}s`,voiceover:scene.voiceover,voiceoverTimestamp:scene.voiceoverTimestamp,visual:scene.visual,assets:'',assetReferences:'',mapAnimation:null,contextCard:true,technicalNotes:'Suggested animation: hold'}))},mapAnimations:[]};
+}
 async function analyzeLocal(){
  if(!audioBytes||audioIsPreview||speedBusy||analysisBusy||scenePlanBusy)return;
  try{await ensureFinalSpeed();}catch{return;}
@@ -424,7 +429,12 @@ async function generateScenePlan(){
   await savePendingAiDraft({title:$('title').value,creativeInstructions:$('creativeInstructions').value,analysis:payload.analysis,creatorStudio:payload.creatorStudio},new Blob([audioBytes],{type:'audio/mpeg'}));
   scenePlanSaved=true;$('localAnalysisStatus').textContent='Sync plan ready. Review every scene, then apply it to the project and open Motion Studio.';
  }
- catch(error){scenePlanSaved=false;flow.classList.remove('plan-generating');$('scenePlanProgress').hidden=true;$('localAnalysisStatus').textContent=localVoiceoverError(error,'Generate sync plan')+' Your transcript and animation instructions are still here; retry when ready.';}
+ catch(error){
+  scenePlanSaved=false;
+  if(/unsupported intent/i.test(String(error?.message||error))){
+   try{const payload=safeScenePlanFallback(timedTranscript,$('title').value);renderScenePlan(payload);$('localAnalysisStatus').textContent='Qwen used an unsupported animation label. A safe scene was loaded for every locked timestamp and is being saved…';await savePendingAiDraft({title:$('title').value,creativeInstructions:$('creativeInstructions').value,analysis:payload.analysis,creatorStudio:payload.creatorStudio},new Blob([audioBytes],{type:'audio/mpeg'}));scenePlanSaved=true;$('localAnalysisStatus').textContent=`Safe ${payload.analysis.scenes.length}-scene sync plan ready. Review it, then apply it to Motion Studio.`;}catch(fallbackError){flow.classList.remove('plan-review-active');$('scenePlanReview').hidden=true;$('localAnalysisStatus').textContent='The safe sync plan could not be saved: '+fallbackError.message+' Your transcript and animation instructions are still here.';}
+  }else{flow.classList.remove('plan-generating');$('scenePlanProgress').hidden=true;$('localAnalysisStatus').textContent=localVoiceoverError(error,'Generate sync plan')+' Your transcript and animation instructions are still here; retry when ready.';}
+ }
  finally{clearInterval(scenePlanProgressTimer);scenePlanProgressTimer=null;scenePlanBusy=false;updateAiFlow();refreshAvailability();}
 }
 function applyPlaybackSpeed(){

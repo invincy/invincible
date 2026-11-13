@@ -99,13 +99,19 @@ export function compileCreativePlan(transcript, plan, assetCatalog, { production
   // A small local model can occasionally merge or omit a locked Whisper segment.
   // Preserve Qwen's valid intentions and create a transparent, geometry-free hold
   // for only the omitted segment instead of discarding the entire plan.
-  const rows=t.segments.map(seg=>bySegment.get(seg.id)||{sourceSegmentId:seg.id,intent:'hold',assetId:'',locationId:'',routeId:'',title:seg.text.slice(0,96),plannerFallback:true});
+  const allowedIntents=new Set(['advance','reveal','hold','title']);
+  const rows=t.segments.map(seg=>{
+    const row=bySegment.get(seg.id);
+    if(!row)return {sourceSegmentId:seg.id,intent:'hold',assetId:'',locationId:'',routeId:'',title:seg.text.slice(0,96),plannerFallback:'omitted'};
+    if(production&&!allowedIntents.has(row.intent))return {...row,intent:'hold',plannerFallback:'unsupported-intent'};
+    return row;
+  });
   const locations=new Map((assetCatalog.verifiedLocations||[]).map(item=>[String(item.id),item])),routes=new Map((assetCatalog.verifiedRoutes||[]).filter(item=>item.reviewed===true).map(item=>[String(item.id),item]));
   const scenes=rows.map((row,i)=>{
     const seg=segments.get(String(row.sourceSegmentId));if(!seg)throw Error(`Plan ${i+1} references an unknown segment.`);
     const assetId=String(row.assetId||'');if(assetId&&!assets.has(assetId))throw Error(`Plan ${i+1} selected an unregistered asset.`);
-    if(!['advance','reveal','hold','title'].includes(row.intent))throw Error(`Plan ${i+1} has an unsupported intent.`);
-    const duration=Number((seg.end-seg.start).toFixed(3)),route=routes.get(String(row.routeId||'')),location=locations.get(String(row.locationId||''));let mapAnimation=null;const missingInfo=row.plannerFallback?['Qwen omitted this locked segment; a safe hold scene was created for review.']:[];
+    if(!allowedIntents.has(row.intent))throw Error(`Plan ${i+1} has an unsupported intent.`);
+    const duration=Number((seg.end-seg.start).toFixed(3)),route=routes.get(String(row.routeId||'')),location=locations.get(String(row.locationId||''));let mapAnimation=null;const missingInfo=row.plannerFallback==='omitted'?['Qwen omitted this locked segment; a safe hold scene was created for review.']:row.plannerFallback==='unsupported-intent'?['Qwen returned an unsupported animation intent; a safe hold scene was created for review.']:[];
     if(row.intent==='advance'){
       const coordinates=route?.coordinates;
       const sourced=route&&String(route.sourceUrl||'').startsWith('https://')&&String(route.sourceDate||'').trim()&&String(route.precisionNote||'').trim()&&Array.isArray(coordinates)&&coordinates.length>=2&&coordinates.every(point=>Array.isArray(point)&&point.length===2&&point.every(Number.isFinite)&&Math.abs(point[0])<=180&&Math.abs(point[1])<=90);

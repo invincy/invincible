@@ -90,6 +90,16 @@ test('still rejects duplicate or unknown Qwen segment references', () => {
   assert.throws(()=>compileCreativePlan(transcript,{scenes:[{sourceSegmentId:'unknown',intent:'hold'}]},{assets:[]}),/unknown segment/);
 });
 
+test('production keeps every locked segment when Qwen returns an unsupported intent', () => {
+  const draft=compileCreativePlan(transcript,{scenes:[{sourceSegmentId:'s1',intent:'zoom-and-converge',title:'ITCZ winds'},{sourceSegmentId:'s2',intent:'title',title:'ITCZ'}]},{assets:[],verifiedLocations:[],verifiedRoutes:[]},{production:true});
+  assert.equal(draft.scenes.length,2);
+  assert.equal(draft.scenes[0].animation,'hold');
+  assert.ok(draft.scenes[0].contextCard===true||draft.scenes[0].mapAnimation);
+  assert.match(draft.scenes[0].missingInfo.join(' '),/unsupported animation intent/);
+  assert.equal(draft.scenes[1].animation,'title');
+  assert.throws(()=>compileCreativePlan(transcript,{scenes:[{sourceSegmentId:'s1',intent:'zoom-and-converge'},{sourceSegmentId:'s2',intent:'title'}]},{assets:[],verifiedLocations:[],verifiedRoutes:[]}),/unsupported intent/);
+});
+
 test('analyzes only workspace audio through injected local adapters', async () => {
   const workspace = await fs.mkdtemp(path.join(os.tmpdir(), 'invincible-voiceover-'));
   const audioPath = path.join(workspace, 'panipat.wav');
