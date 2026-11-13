@@ -251,3 +251,12 @@ or Motion & export as soon as the import succeeds. Cancelling replacement keeps 
 current Script workspace and existing Motion Studio draft unchanged. The focused Creator
 browser flow and the complete repository test suite cover the corrected navigation and
 existing project compatibility; production Firebase rules and Functions were not changed.
+
+## Visual continuity and atmospheric diagrams — November 14, 2026
+
+Natural pauses between locked transcript segments hold the preceding visual instead of
+showing the brand background as a black interruption. Transcript and voiceover timing
+remain unchanged. Non-geographic atmospheric mechanism scenes compile to an editable
+Canvas cross-section with an ocean surface, converging surface winds, rising air and
+restrained cloud cues. Older saved ITCZ-style Canvas instructions without an explicit
+preset receive the same compatibility treatment when reopened.

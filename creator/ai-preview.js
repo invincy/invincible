@@ -1,5 +1,5 @@
-import {emptyVideo,PRESETS,compileTimeline,validateManifest} from './video-studio/model.js?v=2026111112';
-import {createStudioRenderer} from './video-studio/adapters.js?v=2026111014';
+import {emptyVideo,PRESETS,compileTimeline,validateManifest} from './video-studio/model.js?v=2026111415';
+import {createStudioRenderer} from './video-studio/adapters.js?v=2026111415';
 
 function timing(scene){const match=String(scene.timeline||'').match(/([0-9.]+)\s*[-–—]\s*([0-9.]+)/);const start=Number.isFinite(Number(scene.startSeconds))?Number(scene.startSeconds):(match?Number(match[1]):null);const seconds=Number(scene.durationSeconds)>0?Number(scene.durationSeconds):Number(scene.duration)>0?Number(scene.duration):match?Number(match[2])-Number(match[1]):2;return {start,seconds};}
 export async function renderAiScenePreviews(scenes,{width=540,height=960,mapAssets=[]}={}){
@@ -40,7 +40,15 @@ export function compileAiStoryboardManifest(storyboard,{aspectRatio='9:16',audio
   const overlays=documentaryFrame(idea.title).map(layer=>['title-plaque','title'].includes(layer.id)?{...layer,keyframes:[first,last]}:layer);
   const appear=(delay=.15)=>[{timeSeconds:0,opacity:0,easing:'hold'},{timeSeconds:Math.min(durationSeconds-.01,Math.max(1/60,enter+delay)),opacity:1,easing:'smooth'}];
   const add=(layer)=>overlays.push(layer);
-  if(idea.presetId==='pressure-driven-flow'){
+  const atmosphericText=[idea.title,idea.subtitle,idea.visual,row.visual].join(' '),atmosphericCrossSection=idea.presetId==='atmospheric-cross-section'||(!idea.presetId&&/\b(?:ITCZ|atmospher|converg|rising air|trade wind|moist air)\b/i.test(atmosphericText));
+  if(atmosphericCrossSection){
+   add({id:'ocean-surface',type:'line',x:.5,y:.7,width:.78,rotation:0,lineWidth:8,color:'#D4A85F',opacity:.92,keyframes:appear()});
+   add({id:'convergence-zone',type:'circle',x:.5,y:.64,width:.22,height:.09,color:'#E77A62',opacity:.3,keyframes:appear(.12)});
+   add({id:'surface-flow-left',type:'arrow',x:.34,y:.63,width:.27,rotation:0,lineWidth:8,color:'#65B7E6',keyframes:appear(.18)});
+   add({id:'surface-flow-right',type:'arrow',x:.66,y:.63,width:.27,rotation:180,lineWidth:8,color:'#65B7E6',keyframes:appear(.28)});
+   for(const [i,x] of [.46,.5,.54].entries())add({id:`rising-air-${i}`,type:'arrow',x,y:.49-i*.035,width:.22,rotation:-90,lineWidth:7,color:'#E1C65B',keyframes:appear(.38+i*.1)});
+   for(const [i,[x,y,w,h]] of [[.43,.33,.17,.07],[.52,.31,.22,.09],[.61,.35,.15,.065]].entries())add({id:`cloud-${i}`,type:'circle',x,y,width:w,height:h,color:'#DCE7EA',opacity:.78,keyframes:appear(.58+i*.08)});
+  }else if(idea.presetId==='pressure-driven-flow'){
    add({id:'high-zone',type:'circle',x:.25,y:.47,width:.22,height:.22,color:'#3278A8',opacity:.72,keyframes:appear()});
    add({id:'high-label',type:'text',text:'H',x:.25,y:.47,fontSize:58,fontWeight:700,color:'#F4F5F7',keyframes:appear()});
    add({id:'low-zone',type:'circle',x:.75,y:.47,width:.22,height:.22,color:'#B5524A',opacity:.72,keyframes:appear(.25)});

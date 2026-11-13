@@ -113,6 +113,7 @@ function buildSemanticPlannerPrompt({segments,creativeInstructions='',assets=[],
   'Use only supplied assetIds, locationId and routeId values. Use an empty string or empty array when none is grounded.',
   'Map scenes require a supplied locationId or routeId, or a dated historicalYear with relevant polityNames. Do not convert illustrative atmospheric flow into a factual route.',
   'When the instructions explicitly request a real geographic map and a supplied generic context matches, choose engine map and that locationId. For atmospheric maps use pressure-driven-flow or shifting-zone; the deterministic compiler creates illustrative flow and zone layers without model-authored coordinates.',
+  'For a non-geographic atmospheric mechanism or cross-section, choose engine canvas, sceneKind atmospheric-system and presetId atmospheric-cross-section. The compiler draws the ocean surface, converging near-surface winds, rising air and restrained cloud cues.',
   'Use context-india-indian-ocean for India/Indian Ocean monsoon or ITCZ explanations, context-global-equator for global Equator explanations, and context-south-asia for regional South Asia context. Do not request these built-in contexts as missing resources.',
   'Choose the smallest supplied geographic context that contains every place named in the locked segment. The compiler—not you—sets global, regional, country and city zoom, safe framing, readable type, arrows and atmospheric-band geometry.',
   'Treat creative instructions as editorial requirements. Select the matching generic preset and describe the intended relationship in visualIntent; do not imitate renderer JSON or smuggle coordinates, colours, sizes or keyframes into prose.',
@@ -210,7 +211,8 @@ function semanticCanvasScene(scene){
  const motion={hold:'hold','slow-push':'zoom-in','slow-pull':'hold','pan-left':'pan-left','pan-right':'pan-right','follow-route':'pan-right','global-to-local':'zoom-in'}[scene.cameraIntent]||'hold';
  const backgroundStyle=scene.sceneKind==='documentary-diagram'||scene.sceneKind==='atmospheric-system'?'blueprint':scene.sceneKind==='comparison'?'grid':'plain';
  const accentColor=scene.emphasis.includes('wind')||scene.emphasis.includes('moisture')?styleProfile.palette.coolFlow:scene.emphasis.includes('pressure')||scene.emphasis.includes('temperature')?styleProfile.palette.warmZone:styleProfile.palette.accent;
- return{title:scene.title||'Documentary scene',subtitle:scene.sceneKind.replaceAll('-',' '),visual:scene.visualIntent,backgroundStyle,accentColor,motion,presetId:scene.presetId,labelTreatment:scene.labelTreatment,emphasis:scene.emphasis};
+ const presetId=scene.sceneKind==='atmospheric-system'&&scene.engine!=='map'?'atmospheric-cross-section':scene.presetId;
+ return{title:scene.title||'Documentary scene',subtitle:scene.sceneKind.replaceAll('-',' '),visual:scene.visualIntent,backgroundStyle,accentColor,motion,presetId,labelTreatment:scene.labelTreatment,emphasis:scene.emphasis};
 }
 
 module.exports={plannerPack,plannerSchemaForRequest,normalizeSemanticPlan,buildSemanticPlannerPrompt,semanticCanvasScene,compileSemanticMap,geographyLocations,BUILTIN_GEOGRAPHY_CONTEXTS};

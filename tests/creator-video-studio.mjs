@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,layerFrame,sceneAt,exportDimensions,assetsForBrand} from '../creator/video-studio/model.js';
+import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,layerFrame,sceneAt,visualSceneAt,exportDimensions,assetsForBrand} from '../creator/video-studio/model.js';
 import {DEFAULT_PARALLAX,parallaxTransform,projectLayer,trainTemplate} from '../creator/video-studio/parallax.js';
 import {audioChunk} from '../creator/video-studio/audio.js';
 import {encodeStudioVideo} from '../creator/video-studio/export.js';
@@ -55,6 +55,13 @@ test('scene order, overlap, duration, duplicate IDs and nonfinite timing are rej
 });
 test('timeline handles exact scene boundaries and gaps deterministically',()=>{
  const t=compileTimeline({...video(),scenes:[graphic('a'),graphic('b',3)]},PRESETS[0]);assert.equal(sceneAt(t,0).id,'a');assert.equal(sceneAt(t,2),undefined);assert.equal(sceneAt(t,3).id,'b');assert.equal(t.duration,5);
+ assert.equal(visualSceneAt(t,2.5).scene.id,'a');assert.equal(visualSceneAt(t,2.5).held,true);assert.ok(visualSceneAt(t,2.5).localTime<2);
+ const faded=compileTimeline({...video(),scenes:[{...graphic('a'),transition:{type:'fade',durationSeconds:.3}},graphic('b',3)]},PRESETS[0]);assert.equal(visualSceneAt(faded,2.5).localTime,1.7);
+});
+test('legacy atmospheric Canvas instructions compile a visible cross-section',()=>{
+ const row={id:'itcz-mechanism',timeline:'0-2s',visual:'Show moist air converging and rising in an atmospheric cross-section.',canvasScene:{title:'How ITCZ works',visual:'Surface trade winds converge and warm moist air rises to form clouds.',backgroundStyle:'blueprint',accentColor:'#65B7E6',motion:'rise'}};
+ const manifest=compileAiStoryboardManifest([row]),ids=new Set(manifest.scenes[0].overlays.map(layer=>layer.id));
+ for(const id of ['ocean-surface','surface-flow-left','surface-flow-right','rising-air-0','cloud-0'])assert.ok(ids.has(id));
 });
 test('branding is opt-in; enabling intro shifts scenes and audio, outro follows full recording',()=>{
  const b={...PRESETS[0],intro:graphic('intro',0,2),outro:graphic('outro',0,3)},m={...video(),audio:{fileId:'f',name:'audio.wav',startSeconds:.5,gain:1}};

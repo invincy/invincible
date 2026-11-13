@@ -9,12 +9,13 @@
     { "id": "video", "status": "review-required", "useFor": ["source-image"] },
     { "id": "three", "status": "review-required", "useFor": ["documentary-diagram"] }
   ],
-  "automaticPresets": ["framed-title", "geographic-locator", "revealed-route", "historical-year-map", "pressure-driven-flow", "shifting-zone", "documentary-diagram", "source-image", "safe-hold"],
+  "automaticPresets": ["framed-title", "geographic-locator", "revealed-route", "historical-year-map", "pressure-driven-flow", "shifting-zone", "atmospheric-cross-section", "documentary-diagram", "source-image", "safe-hold"],
   "reviewPresets": ["opposing-formations", "terrain-barrier", "temperature-comparison"],
   "rules": [
     "The planner chooses semantic intent only; it never emits coordinates, colours, font sizes or keyframes.",
     "Map scenes require a supplied built-in or project locationId, reviewed routeId, or dated historical context before compilation.",
     "Built-in atmospheric map contexts compile pressure-driven-flow and shifting-zone into illustrative Map Editor layers without model-authored coordinates.",
+    "Canvas atmospheric-system scenes compile atmospheric-cross-section into ocean, convergence, rising-air and cloud primitives.",
     "Historical context can request a year, region and named polities. Connected dated outlines remain review-required; the automatic fallback is a sourced locator map.",
     "Missing resources become explicit resourceRequests with a safe fallback. They never remove a locked segment or stop unrelated scenes.",
     "Unsupported or ungrounded selections compile to a visible review card without losing narration timing.",

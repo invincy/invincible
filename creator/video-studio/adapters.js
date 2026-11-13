@@ -3,7 +3,7 @@ import {drawCanvasBackground,drawCanvasLayer} from './canvas.js?v=2026111206';
 import {ensureDocumentaryFonts} from '../map-fonts.js';
 import {compileAnimation} from '../map-animation-import.js?v=2026111002';
 import {createHistoryPlayer} from '../history-player.js?v=2026111002';
-import {layerFrame,sceneAt,referencedMapAssets} from './model.js?v=2026111207';
+import {layerFrame,visualSceneAt,referencedMapAssets} from './model.js?v=2026111415';
 import {resolveMapAsset} from '../map-assets-client.js?v=2026111002';
 import {drawBattlefield} from './battlefield.js?v=2026111014';
 import {parallaxTransform,projectLayer} from './parallax.js';
@@ -84,8 +84,8 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
  }
  async function draw(time,{exporting=false,signal:frameSignal}={}){
   if(disposed)throw new DOMException('Renderer closed','AbortError');frameSignal?.throwIfAborted();
-  ctx.globalAlpha=1;ctx.fillStyle=brand.background;ctx.fillRect(0,0,width,height);const scene=sceneAt(timeline,time);if(scene?.engineType!=='three')releaseStage();if(!scene)return;
-  const local=time-scene.startSeconds,transition=scene.transition?.type==='fade'?scene.transition.durationSeconds:0;
+  ctx.globalAlpha=1;ctx.fillStyle=brand.background;ctx.fillRect(0,0,width,height);const visual=visualSceneAt(timeline,time),scene=visual?.scene;if(scene?.engineType!=='three')releaseStage();if(!scene)return;
+  const local=visual.localTime,transition=scene.transition?.type==='fade'?scene.transition.durationSeconds:0;
   ctx.save();try{
    if(transition)ctx.globalAlpha=Math.max(0,Math.min(1,local/transition,(scene.durationSeconds-local)/transition));
    if(scene.engineData.background){ctx.fillStyle=scene.engineData.background;ctx.fillRect(0,0,width,height);}

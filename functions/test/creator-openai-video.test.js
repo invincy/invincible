@@ -31,6 +31,7 @@ test('builds the same semantic plan shape used by the local planner',()=>{
  assert.equal(payload.creatorStudio.scenes[1].timeline,'2.000-4.000s');
  assert.equal(payload.creatorStudio.scenes[1].semanticPlan.presetId,'pressure-driven-flow');
  assert.equal(payload.creatorStudio.scenes[1].canvasScene.backgroundStyle,'blueprint');
+ assert.equal(payload.creatorStudio.scenes[1].canvasScene.presetId,'atmospheric-cross-section');
  assert.equal(payload.mapAnimations.length,0);
 });
 

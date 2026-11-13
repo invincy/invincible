@@ -138,6 +138,16 @@ export function layerFrame(layer,time){
  return out;
 }
 export function sceneAt(timeline,time){return timeline.scenes.find(s=>time>=s.startSeconds&&time<s.startSeconds+s.durationSeconds);}
+// Narration timestamps may contain short natural pauses. Keep the preceding visual
+// alive through those pauses without changing the locked transcript timing.
+export function visualSceneAt(timeline,time){
+ const active=sceneAt(timeline,time);if(active)return{scene:active,localTime:time-active.startSeconds,held:false};
+ const previous=[...timeline.scenes].reverse().find(scene=>scene.startSeconds+scene.durationSeconds<=time);
+ if(!previous)return null;
+ const exitFade=previous.transition?.type==='fade'?previous.transition.durationSeconds:0;
+ const frame=Math.max(0,previous.durationSeconds-Math.max(1/30,exitFade));
+ return{scene:previous,localTime:frame,held:true};
+}
 
 // Include only a profile's referenced assets when reusing it in another video.
 export function assetsForBrand(brand,existing,catalog){
