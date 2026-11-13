@@ -12,14 +12,12 @@ projects selector keeps Motion Studio active when switching projects. Other
 project tools retain their existing project picker, while Voiceover and Image
 Studio retain their standalone routes.
 
-New project creation asks only for a name, an optional MP3/WAV voiceover and
-optional creative instructions. The project record continues to use the
-existing Creator schema; instructions use the existing notes field. A starting
-voiceover is uploaded to the owner's existing private shared-media library and
-attached to the existing version-2 Studio draft. Advanced storyboard/project
-setup remains available without becoming a required step.
-The Creator Studio **New project** action is the only guided creation entry;
-after creation it opens the normal Script-first project sequence.
+The Creator Studio **New project** action immediately opens a local, unsaved
+**Untitled project** on the Script step. It does not interrupt the flow with the
+compact project-setup dialog. Naming the project, adding or generating the
+voiceover, and entering the animation instructions happen in the normal
+Script-first project sequence. The project keeps the existing Creator schema
+and is written through the existing revision-aware save path.
 
 Inside a project, a visible project toolbar links Motion Studio, Script &
 scenes, Map Editor, Battlefield Editor, Assets & 3D, Image Studio and

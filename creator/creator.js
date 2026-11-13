@@ -188,7 +188,7 @@ function bindDrag(){
 }
 
 $("stageSelect").innerHTML=stages.map(stage=>'<option>'+stage+'</option>').join("");
-$("addContent").onclick=()=>openDialog();
+$("addContent").onclick=()=>{window.location.href="project.html?draft=1";};
 document.querySelectorAll("dialog .close").forEach(button=>button.onclick=()=>$("contentDialog").close());
 $("stageTabs").onclick=event=>{const button=event.target.closest("[data-stage]");if(!button)return;mobileStage=button.dataset.stage;render();};
 document.querySelector(".metrics").onclick=event=>{const card=event.target.closest("[data-metric]");if(!card)return;metricFilter=metricFilter===card.dataset.metric?"":card.dataset.metric;const first=state.items.find(metricMatch);if(first)mobileStage=first.stage;render();$("board").scrollIntoView({behavior:"smooth",block:"start"});};

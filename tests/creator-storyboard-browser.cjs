@@ -49,13 +49,21 @@ const server=http.createServer((req,res)=>{
    await page.locator('[data-tab="'+name+'"]').click();
   };
   const stored=()=>page.evaluate(()=>Object.values(JSON.parse(localStorage.getItem('test.creator')||'{}')).find(item=>item.title==='Gaganyaan production'));
-  // New Content opens the shared workbench; draft interactions never submit the form.
+  // Creator Studio's New project action opens an untitled Script-first project directly.
   await page.goto(base);await page.locator('#app:not([hidden])').waitFor();
   {const panelWidths=await page.locator('.creator-project-panels>.space-panel').evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().width));assert.equal(panelWidths.length,3);assert.ok(Math.max(...panelWidths)-Math.min(...panelWidths)<1);}
   await page.screenshot({path:path.join(root,'.test-output/creator-three-panels.png')});
   await page.locator('#addContent:enabled').click();
+  await page.waitForURL(/project\.html\?draft=1&id=/);
+  await page.locator('#projectTitle').filter({hasText:'Untitled project'}).waitFor();
+  await page.locator('#projectVoiceoverStep:not([hidden])').waitFor();
+  assert.equal(await page.locator('[data-project-area="Voiceover"]').getAttribute('aria-current'),'step');
+  assert.equal(await page.evaluate(()=>window.writes||0),0,'Opening an untitled project does not save it before the user edits it');
+  await page.goto(base);await page.locator('#app:not([hidden])').waitFor();
+  await page.evaluate(()=>{const data=JSON.parse(localStorage.getItem('test.creator')||'{}');data['creatorProjects/draft-production']={id:'draft-production',title:'Draft production',ownerUid:'owner',ownerEmail:'owner@example.com',editorEmails:[],stage:'Ideas',format:'Short',scenes:[],assets:[],animationGroups:[]};localStorage.setItem('test.creator',JSON.stringify(data));});
+  await page.reload();await page.locator('#app:not([hidden])').waitFor();
+  await page.locator('#projectGrid .content-card').filter({hasText:'Draft production'}).locator('[data-edit]').click();
   const dialog=page.locator('#contentDialog');
-  await page.locator('[name=title]').fill('Draft production');
   await dialog.locator('.advanced-project-setup>summary').click();
   await dialog.locator('[data-filter-search]').fill('rocket');await dialog.locator('[data-filter-search]').press('Enter');
   assert.equal(await dialog.evaluate(node=>node.open),true);
@@ -122,7 +130,8 @@ const server=http.createServer((req,res)=>{
    assert.equal(await dialog.locator('#saveContent').evaluate(button=>{const rect=button.getBoundingClientRect();return rect.bottom<=innerHeight&&rect.top>=0}),true);
   }
   await page.setViewportSize({width:1440,height:1000});
-  await dialog.locator('#saveContent').click();await page.waitForURL(/project.html\?id=/);
+  await dialog.locator('#saveContent').click();await dialog.waitFor({state:'hidden'});
+  await page.locator('#projectGrid .content-card').filter({hasText:'Draft production'}).locator('[data-open]').click();await page.waitForURL(/project.html\?id=/);
   await page.locator('#projectTitle').filter({hasText:'Draft production'}).waitFor();
   await page.locator('#projectVoiceoverStep:not([hidden])').waitFor();
   assert.equal(await page.locator('[data-project-area="Voiceover"]').getAttribute('aria-current'),'step');
@@ -227,7 +236,7 @@ const server=http.createServer((req,res)=>{
   assert.equal(await page.locator('#toolDialog').evaluate(node=>node.open),true);
   assert.ok(await page.locator('#toolProjectList a').count()>=1);
   await page.locator('#toolDialog [value=cancel]').first().click();
-  await page.locator('#addContent:enabled').click();await page.locator('[name=title]').fill('Gaganyaan production');
+  await page.getByRole('button',{name:/Map Editor/}).click();await page.locator('#toolNewProject').click();await page.locator('[name=title]').fill('Gaganyaan production');
   await page.locator('[name=instructions]').fill('Use a clear map opening and preserve the supplied narration.');
   assert.equal(await page.locator('#contentDetails').evaluate(node=>node.open),false);
   await page.locator('.advanced-project-setup>summary').click();

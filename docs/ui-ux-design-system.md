@@ -88,8 +88,9 @@ require attention and keep routine success messages out of the visual layout.
 The Motion Studio launcher opens a dedicated project selector without creating
 or saving an untitled project. Selecting a project opens that same project's
 Motion Studio workspace; the in-project Recent projects menu preserves Motion
-Studio while switching. New projects begin only through Creator Studio's guided
-New project action and open on Script. The workflow runs from Script to
+Studio while switching. Creator Studio's New project action opens an unsaved
+Untitled project directly on Script, without showing the compact setup dialog.
+The workflow runs from Script to
 Script & scenes, then Map Editor when visuals need maps, and finally Motion
 Studio for assembly. The separate Invincible AI Voiceover tool keeps its name.
 
