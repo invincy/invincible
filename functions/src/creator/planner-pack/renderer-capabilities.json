@@ -1,7 +1,7 @@
 {
   "version": 1,
   "engines": [
-    { "id": "map", "status": "automatic", "useFor": ["locator-map", "route-map", "historical-context", "terrain-explanation"] },
+    { "id": "map", "status": "automatic", "useFor": ["locator-map", "route-map", "historical-context", "terrain-explanation", "atmospheric-system"] },
     { "id": "canvas", "status": "automatic", "useFor": ["title", "comparison", "documentary-diagram", "hold"] },
     { "id": "battlefield", "status": "review-required", "useFor": ["battle-formation"] },
     { "id": "motion", "status": "review-required", "useFor": ["atmospheric-system", "comparison"] },
@@ -9,11 +9,12 @@
     { "id": "video", "status": "review-required", "useFor": ["source-image"] },
     { "id": "three", "status": "review-required", "useFor": ["documentary-diagram"] }
   ],
-  "automaticPresets": ["framed-title", "geographic-locator", "revealed-route", "historical-year-map", "documentary-diagram", "source-image", "safe-hold"],
-  "reviewPresets": ["opposing-formations", "pressure-driven-flow", "shifting-zone", "terrain-barrier", "temperature-comparison"],
+  "automaticPresets": ["framed-title", "geographic-locator", "revealed-route", "historical-year-map", "pressure-driven-flow", "shifting-zone", "documentary-diagram", "source-image", "safe-hold"],
+  "reviewPresets": ["opposing-formations", "terrain-barrier", "temperature-comparison"],
   "rules": [
     "The planner chooses semantic intent only; it never emits coordinates, colours, font sizes or keyframes.",
-    "Map scenes require a supplied locationId or reviewed routeId before compilation.",
+    "Map scenes require a supplied built-in or project locationId, reviewed routeId, or dated historical context before compilation.",
+    "Built-in atmospheric map contexts compile pressure-driven-flow and shifting-zone into illustrative Map Editor layers without model-authored coordinates.",
     "Historical context can request a year, region and named polities. Connected dated outlines remain review-required; the automatic fallback is a sourced locator map.",
     "Missing resources become explicit resourceRequests with a safe fallback. They never remove a locked segment or stop unrelated scenes.",
     "Unsupported or ungrounded selections compile to a visible review card without losing narration timing.",

@@ -4,6 +4,8 @@ Date: 2026-11-13
 Repository: `invincy/invincible`  
 Scope: Creator Studio, Script/Sync Plan, Local Whisper, Qwen, OpenAI planning, Map Editor, Motion Studio and MP4 export
 
+Update — November 13, 2026: the shared planner pack now includes generalized, sourced Global Equator, India–Indian Ocean and South Asia contexts. `pressure-driven-flow` and `shifting-zone` can compile into real editable Map Editor animations using satellite geography, compiler-owned camera keys, Equator/ITCZ layers and illustrative wind streams. The planner selects semantic IDs only and still cannot author coordinates, boundaries, colours or renderer internals.
+
 ## 1. Purpose of this report
 
 This report is intended to be shared with external reviewers such as Gemini, ChatGPT or another engineering team. It explains:

@@ -6,7 +6,7 @@ import { findSceneGeography, contextMap } from './history-context.mjs';
 import {matchHistoricalRecords,historicalLocatorAnimation} from '../creator/ai-resource-resolver.js';
 
 const require = createRequire(import.meta.url);
-const { plannerPack, plannerSchemaForRequest, normalizeSemanticPlan, buildSemanticPlannerPrompt, semanticCanvasScene } = require('../functions/src/creator/semantic-plan.js');
+const { plannerPack, plannerSchemaForRequest, normalizeSemanticPlan, buildSemanticPlannerPrompt, semanticCanvasScene, compileSemanticMap, geographyLocations } = require('../functions/src/creator/semantic-plan.js');
 
 const AUDIO_EXTENSIONS = new Set(['.mp3', '.wav']);
 
@@ -122,7 +122,7 @@ export function buildCreativePlanSchema(transcript,assetCatalog={},creativeInstr
 }
 
 export function compileCreativePlan(transcript, plan, assetCatalog, { production = false, creativeInstructions = '' } = {}) {
-  const t=normalizeTranscript(transcript),segments=new Map(t.segments.map(s=>[s.id,s])),assets=catalogMap(assetCatalog),locationsList=assetCatalog.verifiedLocations||[],routesList=(assetCatalog.verifiedRoutes||[]).filter(route=>route.reviewed===true);
+  const t=normalizeTranscript(transcript),segments=new Map(t.segments.map(s=>[s.id,s])),assets=catalogMap(assetCatalog),locationsList=geographyLocations(assetCatalog.verifiedLocations||[]),routesList=(assetCatalog.verifiedRoutes||[]).filter(route=>route.reviewed===true);
   const semantic=plan?.schemaVersion==='creator-semantic-plan-v1'?normalizeSemanticPlan(plan,{segmentIds:t.segments.map(s=>s.id),assetIds:[...assets.keys()],locationIds:locationsList.map(item=>item.id),routeIds:routesList.map(item=>item.id)}):null;
   const received=Array.isArray(semantic?.scenes)?semantic.scenes:Array.isArray(plan?.scenes)?plan.scenes:[];
   const bySegment=new Map();
@@ -153,20 +153,20 @@ export function compileCreativePlan(transcript, plan, assetCatalog, { production
     if(production&&!allowedIntents.has(row.intent))return {...row,intent:'hold',plannerFallback:'unsupported-intent'};
     return row;
   });
-  const locations=new Map((assetCatalog.verifiedLocations||[]).map(item=>[String(item.id),item])),routes=new Map((assetCatalog.verifiedRoutes||[]).filter(item=>item.reviewed===true).map(item=>[String(item.id),item]));
+  const locations=new Map(locationsList.map(item=>[String(item.id),item])),routes=new Map(routesList.map(item=>[String(item.id),item]));
   const scenes=rows.map((row,i)=>{
     const seg=segments.get(String(row.sourceSegmentId));if(!seg)throw Error(`Plan ${i+1} references an unknown segment.`);
     const assetId=String(row.assetId||'');if(assetId&&!assets.has(assetId))throw Error(`Plan ${i+1} selected an unregistered asset.`);
     if(!allowedIntents.has(row.intent))throw Error(`Plan ${i+1} has an unsupported intent.`);
-    const duration=Number((seg.end-seg.start).toFixed(3)),route=routes.get(String(row.routeId||'')),location=locations.get(String(row.locationId||''));let mapAnimation=null;const missingInfo=[...(Array.isArray(row.missingInfo)?row.missingInfo:[]),...(row.plannerFallback==='omitted'?['Qwen omitted this locked segment; a safe hold scene was created for review.']:row.plannerFallback==='unsupported-intent'?['Qwen returned an unsupported animation intent; a safe hold scene was created for review.']:[])];
-    if(row.intent==='advance'){
+    const duration=Number((seg.end-seg.start).toFixed(3)),route=routes.get(String(row.routeId||'')),location=locations.get(String(row.locationId||''));let mapAnimation=semantic?compileSemanticMap(row,duration,{locations:locationsList,routes:routesList}):null;const missingInfo=[...(Array.isArray(row.missingInfo)?row.missingInfo:[]),...(row.plannerFallback==='omitted'?['Qwen omitted this locked segment; a safe hold scene was created for review.']:row.plannerFallback==='unsupported-intent'?['Qwen returned an unsupported animation intent; a safe hold scene was created for review.']:[])];
+    if(!mapAnimation&&row.intent==='advance'){
       const coordinates=route?.coordinates;
       const sourced=route&&String(route.sourceUrl||'').startsWith('https://')&&String(route.sourceDate||'').trim()&&String(route.precisionNote||'').trim()&&Array.isArray(coordinates)&&coordinates.length>=2&&coordinates.every(point=>Array.isArray(point)&&point.length===2&&point.every(Number.isFinite)&&Math.abs(point[0])<=180&&Math.abs(point[1])<=90);
       if(sourced){const first=coordinates[0],last=coordinates.at(-1);mapAnimation={format:'invincible-map-animation',version:1,title:String(route.name||row.title||'Verified route'),duration,aspectRatio:'9:16',basemap:'terrain',terrain:false,overlayPreset:'documentary',camera:[{time:0,center:first,zoom:5,pitch:0,bearing:0,easing:'smooth'},{time:duration,center:last,zoom:5.35,pitch:0,bearing:0,easing:'smooth'}],assets:[],layers:[{id:`route-${i+1}`,type:'route',name:`${String(route.name||'Verified route')} · ${String(route.precisionNote)}`,start:0,end:duration,coordinates,color:'#E1C65B',lineWidth:3.5,revealDuration:Math.min(1.8,duration*.6),fadeIn:.2,fadeOut:.2,arrowhead:true}]};}
       else missingInfo.push('No reviewed, sourced route geometry is available for this movement; no route was invented.');
-    }else if(location&&Array.isArray(location.coordinates)&&location.coordinates.length===2&&location.coordinates.every(Number.isFinite)&&String(location.sourceUrl||'').startsWith('https://')&&String(location.sourceDate||'').trim()&&String(location.precisionNote||'').trim()){
+    }else if(!mapAnimation&&location&&Array.isArray(location.coordinates)&&location.coordinates.length===2&&location.coordinates.every(Number.isFinite)&&String(location.sourceUrl||'').startsWith('https://')&&String(location.sourceDate||'').trim()&&String(location.precisionNote||'').trim()){
       const center=location.coordinates;mapAnimation={format:'invincible-map-animation',version:1,title:String(row.title||location.name||row.intent),duration,aspectRatio:'9:16',basemap:'terrain',terrain:false,overlayPreset:'documentary',camera:[{time:0,center,zoom:4.9,pitch:0,bearing:0,easing:'smooth'},{time:duration,center,zoom:5.25,pitch:0,bearing:0,easing:'smooth'}],assets:[],layers:[{id:`label-${i+1}`,type:'label',name:String(location.name),start:0,end:duration,position:center,color:'#F4F5F7',scale:1}]};
-    }else if(!row.historicalYear)missingInfo.push('No reviewed, sourced location geometry is available for this scene; no coordinates were invented.');
+    }else if(!mapAnimation&&!row.historicalYear)missingInfo.push('No reviewed, sourced location geometry is available for this scene; no coordinates were invented.');
     if(assetId)missingInfo.push(`Selected asset ${assets.get(assetId).name} has no verified map placement in this catalog.`);
     let contextSources = [];
     if (production && duration < 1) mapAnimation = null;

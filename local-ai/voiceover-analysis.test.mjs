@@ -30,7 +30,7 @@ test('constrains live structured output to the locked catalog IDs',()=>{
   assert.equal(schema.properties.scenes.minItems,2);
   assert.equal(schema.properties.scenes.maxItems,2);
   assert.deepEqual(properties.assetIds.items.enum,['commander_babur']);
-  assert.deepEqual(properties.locationId.enum,['']);
+  assert.deepEqual(properties.locationId.enum,['','context-global-equator','context-india-indian-ocean','context-south-asia']);
   assert.deepEqual(properties.routeId.enum,['']);
 });
 
@@ -98,7 +98,8 @@ test('does not invent Panipat positions or routes when the approved catalog has 
   const prompt = buildCreativePlanPrompt(transcript, { assets: [], verifiedLocations: [], verifiedRoutes: [] });
   assert.match(prompt, /Never output coordinates/);
   assert.match(prompt, /creator-semantic-plan-v1/);
-  assert.match(prompt, /"locations":\[\]/);
+  assert.match(prompt, /context-global-equator/);
+  assert.match(prompt, /context-india-indian-ocean/);
   assert.doesNotMatch(prompt, /76\.96|29\.39|Panipat \[/);
   const draft = compileCreativePlan(transcript, { scenes: [{ sourceSegmentId: 'segment-1', intent: 'advance', location: 'Panipat', routeId: 'invented' }] }, { assets: [], verifiedLocations: [], verifiedRoutes: [] });
   assert.equal(draft.scenes[0].mapAnimation, null);
@@ -132,6 +133,17 @@ test('repairs ungrounded map choices into generic supported scenes', () => {
   assert.equal(draft.scenes[0].mapAnimation,null);
   assert.equal(draft.scenes[0].canvasScene.presetId,'shifting-zone');
   assert.match(draft.scenes[0].missingInfo.join(' '),/no verified location or route/);
+});
+
+test('compiles the shared ITCZ map contexts for local planning too',()=>{
+ const weather={segments:[{id:'w1',start:0,end:4,text:'Trade winds converge near the Equator.'},{id:'w2',start:4,end:8,text:'The belt shifts north toward India.'}]};
+ const base={engine:'map',sceneKind:'atmospheric-system',title:'ITCZ',visualIntent:'Show the atmospheric process on a real geography basemap.',labelTreatment:'map-label',cameraIntent:'global-to-local',assetIds:[],locationId:'context-india-indian-ocean',routeId:'',historicalYear:0,regionId:'global',polityNames:[],emphasis:['geography','pressure','wind'],missingInfo:[],resourceRequests:[],clarifications:[]};
+ const plan={schemaVersion:'creator-semantic-plan-v1',scenes:[{...base,sourceSegmentId:'w1',presetId:'pressure-driven-flow'},{...base,sourceSegmentId:'w2',presetId:'shifting-zone'}]};
+ const draft=compileCreativePlan(weather,plan,{assets:[],verifiedLocations:[],verifiedRoutes:[]},{production:true});
+ assert.equal(draft.scenes.length,2);
+ assert.ok(draft.scenes.every(scene=>scene.mapAnimation?.format==='invincible-map-animation'));
+ assert.ok(draft.scenes[0].mapAnimation.layers.some(layer=>layer.id==='itcz-band'));
+ assert.ok(draft.scenes[1].mapAnimation.layers.some(layer=>layer.id==='itcz-north'));
 });
 
 test('repairs an omitted Qwen row without merging or losing locked Whisper segments', () => {

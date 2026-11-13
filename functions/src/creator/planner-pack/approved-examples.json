@@ -45,9 +45,10 @@
       "name": "Monsoon pressure and wind",
       "when": "Narration explains air moving from a high-pressure region toward a low-pressure region.",
       "plan": {
-        "engine": "motion",
+        "engine": "map",
         "sceneKind": "atmospheric-system",
         "presetId": "pressure-driven-flow",
+        "locationId": "context-india-indian-ocean",
         "labelTreatment": "map-label",
         "cameraIntent": "global-to-local",
         "emphasis": ["pressure", "wind", "moisture"]

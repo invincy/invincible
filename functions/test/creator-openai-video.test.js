@@ -20,6 +20,21 @@ test('builds the same semantic plan shape used by the local planner',()=>{
  assert.equal(payload.mapAnimations.length,0);
 });
 
+test('compiles ITCZ semantic choices into executable Map Editor animation',()=>{
+ const transcript={duration:8.4,segments:[{id:'segment-1',start:0,end:5.36,text:'The ITCZ is a moving belt of low pressure near the Equator.'},{id:'segment-2',start:6.02,end:8.14,text:'It shifts north during the Indian summer.'}]};
+ const catalog=projectCatalog({});
+ const payload=buildPlan({schemaVersion:'creator-semantic-plan-v1',scenes:[
+  semantic('segment-1',{engine:'map',sceneKind:'atmospheric-system',presetId:'pressure-driven-flow',title:'Intertropical Convergence Zone',visualIntent:'Show trade winds converging over the Equator.',labelTreatment:'map-label',cameraIntent:'global-to-local',locationId:'context-india-indian-ocean',emphasis:['geography','pressure','wind']}),
+  semantic('segment-2',{engine:'map',sceneKind:'atmospheric-system',presetId:'shifting-zone',title:'Summer shift',visualIntent:'Show the convergence belt moving north toward India.',labelTreatment:'map-label',cameraIntent:'global-to-local',locationId:'context-india-indian-ocean',emphasis:['geography','pressure']})
+ ]},transcript,'ITCZ',catalog);
+ assert.equal(payload.mapAnimations.length,2);
+ assert.equal(payload.creatorStudio.scenes[0].mapAnimation.basemap,'satellite');
+ assert.ok(payload.creatorStudio.scenes[0].mapAnimation.layers.some(layer=>layer.id==='itcz-band'));
+ assert.ok(payload.creatorStudio.scenes[0].mapAnimation.layers.filter(layer=>layer.arrowhead===true).length>=4);
+ assert.ok(payload.creatorStudio.scenes[1].mapAnimation.layers.some(layer=>layer.id==='itcz-north'));
+ assert.equal(payload.creatorStudio.scenes[0].canvasScene,null);
+});
+
 test('rejects a semantic plan that drops a locked timestamp',()=>{
  const transcript={segments:[{id:'a',start:0,end:1,text:'A'},{id:'b',start:1,end:2,text:'B'}]};
  assert.throws(()=>buildPlan({schemaVersion:'creator-semantic-plan-v1',scenes:[semantic('a')]},transcript,'x'),/expected 2, received 1/);
@@ -43,6 +58,6 @@ test('preserves dated historical resource requests without inventing renderer ge
 test('reuses project assets, verified places and reviewed routes in the hosted planner catalog',()=>{
  const catalog=projectCatalog({assets:[{id:'babur','name':'Babur portrait',type:'image',description:'Reviewed illustration'}],historicalMap:{visual:{assets:[{id:'army-model',name:'Army model',type:'glb',credit:'Internal'}]},events:[{id:'panipat',label:'Panipat',coordinates:[76.96,29.39],sourceUrl:'https://example.org/place',date:'1526',sourceNote:'Approximate'}],features:{features:[{geometry:{type:'LineString',coordinates:[[70,30],[77,29]]},properties:{id:'babur-route',label:'Babur route',reviewed:true,sourceUrl:'https://example.org/route'}},{geometry:{type:'LineString',coordinates:[[1,1],[2,2]]},properties:{id:'draft-route',label:'Draft',reviewed:false}}]}}});
  assert.deepEqual(catalog.assets.map(item=>item.id),['babur','army-model']);
- assert.deepEqual(catalog.locations.map(item=>item.id),['panipat']);
+ assert.deepEqual(catalog.locations.map(item=>item.id),['context-global-equator','context-india-indian-ocean','context-south-asia','panipat']);
  assert.deepEqual(catalog.routes.map(item=>item.id),['babur-route']);
 });
