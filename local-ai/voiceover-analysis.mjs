@@ -88,14 +88,24 @@ export function buildCreativePlanPrompt(transcript, assetCatalog, creativeInstru
 }
 
 export function compileCreativePlan(transcript, plan, assetCatalog, { production = false, creativeInstructions = '' } = {}) {
-  const t=normalizeTranscript(transcript),segments=new Map(t.segments.map(s=>[s.id,s])),assets=catalogMap(assetCatalog),rows=Array.isArray(plan?.scenes)?plan.scenes:[];
-  if(rows.length!==t.segments.length)throw Error(`Creative pass must return one plan per segment; expected ${t.segments.length}, received ${rows.length}.`);
+  const t=normalizeTranscript(transcript),segments=new Map(t.segments.map(s=>[s.id,s])),assets=catalogMap(assetCatalog),received=Array.isArray(plan?.scenes)?plan.scenes:[];
+  const bySegment=new Map();
+  for(const [index,row] of received.entries()){
+    const id=String(row?.sourceSegmentId||'');
+    if(!segments.has(id))throw Error(`Plan ${index+1} references an unknown segment.`);
+    if(bySegment.has(id))throw Error(`Creative pass returned more than one plan for ${id}.`);
+    bySegment.set(id,row);
+  }
+  // A small local model can occasionally merge or omit a locked Whisper segment.
+  // Preserve Qwen's valid intentions and create a transparent, geometry-free hold
+  // for only the omitted segment instead of discarding the entire plan.
+  const rows=t.segments.map(seg=>bySegment.get(seg.id)||{sourceSegmentId:seg.id,intent:'hold',assetId:'',locationId:'',routeId:'',title:seg.text.slice(0,96),plannerFallback:true});
   const locations=new Map((assetCatalog.verifiedLocations||[]).map(item=>[String(item.id),item])),routes=new Map((assetCatalog.verifiedRoutes||[]).filter(item=>item.reviewed===true).map(item=>[String(item.id),item]));
   const scenes=rows.map((row,i)=>{
     const seg=segments.get(String(row.sourceSegmentId));if(!seg)throw Error(`Plan ${i+1} references an unknown segment.`);
     const assetId=String(row.assetId||'');if(assetId&&!assets.has(assetId))throw Error(`Plan ${i+1} selected an unregistered asset.`);
     if(!['advance','reveal','hold','title'].includes(row.intent))throw Error(`Plan ${i+1} has an unsupported intent.`);
-    const duration=Number((seg.end-seg.start).toFixed(3)),route=routes.get(String(row.routeId||'')),location=locations.get(String(row.locationId||''));let mapAnimation=null;const missingInfo=[];
+    const duration=Number((seg.end-seg.start).toFixed(3)),route=routes.get(String(row.routeId||'')),location=locations.get(String(row.locationId||''));let mapAnimation=null;const missingInfo=row.plannerFallback?['Qwen omitted this locked segment; a safe hold scene was created for review.']:[];
     if(row.intent==='advance'){
       const coordinates=route?.coordinates;
       const sourced=route&&String(route.sourceUrl||'').startsWith('https://')&&String(route.sourceDate||'').trim()&&String(route.precisionNote||'').trim()&&Array.isArray(coordinates)&&coordinates.length>=2&&coordinates.every(point=>Array.isArray(point)&&point.length===2&&point.every(Number.isFinite)&&Math.abs(point[0])<=180&&Math.abs(point[1])<=90);

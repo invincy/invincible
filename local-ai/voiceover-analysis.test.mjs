@@ -77,6 +77,19 @@ test('does not invent Panipat positions or routes when the approved catalog has 
   assert.match(draft.scenes[0].missingInfo.join(' '), /no route was invented/);
 });
 
+test('repairs an omitted Qwen row without merging or losing locked Whisper segments', () => {
+  const draft=compileCreativePlan(transcript,{scenes:[{sourceSegmentId:'s1',intent:'title',title:'Panipat',assetId:'',locationId:'',routeId:''}]},{assets:[],verifiedLocations:[],verifiedRoutes:[]});
+  assert.equal(draft.scenes.length,2);
+  assert.deepEqual(draft.scenes.map(scene=>scene.sourceSegmentIds),[['s1'],['s2']]);
+  assert.equal(draft.scenes[1].animation,'hold');
+  assert.match(draft.scenes[1].missingInfo.join(' '),/safe hold scene was created/);
+});
+
+test('still rejects duplicate or unknown Qwen segment references', () => {
+  assert.throws(()=>compileCreativePlan(transcript,{scenes:[{sourceSegmentId:'s1',intent:'hold'},{sourceSegmentId:'s1',intent:'title'}]},{assets:[]}),/more than one plan/);
+  assert.throws(()=>compileCreativePlan(transcript,{scenes:[{sourceSegmentId:'unknown',intent:'hold'}]},{assets:[]}),/unknown segment/);
+});
+
 test('analyzes only workspace audio through injected local adapters', async () => {
   const workspace = await fs.mkdtemp(path.join(os.tmpdir(), 'invincible-voiceover-'));
   const audioPath = path.join(workspace, 'panipat.wav');
