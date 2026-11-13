@@ -419,7 +419,7 @@ async function generateScenePlan(){
  const showProgress=()=>{const seconds=Math.max(1,Math.round((Date.now()-started)/1000));$('localAnalysisStatus').textContent='Qwen is creating the sync plan. Review will open automatically when it is ready.';$('scenePlanProgressTime').textContent=`Matching ${timedTranscript.segments.length} locked timestamp${timedTranscript.segments.length===1?'':'s'} · ${seconds} sec elapsed`;};showProgress();scenePlanProgressTimer=setInterval(showProgress,1000);$('scenePlanProgress').scrollIntoView({behavior:'smooth',block:'start'});refreshAvailability();
  try{
   await persistScriptSync();
-  const payload=await localWorker.request('/api/voiceover/plan',{title:$('title').value,creativeInstructions:$('creativeInstructions').value,transcript:timedTranscript},{timeoutMs:180000});
+  const payload=await localWorker.request('/api/voiceover/plan',{title:$('title').value,creativeInstructions:$('creativeInstructions').value,transcript:timedTranscript,production:true},{timeoutMs:180000});
   clearInterval(scenePlanProgressTimer);scenePlanProgressTimer=null;renderScenePlan(payload);$('localAnalysisStatus').textContent='Sync plan generated. Saving it with the final MP3…';refreshAvailability();
   await savePendingAiDraft({title:$('title').value,creativeInstructions:$('creativeInstructions').value,analysis:payload.analysis,creatorStudio:payload.creatorStudio},new Blob([audioBytes],{type:'audio/mpeg'}));
   scenePlanSaved=true;$('localAnalysisStatus').textContent='Sync plan ready. Review every scene, then apply it to the project and open Motion Studio.';

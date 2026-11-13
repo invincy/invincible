@@ -1,4 +1,4 @@
-import {mountVideoStudio} from './video-studio/workspace.js?v=2026111301';
+import {mountVideoStudio} from './video-studio/workspace.js?v=2026111314';
 import {mountHistoryWorkspace} from './history-workspace.js?v=2026111203';
 import {makeScene} from './storyboard-model.js?v=3';
 import {METHODS,IMPORT_FIELDS,uid,methodsOf,inspectImport,parseProductionImport,uniqueScenes,groupFor,taskFor,setTask,animationStage,requirements,sceneState,projectProgress,queueScenes,canonicalScript,scriptReview,filterScenes,productionReadiness} from './production-model.js?v=2026111112';
@@ -145,7 +145,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   if(!aiScenes.every(scene=>scene.mapAnimation||scene.contextCard===true))throw Error('Review the missing or unverified scene information before applying this draft.');
   if(!audio)throw Error('The original MP3 is missing from this device. Run local analysis again to attach it.');
   tab='Video Studio';render();await videoWorkspace?.ready;if(!videoWorkspace)throw Error('Video Studio could not be opened.');
-  await videoWorkspace.importAiProduction(aiScenes,audio,{title:draft.title||'Invincible AI production'});message('Executable scenes and the exact analyzed MP3 are loaded in Video Studio.');
+  await videoWorkspace.importAiProduction(aiScenes,audio,{title:draft.title||'Invincible AI production',allowContextCards:true});message(`${aiScenes.length} scenes and the exact MP3 are saved in Motion Studio. Preview the full timeline, then Export MP4.`);
  }
  function groupEditor(group){
   return '<section class="wb-group" data-group="'+esc(group.id)+'"><div class="wb-detail-grid"><label>Project name<input data-group-field="name" value="'+esc(group.name)+'"></label><label>Blender file<input data-group-field="blenderFile" value="'+esc(group.blenderFile||'')+'"></label>'+

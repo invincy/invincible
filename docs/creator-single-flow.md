@@ -45,6 +45,12 @@ finishes, and enables Motion Studio only after the plan and final MP3 are saved.
 While Qwen works, state clearly that no further click is required and that the
 Review sync plan stage will open automatically; do not leave a disabled button
 as the only explanation of progress.
+After the final reviewed scene, one Apply action imports every locked scene and
+the exact analyzed MP3 into Motion Studio. Planning requests production-safe
+fallbacks, so missing verified geography becomes an explicit Canvas context
+scene instead of a dead handoff. Applying immediately saves a recoverable local
+Motion Studio draft. The remaining user choice is Preview full video, optionally
+edit a scene, then Export MP4; do not send the user through another importer.
 As soon as Whisper finishes, Creator Studio checkpoints the final MP3, original
 source MP3, locked transcript and current animation instructions for that
 account and project. After an app restart, selecting Script & scenes opens this
