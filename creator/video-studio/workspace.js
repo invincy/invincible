@@ -7,7 +7,7 @@ import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111207';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111207';
 import {createStudioRenderer} from './adapters.js?v=2026111207';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111014';
-import {mountAssembly} from './assembly.js?v=2026111301';
+import {mountAssembly} from './assembly.js?v=2026111318';
 import {encodeStudioVideo} from './export.js?v=2026111209';
 import {openStudioStore} from './storage.js';
 import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111203';
@@ -332,5 +332,6 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  });
  async function importAiProduction(storyboard,audioBlob,{title='Invincible AI production',allowContextCards=false,replaceExisting=false}={}){await ready;const hasDraft=state.manifest.scenes.length||(state.manifest.audioClips||[]).length||state.manifest.audio;if(hasDraft&&!replaceExisting)throw Error('Motion Studio already contains a different draft. Choose Replace when applying the reviewed sync plan, or keep the existing draft.');if(!Array.isArray(storyboard)||!storyboard.length)throw Error('The AI draft has no executable scenes.');if(!(audioBlob instanceof Blob)||!audioBlob.size)throw Error('The original voiceover MP3 is missing. Run AI timing again to attach it.');const file=new File([audioBlob],audioBlob.name||'invincible-voiceover.mp3',{type:audioBlob.type||'audio/mpeg'}),decoded=await decodeVoiceover(file),fileId=uid(),next=compileAiStoryboardManifest(storyboard,{aspectRatio:'9:16',audioFileId:fileId,audioName:file.name,audioDuration:decoded.duration,mapAssets:mapAssets(),allowContextCards});next.title=String(title).slice(0,200);state.files.set(fileId,file);try{await applyManifest(next);time=0;await draw();await saveLocalDraft();status(`${next.scenes.length} scenes and the exact MP3 are saved on this device. Next: Play the full preview, then Export MP4.`);return next;}catch(error){state.files.delete(fileId);throw error;}}
  const hidden=()=>{if(document.hidden)stop();};document.addEventListener('visibilitychange',hidden);
- return {ready,get manifest(){return state.manifest;},importAiProduction,destroy(){images.destroy();disposed=true;state.time=time;assembly?.destroy();stop();lifecycle.abort(new DOMException('Workspace closed','AbortError'));controller?.abort(new DOMException('Workspace closed','AbortError'));renderer?.destroy();context?.close();store?.close();document.removeEventListener('visibilitychange',hidden);}};
+ async function reviewGeneratedMaps(){await ready;return assembly?.startMapReview()||false;}
+ return {ready,get manifest(){return state.manifest;},importAiProduction,reviewGeneratedMaps,destroy(){images.destroy();disposed=true;state.time=time;assembly?.destroy();stop();lifecycle.abort(new DOMException('Workspace closed','AbortError'));controller?.abort(new DOMException('Workspace closed','AbortError'));renderer?.destroy();context?.close();store?.close();document.removeEventListener('visibilitychange',hidden);}};
 }

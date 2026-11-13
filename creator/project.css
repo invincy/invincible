@@ -392,6 +392,9 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
 .project-workspace-nav :is(button,a):hover,.project-workspace-nav button[aria-current=page]{border-color:#478e93;background:#15313d;color:#d2f4ef}
 .project-workspace-nav .project-nav-spacer{flex:1;min-width:12px}
 .project-workspace-nav .primary{background:var(--studio-accent);border-color:transparent;color:#082025}
+.project-workspace-nav .project-tool-divider{flex:none;margin-left:8px;padding-left:14px;border-left:1px solid var(--studio-line);color:#78909e;font-size:11px;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+.project-workflow-guide{display:flex;align-items:center;min-height:34px;padding:7px clamp(14px,2.2vw,38px);border-bottom:1px solid rgba(78,125,145,.22);background:rgba(8,18,27,.78);color:#a9c1ce;font-size:12px}
+.project-workflow-guide strong{margin-right:6px;color:var(--studio-accent)}
 .project-page.creator-focus-mode>.project-workspace-nav{flex:none}
 .project-page.creator-focus-mode #app{display:flex;flex-direction:column}
 .project-page.creator-focus-mode .project-readiness{display:none}
@@ -587,4 +590,6 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
  .project-workspace-nav{padding:8px 10px;scroll-snap-type:x proximity}
  .project-workspace-nav :is(button,a){min-height:48px;scroll-snap-align:start}
  .project-workspace-nav .project-nav-spacer{display:none}
+ .project-workspace-nav .project-tool-divider{margin-left:2px;padding-left:10px}
+ .project-workflow-guide{padding:7px 12px}
 }

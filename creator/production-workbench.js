@@ -1,4 +1,4 @@
-import {mountVideoStudio} from './video-studio/workspace.js?v=2026111315';
+import {mountVideoStudio} from './video-studio/workspace.js?v=2026111318';
 import {mountHistoryWorkspace} from './history-workspace.js?v=2026111203';
 import {makeScene} from './storyboard-model.js?v=3';
 import {METHODS,IMPORT_FIELDS,uid,methodsOf,inspectImport,parseProductionImport,uniqueScenes,groupFor,taskFor,setTask,animationStage,requirements,sceneState,projectProgress,queueScenes,canonicalScript,scriptReview,filterScenes,productionReadiness} from './production-model.js?v=2026111112';
@@ -139,7 +139,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   const text=JSON.stringify(draft.creatorStudio);root.querySelector('[data-paste]').value=text;importTable=inspectImport(text);mapping=[...importTable.mapping];
   const box=root.querySelector('[data-import-preview]');box.innerHTML='<p>Local AI draft · '+importTable.rows.length+' scenes. Review every scene before importing.</p><div data-mapped-preview></div>';mappedPreview();
  }
- async function openAiVideo(){
+ async function openAiVideo({reviewMaps=false}={}){
   const draft=loadPendingAiDraft(),audio=await loadPendingAiAudio(),aiScenes=draft?.creatorStudio?.scenes;
   if(!Array.isArray(aiScenes)||!aiScenes.length)throw Error('This AI draft has no executable scene plan yet. Generate an animation-ready draft first.');
   if(!aiScenes.every(scene=>scene.mapAnimation||scene.canvasScene||scene.contextCard===true))throw Error('Review the missing or unverified scene information before applying this draft.');
@@ -147,8 +147,10 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   tab='Video Studio';render();await videoWorkspace?.ready;if(!videoWorkspace)throw Error('Video Studio could not be opened.');
   const current=videoWorkspace.manifest,hasDraft=current&&(current.scenes.length||(current.audioClips||[]).length||current.audio);
   if(hasDraft&&!confirm('Replace the current Motion Studio draft with this reviewed sync plan? The existing local video draft will be replaced; the Creator project and source MP3 remain saved.')){message('Existing Motion Studio draft kept. The reviewed sync plan is still available in Script & scenes.');return;}
-  await videoWorkspace.importAiProduction(aiScenes,audio,{title:draft.title||'Invincible AI production',allowContextCards:true,replaceExisting:!!hasDraft});message(`${aiScenes.length} scenes and the exact MP3 are saved in Motion Studio. Preview the full timeline, then Export MP4.`);
+  await videoWorkspace.importAiProduction(aiScenes,audio,{title:draft.title||'Invincible AI production',allowContextCards:true,replaceExisting:!!hasDraft});
+  const reviewingMaps=reviewMaps&&await videoWorkspace.reviewGeneratedMaps();message(reviewingMaps?'Review each generated map. Save or discard to continue; Motion Studio opens automatically after the last map.':`${aiScenes.length} scenes and the exact MP3 are saved in Motion Studio. Preview the full timeline, then Export MP4.`);return {reviewingMaps};
  }
+ async function reviewMaps(){tab='Video Studio';render();await videoWorkspace?.ready;if(!videoWorkspace)throw Error('Motion Studio could not be opened.');const reviewingMaps=await videoWorkspace.reviewGeneratedMaps();if(!reviewingMaps)message('This plan has no map scenes. Continue to Motion & export.');return reviewingMaps;}
  function groupEditor(group){
   return '<section class="wb-group" data-group="'+esc(group.id)+'"><div class="wb-detail-grid"><label>Project name<input data-group-field="name" value="'+esc(group.name)+'"></label><label>Blender file<input data-group-field="blenderFile" value="'+esc(group.blenderFile||'')+'"></label>'+
    field('Resources','resources',group.resources||'','data-group-field="resources"')+'</div></section>';
@@ -378,5 +380,5 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  root.addEventListener('dragover',event=>{if(dragId&&event.target.closest('[data-scene],[data-nav-scene]'))event.preventDefault();});
  root.addEventListener('drop',event=>{event.preventDefault();dragId=event.dataTransfer?.getData('text/plain')||dragId;const target=event.target.closest('[data-scene],[data-nav-scene]'),id=target?.dataset.scene||target?.dataset.navScene;if(!dragId||!id||id===dragId)return;const from=scenes().findIndex(scene=>scene.id===dragId),to=scenes().findIndex(scene=>scene.id===id);if(from<0||to<0)return;const [item]=project().scenes.splice(from,1);project().scenes.splice(to,0,item);dragId='';changed();});
  root.addEventListener('dragend',()=>dragId='');
- return {render,openAiDraft:openAiVideo,suspend(){historyWorkspace?.destroy();historyWorkspace=null;videoWorkspace?.destroy();videoWorkspace=null;},open({area='Production',method,sceneId}={}){tab=area;viewMode='focused';expandAll=false;if(method)workspace=method;active=sceneId||'';render();if(active)root.querySelector('[data-scene="'+CSS.escape(active)+'"]')?.scrollIntoView({block:'nearest'});},reset(){videoSession={};tab=defaultArea;workspace="All";assetFilter="All";completionFilter="All";searchQuery="";groupBy="project";active="";activeAsset="";expandAll=false;viewMode="focused";expandedScene="";editorPane="plan";promptKey="blenderPrompt";message("");render();}};
+ return {render,openAiDraft:openAiVideo,reviewMaps,suspend(){historyWorkspace?.destroy();historyWorkspace=null;videoWorkspace?.destroy();videoWorkspace=null;},open({area='Production',method,sceneId}={}){tab=area;viewMode='focused';expandAll=false;if(method)workspace=method;active=sceneId||'';render();if(active)root.querySelector('[data-scene="'+CSS.escape(active)+'"]')?.scrollIntoView({block:'nearest'});},reset(){videoSession={};tab=defaultArea;workspace="All";assetFilter="All";completionFilter="All";searchQuery="";groupBy="project";active="";activeAsset="";expandAll=false;viewMode="focused";expandedScene="";editorPane="plan";promptKey="blenderPrompt";message("");render();}};
 }

@@ -14,7 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../site-nav.css?v=19">
   <link rel="stylesheet" href="../shared/dashboard-backdrop.css?v=4">
-  <link rel="stylesheet" href="project.css?v=2026111307">
+  <link rel="stylesheet" href="project.css?v=2026111318">
   <link rel="stylesheet" href="storyboard.css?v=5">
   <link rel="stylesheet" href="production-workbench.css?v=12">
   <link rel="stylesheet" href="history-workspace.css?v=2026110903">
@@ -70,9 +70,11 @@
   <div class="project-progress" aria-hidden="true"><span id="projectProgressBar"></span></div>
   <nav class="project-workspace-nav" aria-label="Project tools">
     <button type="button" data-project-area="Voiceover"><span aria-hidden="true">1</span> Script</button>
-    <button type="button" data-project-area="Storyboard"><span aria-hidden="true">2</span> Script &amp; scenes</button>
-    <button type="button" data-project-area="Maps"><span aria-hidden="true">3</span> Map Editor</button>
-    <button type="button" data-project-area="Video Studio"><span aria-hidden="true">4</span> Motion Studio</button>
+    <button type="button" data-project-area="Storyboard"><span aria-hidden="true">2</span> Sync plan</button>
+    <button type="button" data-project-area="Video Studio" data-tool-mode="map-review"><span aria-hidden="true">3</span> Review maps</button>
+    <button type="button" data-project-area="Video Studio"><span aria-hidden="true">4</span> Motion &amp; export</button>
+    <span class="project-tool-divider" aria-hidden="true">Optional tools</span>
+    <button type="button" data-project-area="Maps">Map Editor</button>
     <button type="button" data-project-area="Video Studio" data-tool-mode="battlefield">Battlefield Editor</button>
     <button type="button" data-project-area="Assets">Assets &amp; 3D</button>
     <a href="images.html">Image Studio</a>
@@ -80,6 +82,7 @@
     <button id="saveProjectNow" type="button">Save now</button>
     <button id="saveAndReturn" type="button" class="primary">Save &amp; return</button>
   </nav>
+  <div id="workflowGuide" class="project-workflow-guide" role="status" aria-live="polite"></div>
   <div id="status" class="sync-status" role="status" aria-live="polite" hidden></div>
   <aside id="conflictBanner" class="conflict-banner" role="alert" hidden>
     <div class="conflict-copy">
@@ -122,6 +125,6 @@
       <div class="share-footer"><button id="copyProjectLink" type="button" class="secondary">Copy project link</button><button value="cancel" class="primary">Done</button></div>
     </form>
   </dialog>
-  <script type="module" src="project.js?v=2026111317"></script>
+  <script type="module" src="project.js?v=2026111318"></script>
 </body>
 </html>

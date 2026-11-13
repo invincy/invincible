@@ -53,11 +53,15 @@ Motion Studio draft. The remaining user choice is Preview full video, optionally
 edit a scene, then Export MP4; do not send the user through another importer.
 OpenAI planning now selects the existing native Map Editor engine for geographic
 segments and supplies its validated version-1 camera, label and illustrative
-route instructions. Motion Studio receives those scenes as `map`, not Canvas,
-and Edit scene opens the real Map Editor on an isolated copy before Save scene &
-return. Canvas remains available for non-geographic diagrams. The project steps
-therefore read Script → Script & scenes → Map Editor → Motion Studio; this does
-not add a second renderer or replace a saved project's map schema.
+route instructions. Motion Studio receives those scenes as `map`, not Canvas.
+The visible numbered flow reads **1 Script → 2 Sync plan → 3 Review maps → 4
+Motion & export**. After a plan is applied, every generated map opens in the real
+Map Editor in timeline order; Save or discard continues to the next map, and the
+last map returns automatically to Motion Studio. A persistent guidance strip
+states the current step and next action. Canvas remains available for
+non-geographic diagrams, while project-wide Map Editor, Battlefield Editor,
+Assets & 3D and Image Studio stay visible as optional tools. This does not add a
+second renderer or replace a saved project's map schema.
 As soon as Whisper finishes, Creator Studio checkpoints the final MP3, original
 source MP3, locked transcript and current animation instructions for that
 account and project. After an app restart, selecting Script & scenes opens this

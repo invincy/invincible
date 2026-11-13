@@ -42,7 +42,7 @@ export async function loadAssetLibraryCatalog(url=catalogUrl){
 }
 export function mountAssembly(root,api){
  const {getManifest,setManifest,getProject,getFile,putFile,deleteFile,importFiles,run,status,getTime,setTime,releaseRenderer,previewManifest}=api;
- let modelId='',selected=api.session.selected||'',audioSelected='',pending=null,focused=null,editor=null,focusScene=null,returnTime=0,closed=false,catalog=null;
+ let modelId='',selected=api.session.selected||'',audioSelected='',pending=null,focused=null,editor=null,focusScene=null,returnTime=0,closed=false,catalog=null,mapReviewQueue=[],mapReviewTotal=0;
  const objectRoot=document.createElement('section');objectRoot.className='vs-object-editor';root.closest('.video-studio').querySelector('.vs-preview').append(objectRoot);
  const objects=mountObjectEditor(objectRoot,{canvas:root.closest('.video-studio').querySelector('canvas'),getScene:()=>focused?null:scene(),getManifest,getTime,setTime,run,pause:api.pause,seek:()=>previewManifest(getManifest()),change:async(fn,replacement)=>{const m=replacement||await upgrade();if(fn)fn(m.scenes.find(s=>s.id===selected));await apply(m);}});
  const lockNavigation=value=>root.closest('.production-workbench')?.querySelectorAll('[data-tab]').forEach(b=>b.disabled=value);
@@ -91,11 +91,15 @@ export function mountAssembly(root,api){
  }
  async function apply(next){validateManifest(next,{mapAssets:mapAssets()});await setManifest(next);pending=null;render();}
  async function openEditor(){const m=await upgrade(),s=m.scenes.find(s=>s.id===selected);returnTime=getTime();await releaseRenderer();objects.sync();lockNavigation(true);focusScene=s;focused=m;objects.sync();root.closest('.video-studio').classList.add('vs-focusing');root.closest('.video-studio').dataset.editorKind=s.engineType;
-  root.innerHTML='<div class="vs-actions"><button data-compose="finish-edit">Save scene & return</button><button data-compose="cancel-edit">Discard & return</button></div><div data-focused-editor></div>';const host=root.querySelector('[data-focused-editor]');
+  const continuing=mapReviewQueue.length>0,reviewNote=continuing?`<p class="vs-help"><strong>Review generated map ${mapReviewTotal-mapReviewQueue.length+1} of ${mapReviewTotal}.</strong> Save or discard to continue automatically.</p>`:'';
+  root.innerHTML=reviewNote+`<div class="vs-actions"><button data-compose="finish-edit">Save scene & ${continuing?'continue':'return'}</button><button data-compose="cancel-edit">Discard & ${continuing?'continue':'return'}</button></div><div data-focused-editor></div>`;const host=root.querySelector('[data-focused-editor]');
   if(s.engineType==='battlefield')editor=mountBattlefieldEditor(host,{scene:s,assets:m.assets,onChange:()=>run(async()=>{await previewManifest(m);}).catch(()=>{})});
   else {const full=s.engineData.project||m.mapSources?.find(source=>source.id===s.engineData.sourceId)?.project||mapDraft(s.engineData.animation,s.engineData.geometryReviewed,mapAssets()),p=structuredClone({scenes:full.scenes.map(s=>({id:s.id,duration:s.duration})),historicalMap:full.historicalMap});p.id=getProject()?.id;s.engineData={project:p,sourceStart:s.engineData.sourceStart||0};editor=mountMapEditor(host,{getProject:()=>p,onChange:()=>{},initialTime:s.engineData.sourceStart+Math.max(0,returnTime-s.startSeconds),onAdvanced:()=>status('Map tools are available here. Use Save scene & return to finish.')});}
  }
- async function closeEditor(save){const next=focused;if(save){if(focusScene.engineType==='map'){const p=focusScene.engineData.project;p.scenes=p.scenes.map(s=>({id:s.id,duration:s.duration}));delete p.aspectRatio;delete p.id;}validateManifest(next,{mapAssets:mapAssets()});}editor?.destroy();editor=null;focused=null;focusScene=null;lockNavigation(false);root.closest('.video-studio').classList.remove('vs-focusing');await releaseRenderer();setTime(returnTime);if(save)await setManifest(next);else await previewManifest(getManifest());render();}
+ async function closeEditor(save){const next=focused,closedId=focusScene?.id;if(save){if(focusScene.engineType==='map'){const p=focusScene.engineData.project;p.scenes=p.scenes.map(s=>({id:s.id,duration:s.duration}));delete p.aspectRatio;delete p.id;}validateManifest(next,{mapAssets:mapAssets()});}editor?.destroy();editor=null;focused=null;focusScene=null;lockNavigation(false);root.closest('.video-studio').classList.remove('vs-focusing');await releaseRenderer();setTime(returnTime);if(save)await setManifest(next);else await previewManifest(getManifest());render();
+  if(mapReviewQueue.length){mapReviewQueue=mapReviewQueue.filter(id=>id!==closedId);const nextMap=mapReviewQueue.find(id=>getManifest().scenes.some(scene=>scene.id===id&&scene.engineType==='map'));if(nextMap){selected=nextMap;setTime(scene().startSeconds);render();await openEditor();return;}mapReviewQueue=[];mapReviewTotal=0;root.dispatchEvent(new CustomEvent('invincible-map-review-complete',{bubbles:true}));}
+ }
+ async function startMapReview(){mapReviewQueue=getManifest().scenes.filter(scene=>scene.engineType==='map').map(scene=>scene.id);mapReviewTotal=mapReviewQueue.length;if(!mapReviewQueue.length)return false;selected=mapReviewQueue[0];setTime(scene().startSeconds);render();await openEditor();return true;}
  root.addEventListener('click',e=>{if(e.target.closest('[data-focused-editor]'))return;const select=e.target.closest('[data-compose-select]'),audio=e.target.closest('[data-compose-audio-select]'),action=e.target.closest('[data-compose]')?.dataset.compose;
   if(select){if(pending){status('Apply or discard the pending change first.');return;}selected=select.dataset.composeSelect;setTime(scene().startSeconds);render();run(()=>previewManifest(getManifest()));return;}
   if(audio){audioSelected=audio.dataset.composeAudioSelect;render();return;}if(!action)return;
@@ -174,5 +178,5 @@ export function mountAssembly(root,api){
    review(arrangeScenes(m,m.scenes,{mapAssets:mapAssets()}),'Apply selected scene changes?');
   });
  });
- render();return {sync:render,highlight:()=>objects.highlight(),get focused(){return !!focused;},destroy(){closed=true;lockNavigation(false);editor?.destroy();objects.destroy();},select(id){selected=id;render();}};
+ render();return {sync:render,highlight:()=>objects.highlight(),startMapReview,get focused(){return !!focused;},destroy(){closed=true;lockNavigation(false);editor?.destroy();objects.destroy();},select(id){selected=id;render();}};
 }

@@ -56,7 +56,8 @@ const server=http.createServer((req,res)=>{
   await page.locator('#projectTitle').filter({hasText:'Untitled project'}).waitFor();
   await page.locator('#projectVoiceoverStep:not([hidden])').waitFor();
   assert.equal(await page.locator('[data-project-area="Voiceover"]').getAttribute('aria-current'),'step');
-  assert.deepEqual(await page.locator('.project-workspace-nav [data-project-area]').allTextContents(),['1 Script','2 Script & scenes','3 Map Editor','4 Motion Studio','Battlefield Editor','Assets & 3D']);
+  assert.deepEqual(await page.locator('.project-workspace-nav [data-project-area]').allTextContents(),['1 Script','2 Sync plan','3 Review maps','4 Motion & export','Map Editor','Battlefield Editor','Assets & 3D']);
+  assert.match(await page.locator('#workflowGuide').innerText(),/Step 1 of 4/);
   assert.equal(await page.frameLocator('#projectVoiceoverFrame').locator('[name="aiProvider"][value="cloud"]').isChecked(),true,'Creator Studio reuses OpenAI by default while keeping Local AI selectable');
   assert.equal(await page.evaluate(()=>window.writes||0),0,'Opening an untitled project does not save it before the user edits it');
   await page.goto(base);await page.locator('#app:not([hidden])').waitFor();
@@ -278,7 +279,7 @@ const server=http.createServer((req,res)=>{
   await page.locator('#projectTitle').filter({hasText:'Gaganyaan production'}).waitFor();await openArea('Storyboard');
   const projectId=new URL(page.url()).searchParams.get('id');
   assert.equal((await stored()).notes,'Use a clear map opening and preserve the supplied narration.');
-  assert.equal(await page.locator('.project-workspace-nav [data-project-area]').count(),6);
+  assert.equal(await page.locator('.project-workspace-nav [data-project-area]').count(),7);
   assert.equal(await page.locator('#saveAndReturn').isVisible(),true);
   const stamp=seconds=>String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');
   const table='Voiceover\tVisual / Animation\tAssets Required\tTimeline\tTimestamp\n'+Array.from({length:16},(_,i)=>'भारत का मिशन '+(i+1)+'!\t'+(i===0?'Gaganyaan upper assembly को orbit में दिखाएं. Start with a wide view of the complete spacecraft, then move the camera slowly around the Crew Module and Service Module. Preserve realistic proportions and show the protective structure clearly. Keep the background dark, use soft cyan rim lighting, and finish with a stable three-quarter view. Do not show liftoff or add new objects.':'Camera '+(i+1))+'\tLVM3 model\t'+(i*4)+'–'+(i*4+4)+'s\t'+stamp(i*4)+'.125–'+stamp(i*4+4)+'.875').join('\n');

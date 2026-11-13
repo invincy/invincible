@@ -1,5 +1,5 @@
 import{makeScene}from'./storyboard-model.js?v=3';
-import{createProductionWorkbench}from'./production-workbench.js?v=2026111317';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026111318';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -81,8 +81,8 @@ window.addEventListener("message",async event=>{
     selectProjectArea("Storyboard");
     return;
   }
-  if(event.data?.type!=="invincible-apply-ai-draft")return;
-  try{await storyboard.openAiDraft();selectProjectArea("Video Studio");}
+  if(event.data?.type!=="invincible-review-ai-maps")return;
+  try{const result=await storyboard.openAiDraft({reviewMaps:true});setProjectAreaState("Video Studio",result?.reviewingMaps?"map-review":"");}
   catch(error){status(error.message||"The reviewed scene plan could not be opened.","error");}
 });
 
@@ -105,8 +105,25 @@ function render(){
   renderSceneWorkspace();
 }
 
-function selectProjectArea(area,mode=""){
+function setProjectAreaState(area,mode=""){
   selectedArea=area;selectedTool=mode;
+  const guides={
+    Voiceover:'<strong>Step 1 of 4 · Script.</strong> Create the final MP3, then choose Next · Sync plan.',
+    Storyboard:'<strong>Step 2 of 4 · Sync plan.</strong> Review timestamps and instructions; Next opens every generated map in order.',
+    'Video Studio:map-review':'<strong>Step 3 of 4 · Review maps.</strong> Save or discard each map; Motion & export opens automatically after the last one.',
+    'Video Studio':'<strong>Step 4 of 4 · Motion & export.</strong> Preview the complete timeline, refine any scene, then export the MP4.',
+    Maps:'<strong>Optional · Map Editor.</strong> Build or edit the project-wide map manually.',
+    'Video Studio:battlefield':'<strong>Optional · Battlefield Editor.</strong> Use only when the story needs a tactical schematic.',
+    Assets:'<strong>Optional · Assets & 3D.</strong> Add reusable artwork or models.'
+  };
+  const guide=$("workflowGuide");if(guide)guide.innerHTML=guides[area+(mode?":"+mode:"")]||guides[area]||'<strong>Optional tool.</strong> Return to the numbered flow when ready.';
+  document.querySelectorAll("[data-project-area]").forEach(button=>{
+    const active=button.dataset.projectArea===area&&(button.dataset.toolMode||"")===mode;
+    button.setAttribute("aria-current",active?"step":"false");
+  });
+}
+async function selectProjectArea(area,mode=""){
+  setProjectAreaState(area,mode);
   const isVoiceover=area==="Voiceover",isTiming=area==="Storyboard",showScriptWorkspace=isVoiceover||isTiming;
   $("projectVoiceoverStep").hidden=!showScriptWorkspace;
   $("projectEditingStep").hidden=showScriptWorkspace;
@@ -115,12 +132,11 @@ function selectProjectArea(area,mode=""){
     const frame=$("projectVoiceoverFrame");
     if(!frame.hasAttribute("src"))frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId,view:isTiming?"timing":"script"});
     else frame.contentWindow?.postMessage({type:"invincible-project-script-view",view:isTiming?"timing":"script"},location.origin);
-  }else storyboard.open({area});
-  document.querySelectorAll("[data-project-area]").forEach(button=>{
-    const active=button.dataset.projectArea===area&&(button.dataset.toolMode||"")===mode;
-    button.setAttribute("aria-current",active?"step":"false");
-  });
+  }else if(area==="Video Studio"&&mode==="map-review"){const reviewing=await storyboard.reviewMaps();if(!reviewing)setProjectAreaState("Video Studio","");}
+  else storyboard.open({area});
 }
+
+$("projectStoryboard").addEventListener("invincible-map-review-complete",()=>setProjectAreaState("Video Studio",""));
 
 const renameForm=$("renameProjectForm"), titleInput=$("projectTitleInput");
 function closeRename(){
@@ -383,10 +399,10 @@ $("copyProjectLink").onclick=async()=>{
   catch(error){$("shareFeedback").textContent=error.message;}
 };
 
-document.querySelector(".project-workspace-nav").addEventListener("click",event=>{
+document.querySelector(".project-workspace-nav").addEventListener("click",async event=>{
   const button=event.target.closest("[data-project-area]");
   if(!button)return;
-  selectProjectArea(button.dataset.projectArea,button.dataset.toolMode||"");
+  await selectProjectArea(button.dataset.projectArea,button.dataset.toolMode||"");
 });
 $("saveProjectNow").onclick=async()=>{if(await save())status("Saved to Firebase","ok");};
 $("saveAndReturn").onclick=async()=>{const button=$("saveAndReturn");button.disabled=true;button.textContent="Saving…";if(await save())location.href="/invincible/creator/";else{button.disabled=false;button.textContent="Save & return";}};
