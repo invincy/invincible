@@ -13,7 +13,7 @@ const BUILTIN_GEOGRAPHY_CONTEXTS=[
 const VISUAL_PRESETS=Object.freeze({
  map:{global:[1.45,1.65],continent:[2.15,2.45],region:[2.75,3.15],'country-region':[3.05,3.45],country:[3.55,4.15],city:[7.25,8.1],site:[10,11]},
  label:{primary:{fontSize:58,role:'primary',labelStyle:'card',scale:1},regional:{fontSize:40,role:'regional',labelStyle:'halo',scale:1}},
- route:{flowWidth:7,flowGlowWidth:15,bandWidth:20,bandGlowWidth:32,bandCoreWidth:3.5}
+ route:{flowWidth:7,flowGlowWidth:15,bandWidth:20,bandGlowWidth:20,bandCoreWidth:3.5}
 });
 
 const sceneProperties=schema.properties.scenes.items.properties;
