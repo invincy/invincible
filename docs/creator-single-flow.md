@@ -31,6 +31,10 @@ the in-memory final MP3 while activating the project's second navigation step.
 Script & scenes owns Whisper timing, timed-transcript correction, animation
 instructions and scene-plan review. The browser does not open a separate page
 or reload, so the generated recording remains available to Whisper.
+After generation, Final speed previews the chosen pace. Download MP3 and Next ·
+Script & scenes both prepare the same pitch-preserving, speed-adjusted MP3.
+Whisper receives those adjusted bytes rather than the original recording, so
+the downloaded duration, transcript timestamps and scene timing agree.
 Opening previews cannot be analysed as the final recording. The visible
 MP3 ready → Whisper timing → Scene plan progress leads into locked timestamps,
 animation instructions, scene-plan review, and finally Apply to project → Open

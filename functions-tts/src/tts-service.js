@@ -34,6 +34,18 @@ async function encodeMp3(wav,{ffmpeg=require('ffmpeg-static'),tempRoot=os.tmpdir
   return bytes;
  }finally{await rm(directory,{recursive:true,force:true});}
 }
+async function retimeMp3(mp3,speed,{ffmpeg=require('ffmpeg-static'),tempRoot=os.tmpdir()}={}){
+ if(!Buffer.isBuffer(mp3)||!mp3.length||mp3.length>15*1024*1024)throw Error('Choose one MP3 no larger than 15 MB.');
+ speed=Number(speed);if(!Number.isFinite(speed)||speed<.75||speed>2)throw Error('Final speed must be between 0.75× and 2.00×.');
+ const tempBase=path.resolve(tempRoot),directory=await mkdtemp(path.join(tempBase,'invincible-tts-speed-'));
+ if(path.dirname(path.resolve(directory))!==tempBase||!path.basename(directory).startsWith('invincible-tts-speed-'))throw Error('Unexpected temporary audio directory.');
+ try{
+  const input=path.join(directory,'source.mp3'),output=path.join(directory,'final.mp3');await writeFile(input,mp3);
+  await execute(ffmpeg,['-v','error','-nostdin','-y','-i',input,'-filter:a','atempo='+speed.toFixed(4),'-vn','-codec:a','libmp3lame','-b:a','160k',output],{timeout:90000,maxBuffer:65536});
+  await execute(ffmpeg,['-v','error','-xerror','-nostdin','-i',output,'-f','null','-'],{timeout:90000,maxBuffer:65536});
+  const bytes=await readFile(output);if(!bytes.length)throw Error('Speed-adjusted MP3 encoding produced empty audio.');return bytes;
+ }finally{await rm(directory,{recursive:true,force:true});}
+}
 async function generate(data,{voices,request=googleRequest,encoder=encodeMp3}={}){
  voices=voices||await listVoices(request);
  const voice=voices.find(v=>v.name===data?.voiceName),input=parseInput(data,voice),requests=prepareRequests(input,voice);
@@ -53,4 +65,4 @@ async function generate(data,{voices,request=googleRequest,encoder=encodeMp3}={}
  if(mp3.length>15*1024*1024)throw Error('The MP3 is too large for one download. Split this narration.');
  return {audioBase64:mp3.toString('base64'),mimeType:'audio/mpeg',filename:input.filename,durationSeconds:pcmBytes/(SAMPLE_RATE*2),voiceName:voice.name,requests:requests.length};
 }
-module.exports={googleRequest,listVoices,encodeMp3,generate,GoogleTtsError};
+module.exports={googleRequest,listVoices,encodeMp3,retimeMp3,generate,GoogleTtsError};

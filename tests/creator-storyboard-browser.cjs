@@ -15,7 +15,7 @@ const server=http.createServer((req,res)=>{
  const url=new URL(req.url,'http://localhost').pathname;
  res.setHeader('Content-Type',/\.m?js$/.test(url)?'text/javascript':url.endsWith('.css')?'text/css':'text/html');
  if(url==='/invincible/ai/'){res.end('<style>html,body{background:#0e111a;color-scheme:dark}</style><body></body>');return;}
- if(url==='/invincible/creator/tts-api.js'){res.end('export const loadVoices=async()=>[];export const generateVoiceover=async()=>{throw Error("Voice generation is outside this fixture")};');return;}
+ if(url==='/invincible/creator/tts-api.js'){res.end('export const loadVoices=async()=>[];export const generateVoiceover=async()=>{throw Error("Voice generation is outside this fixture")};export const retimeVoiceover=async()=>{throw Error("Voice speed processing is outside this fixture")};');return;}
  if(url==='/fixture.mjs'||url==='/invincible/shared/firebase-client.js'){res.end(fixture);return;}
  try{
   let file=path.join(root,url.replace(/^\/invincible\/?/,''));

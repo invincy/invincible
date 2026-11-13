@@ -1,7 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const {DOMParser}=require('@xmldom/xmldom');
 const {capabilities,normalizeVoices,parseInput,splitText,splitSsml,prepareRequests,readWav,makeWav,CHUNK_BYTES}=require('../src/tts-model');
-const {generate,encodeMp3,GoogleTtsError,googleRequest}=require('../src/tts-service');
+const {generate,encodeMp3,retimeMp3,GoogleTtsError,googleRequest}=require('../src/tts-service');
 const {assertAccount}=require('../src/tts-callables');
 const voice=normalizeVoices([{name:'hi-IN-Neural2-B',languageCodes:['hi-IN'],ssmlGender:'MALE'}])[0];
 const input={text:'पानीपत की कहानी। Military Strategy!',voiceName:voice.name,languageCode:'hi-IN'};
@@ -93,6 +93,11 @@ test('does not retry Google failures or print upstream response details',async()
 test('real MP3 encoder produces a nonempty, fully decodable recording',async()=>{
  const pcm=Buffer.alloc(48000);for(let i=0;i<24000;i++)pcm.writeInt16LE(Math.round(3000*Math.sin(2*Math.PI*440*i/24000)),i*2);
  const result=await encodeMp3(makeWav([pcm]));assert.ok(result.length>10000);
+});
+test('final-speed processing creates a pitch-preserving decodable MP3',async()=>{
+ const pcm=Buffer.alloc(48000*2);for(let i=0;i<48000;i++)pcm.writeInt16LE(Math.round(3000*Math.sin(2*Math.PI*440*i/24000)),i*2);
+ const original=await encodeMp3(makeWav([pcm])),faster=await retimeMp3(original,1.2);assert.ok(faster.length>10000);assert.notDeepEqual(faster,original);
+ await assert.rejects(()=>retimeMp3(original,.5),/between 0.75/);
 });
 
 test('social and empathetic delivery preserve narration and carry distinct performance prompts',async()=>{

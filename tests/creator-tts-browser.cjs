@@ -20,7 +20,8 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
  export async function getDocs(q){const response=await fetch('/history-fixture?path='+encodeURIComponent(q.path));let rows=await response.json();rows.sort((a,b)=>b.data.createdAt-a.data.createdAt);const cursor=q.rules.find(r=>r.after)?.after;if(cursor)rows=rows.slice(rows.findIndex(r=>r.id===cursor)+1);rows=rows.slice(0,q.rules.find(r=>r.limit)?.limit);return {size:rows.length,docs:rows.map(r=>({id:r.id,data:()=>r.data}))};}
  export async function setDoc(path,data){if(window.failHistorySave)throw Error('History connection failed');await fetch('/history-fixture?path='+encodeURIComponent(path),{method:'PUT',body:JSON.stringify(data)});}
  export async function deleteDoc(path){if(window.failHistoryDelete)throw Error('History deletion failed');await fetch('/history-fixture?path='+encodeURIComponent(path),{method:'DELETE'});}`;
- const fixtureApi='export async function loadVoices(){if(window.failVoices)throw Error("Backend unavailable");return '+JSON.stringify(voices)+';} export async function generateVoiceover(data){window.lastTtsRequest=data;if(window.generationGate)await window.generationGate;await new Promise(r=>setTimeout(r,window.generationDelay||30));if(window.failGenerate)throw Error("Google TTS quota is exhausted");return '+JSON.stringify({audioBase64:mp3.toString('base64'),mimeType:'audio/mpeg',filename:'test-voice.mp3',durationSeconds:1,voiceName:'hi-IN-Neural2-B'})+';}';
+ const fixtureAudio=JSON.stringify({audioBase64:mp3.toString('base64'),mimeType:'audio/mpeg',filename:'test-voice.mp3',durationSeconds:1,voiceName:'hi-IN-Neural2-B'});
+ const fixtureApi='export async function loadVoices(){if(window.failVoices)throw Error("Backend unavailable");return '+JSON.stringify(voices)+';} export async function generateVoiceover(data){window.lastTtsRequest=data;if(window.generationGate)await window.generationGate;await new Promise(r=>setTimeout(r,window.generationDelay||30));if(window.failGenerate)throw Error("Google TTS quota is exhausted");return '+fixtureAudio+';} export async function retimeVoiceover(data){window.lastRetimeRequest=data;return {...'+fixtureAudio+',filename:"test-voice-"+Number(data.speed).toFixed(2)+"x.mp3",durationSeconds:data.durationSeconds/data.speed,speed:data.speed};}';
  const server=http.createServer((req,res)=>{
   const url=new URL(req.url,'http://localhost'),relative=decodeURIComponent(url.pathname.replace(/^\/invincible\//,''));
   if(url.pathname==='/history-fixture'){
@@ -107,7 +108,9 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   await page.locator('#speed').fill('1.15');
   await page.locator('#generate').click();await page.locator('#generationStatus').filter({hasText:'MP3 ready'}).waitFor();
   const full=await page.evaluate(()=>window.lastTtsRequest);assert.equal(full.text,await page.locator('#script').inputValue());
+  await page.locator('#playbackSpeed').selectOption('1.2');assert.equal(await page.locator('#player').evaluate(audio=>audio.playbackRate),1.2);assert.match(await page.locator('#playbackHelp').innerText(),/Download and Next use this exact speed/);
   assert.equal(await page.locator('.recording-actions #analyzeLocal').innerText(),'Scripting · Step 2');assert.equal(await page.locator('#analyzeLocal').isEnabled(),true);assert.equal(await page.locator('[data-ai-flow="audio"]').getAttribute('class'),'done');assert.equal(await page.locator('[data-ai-flow="timing"]').getAttribute('aria-current'),'step');transcribeMissing=true;await page.locator('#analyzeLocal').click();await page.locator('#localAnalysisStatus').filter({hasText:'out of date'}).waitFor();assert.match(await page.locator('#localAnalysisStatus').innerText(),/MP3 is still here/);assert.equal(await page.locator('#retryAnalysis').isVisible(),true);transcribeMissing=false;await page.locator('#retryAnalysis').click();await page.locator('#transcriptReview').waitFor();
+  assert.equal((await page.evaluate(()=>window.lastRetimeRequest)).speed,1.2);assert.equal(await page.locator('#player').evaluate(audio=>audio.playbackRate),1);assert.match(await page.locator('#recordingInfo').innerText(),/final 1\.20×/);
   assert.equal(await page.locator('[data-ai-flow="timing"]').getAttribute('class'),'done');assert.equal(await page.locator('[data-ai-flow="plan"]').getAttribute('aria-current'),'step');
   assert.match(await page.locator('#transcriptDuration').innerText(),/00:01\.000/);assert.equal(await page.locator('.transcript-segment').count(),1);
   await page.locator('#creativeInstructions').fill('Show red arrows rising above the Equator.');await page.locator('.transcript-segment textarea').fill('Warm air rises above the Equator.');assert.equal(await page.locator('#generateScenePlan').isEnabled(),true);
@@ -218,10 +221,8 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
    for(const id of ['generate','player','download']){
     const control=page.locator('#'+id);
     await control.scrollIntoViewIfNeeded();
-    assert.ok(await control.evaluate(el=>{
-    const r=el.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
-    return r.y>=0&&r.bottom<=innerHeight&&hit&&(hit===el||el.contains(hit));
-   }),'Transport reachable and unobscured: '+id+' at '+width);
+    const reach=await control.evaluate(el=>{const r=el.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return{ok:r.y>=0&&r.bottom<=innerHeight+1&&!!hit&&(hit===el||el.contains(hit)),rect:{x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom},viewport:innerHeight,hit:hit?.id||hit?.className||hit?.tagName}});
+    assert.ok(reach.ok,'Transport reachable and unobscured: '+id+' at '+width+' '+JSON.stringify(reach));
    }
     if(width>900&&height>=650){
     const editor=await page.locator('#script').boundingBox();

@@ -3,5 +3,7 @@ import {getFunctions,httpsCallable} from 'https://www.gstatic.com/firebasejs/10.
 const functions=getFunctions(firebaseApp,'asia-south1');
 const voices=httpsCallable(functions,'creatorTtsVoices',{timeout:120000});
 const generate=httpsCallable(functions,'creatorTtsGenerate',{timeout:540000});
+const retime=httpsCallable(functions,'creatorTtsRetime',{timeout:540000});
 export const loadVoices=async()=>(await voices({})).data.voices;
 export const generateVoiceover=async data=>(await generate(data)).data;
+export const retimeVoiceover=async data=>(await retime(data)).data;

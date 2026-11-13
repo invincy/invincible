@@ -2,7 +2,7 @@ const {onCall,HttpsError}=require('firebase-functions/v2/https');
 const {defineString}=require('firebase-functions/params');
 const {getFirestore,Timestamp}=require('firebase-admin/firestore');
 const {logger}=require('firebase-functions');
-const {listVoices,generate,GoogleTtsError}=require('./tts-service');
+const {listVoices,generate,retimeMp3,GoogleTtsError}=require('./tts-service');
 const {parseInput,prepareRequests}=require('./tts-model');
 const accountUid=defineString('CREATOR_TTS_ACCOUNT_UID',{default:''});
 const options={region:'asia-south1',timeoutSeconds:540,memory:'1GiB',maxInstances:2,concurrency:1};
@@ -44,5 +44,14 @@ exports.creatorTtsGenerate=onCall(options,guarded(async request=>{
  const release=await reserveUsage(request.auth.uid,charge);
  try{return await generate(request.data,{voices});}
  finally{try{await release();}catch{logger.warn('Creator TTS usage lock release failed');}}
+}));
+exports.creatorTtsRetime=onCall(options,guarded(async request=>{
+ const data=request.data||{},encoded=String(data.audioBase64||''),speed=Number(data.speed),duration=Number(data.durationSeconds);
+ if(!encoded||encoded.length>21*1024*1024||!/^[A-Za-z0-9+/]+={0,2}$/.test(encoded))throw new HttpsError('invalid-argument','A valid generated MP3 is required.');
+ if(!Number.isFinite(speed)||speed<.75||speed>2)throw new HttpsError('invalid-argument','Final speed must be between 0.75× and 2.00×.');
+ if(!Number.isFinite(duration)||duration<=0||duration>600)throw new HttpsError('invalid-argument','The original MP3 duration is invalid.');
+ const source=Buffer.from(encoded,'base64');if(!source.length||source.length>15*1024*1024)throw new HttpsError('invalid-argument','The generated MP3 is too large.');
+ const mp3=await retimeMp3(source,speed),title=String(data.filename||'voiceover.mp3').replace(/\.mp3$/i,'').replace(/[^\p{L}\p{N}._ -]+/gu,'').trim().slice(0,80)||'voiceover';
+ return{audioBase64:mp3.toString('base64'),mimeType:'audio/mpeg',filename:`${title}-${speed.toFixed(2)}x.mp3`,durationSeconds:duration/speed,speed};
 }));
 exports.assertAccount=assertAccount;

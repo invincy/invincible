@@ -1,11 +1,11 @@
 import {observeAuth} from '../shared/firebase-client.js';
-import {loadVoices,generateVoiceover} from './tts-api.js';
+import {loadVoices,generateVoiceover,retimeVoiceover} from './tts-api.js';
 import {createVoiceDemoPlayer} from './tts-voice-demo-player.js?v=2026111113';
 import {createTtsHistoryClient} from './tts-history-api.js?v=2026111004';
 import {savePendingAiDraft} from './ai-draft.js?v=2026111112';
 import {createLocalImageClient} from '../shared/local-image-client.js?v=2026111112';
 const $=id=>document.getElementById(id),fields=['title','script','creativeInstructions','mode','engine','model','direction','language','gender','family','voice','preset','speed','pitch','volume','pause'];
-let user=null,voices=[],busy=false,loading=false,epoch=0,voiceEpoch=0,audioUrl=null,audioBytes=null,audioIsPreview=true,saveTimer;
+let user=null,voices=[],busy=false,loading=false,epoch=0,voiceEpoch=0,audioUrl=null,audioBytes=null,sourceAudioBytes=null,sourceDuration=0,sourceFilename='',recordingLabel='',appliedSpeed=1,audioIsPreview=true,speedBusy=false,saveTimer;
 let timedTranscript=null,analysisBusy=false,scenePlanBusy=false;
 let historyClient=null,historyEntries=[],historyCursor=null,historyEpoch=0,historyLoading=false;
 const localWorker=createLocalImageClient({getAccountId:()=>user?.uid||null,requireAccount:true});
@@ -86,8 +86,10 @@ function refreshAvailability(){
  $('reloadVoices').disabled=busy||loading||!user;
  $('voiceDemo').disabled=busy||loading||!user||!voiceDemo.available();
  $('voiceFields').disabled=busy||loading||!user||!voices.length;
- $('generate').disabled=!ready||!$('script').value.trim();$('analyzeLocal').disabled=!audioBytes||audioIsPreview||busy||loading||analysisBusy||scenePlanBusy||!user;
+ $('generate').disabled=!ready||!$('script').value.trim();$('analyzeLocal').disabled=!audioBytes||audioIsPreview||busy||loading||speedBusy||analysisBusy||scenePlanBusy||!user;
  $('retryAnalysis').disabled=$('analyzeLocal').disabled;
+ $('playbackSpeed').disabled=!audioBytes||busy||loading||speedBusy;
+ $('download').setAttribute('aria-disabled',String(!audioBytes||busy||loading||speedBusy));
  $('generateScenePlan').disabled=!timedTranscript||!validTimedTranscript().valid||!$('creativeInstructions').value.trim()||analysisBusy||scenePlanBusy||!user;
  $('preview').disabled=!ready||!$('script').value.trim()||$('mode').value==='ssml';
  $('pitch').disabled=!voice?.capabilities.pitch;
@@ -272,7 +274,7 @@ function updateAiFlow(){
  document.querySelectorAll('[data-ai-flow]').forEach(item=>{const state=states[item.dataset.aiFlow];item.classList.toggle('done',state.done);item.classList.toggle('current',state.current);if(state.current)item.setAttribute('aria-current','step');else item.removeAttribute('aria-current');});
 }
 function resetAiFlow(){timedTranscript=null;analysisBusy=false;scenePlanBusy=false;$('transcriptReview').hidden=true;$('transcriptSegments').replaceChildren();$('scenePlanReview').hidden=true;$('scenePlanScenes').replaceChildren();$('localAnalysisResult').hidden=true;$('localAnalysisResult').textContent='';$('localAnalysisStatus').textContent='Generate the final MP3, then let Whisper create its transcript and timestamps.';updateAiFlow();}
-function clearAudio(){if(audioUrl)URL.revokeObjectURL(audioUrl);audioUrl=null;audioBytes=null;audioIsPreview=true;$('player').pause();$('player').removeAttribute('src');$('player').load();$('download').removeAttribute('href');$('recording').hidden=true;resetAiFlow();}
+function clearAudio(){if(audioUrl)URL.revokeObjectURL(audioUrl);audioUrl=null;audioBytes=null;sourceAudioBytes=null;sourceDuration=0;sourceFilename='';recordingLabel='';appliedSpeed=1;audioIsPreview=true;speedBusy=false;$('player').pause();$('player').removeAttribute('src');$('player').load();$('download').removeAttribute('href');$('recording').hidden=true;resetAiFlow();}
 function friendly(error){
  if(error?.code==='functions/not-found')return 'Voiceover generation has not been deployed to Invincible yet. Your script is kept here.';
  if(/unauthenticated/.test(error?.code||''))return 'Sign in to Invincible again. Your script is kept here.';
@@ -320,16 +322,27 @@ async function record(preview){
   if(current!==epoch||user?.uid!==owner)return;
   if(typeof result.audioBase64!=='string'||result.mimeType!=='audio/mpeg')throw Error('The server returned no MP3.');
   const decoded=atob(result.audioBase64),buffer=Uint8Array.from(decoded,c=>c.charCodeAt(0));
-  clearAudio();audioBytes=buffer;audioIsPreview=preview;audioUrl=URL.createObjectURL(new Blob([buffer],{type:result.mimeType}));
+  clearAudio();audioBytes=buffer;sourceAudioBytes=buffer;sourceDuration=result.durationSeconds;sourceFilename=result.filename;appliedSpeed=1;audioIsPreview=preview;audioUrl=URL.createObjectURL(new Blob([buffer],{type:result.mimeType}));
   $('player').src=audioUrl;applyPlaybackSpeed();$('download').href=audioUrl;$('download').download=result.filename;
-  $('recording').hidden=false;$('recordingInfo').textContent=result.durationSeconds.toFixed(1)+' sec · '+result.voiceName+(preview?' · opening preview':'');
-  if(data.engine==='gemini')$('recordingInfo').textContent+=' · '+data.delivery+' · requested pace ≈ '+data.speed+'×';
-  status(preview?'Preview ready. Listen, adjust, then generate the full recording.':'MP3 ready. Download it or continue to Scripting · Step 2.');updateAiFlow();
+  recordingLabel=result.voiceName+(preview?' · opening preview':'')+(data.engine==='gemini'?' · '+data.delivery+' · requested pace ≈ '+data.speed+'×':'');
+  $('recording').hidden=false;$('recordingInfo').textContent=result.durationSeconds.toFixed(1)+' sec · '+recordingLabel;
+  status(preview?'Preview ready. Listen, adjust, then generate the full recording.':'MP3 ready. Choose the final speed, then Download or continue to Script & scenes.');updateAiFlow();
   if(!preview)saveHistory({id:crypto.randomUUID(),version:1,createdAt:Date.now(),settings,request:data,filename:result.filename,voiceName:result.voiceName,durationSeconds:result.durationSeconds});
  }catch(error){if(current===epoch)status(friendly(error),true);}
  finally{if(current===epoch){busy=false;refreshAvailability();}}
 }
-function audioBase64(){let binary='';for(let i=0;i<audioBytes.length;i+=0x8000)binary+=String.fromCharCode(...audioBytes.subarray(i,i+0x8000));return btoa(binary);}
+function bytesBase64(bytes){let binary='';for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000));return btoa(binary);}
+function audioBase64(){return bytesBase64(audioBytes);}
+async function ensureFinalSpeed(){
+ const target=Number($('playbackSpeed').value);if(!audioBytes||!sourceAudioBytes||target===appliedSpeed)return;
+ speedBusy=true;refreshAvailability();status('Preparing the final '+target.toFixed(2)+'× MP3…');
+ try{
+  let bytes=sourceAudioBytes,filename=sourceFilename,duration=sourceDuration;
+  if(target!==1){const result=await retimeVoiceover({audioBase64:bytesBase64(sourceAudioBytes),speed:target,durationSeconds:sourceDuration,filename:sourceFilename});const decoded=atob(result.audioBase64);bytes=Uint8Array.from(decoded,c=>c.charCodeAt(0));filename=result.filename;duration=result.durationSeconds;}
+  if(audioUrl)URL.revokeObjectURL(audioUrl);audioBytes=bytes;appliedSpeed=target;audioUrl=URL.createObjectURL(new Blob([bytes],{type:'audio/mpeg'}));$('player').src=audioUrl;$('download').href=audioUrl;$('download').download=filename;$('recordingInfo').textContent=duration.toFixed(1)+' sec · '+recordingLabel+' · final '+target.toFixed(2)+'×';applyPlaybackSpeed();status('Final '+target.toFixed(2)+'× MP3 ready. Download it or continue to Script & scenes.');
+ }catch(error){status(friendly(error),true);throw error;}
+ finally{speedBusy=false;refreshAvailability();}
+}
 function clock(seconds){const value=Math.max(0,Number(seconds)||0),minutes=Math.floor(value/60),rest=(value-minutes*60).toFixed(3).padStart(6,'0');return `${String(minutes).padStart(2,'0')}:${rest}`;}
 function validTimedTranscript(){
  if(!timedTranscript?.segments?.length)return{valid:false,message:'Whisper timing is not ready.'};
@@ -363,7 +376,8 @@ function renderScenePlan(payload){
  updateAiFlow();requestAnimationFrame(()=>$('scenePlanReview').scrollIntoView({behavior:'smooth',block:'start'}));
 }
 async function analyzeLocal(){
- if(!audioBytes||audioIsPreview||analysisBusy||scenePlanBusy)return;
+ if(!audioBytes||audioIsPreview||speedBusy||analysisBusy||scenePlanBusy)return;
+ try{await ensureFinalSpeed();}catch{return;}
  if(projectVoiceoverId){window.parent.postMessage({type:'invincible-sync-project-script',script:$('script').value,creativeInstructions:$('creativeInstructions').value},location.origin);window.parent.postMessage({type:'invincible-open-script-timing'},location.origin);}
  analysisBusy=true;$('retryAnalysis').hidden=true;$('localAnalysisStatus').textContent='Analysing voiceover… Creating transcript and timestamps.';$('transcriptReview').hidden=true;$('scenePlanReview').hidden=true;updateAiFlow();refreshAvailability();
  requestAnimationFrame(()=>$('timingHeading').scrollIntoView({behavior:'smooth',block:'start'}));
@@ -378,12 +392,13 @@ async function generateScenePlan(){
  finally{scenePlanBusy=false;updateAiFlow();refreshAvailability();}
 }
 function applyPlaybackSpeed(){
- const speed=Number($('playbackSpeed').value);
- $('player').defaultPlaybackRate=speed;
- $('player').playbackRate=speed;
+ const speed=Number($('playbackSpeed').value),rate=speed/appliedSpeed;
+ $('player').defaultPlaybackRate=rate;
+ $('player').playbackRate=rate;
 }
-$('playbackSpeed').addEventListener('change',applyPlaybackSpeed);
+$('playbackSpeed').addEventListener('change',()=>{applyPlaybackSpeed();if(timedTranscript)resetAiFlow();if(audioBytes)status('Final speed set to '+Number($('playbackSpeed').value).toFixed(2)+'×. Download or Next will prepare this exact-speed MP3.');});
 $('player').addEventListener('loadedmetadata',applyPlaybackSpeed);
+$('download').addEventListener('click',async event=>{event.preventDefault();if(!audioBytes||speedBusy)return;try{await ensureFinalSpeed();const link=document.createElement('a');link.href=$('download').href;link.download=$('download').download;link.click();}catch{}});
 $('generate').addEventListener('click',()=>record(false));$('preview').addEventListener('click',()=>record(true));
 $('analyzeLocal').addEventListener('click',analyzeLocal);
 $('retryAnalysis').addEventListener('click',analyzeLocal);

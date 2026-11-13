@@ -99,6 +99,10 @@ select the second project step and reveal MP3 ready → Whisper timing → Scene
 plan across the available width. Transcript correction and animation
 instructions belong to Script & scenes, not beneath the Script editor. Do not
 reload or open a separate browser page during this handoff.
+Treat the post-generation Final speed selector as an output setting, not a
+listening-only control. Playback previews the selected pace; Download and Next
+must use the same pitch-preserving processed MP3, and Whisper must time that
+processed duration.
 
 Carry the selected Invincible theme backdrop into the editor, including its
 ambient details. Keep the background free of page-specific artwork and use
