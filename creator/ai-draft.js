@@ -14,7 +14,7 @@ export async function savePendingAiDraft(payload,audioBlob=null){
  localStorage.setItem(KEY,JSON.stringify(draft));
  return draft;
 }
-export function loadPendingAiDraft(){try{const value=JSON.parse(localStorage.getItem(KEY)||'null');return [1,2].includes(value?.version)?value:null;}catch{return null;}}
+export function loadPendingAiDraft({accountId=null,projectId=null}={}){try{const value=JSON.parse(localStorage.getItem(KEY)||'null');if(![1,2].includes(value?.version))return null;if(value.accountId&&accountId&&value.accountId!==accountId)return null;if(value.projectId&&projectId&&value.projectId!==projectId)return null;return value;}catch{return null;}}
 export async function loadPendingAiAudio(){return audioRequest('readonly',store=>store.get(AUDIO_KEY));}
 export function clearPendingAiDraft(){try{localStorage.removeItem(KEY);}catch{}audioRequest('readwrite',store=>store.delete(AUDIO_KEY)).catch(()=>{});}
 

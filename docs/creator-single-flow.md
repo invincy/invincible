@@ -208,3 +208,8 @@ save/reload, responsive width and native JSON-to-MP4 export. Inspect its resulti
 `.test-output/creator-motion-studio.mp4`, verify both streams when adding real audio,
 and review dragging/resizing/track trims on desktop and mobile before publishing.
 Publication was subsequently authorized by the user. The GitHub Pages workflow publishes the master branch; its run result is the authority for deployment status. Browser/media verification limits above still apply.
+
+Completed sync plans are scoped to the signed-in account and Creator project. When the
+saved transcript and animation instructions still match, reopening Step 2 restores the
+finished plan at review instead of making the user regenerate it. A stale plan or a plan
+from another project is not shown.

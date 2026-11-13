@@ -14,7 +14,7 @@ import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111203';
 import {runAiProduction} from '../ai-production-runner.mjs?v=2026111203';
 import {generateVoiceover} from '../tts-api.js';
 import {createProductionReadiness,selectProductionVoice} from './production-readiness.js?v=2026111209';
-import {loadPendingAiDraft,loadPendingAiAudio,savePendingAiDraft} from '../ai-draft.js?v=2026111312';
+import {loadPendingAiDraft,loadPendingAiAudio,savePendingAiDraft} from '../ai-draft.js?v=2026111319';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>crypto.randomUUID();
 const template=(name,text)=>({id:name,startSeconds:0,durationSeconds:2,engineType:'graphic',engineData:{},transition:{type:'fade',durationSeconds:.3},overlays:[{id:'title',type:'text',text,x:.5,y:.5,fontSize:64}]});
@@ -220,7 +220,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   const blockers=Object.values(services).filter(service=>!service.ready);
   if(blockers.length)throw Error(blockers.map(service=>service.detail).join('. ')+'. Narration generation has not started.');
   const voiceRequest=aiVoiceRequest(script,voices),title=String(getProject()?.title||voiceRequest.title);
-  const result=await runAiProduction({uid:account,projectId,title,script,creativeInstructions,voiceRequest,loadCheckpoint:async()=>loadPendingAiDraft(),loadAudio:loadPendingAiAudio,saveCheckpoint:savePendingAiDraft,generateVoiceover,analyzeVoiceover:analyzeAiVoiceover,importProduction:importAiProduction,saveVideo:save,exportVideo:renderExport,onProgress:event=>{$('[data-ai-status]').textContent=event.message;status(event.message);}});
+  const result=await runAiProduction({uid:account,projectId,title,script,creativeInstructions,voiceRequest,loadCheckpoint:async()=>loadPendingAiDraft({accountId:account,projectId}),loadAudio:loadPendingAiAudio,saveCheckpoint:savePendingAiDraft,generateVoiceover,analyzeVoiceover:analyzeAiVoiceover,importProduction:importAiProduction,saveVideo:save,exportVideo:renderExport,onProgress:event=>{$('[data-ai-status]').textContent=event.message;status(event.message);}});
   if(result.status==='blocked'){
    const details=result.missingInfo.length?result.missingInfo.join(' '):'The scene plan has no executable Map Editor animation.';
    const message='Narration and scene JSON are saved, but no video was exported. '+details;

@@ -1,8 +1,8 @@
-import {mountVideoStudio} from './video-studio/workspace.js?v=2026111318';
+import {mountVideoStudio} from './video-studio/workspace.js?v=2026111319';
 import {mountHistoryWorkspace} from './history-workspace.js?v=2026111203';
 import {makeScene} from './storyboard-model.js?v=3';
 import {METHODS,IMPORT_FIELDS,uid,methodsOf,inspectImport,parseProductionImport,uniqueScenes,groupFor,taskFor,setTask,animationStage,requirements,sceneState,projectProgress,queueScenes,canonicalScript,scriptReview,filterScenes,productionReadiness} from './production-model.js?v=2026111112';
-import {loadPendingAiDraft,loadPendingAiAudio,clearPendingAiDraft} from './ai-draft.js?v=2026111112';
+import {loadPendingAiDraft,loadPendingAiAudio,clearPendingAiDraft} from './ai-draft.js?v=2026111319';
 import {renderAiScenePreviews} from './ai-preview.js?v=2026111315';
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const options=(values,current)=>values.map(value=>'<option '+(value===current?'selected':'')+'>'+esc(value)+'</option>').join('');
@@ -30,6 +30,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  for(const name of ['Assets','Production','Overview','Maps','Clips'])more.querySelector('div').append(nav.querySelector('[data-tab="'+name+'"]'));nav.append(more);
  }
  const project=()=>getProject();
+ const pendingAiDraft=()=>loadPendingAiDraft({accountId:getAccountId?.(),projectId:project()?.id});
  const scenes=()=>project()?.scenes||[];
  const changed=(rerender=true)=>{onChange();if(rerender)render();};
  const findScene=id=>scenes().find(scene=>scene.id===id);
@@ -130,17 +131,17 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    (viewMode==='all'?action('expand-all',expandAll?'Collapse all scenes':'Expand all filtered scenes','expand','aria-pressed="'+expandAll+'"'):action('toggle-filters','Scene filters','search','aria-expanded="'+filtersVisible+'"'));
  }
  function storyboard(){
-  const ai=loadPendingAiDraft();
+  const ai=pendingAiDraft();
   return '<div class="wb-toolbar"><details class="wb-import" '+(!scenes().length?'open':'')+'><summary>'+icon('import')+'<span>Import</span></summary><div class="wb-import-body"><textarea aria-label="Paste storyboard" data-paste rows="3" title="Paste TSV or Markdown with an optional final Timestamp column" placeholder="Voiceover&#9;Visual / Animation&#9;Assets Required&#9;Timeline&#9;Timestamp"></textarea><button type="button" data-action="preview">Preview</button><div data-import-preview></div></div></details>'+(ai?'<button type="button" data-action="review-ai-draft" class="wb-ai-draft">Review AI draft <small>'+esc(ai.title||'Local analysis')+'</small></button>':'')+modeControls()+action('add','Add scene','add')+'</div>'+
    (viewMode==='all'||!visibleScenes().length?filterBar():'')+sceneWorkspace();
  }
  function reviewAiDraft(){
-  const draft=loadPendingAiDraft();if(!draft?.creatorStudio)throw Error('No pending local AI draft is available on this device.');
+  const draft=pendingAiDraft();if(!draft?.creatorStudio)throw Error('No pending local AI draft is available on this device.');
   const text=JSON.stringify(draft.creatorStudio);root.querySelector('[data-paste]').value=text;importTable=inspectImport(text);mapping=[...importTable.mapping];
   const box=root.querySelector('[data-import-preview]');box.innerHTML='<p>Local AI draft · '+importTable.rows.length+' scenes. Review every scene before importing.</p><div data-mapped-preview></div>';mappedPreview();
  }
  async function openAiVideo({reviewMaps=false}={}){
-  const draft=loadPendingAiDraft(),audio=await loadPendingAiAudio(),aiScenes=draft?.creatorStudio?.scenes;
+  const draft=pendingAiDraft(),audio=await loadPendingAiAudio(),aiScenes=draft?.creatorStudio?.scenes;
   if(!Array.isArray(aiScenes)||!aiScenes.length)throw Error('This AI draft has no executable scene plan yet. Generate an animation-ready draft first.');
   if(!aiScenes.every(scene=>scene.mapAnimation||scene.canvasScene||scene.contextCard===true))throw Error('Review the missing or unverified scene information before applying this draft.');
   if(!audio)throw Error('The original MP3 is missing from this device. Run AI timing again to attach it.');
@@ -223,7 +224,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   try{
    const parsed=parseProductionImport(root.querySelector('[data-paste]').value,mapping);
    const unique=uniqueScenes(scenes(),parsed);pending=unique.scenes;
-   const aiDraft=loadPendingAiDraft(),aiScenes=aiDraft?.creatorStudio?.scenes,executableScenes=pending.length>0&&pending.every(scene=>scene.mapAnimation),executableAiDraft=Array.isArray(aiScenes)&&aiScenes.length>0&&aiScenes.every(scene=>scene.mapAnimation);root.querySelector('[data-mapped-preview]').innerHTML='<p>'+pending.length+' new scenes · '+unique.duplicates+' duplicates skipped. Existing scenes stay in place.</p><div class="wb-preview">'+parsed.map((scene,index)=>'<article><strong>Scene '+(index+1)+' · '+esc(scene.timeline||scene.duration+' sec')+'</strong>'+(scene.voiceoverTimestamp?'<p class="wb-timestamp-preview">Timestamp · '+esc(scene.voiceoverTimestamp)+'</p>':'')+'<p>'+esc(scene.voiceover)+'</p><p>'+esc(scene.visual)+'</p><p>'+esc(scene.assets)+'</p><p>'+esc(methodsOf(scene).join(', '))+'</p><p>'+esc(scene.blenderPrompt||scene.videoPrompt||'')+'</p>'+(scene.importedStatus?'<p>Imported status: '+esc(scene.importedStatus)+' (completion requires review)</p>':'')+'</article>').join('')+'</div><div class="wb-actions">'+(executableScenes?'<button type="button" data-action="render-ai-previews">Render JPG previews</button>':'<span>Map previews are available when every scene has an executable animation built from approved geometry.</span>')+'<button type="button" data-action="import" '+(!pending.length?'disabled':'')+'>Append reviewed scenes</button>'+(enableVideoStudio&&aiDraft?.audioAvailable&&executableAiDraft?'<button type="button" data-action="open-ai-video">Open executable draft in Video Studio</button>':'')+'</div><div data-ai-preview-results></div>';
+   const aiDraft=pendingAiDraft(),aiScenes=aiDraft?.creatorStudio?.scenes,executableScenes=pending.length>0&&pending.every(scene=>scene.mapAnimation),executableAiDraft=Array.isArray(aiScenes)&&aiScenes.length>0&&aiScenes.every(scene=>scene.mapAnimation);root.querySelector('[data-mapped-preview]').innerHTML='<p>'+pending.length+' new scenes · '+unique.duplicates+' duplicates skipped. Existing scenes stay in place.</p><div class="wb-preview">'+parsed.map((scene,index)=>'<article><strong>Scene '+(index+1)+' · '+esc(scene.timeline||scene.duration+' sec')+'</strong>'+(scene.voiceoverTimestamp?'<p class="wb-timestamp-preview">Timestamp · '+esc(scene.voiceoverTimestamp)+'</p>':'')+'<p>'+esc(scene.voiceover)+'</p><p>'+esc(scene.visual)+'</p><p>'+esc(scene.assets)+'</p><p>'+esc(methodsOf(scene).join(', '))+'</p><p>'+esc(scene.blenderPrompt||scene.videoPrompt||'')+'</p>'+(scene.importedStatus?'<p>Imported status: '+esc(scene.importedStatus)+' (completion requires review)</p>':'')+'</article>').join('')+'</div><div class="wb-actions">'+(executableScenes?'<button type="button" data-action="render-ai-previews">Render JPG previews</button>':'<span>Map previews are available when every scene has an executable animation built from approved geometry.</span>')+'<button type="button" data-action="import" '+(!pending.length?'disabled':'')+'>Append reviewed scenes</button>'+(enableVideoStudio&&aiDraft?.audioAvailable&&executableAiDraft?'<button type="button" data-action="open-ai-video">Open executable draft in Video Studio</button>':'')+'</div><div data-ai-preview-results></div>';
    message('Preview only. No scenes changed.');
   }catch(error){message(error.message);}
  }
