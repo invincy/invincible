@@ -7,7 +7,7 @@
     "node": "22"
   },
   "scripts": {
-    "test": "node --test test/task-project.test.js test/invincible-tools.test.js test/creator-kling.test.js test/creator-map-assets.test.js test/creator-openai-video.test.js",
+    "test": "node --test test/task-project.test.js test/invincible-tools.test.js test/creator-access.test.js test/creator-map-assets.test.js test/creator-openai-video.test.js",
     "test:emulator": "cd .. && npx --yes firebase-tools@13.24.1 emulators:exec --only firestore --project demo-invincible-ai \"node functions/test/firestore-flow.test.js\"",
     "check": "node --check src/index.js && node --check src/ai/openai-provider.js && node --check src/creator/openai-video-callables.js && node --check src/tools/invincible-tools.js"
   },

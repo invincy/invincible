@@ -218,7 +218,7 @@ Google Gemini TTS or uploaded MP3
     ↓
 Exact final-speed MP3
     ↓
-Whisper/OpenAI timing (locked segments)
+Local Whisper timing (locked segments)
     ↓
 Animation instructions + locked transcript
     ↓

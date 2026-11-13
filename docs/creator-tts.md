@@ -224,7 +224,7 @@ npm ci --prefix functions-tts
 firebase deploy --only functions:creator-tts --project life-by-adichimp
 ```
 
-TTS has its own functions-tts package and creator-tts codebase, so the existing AI/Kling/asset Functions and their secrets do not need redeployment.
+TTS has its own functions-tts package and creator-tts codebase, so the existing AI and asset Functions do not need redeployment.
 No new OpenAI credential is used by this feature. Publish the static page using the
 repository's usual GitHub Pages workflow after the backend is ready.
 

@@ -31,6 +31,11 @@ the in-memory final MP3 while activating the project's second navigation step.
 Script & scenes owns Whisper timing, timed-transcript correction, animation
 instructions and scene-plan review. The browser does not open a separate page
 or reload, so the generated recording remains available to Whisper.
+Timing always uses the paired laptop's local Whisper service. The scene-planning
+choice is independent: OpenAI is the recommended planner, while local Qwen
+remains an optional fallback. Selecting OpenAI does not upload the MP3 or pay
+for hosted transcription; only the locked transcript, animation instructions
+and project catalog are sent for sync planning.
 After generation, Final speed previews the chosen pace. Download MP3 and Next ·
 Script & scenes both prepare the same pitch-preserving, speed-adjusted MP3.
 Whisper receives those adjusted bytes rather than the original recording, so

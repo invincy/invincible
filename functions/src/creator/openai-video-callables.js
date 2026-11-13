@@ -2,8 +2,7 @@ const {onCall,HttpsError}=require('firebase-functions/v2/https');
 const {defineSecret,defineString}=require('firebase-functions/params');
 const {getFirestore}=require('firebase-admin/firestore');
 const OpenAI=require('openai');
-const {toFile}=require('openai');
-const {assertAccess}=require('./kling');
+const {assertAccess}=require('./access');
 const {plannerSchemaForRequest,normalizeSemanticPlan,buildSemanticPlannerPrompt,semanticCanvasScene}=require('./semantic-plan');
 
 const openAiApiKey=defineSecret('OPENAI_API_KEY');
@@ -18,22 +17,6 @@ async function access(request){
  const project=snap.exists?snap.data():null;assertAccess(request.auth,project);return project;
 }
 function guarded(fn){return async request=>{try{const project=await access(request);return await fn(request.data||{},{project});}catch(error){if(error instanceof HttpsError)throw error;throw new HttpsError('failed-precondition',error.message||'Creator AI operation failed.');}};}
-function decodeAudio(data){
- const value=data.audioBase64;if(typeof value!=='string'||!value.length||value.length>28_000_000||value.length%4||!/^[A-Za-z0-9+/]*={0,2}$/.test(value))throw Error('Use an MP3 up to 20 MB.');
- const bytes=Buffer.from(value,'base64');if(bytes.length<32||bytes.length>20*1024*1024)throw Error('Use an MP3 up to 20 MB.');return bytes;
-}
-function normalizeTranscript(raw){
- const sourceSegments=Array.isArray(raw.segments)?raw.segments:[],globalWords=Array.isArray(raw.words)?raw.words:[];
- const segments=sourceSegments.map((segment,index)=>{
-  const start=Number(segment.start),end=Number(segment.end),words=globalWords.filter(word=>Number(word.start)>=start-.01&&Number(word.end)<=end+.01).map(word=>({word:clean(word.word,200),start:Number(word.start),end:Number(word.end)}));
-  return{id:`segment-${index+1}`,start,end,text:clean(segment.text,4000),words};
- }).filter(segment=>Number.isFinite(segment.start)&&Number.isFinite(segment.end)&&segment.end>segment.start&&segment.text);
- if(!segments.length)throw Error('OpenAI did not return usable timestamped speech.');
- const duration=Number(raw.duration)||segments.at(-1).end;
- if(Number.isFinite(duration)&&duration>=segments.at(-1).end)segments.at(-1).end=duration;
- return{text:clean(raw.text,30000),language:clean(raw.language,40),duration,segments};
-}
-
 function projectCatalog(project={}){
  const assets=[...(project.assets||[]),...(project.historicalMap?.visual?.assets||[])].map(asset=>({id:clean(asset.id,160),name:clean(asset.name,160),type:clean(asset.type||asset.kind||'asset',80),description:clean(asset.description||asset.credit||asset.notes,160)})).filter(asset=>asset.id&&asset.name).slice(0,50);
  const locations=(project.historicalMap?.events||[]).map(event=>({id:clean(event.id,160),name:clean(event.label,160),coordinates:event.coordinates,sourceUrl:event.sourceUrl,sourceDate:event.date,precisionNote:clean(event.sourceNote,160)})).filter(item=>item.id&&item.name&&Array.isArray(item.coordinates)).slice(0,50);
@@ -56,11 +39,6 @@ function buildPlan(plan,transcript,title,catalog={assets:[],locations:[],routes:
 
 exports.creatorOpenAiVideo=onCall(options,guarded(async(data,{project})=>{
  const client=new OpenAI({apiKey:openAiApiKey.value()});
- if(data.action==='transcribe'){
-  const file=await toFile(decodeAudio(data),'voiceover.mp3',{type:'audio/mpeg'});
-  const result=await client.audio.transcriptions.create({file,model:'whisper-1',response_format:'verbose_json',timestamp_granularities:['segment','word'],prompt:clean(data.script,2000)});
-  return{transcript:normalizeTranscript(result)};
- }
  if(data.action==='plan'){
   const transcript=data.transcript;if(!transcript||!Array.isArray(transcript.segments)||!transcript.segments.length||transcript.segments.length>100)throw Error('Timestamped transcript is required.');
   const catalog=projectCatalog(project),segments=transcript.segments.map(segment=>({id:segment.id,narration:clean(segment.text,4000)})),requestSchema=plannerSchemaForRequest({segmentIds:transcript.segments.map(segment=>segment.id),assetIds:catalog.assets.map(item=>item.id),locationIds:catalog.locations.map(item=>item.id),routeIds:catalog.routes.map(item=>item.id)});
@@ -70,7 +48,7 @@ exports.creatorOpenAiVideo=onCall(options,guarded(async(data,{project})=>{
   if(!response.output_text)throw Error('OpenAI returned no usable scene plan.');
   return buildPlan(JSON.parse(response.output_text),transcript,clean(data.title,200),catalog);
  }
- throw Error('Choose OpenAI timing or scene planning.');
+ throw Error('Choose OpenAI scene planning. Voiceover timing is created by local Whisper.');
 }));
 
-Object.defineProperties(exports,{normalizeTranscript:{value:normalizeTranscript},buildPlan:{value:buildPlan},projectCatalog:{value:projectCatalog}});
+Object.defineProperties(exports,{buildPlan:{value:buildPlan},projectCatalog:{value:projectCatalog}});
