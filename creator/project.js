@@ -19,6 +19,7 @@ let saveChain=Promise.resolve(),editVersion=0,cloudVersion=0,baseRevision=0;
 let productionReadiness;
 let user=null,project=null,projectRef=null,saveTimer=null,localDirty=false,pendingConflict=null,recoveredLegacyDraft=false;
 let selectedArea=requestedArea||"Voiceover",selectedTool=requestedTool;
+let scriptTimingActive=false;
 
 function esc(value){const node=document.createElement("div");node.textContent=value??"";return node.innerHTML;}
 function attr(value){return esc(value).replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
@@ -77,8 +78,13 @@ window.addEventListener("message",async event=>{
     queueSave();
     return;
   }
+  if(event.data?.type==="invincible-open-script-timing"){
+    scriptTimingActive=true;
+    selectProjectArea("Storyboard");
+    return;
+  }
   if(event.data?.type!=="invincible-apply-ai-draft")return;
-  try{await storyboard.openAiDraft();selectProjectArea("Video Studio");}
+  try{scriptTimingActive=false;await storyboard.openAiDraft();selectProjectArea("Video Studio");}
   catch(error){status(error.message||"The reviewed scene plan could not be opened.","error");}
 });
 
@@ -103,13 +109,14 @@ function render(){
 
 function selectProjectArea(area,mode=""){
   selectedArea=area;selectedTool=mode;
-  const isVoiceover=area==="Voiceover";
-  $("projectVoiceoverStep").hidden=!isVoiceover;
-  $("projectEditingStep").hidden=isVoiceover;
-  document.body.classList.toggle("project-voiceover-active",isVoiceover);
-  if(isVoiceover){
+  const isVoiceover=area==="Voiceover",isTiming=area==="Storyboard"&&scriptTimingActive,showScriptWorkspace=isVoiceover||isTiming;
+  $("projectVoiceoverStep").hidden=!showScriptWorkspace;
+  $("projectEditingStep").hidden=showScriptWorkspace;
+  document.body.classList.toggle("project-voiceover-active",showScriptWorkspace);
+  if(showScriptWorkspace){
     const frame=$("projectVoiceoverFrame");
     if(!frame.hasAttribute("src"))frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId});
+    else frame.contentWindow?.postMessage({type:"invincible-project-script-view",view:isTiming?"timing":"script"},location.origin);
   }else storyboard.open({area});
   document.querySelectorAll("[data-project-area]").forEach(button=>{
     const active=button.dataset.projectArea===area&&(button.dataset.toolMode||"")===mode;

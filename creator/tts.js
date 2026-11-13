@@ -65,9 +65,11 @@ if(projectVoiceoverId){
  $('script').placeholder='Paste your narration here…';
  $('voiceHeading').textContent='Voice';
  $('resultHeading').textContent='Recording';
+ $('analyzeLocal').textContent='Next · Script & scenes';
  $('preview').textContent='Preview';
  $('inputHelp').textContent='Paragraph breaks can become pauses.';
 }
+window.addEventListener('message',event=>{if(!projectVoiceoverId||event.origin!==location.origin||event.source!==window.parent||event.data?.type!=='invincible-project-script-view')return;document.documentElement.classList.toggle('project-timing-view',event.data.view==='timing');});
 let mobileSettingsOpen=false;
 function arrangeSettings(){voiceSettings.open=basicVoiceover||desktopLayout.matches||mobileSettingsOpen;}
 voiceSettings.addEventListener('toggle',()=>{if(!desktopLayout.matches)mobileSettingsOpen=voiceSettings.open;});
@@ -85,6 +87,7 @@ function refreshAvailability(){
  $('voiceDemo').disabled=busy||loading||!user||!voiceDemo.available();
  $('voiceFields').disabled=busy||loading||!user||!voices.length;
  $('generate').disabled=!ready||!$('script').value.trim();$('analyzeLocal').disabled=!audioBytes||audioIsPreview||busy||loading||analysisBusy||scenePlanBusy||!user;
+ $('retryAnalysis').disabled=$('analyzeLocal').disabled;
  $('generateScenePlan').disabled=!timedTranscript||!validTimedTranscript().valid||!$('creativeInstructions').value.trim()||analysisBusy||scenePlanBusy||!user;
  $('preview').disabled=!ready||!$('script').value.trim()||$('mode').value==='ssml';
  $('pitch').disabled=!voice?.capabilities.pitch;
@@ -361,11 +364,11 @@ function renderScenePlan(payload){
 }
 async function analyzeLocal(){
  if(!audioBytes||audioIsPreview||analysisBusy||scenePlanBusy)return;
- if(projectVoiceoverId)window.parent.postMessage({type:'invincible-sync-project-script',script:$('script').value,creativeInstructions:$('creativeInstructions').value},location.origin);
- analysisBusy=true;$('localAnalysisStatus').textContent='Analysing voiceover… Creating transcript and timestamps.';$('transcriptReview').hidden=true;$('scenePlanReview').hidden=true;updateAiFlow();refreshAvailability();
+ if(projectVoiceoverId){window.parent.postMessage({type:'invincible-sync-project-script',script:$('script').value,creativeInstructions:$('creativeInstructions').value},location.origin);window.parent.postMessage({type:'invincible-open-script-timing'},location.origin);}
+ analysisBusy=true;$('retryAnalysis').hidden=true;$('localAnalysisStatus').textContent='Analysing voiceover… Creating transcript and timestamps.';$('transcriptReview').hidden=true;$('scenePlanReview').hidden=true;updateAiFlow();refreshAvailability();
  requestAnimationFrame(()=>$('timingHeading').scrollIntoView({behavior:'smooth',block:'start'}));
  try{const payload=await localWorker.request('/api/voiceover/transcribe',{audioBase64:audioBase64()},{timeoutMs:180000});timedTranscript=payload.transcript;renderTranscript();$('localAnalysisStatus').textContent='Whisper timing is ready. Review the words, then add animation instructions.';}
- catch(error){timedTranscript=null;$('localAnalysisStatus').textContent=localVoiceoverError(error,'Scripting · Step 2');}
+ catch(error){timedTranscript=null;$('retryAnalysis').hidden=false;$('localAnalysisStatus').textContent=localVoiceoverError(error,'Scripting · Step 2');}
  finally{analysisBusy=false;updateScenePlanGate();updateAiFlow();}
 }
 async function generateScenePlan(){
@@ -383,6 +386,7 @@ $('playbackSpeed').addEventListener('change',applyPlaybackSpeed);
 $('player').addEventListener('loadedmetadata',applyPlaybackSpeed);
 $('generate').addEventListener('click',()=>record(false));$('preview').addEventListener('click',()=>record(true));
 $('analyzeLocal').addEventListener('click',analyzeLocal);
+$('retryAnalysis').addEventListener('click',analyzeLocal);
 $('generateScenePlan').addEventListener('click',generateScenePlan);
 $('openMotionStudio').addEventListener('click',event=>{if(!projectVoiceoverId)return;event.preventDefault();window.parent.postMessage({type:'invincible-apply-ai-draft'},location.origin);});
 $('reloadVoices').addEventListener('click',()=>fetchVoices());

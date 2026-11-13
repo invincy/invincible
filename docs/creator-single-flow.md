@@ -25,21 +25,21 @@ Voiceover. Save now and Save & return use the existing revision-aware save
 path. Direct tool URLs retain the project ID and select the requested existing
 workbench area; no project, manifest, map or renderer schema is replaced.
 
-The Script step is one continuous visual flow. After the final MP3 is generated,
-**Scripting · Step 2** appears beside Download MP3. It stays on the same page,
-saves the current project script, and sends the in-memory final MP3 to Whisper.
+The Script step owns narration and voiceover creation. After the final MP3 is
+generated, **Next · Script & scenes** appears beside Download MP3. It preserves
+the in-memory final MP3 while activating the project's second navigation step.
+Script & scenes owns Whisper timing, timed-transcript correction, animation
+instructions and scene-plan review. The browser does not open a separate page
+or reload, so the generated recording remains available to Whisper.
 Opening previews cannot be analysed as the final recording. The visible
 MP3 ready → Whisper timing → Scene plan progress leads into locked timestamps,
 animation instructions, scene-plan review, and finally Apply to project → Open
 Motion Studio. The old outer button that jumped to an empty storyboard is not
 part of this flow.
 
-On wide project screens, the Script workspace uses the available width as three
-columns: Script and Recording on the left, Voice in the centre, and Whisper
-timing / scene planning on the right. The timing card begins at the top, so the
-user does not scroll below the narration merely to reach Step 2. Medium screens
-move timing beneath the editing row; phones preserve the order Script,
-Recording, Voice, then timing without horizontal overflow.
+On wide project screens, Script and Recording share the main column and Voice
+uses the side column. Script & scenes gives the Whisper / scene-plan workspace
+the full project width. Phones preserve each step without horizontal overflow.
 
 ### UX overhaul verification — November 13, 2026
 

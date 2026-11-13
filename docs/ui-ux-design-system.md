@@ -93,14 +93,12 @@ Untitled project directly on Script, without showing the compact setup dialog.
 The workflow runs from Script to
 Script & scenes, then Map Editor when visuals need maps, and finally Motion
 Studio for assembly. The separate Invincible AI Voiceover tool keeps its name.
-Within Script, keep MP3 generation, Download MP3 and Scripting · Step 2 in one
-continuous surface. Step 2 must not navigate away: reveal the MP3 ready,
-Whisper timing and Scene plan progression in place, with transcript correction
-and animation instructions visible before scene generation.
-Use a three-column project layout when desktop width allows: Script/Recording,
-Voice, and Whisper/Scene plan. Do not leave Step 2 below the desktop fold while
-unused horizontal space remains. Collapse to two columns and then one column at
-narrower widths without introducing horizontal scrolling.
+Within Script, keep MP3 generation and Download MP3 together, followed by the
+Next · Script & scenes action. Activating it must preserve the in-memory MP3,
+select the second project step and reveal MP3 ready → Whisper timing → Scene
+plan across the available width. Transcript correction and animation
+instructions belong to Script & scenes, not beneath the Script editor. Do not
+reload or open a separate browser page during this handoff.
 
 Carry the selected Invincible theme backdrop into the editor, including its
 ambient details. Keep the background free of page-specific artwork and use
