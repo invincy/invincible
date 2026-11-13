@@ -42,6 +42,9 @@ Motion Studio. On desktop, animation instructions use the wider left card while
 the locked Whisper transcript remains visible in a separate right card. The
 planner reports elapsed progress, renders the review as soon as generation
 finishes, and enables Motion Studio only after the plan and final MP3 are saved.
+While Qwen works, state clearly that no further click is required and that the
+Review sync plan stage will open automatically; do not leave a disabled button
+as the only explanation of progress.
 As soon as Whisper finishes, Creator Studio checkpoints the final MP3, original
 source MP3, locked transcript and current animation instructions for that
 account and project. After an app restart, selecting Script & scenes opens this
