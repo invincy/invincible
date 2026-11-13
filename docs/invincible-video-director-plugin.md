@@ -14,7 +14,7 @@ to supported ChatGPT and OpenAI HTTPS callback hosts, authorization codes are
 one-use and short-lived, and every MCP request is authorized against the exact
 Invincible resource URL.
 
-The first cloud release is deliberately read-only. Its tools are:
+The cloud connection separates review from mutation. Its tools are:
 
 - `get_my_profile`: confirms the connected Invincible account.
 - `get_creator_contract`: returns the semantic planning schema, style profile,
@@ -24,11 +24,27 @@ The first cloud release is deliberately read-only. Its tools are:
   assets and reviewed geography for one accessible project.
 - `compile_creator_plan`: validates one semantic scene per locked segment and
   compiles the existing Creator Studio, Map Editor and Motion Studio shapes.
+- `apply_creator_plan`: recompiles the reviewed semantic plan against the latest
+  project catalog and saves it only with `creator.write`, explicit confirmation
+  and an exact `writeRevision`. Existing scenes require a separate explicit
+  replacement confirmation.
 
-It cannot save, delete, publish, attach assets or apply a draft. The connection
-is private because it is not submitted to a public plugin directory. Add its
+It cannot delete projects, publish videos or upload assets. The connection is
+private because it is not submitted to a public plugin directory. Add its
 MCP endpoint as a personal custom connection in ChatGPT, then approve it on the
 Invincible connection page using the existing Firebase account.
+
+## Timed transcript sync
+
+Local Whisper still runs on the laptop and the MP3 stays in the browser's
+device-local audio store. After timing is ready, Creator saves only a bounded
+project workspace to the existing `creatorProjects/{projectId}` document:
+segment text/start/end, animation instructions, duration, filename and speed.
+Word-level timing and audio bytes are deliberately omitted. This makes the
+timing visible to the cloud plugin without adding a second storage system or a
+Firebase Storage upload. Opening the project on another device restores the
+timed text, but Motion Studio still requires the original MP3 on the device
+that will export the video.
 
 ## Local development endpoint
 

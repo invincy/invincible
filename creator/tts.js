@@ -23,6 +23,11 @@ const basicVoiceover=document.documentElement.classList.contains('ai-voiceover-e
 const embedParams=new URLSearchParams(location.search);
 const projectVoiceoverId=document.documentElement.classList.contains('project-voiceover-embed')
  ? embedParams.get('project') : null;
+window.addEventListener('message',event=>{
+ if(event.origin!==location.origin||event.source!==window.parent||event.data?.type!=='invincible-load-project-script-workspace')return;
+ const workspace=event.data.workspace;if(!workspace?.transcript?.segments?.length||timedTranscript)return;
+ timedTranscript=structuredClone(workspace.transcript);$('script').value=workspace.script||$('script').value;$('creativeInstructions').value=workspace.creativeInstructions||$('creativeInstructions').value;renderTranscript();$('localAnalysisStatus').textContent='Saved project timing restored from Firebase. The original MP3 remains on the device where it was created.';meters();
+});
 if(projectVoiceoverId){
  const scriptPanel=document.querySelector('.script-panel');
  const direction=$('expressiveControls');
@@ -350,10 +355,14 @@ async function record(preview){
 function bytesBase64(bytes){let binary='';for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000));return btoa(binary);}
 function audioBase64(){return bytesBase64(audioBytes);}
 function scriptSyncSnapshot(){return{script:$('script').value,title:$('title').value,creativeInstructions:$('creativeInstructions').value,transcript:structuredClone(timedTranscript),scenePlan:scenePlanPayload?structuredClone(scenePlanPayload):null,aiProvider,appliedSpeed,playbackSpeed:$('playbackSpeed').value,sourceDuration,sourceFilename,recordingLabel,finalDuration:Number(timedTranscript?.duration)||0,downloadFilename:$('download').download||sourceFilename};}
+function syncCloudScriptWorkspace(){
+ if(!projectVoiceoverId||!timedTranscript?.segments?.length)return;
+ window.parent.postMessage({type:'invincible-sync-project-script-workspace',workspace:{version:1,script:$('script').value,creativeInstructions:$('creativeInstructions').value,transcript:structuredClone(timedTranscript),timingProvider:aiProvider==='cloud'?'openai-or-local-whisper':'local-whisper',audio:{sourceFilename:String(sourceFilename||'').slice(0,240),finalDuration:Number(timedTranscript.duration)||0,appliedSpeed:Number(appliedSpeed)||1},updatedAtMs:Date.now()}},location.origin);
+}
 async function persistScriptSync({includeAudio=false}={}){
  if(!projectVoiceoverId||!user||!timedTranscript)return;
  const finalAudio=includeAudio&&audioBytes?new Blob([audioBytes],{type:'audio/mpeg'}):null,sourceAudio=includeAudio&&sourceAudioBytes?new Blob([sourceAudioBytes],{type:'audio/mpeg'}):null;
- return saveScriptSyncCheckpoint({accountId:user.uid,projectId:projectVoiceoverId,checkpoint:scriptSyncSnapshot(),finalAudio,sourceAudio});
+ const saved=await saveScriptSyncCheckpoint({accountId:user.uid,projectId:projectVoiceoverId,checkpoint:scriptSyncSnapshot(),finalAudio,sourceAudio});syncCloudScriptWorkspace();return saved;
 }
 function scheduleScriptSyncSave(){
  if(!projectVoiceoverId||!user||!timedTranscript)return;clearTimeout(scriptSyncSaveTimer);const owner=user.uid,current=epoch;

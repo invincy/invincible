@@ -2,7 +2,7 @@ import {mountVideoStudio} from './video-studio/workspace.js?v=2026111401';
 import {mountHistoryWorkspace} from './history-workspace.js?v=2026111329';
 import {makeScene} from './storyboard-model.js?v=3';
 import {METHODS,IMPORT_FIELDS,uid,methodsOf,inspectImport,parseProductionImport,uniqueScenes,groupFor,taskFor,setTask,animationStage,requirements,sceneState,projectProgress,queueScenes,canonicalScript,scriptReview,filterScenes,productionReadiness} from './production-model.js?v=2026111112';
-import {loadPendingAiDraft,loadPendingAiAudio,clearPendingAiDraft} from './ai-draft.js?v=2026111319';
+import {loadPendingAiDraft,loadPendingAiAudio,loadScriptSyncCheckpoint,clearPendingAiDraft} from './ai-draft.js?v=2026111410';
 import {renderAiScenePreviews} from './ai-preview.js?v=2026111401';
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const options=(values,current)=>values.map(value=>'<option '+(value===current?'selected':'')+'>'+esc(value)+'</option>').join('');
@@ -30,7 +30,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  for(const name of ['Assets','Production','Overview','Maps','Clips'])more.querySelector('div').append(nav.querySelector('[data-tab="'+name+'"]'));nav.append(more);
  }
  const project=()=>getProject();
- const pendingAiDraft=()=>loadPendingAiDraft({accountId:getAccountId?.(),projectId:project()?.id});
+ const pendingAiDraft=()=>loadPendingAiDraft({accountId:getAccountId?.(),projectId:project()?.id})||project()?.pluginDraft||null;
  const scenes=()=>project()?.scenes||[];
  const changed=(rerender=true)=>{onChange();if(rerender)render();};
  const findScene=id=>scenes().find(scene=>scene.id===id);
@@ -141,10 +141,10 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   const box=root.querySelector('[data-import-preview]');box.innerHTML='<p>Local AI draft · '+importTable.rows.length+' scenes. Review every scene before importing.</p><div data-mapped-preview></div>';mappedPreview();
  }
  async function openAiVideo({reviewMaps=false}={}){
-  const draft=pendingAiDraft(),audio=await loadPendingAiAudio(),aiScenes=draft?.creatorStudio?.scenes;
+  const draft=pendingAiDraft();let audio=await loadPendingAiAudio();if(!audio&&project()?.pluginDraft){const checkpoint=await loadScriptSyncCheckpoint(getAccountId?.(),project()?.id).catch(()=>null);audio=checkpoint?.finalAudio||null;}const aiScenes=draft?.creatorStudio?.scenes;
   if(!Array.isArray(aiScenes)||!aiScenes.length)throw Error('This AI draft has no executable scene plan yet. Generate an animation-ready draft first.');
   if(!aiScenes.every(scene=>scene.mapAnimation||scene.canvasScene||scene.contextCard===true))throw Error('Review the missing or unverified scene information before applying this draft.');
-  if(!audio)throw Error('The original MP3 is missing from this device. Run AI timing again to attach it.');
+  if(!audio)throw Error('The compiled project is ready, but the original MP3 is not on this device. Open Script once on the device where you created the MP3, then continue to Motion Studio.');
   tab='Video Studio';render();await videoWorkspace?.ready;if(!videoWorkspace)throw Error('Video Studio could not be opened.');
   const current=videoWorkspace.manifest,hasDraft=current&&(current.scenes.length||(current.audioClips||[]).length||current.audio);
   if(hasDraft&&!confirm('Replace the current Motion Studio draft with this reviewed sync plan? The existing local video draft will be replaced; the Creator project and source MP3 remain saved.')){message('Existing Motion Studio draft kept. The reviewed sync plan is still available in Script & scenes.');return;}

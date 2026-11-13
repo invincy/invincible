@@ -1,6 +1,7 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const oauth=require('../src/creator/plugin-oauth');
+const plugin=require('../src/creator/plugin-cloud');
 
 test('plugin OAuth accepts only supported ChatGPT redirect hosts',()=>{
  assert.equal(oauth.allowedRedirectUri('https://chatgpt.com/connector/callback'),true);
@@ -24,6 +25,12 @@ test('plugin OAuth metadata advertises authorization code with refresh and PKCE'
  const metadata=oauth.authorizationServerMetadata('https://auth.example.test');
  assert.deepEqual(metadata.grant_types_supported,['authorization_code','refresh_token']);
  assert.deepEqual(metadata.code_challenge_methods_supported,['S256']);
- assert.deepEqual(metadata.scopes_supported,['creator.read','creator.compile']);
+ assert.deepEqual(metadata.scopes_supported,['creator.read','creator.compile','creator.write']);
  assert.equal(metadata.authorization_response_iss_parameter_supported,true);
+});
+
+test('plugin apply requires explicit confirmation and preserves compiled timing',()=>{
+ assert.throws(()=>plugin.applyInput.parse({}),/Invalid input/);
+ const scenes=plugin.creatorScenes({creatorStudio:{scenes:[{id:'scene-1',startSeconds:0,endSeconds:.8,durationSeconds:.8,voiceoverTimestamp:'0.000-0.800s'}]}});
+ assert.equal(scenes[0].startSeconds,0);assert.equal(scenes[0].endSeconds,.8);assert.equal(scenes[0].voiceoverTimestamp,'0.000-0.800s');assert.equal(scenes[0].duration,1);
 });

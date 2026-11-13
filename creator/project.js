@@ -1,5 +1,5 @@
 import{makeScene}from'./storyboard-model.js?v=3';
-import{createProductionWorkbench}from'./production-workbench.js?v=2026111401';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026111411';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -77,6 +77,16 @@ window.addEventListener("message",async event=>{
     queueSave();
     return;
   }
+  if(event.data?.type==="invincible-sync-project-script-workspace"){
+    const source=event.data.workspace||{},segments=Array.isArray(source.transcript?.segments)?source.transcript.segments.slice(0,100):[];
+    const valid=segments.length&&segments.every(segment=>Number.isFinite(Number(segment.start))&&Number.isFinite(Number(segment.end))&&Number(segment.end)>Number(segment.start)&&String(segment.text||'').trim().length<=4000);
+    if(!valid){status("The timed transcript was not saved because it is incomplete.","error");return;}
+    const transcript={language:String(source.transcript.language||'').slice(0,40),duration:Number(source.transcript.duration)||Number(segments.at(-1).end),text:String(source.transcript.text||'').slice(0,30000),segments:segments.map((segment,index)=>({id:String(segment.id||`segment-${index+1}`).slice(0,100),start:Number(segment.start),end:Number(segment.end),text:String(segment.text||'').slice(0,4000)}))};
+    project.scriptWorkspace={version:1,script:String(source.script||'').slice(0,30000),creativeInstructions:String(source.creativeInstructions||'').slice(0,12000),transcript,timingProvider:String(source.timingProvider||'local-whisper').slice(0,40),audio:{sourceFilename:String(source.audio?.sourceFilename||'').slice(0,240),finalDuration:Number(source.audio?.finalDuration)||transcript.duration,appliedSpeed:Number(source.audio?.appliedSpeed)||1},updatedAtMs:Number(source.updatedAtMs)||Date.now()};
+    if(project.scriptWorkspace.script)project.script=project.scriptWorkspace.script;
+    if(project.scriptWorkspace.creativeInstructions)project.notes=project.scriptWorkspace.creativeInstructions;
+    queueSave();return;
+  }
   if(event.data?.type==="invincible-open-script-timing"){
     selectProjectArea("Storyboard");
     return;
@@ -144,8 +154,9 @@ async function selectProjectArea(area,mode=""){
   const isTiming=area==="Storyboard";
   if(showScriptWorkspace){
     const frame=$("projectVoiceoverFrame");
-    if(!frame.hasAttribute("src"))frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId,view:isTiming?"timing":"script",build:"2026111330"});
-    else frame.contentWindow?.postMessage({type:"invincible-project-script-view",view:isTiming?"timing":"script"},location.origin);
+    const sendWorkspace=()=>frame.contentWindow?.postMessage({type:"invincible-load-project-script-workspace",workspace:project.scriptWorkspace||null},location.origin);
+    if(!frame.hasAttribute("src")){frame.addEventListener("load",sendWorkspace,{once:true});frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId,view:isTiming?"timing":"script",build:"2026111411"});}
+    else{frame.contentWindow?.postMessage({type:"invincible-project-script-view",view:isTiming?"timing":"script"},location.origin);sendWorkspace();}
   }else if(area==="Video Studio"&&mode==="map-review"){const reviewing=await storyboard.reviewMaps();if(!reviewing)setProjectAreaState("Video Studio","");}
   else storyboard.open({area});
 }

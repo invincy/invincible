@@ -1,6 +1,6 @@
 const {createHash,randomBytes,timingSafeEqual}=require('node:crypto');
 
-const SCOPES=Object.freeze(['creator.read','creator.compile']);
+const SCOPES=Object.freeze(['creator.read','creator.compile','creator.write']);
 const DEFAULT_SCOPE=SCOPES.join(' ');
 const ACCESS_TTL_SECONDS=60*60;
 const REFRESH_TTL_SECONDS=90*24*60*60;
