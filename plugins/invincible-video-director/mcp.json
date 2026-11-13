@@ -3,7 +3,7 @@
   "mcpServers": {
     "invincible-creator": {
       "type": "streamable-http",
-      "url": "http://127.0.0.1:8791/mcp"
+      "url": "https://asia-south1-life-by-adichimp.cloudfunctions.net/creatorPluginMcp/mcp"
     }
   }
 }
