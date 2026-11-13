@@ -2,7 +2,7 @@ import {initializeMapProject} from './map-defaults.js?v=2026110903';
 import {productionId,emptyMap,validateMap,sceneTimeline,durationOf,createClip,clipTiming,exportManifest,safeUrl,timeOf} from './history-model.js?v=2026111002';
 const archiveSource='https://commons.wikimedia.org/wiki/File:India1765and1805b.jpg';
 import {createHistoryPlayer,downloadBlob,sizeMapFrame} from './history-player.js?v=2026111002';
-import {mountMapEditor} from './map-editor.js?v=2026111203';
+import {mountMapEditor} from './map-editor.js?v=2026111328';
 import {mapExportPanel,handleMapExport} from './map-editor-panels.js?v=2026111002';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const button=(id,label)=>`<button type="button" data-history="${id}">${label}</button>`;

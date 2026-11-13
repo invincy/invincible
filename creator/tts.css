@@ -356,6 +356,15 @@ audio{width:100%;height:36px}
 .project-voiceover-embed.project-timing-view .timing-instructions-card label { display: block; margin-bottom: 8px; font-weight: 650; }
 .project-voiceover-embed.project-timing-view #creativeInstructions { min-height: clamp(280px, 53dvh, 580px); resize: vertical; }
 .project-voiceover-embed.project-timing-view :is(.transcript-review,.scene-plan-review) { max-height: 68dvh; overflow-y: auto; }
+.resource-review { margin: 12px 0; padding: 12px 0; border-block: 1px solid var(--line); }
+.resource-review-items { display: grid; gap: 8px; }
+.resource-review-item { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; background: #122532; }
+.resource-review-item p { margin: 4px 0 0; }
+.resource-review-item small { color: var(--muted); }
+.resource-review-item[data-status="missing"] { box-shadow: inset 3px 0 #e77a62; }
+.resource-review-item[data-status="review"] { box-shadow: inset 3px 0 #e1c65b; }
+.resource-clarification { padding: 8px 10px; border-left: 3px solid #65b7e6; background: #0b1c28; }
+@media (max-width: 600px) { .resource-review-item { grid-template-columns: minmax(0,1fr); } .resource-review-item button { width: 100%; } }
 .project-voiceover-embed.project-timing-view .transcript-segment { grid-template-columns: 1fr; gap: 3px; }
 .project-voiceover-embed.project-timing-view .transcript-segment>span { padding-top: 0; }
 .project-voiceover-embed.project-timing-view .ai-next-row { position: sticky; bottom: 0; padding-top: 10px; background: linear-gradient(transparent,#0a1a25 18%); }

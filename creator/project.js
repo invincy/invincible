@@ -1,5 +1,5 @@
 import{makeScene}from'./storyboard-model.js?v=3';
-import{createProductionWorkbench}from'./production-workbench.js?v=2026111326';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026111328';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -79,6 +79,12 @@ window.addEventListener("message",async event=>{
   }
   if(event.data?.type==="invincible-open-script-timing"){
     selectProjectArea("Storyboard");
+    return;
+  }
+  if(event.data?.type==="invincible-open-creator-resource"){
+    const area=event.data.area==="Maps"?"Maps":"Assets";
+    if(area==="Maps")try{sessionStorage.setItem(`invincible.creator.map-resource.${projectId}`,JSON.stringify({year:Number(event.data.year)||0,polityNames:Array.isArray(event.data.polityNames)?event.data.polityNames.slice(0,12):[]}));}catch{}
+    selectProjectArea(area);
     return;
   }
   if(event.data?.type!=="invincible-review-ai-maps")return;

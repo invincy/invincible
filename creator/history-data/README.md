@@ -11,9 +11,15 @@ Map Editor → **Historical GeoJSON → Find a historical territory** searches a
 
 Load a result into the existing GeoJSON form. The source, date and precision note are filled in for review. Importing adds the geometry at the current playhead. Military routes and event-level battle geometry require separate sources.
 
+The picker also accepts comma-separated polity names and can load every active
+outline for a selected year into one colour-coded review pack. This is useful
+for establishing a 1526 political context, but it deliberately leaves the
+review checkbox off. Colours distinguish overlapping records; they do not
+assert sovereignty, exact borders or historical certainty.
+
 When a dynasty is missing, first try a spelling variant and the relevant year. If a historical map supplies a usable extent, digitize and import it as an approximate reconstruction with a citation. If the source only mentions places or regions, show named, sourced points or soft regional shading labeled “Regional context · modern geography.” For a claim such as “parts of present-day Gujarat and Rajasthan,” use the states as orientation and highlight only the areas the source supports. Keep modern administrative outlines separate from any historical extent. Use a visibly illustrative route only when supported endpoints or waypoints make that useful.
 
-Rebuild with `python scripts/build-cliopatria-reference.py <cliopatria-v0.2.1.zip>` (Python 3.11+ and Shapely). The script verifies the archive SHA-256. The original 46 MB archive is kept separately from the web app. This reference picker feeds the manual Map Editor import. The local AI planner still needs a separate connection to the open project's saved geography.
+Rebuild with `python scripts/build-cliopatria-reference.py <cliopatria-v0.2.1.zip>` (Python 3.11+ and Shapely). The script verifies the archive SHA-256. The original 46 MB archive is kept separately from the web app. The shared Creator semantic planner now names the historical year and relevant polities explicitly. Its resource resolver checks this pack, creates only a label-based approximate locator automatically and links the factual outline request back to this manual Map Editor review. Hosted and local planners use the same contract.
 
 Video Studio's **Create with AI** also checks this pack automatically. It looks
 for matching polity names and a matching year in the timed narration or brief.

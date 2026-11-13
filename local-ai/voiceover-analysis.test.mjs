@@ -182,3 +182,14 @@ test('production finds dated and modern locators and falls back without invented
   const video = compileAiStoryboardManifest(scenes,{allowContextCards:true,audioFileId:'voice',audioDuration:9.2});
   assert.deepEqual(video.scenes.map(scene=>scene.engineType),['map','map','graphic']);
 });
+
+test('local semantic planning uses explicit historical fields before narration heuristics', async () => {
+  const root = new URL('..', import.meta.url).pathname.replace(/^\/(\w:)/, '$1');
+  const catalog = await loadCreatorAssetCatalog(root, { includeHistory: true });
+  const locked = {segments:[{id:'h1',start:0,end:4,text:'The political context matters.'}]};
+  const plan={schemaVersion:'creator-semantic-plan-v1',scenes:[{sourceSegmentId:'h1',engine:'map',sceneKind:'historical-context',presetId:'historical-year-map',title:'North India · 1526',visualIntent:'Establish the Lodi political context.',labelTreatment:'map-label',cameraIntent:'global-to-local',assetIds:[],locationId:'',routeId:'',historicalYear:1526,regionId:'south-asia',polityNames:['Lodi Dynasty'],emphasis:['geography','polity'],missingInfo:[],resourceRequests:[{type:'historical-territory',query:'Lodi Dynasty in 1526',importance:'required-factual',fallback:'dated-location-context'}],clarifications:[]}]};
+  const draft=compileCreativePlan(locked,plan,catalog,{production:true});
+  assert.deepEqual(draft.scenes[0].mapAnimation.layers.map(layer=>layer.name),['Lodi Dynasty · approximate extent']);
+  assert.doesNotMatch(draft.scenes[0].missingInfo.join(' '),/No reviewed, sourced location geometry/);
+  assert.equal(draft.scenes[0].semanticPlan.historicalYear,1526);
+});

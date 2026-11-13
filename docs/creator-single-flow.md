@@ -51,6 +51,13 @@ fallbacks, so missing verified geography becomes an explicit Canvas context
 scene instead of a dead handoff. Applying immediately saves a recoverable local
 Motion Studio draft. The remaining user choice is Preview full video, optionally
 edit a scene, then Export MP4; do not send the user through another importer.
+The sync-plan review also lists every requested production resource. Existing
+project assets are reused. Historical territory requests are checked against
+the bundled dated reference pack; a safe label-only locator can be created
+automatically, while factual polygon extents remain queued for Map Editor
+review. Missing visual resources keep their declared fallback and offer a
+direct **Open Map Editor** or **Open Assets** action. A single missing asset no
+longer blocks the rest of the plan.
 OpenAI planning now selects the existing native Map Editor engine for geographic
 segments and supplies its validated version-1 camera, label and illustrative
 route instructions. Motion Studio receives those scenes as `map`, not Canvas.
@@ -76,6 +83,11 @@ not part of the Step 2 header.
 On wide project screens, Script and Recording share the main column and Voice
 uses the side column. Script & scenes gives the Whisper / sync-plan workspace
 the full project width. Phones preserve each step without horizontal overflow.
+
+For historical projects, Map Editor's dated reference picker accepts multiple
+comma-separated polity names. **Load complete year view** prepares all active
+territory outlines for that year as a colour-coded review pack. The user must
+still inspect the source and explicitly approve the GeoJSON before import.
 
 ### UX overhaul verification — November 13, 2026
 

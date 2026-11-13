@@ -39,8 +39,8 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced,initialTime=
  <details><summary>Find a historical territory</summary>
  <p>Approximate outlines for South Asia and nearby regions, 1450–1600. <a href="${cliopatriaSource}" target="_blank" rel="noopener">Cliopatria v0.2.1 · Seshat Global History Databank</a> · <a href="${cliopatriaLicense}" target="_blank" rel="noopener">CC BY 4.0</a>.</p>
  <label>Year<input data-reference-year type="number" min="1450" max="1600" step="1" value="1526" required></label>
- <label>Polity name<input data-reference-name type="search" placeholder="e.g. Lodi"></label>
- ${button('reference-find','Find outlines')}
+ <label>Polity name<input data-reference-name type="search" placeholder="e.g. Lodi · leave blank for all"></label>
+ <div class="history-controls">${button('reference-find','Find outlines')}${button('reference-year-view','Load complete year view')}</div>
  <label>Matching outlines<select data-reference-result disabled aria-label="Matching outlines"></select></label>
  <button type="button" data-edit="reference-use" disabled>Load into GeoJSON form</button>
  <p data-reference-status role="status" aria-live="polite"></p>
@@ -50,6 +50,7 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced,initialTime=
  <details><summary>Terrain / elevation</summary><p>Use a provider's raster DEM TileJSON. Coverage, CORS and usage rights depend on that provider. Terrain represents the supplied elevation dataset, not a historical reconstruction.</p><label>DEM TileJSON URL<input data-dem-url type="url" placeholder="https://…/tiles.json"></label><label>Attribution<input data-dem-credit></label><label>Encoding<select data-dem-encoding><option>mapbox</option><option>terrarium</option></select></label><label>Exaggeration<input data-dem-scale type="number" min="0" max="5" step="0.1" value="1"></label><label><input data-dem-enabled type="checkbox"> Enable terrain</label>${button('terrain','Apply terrain')}</details>
  <details><summary>Historical sources</summary><div data-sources></div></details></aside></div>`;
  const q=s=>root.querySelector(s),host=q('[data-map]');
+ try{const key=`invincible.creator.map-resource.${project.id}`,request=JSON.parse(sessionStorage.getItem(key)||'null');if(request){sessionStorage.removeItem(key);if(Number(request.year)>=1450&&Number(request.year)<=1600)q('[data-reference-year]').value=Number(request.year);if(request.polityNames?.length)q('[data-reference-name]').value=request.polityNames.join(', ');q('[data-reference-status]').textContent='AI resource request loaded. Find a named outline, or load the complete year view for review.';}}catch{}
  const guide=document.createElement('div');guide.className='map-shorts-guide';guide.setAttribute('aria-hidden','true');guide.innerHTML='<span>SHORTS SAFE AREA · PREVIEW ONLY</span>';host.append(guide);
  q('[data-export-ratio]').value=project.aspectRatio||'16:9';sizeMapFrame(host,q('[data-export-ratio]').value);
  const status=text=>{if(!disposed)q('[data-editor-status]').textContent=text;};
@@ -163,7 +164,7 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced,initialTime=
   if(action==='reference-find'){
    const yearField=q('[data-reference-year]');
    if(!yearField.checkValidity())throw Error('Enter a whole year from 1450 to 1600.');
-   const year=Number(yearField.value),name=q('[data-reference-name]').value.trim().toLowerCase();
+   const year=Number(yearField.value),nameQuery=q('[data-reference-name]').value.trim().toLowerCase(),names=nameQuery.split(',').map(value=>value.trim()).filter(Boolean);
    const result=q('[data-reference-result]'),message=q('[data-reference-status]'),use=q('[data-edit=reference-use]');
    b.disabled=true;result.disabled=true;use.disabled=true;
    message.textContent='Loading reference outlines…';
@@ -174,12 +175,12 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced,initialTime=
      referenceCatalog=await response.json();
     }
     if(disposed)return;
-    if(Number(yearField.value)!==year||q('[data-reference-name]').value.trim().toLowerCase()!==name){
+    if(Number(yearField.value)!==year||q('[data-reference-name]').value.trim().toLowerCase()!==nameQuery){
      message.textContent='Search again for the updated year or name.';
      return;
     }
     referenceYear=year;
-    referenceMatches=referenceCatalog.records.filter(row=>row.start<=year&&year<=row.end&&row.name.toLowerCase().includes(name));
+    referenceMatches=referenceCatalog.records.filter(row=>row.start<=year&&year<=row.end&&(!names.length||names.some(name=>row.name.toLowerCase().includes(name))));
     result.replaceChildren(...referenceMatches.map((row,index)=>new Option(row.name+' · '+row.start+'–'+row.end,String(index))));
     result.disabled=use.disabled=!referenceMatches.length;
     message.textContent=referenceMatches.length?`${referenceMatches.length} approximate outline(s) for ${year}.`:'No matching outline. Try another spelling or use sourced GeoJSON or place markers.';
@@ -188,6 +189,17 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced,initialTime=
    }finally{
     if(!disposed)b.disabled=false;
    }
+   return;
+  }
+  if(action==='reference-year-view'){
+   const yearField=q('[data-reference-year]');if(!yearField.checkValidity())throw Error('Enter a whole year from 1450 to 1600.');const year=Number(yearField.value),message=q('[data-reference-status]');b.disabled=true;message.textContent='Building the dated territory review pack…';
+   try{
+    if(!referenceCatalog){const response=await fetch(cliopatriaFile);if(!response.ok)throw Error('Reference outlines could not be loaded. Try again.');referenceCatalog=await response.json();}
+    const rows=referenceCatalog.records.filter(row=>row.start<=year&&year<=row.end).slice(0,100);if(!rows.length)throw Error(`No territory outlines are available for ${year}.`);
+    const colors=['#d8b873','#65b7e6','#8bbf8a','#e77a62','#9b8ac4','#d69a62','#6fb3a8','#c9829d'];
+    q('[data-geo]').value=JSON.stringify({type:'FeatureCollection',features:rows.map((row,index)=>({type:'Feature',properties:{label:`${row.name} · Approximate extent`,sourceRange:`${row.start}–${row.end} CE`,color:colors[index%colors.length]},geometry:row.geometry}))});
+    q('[data-geo-label]').value='';q('[data-geo-date]').value=`${year} CE · individual source frames retained in the GeoJSON`;q('[data-geo-source]').value=cliopatriaSource;q('[data-geo-note]').value=`Cliopatria v0.2.1, Seshat Global History Databank, CC BY 4.0 (${cliopatriaLicense}). Approximate extents simplified by Invincible; overlaps and frame-year transitions require review.`;q('[data-reviewed]').checked=false;message.textContent=`${rows.length} active territory outlines loaded together. Inspect the geography, remove irrelevant features if needed, then tick the review box and import.`;
+   }finally{b.disabled=false;}
    return;
   }
   if(action==='reference-use'){

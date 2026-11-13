@@ -14,6 +14,22 @@
       }
     },
     {
+      "name": "Panipat dated political context",
+      "when": "Narration establishes the powers relevant to the First Battle of Panipat in 1526.",
+      "plan": {
+        "engine": "map",
+        "sceneKind": "historical-context",
+        "presetId": "historical-year-map",
+        "historicalYear": 1526,
+        "regionId": "south-asia",
+        "polityNames": ["Lodi Dynasty"],
+        "labelTreatment": "map-label",
+        "cameraIntent": "global-to-local",
+        "emphasis": ["geography", "date", "polity"],
+        "resourceRequests": [{"type":"historical-territory","query":"Lodi Dynasty in 1526","importance":"required-factual","fallback":"dated-location-context"}]
+      }
+    },
+    {
       "name": "Panipat opposing armies",
       "when": "Narration compares Babur and Ibrahim Lodi or explains battlefield formation.",
       "plan": {

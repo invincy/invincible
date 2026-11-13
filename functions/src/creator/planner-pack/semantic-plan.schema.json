@@ -27,8 +27,13 @@
           "assetIds",
           "locationId",
           "routeId",
+          "historicalYear",
+          "regionId",
+          "polityNames",
           "emphasis",
-          "missingInfo"
+          "missingInfo",
+          "resourceRequests",
+          "clarifications"
         ],
         "properties": {
           "sourceSegmentId": { "type": "string", "minLength": 1, "maxLength": 100 },
@@ -42,6 +47,7 @@
               "title",
               "locator-map",
               "route-map",
+              "historical-context",
               "battle-formation",
               "atmospheric-system",
               "terrain-explanation",
@@ -57,6 +63,7 @@
               "framed-title",
               "geographic-locator",
               "revealed-route",
+              "historical-year-map",
               "opposing-formations",
               "pressure-driven-flow",
               "shifting-zone",
@@ -84,18 +91,54 @@
           },
           "locationId": { "type": "string", "maxLength": 160 },
           "routeId": { "type": "string", "maxLength": 160 },
+          "historicalYear": { "type": "integer", "minimum": -3400, "maximum": 2100 },
+          "regionId": { "type": "string", "enum": ["", "south-asia", "global"] },
+          "polityNames": {
+            "type": "array",
+            "maxItems": 12,
+            "items": { "type": "string", "maxLength": 120 }
+          },
           "emphasis": {
             "type": "array",
             "maxItems": 6,
             "items": {
               "type": "string",
-              "enum": ["geography", "route", "formation", "pressure", "wind", "moisture", "temperature", "terrain", "comparison", "person", "date", "definition"]
+              "enum": ["geography", "route", "formation", "pressure", "wind", "moisture", "temperature", "terrain", "comparison", "person", "date", "definition", "polity"]
             }
           },
           "missingInfo": {
             "type": "array",
             "maxItems": 8,
             "items": { "type": "string", "maxLength": 240 }
+          },
+          "resourceRequests": {
+            "type": "array",
+            "maxItems": 12,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type", "query", "importance", "fallback"],
+              "properties": {
+                "type": { "type": "string", "enum": ["historical-territory", "historical-route", "historical-place", "image", "portrait", "flag", "video", "audio", "model", "source"] },
+                "query": { "type": "string", "minLength": 1, "maxLength": 240 },
+                "importance": { "type": "string", "enum": ["required-factual", "required-visual", "optional"] },
+                "fallback": { "type": "string", "enum": ["dated-location-context", "verified-endpoints", "documentary-card", "name-card", "skip-optional"] }
+              }
+            }
+          },
+          "clarifications": {
+            "type": "array",
+            "maxItems": 6,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["question", "default", "reason"],
+              "properties": {
+                "question": { "type": "string", "minLength": 1, "maxLength": 240 },
+                "default": { "type": "string", "minLength": 1, "maxLength": 160 },
+                "reason": { "type": "string", "minLength": 1, "maxLength": 240 }
+              }
+            }
           }
         }
       }

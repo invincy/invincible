@@ -7,7 +7,7 @@ import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111207';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111207';
 import {createStudioRenderer} from './adapters.js?v=2026111207';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111014';
-import {mountAssembly} from './assembly.js?v=2026111318';
+import {mountAssembly} from './assembly.js?v=2026111328';
 import {encodeStudioVideo} from './export.js?v=2026111209';
 import {openStudioStore} from './storage.js';
 import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111203';

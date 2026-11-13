@@ -3,6 +3,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { readAnimation } from '../creator/map-animation-import.js?v=2026111112';
 import { findSceneGeography, contextMap } from './history-context.mjs';
+import {matchHistoricalRecords,historicalLocatorAnimation} from '../creator/ai-resource-resolver.js';
 
 const require = createRequire(import.meta.url);
 const { plannerPack, plannerSchemaForRequest, normalizeSemanticPlan, buildSemanticPlannerPrompt, semanticCanvasScene } = require('../functions/src/creator/semantic-plan.js');
@@ -140,7 +141,7 @@ export function compileCreativePlan(transcript, plan, assetCatalog, { production
     if(!row)return {sourceSegmentId:seg.id,intent:'hold',assetId:'',locationId:'',routeId:'',title:seg.text.slice(0,96),plannerFallback:'omitted'};
     if(semantic){
       let grounded=row;
-      if(row.engine==='map'&&!row.locationId&&!row.routeId){
+      if(row.engine==='map'&&!row.locationId&&!row.routeId&&!row.historicalYear){
         const subject=`${seg.text} ${row.title} ${row.visualIntent}`.toLowerCase();
         const atmospheric=/pressure|wind|moist|atmospher|air|cloud|belt|zone|मानसून|हवा|दबाव/u.test(subject);
         const shifting=atmospheric&&/shift|move|north|south|बदल|खिसक/u.test(subject);
@@ -165,14 +166,18 @@ export function compileCreativePlan(transcript, plan, assetCatalog, { production
       else missingInfo.push('No reviewed, sourced route geometry is available for this movement; no route was invented.');
     }else if(location&&Array.isArray(location.coordinates)&&location.coordinates.length===2&&location.coordinates.every(Number.isFinite)&&String(location.sourceUrl||'').startsWith('https://')&&String(location.sourceDate||'').trim()&&String(location.precisionNote||'').trim()){
       const center=location.coordinates;mapAnimation={format:'invincible-map-animation',version:1,title:String(row.title||location.name||row.intent),duration,aspectRatio:'9:16',basemap:'terrain',terrain:false,overlayPreset:'documentary',camera:[{time:0,center,zoom:4.9,pitch:0,bearing:0,easing:'smooth'},{time:duration,center,zoom:5.25,pitch:0,bearing:0,easing:'smooth'}],assets:[],layers:[{id:`label-${i+1}`,type:'label',name:String(location.name),start:0,end:duration,position:center,color:'#F4F5F7',scale:1}]};
-    }else missingInfo.push('No reviewed, sourced location geometry is available for this scene; no coordinates were invented.');
+    }else if(!row.historicalYear)missingInfo.push('No reviewed, sourced location geometry is available for this scene; no coordinates were invented.');
     if(assetId)missingInfo.push(`Selected asset ${assets.get(assetId).name} has no verified map placement in this catalog.`);
     let contextSources = [];
     if (production && duration < 1) mapAnimation = null;
     if (production && !mapAnimation) {
-      const places = findSceneGeography(seg.text, creativeInstructions, t.text, assetCatalog.territoryRecords);
-      mapAnimation = contextMap(places, duration);
-      if (mapAnimation) contextSources = places.map(({name, source}) => ({name, source}));
+      const historical=matchHistoricalRecords(assetCatalog.territoryRecords,{year:row.historicalYear,names:row.polityNames});
+      if(historical.length){mapAnimation=historicalLocatorAnimation(historical,duration,row.title||'Historical context');contextSources=historical.map(item=>({name:item.name,source:'https://github.com/Seshat-Global-History-Databank/cliopatria/releases/tag/v0.2.1',year:row.historicalYear,start:item.start,end:item.end}));missingInfo.push(`${historical.length} dated territory outline(s) are available for independent Map Editor review.`);}
+      else{
+       const places = findSceneGeography(seg.text, creativeInstructions, t.text, assetCatalog.territoryRecords);
+       mapAnimation = contextMap(places, duration);
+       if (mapAnimation) contextSources = places.map(({name, source}) => ({name, source}));
+      }
     }
     const checked=mapAnimation?readAnimation(mapAnimation):null,semanticPlan=semantic?row:null,canvasScene=semantic&&!checked?semanticCanvasScene(row):null;
     return {id:`scene-${i+1}`,sourceSegmentIds:[seg.id],visual:String(row.visualIntent||row.title||seg.text),animation:String(row.intent),assetIds:assetId?[assetId]:[],missingInfo,mapAnimation:checked,...(canvasScene?{canvasScene}:{}),...(semanticPlan?{semanticPlan}:{}),...(production&&!checked&&!canvasScene?{contextCard:true}:{}),...(contextSources.length?{contextSources}:{})};

@@ -62,6 +62,6 @@
     "doNotInventBoundaries": true,
     "doNotInventRoutes": true,
     "illustrativeAssetsMustBeLabeled": true,
-    "missingInformationAction": "flag-for-review"
+    "missingInformationAction": "continue-with-declared-safe-fallback-and-flag-for-review"
   }
 }

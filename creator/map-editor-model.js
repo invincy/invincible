@@ -48,7 +48,7 @@ export function validateVisual(map,project){
 export function visualMap(map){
  const copy=structuredClone(map);copy.visual??={version:1,layers:[],assets:[]};
  for(const [kind,items] of [['feature',copy.features.features.map(f=>f.properties)],['event',copy.events]])for(const item of items){
-  if(!copy.visual.layers.some(l=>l.kind===kind&&l.ref===item.id))copy.visual.layers.push({id:uid(),kind,ref:item.id,name:item.label,visible:true,...(copy.presentation&&kind==='event'?{inheritTextColor:true}:{}),opacity:copy.presentation?1:0.7,color:copy.presentation?(kind==='event'?copy.presentation.textColor:copy.presentation.accentColor):'#c5a15d'});
+  if(!copy.visual.layers.some(l=>l.kind===kind&&l.ref===item.id))copy.visual.layers.push({id:uid(),kind,ref:item.id,name:item.label,visible:true,...(copy.presentation&&kind==='event'?{inheritTextColor:true}:{}),opacity:copy.presentation?1:0.7,color:/^#[0-9a-f]{6}$/i.test(item.color||'')?item.color:copy.presentation?(kind==='event'?copy.presentation.textColor:copy.presentation.accentColor):'#c5a15d'});
  }
  return copy;
 }

@@ -42,6 +42,22 @@ const server=http.createServer((req,res)=>{try{const route=new URL(req.url,'http
  assert.match(await page.locator('[data-reference-status]').textContent(),/No matching outline/);
  assert.equal(await page.locator('[data-edit=reference-use]').isDisabled(),true);
 
+ await page.locator('[data-reference-name]').fill('Lodi, Bengal');
+ await click('reference-find');
+ await page.waitForFunction(()=>document.querySelector('[data-reference-result]').options.length>=2);
+ assert.ok(await page.locator('[data-reference-result]').locator('option').allTextContents().then(rows=>rows.some(row=>row.includes('Lodi'))&&rows.some(row=>row.includes('Bengal'))));
+ await click('reference-year-view');
+ assert.match(await page.locator('[data-reference-status]').textContent(),/active territory outlines loaded together/);
+ const yearPack=JSON.parse(await page.locator('[data-geo]').inputValue());
+ assert.ok(yearPack.features.length>=25);
+ assert.ok(yearPack.features.every(feature=>/^#[0-9a-f]{6}$/i.test(feature.properties.color)));
+ assert.equal(await page.locator('[data-reviewed]').isChecked(),false);
+ assert.equal(await page.evaluate(()=>project.historicalMap.features.features.length),1);
+ await page.locator('[data-reviewed]').check();await click('geo');await settled();
+ assert.ok(await page.evaluate(()=>project.historicalMap.features.features.length>=26));
+ assert.ok(await page.evaluate(async()=>{const {visualMap}=await import('/creator/map-editor-model.js');return visualMap(project.historicalMap).visual.layers.filter(layer=>layer.kind==='feature').some(layer=>layer.color==='#d8b873');}));
+ await click('undo');await settled();assert.equal(await page.evaluate(()=>project.historicalMap.features.features.length),1);
+
  // Real MapLibre image, terrain and Three.js layers with intercepted synthetic assets.
  const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');x.fillStyle='rgb(1,134,160)';x.fillRect(0,0,256,256);return c.toDataURL().split(',')[1];});
  const raw=Buffer.from(new Float32Array([-1,0,0,1,0,0,0,2,0]).buffer);

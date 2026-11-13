@@ -15,9 +15,9 @@ const clean=(value,max=12000)=>String(value||'').trim().slice(0,max);
 async function access(request){
  if(!request.auth)throw new HttpsError('unauthenticated','Sign in first.');
  const snap=await getFirestore().collection('creatorProjects').doc(id(request.data?.projectId)).get();
- assertAccess(request.auth,snap.exists?snap.data():null);
+ const project=snap.exists?snap.data():null;assertAccess(request.auth,project);return project;
 }
-function guarded(fn){return async request=>{try{await access(request);return await fn(request.data||{});}catch(error){if(error instanceof HttpsError)throw error;throw new HttpsError('failed-precondition',error.message||'Creator AI operation failed.');}};}
+function guarded(fn){return async request=>{try{const project=await access(request);return await fn(request.data||{},{project});}catch(error){if(error instanceof HttpsError)throw error;throw new HttpsError('failed-precondition',error.message||'Creator AI operation failed.');}};}
 function decodeAudio(data){
  const value=data.audioBase64;if(typeof value!=='string'||!value.length||value.length>28_000_000||value.length%4||!/^[A-Za-z0-9+/]*={0,2}$/.test(value))throw Error('Use an MP3 up to 20 MB.');
  const bytes=Buffer.from(value,'base64');if(bytes.length<32||bytes.length>20*1024*1024)throw Error('Use an MP3 up to 20 MB.');return bytes;
@@ -34,12 +34,19 @@ function normalizeTranscript(raw){
  return{text:clean(raw.text,30000),language:clean(raw.language,40),duration,segments};
 }
 
-function buildPlan(plan,transcript,title){
- const semantic=normalizeSemanticPlan(plan,{segmentIds:transcript.segments.map(segment=>segment.id)});
+function projectCatalog(project={}){
+ const assets=[...(project.assets||[]),...(project.historicalMap?.visual?.assets||[])].map(asset=>({id:clean(asset.id,160),name:clean(asset.name,160),type:clean(asset.type||asset.kind||'asset',80),description:clean(asset.description||asset.credit||asset.notes,160)})).filter(asset=>asset.id&&asset.name).slice(0,50);
+ const locations=(project.historicalMap?.events||[]).map(event=>({id:clean(event.id,160),name:clean(event.label,160),coordinates:event.coordinates,sourceUrl:event.sourceUrl,sourceDate:event.date,precisionNote:clean(event.sourceNote,160)})).filter(item=>item.id&&item.name&&Array.isArray(item.coordinates)).slice(0,50);
+ const routes=(project.historicalMap?.features?.features||[]).filter(feature=>feature.geometry?.type==='LineString'&&feature.properties?.reviewed===true).map(feature=>({id:clean(feature.properties.id,160),name:clean(feature.properties.label,160),coordinates:feature.geometry.coordinates,sourceUrl:feature.properties.sourceUrl,sourceDate:feature.properties.date,precisionNote:clean(feature.properties.sourceNote,160),reviewed:true})).filter(item=>item.id&&item.name).slice(0,50);
+ return{assets,locations,routes};
+}
+
+function buildPlan(plan,transcript,title,catalog={assets:[],locations:[],routes:[]}){
+ const semantic=normalizeSemanticPlan(plan,{segmentIds:transcript.segments.map(segment=>segment.id),assetIds:catalog.assets.map(item=>item.id),locationIds:catalog.locations.map(item=>item.id),routeIds:catalog.routes.map(item=>item.id)});
  const scenes=transcript.segments.map((segment,index)=>{
   const idea=semantic.scenes[index];if(idea.sourceSegmentId!==segment.id)throw Error('OpenAI returned scenes out of timestamp order.');
   const duration=Number((segment.end-segment.start).toFixed(3)),missingInfo=[...idea.missingInfo];
-  if(idea.engine==='map'&&!idea.locationId&&!idea.routeId)missingInfo.push('No reviewed location or route geometry was supplied; the semantic plan remains editable without invented coordinates.');
+  if(idea.engine==='map'&&!idea.locationId&&!idea.routeId&&!idea.historicalYear)missingInfo.push('No reviewed location, route or dated historical context was supplied; the semantic plan remains editable without invented coordinates.');
   const canvasScene=semanticCanvasScene(idea);
   return{id:`scene-${index+1}`,startSeconds:segment.start,endSeconds:segment.end,durationSeconds:duration,voiceover:segment.text,voiceoverTimestamp:`${segment.start.toFixed(3)}-${segment.end.toFixed(3)}s`,visual:idea.visualIntent,animation:idea.cameraIntent,assets:'',assetIds:idea.assetIds,assetReferences:idea.assetIds.join('; '),sourceSegmentIds:[segment.id],missingInfo,mapAnimation:null,contextCard:false,canvasScene,semanticPlan:idea};
  });
@@ -47,7 +54,7 @@ function buildPlan(plan,transcript,title){
  return{analysis,creatorStudio:{schemaVersion:1,title:title||'Voiceover sync plan',aspectRatio:'9:16',assets:[],audio:null,scenes:scenes.map(scene=>({id:scene.id,timeline:`${scene.startSeconds.toFixed(3)}-${scene.endSeconds.toFixed(3)}s`,startSeconds:scene.startSeconds,endSeconds:scene.endSeconds,durationSeconds:scene.durationSeconds,voiceover:scene.voiceover,voiceoverTimestamp:scene.voiceoverTimestamp,visual:scene.visual,assets:scene.assets,assetReferences:scene.assetReferences,mapAnimation:null,contextCard:false,canvasScene:scene.canvasScene,semanticPlan:scene.semanticPlan,technicalNotes:`${scene.semanticPlan.engine} · ${scene.semanticPlan.presetId} · ${scene.semanticPlan.cameraIntent}`}))},mapAnimations:[]};
 }
 
-exports.creatorOpenAiVideo=onCall(options,guarded(async data=>{
+exports.creatorOpenAiVideo=onCall(options,guarded(async(data,{project})=>{
  const client=new OpenAI({apiKey:openAiApiKey.value()});
  if(data.action==='transcribe'){
   const file=await toFile(decodeAudio(data),'voiceover.mp3',{type:'audio/mpeg'});
@@ -56,14 +63,14 @@ exports.creatorOpenAiVideo=onCall(options,guarded(async data=>{
  }
  if(data.action==='plan'){
   const transcript=data.transcript;if(!transcript||!Array.isArray(transcript.segments)||!transcript.segments.length||transcript.segments.length>100)throw Error('Timestamped transcript is required.');
-  const segments=transcript.segments.map(segment=>({id:segment.id,narration:clean(segment.text,4000)})),requestSchema=plannerSchemaForRequest({segmentIds:transcript.segments.map(segment=>segment.id)});
-  const input=buildSemanticPlannerPrompt({segments,creativeInstructions:clean(data.creativeInstructions,12000),assets:[],locations:[],routes:[]});
+  const catalog=projectCatalog(project),segments=transcript.segments.map(segment=>({id:segment.id,narration:clean(segment.text,4000)})),requestSchema=plannerSchemaForRequest({segmentIds:transcript.segments.map(segment=>segment.id),assetIds:catalog.assets.map(item=>item.id),locationIds:catalog.locations.map(item=>item.id),routeIds:catalog.routes.map(item=>item.id)});
+  const input=buildSemanticPlannerPrompt({segments,creativeInstructions:clean(data.creativeInstructions,12000),...catalog});
   const response=await client.responses.create({model:aiModel.value(),instructions:'You are the Invincible Creator Studio semantic scene planner. Follow the supplied locked contract and return only the structured plan.',input,text:{format:{type:'json_schema',name:'creator_semantic_plan',description:'One provider-neutral editorial scene decision for every locked narration segment.',strict:true,schema:requestSchema}}});
   if(response.status&&response.status!=='completed')throw Error(`OpenAI scene planning ended with status ${response.status}.`);
   if(!response.output_text)throw Error('OpenAI returned no usable scene plan.');
-  return buildPlan(JSON.parse(response.output_text),transcript,clean(data.title,200));
+  return buildPlan(JSON.parse(response.output_text),transcript,clean(data.title,200),catalog);
  }
  throw Error('Choose OpenAI timing or scene planning.');
 }));
 
-Object.defineProperties(exports,{normalizeTranscript:{value:normalizeTranscript},buildPlan:{value:buildPlan}});
+Object.defineProperties(exports,{normalizeTranscript:{value:normalizeTranscript},buildPlan:{value:buildPlan},projectCatalog:{value:projectCatalog}});

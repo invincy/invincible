@@ -24,7 +24,9 @@ For every locked narration segment the model returns exactly one scene containin
 - short title and visual intent;
 - label treatment and camera intent;
 - registered asset, location and route IDs only;
-- semantic emphasis and missing-information notes.
+- an optional historical year, supported region and narration-relevant polity names;
+- semantic emphasis and missing-information notes;
+- explicit resource requests, safe fallbacks and only materially necessary clarification questions.
 
 The model cannot return timestamps, coordinates, colours, font sizes, political boundaries, keyframes or final Map/Motion JSON.
 
@@ -36,8 +38,11 @@ The deterministic compiler:
 - rejects missing, duplicate or unknown segment IDs;
 - rejects invented assets, locations, routes, engines and presets;
 - compiles grounded locations and reviewed routes through the existing Map Editor format;
+- resolves dated polity names against the bundled Cliopatria reference pack and creates a label-only locator automatically;
+- sends factual territory polygons to Map Editor for source review instead of silently approving them;
 - compiles supported semantic presets into editable Motion Studio primitives;
-- keeps unsupported or ungrounded ideas visible for review without discarding narration timing.
+- keeps unsupported or ungrounded ideas visible for review without discarding narration timing;
+- reuses matching project assets and gives each missing resource a direct Map Editor or Assets action while retaining the model-declared safe fallback.
 
 The first editable semantic presets are:
 
@@ -52,9 +57,29 @@ The first editable semantic presets are:
 
 All generated Canvas scenes use the reference-film border, top title plaque, safe layout, semantic palette and narration-ordered reveals.
 
+## Resource resolution
+
+Both Qwen and OpenAI use the same `creator-semantic-plan-v1` fields. A dated
+scene can request a `historical-territory`, `historical-route`, place, image,
+portrait, flag, video, audio, model or source. Each request states whether it is
+factually required, visually required or optional, plus one supported fallback.
+The application—not the model—then matches the request to the open project's
+catalog and the bundled historical reference pack.
+
+The sync-plan review shows **Ready**, **Review in Map Editor** or **Missing**.
+A missing item never deletes or merges a locked scene. The declared fallback is
+kept in the draft, and the user can open the correct tool to add the resource.
+Clarifications contain a conservative default, so a non-critical unanswered
+question also does not stop compilation.
+
+For a year such as 1526, Map Editor can load every active territory outline in
+the connected South Asia pack into one colour-coded GeoJSON review form. The
+review checkbox remains off. This is a preparation shortcut, not automatic
+historical verification.
+
 ## Current boundary
 
-This increment establishes the shared contract and reusable Motion Studio primitives. A real Map Editor scene is generated only when Creator supplies a reviewed `locationId` or `routeId`; the planners are no longer allowed to fabricate coordinates. Expanding the verified geography catalog and compiling `opposing-formations` directly into Battlefield Editor are the next renderer increments.
+This increment establishes the shared contract, reusable Motion Studio primitives and the first dated-history resource resolver. A real factual boundary still requires Map Editor review, while automatic locator scenes use labels and approximate reference centers only. The planners are not allowed to fabricate coordinates. Expanding the verified geography catalog beyond the connected South Asia pack and compiling `opposing-formations` directly into Battlefield Editor are the next renderer increments.
 
 Existing Creator project schemas, saved projects, native maps, Motion Studio manifests and renderers remain compatible. The semantic fields are additive handoff data.
 
