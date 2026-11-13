@@ -10,8 +10,9 @@ test('extends the final locked segment through trailing MP3 silence',()=>{
  const transcript=normalizeTranscript({text:'Done.',language:'en',duration:2.5,segments:[{start:0,end:2,text:'Done.'}],words:[]});assert.equal(transcript.segments[0].end,2.5);
 });
 
-const canvas=(segmentNumber,title)=>({segmentNumber,engine:'canvas',title,subtitle:'Convection',visual:'Show rising particles.',backgroundStyle:'blueprint',accentColor:'#42D6D0',motion:'rise',mapBasemap:'satellite',mapCenter:[0,0],mapEndCenter:[0,0],mapZoom:2,mapEndZoom:2,mapLabels:[],mapRoutes:[],assets:'',missingInfo:[]});
-const map=(segmentNumber,title)=>({segmentNumber,engine:'map',title,subtitle:'Geography',visual:'Show the region on the map.',backgroundStyle:'plain',accentColor:'#E1C65B',motion:'hold',mapBasemap:'satellite',mapCenter:[78,18],mapEndCenter:[80,22],mapZoom:3.2,mapEndZoom:3.8,mapLabels:[{name:'India',position:[78,22],role:'primary'}],mapRoutes:[{name:'Illustrative monsoon wind',coordinates:[[55,-5],[72,8],[78,18]],color:'#65B7E6',arrowhead:true}],assets:'',missingInfo:[]});
+const at=(longitude,latitude)=>({longitude,latitude});
+const canvas=(segmentNumber,title)=>({segmentNumber,engine:'canvas',title,subtitle:'Convection',visual:'Show rising particles.',backgroundStyle:'blueprint',accentColor:'#42D6D0',motion:'rise',mapBasemap:'satellite',mapCenter:at(0,0),mapEndCenter:at(0,0),mapZoom:2,mapEndZoom:2,mapLabels:[],mapRoutes:[],assets:'',missingInfo:[]});
+const map=(segmentNumber,title)=>({segmentNumber,engine:'map',title,subtitle:'Geography',visual:'Show the region on the map.',backgroundStyle:'plain',accentColor:'#E1C65B',motion:'hold',mapBasemap:'satellite',mapCenter:at(78,18),mapEndCenter:at(80,22),mapZoom:3.2,mapEndZoom:3.8,mapLabels:[{name:'India',position:at(78,22),role:'primary'}],mapRoutes:[{name:'Illustrative monsoon wind',coordinates:[at(55,-5),at(72,8),at(78,18)],color:'#65B7E6',arrowhead:true}],assets:'',missingInfo:[]});
 
 test('builds real Map Editor scenes and retains Canvas only when requested',()=>{
  const transcript={duration:4,segments:[{id:'segment-1',start:0,end:2,text:'First.'},{id:'segment-2',start:2,end:4,text:'Second.'}]};

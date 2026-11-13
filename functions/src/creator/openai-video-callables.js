@@ -35,7 +35,8 @@ function normalizeTranscript(raw){
  return{text:clean(raw.text,30000),language:clean(raw.language,40),duration,segments};
 }
 
-const Coordinate=z.tuple([z.number().min(-180).max(180),z.number().min(-85).max(85)]);
+const Coordinate=z.object({longitude:z.number().min(-180).max(180),latitude:z.number().min(-85).max(85)});
+const point=value=>[value.longitude,value.latitude];
 const MapLabel=z.object({
  name:z.string().min(1).max(100),
  position:Coordinate,
@@ -68,11 +69,11 @@ const Scene=z.object({
 });
 const Plan=z.object({scenes:z.array(Scene).min(1).max(100)});
 function mapAnimation(idea,duration){
- const seconds=Math.max(1,Number(duration.toFixed(3))),sameCenter=idea.mapCenter[0]===idea.mapEndCenter[0]&&idea.mapCenter[1]===idea.mapEndCenter[1],sameZoom=idea.mapZoom===idea.mapEndZoom;
- const camera=[{time:0,center:idea.mapCenter,zoom:idea.mapZoom,pitch:0,bearing:0,easing:'smooth'}];
- if(!sameCenter||!sameZoom)camera.push({time:seconds,center:idea.mapEndCenter,zoom:idea.mapEndZoom,pitch:0,bearing:0,easing:'smooth'});
- const labels=idea.mapLabels.map((label,index)=>({id:`label-${index+1}`,type:'label',name:label.name,start:0,end:seconds,position:label.position,role:label.role,fontSize:label.role==='primary'?64:label.role==='secondary'?48:40,fadeIn:Math.min(.3,seconds/3),fadeOut:Math.min(.2,seconds/3)}));
- const routes=idea.mapRoutes.map((route,index)=>({id:`route-${index+1}`,type:'route',name:route.name,start:0,end:seconds,coordinates:route.coordinates,color:route.color,lineWidth:4,arrowhead:route.arrowhead,revealDuration:Math.min(Math.max(.25,seconds*.65),seconds),fadeIn:0,fadeOut:Math.min(.2,seconds/3)}));
+ const seconds=Math.max(1,Number(duration.toFixed(3))),sameCenter=idea.mapCenter.longitude===idea.mapEndCenter.longitude&&idea.mapCenter.latitude===idea.mapEndCenter.latitude,sameZoom=idea.mapZoom===idea.mapEndZoom;
+ const camera=[{time:0,center:point(idea.mapCenter),zoom:idea.mapZoom,pitch:0,bearing:0,easing:'smooth'}];
+ if(!sameCenter||!sameZoom)camera.push({time:seconds,center:point(idea.mapEndCenter),zoom:idea.mapEndZoom,pitch:0,bearing:0,easing:'smooth'});
+ const labels=idea.mapLabels.map((label,index)=>({id:`label-${index+1}`,type:'label',name:label.name,start:0,end:seconds,position:point(label.position),role:label.role,fontSize:label.role==='primary'?64:label.role==='secondary'?48:40,fadeIn:Math.min(.3,seconds/3),fadeOut:Math.min(.2,seconds/3)}));
+ const routes=idea.mapRoutes.map((route,index)=>({id:`route-${index+1}`,type:'route',name:route.name,start:0,end:seconds,coordinates:route.coordinates.map(point),color:route.color,lineWidth:4,arrowhead:route.arrowhead,revealDuration:Math.min(Math.max(.25,seconds*.65),seconds),fadeIn:0,fadeOut:Math.min(.2,seconds/3)}));
  return{format:'invincible-map-animation',version:1,title:idea.title,duration:seconds,aspectRatio:'9:16',basemap:idea.mapBasemap,terrain:idea.mapBasemap==='terrain',overlayPreset:'documentary',camera,assets:[],layers:[...routes,...labels]};
 }
 function buildPlan(plan,transcript,title){
@@ -97,7 +98,7 @@ exports.creatorOpenAiVideo=onCall(options,guarded(async data=>{
  if(data.action==='plan'){
   const transcript=data.transcript;if(!transcript||!Array.isArray(transcript.segments)||!transcript.segments.length||transcript.segments.length>100)throw Error('Timestamped transcript is required.');
   const segments=transcript.segments.map((segment,index)=>({segmentNumber:index+1,start:Number(segment.start),end:Number(segment.end),narration:clean(segment.text,4000)}));
-  const response=await client.responses.parse({model:aiModel.value(),instructions:'You are the Creator Studio scene planner. Return exactly one scene per supplied segment, in the same order. Never alter narration or timestamps. Geographic narration must use engine map so Motion Studio receives a real, editable Map Editor scene; use canvas only for genuinely non-geographic diagrams. For every map scene, provide a restrained north-up camera, essential labels, and only illustrative routes that the narration actually needs. Coordinates are [longitude, latitude]. Do not invent or approximate political or historical boundaries, territorial highlights, statistics, people, archival assets, or exact factual routes. Never treat a basemap as evidence. Put uncertainty or missing source material in missingInfo. mapRoutes may represent clearly illustrative flows such as winds; do not use them as borders. For canvas scenes, leave mapLabels and mapRoutes empty, but still return valid neutral map fields. Follow the creative instructions, use real terrain or satellite geography where appropriate, keep on-screen text concise, and preserve documentary restraint.',input:JSON.stringify({title:clean(data.title,200),aspectRatio:'9:16',creativeInstructions:clean(data.creativeInstructions,12000),segments}),text:{format:zodTextFormat(Plan,'creator_scene_plan')}});
+  const response=await client.responses.parse({model:aiModel.value(),instructions:'You are the Creator Studio scene planner. Return exactly one scene per supplied segment, in the same order. Never alter narration or timestamps. Geographic narration must use engine map so Motion Studio receives a real, editable Map Editor scene; use canvas only for genuinely non-geographic diagrams. For every map scene, provide a restrained north-up camera, essential labels, and only illustrative routes that the narration actually needs. Every coordinate object has longitude then latitude. Do not invent or approximate political or historical boundaries, territorial highlights, statistics, people, archival assets, or exact factual routes. Never treat a basemap as evidence. Put uncertainty or missing source material in missingInfo. mapRoutes may represent clearly illustrative flows such as winds; do not use them as borders. For canvas scenes, leave mapLabels and mapRoutes empty, but still return valid neutral map fields. Follow the creative instructions, use real terrain or satellite geography where appropriate, keep on-screen text concise, and preserve documentary restraint.',input:JSON.stringify({title:clean(data.title,200),aspectRatio:'9:16',creativeInstructions:clean(data.creativeInstructions,12000),segments}),text:{format:zodTextFormat(Plan,'creator_scene_plan')}});
   if(!response.output_parsed)throw Error('OpenAI returned no usable scene plan.');return buildPlan(response.output_parsed,transcript,clean(data.title,200));
  }
  throw Error('Choose OpenAI timing or scene planning.');
