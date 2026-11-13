@@ -93,6 +93,12 @@ laptop running both services. No production account write was tested here.
 GitHub Pages staging includes the public shared client and excludes local worker
 and Firebase server source. The static publication does not deploy Functions.
 
+The launcher also starts the read-only Invincible Video Director MCP endpoint on
+`127.0.0.1:8791`. That endpoint exposes the shared Creator planning contract and
+compiler; it does not expose ComfyUI, the worker bearer, project writes or local
+files. ChatGPT uses it through a user-created Secure MCP Tunnel connection. See
+[the plugin contract](invincible-video-director-plugin.md).
+
 ## Verification, 11 November 2026
 
 - Real square generation through the local AI UI passed in 41.795 seconds. PNG

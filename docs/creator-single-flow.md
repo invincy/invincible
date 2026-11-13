@@ -31,11 +31,12 @@ the in-memory final MP3 while activating the project's second navigation step.
 Script & scenes owns Whisper timing, timed-transcript correction, animation
 instructions and scene-plan review. The browser does not open a separate page
 or reload, so the generated recording remains available to Whisper.
-Timing always uses the paired laptop's local Whisper service. The scene-planning
+Timing tries the paired laptop's local Whisper service first. The scene-planning
 choice is independent: OpenAI is the recommended planner, while local Qwen
-remains an optional fallback. Selecting OpenAI does not upload the MP3 or pay
-for hosted transcription; only the locked transcript, animation instructions
-and project catalog are sent for sync planning.
+remains an optional fallback. When OpenAI is selected and the local timing
+service is unavailable, Creator explicitly switches to the paid OpenAI
+transcription fallback and checkpoints the returned segment/word timestamps.
+Local Whisper remains local and free; only the fallback uploads the final MP3.
 After generation, Final speed previews the chosen pace. Download MP3 and Next ·
 Script & scenes both prepare the same pitch-preserving, speed-adjusted MP3.
 Whisper receives those adjusted bytes rather than the original recording, so
@@ -93,6 +94,14 @@ For historical projects, Map Editor's dated reference picker accepts multiple
 comma-separated polity names. **Load complete year view** prepares all active
 territory outlines for that year as a colour-coded review pack. The user must
 still inspect the source and explicitly approve the GeoJSON before import.
+
+### Video Director plugin — November 14, 2026
+
+The first private ChatGPT plugin increment exposes the shared semantic contract
+and deterministic compiler over a loopback streamable-HTTP MCP server. It is
+read-only: ChatGPT can load the exact renderer vocabulary and compile a complete
+locked plan, but applying that draft still uses Creator's existing reviewed
+project flow. See [Invincible Video Director plugin](invincible-video-director-plugin.md).
 
 ### UX overhaul verification — November 13, 2026
 

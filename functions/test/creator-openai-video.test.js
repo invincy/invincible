@@ -1,11 +1,25 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
-const {buildPlan,projectCatalog}=require('../src/creator/openai-video-callables');
+const {buildPlan,projectCatalog,normalizeCloudTranscript,voiceoverAudio}=require('../src/creator/openai-video-callables');
 
-test('hosted Creator AI accepts locked timing only and has no audio transcription path',()=>{
+test('hosted Creator AI exposes planning and paid timing fallback actions',()=>{
  const source=require('node:fs').readFileSync(require.resolve('../src/creator/openai-video-callables'),'utf8');
- assert.doesNotMatch(source,/audio\.transcriptions|whisper-1|action==='transcribe'/);
+ assert.match(source,/audio\.transcriptions/);
+ assert.match(source,/action==='transcribe'/);
  assert.match(source,/action==='plan'/);
+});
+
+test('normalizes cloud segment and word timestamps into the locked transcript contract',()=>{
+ const transcript=normalizeCloudTranscript({language:'hi',duration:2.4,text:'नमस्ते दुनिया',segments:[{start:0,end:1.1,text:'नमस्ते'},{start:1.1,end:2.4,text:'दुनिया'}],words:[{word:'नमस्ते',start:0,end:1},{word:'दुनिया',start:1.2,end:2.3}]});
+ assert.equal(transcript.segments[0].id,'segment-1');
+ assert.equal(transcript.segments[1].words[0].word,'दुनिया');
+ assert.equal(transcript.duration,2.4);
+});
+
+test('cloud timing accepts real MP3 signatures and rejects arbitrary bytes',()=>{
+ const mp3=Buffer.from([0x49,0x44,0x33,0x04,0x00,0x00]).toString('base64');
+ assert.deepEqual(voiceoverAudio(mp3),Buffer.from([0x49,0x44,0x33,0x04,0x00,0x00]));
+ assert.throws(()=>voiceoverAudio(Buffer.from('not audio').toString('base64')),/valid MP3/);
 });
 
 const semantic=(sourceSegmentId,overrides={})=>({sourceSegmentId,engine:'canvas',sceneKind:'documentary-diagram',presetId:'documentary-diagram',title:'Air rises',visualIntent:'Show warm air rising in a restrained diagram.',labelTreatment:'title-plaque',cameraIntent:'slow-push',assetIds:[],locationId:'',routeId:'',historicalYear:0,regionId:'',polityNames:[],emphasis:['definition'],missingInfo:[],resourceRequests:[],clarifications:[],...overrides});

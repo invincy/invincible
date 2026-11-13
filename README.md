@@ -30,6 +30,12 @@ The main React app chooses and lazily loads its page in `react/src/App.jsx`. Its
 
 Studio now opens with shared cloud uploads, one complete-video JSON import, the scene/audio timeline and MP4 export on the same screen. Assets uploaded through Studio, Maps or production clips use the same private account library; owners can sync complete video drafts across devices. Existing projects and detailed editors remain available. See [the workflow and storage contract](docs/creator-single-flow.md).
 
+The private [Invincible Video Director plugin](docs/invincible-video-director-plugin.md)
+exposes the existing semantic contract and deterministic compiler to ChatGPT
+through a read-only local MCP endpoint. Script timing remains local-first, with
+an explicit billable OpenAI transcription fallback when the laptop service is
+unavailable and OpenAI planning is selected.
+
 ## Universal Creator Studio
 
 Creator Studio is a shared production workspace for independent videos. Film content stays in each project’s JSON, assets, voiceover and timing; the shared Map Editor never selects rendering by a film title or ID. Optional overlays use explicitly registered, versioned plugin factories. New projects share the saved default style, while older projects retain their appearance.

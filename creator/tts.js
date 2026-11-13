@@ -84,10 +84,10 @@ function status(message,error=false){$('generationStatus').textContent=message;$
 function providerName(){return aiProvider==='cloud'?'OpenAI':'Local Qwen';}
 function updateProviderUi(){
  const input=document.querySelector(`[name="aiProvider"][value="${aiProvider}"]`);if(input)input.checked=true;
- $('timingProviderLabel').textContent='Local Whisper timing';
- $('retryAnalysis').textContent='Retry local Whisper timing';
+ $('timingProviderLabel').textContent=aiProvider==='cloud'?'Local Whisper · OpenAI fallback':'Local Whisper timing';
+ $('retryAnalysis').textContent='Retry voiceover timing';
  $('scenePlanProgressTime').textContent=`${providerName()} is starting.`;
- if(!timedTranscript&&!analysisBusy)$('localAnalysisStatus').textContent='Generate the final MP3, then let local Whisper create its transcript and timestamps.';
+ if(!timedTranscript&&!analysisBusy)$('localAnalysisStatus').textContent=aiProvider==='cloud'?'Generate the final MP3. Local Whisper runs first; if the laptop service is offline, paid OpenAI timing takes over automatically.':'Generate the final MP3, then let local Whisper create its transcript and timestamps.';
 }
 function setOptions(select,options,value){select.replaceChildren(...options.map(o=>{const el=document.createElement('option');el.value=o.value;el.textContent=o.label;return el;}));if(options.some(o=>o.value===value))select.value=value;}
 function selectedVoice(){return voices.find(v=>v.name===$('voice').value);}
@@ -436,7 +436,16 @@ async function analyzeLocal(){
  if(projectVoiceoverId){window.parent.postMessage({type:'invincible-sync-project-script',script:$('script').value,creativeInstructions:$('creativeInstructions').value},location.origin);window.parent.postMessage({type:'invincible-open-script-timing'},location.origin);}
  analysisBusy=true;$('retryAnalysis').hidden=true;$('localAnalysisStatus').textContent='Local Whisper is analysing the voiceover and creating timestamps…';$('transcriptReview').hidden=true;$('scenePlanReview').hidden=true;updateAiFlow();refreshAvailability();
  requestAnimationFrame(()=>$('timingHeading').scrollIntoView({behavior:'smooth',block:'start'}));
- try{const payload=await localWorker.request('/api/voiceover/transcribe',{audioBase64:audioBase64()},{timeoutMs:180000});timedTranscript=payload.transcript;renderTranscript();$('localAnalysisStatus').textContent='Local Whisper timing is ready. Saving this project checkpoint…';try{await persistScriptSync({includeAudio:true});$('localAnalysisStatus').textContent=`Local Whisper timing is saved. Review the words, add animation instructions, then generate the plan with ${providerName()}.`;}catch(saveError){$('localAnalysisStatus').textContent=`Local Whisper timing is ready, but its project checkpoint could not be saved: ${saveError.message}`;}}
+ try{
+  let payload,timingProvider='Local Whisper';
+  try{payload=await localWorker.request('/api/voiceover/transcribe',{audioBase64:audioBase64()},{timeoutMs:180000});}
+  catch(localError){
+   if(aiProvider!=='cloud'||!projectVoiceoverId)throw localError;
+   $('localAnalysisStatus').textContent='Local Whisper is unavailable. Using the paid OpenAI timing fallback…';
+   payload=await runCreatorOpenAi({action:'transcribe',projectId:projectVoiceoverId,audioBase64:audioBase64()});timingProvider='OpenAI';
+  }
+  timedTranscript=payload.transcript;renderTranscript();$('localAnalysisStatus').textContent=`${timingProvider} timing is ready. Saving this project checkpoint…`;try{await persistScriptSync({includeAudio:true});$('localAnalysisStatus').textContent=`${timingProvider} timing is saved. Review the words, add animation instructions, then generate the plan with ${providerName()}.`;}catch(saveError){$('localAnalysisStatus').textContent=`${timingProvider} timing is ready, but its project checkpoint could not be saved: ${saveError.message}`;}
+ }
  catch(error){timedTranscript=null;$('retryAnalysis').hidden=false;$('localAnalysisStatus').textContent=localVoiceoverError(error,'Scripting · Step 2');}
  finally{analysisBusy=false;updateScenePlanGate();updateAiFlow();}
 }
@@ -472,7 +481,7 @@ $('generate').addEventListener('click',()=>record(false));$('preview').addEventL
 $('analyzeLocal').addEventListener('click',analyzeLocal);
 $('retryAnalysis').addEventListener('click',analyzeLocal);
 $('generateScenePlan').addEventListener('click',generateScenePlan);
-$('aiProviderChoice').addEventListener('change',event=>{if(!event.target.matches('[name="aiProvider"]'))return;aiProvider=event.target.value==='local'?'local':'cloud';localStorage.setItem(aiProviderKey,aiProvider);scenePlanSaved=false;updateProviderUi();scheduleScriptSyncSave();if(!$('scenePlanReview').hidden){$('scenePlanReview').hidden=true;document.querySelector('.ai-script-flow').classList.remove('plan-review-active');}$('localAnalysisStatus').textContent=timedTranscript?`Scene planner changed to ${providerName()}. Local Whisper timing is still ready; generate the sync plan.`:`Scene planner changed to ${providerName()}. Local Whisper will create the timing after the final MP3 is ready.`;refreshAvailability();});
+$('aiProviderChoice').addEventListener('change',event=>{if(!event.target.matches('[name="aiProvider"]'))return;aiProvider=event.target.value==='local'?'local':'cloud';localStorage.setItem(aiProviderKey,aiProvider);scenePlanSaved=false;updateProviderUi();scheduleScriptSyncSave();if(!$('scenePlanReview').hidden){$('scenePlanReview').hidden=true;document.querySelector('.ai-script-flow').classList.remove('plan-review-active');}$('localAnalysisStatus').textContent=timedTranscript?`Scene planner changed to ${providerName()}. Existing timing is still ready; generate the sync plan.`:aiProvider==='cloud'?'Scene planner changed to OpenAI. Local Whisper will run first; paid OpenAI timing will take over only if the laptop service is unavailable.':'Scene planner changed to Local Qwen. Local Whisper will create the timing after the final MP3 is ready.';refreshAvailability();});
 $('editTimingPlan').addEventListener('click',()=>{document.querySelector('.ai-script-flow').classList.remove('plan-review-active');$('timingHeading').scrollIntoView({behavior:'smooth',block:'start'});});
 $('openMotionStudio').addEventListener('click',event=>{if(!scenePlanSaved){event.preventDefault();$('localAnalysisStatus').textContent='Wait for the generated sync plan and MP3 to finish saving, then continue.';return;}if(!projectVoiceoverId)return;event.preventDefault();window.parent.postMessage({type:'invincible-review-ai-maps'},location.origin);});
 $('resourceReview').addEventListener('click',event=>{const button=event.target.closest('[data-resource-action]');if(!button)return;window.parent.postMessage({type:'invincible-open-creator-resource',area:button.dataset.resourceAction==='map'?'Maps':'Assets',year:Number(button.dataset.resourceYear)||0,polityNames:String(button.dataset.resourcePolities||'').split('|').filter(Boolean)},location.origin);});

@@ -1,7 +1,11 @@
 import { createLocalAgentServer } from './agent-server.mjs';
+import {createInvinciblePluginServer} from './invincible-plugin-server.mjs';
 const service = await createLocalAgentServer({ ownerUid: process.env.INVINCIBLE_LOCAL_OWNER_UID, port: Number(process.env.INVINCIBLE_LOCAL_AI_PORT || 8787), appOrigin: process.env.INVINCIBLE_APP_ORIGIN || null });
 await service.listen();
+const plugin=createInvinciblePluginServer({port:Number(process.env.INVINCIBLE_PLUGIN_PORT||8791)});
+await plugin.listen();
 console.log('Invincible Local AI: ' + service.origin);
+console.log('Invincible Video Director: ' + plugin.origin + '/mcp');
 console.log('Open locally to pair this browser (keep this link private): ' + service.origin + '/#pair=' + service.token);
 if (!service.images.storage().available) console.error(service.images.storage().error);
-process.on('SIGINT', async () => { await service.close(); process.exit(0); });
+process.on('SIGINT', async () => { await plugin.close();await service.close(); process.exit(0); });

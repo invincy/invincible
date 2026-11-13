@@ -3,6 +3,7 @@ param([switch]$NoBrowser,[switch]$VideoOnly)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 $origin = 'http://127.0.0.1:8788'
+$pluginOrigin = 'http://127.0.0.1:8791'
 $log = 'E:\Invincible\AgentWorkspace\imagegen-test-worker.log'
 $credentialFile = 'E:\Invincible\ImageGen\worker-login.dpapi'
 $config = if (Test-Path -LiteralPath 'E:\Invincible\ImageGen\worker-config.json') { Get-Content -LiteralPath 'E:\Invincible\ImageGen\worker-config.json' -Raw | ConvertFrom-Json } else { @{ownerUid='local-imagegen-test'} }
@@ -69,6 +70,12 @@ for ($i=0; $i -lt 40; $i++) {
     Start-Sleep -Seconds 1
 }
 if (-not $ready) { throw 'Worker startup did not finish. Inspect E:\Invincible\ImageGen\logs\worker-startup-stderr.log.' }
+$pluginReady = $false
+for ($i=0; $i -lt 20; $i++) {
+    if (Test-LocalService "$pluginOrigin/health") { $pluginReady = $true; break }
+    Start-Sleep -Milliseconds 500
+}
+if (-not $pluginReady) { throw 'Invincible Video Director did not start. Inspect E:\Invincible\ImageGen\logs\worker-startup-stderr.log.' }
 if (-not $VideoOnly -and $config.appOrigin -eq 'https://invincy.github.io') {
     try { & (Join-Path $PSScriptRoot 'start-image-relay.ps1') -ImageToken $pairingToken }
     catch { Write-Warning ('Image Studio is ready locally. Mobile connection could not start. ' + $_.Exception.Message) }
@@ -87,7 +94,7 @@ if ($VideoOnly) {
     }
     if (-not $videoReady) { throw 'Video services are not ready. Check the Whisper startup log, Ollama and the laptop worker version.' }
     if (-not $NoBrowser) { Start-Process 'https://invincy.github.io/invincible/creator/' }
-    Write-Output 'Invincible Video Studio local services are ready.'
+    Write-Output 'Invincible Video Studio and Video Director plugin are ready.'
     exit
 }
 if (-not $NoBrowser) {

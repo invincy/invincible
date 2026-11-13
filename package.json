@@ -30,7 +30,9 @@
     "test:video-studio": "node --test tests/creator-video-studio.mjs tests/creator-studio-composition.mjs && node tests/creator-video-studio-browser.cjs && node tests/creator-studio-composition-browser.cjs && node tests/creator-single-flow-browser.cjs",
     "vendor:video-studio": "node scripts/vendor-studio-video.mjs",
     "test:tts": "npm --prefix functions-tts test && node tests/creator-tts-browser.cjs && node tests/creator-tts-river-browser.cjs && node tests/creator-tts-forest-browser.cjs",
-    "test:imagegen": "node --test tests/mobile-image-relay.mjs functions/test/universal-agent-api.test.js functions/test/task-bridge.test.js local-ai/image-worker.test.mjs local-ai/agent-server.test.mjs local-ai/invincible-local-controller.test.mjs && node tests/browser/image-generator.mjs && node tests/browser/image-connection.mjs && node tests/browser/personal-images.mjs && node tests/browser/mobile-images.mjs"
+    "test:imagegen": "node --test tests/mobile-image-relay.mjs functions/test/universal-agent-api.test.js functions/test/task-bridge.test.js local-ai/image-worker.test.mjs local-ai/agent-server.test.mjs local-ai/invincible-local-controller.test.mjs local-ai/invincible-plugin-server.test.mjs && node tests/browser/image-generator.mjs && node tests/browser/image-connection.mjs && node tests/browser/personal-images.mjs && node tests/browser/mobile-images.mjs",
+    "start:creator-plugin": "node local-ai/invincible-plugin-server.mjs",
+    "test:creator-plugin": "node --test local-ai/invincible-plugin-server.test.mjs"
   },
   "devDependencies": {
     "esbuild": "0.25.12",
@@ -38,5 +40,9 @@
     "mediabunny": "1.65.2",
     "playwright": "1.56.1",
     "three": "0.180.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
   }
 }

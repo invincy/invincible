@@ -1,0 +1,19 @@
+{
+  "name": "invincible-local",
+  "plugins": [
+    {
+      "name": "invincible-video-director",
+      "source": {
+        "source": "local",
+        "path": "./plugins/invincible-video-director"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "interface": {
+        "displayName": "Invincible Video Director"
+      }
+    }
+  ]
+}
