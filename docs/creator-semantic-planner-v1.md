@@ -13,6 +13,8 @@ The canonical planning pack is `functions/src/creator/planner-pack/manifest.json
 
 Both providers receive the same schema as a real structured-output constraint. Ollama receives it through `format`; OpenAI receives it through Responses API `text.format`. Application validation runs again after generation.
 
+The schema is narrowed for each request. It fixes the exact scene count and segment IDs, limits assets to the supplied catalog, and makes unavailable location and route IDs empty-only. This prevents a smaller local model from satisfying the general JSON shape while inventing a plausible-looking catalog ID.
+
 ## Model responsibility
 
 For every locked narration segment the model returns exactly one scene containing:
@@ -66,3 +68,11 @@ Required focused checks:
 - `STUDIO_LAYOUT_ONLY=1 node tests/creator-video-studio-browser.cjs`
 
 The full encoded-browser export remains an environment-sensitive acceptance check because it requires a working browser H.264 download path.
+
+## ITCZ A/B retest — November 13, 2026
+
+The published UI was tested with the same four corrected transcript segments, locked timestamps and animation instructions for both providers. OpenAI returned four valid semantic scenes: `pressure-driven-flow`, `shifting-zone`, `pressure-driven-flow` and `documentary-diagram`. It preserved all timings and left assets/geography empty while listing the required scientific and geographic review.
+
+The local Qwen path returned the safe four-card fallback. A direct current-model replay isolated the first contract deviation: Qwen invented `locationId: "monsoon-region-1"` even though the catalog supplied no location IDs. The base schema had constrained that field only to a string; the prompt prohibition was insufficient for the 4B model. The request-specific schema above corrected that failure in a direct replay: Qwen returned four schema-valid scenes with empty catalog IDs and all locked segment IDs intact.
+
+The repaired Qwen result remains editorially weaker. It selected a locator-map without grounded geography and interpreted converging winds as a battlefield formation. This is now a model-selection quality issue visible after structural validation, not timestamp loss or renderer corruption. Do not use that result as training data or claim an MP4 comparison until the updated local worker is running and both plans have completed the normal review/apply/export path.

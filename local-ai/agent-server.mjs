@@ -7,7 +7,7 @@ import { createRequire } from 'node:module';
 import { askOllama, detectLocalIntent, draftImagePrompt, imagePromptText } from './invincible-local-controller.mjs';
 import { createGpuCoordinator } from './gpu-coordinator.mjs';
 import { createImageWorker, safeDirectory, WORKSPACE_ROOT } from './image-worker.mjs';
-import { buildCreativePlanPrompt, compileCreativePlan, assembleSceneDraft, loadCreatorAssetCatalog, normalizeTranscript, toCreatorStudioImport, transcribeWithWhisper, whisperEndpoint } from './voiceover-analysis.mjs';
+import { buildCreativePlanPrompt, buildCreativePlanSchema, compileCreativePlan, assembleSceneDraft, loadCreatorAssetCatalog, normalizeTranscript, toCreatorStudioImport, transcribeWithWhisper, whisperEndpoint } from './voiceover-analysis.mjs';
 const require = createRequire(import.meta.url);
 const { createUniversalAgent } = require('../functions/src/local-ai/universal-agent-api.js');
 const { executeInvincibleTool } = require('../functions/src/tools/invincible-tools.js');
@@ -47,7 +47,7 @@ export async function createLocalAgentServer({ ownerUid, token = crypto.randomBy
     if(requireInstructions&&Math.abs(timedTranscript.duration-timedTranscript.segments.at(-1).end)>.25)throw Error('The final transcript timestamp must agree with the MP3 duration within 0.25 seconds.');
     const catalog=await loadVoiceoverCatalog(root,{includeHistory:production===true});let draft,failure;
     for(let attempt=0;attempt<2;attempt++){
-      try{const prompt=buildCreativePlanPrompt(timedTranscript,catalog,direction),intentions=await gpu.run(async()=>{await images.unloadImages();return structuredVoiceoverAsk(prompt,catalog.plannerPack?.schema);});draft=compileCreativePlan(timedTranscript,intentions,catalog,{production:production===true,creativeInstructions:direction});failure=null;break;}
+      try{const prompt=buildCreativePlanPrompt(timedTranscript,catalog,direction),requestSchema=buildCreativePlanSchema(timedTranscript,catalog),intentions=await gpu.run(async()=>{await images.unloadImages();return structuredVoiceoverAsk(prompt,requestSchema);});draft=compileCreativePlan(timedTranscript,intentions,catalog,{production:production===true,creativeInstructions:direction});failure=null;break;}
       catch(error){failure=error;}
     }
     if(failure)throw Error('Map planning failed after 2 targeted attempts: '+failure.message);

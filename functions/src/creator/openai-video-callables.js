@@ -4,7 +4,7 @@ const {getFirestore}=require('firebase-admin/firestore');
 const OpenAI=require('openai');
 const {toFile}=require('openai');
 const {assertAccess}=require('./kling');
-const {plannerPack,normalizeSemanticPlan,buildSemanticPlannerPrompt,semanticCanvasScene}=require('./semantic-plan');
+const {plannerSchemaForRequest,normalizeSemanticPlan,buildSemanticPlannerPrompt,semanticCanvasScene}=require('./semantic-plan');
 
 const openAiApiKey=defineSecret('OPENAI_API_KEY');
 const aiModel=defineString('OPENAI_MODEL',{default:'gpt-5.6'});
@@ -56,9 +56,9 @@ exports.creatorOpenAiVideo=onCall(options,guarded(async data=>{
  }
  if(data.action==='plan'){
   const transcript=data.transcript;if(!transcript||!Array.isArray(transcript.segments)||!transcript.segments.length||transcript.segments.length>100)throw Error('Timestamped transcript is required.');
-  const segments=transcript.segments.map(segment=>({id:segment.id,narration:clean(segment.text,4000)})),pack=plannerPack();
+  const segments=transcript.segments.map(segment=>({id:segment.id,narration:clean(segment.text,4000)})),requestSchema=plannerSchemaForRequest({segmentIds:transcript.segments.map(segment=>segment.id)});
   const input=buildSemanticPlannerPrompt({segments,creativeInstructions:clean(data.creativeInstructions,12000),assets:[],locations:[],routes:[]});
-  const response=await client.responses.create({model:aiModel.value(),instructions:'You are the Invincible Creator Studio semantic scene planner. Follow the supplied locked contract and return only the structured plan.',input,text:{format:{type:'json_schema',name:'creator_semantic_plan',description:'One provider-neutral editorial scene decision for every locked narration segment.',strict:true,schema:pack.schema}}});
+  const response=await client.responses.create({model:aiModel.value(),instructions:'You are the Invincible Creator Studio semantic scene planner. Follow the supplied locked contract and return only the structured plan.',input,text:{format:{type:'json_schema',name:'creator_semantic_plan',description:'One provider-neutral editorial scene decision for every locked narration segment.',strict:true,schema:requestSchema}}});
   if(response.status&&response.status!=='completed')throw Error(`OpenAI scene planning ended with status ${response.status}.`);
   if(!response.output_text)throw Error('OpenAI returned no usable scene plan.');
   return buildPlan(JSON.parse(response.output_text),transcript,clean(data.title,200));

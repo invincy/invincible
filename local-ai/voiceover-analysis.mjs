@@ -5,7 +5,7 @@ import { readAnimation } from '../creator/map-animation-import.js?v=2026111112';
 import { findSceneGeography, contextMap } from './history-context.mjs';
 
 const require = createRequire(import.meta.url);
-const { plannerPack, normalizeSemanticPlan, buildSemanticPlannerPrompt, semanticCanvasScene } = require('../functions/src/creator/semantic-plan.js');
+const { plannerPack, plannerSchemaForRequest, normalizeSemanticPlan, buildSemanticPlannerPrompt, semanticCanvasScene } = require('../functions/src/creator/semantic-plan.js');
 
 const AUDIO_EXTENSIONS = new Set(['.mp3', '.wav']);
 
@@ -91,6 +91,11 @@ export function buildCreativePlanPrompt(transcript, assetCatalog, creativeInstru
   const t=normalizeTranscript(transcript), assets=(assetCatalog.assets||[]).map(({id,name,type,description})=>({id,name,type,description}));
   const locations=Array.isArray(assetCatalog.verifiedLocations)?assetCatalog.verifiedLocations:[],routes=Array.isArray(assetCatalog.verifiedRoutes)?assetCatalog.verifiedRoutes:[];
   return buildSemanticPlannerPrompt({segments:t.segments.map(s=>({id:s.id,narration:s.text})),creativeInstructions:normalizeCreativeInstructions(creativeInstructions),assets,locations,routes:routes.filter(route=>route.reviewed===true)});
+}
+
+export function buildCreativePlanSchema(transcript,assetCatalog={}){
+ const t=normalizeTranscript(transcript),assets=assetCatalog.assets||[],locations=assetCatalog.verifiedLocations||[],routes=(assetCatalog.verifiedRoutes||[]).filter(route=>route.reviewed===true);
+ return plannerSchemaForRequest({segmentIds:t.segments.map(segment=>segment.id),assetIds:assets.map(asset=>asset.id),locationIds:locations.map(location=>location.id),routeIds:routes.map(route=>route.id)});
 }
 
 export function compileCreativePlan(transcript, plan, assetCatalog, { production = false, creativeInstructions = '' } = {}) {

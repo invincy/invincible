@@ -14,6 +14,18 @@ function plannerPack(){
  return{manifest,schema,styleProfile,rendererCapabilities,approvedExamples};
 }
 
+function plannerSchemaForRequest({segmentIds=[],assetIds=[],locationIds=[],routeIds=[]}={}){
+ const value=structuredClone(schema),sceneList=value.properties.scenes,properties=sceneList.items.properties;
+ const unique=items=>[...new Set(items.map(item=>String(item)).filter(Boolean))];
+ const segments=unique(segmentIds),assets=unique(assetIds),locations=unique(locationIds),routes=unique(routeIds);
+ if(segments.length){sceneList.minItems=segments.length;sceneList.maxItems=segments.length;properties.sourceSegmentId={type:'string',enum:segments};}
+ properties.assetIds={...properties.assetIds,maxItems:Math.min(12,assets.length)};
+ if(assets.length)properties.assetIds.items={type:'string',enum:assets};
+ properties.locationId={type:'string',enum:['',...locations]};
+ properties.routeId={type:'string',enum:['',...routes]};
+ return value;
+}
+
 function normalizeSemanticScene(row,index){
  if(!row||Array.isArray(row)||typeof row!=='object')throw Error(`Scene ${index+1} must be an object.`);
  const normalized={
@@ -87,4 +99,4 @@ function semanticCanvasScene(scene){
  return{title:scene.title||'Documentary scene',subtitle:scene.sceneKind.replaceAll('-',' '),visual:scene.visualIntent,backgroundStyle,accentColor,motion,presetId:scene.presetId,labelTreatment:scene.labelTreatment,emphasis:scene.emphasis};
 }
 
-module.exports={plannerPack,normalizeSemanticPlan,buildSemanticPlannerPrompt,semanticCanvasScene};
+module.exports={plannerPack,plannerSchemaForRequest,normalizeSemanticPlan,buildSemanticPlannerPrompt,semanticCanvasScene};

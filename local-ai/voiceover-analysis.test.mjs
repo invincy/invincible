@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assembleSceneDraft, analyzeVoiceover, buildCreativePlanPrompt, buildQwenPrompt, compileCreativePlan, loadCreatorAssetCatalog, normalizeCreativeInstructions, normalizeTranscript, toCreatorStudioImport, validateMapAnimation } from './voiceover-analysis.mjs';
+import { assembleSceneDraft, analyzeVoiceover, buildCreativePlanPrompt, buildCreativePlanSchema, buildQwenPrompt, compileCreativePlan, loadCreatorAssetCatalog, normalizeCreativeInstructions, normalizeTranscript, toCreatorStudioImport, validateMapAnimation } from './voiceover-analysis.mjs';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -22,6 +22,16 @@ test('builds a constrained Qwen prompt', () => {
   assert.match(prompt, /Do not invent asset IDs/);
   assert.match(prompt, /commander_babur/);
   assert.match(prompt, /restrained gold titles/);
+});
+
+test('constrains live structured output to the locked catalog IDs',()=>{
+  const schema=buildCreativePlanSchema(transcript,{assets:[{id:'asset-1'}],verifiedLocations:[],verifiedRoutes:[]}),properties=schema.properties.scenes.items.properties;
+  assert.deepEqual(properties.sourceSegmentId.enum,['s1','s2']);
+  assert.equal(schema.properties.scenes.minItems,2);
+  assert.equal(schema.properties.scenes.maxItems,2);
+  assert.deepEqual(properties.assetIds.items.enum,['asset-1']);
+  assert.deepEqual(properties.locationId.enum,['']);
+  assert.deepEqual(properties.routeId.enum,['']);
 });
 
 test('bounds creative direction', () => {
