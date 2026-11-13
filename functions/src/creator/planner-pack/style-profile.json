@@ -27,7 +27,8 @@
     "fontFamily": "Invincible Sans, Invincible Hindi, sans-serif",
     "titleWeight": 700,
     "labelWeight": 600,
-    "minimumLabelSize": 26,
+    "minimumEssentialLabelSize": 48,
+    "minimumInfoSize": 26,
     "maximumTitleLines": 2,
     "labelStyle": "rounded pill or plaque",
     "uppercaseEnglishTitles": true

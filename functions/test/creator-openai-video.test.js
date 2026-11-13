@@ -30,8 +30,13 @@ test('compiles ITCZ semantic choices into executable Map Editor animation',()=>{
  assert.equal(payload.mapAnimations.length,2);
  assert.equal(payload.creatorStudio.scenes[0].mapAnimation.basemap,'satellite');
  assert.ok(payload.creatorStudio.scenes[0].mapAnimation.layers.some(layer=>layer.id==='itcz-band'));
+ assert.ok(payload.creatorStudio.scenes[0].mapAnimation.layers.some(layer=>layer.id==='itcz-band-glow'));
+ assert.ok(payload.creatorStudio.scenes[0].mapAnimation.layers.find(layer=>layer.id==='itcz-band').coordinates.length>3);
+ assert.ok(new Set(payload.creatorStudio.scenes[0].mapAnimation.layers.find(layer=>layer.id==='itcz-band').coordinates.map(point=>point[1])).size>2);
  assert.ok(payload.creatorStudio.scenes[0].mapAnimation.layers.filter(layer=>layer.arrowhead===true).length>=4);
  assert.ok(payload.creatorStudio.scenes[1].mapAnimation.layers.some(layer=>layer.id==='itcz-north'));
+ assert.ok(payload.creatorStudio.scenes[1].mapAnimation.camera.at(-1).zoom>=4);
+ assert.ok(payload.creatorStudio.scenes[0].mapAnimation.layers.find(layer=>layer.id==='itcz-label').fontSize>=48);
  assert.equal(payload.creatorStudio.scenes[0].canvasScene,null);
 });
 

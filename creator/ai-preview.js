@@ -17,8 +17,18 @@ export function compileAiStoryboardManifest(storyboard,{aspectRatio='9:16',audio
  if(!Array.isArray(storyboard)||!storyboard.length)throw Error('Storyboard contains no scenes.');
  const manifest={...emptyVideo(),schemaVersion:2,title:'Invincible AI production',aspectRatio,audio:null,audioClips:[],scenes:[]};let cursor=0;
  const transition={type:'cut',durationSeconds:0};
+ const documentaryFrame=title=>[
+  {id:'frame-top',type:'line',x:.5,y:.075,width:.84,rotation:0,lineWidth:2,color:'#E1C65B',opacity:.72},
+  {id:'frame-bottom',type:'line',x:.5,y:.925,width:.84,rotation:0,lineWidth:2,color:'#E1C65B',opacity:.72},
+  {id:'frame-left',type:'line',x:.08,y:.5,width:1.7,rotation:90,lineWidth:2,color:'#E1C65B',opacity:.72},
+  {id:'frame-right',type:'line',x:.92,y:.5,width:1.7,rotation:90,lineWidth:2,color:'#E1C65B',opacity:.72},
+  ...(String(title||'').trim()?[
+   {id:'title-plaque',type:'rectangle',x:.5,y:.135,width:.74,height:.075,color:'#0D2732',opacity:.92},
+   {id:'title',type:'text',text:String(title).slice(0,120),x:.5,y:.135,width:.68,fontFamily:'Invincible Sans',fontSize:48,fontWeight:700,color:'#F4F5F7'}
+  ]:[])
+ ];
  function addCard(id,startSeconds,durationSeconds,text){
-  manifest.scenes.push({id,name:text,startSeconds,durationSeconds,engineType:'graphic',engineData:{},transition,overlays:[
+  manifest.scenes.push({id,name:text,startSeconds,durationSeconds,engineType:'graphic',engineData:{},transition,overlays:[...documentaryFrame('MAP REVIEW NEEDED'),
    {id:'context',type:'text',text,x:.5,y:.48,fontSize:54,color:'#F4F5F7'},
    {id:'caption',type:'text',text:'Historical context',x:.5,y:.55,fontSize:30,color:'#E1C65B'}
   ]});
@@ -27,14 +37,7 @@ export function compileAiStoryboardManifest(storyboard,{aspectRatio='9:16',audio
   const idea=row.canvasScene,accent=/^#[0-9a-f]{6}$/i.test(idea.accentColor||'')?idea.accentColor:'#61D6D1',enter=Math.min(.8,Math.max(1/60,durationSeconds*.35));
   const first={timeSeconds:0,opacity:0,easing:'smooth'},last={timeSeconds:enter,opacity:1,easing:'smooth'};
   if(idea.motion==='rise'){first.y=.58;last.y=.48;}else if(idea.motion==='pan-left'){first.x=.65;last.x=.5;}else if(idea.motion==='pan-right'){first.x=.35;last.x=.5;}else if(idea.motion==='zoom-in'){first.scale=.72;last.scale=1;}
-  const overlays=[
-   {id:'frame-top',type:'line',x:.5,y:.075,width:.84,rotation:0,lineWidth:2,color:'#E1C65B',opacity:.72},
-   {id:'frame-bottom',type:'line',x:.5,y:.925,width:.84,rotation:0,lineWidth:2,color:'#E1C65B',opacity:.72},
-   {id:'frame-left',type:'line',x:.08,y:.5,width:1.7,rotation:90,lineWidth:2,color:'#E1C65B',opacity:.72},
-   {id:'frame-right',type:'line',x:.92,y:.5,width:1.7,rotation:90,lineWidth:2,color:'#E1C65B',opacity:.72},
-   {id:'title-plaque',type:'rectangle',x:.5,y:.135,width:.74,height:.075,color:'#0D2732',opacity:.92,keyframes:[first,last]},
-   {id:'title',type:'text',text:String(idea.title||'').slice(0,200),x:.5,y:.135,width:.68,fontFamily:'Invincible Sans',fontSize:43,fontWeight:700,color:'#F4F5F7',keyframes:[first,last]}
-  ];
+  const overlays=documentaryFrame(idea.title).map(layer=>['title-plaque','title'].includes(layer.id)?{...layer,keyframes:[first,last]}:layer);
   const appear=(delay=.15)=>[{timeSeconds:0,opacity:0,easing:'hold'},{timeSeconds:Math.min(durationSeconds-.01,Math.max(1/60,enter+delay)),opacity:1,easing:'smooth'}];
   const add=(layer)=>overlays.push(layer);
   if(idea.presetId==='pressure-driven-flow'){
@@ -81,7 +84,7 @@ export function compileAiStoryboardManifest(storyboard,{aspectRatio='9:16',audio
   if(seconds<1/30)throw Error(`Scene ${index+1} has invalid timing.`);
   if(!row.mapAnimation)throw Error(`Scene ${index+1} has no executable map animation. Descriptive scenes cannot be exported.`);
   if(row.mapAnimation.aspectRatio!==aspectRatio)throw Error(`Scene ${index+1} aspect ratio differs from the production format.`);
-  manifest.scenes.push({id:String(row.id||`ai-scene-${index+1}`),name:String(row.visual||row.title||`Scene ${index+1}`).slice(0,200),startSeconds:sceneStart,durationSeconds:seconds,engineType:'map',engineData:{animation:row.mapAnimation,geometryReviewed:false},transition:{type:'cut',durationSeconds:0},overlays:[]});cursor=sceneStart+seconds;
+  manifest.scenes.push({id:String(row.id||`ai-scene-${index+1}`),name:String(row.visual||row.title||`Scene ${index+1}`).slice(0,200),startSeconds:sceneStart,durationSeconds:seconds,engineType:'map',engineData:{animation:row.mapAnimation,geometryReviewed:false},transition:{type:'cut',durationSeconds:0},overlays:documentaryFrame(row.semanticPlan?.title||row.mapAnimation.title||row.title)});cursor=sceneStart+seconds;
  }
  if(!manifest.scenes.length)throw Error('The narration is too short to render a scene.');
  if(audioFileId){

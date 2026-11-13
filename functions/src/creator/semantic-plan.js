@@ -5,10 +5,16 @@ const rendererCapabilities=require('./planner-pack/renderer-capabilities.json');
 const approvedExamples=require('./planner-pack/approved-examples.json');
 
 const BUILTIN_GEOGRAPHY_CONTEXTS=[
- {id:'context-global-equator',name:'Global Equator',coordinates:[0,0],sourceUrl:'https://www.naturalearthdata.com/downloads/110m-cultural-vectors/',sourceDate:'Natural Earth 5.1.2',precisionNote:'Generalized global reference context; the Equator is compiler-defined at 0° latitude.'},
- {id:'context-india-indian-ocean',name:'India and the Indian Ocean',coordinates:[78,8],sourceUrl:'https://www.naturalearthdata.com/downloads/110m-cultural-vectors/',sourceDate:'Natural Earth 5.1.2',precisionNote:'Generalized regional reference context for explanatory maps; not a political-boundary claim.'},
- {id:'context-south-asia',name:'South Asia',coordinates:[78,22],sourceUrl:'https://www.naturalearthdata.com/downloads/110m-cultural-vectors/',sourceDate:'Natural Earth 5.1.2',precisionNote:'Generalized regional reference center for explanatory maps.'}
+ {id:'context-global-equator',name:'Global Equator',coordinates:[0,0],cameraScope:'global',sourceUrl:'https://www.naturalearthdata.com/downloads/110m-cultural-vectors/',sourceDate:'Natural Earth 5.1.2',precisionNote:'Generalized global reference context; the Equator is compiler-defined at 0° latitude.'},
+ {id:'context-india-indian-ocean',name:'India and the Indian Ocean',coordinates:[78,8],cameraScope:'country-region',sourceUrl:'https://www.naturalearthdata.com/downloads/110m-cultural-vectors/',sourceDate:'Natural Earth 5.1.2',precisionNote:'Generalized regional reference context for explanatory maps; not a political-boundary claim.'},
+ {id:'context-south-asia',name:'South Asia',coordinates:[78,22],cameraScope:'region',sourceUrl:'https://www.naturalearthdata.com/downloads/110m-cultural-vectors/',sourceDate:'Natural Earth 5.1.2',precisionNote:'Generalized regional reference center for explanatory maps.'}
 ];
+
+const VISUAL_PRESETS=Object.freeze({
+ map:{global:[1.45,1.65],continent:[2.15,2.45],region:[2.75,3.15],'country-region':[3.05,3.45],country:[3.55,4.15],city:[7.25,8.1],site:[10,11]},
+ label:{primary:{fontSize:58,role:'primary',labelStyle:'card',scale:1},regional:{fontSize:40,role:'regional',labelStyle:'halo',scale:1}},
+ route:{flowWidth:7,flowGlowWidth:15,bandWidth:20,bandGlowWidth:32,bandCoreWidth:3.5}
+});
 
 const sceneProperties=schema.properties.scenes.items.properties;
 const allowed=Object.fromEntries(Object.entries(sceneProperties).filter(([,value])=>Array.isArray(value.enum)).map(([key,value])=>[key,new Set(value.enum)]));
@@ -108,6 +114,8 @@ function buildSemanticPlannerPrompt({segments,creativeInstructions='',assets=[],
   'Map scenes require a supplied locationId or routeId, or a dated historicalYear with relevant polityNames. Do not convert illustrative atmospheric flow into a factual route.',
   'When the instructions explicitly request a real geographic map and a supplied generic context matches, choose engine map and that locationId. For atmospheric maps use pressure-driven-flow or shifting-zone; the deterministic compiler creates illustrative flow and zone layers without model-authored coordinates.',
   'Use context-india-indian-ocean for India/Indian Ocean monsoon or ITCZ explanations, context-global-equator for global Equator explanations, and context-south-asia for regional South Asia context. Do not request these built-in contexts as missing resources.',
+  'Choose the smallest supplied geographic context that contains every place named in the locked segment. The compiler—not you—sets global, regional, country and city zoom, safe framing, readable type, arrows and atmospheric-band geometry.',
+  'Treat creative instructions as editorial requirements. Select the matching generic preset and describe the intended relationship in visualIntent; do not imitate renderer JSON or smuggle coordinates, colours, sizes or keyframes into prose.',
   'For dated history, set historicalYear, regionId and only the narration-relevant polityNames. Use historical-year-map when a dated political context is editorially necessary. Use 0, an empty region and an empty polity list when they do not apply.',
   'Use resourceRequests for every missing factual or visual input. Choose a safe fallback so the rest of the video can compile; never drop a locked segment because an asset is missing.',
   'Use clarifications only when an answer would materially change a factual claim. Supply a conservative default so production can continue without waiting. Use an empty list when no clarification is needed.',
@@ -129,33 +137,63 @@ function routeLayer({id,name,start=0,end,coordinates,color='#65B7E6',lineWidth=4
  return{id,type:'route',name,start,end,coordinates,color,lineWidth,opacity,arrowhead,revealDuration:revealDuration??Math.min(1.6,end*.45),fadeIn:Math.min(fadeIn,end/3),fadeOut:Math.min(fadeOut,end/3)};
 }
 
+function cameraFor(context,{center=context.coordinates,intent='hold',end=1,scope=context.cameraScope||'region'}={}){
+ const [startZoom,endZoom]=VISUAL_PRESETS.map[scope]||VISUAL_PRESETS.map.region;
+ const finish=intent==='slow-pull'?startZoom:intent==='hold'?startZoom+.15:endZoom;
+ return[{time:0,center,zoom:startZoom,pitch:0,bearing:0,easing:'smooth'},{time:end,center,zoom:finish,pitch:0,bearing:0,easing:intent==='hold'?'hold':'smooth'}];
+}
+
+function atmosphericCurve({west,east,latitude=0,india=false}){
+ const span=east-west;
+ const offsets=india?[0,1.4,-.5,1.1,-.8,.8,0]:[0,1.8,-1.1,1.5,-.8,1.1,0];
+ return offsets.map((offset,index)=>[Number((west+span*index/(offsets.length-1)).toFixed(3)),Number((latitude+offset).toFixed(3))]);
+}
+
+function bandLayers({id,name,start=0,end,coordinates,opacity=.44}){
+ const p=VISUAL_PRESETS.route;
+ return[
+  routeLayer({id:`${id}-glow`,name:`${name} · soft edge`,start,end,coordinates,color:'#E2B75D',lineWidth:p.bandGlowWidth,opacity:.12,arrowhead:false,revealDuration:Math.min(1.2,end*.35)}),
+  routeLayer({id,name,start,end,coordinates,color:'#E2B75D',lineWidth:p.bandWidth,opacity,arrowhead:false,revealDuration:Math.min(1.2,end*.35)}),
+  routeLayer({id:`${id}-core`,name:`${name} · center`,start,end,coordinates,color:'#F4D88A',lineWidth:p.bandCoreWidth,opacity:.82,arrowhead:false,revealDuration:Math.min(1.2,end*.35)})
+ ];
+}
+
+function flowLayers({id,name,end,coordinates}){
+ const p=VISUAL_PRESETS.route;
+ return[
+  routeLayer({id:`${id}-glow`,name:`${name} · glow`,end,coordinates,lineWidth:p.flowGlowWidth,opacity:.13,arrowhead:false}),
+  routeLayer({id,name,end,coordinates,lineWidth:p.flowWidth,opacity:.95,arrowhead:true})
+ ];
+}
+
 function atmosphericMap(scene,duration,context){
  if(!['pressure-driven-flow','shifting-zone'].includes(scene.presetId))return null;
  const end=Math.max(1,Number(duration)||1),india=context.id==='context-india-indian-ocean'||context.id==='context-south-asia';
- const west=india?25:-135,east=india?135:135,center=india?[78,6]:[0,0],layers=[
+ const west=india?36:-135,east=india?122:135,center=india?[78,7]:[0,0],layers=[
   routeLayer({id:'equator',name:'Equator',end,coordinates:[[west,0],[east,0]],color:'#F4F5F7',lineWidth:2,opacity:.75,arrowhead:false,revealDuration:Math.min(.8,end*.25),fadeOut:0}),
-  {id:'equator-label',type:'label',name:'EQUATOR',start:0,end,position:[india?42:-35,0],color:'#F4F5F7',scale:.9,fadeIn:.2,fadeOut:.2}
+  {id:'equator-label',type:'label',name:'EQUATOR',start:0,end,position:[india?45:-35,0],color:'#F4F5F7',...VISUAL_PRESETS.label.regional,fadeIn:.2,fadeOut:.2}
  ];
  if(scene.presetId==='pressure-driven-flow'){
   layers.push(
-   routeLayer({id:'itcz-band',name:'ITCZ · illustrative convergence zone',end,coordinates:[[west,-1],[east,-1]],color:'#E2B75D',lineWidth:16,opacity:.42,arrowhead:false,revealDuration:Math.min(1.2,end*.35)}),
-   {id:'itcz-label',type:'label',name:'ITCZ',start:Math.min(.35,end*.1),end,position:[india?82:8,1.6],color:'#F4F5F7',scale:1.15,fadeIn:.25,fadeOut:.2},
-   routeLayer({id:'trade-nw',name:'North-East Trade Winds · illustrative',end,coordinates:[[india?42:-100,22],[india?58:-55,11],[india?74:-10,1]],arrowhead:true}),
-   routeLayer({id:'trade-ne',name:'North-East Trade Winds · illustrative',end,coordinates:[[india?118:100,22],[india?100:55,11],[india?84:10,1]],arrowhead:true}),
-   routeLayer({id:'trade-sw',name:'South-East Trade Winds · illustrative',end,coordinates:[[india?42:-100,-22],[india?58:-55,-11],[india?74:-10,-1]],arrowhead:true}),
-   routeLayer({id:'trade-se',name:'South-East Trade Winds · illustrative',end,coordinates:[[india?118:100,-22],[india?100:55,-11],[india?84:10,-1]],arrowhead:true})
+   ...bandLayers({id:'itcz-band',name:'ITCZ · illustrative convergence zone',end,coordinates:atmosphericCurve({west,east,latitude:-1,india})}),
+   {id:'itcz-label',type:'label',name:'ITCZ',start:Math.min(.35,end*.1),end,position:[india?82:8,2.8],color:'#F4F5F7',...VISUAL_PRESETS.label.primary,fadeIn:.25,fadeOut:.2},
+   ...flowLayers({id:'trade-nw',name:'North-East Trade Winds · illustrative',end,coordinates:india?[[42,25],[51,20],[60,14],[68,8],[75,1]]:[[-110,25],[-85,20],[-60,14],[-35,8],[-10,1]]}),
+   ...flowLayers({id:'trade-ne',name:'North-East Trade Winds · illustrative',end,coordinates:india?[[116,25],[108,20],[101,14],[93,8],[85,1]]:[[110,25],[85,20],[60,14],[35,8],[10,1]]}),
+   ...flowLayers({id:'trade-sw',name:'South-East Trade Winds · illustrative',end,coordinates:india?[[42,-25],[51,-20],[60,-14],[68,-8],[75,-1]]:[[-110,-25],[-85,-20],[-60,-14],[-35,-8],[-10,-1]]}),
+   ...flowLayers({id:'trade-se',name:'South-East Trade Winds · illustrative',end,coordinates:india?[[116,-25],[108,-20],[101,-14],[93,-8],[85,-1]]:[[110,-25],[85,-20],[60,-14],[35,-8],[10,-1]]})
   );
-  return{format:'invincible-map-animation',version:1,title:scene.title||'Atmospheric convergence',duration:end,aspectRatio:'9:16',basemap:'satellite',terrain:false,overlayPreset:'documentary',camera:[{time:0,center,zoom:india?2.25:1.35,pitch:0,bearing:0,easing:'smooth'},{time:end,center:[center[0],center[1]+2],zoom:india?2.55:1.55,pitch:0,bearing:0,easing:'hold'}],assets:[],layers};
+  return{format:'invincible-map-animation',version:1,title:scene.title||'Atmospheric convergence',duration:end,aspectRatio:'9:16',basemap:'satellite',terrain:false,overlayPreset:'documentary',camera:cameraFor(context,{center,intent:scene.cameraIntent,end,scope:india?'country-region':'global'}),assets:[],layers};
  }
  const phase=Math.max(.3,end*.28),late=Math.max(phase+.2,end*.58);
  layers.push(
-  routeLayer({id:'itcz-start',name:'ITCZ · initial illustrative position',start:0,end:Math.max(phase+.25,end*.52),coordinates:[[west,1],[east,1]],color:'#E2B75D',lineWidth:16,opacity:.3,arrowhead:false,revealDuration:Math.min(.7,end*.2)}),
-  routeLayer({id:'itcz-middle',name:'ITCZ · illustrative northward shift',start:phase,end:Math.max(late+.2,end*.82),coordinates:[[west,8],[east,8]],color:'#E2B75D',lineWidth:16,opacity:.36,arrowhead:false,revealDuration:Math.min(.7,end*.2)}),
-  routeLayer({id:'itcz-north',name:'ITCZ · northern summer position',start:late,end,coordinates:[[west,15],[east,15]],color:'#E2B75D',lineWidth:16,opacity:.46,arrowhead:false,revealDuration:Math.min(.7,end*.2)}),
-  {id:'itcz-shift-label',type:'label',name:'ITCZ shifts north',start:late,end,position:[india?78:5,17],color:'#F4F5F7',scale:1.05,fadeIn:.25,fadeOut:.2}
+  ...bandLayers({id:'itcz-start',name:'ITCZ · initial illustrative position',start:0,end:Math.max(phase+.25,end*.52),coordinates:atmosphericCurve({west,east,latitude:1,india}),opacity:.28}),
+  ...bandLayers({id:'itcz-middle',name:'ITCZ · illustrative northward shift',start:phase,end:Math.max(late+.2,end*.82),coordinates:atmosphericCurve({west,east,latitude:8,india}),opacity:.36}),
+  ...bandLayers({id:'itcz-north',name:'ITCZ · northern summer position',start:late,end,coordinates:atmosphericCurve({west,east,latitude:15,india}),opacity:.5}),
+  {id:'itcz-shift-label',type:'label',name:'ITCZ SHIFTS NORTH',start:late,end,position:[india?78:5,18.5],color:'#F4F5F7',...VISUAL_PRESETS.label.primary,fadeIn:.25,fadeOut:.2}
  );
- if(india)layers.push({id:'india-label',type:'label',name:'INDIA',start:late,end,position:[78.9,21],color:'#F4F5F7',scale:1,fadeIn:.25,fadeOut:.2});
- return{format:'invincible-map-animation',version:1,title:scene.title||'Northward atmospheric shift',duration:end,aspectRatio:'9:16',basemap:'satellite',terrain:false,overlayPreset:'documentary',camera:[{time:0,center,zoom:india?2.25:1.35,pitch:0,bearing:0,easing:'smooth'},{time:end,center:[center[0],india?16:12],zoom:india?3.05:1.65,pitch:0,bearing:0,easing:'smooth'}],assets:[],layers};
+ if(india)layers.push({id:'india-label',type:'label',name:'INDIA',start:late,end,position:[78.9,22],color:'#F4F5F7',...VISUAL_PRESETS.label.regional,fadeIn:.25,fadeOut:.2});
+ const shiftCenter=india?[78,16]:[0,11];
+ return{format:'invincible-map-animation',version:1,title:scene.title||'Northward atmospheric shift',duration:end,aspectRatio:'9:16',basemap:'satellite',terrain:false,overlayPreset:'documentary',camera:cameraFor(context,{center:shiftCenter,intent:'global-to-local',end,scope:india?'country':'global'}),assets:[],layers};
 }
 
 function compileSemanticMap(scene,duration,{locations=[],routes=[]}={}){
@@ -164,7 +202,7 @@ function compileSemanticMap(scene,duration,{locations=[],routes=[]}={}){
  const atmospheric=location&&atmosphericMap(scene,seconds,location);if(atmospheric)return atmospheric;
  const route=(routes||[]).find(item=>String(item.id)===String(scene.routeId||'')&&item.reviewed===true);
  if(route?.coordinates?.length>=2)return{format:'invincible-map-animation',version:1,title:scene.title||route.name,duration:seconds,aspectRatio:'9:16',basemap:'terrain',terrain:false,overlayPreset:'documentary',camera:[{time:0,center:route.coordinates[0],zoom:4.4,pitch:0,bearing:0,easing:'smooth'},{time:seconds,center:route.coordinates.at(-1),zoom:4.9,pitch:0,bearing:0,easing:'smooth'}],assets:[],layers:[routeLayer({id:'verified-route',name:route.name||'Reviewed route',end:seconds,coordinates:route.coordinates,color:'#E1C65B',lineWidth:4,arrowhead:true})]};
- if(location?.coordinates?.length===2)return{format:'invincible-map-animation',version:1,title:scene.title||location.name,duration:seconds,aspectRatio:'9:16',basemap:'satellite',terrain:false,overlayPreset:'documentary',camera:[{time:0,center:location.coordinates,zoom:3.4,pitch:0,bearing:0,easing:'smooth'},{time:seconds,center:location.coordinates,zoom:3.8,pitch:0,bearing:0,easing:'hold'}],assets:[],layers:[{id:'context-label',type:'label',name:location.name,start:0,end:seconds,position:location.coordinates,color:'#F4F5F7',scale:1,fadeIn:.25,fadeOut:.2}]};
+ if(location?.coordinates?.length===2)return{format:'invincible-map-animation',version:1,title:scene.title||location.name,duration:seconds,aspectRatio:'9:16',basemap:'satellite',terrain:false,overlayPreset:'documentary',camera:cameraFor(location,{intent:scene.cameraIntent,end:seconds}),assets:[],layers:[{id:'context-label',type:'label',name:location.name,start:0,end:seconds,position:location.coordinates,color:'#F4F5F7',...VISUAL_PRESETS.label.primary,fadeIn:.25,fadeOut:.2}]};
  return null;
 }
 

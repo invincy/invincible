@@ -10,7 +10,7 @@ import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=
 import {mountAssembly} from './assembly.js?v=2026111328';
 import {encodeStudioVideo} from './export.js?v=2026111209';
 import {openStudioStore} from './storage.js';
-import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111203';
+import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111401';
 import {runAiProduction} from '../ai-production-runner.mjs?v=2026111203';
 import {generateVoiceover} from '../tts-api.js';
 import {createProductionReadiness,selectProductionVoice} from './production-readiness.js?v=2026111322';
