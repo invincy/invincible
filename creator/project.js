@@ -82,7 +82,10 @@ window.addEventListener("message",async event=>{
     return;
   }
   if(event.data?.type!=="invincible-review-ai-maps")return;
-  try{const result=await storyboard.openAiDraft({reviewMaps:true});setProjectAreaState("Video Studio",result?.reviewingMaps?"map-review":"");}
+  try{
+    const result=await storyboard.openAiDraft({reviewMaps:true});
+    if(result)revealProjectArea("Video Studio",result.reviewingMaps?"map-review":"");
+  }
   catch(error){status(error.message||"The reviewed scene plan could not be opened.","error");}
 });
 
@@ -122,12 +125,17 @@ function setProjectAreaState(area,mode=""){
     button.setAttribute("aria-current",active?"step":"false");
   });
 }
-async function selectProjectArea(area,mode=""){
+function revealProjectArea(area,mode=""){
   setProjectAreaState(area,mode);
   const isVoiceover=area==="Voiceover",isTiming=area==="Storyboard",showScriptWorkspace=isVoiceover||isTiming;
   $("projectVoiceoverStep").hidden=!showScriptWorkspace;
   $("projectEditingStep").hidden=showScriptWorkspace;
   document.body.classList.toggle("project-voiceover-active",showScriptWorkspace);
+  return showScriptWorkspace;
+}
+async function selectProjectArea(area,mode=""){
+  const showScriptWorkspace=revealProjectArea(area,mode);
+  const isTiming=area==="Storyboard";
   if(showScriptWorkspace){
     const frame=$("projectVoiceoverFrame");
     if(!frame.hasAttribute("src"))frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId,view:isTiming?"timing":"script",build:"2026111325"});

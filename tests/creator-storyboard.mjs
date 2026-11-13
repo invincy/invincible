@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {parseSceneInput,inspectScenes} from '../creator/scene-tools.js';
 import {looksLikeStoryboard,makeScene,parseStoryboard,storyboardDuration} from '../creator/storyboard-model.js';
+const here=path.dirname(fileURLToPath(import.meta.url));
 const headers='Voiceover\tVisual/Animation\tAssets\tDuration\n';
 test('storyboard imports TSV, reordered headers, Unicode, blank cells and literal pipes',()=>{
  const scenes=parseStoryboard('\uFEFF'+headers+'ગુજરાતી voice | one\tPan\tphoto.png\t8 sec\r\nSecond\t\t\t0:09\r\n');
@@ -45,4 +49,10 @@ test('scene normalization preserves legacy fields and additive storyboard data t
 test('advanced prompt imports still normalize into the existing production workflow',()=>{
  const scenes=parseSceneInput('| Voiceover | Image Prompt | Video Prompt | Duration |\n|---|---|---|---|\n| Original line | Existing still | Existing motion | 8 |',makeScene);
  assert.deepEqual(inspectScenes(scenes),[]);assert.equal(scenes[0].imagePrompt,'Existing still');assert.equal(scenes[0].visual,'');
+});
+
+test('applying a reviewed sync plan reveals the loaded Motion Studio workspace',()=>{
+ const source=fs.readFileSync(path.join(here,'../creator/project.js'),'utf8');
+ assert.match(source,/const result=await storyboard\.openAiDraft\(\{reviewMaps:true\}\);\s*if\(result\)revealProjectArea\("Video Studio",result\.reviewingMaps\?"map-review":""\);/);
+ assert.match(source,/function revealProjectArea\(area,mode=""\)[\s\S]*?\$\("projectVoiceoverStep"\)\.hidden=!showScriptWorkspace;[\s\S]*?\$\("projectEditingStep"\)\.hidden=showScriptWorkspace;/);
 });

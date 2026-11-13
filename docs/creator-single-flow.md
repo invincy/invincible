@@ -213,3 +213,15 @@ Completed sync plans are stored with the signed-in account's Creator-project che
 Reopening Step 2 restores the finished plan at review instead of making the user
 regenerate it. The compatible pending-draft cache remains a fallback; a stale plan or a
 plan from another project is not shown.
+
+## Reviewed-plan handoff verification — November 13, 2026
+
+A signed-in production test applied a four-scene OpenAI sync plan with its exact
+12.10-second MP3, opened the resulting Motion Studio timeline, played the full-video
+preview and completed the browser's H.264/AAC MP4 export. The test exposed an outer-page
+handoff defect: Motion Studio was loaded internally while the Script workspace remained
+visible. Applying a reviewed plan now switches the outer project workspace to Review maps
+or Motion & export as soon as the import succeeds. Cancelling replacement keeps the
+current Script workspace and existing Motion Studio draft unchanged. The focused Creator
+browser flow and the complete repository test suite cover the corrected navigation and
+existing project compatibility; production Firebase rules and Functions were not changed.
