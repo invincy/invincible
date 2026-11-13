@@ -141,9 +141,9 @@ audio{width:100%;height:36px}
 .ai-step-heading,.review-summary,.ai-next-row,.scene-plan-review header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .ai-step-heading>div{display:flex;align-items:center;gap:9px}.ai-step-heading>div>span{color:var(--cyan);font-size:11px;text-transform:uppercase;letter-spacing:.08em}.ai-step-heading h2{font-size:15px}
 .ai-flow-progress{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0;padding:0;list-style:none}.ai-flow-progress li{display:flex;align-items:center;gap:7px;min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;color:var(--muted);font-size:11px}.ai-flow-progress li span{display:grid;place-items:center;width:23px;height:23px;border:1px solid currentColor;border-radius:50%;font-variant-numeric:tabular-nums}.ai-flow-progress li.current{border-color:var(--cyan);color:var(--text);background:#12313a}.ai-flow-progress li.done{color:var(--cyan);background:#0d282f}.ai-flow-progress li.done span{color:#082025;background:var(--cyan);border-color:var(--cyan)}
-.transcript-review,.scene-plan-review{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}.review-summary span,.transcript-segment>span,.scene-plan-review header span{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+.timing-columns{display:block}.timing-instructions-card:empty{display:none}.timing-card{min-width:0}.transcript-review,.scene-plan-review{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}.review-summary span,.transcript-segment>span,.scene-plan-review header span{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
 .transcript-segments,.scene-plan-scenes{display:grid;gap:8px;margin-top:10px}.transcript-segment{display:grid;grid-template-columns:150px minmax(0,1fr);align-items:start;gap:10px;margin:0}.transcript-segment>span{padding-top:10px}.transcript-segment textarea{min-height:58px;height:auto;padding:9px 11px;font-size:14px;line-height:1.45;resize:vertical}
-.ai-next-row{margin-top:12px;align-items:flex-start}.ai-next-row .help{margin:7px 0;flex:1}.scene-plan-scenes article{border:1px solid var(--line);border-radius:11px;background:#0c1d29;padding:12px}.scene-plan-scenes article>p{margin:8px 0;color:#dce9ed}.scene-plan-scenes dl{display:grid;gap:5px;margin:0}.scene-plan-scenes dl>div{display:grid;grid-template-columns:120px minmax(0,1fr);gap:8px}.scene-plan-scenes dt{color:var(--muted);font-size:11px}.scene-plan-scenes dd{margin:0;overflow-wrap:anywhere}.scene-plan-review>.primary{margin-top:12px;width:100%}
+.ai-next-row{margin-top:12px;align-items:flex-start}.ai-next-row .help{margin:7px 0;flex:1}.scene-plan-scenes article{border:1px solid var(--line);border-radius:11px;background:#0c1d29;padding:12px}.scene-plan-scenes article>p{margin:8px 0;color:#dce9ed}.scene-plan-scenes dl{display:grid;gap:5px;margin:0}.scene-plan-scenes dl>div{display:grid;grid-template-columns:120px minmax(0,1fr);gap:8px}.scene-plan-scenes dt{color:var(--muted);font-size:11px}.scene-plan-scenes dd{margin:0;overflow-wrap:anywhere}.scene-plan-review>.primary{margin-top:12px;width:100%}.scene-plan-review>.primary[aria-disabled="true"]{opacity:.5;pointer-events:none}
 @media(max-width:600px){.ai-flow-progress{grid-template-columns:1fr}.transcript-segment{grid-template-columns:1fr;gap:2px}.transcript-segment>span{padding:0}.ai-next-row{align-items:stretch;flex-direction:column}.ai-next-row button{width:100%}.scene-plan-scenes dl>div{grid-template-columns:1fr;gap:1px}}
 
 /* Voiceover workbench: quiet translucent surfaces leave the Studio water visible. */
@@ -331,6 +331,26 @@ audio{width:100%;height:36px}
 .project-voiceover-embed.project-timing-view .voiceover-page .workspace.space-panels { max-width: 1280px; margin-inline: auto; grid-template-columns: minmax(0,1fr); grid-template-areas: "timing"; }
 .project-voiceover-embed.project-timing-view .voiceover-page .workspace :is(.voice-script-pane,.controls-panel) { display: none; }
 .project-voiceover-embed.project-timing-view .voiceover-page .workspace .ai-script-flow { display: block; max-height: calc(100dvh - 24px); }
+.project-voiceover-embed.project-timing-view .timing-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(420px, .85fr);
+  align-items: start;
+  gap: 14px;
+  margin-top: 12px;
+}
+.project-voiceover-embed.project-timing-view .timing-card {
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #0a1a25e8;
+}
+.project-voiceover-embed.project-timing-view .timing-instructions-card label { display: block; margin-bottom: 8px; font-weight: 650; }
+.project-voiceover-embed.project-timing-view #creativeInstructions { min-height: clamp(280px, 53dvh, 580px); resize: vertical; }
+.project-voiceover-embed.project-timing-view .transcript-review { max-height: 68dvh; overflow-y: auto; }
+.project-voiceover-embed.project-timing-view .transcript-segment { grid-template-columns: 1fr; gap: 3px; }
+.project-voiceover-embed.project-timing-view .transcript-segment>span { padding-top: 0; }
+.project-voiceover-embed.project-timing-view .ai-next-row { position: sticky; bottom: 0; padding-top: 10px; background: linear-gradient(transparent,#0a1a25 18%); }
 .project-voiceover-embed .voice-script-pane > :is(.script-panel,.result-panel) {
   align-self: stretch;
   margin: 0;
@@ -386,6 +406,7 @@ audio{width:100%;height:36px}
     grid-template-areas: "content controls";
   }
   .project-voiceover-embed.project-timing-view .voiceover-page .workspace.space-panels { grid-template-columns: minmax(0,1fr); grid-template-areas: "timing"; }
+  .project-voiceover-embed.project-timing-view .timing-columns { grid-template-columns: minmax(0,1fr) minmax(360px,.9fr); }
 }
 @media (max-width: 820px) {
   .project-voiceover-embed .voiceover-page .workspace.space-panels {
@@ -395,6 +416,9 @@ audio{width:100%;height:36px}
   .project-voiceover-embed .voiceover-page .workspace .controls-panel { max-height: none; overflow: visible; }
   .project-voiceover-embed.project-timing-view .voiceover-page .workspace.space-panels { grid-template-areas: "timing"; }
   .project-voiceover-embed.project-timing-view .voiceover-page .workspace .ai-script-flow { max-height: none; }
+  .project-voiceover-embed.project-timing-view .timing-columns { grid-template-columns: minmax(0,1fr); }
+  .project-voiceover-embed.project-timing-view #creativeInstructions { min-height: 220px; }
+  .project-voiceover-embed.project-timing-view .transcript-review { max-height: none; overflow: visible; }
 }
 .ai-voiceover-embed main { padding: 12px; }
 .ai-voiceover-embed :is(.global-nav,.heading,.tts-forest,.voice-panel-links,

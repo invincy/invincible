@@ -95,7 +95,7 @@ Script & scenes, then Map Editor when visuals need maps, and finally Motion
 Studio for assembly. The separate Invincible AI Voiceover tool keeps its name.
 Within Script, keep MP3 generation and Download MP3 together, followed by the
 Next · Script & scenes action. Activating it must preserve the in-memory MP3,
-select the second project step and reveal MP3 ready → Whisper timing → Scene
+select the second project step and reveal MP3 ready → Whisper timing → Sync
 plan across the available width. Transcript correction and animation
 instructions belong to Script & scenes, not beneath the Script editor. Do not
 reload or open a separate browser page during this handoff.
@@ -103,6 +103,11 @@ Treat the post-generation Final speed selector as an output setting, not a
 listening-only control. Playback previews the selected pace; Download and Next
 must use the same pitch-preserving processed MP3, and Whisper must time that
 processed duration.
+At desktop widths, show animation instructions and locked timestamps in two
+separate cards, with the instruction card wider. During local planning, show
+elapsed progress instead of a silent disabled button. The final transition is
+Review sync plan → Apply to project → Open Motion Studio; keep it unavailable
+until both the plan and its final MP3 have been saved locally.
 
 Carry the selected Invincible theme backdrop into the editor, including its
 ambient details. Keep the background free of page-specific artwork and use

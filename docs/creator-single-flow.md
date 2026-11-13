@@ -36,13 +36,17 @@ Script & scenes both prepare the same pitch-preserving, speed-adjusted MP3.
 Whisper receives those adjusted bytes rather than the original recording, so
 the downloaded duration, transcript timestamps and scene timing agree.
 Opening previews cannot be analysed as the final recording. The visible
-MP3 ready → Whisper timing → Scene plan progress leads into locked timestamps,
-animation instructions, scene-plan review, and finally Apply to project → Open
-Motion Studio. The old outer button that jumped to an empty storyboard is not
+MP3 ready → Whisper timing → Sync plan progress leads into locked timestamps,
+animation instructions, sync-plan review, and finally Apply to project → Open
+Motion Studio. On desktop, animation instructions use the wider left card while
+the locked Whisper transcript remains visible in a separate right card. The
+planner reports elapsed progress, renders the review as soon as generation
+finishes, and enables Motion Studio only after the plan and final MP3 are saved.
+The old outer button that jumped to an empty storyboard is not
 part of this flow.
 
 On wide project screens, Script and Recording share the main column and Voice
-uses the side column. Script & scenes gives the Whisper / scene-plan workspace
+uses the side column. Script & scenes gives the Whisper / sync-plan workspace
 the full project width. Phones preserve each step without horizontal overflow.
 
 ### UX overhaul verification — November 13, 2026
