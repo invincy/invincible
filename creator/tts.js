@@ -274,6 +274,11 @@ function friendly(error){
  if(/unauthenticated/.test(error?.code||''))return 'Sign in to Invincible again. Your script is kept here.';
  return error?.message||'The request failed. Your script is kept here. Please retry when ready.';
 }
+function localVoiceoverError(error,step){
+ if(error?.status===404||/^not found\.?$/i.test(error?.message||''))return 'The laptop video service is out of date. Restart Invincible Video Studio on this laptop, then click '+step+' again. Your MP3 is still here.';
+ if(error?.code==='LOCAL_WORKER_UNREACHABLE')return 'The laptop video service is not running. Start Invincible Video Studio, then click '+step+' again. Your MP3 is still here.';
+ return error?.message||step+' failed. Your MP3 and script are still here.';
+}
 async function fetchVoices({initial=false}={}){
  const current=epoch,version=++voiceEpoch;loading=true;refreshAvailability();$('accountStatus').textContent='Loading available Google voices…';$('accountStatus').classList.remove('error');
  try{
@@ -359,13 +364,13 @@ async function analyzeLocal(){
  analysisBusy=true;$('localAnalysisStatus').textContent='Analysing voiceover… Creating transcript and timestamps.';$('transcriptReview').hidden=true;$('scenePlanReview').hidden=true;updateAiFlow();refreshAvailability();
  requestAnimationFrame(()=>$('timingHeading').scrollIntoView({behavior:'smooth',block:'start'}));
  try{const payload=await localWorker.request('/api/voiceover/transcribe',{audioBase64:audioBase64()},{timeoutMs:180000});timedTranscript=payload.transcript;renderTranscript();$('localAnalysisStatus').textContent='Whisper timing is ready. Review the words, then add animation instructions.';}
- catch(error){timedTranscript=null;$('localAnalysisStatus').textContent=error.message||'Whisper analysis failed.';}
+ catch(error){timedTranscript=null;$('localAnalysisStatus').textContent=localVoiceoverError(error,'Scripting · Step 2');}
  finally{analysisBusy=false;updateScenePlanGate();updateAiFlow();}
 }
 async function generateScenePlan(){
  const check=validTimedTranscript();if(!check.valid||!$('creativeInstructions').value.trim()||scenePlanBusy)return;scenePlanBusy=true;$('localAnalysisStatus').textContent='Generating scenes from the locked timestamps and your animation instructions…';$('scenePlanReview').hidden=true;refreshAvailability();
  try{const payload=await localWorker.request('/api/voiceover/plan',{title:$('title').value,creativeInstructions:$('creativeInstructions').value,transcript:timedTranscript},{timeoutMs:180000});await savePendingAiDraft({title:$('title').value,creativeInstructions:$('creativeInstructions').value,analysis:payload.analysis,creatorStudio:payload.creatorStudio},new Blob([audioBytes],{type:'audio/mpeg'}));renderScenePlan(payload);$('localAnalysisStatus').textContent='Scene plan ready. Review every scene before applying it to the project.';}
- catch(error){$('localAnalysisStatus').textContent=error.message||'Scene planning failed.';}
+ catch(error){$('localAnalysisStatus').textContent=localVoiceoverError(error,'Generate scene plan');}
  finally{scenePlanBusy=false;updateAiFlow();refreshAvailability();}
 }
 function applyPlaybackSpeed(){
