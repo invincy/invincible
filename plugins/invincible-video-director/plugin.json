@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "invincible-video-director",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Privately read and compile reviewed Invincible Creator Studio videos with Firebase authentication and the existing deterministic renderers.",
   "author": {
     "name": "Invincible"

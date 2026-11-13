@@ -34,3 +34,13 @@ test('plugin apply requires explicit confirmation and preserves compiled timing'
  const scenes=plugin.creatorScenes({creatorStudio:{scenes:[{id:'scene-1',startSeconds:0,endSeconds:.8,durationSeconds:.8,voiceoverTimestamp:'0.000-0.800s'}]}});
  assert.equal(scenes[0].startSeconds,0);assert.equal(scenes[0].endSeconds,.8);assert.equal(scenes[0].voiceoverTimestamp,'0.000-0.800s');assert.equal(scenes[0].duration,1);
 });
+
+test('plugin exposes OAuth tool metadata before sign-in and returns a linking challenge',async()=>{
+ const server=plugin.createServer(null),profile=server._registeredTools.get_my_profile,apply=server._registeredTools.apply_creator_plan;
+ assert.deepEqual(profile._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read']}]);
+ assert.deepEqual(apply._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read','creator.compile','creator.write']}]);
+ const result=await profile.handler({});
+ assert.equal(result.isError,true);
+ assert.match(result._meta['mcp/www_authenticate'][0],/resource_metadata=/);
+ assert.match(result._meta['mcp/www_authenticate'][0],/creator\.read/);
+});
