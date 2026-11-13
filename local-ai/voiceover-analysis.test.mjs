@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assembleSceneDraft, analyzeVoiceover, buildCreativePlanPrompt, buildCreativePlanSchema, buildQwenPrompt, compileCreativePlan, loadCreatorAssetCatalog, normalizeCreativeInstructions, normalizeTranscript, toCreatorStudioImport, validateMapAnimation } from './voiceover-analysis.mjs';
+import { assembleSceneDraft, analyzeVoiceover, buildCreativePlanPrompt, buildCreativePlanSchema, buildQwenPrompt, compileCreativePlan, loadCreatorAssetCatalog, normalizeCreativeInstructions, normalizeTranscript, relevantCreatorAssets, toCreatorStudioImport, validateMapAnimation } from './voiceover-analysis.mjs';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -25,11 +25,11 @@ test('builds a constrained Qwen prompt', () => {
 });
 
 test('constrains live structured output to the locked catalog IDs',()=>{
-  const schema=buildCreativePlanSchema(transcript,{assets:[{id:'asset-1'}],verifiedLocations:[],verifiedRoutes:[]}),properties=schema.properties.scenes.items.properties;
+  const schema=buildCreativePlanSchema(transcript,{assets:[{id:'commander_babur',name:'Commander Babur'}],verifiedLocations:[],verifiedRoutes:[]}),properties=schema.properties.scenes.items.properties;
   assert.deepEqual(properties.sourceSegmentId.enum,['s1','s2']);
   assert.equal(schema.properties.scenes.minItems,2);
   assert.equal(schema.properties.scenes.maxItems,2);
-  assert.deepEqual(properties.assetIds.items.enum,['asset-1']);
+  assert.deepEqual(properties.assetIds.items.enum,['commander_babur']);
   assert.deepEqual(properties.locationId.enum,['']);
   assert.deepEqual(properties.routeId.enum,['']);
 });
@@ -48,6 +48,21 @@ test('loads real Creator Studio assets and animation presets', async () => {
   assert.equal(catalog.styleProfile.animation.troopMovement, 'sequential-timed-layers');
   assert.equal(catalog.plannerPack.manifest.schemaVersion, 'creator-semantic-plan-v1');
   assert.ok(catalog.plannerPack.approvedExamples.examples.some(example => /Panipat/.test(example.name)));
+});
+
+test('only exposes assets that are relevant to the locked narration and directions', () => {
+  const catalog={assets:[
+    {id:'commander_babur',name:'Commander · Babur · 1526'},
+    {id:'commander_hemu',name:'Commander · Hemu · 1556'},
+    {id:'india-flag-map',name:'India flag overlay'}
+  ]};
+  const itcz={segments:[{id:'itcz',start:0,end:3,text:'India and the ITCZ low pressure belt.'}]};
+  assert.deepEqual(relevantCreatorAssets(itcz,catalog,'Show monsoon wind streams.'),[]);
+  assert.deepEqual(relevantCreatorAssets(transcript,catalog,'Show Babur at Panipat.').map(asset=>asset.id),['commander_babur']);
+  assert.deepEqual(relevantCreatorAssets(itcz,catalog,'Show the India flag map.').map(asset=>asset.id),['india-flag-map']);
+  const schema=buildCreativePlanSchema(itcz,catalog,'Show monsoon wind streams.');
+  assert.equal(schema.properties.scenes.items.properties.assetIds.maxItems,0);
+  assert.doesNotMatch(buildCreativePlanPrompt(itcz,catalog,'Show monsoon wind streams.'),/india-flag-map/);
 });
 
 test('uses transcript timing as source of truth and accepts catalog assets', () => {
@@ -97,12 +112,26 @@ test('compiles the shared semantic plan without allowing the model to author ren
   ]};
   const draft=compileCreativePlan(transcript,plan,{assets:[],verifiedLocations:[],verifiedRoutes:[]},{production:true});
   assert.equal(draft.scenes.length,2);
-  assert.equal(draft.scenes[0].semanticPlan.presetId,'geographic-locator');
+  assert.equal(draft.scenes[0].semanticPlan.engine,'canvas');
+  assert.equal(draft.scenes[0].semanticPlan.presetId,'documentary-diagram');
   assert.equal(draft.scenes[1].canvasScene.backgroundStyle,'grid');
   assert.equal(draft.scenes[1].mapAnimation,null);
   const imported=toCreatorStudioImport(assembleSceneDraft(transcript,draft,{assets:[]}));
   assert.equal(imported.scenes[1].semanticPlan.engine,'motion');
   assert.equal(imported.scenes[1].canvasScene.presetId,'temperature-comparison');
+});
+
+test('repairs ungrounded map choices into generic supported scenes', () => {
+  const weather={segments:[{id:'w1',start:0,end:3,text:'The low pressure belt shifts northward.'}]};
+  const plan={schemaVersion:'creator-semantic-plan-v1',scenes:[
+    {sourceSegmentId:'w1',engine:'map',sceneKind:'locator-map',presetId:'geographic-locator',title:'Low Pressure Belt',visualIntent:'Show the belt moving north.',labelTreatment:'map-label',cameraIntent:'global-to-local',assetIds:[],locationId:'',routeId:'',emphasis:['pressure'],missingInfo:[]}
+  ]};
+  const draft=compileCreativePlan(weather,plan,{assets:[],verifiedLocations:[],verifiedRoutes:[]},{production:true});
+  assert.equal(draft.scenes[0].semanticPlan.engine,'motion');
+  assert.equal(draft.scenes[0].semanticPlan.presetId,'shifting-zone');
+  assert.equal(draft.scenes[0].mapAnimation,null);
+  assert.equal(draft.scenes[0].canvasScene.presetId,'shifting-zone');
+  assert.match(draft.scenes[0].missingInfo.join(' '),/no verified location or route/);
 });
 
 test('repairs an omitted Qwen row without merging or losing locked Whisper segments', () => {

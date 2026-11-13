@@ -24,7 +24,9 @@ function wav(){const rate=48000,frames=rate,b=Buffer.alloc(44+frames*2);b.write(
   await page.setViewportSize({width:393,height:852});
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
   await page.getByRole('navigation',{name:'Studio panels'}).getByRole('button',{name:'Preview'}).click();
-  await page.waitForFunction(()=>{const track=document.querySelector('.vs-layout');return track.scrollLeft>=track.clientWidth-5});
+  await page.waitForFunction(()=>document.querySelector('.video-studio')?.dataset.mobilePanel==='preview');
+  assert.equal(await page.locator('.vs-preview').isVisible(),true);
+  assert.equal(await page.locator('.vs-assembly').isVisible(),false);
   assert.deepEqual(errors,[]);
   console.log('Motion Studio desktop columns, phone panels and preview navigation passed.');
   return;

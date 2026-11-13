@@ -60,6 +60,28 @@ export async function loadCreatorAssetCatalog(repoRoot, { includeHistory = false
   };
 }
 
+const ASSET_WORDS_TO_IGNORE = new Set(['asset','clean','commander','cutout','flag','image','map','overlay','the','with']);
+function catalogAssetWords(asset) {
+  return String(`${asset.id || ''} ${asset.name || ''}`)
+    .toLowerCase()
+    .replace(/[^a-z0-9\u0900-\u097f]+/g, ' ')
+    .split(/\s+/)
+    .filter(word => word.length >= 4 && !ASSET_WORDS_TO_IGNORE.has(word) && !/^\d+$/.test(word));
+}
+
+export function relevantCreatorAssets(transcript, assetCatalog = {}, creativeInstructions = '') {
+  const normalized = normalizeTranscript(transcript);
+  const requestText = `${normalized.text || normalized.segments.map(segment => segment.text).join(' ')} ${normalizeCreativeInstructions(creativeInstructions)}`.toLowerCase();
+  const wantsFlag = /\bflags?\b|\bflag[- ]?map\b|झंड|ध्वज/u.test(requestText);
+  return (assetCatalog.assets || []).filter(asset => {
+    const id = String(asset.id || '').toLowerCase();
+    const words = catalogAssetWords(asset);
+    if (id.includes('flag')) return wantsFlag && words.some(word => requestText.includes(word));
+    if (id.startsWith('commander_')) return words.some(word => requestText.includes(word));
+    return words.some(word => requestText.includes(word));
+  });
+}
+
 export function normalizeCreativeInstructions(value) {
   const text = String(value ?? '').trim();
   if (text.length > 4000) throw new Error('Creative instructions must be 4,000 characters or fewer.');
@@ -88,13 +110,13 @@ export async function analyzeVoiceover({ audioPath, workspaceRoot, assetCatalog 
 }
 
 export function buildCreativePlanPrompt(transcript, assetCatalog, creativeInstructions = '') {
-  const t=normalizeTranscript(transcript), assets=(assetCatalog.assets||[]).map(({id,name,type,description})=>({id,name,type,description}));
+  const t=normalizeTranscript(transcript), assets=relevantCreatorAssets(t,assetCatalog,creativeInstructions).map(({id,name,type,description})=>({id,name,type,description}));
   const locations=Array.isArray(assetCatalog.verifiedLocations)?assetCatalog.verifiedLocations:[],routes=Array.isArray(assetCatalog.verifiedRoutes)?assetCatalog.verifiedRoutes:[];
   return buildSemanticPlannerPrompt({segments:t.segments.map(s=>({id:s.id,narration:s.text})),creativeInstructions:normalizeCreativeInstructions(creativeInstructions),assets,locations,routes:routes.filter(route=>route.reviewed===true)});
 }
 
-export function buildCreativePlanSchema(transcript,assetCatalog={}){
- const t=normalizeTranscript(transcript),assets=assetCatalog.assets||[],locations=assetCatalog.verifiedLocations||[],routes=(assetCatalog.verifiedRoutes||[]).filter(route=>route.reviewed===true);
+export function buildCreativePlanSchema(transcript,assetCatalog={},creativeInstructions=''){
+ const t=normalizeTranscript(transcript),assets=relevantCreatorAssets(t,assetCatalog,creativeInstructions),locations=assetCatalog.verifiedLocations||[],routes=(assetCatalog.verifiedRoutes||[]).filter(route=>route.reviewed===true);
  return plannerSchemaForRequest({segmentIds:t.segments.map(segment=>segment.id),assetIds:assets.map(asset=>asset.id),locationIds:locations.map(location=>location.id),routeIds:routes.map(route=>route.id)});
 }
 
@@ -117,8 +139,15 @@ export function compileCreativePlan(transcript, plan, assetCatalog, { production
     const row=bySegment.get(seg.id);
     if(!row)return {sourceSegmentId:seg.id,intent:'hold',assetId:'',locationId:'',routeId:'',title:seg.text.slice(0,96),plannerFallback:'omitted'};
     if(semantic){
-      const intent=row.routeId?'advance':row.locationId?'reveal':row.sceneKind==='title'?'title':'hold';
-      return{...row,intent,assetId:row.assetIds[0]||'',title:row.title||seg.text.slice(0,96)};
+      let grounded=row;
+      if(row.engine==='map'&&!row.locationId&&!row.routeId){
+        const subject=`${seg.text} ${row.title} ${row.visualIntent}`.toLowerCase();
+        const atmospheric=/pressure|wind|moist|atmospher|air|cloud|belt|zone|मानसून|हवा|दबाव/u.test(subject);
+        const shifting=atmospheric&&/shift|move|north|south|बदल|खिसक/u.test(subject);
+        grounded={...row,engine:atmospheric?'motion':'canvas',sceneKind:atmospheric?'atmospheric-system':row.sceneKind==='title'?'title':'documentary-diagram',presetId:atmospheric?(shifting?'shifting-zone':'pressure-driven-flow'):row.sceneKind==='title'?'framed-title':'documentary-diagram',labelTreatment:row.sceneKind==='title'?'title-plaque':'primary-pill',cameraIntent:['follow-route','global-to-local'].includes(row.cameraIntent)?'slow-push':row.cameraIntent,missingInfo:[...row.missingInfo,'Map intent had no verified location or route; a supported generic scene was used instead.']};
+      }
+      const intent=grounded.routeId?'advance':grounded.locationId?'reveal':grounded.sceneKind==='title'?'title':'hold';
+      return{...grounded,intent,assetId:grounded.assetIds[0]||'',title:grounded.title||seg.text.slice(0,96)};
     }
     if(production&&!allowedIntents.has(row.intent))return {...row,intent:'hold',plannerFallback:'unsupported-intent'};
     return row;
@@ -128,7 +157,7 @@ export function compileCreativePlan(transcript, plan, assetCatalog, { production
     const seg=segments.get(String(row.sourceSegmentId));if(!seg)throw Error(`Plan ${i+1} references an unknown segment.`);
     const assetId=String(row.assetId||'');if(assetId&&!assets.has(assetId))throw Error(`Plan ${i+1} selected an unregistered asset.`);
     if(!allowedIntents.has(row.intent))throw Error(`Plan ${i+1} has an unsupported intent.`);
-    const duration=Number((seg.end-seg.start).toFixed(3)),route=routes.get(String(row.routeId||'')),location=locations.get(String(row.locationId||''));let mapAnimation=null;const missingInfo=row.plannerFallback==='omitted'?['Qwen omitted this locked segment; a safe hold scene was created for review.']:row.plannerFallback==='unsupported-intent'?['Qwen returned an unsupported animation intent; a safe hold scene was created for review.']:[];
+    const duration=Number((seg.end-seg.start).toFixed(3)),route=routes.get(String(row.routeId||'')),location=locations.get(String(row.locationId||''));let mapAnimation=null;const missingInfo=[...(Array.isArray(row.missingInfo)?row.missingInfo:[]),...(row.plannerFallback==='omitted'?['Qwen omitted this locked segment; a safe hold scene was created for review.']:row.plannerFallback==='unsupported-intent'?['Qwen returned an unsupported animation intent; a safe hold scene was created for review.']:[])];
     if(row.intent==='advance'){
       const coordinates=route?.coordinates;
       const sourced=route&&String(route.sourceUrl||'').startsWith('https://')&&String(route.sourceDate||'').trim()&&String(route.precisionNote||'').trim()&&Array.isArray(coordinates)&&coordinates.length>=2&&coordinates.every(point=>Array.isArray(point)&&point.length===2&&point.every(Number.isFinite)&&Math.abs(point[0])<=180&&Math.abs(point[1])<=90);

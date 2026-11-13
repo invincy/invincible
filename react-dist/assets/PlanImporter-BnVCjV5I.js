@@ -1,4 +1,4 @@
-import{r as g,j as t}from"./invincible-app-CMdH9AS0.js";import{n as w}from"./task-model-CDefJTIz.js";import{E as P,S}from"./StepTreeEditor-CsNvjkzQ.js";import{i as k,t as D}from"./task-actions-CpyvyJ7M.js";import{r as L,w as E,c as C,d as I}from"./draft-store-KwoiYtx0.js";import"./firebase-D4EiY6x-.js";import"./task-content-bgvrruwS.js";const y=`Project: Build LMV 3 model
+import{r as g,j as t}from"./invincible-app-Dwr8OQYr.js";import{n as w}from"./task-model-CDefJTIz.js";import{E as P,S}from"./StepTreeEditor-UcJvwA1y.js";import{i as k,t as D}from"./task-actions-LdgLwj-H.js";import{r as L,w as E,c as C,d as I}from"./draft-store-KwoiYtx0.js";import"./firebase-D4EiY6x-.js";import"./task-content-bgvrruwS.js";const y=`Project: Build LMV 3 model
 Description: Complete and validate the final model.
 
 1. Research

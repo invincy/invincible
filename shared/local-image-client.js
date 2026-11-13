@@ -20,7 +20,7 @@ export function createLocalImageClient({ origin = window.__INVINCIBLE_LOCAL_AI_O
     if (!token) throw Object.assign(Error('Connect this laptop to generate images.'), {status:401,code:'LOCAL_PAIRING_REQUIRED',definitive:true});
     let response;
     try { response = await fetch(origin + route, { method: body === undefined ? 'GET' : 'POST', headers: { Authorization: 'Bearer ' + token, ...(account ? { 'X-Invincible-Account': account } : {}), ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal: AbortSignal.timeout(timeoutMs), redirect: 'error', targetAddressSpace: 'loopback' }); }
-    catch { throw Object.assign(Error('Start Image Studio, then check the connection. If Chrome asks, allow local access.'),{code:'LOCAL_WORKER_UNREACHABLE'}); }
+    catch(error) { if(error?.name==='TimeoutError'||error?.name==='AbortError')throw Object.assign(Error('The local worker is still running, but this request took too long.'),{code:'LOCAL_WORKER_TIMEOUT'});throw Object.assign(Error('Start Image Studio, then check the connection. If Chrome asks, allow local access.'),{code:'LOCAL_WORKER_UNREACHABLE'}); }
     if (getAccountId() !== account) throw Error('Your account changed. Reopen the image panel.');
     if (!response.ok) { if (response.status === 401) forget(account,token);const data = await response.json();throw Object.assign(Error(data.error || 'Local worker rejected this request.'), { definitive: true, status: response.status, code: data.code }); }
     return binary ? response.blob() : response.json();

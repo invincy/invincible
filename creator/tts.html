@@ -47,7 +47,7 @@ if (window.parent !== window) {
 <div class="ai-step-heading"><div><span>Step 2</span><h2 id="timingHeading">Time the voiceover</h2></div><button id="retryAnalysis" type="button" class="secondary" hidden>Retry AI timing</button></div>
 <ol class="ai-flow-progress" aria-label="Script production progress"><li data-ai-flow="audio" aria-current="step"><span>1</span>MP3 ready</li><li data-ai-flow="timing"><span>2</span><b id="timingProviderLabel">OpenAI timing</b></li><li data-ai-flow="plan"><span>3</span>Sync plan</li></ol>
 <p id="localAnalysisStatus" class="help" role="status" aria-live="polite">Generate the final MP3, then let OpenAI create its transcript and timestamps.</p>
-<div id="scenePlanProgress" class="scene-plan-progress" role="status" hidden><strong>Creating your sync plan…</strong><span id="scenePlanProgressTime">OpenAI is starting.</span><p>You do not need to click anything else. Review sync plan will open automatically when it is ready. This can take up to three minutes.</p></div>
+<div id="scenePlanProgress" class="scene-plan-progress" role="status" hidden><strong>Creating your sync plan…</strong><span id="scenePlanProgressTime">OpenAI is starting.</span><p>You do not need to click anything else. Review sync plan will open automatically when it is ready. Local AI can take several minutes.</p></div>
 <div class="timing-columns">
 <section id="timingInstructionsCard" class="timing-card timing-instructions-card" aria-label="Animation instructions"></section>
 <div id="transcriptReview" class="timing-card transcript-review" hidden>
@@ -92,6 +92,6 @@ if (window.parent !== window) {
 </section>
 </div>
 </main>
-<script type="module" src="tts.js?v=2026111320"></script>
+<script type="module" src="tts.js?v=2026111325"></script>
 <script type="module" src="tts-forest.js?v=1"></script>
 </body></html>

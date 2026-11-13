@@ -3,7 +3,7 @@ import {loadVoices,generateVoiceover,retimeVoiceover,runCreatorOpenAi} from './t
 import {createVoiceDemoPlayer} from './tts-voice-demo-player.js?v=2026111113';
 import {createTtsHistoryClient} from './tts-history-api.js?v=2026111004';
 import {savePendingAiDraft,loadPendingAiDraft,saveScriptSyncCheckpoint,loadScriptSyncCheckpoint,clearScriptSyncCheckpoint} from './ai-draft.js?v=2026111319';
-import {createLocalImageClient} from '../shared/local-image-client.js?v=2026111112';
+import {createLocalImageClient} from '../shared/local-image-client.js?v=2026111322';
 const $=id=>document.getElementById(id),fields=['title','script','creativeInstructions','mode','engine','model','direction','language','gender','family','voice','preset','speed','pitch','volume','pause'];
 let user=null,voices=[],busy=false,loading=false,epoch=0,voiceEpoch=0,audioUrl=null,audioBytes=null,sourceAudioBytes=null,sourceDuration=0,sourceFilename='',recordingLabel='',appliedSpeed=1,audioIsPreview=true,speedBusy=false,saveTimer;
 let timedTranscript=null,scenePlanPayload=null,analysisBusy=false,scenePlanBusy=false,scenePlanSaved=false,scenePlanProgressTimer=null;
@@ -294,6 +294,7 @@ function friendly(error){
 }
 function localVoiceoverError(error,step){
  if(error?.status===404||/^not found\.?$/i.test(error?.message||''))return 'The laptop video service is out of date. Restart Invincible Video Studio on this laptop, then click '+step+' again. Your MP3 is still here.';
+ if(error?.code==='LOCAL_WORKER_TIMEOUT')return 'Local AI took longer than expected. The laptop service is still running; click '+step+' to retry. Your MP3 is still here.';
  if(error?.code==='LOCAL_WORKER_UNREACHABLE')return 'The laptop video service is not running. Start Invincible Video Studio, then click '+step+' again. Your MP3 is still here.';
  return error?.message||step+' failed. Your MP3 and script are still here.';
 }
@@ -438,7 +439,7 @@ async function generateScenePlan(){
  try{
   await persistScriptSync();
   const planRequest={title:$('title').value,creativeInstructions:$('creativeInstructions').value,transcript:timedTranscript,production:true};
-  const payload=aiProvider==='cloud'?await runCreatorOpenAi({action:'plan',projectId:projectVoiceoverId,...planRequest}):await localWorker.request('/api/voiceover/plan',planRequest,{timeoutMs:180000});
+  const payload=aiProvider==='cloud'?await runCreatorOpenAi({action:'plan',projectId:projectVoiceoverId,...planRequest}):await localWorker.request('/api/voiceover/plan',planRequest,{timeoutMs:330000});
   clearInterval(scenePlanProgressTimer);scenePlanProgressTimer=null;renderScenePlan(payload);$('localAnalysisStatus').textContent='Sync plan generated. Saving it with the final MP3…';refreshAvailability();
   await savePendingAiDraft({accountId:user?.uid||'',projectId:projectVoiceoverId||'',title:$('title').value,creativeInstructions:$('creativeInstructions').value,analysis:payload.analysis,creatorStudio:payload.creatorStudio},new Blob([audioBytes],{type:'audio/mpeg'}));
   scenePlanSaved=true;await persistScriptSync();$('localAnalysisStatus').textContent='Sync plan ready. Review every scene, then continue to generated maps and Motion Studio.';

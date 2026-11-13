@@ -13,7 +13,7 @@ import {openStudioStore} from './storage.js';
 import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111203';
 import {runAiProduction} from '../ai-production-runner.mjs?v=2026111203';
 import {generateVoiceover} from '../tts-api.js';
-import {createProductionReadiness,selectProductionVoice} from './production-readiness.js?v=2026111209';
+import {createProductionReadiness,selectProductionVoice} from './production-readiness.js?v=2026111322';
 import {loadPendingAiDraft,loadPendingAiAudio,savePendingAiDraft} from '../ai-draft.js?v=2026111319';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>crypto.randomUUID();
@@ -39,9 +39,11 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  mobile.innerHTML='<button type="button" data-mobile-panel="scenes">Scenes &amp; audio</button><button type="button" data-mobile-panel="preview">Preview</button><button type="button" data-mobile-panel="settings">Settings</button>';
  header.after(mobile);
  const panels={scenes:assemblyRoot,preview:$('.vs-preview'),settings:advanced};
+ root.dataset.mobilePanel='preview';
+ mobile.querySelector('[data-mobile-panel="preview"]').setAttribute('aria-pressed','true');
  mobile.onclick=event=>{
   const button=event.target.closest('[data-mobile-panel]');
-  if(button)panels[button.dataset.mobilePanel].scrollIntoView({block:'nearest',inline:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+  if(button){root.dataset.mobilePanel=button.dataset.mobilePanel;mobile.querySelectorAll('[data-mobile-panel]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));panels[button.dataset.mobilePanel].scrollIntoView({block:'nearest',inline:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}
  };
  for(const key of ['save','export'])header.querySelector('[data-studio-actions]').append($(`[data-vs=${key}]`));
  const lastExport=document.createElement('a');lastExport.dataset.vsLastExport='';lastExport.className='secondary';lastExport.textContent='Download last MP4';lastExport.hidden=true;header.querySelector('[data-studio-actions]').append(lastExport);

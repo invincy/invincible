@@ -45,16 +45,13 @@ export async function createLocalAgentServer({ ownerUid, token = crypto.randomBy
     if(direction.length>4000)throw Error('Creative instructions must be 4,000 characters or fewer.');
     if(requireInstructions&&!direction)throw Error('Add animation instructions before generating the scene plan.');
     if(requireInstructions&&Math.abs(timedTranscript.duration-timedTranscript.segments.at(-1).end)>.25)throw Error('The final transcript timestamp must agree with the MP3 duration within 0.25 seconds.');
-    const catalog=await loadVoiceoverCatalog(root,{includeHistory:production===true});let draft,failure;
-    for(let attempt=0;attempt<2;attempt++){
-      try{const prompt=buildCreativePlanPrompt(timedTranscript,catalog,direction),requestSchema=buildCreativePlanSchema(timedTranscript,catalog),intentions=await gpu.run(async()=>{await images.unloadImages();return structuredVoiceoverAsk(prompt,requestSchema);});draft=compileCreativePlan(timedTranscript,intentions,catalog,{production:production===true,creativeInstructions:direction});failure=null;break;}
-      catch(error){failure=error;}
-    }
-    if(failure)throw Error('Map planning failed after 2 targeted attempts: '+failure.message);
+    const catalog=await loadVoiceoverCatalog(root,{includeHistory:production===true});let draft;
+    try{const prompt=buildCreativePlanPrompt(timedTranscript,catalog,direction),requestSchema=buildCreativePlanSchema(timedTranscript,catalog,direction),intentions=await gpu.run(async()=>{await images.unloadImages();return structuredVoiceoverAsk(prompt,requestSchema);});draft=compileCreativePlan(timedTranscript,intentions,catalog,{production:production===true,creativeInstructions:direction});}
+    catch(error){throw Error('Map planning failed: '+error.message);}
     const analysis=assembleSceneDraft(timedTranscript,draft,catalog);
     return {status:analysis.valid?200:422,body:{analysis,creatorStudio:analysis.valid?toCreatorStudioImport(analysis,String(title||'AI voiceover draft').slice(0,200)):null,mapAnimations:analysis.valid?analysis.scenes.map(scene=>({sceneId:scene.id,voiceoverTimestamp:scene.voiceoverTimestamp,plan:scene.mapAnimation,missingInfo:scene.missingInfo.filter(item=>item.includes('geometry')||item.includes('placement'))})):[]}};
   }
-  async function installedQwenModel(preferredModels = ['qwen3:4b-instruct', 'qwen3:4b']){
+  async function installedQwenModel(preferredModels = ['qwen3:4b', 'qwen3:4b-instruct']){
     const response=await fetchImpl('http://127.0.0.1:11434/api/tags',{signal:AbortSignal.timeout(3000),redirect:'error'});
     if(!response.ok)throw Error('Ollama did not report installed models.');
     const names=new Set((await response.json()).models?.map(model=>model.name));
@@ -68,7 +65,7 @@ export async function createLocalAgentServer({ ownerUid, token = crypto.randomBy
   }
   const structuredVoiceoverAsk=askVoiceoverJson|| (async (prompt,schema)=>{
     const model=await installedQwenModel();
-    const response=await fetchImpl('http://127.0.0.1:11434/api/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({model,stream:false,think:false,format:schema||'json',options:{temperature:0},messages:[{role:'user',content:prompt}]}),signal:AbortSignal.timeout(120000),redirect:'error'});
+    const response=await fetchImpl('http://127.0.0.1:11434/api/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({model,stream:false,think:false,format:schema||'json',options:{temperature:0,num_ctx:8192,num_predict:1000},messages:[{role:'user',content:prompt}]}),signal:AbortSignal.timeout(300000),redirect:'error'});
     if(!response.ok)throw Error(`Ollama request failed (${response.status}).`);return JSON.parse((await response.json())?.message?.content||'{}');
   });
   async function projects() { try { if ((await fs.lstat(projectsFile)).isSymbolicLink()) throw Error('Project storage must not be a link.'); return JSON.parse(await fs.readFile(projectsFile, 'utf8')); } catch (error) { if (error.code === 'ENOENT') return []; throw error; } }

@@ -1,5 +1,5 @@
 import { loadVoices } from '../tts-api.js';
-import { createLocalImageClient } from '../../shared/local-image-client.js?v=2026111112';
+import { createLocalImageClient } from '../../shared/local-image-client.js?v=2026111322';
 import { checkStudioEncoding } from './export.js?v=2026111209';
 
 const labels = {

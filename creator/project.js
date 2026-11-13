@@ -1,9 +1,9 @@
 import{makeScene}from'./storyboard-model.js?v=3';
-import{createProductionWorkbench}from'./production-workbench.js?v=2026111323';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026111326';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import{createProductionReadiness,mountProductionReadiness}from'./video-studio/production-readiness.js?v=2026111209';
+import{createProductionReadiness,mountProductionReadiness}from'./video-studio/production-readiness.js?v=2026111322';
 import{splitVoiceoverScript}from"./scene-tools.js?v=2";
 
 const queryParams=new URLSearchParams(location.search),$=id=>document.getElementById(id);
@@ -130,7 +130,7 @@ async function selectProjectArea(area,mode=""){
   document.body.classList.toggle("project-voiceover-active",showScriptWorkspace);
   if(showScriptWorkspace){
     const frame=$("projectVoiceoverFrame");
-    if(!frame.hasAttribute("src"))frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId,view:isTiming?"timing":"script",build:"2026111321"});
+    if(!frame.hasAttribute("src"))frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId,view:isTiming?"timing":"script",build:"2026111325"});
     else frame.contentWindow?.postMessage({type:"invincible-project-script-view",view:isTiming?"timing":"script"},location.origin);
   }else if(area==="Video Studio"&&mode==="map-review"){const reviewing=await storyboard.reviewMaps();if(!reviewing)setProjectAreaState("Video Studio","");}
   else storyboard.open({area});
