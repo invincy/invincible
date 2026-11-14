@@ -7,6 +7,15 @@ For future releases, bump the matching version values in shared/app-release.js a
 Local main/V2 builds, stage/reference checks and 106 unit/Functions checks passed (one additional test skipped). Local browser launch is restricted; browser verification runs in the existing GitHub Actions workflow. Physical Android launcher approval is not tested here.
 
 
+## Compact short-desktop dashboard and closing controls — November 14, 2026
+
+Golden Orbit now uses a compact desktop composition when the available window height is 820px or less. Dashboard cards, destination icons and the shared curved navigation tray use less space while preserving readable controls. Taller desktop windows keep the existing composition, and phone layouts retain their dedicated reflow rather than receiving a global scale or forced browser zoom. Electric Blue also uses a narrower centre plan label at the same short-desktop height so Firefox and Chromium both keep it clear of destination names.
+
+Workspace controls now collapse after choosing a theme or motion level, opening Saved Ideas, or completing a daily streak choice. Clicking outside the panel or pressing Escape also collapses it, and nested Daily Tools reset before the next opening. The notification dialog remains available while in use and collapses the controls when dismissed. These changes do not alter Firebase paths, records, ownership checks or Creator project data.
+
+Validation: 19 V2 unit tests, the production V2 build, focused Chromium smoke coverage and the complete Chromium/Firefox V2 browser suites passed. Browser coverage includes theme and motion selection, outside click, Escape, notification dismissal, completed streak choices, Saved Ideas, phone layout and the 1536×788 compact desktop state.
+
+
 ## Compact dashboard and task deletion
 
 Removed the normal connected banner and rectangular tab focus treatment; keyboard focus uses an underline. Actual task titles are compact and the empty state is a short hint. The colour selector sits at the top right of the orb area. Workspace cards now offer Delete with confirmation, pending/error feedback, attachment cleanup and draft cleanup after success, reusing the existing task deletion flow. Failed deletion retains the card for retry. Daily-plan references remain as missing historical references, matching the existing task page behavior.

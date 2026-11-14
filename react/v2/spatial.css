@@ -594,3 +594,17 @@
   }
   .v2-hud .v2-theme-option[data-theme]:focus-visible { outline-color: var(--theme-color) }
 }
+
+/* All desktop themes share the same compact tray in height-constrained windows.
+   Mobile keeps its dedicated navigation and touch sizing. */
+@media (min-width:901px) and (max-height:820px) {
+  :is(.v2-theme-one,.v2-theme-two,.v2-theme-three) .v2-region { padding-bottom:130px }
+  :is(.v2-theme-one,.v2-theme-two,.v2-theme-three) .v2-arc-nav { height:122px }
+  :is(.v2-theme-one,.v2-theme-two,.v2-theme-three) .v2-arc-stop { width:88px; min-height:64px; gap:2px }
+  :is(.v2-theme-one,.v2-theme-two,.v2-theme-three) .v2-arc-stop svg { width:29px; height:29px }
+  :is(.v2-theme-one,.v2-theme-two,.v2-theme-three) .v2-arc-stop span { font-size:10px }
+  :is(.v2-theme-one,.v2-theme-two,.v2-theme-three) .v2-arc-stop.is-active { width:min(144px,calc(var(--arc-step)*1.7)) }
+  :is(.v2-theme-one,.v2-theme-two,.v2-theme-three) .v2-arc-stop.is-active svg { width:40px; height:40px }
+  :is(.v2-theme-one,.v2-theme-two,.v2-theme-three) .v2-arc-stop.is-active span { font-size:11px }
+  .v2-theme-two .v2-guide-timer { bottom:126px }
+}

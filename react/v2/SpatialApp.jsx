@@ -68,6 +68,7 @@ function SignedInWorkspace({user, logout}) {
   }
   const data = useWorkspaceData(user.uid), plan = resolvePlan(data.tasks, data.plan), timer = useFocusSession(user.uid);
   const viewport = useRef(null), orbAnchor = useRef(null), lastFraction = useRef(0), canvasWidth=useRef(0), idle = useRef(null);
+  const controls = useRef(null);
   const [active, setActive] = useState(regionFromHash(location.hash)), [selected, setSelected] = useState(null), [focusedTaskId, setFocusedTaskId] = useState(null);
   const [travelPage, setTravelPage] = useState(null);
   const [ideaPanel,setIdeaPanel]=useState(null),[todayOpen,setTodayOpen]=useState(false);
@@ -196,6 +197,14 @@ function SignedInWorkspace({user, logout}) {
     return next;
   });
   const setMotionIntensity=value=>{setAnimationIntensity(value);try{localStorage.setItem('invincible-electric-motion',value);}catch{}};
+  const closeControls=()=>{const panel=controls.current;if(!panel)return;panel.open=false;panel.querySelectorAll('details[open]').forEach(detail=>{detail.open=false;});};
+  useEffect(()=>{
+    const closeOutside=event=>{const panel=controls.current;if(panel?.open&&!panel.contains(event.target))closeControls();};
+    const closeWithEscape=event=>{const panel=controls.current;if(event.key==='Escape'&&panel?.open){closeControls();panel.querySelector('summary')?.focus();}};
+    document.addEventListener('pointerdown',closeOutside);
+    document.addEventListener('keydown',closeWithEscape);
+    return()=>{document.removeEventListener('pointerdown',closeOutside);document.removeEventListener('keydown',closeWithEscape);};
+  },[]);
   useEffect(()=>{
     const update=()=>document.documentElement.classList.toggle('v2-page-hidden',document.hidden);
     update();document.addEventListener('visibilitychange',update);
@@ -220,11 +229,11 @@ function SignedInWorkspace({user, logout}) {
       <nav aria-label="Explore spaces">{regions.map(region => <a key={region.id} href={'#'+region.id} title={region.label} aria-label={(region.number?region.number+' ':'')+region.label} aria-current={active === region.id ? 'location' : undefined} onClick={event => {if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;event.preventDefault();navigate(region.id);}}>{desktop&&<PageIcon page={region.id}/>}<span className="v2-space-number">{region.number}</span><span className="v2-space-name">{region.label}</span></a>)}</nav>
     </header>
     <div className="v2-hud">
-      <details className="v2-controls">
+      <details ref={controls} className="v2-controls">
         <summary aria-label="Workspace controls" title="Workspace controls"><span aria-hidden="true">⚙</span></summary>
         <div className="v2-controls-panel">
-          {desktop&&<><div className="v2-theme-picker" role="group" aria-label="Dashboard theme">{Object.entries(themeNames).map(([id,label])=><button key={id} type="button" className="v2-theme-option" data-theme={id} aria-label={label} title={label} aria-pressed={visualTheme===id} onClick={()=>chooseVisualTheme(id)}><span className="v2-theme-preview" aria-hidden="true"/></button>)}</div>{visualTheme==='three'&&<label className="v2-motion-setting">Motion<select aria-label="Animation intensity" value={animationIntensity} onChange={event=>setMotionIntensity(event.target.value)}><option value="off">Off</option><option value="subtle">Subtle</option><option value="full">Full</option></select></label>}</>}
-          <div className="v2-account"><Suspense fallback={null}><DashboardTools/></Suspense><button type="button" className="v2-saved-ideas" aria-label="Saved ideas" title="Saved ideas" onClick={()=>setIdeaPanel({})}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg></button></div>
+          {desktop&&<><div className="v2-theme-picker" role="group" aria-label="Dashboard theme">{Object.entries(themeNames).map(([id,label])=><button key={id} type="button" className="v2-theme-option" data-theme={id} aria-label={label} title={label} aria-pressed={visualTheme===id} onClick={()=>{chooseVisualTheme(id);closeControls();}}><span className="v2-theme-preview" aria-hidden="true"/></button>)}</div>{visualTheme==='three'&&<label className="v2-motion-setting">Motion<select aria-label="Animation intensity" value={animationIntensity} onChange={event=>{setMotionIntensity(event.target.value);closeControls();}}><option value="off">Off</option><option value="subtle">Subtle</option><option value="full">Full</option></select></label>}</>}
+          <div className="v2-account"><Suspense fallback={null}><DashboardTools onComplete={closeControls}/></Suspense><button type="button" className="v2-saved-ideas" aria-label="Saved ideas" title="Saved ideas" onClick={()=>{closeControls();setIdeaPanel({});}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg></button></div>
         </div>
       </details>
       <AccountMenu user={user} logout={logout}/></div>

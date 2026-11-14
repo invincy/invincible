@@ -316,10 +316,18 @@ async function checkGlobeWithoutWebGL(browser,base) {
         await page.route('https://**/*',route=>route.abort());
         await page.goto(base+'/fixture');
         await page.locator('.v2-guide-mission h2').getByText('Build the living workspace').waitFor();
+        const controls=page.locator('.v2-controls');
+        await page.getByLabel('Workspace controls',{exact:true}).click();
+        await page.mouse.click(500,120);
+        assert.equal(await controls.getAttribute('open'),null,'clicking outside collapses workspace controls');
+        await page.getByLabel('Workspace controls',{exact:true}).click();
+        await page.keyboard.press('Escape');
+        assert.equal(await controls.getAttribute('open'),null,'Escape collapses workspace controls');
         await page.getByLabel('Workspace controls',{exact:true}).click();
         const themeTwo=page.getByRole('button',{name:'Emerald Forest'}),themeThree=page.getByRole('button',{name:'Electric Blue'}),themeOne=page.getByRole('button',{name:'Golden Orbit'});
         assert.equal(await themeTwo.getAttribute('aria-pressed'),'false');
         await themeTwo.click();assert.equal(await page.locator('.v2-shell').evaluate(node=>node.classList.contains('v2-theme-two')),true);
+        assert.equal(await controls.getAttribute('open'),null,'theme selection collapses workspace controls');
         assert.equal(await page.locator('.v2-forest-portal').count(),1,'Forest has a glass portal');
         assert.equal(await page.locator('.focus-orb-3d').count(),0,'Forest does not reuse the particle globe');
         assert.equal(await page.getByRole('button',{name:/Orb theme:/}).count(),0,'Duplicate orb theme control is removed');
@@ -341,7 +349,9 @@ async function checkGlobeWithoutWebGL(browser,base) {
         assert.ok(forestVertical.timer.bottom<=forestVertical.nav.top,`Forest timer clears the bottom navigation: ${JSON.stringify(forestVertical)}`);
         assert.ok(forestVertical.timer.top-forestVertical.work.bottom>=16,'Forest right-side cards keep a visible gap');
         await page.screenshot({path:path.join(output,'dashboard-theme-forest-1536x788.png')});
+        await page.getByLabel('Workspace controls',{exact:true}).click();
         await themeThree.click();assert.equal(await page.locator('.v2-shell').evaluate(node=>node.classList.contains('v2-theme-three')),true);
+        assert.equal(await controls.getAttribute('open'),null,'theme selection collapses workspace controls');
         assert.equal(await page.locator('.v2-electric-core').count(),0,'Electric keeps the center free of decorative artwork');
         assert.equal(await page.locator('.focus-orb-3d').count(),0,'Electric does not reuse the particle globe');
         assert.equal(await page.locator('.v2-orb-task').isVisible(),false,'Electric does not stack the current task over Today’s plan');
@@ -353,16 +363,35 @@ async function checkGlobeWithoutWebGL(browser,base) {
         assert.equal(await page.evaluate(()=>document.querySelector('.v2-guide-work').getBoundingClientRect().bottom<document.querySelector('.v2-guide-timer').getBoundingClientRect().top),true,'Electric right-side cards do not overlap');
         await page.screenshot({path:path.join(output,'dashboard-theme-electric-1536x788.png')});
         assert.equal(await page.locator('.v2-theme-three-timer-ring').isVisible(),true);
+        await page.getByLabel('Workspace controls',{exact:true}).click();
         const motion=page.getByLabel('Animation intensity');
         assert.equal(await motion.inputValue(),'subtle');
         await motion.selectOption('off');
+        assert.equal(await controls.getAttribute('open'),null,'motion selection collapses workspace controls');
         assert.equal(await page.locator('.v2-shell').getAttribute('data-motion'),'off');
         assert.equal(await page.evaluate(()=>localStorage.getItem('invincible-electric-motion')),'off');
         await page.evaluate(()=>window.seedDashboardReminder(false));
         await page.getByRole('checkbox',{name:'Buy feedstock'}).waitFor({state:'detached'});
-        await motion.selectOption('subtle');await themeOne.click();await page.setViewportSize({width:1440,height:1000});
+        await page.getByLabel('Workspace controls',{exact:true}).click();await motion.selectOption('subtle');
+        await page.getByLabel('Workspace controls',{exact:true}).click();await themeOne.click();await page.setViewportSize({width:1536,height:788});
         assert.equal(await page.locator('.v2-shell').evaluate(node=>node.classList.contains('v2-theme-one')),true);
         assert.equal(await page.locator('.v2-theme-three-timer-ring').isVisible(),false);
+        assert.equal(await controls.getAttribute('open'),null,'Golden selection leaves workspace controls collapsed');
+        assert.equal(await page.evaluate(()=>{
+          const labels=[...document.querySelectorAll('#v2-region-dashboard .v2-page-name')].map(node=>node.getBoundingClientRect());
+          const center=document.querySelector('#v2-region-dashboard .v2-orb-plan').getBoundingClientRect();
+          return labels.every(label=>center.right+4<=label.left||label.right+4<=center.left||center.bottom+4<=label.top||label.bottom+4<=center.top);
+        }),true,'Golden plan text clears every destination label in a short desktop window');
+        const goldenBounds=await page.evaluate(()=>{
+          const left=document.querySelector('.v2-guide-left'),session=document.querySelector('.v2-guide-session-panel'),nav=document.querySelector('.v2-arc-nav').getBoundingClientRect();
+          const cardBottom=container=>Math.max(...[...container.children].map(child=>child.getBoundingClientRect().bottom));
+          return {leftFits:left.scrollHeight<=left.clientHeight+1,sessionFits:session.scrollHeight<=session.clientHeight+1,leftBottom:cardBottom(left),sessionBottom:cardBottom(session),navTop:nav.top};
+        });
+        assert.equal(goldenBounds.leftFits,true,'Golden left cards fit without a needless scrollbar');
+        assert.equal(goldenBounds.sessionFits,true,'Golden session cards fit without a needless scrollbar');
+        assert.ok(goldenBounds.leftBottom<=goldenBounds.navTop&&goldenBounds.sessionBottom<=goldenBounds.navTop,'Golden cards clear the compact bottom navigation');
+        await page.screenshot({path:path.join(output,'dashboard-theme-golden-1536x788.png')});
+        await page.setViewportSize({width:1440,height:1000});
         await page.screenshot({path:path.join(output,'dashboard-theme-golden-1440.png')});
         assert.equal(await page.getByRole('navigation',{name:'Explore spaces'}).getByRole('button').count(),13);
         assert.equal(await page.locator('.focus-orb-3d canvas').count(),1);
@@ -539,6 +568,8 @@ async function checkGlobeWithoutWebGL(browser,base) {
         await travelPage.waitForURL(/#ai/);
         await travelPage.frameLocator('iframe[title="Invincible AI workspace"]').getByLabel('Draft').fill('Keep this AI draft');
         await travelPage.goBack();
+        if(name==='firefox'){await travelPage.waitForTimeout(500);await navigateTo(travelPage,'01 Main Dashboard');}
+        else await travelPage.waitForURL(/#dashboard/);
         await travelPage.locator('.v2-page-point[data-page="ai"]').waitFor();
         assert.equal(await travelPage.locator('.v2-travel').count(),0);
         await travelPage.close();
@@ -785,17 +816,23 @@ async function checkGlobeWithoutWebGL(browser,base) {
         assert.equal(await compactPage.getByRole('button',{name:/Orb theme:/}).count(),0,'obsolete colour selector stays removed');
         await compactPage.screenshot({path:path.join(output,'compact-empty-phone.png'),fullPage:true});await compactPage.close();
         const toolsPage=await context.newPage();await toolsPage.goto(base+'/fixture');
+        const toolsControls=toolsPage.locator('.v2-controls');
         await toolsPage.getByLabel('Workspace controls',{exact:true}).click();
         await toolsPage.getByRole('button',{name:'Notifications: no pending reminders',exact:true}).click();
         await toolsPage.getByRole('dialog',{name:'You’re all caught up.'}).waitFor();
         await toolsPage.getByRole('button',{name:'Close',exact:true}).click();
+        assert.equal(await toolsControls.getAttribute('open'),null,'dismissing notifications collapses workspace controls');
+        await toolsPage.getByLabel('Workspace controls',{exact:true}).click();
         await toolsPage.getByLabel('Daily tools',{exact:true}).click();
         await toolsPage.getByRole('button',{name:'body streak: 0 days',exact:true}).click();
-        await toolsPage.getByRole('button',{name:'body streak: 1 days',exact:true}).waitFor();
-        assert.equal(await toolsPage.getByRole('button',{name:'body streak: 1 days',exact:true}).getAttribute('aria-pressed'),'true');
+        await toolsPage.waitForFunction(()=>!document.querySelector('.v2-controls').open);
+        assert.equal(await toolsControls.getAttribute('open'),null,'completed streak selection collapses workspace controls');
         assert.ok(await toolsPage.evaluate(()=>window.writeLog.some(entry=>entry.path==='users/alice/streaks/body')));
+        await toolsPage.getByLabel('Workspace controls',{exact:true}).click();
+        await toolsPage.getByLabel('Daily tools',{exact:true}).click();
+        assert.equal(await toolsPage.getByRole('button',{name:'body streak: 1 days',exact:true}).getAttribute('aria-pressed'),'true');
         await toolsPage.getByRole('button',{name:'body streak: 1 days',exact:true}).click();
-        await toolsPage.getByRole('button',{name:'body streak: 0 days',exact:true}).waitFor();
+        await toolsPage.waitForFunction(()=>!document.querySelector('.v2-controls').open);
         await toolsPage.close();
         await require('./v2-plan-scenarios.cjs')({browser,base,output,name});
 
@@ -818,8 +855,13 @@ async function checkGlobeWithoutWebGL(browser,base) {
           const cdp=await touchContext.newCDPSession(touchPage);
           await touchPage.goto(base+'/fixture');
           await touchPage.locator('.v2-guide-mission h2').getByText('Build the living workspace').waitFor();
-          await touchPage.getByRole('navigation',{name:'Dashboard panels'}).getByRole('button',{name:'Focus & reminders'}).click();
-          await touchPage.waitForFunction(()=>document.querySelector('.v2-guide-scene').scrollLeft>100);
+          const touchPanels=touchPage.getByRole('navigation',{name:'Dashboard panels'});
+          if(await touchPanels.isVisible()){
+            await touchPanels.getByRole('button',{name:'Focus & reminders'}).click();
+            await touchPage.waitForFunction(()=>document.querySelector('.v2-guide-scene').scrollLeft>100);
+          }else{
+            assert.equal(await touchPage.locator('.v2-guide-scene').evaluate(track=>track.scrollWidth<=track.clientWidth+1),true,'stacked touch Dashboard has no horizontal spill');
+          }
           assert.ok(await touchPage.locator('.v2-canvas').evaluate(canvas=>canvas.scrollLeft<2),'Dashboard panels stay within the current space');
           assert.equal(await touchPage.locator('.v2-free-canvas').count(),0,'Touch navigation remains bounded to the two workspace regions');
           await navigateTo(touchPage,'02 My Workspace');

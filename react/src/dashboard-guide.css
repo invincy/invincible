@@ -403,3 +403,30 @@
 }
 
 .v2-theme-one .v2-theme-three-timer-ring { display: none }
+
+/* Short desktop windows need a denser scene, not browser-level zoom. Keep the
+   mobile reflow and full-height desktop composition unchanged. */
+@media (min-width:901px) and (max-height:820px) {
+  .v2-theme-one .v2-guide-scene {
+    --card-width:clamp(250px,18vw,288px);
+    --card-gutter:clamp(24px,3vw,40px);
+    --card-inset:clamp(42px,6.5dvh,56px);
+  }
+  .v2-theme-one :is(.v2-guide-mission,.v2-guide-timer,.v2-guide-work,.v2-guide-todos) { padding:12px 14px }
+  .v2-theme-one .v2-guide-mission { min-height:0 }
+  .v2-theme-one :is(.v2-guide-left,.v2-guide-session-panel) { gap:12px }
+  .v2-theme-one .v2-guide-kicker { font-size:14px }
+  .v2-theme-one :is(.v2-guide-empty,.v2-guide-nextline) { font-size:15px }
+  .v2-theme-one .v2-guide-timer { min-height:148px }
+  .v2-theme-one .v2-guide-timer output { margin:9px 0 10px; font-size:38px }
+  .v2-theme-one .v2-guide-statuses { gap:8px; margin-top:10px; font-size:14px }
+  .v2-theme-one .v2-guide-statuses b { font-size:19px }
+  .v2-theme-one :is(.v2-guide-primary,.v2-guide-work-link) { font-size:15px }
+  .v2-theme-one #v2-region-dashboard .v2-page-point { max-width:88px; min-height:44px; gap:3px }
+  .v2-theme-one #v2-region-dashboard .v2-page-glow { width:38px; height:38px }
+  .v2-theme-one #v2-region-dashboard .v2-page-glow svg { width:30px; height:30px }
+  .v2-theme-one #v2-region-dashboard .v2-page-name { max-width:88px; font-size:11px; line-height:1.15 }
+  .v2-theme-one #v2-region-dashboard .v2-orb-plan { font-size:clamp(18px,1.65vw,25px) }
+  .v2-theme-one #v2-region-dashboard .v2-orb-plan-preview { max-width:170px; font-size:12px }
+  .v2-theme-three #v2-region-dashboard .v2-orb-plan { max-width:40%; font-size:clamp(18px,1.65vw,25px) }
+}
