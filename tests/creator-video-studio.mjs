@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {mapSceneNeedsReview} from '../creator/video-studio/assembly.js';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,layerFrame,sceneAt,visualSceneAt,exportDimensions,assetsForBrand} from '../creator/video-studio/model.js';
 import {DEFAULT_PARALLAX,parallaxTransform,projectLayer,trainTemplate} from '../creator/video-studio/parallax.js';
 import {audioChunk} from '../creator/video-studio/audio.js';
@@ -165,4 +166,11 @@ test('lightweight GLB checks reject oversized meshes, external data and cyclic n
  assert.throws(()=>checkStudioGlb(glb({...model,buffers:[{uri:'https://example.com/model.bin'}]})),/embedded/);
  assert.throws(()=>checkStudioGlb(glb({...model,accessors:[{count:60003}]})),/budget/);
  assert.throws(()=>checkStudioGlb(glb({...model,nodes:[{mesh:0,children:[0]}]})),/cycle/);
+});
+test('generated map review resumes only unfinished maps',()=>{
+ assert.equal(mapSceneNeedsReview({engineType:'graphic',engineData:{}}),false);
+ assert.equal(mapSceneNeedsReview({engineType:'map',engineData:{animation:{version:1},geometryReviewed:false}}),true);
+ assert.equal(mapSceneNeedsReview({engineType:'map',engineData:{animation:{version:1},geometryReviewed:true}}),false);
+ assert.equal(mapSceneNeedsReview({engineType:'map',engineData:{project:{scenes:[],historicalMap:{}},sourceStart:0}}),false);
+ assert.equal(mapSceneNeedsReview({engineType:'map',engineData:{sourceId:'map-source',sourceStart:0}}),false);
 });

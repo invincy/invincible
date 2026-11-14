@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {directorDraftMatchesManifest} from '../creator/director-resume.js';
 import {newStudioVideo,upgradeVideo,appendProjectMaps,arrangeScenes,resizeScene} from '../creator/video-studio/composition.js';
 import {emptyVideo,validateManifest,compileTimeline,PRESETS,sceneAt} from '../creator/video-studio/model.js';
 import {emptyBattlefield,poseAt,elevationAt,projectBattlePoint} from '../creator/video-studio/battlefield.js';
@@ -31,4 +32,17 @@ test('invalid trims, unsupported engines, negative timing and excessive fades re
 });
 test('duration changes retime battlefield movement, camera and overlays together',()=>{
  const b={...graphic('b',4),engineType:'battlefield',engineData:emptyBattlefield(),overlays:[{id:'t',type:'text',text:'test',endSeconds:4,keyframes:[{timeSeconds:0,x:0},{timeSeconds:4,x:1}]}]};b.engineData.camera.push({...b.engineData.camera[0],timeSeconds:4,x:.7});const out=resizeScene(b,2);assert.equal(out.engineData.camera[1].timeSeconds,2);assert.equal(out.overlays[0].endSeconds,2);assert.equal(out.overlays[0].keyframes[1].timeSeconds,2);assert.equal(b.durationSeconds,4);validateManifest({...newStudioVideo(),scenes:[out]});
+});
+test('reopening the same Director plan reuses Motion Studio without replacement',()=>{
+ const scenes=[
+  {id:'map-1',startSeconds:0,endSeconds:3,mapAnimation:{}},
+  {id:'canvas-2',startSeconds:3,endSeconds:5.5,canvasScene:{}}
+ ];
+ const manifest={scenes:[
+  {id:'map-1',startSeconds:0,durationSeconds:3,engineType:'map',engineData:{project:{}}},
+  {id:'canvas-2',startSeconds:3,durationSeconds:2.5,engineType:'graphic',engineData:{}}
+ ]};
+ assert.equal(directorDraftMatchesManifest(manifest,scenes),true);
+ assert.equal(directorDraftMatchesManifest({...manifest,scenes:manifest.scenes.slice(0,1)},scenes),false);
+ assert.equal(directorDraftMatchesManifest({...manifest,scenes:manifest.scenes.map((scene,index)=>index?{...scene,startSeconds:3.2}:scene)},scenes),false);
 });

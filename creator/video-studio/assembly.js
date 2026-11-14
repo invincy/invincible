@@ -40,6 +40,14 @@ export async function loadAssetLibraryCatalog(url=catalogUrl){
  if(data?.format!=='invincible-asset-library-catalog'||data.version!==1||!Array.isArray(data.libraries))throw Error('Invalid asset library catalog.');
  return data.libraries;
 }
+export function mapSceneNeedsReview(scene){
+ if(scene?.engineType!=='map')return false;
+ const data=scene.engineData||{};
+ // Generated maps begin as an animation plan. Saving them in Map Editor replaces
+ // that plan with a native project snapshot, so reopening review must not queue
+ // completed work again. Source maps are already native and need no generated-map pass.
+ return !!data.animation&&!data.project&&!data.sourceId&&data.geometryReviewed!==true;
+}
 export function mountAssembly(root,api){
  const {getManifest,setManifest,getProject,getFile,putFile,deleteFile,importFiles,run,status,getTime,setTime,releaseRenderer,previewManifest}=api;
  let modelId='',selected=api.session.selected||'',audioSelected='',pending=null,focused=null,editor=null,focusScene=null,returnTime=0,closed=false,catalog=null,mapReviewQueue=[],mapReviewTotal=0;
@@ -99,7 +107,7 @@ export function mountAssembly(root,api){
  async function closeEditor(save){const next=focused,closedId=focusScene?.id;if(save){if(focusScene.engineType==='map'){const p=focusScene.engineData.project;p.scenes=p.scenes.map(s=>({id:s.id,duration:s.duration}));delete p.aspectRatio;delete p.id;}validateManifest(next,{mapAssets:mapAssets()});}editor?.destroy();editor=null;focused=null;focusScene=null;lockNavigation(false);root.closest('.video-studio').classList.remove('vs-focusing');await releaseRenderer();setTime(returnTime);if(save)await setManifest(next);else await previewManifest(getManifest());render();
   if(mapReviewQueue.length){mapReviewQueue=mapReviewQueue.filter(id=>id!==closedId);const nextMap=mapReviewQueue.find(id=>getManifest().scenes.some(scene=>scene.id===id&&scene.engineType==='map'));if(nextMap){selected=nextMap;setTime(scene().startSeconds);render();await openEditor();return;}mapReviewQueue=[];mapReviewTotal=0;root.dispatchEvent(new CustomEvent('invincible-map-review-complete',{bubbles:true}));}
  }
- async function startMapReview(){mapReviewQueue=getManifest().scenes.filter(scene=>scene.engineType==='map').map(scene=>scene.id);mapReviewTotal=mapReviewQueue.length;if(!mapReviewQueue.length)return false;selected=mapReviewQueue[0];setTime(scene().startSeconds);render();await openEditor();return true;}
+ async function startMapReview(){mapReviewQueue=getManifest().scenes.filter(mapSceneNeedsReview).map(scene=>scene.id);mapReviewTotal=mapReviewQueue.length;if(!mapReviewQueue.length)return false;selected=mapReviewQueue[0];setTime(scene().startSeconds);render();await openEditor();return true;}
  root.addEventListener('click',e=>{if(e.target.closest('[data-focused-editor]'))return;const select=e.target.closest('[data-compose-select]'),audio=e.target.closest('[data-compose-audio-select]'),action=e.target.closest('[data-compose]')?.dataset.compose;
   if(select){if(pending){status('Apply or discard the pending change first.');return;}selected=select.dataset.composeSelect;setTime(scene().startSeconds);render();run(()=>previewManifest(getManifest()));return;}
   if(audio){audioSelected=audio.dataset.composeAudioSelect;render();return;}if(!action)return;

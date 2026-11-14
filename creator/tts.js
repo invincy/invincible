@@ -463,7 +463,12 @@ function safeScenePlanFallback(transcript,title){
 }
 async function analyzeLocal(){
  if(!audioBytes||audioIsPreview||speedBusy||analysisBusy||scenePlanBusy)return;
- try{await ensureFinalSpeed();await ensureCloudFinalAudio();}catch(error){status('The final MP3 could not be saved privately: '+error.message,true);return;}
+ try{await ensureFinalSpeed();}catch(error){status('The final MP3 could not be prepared: '+error.message,true);return;}
+ // Local Whisper uses the MP3 already on this device. A temporary cloud upload
+ // failure must not force the user to regenerate or lose timing work; the private
+ // copy can be retried later before a Director handoff from another device.
+ let cloudSaveWarning='';
+ try{await ensureCloudFinalAudio();}catch(error){cloudSaveWarning=' The private cloud copy is still pending: '+error.message;}
  if(projectVoiceoverId){window.parent.postMessage({type:'invincible-sync-project-script',script:$('script').value,creativeInstructions:$('creativeInstructions').value},location.origin);window.parent.postMessage({type:'invincible-open-script-timing'},location.origin);}
  analysisBusy=true;$('retryAnalysis').hidden=true;$('localAnalysisStatus').textContent='Local Whisper is analysing the voiceover and creating timestamps…';$('transcriptReview').hidden=true;$('scenePlanReview').hidden=true;updateAiFlow();refreshAvailability();
  requestAnimationFrame(()=>$('timingHeading').scrollIntoView({behavior:'smooth',block:'start'}));
@@ -475,7 +480,7 @@ async function analyzeLocal(){
    $('localAnalysisStatus').textContent='Local Whisper is unavailable. Using the paid OpenAI timing fallback…';
    payload=await runCreatorOpenAi({action:'transcribe',projectId:projectVoiceoverId,audioBase64:audioBase64()});timingProvider='OpenAI';
   }
-  timedTranscript=payload.transcript;renderTranscript();$('localAnalysisStatus').textContent=`${timingProvider} timing is ready. Saving this project checkpoint…`;try{await persistScriptSync({includeAudio:true});$('localAnalysisStatus').textContent=`${timingProvider} timing is saved. Review the words, add animation instructions, then generate the plan with ${providerName()}.`;}catch(saveError){$('localAnalysisStatus').textContent=`${timingProvider} timing is ready, but its project checkpoint could not be saved: ${saveError.message}`;}
+  timedTranscript=payload.transcript;renderTranscript();$('localAnalysisStatus').textContent=`${timingProvider} timing is ready. Saving this project checkpoint…`;try{await persistScriptSync({includeAudio:true});$('localAnalysisStatus').textContent=`${timingProvider} timing is saved. Review the words, add animation instructions, then generate the plan with ${providerName()}.${cloudSaveWarning}`;}catch(saveError){$('localAnalysisStatus').textContent=`${timingProvider} timing is ready, but its project checkpoint could not be saved: ${saveError.message}${cloudSaveWarning}`;}
  }
  catch(error){timedTranscript=null;$('retryAnalysis').hidden=false;$('localAnalysisStatus').textContent=localVoiceoverError(error,'Scripting · Step 2');}
  finally{analysisBusy=false;updateScenePlanGate();updateAiFlow();}
