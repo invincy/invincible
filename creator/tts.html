@@ -5,7 +5,7 @@
 <title>Voiceover · Invincible</title>
 <link rel="icon" href="/invincible/favicon.ico" sizes="any">
 <link rel="stylesheet" href="../site-nav.css?v=19">
-  <link rel="stylesheet" href="tts.css?v=2026111322">
+  <link rel="stylesheet" href="tts.css?v=2026111420">
 <link rel="stylesheet" href="studio-ui.css?v=3">
 <link rel="stylesheet" href="tts-forest.css?v=1">
 <link rel="stylesheet" href="../shared/spatial-workspace.css?v=4">
@@ -47,6 +47,7 @@ if (window.parent !== window) {
 <div class="ai-step-heading"><div><span>Step 2</span><h2 id="timingHeading">Time the voiceover</h2></div><button id="retryAnalysis" type="button" class="secondary" hidden>Retry local Whisper timing</button></div>
 <ol class="ai-flow-progress" aria-label="Script production progress"><li data-ai-flow="audio" aria-current="step"><span>1</span>MP3 ready</li><li data-ai-flow="timing"><span>2</span><b id="timingProviderLabel">Local Whisper timing</b></li><li data-ai-flow="plan"><span>3</span>Sync plan</li></ol>
 <p id="localAnalysisStatus" class="help" role="status" aria-live="polite">Generate the final MP3, then let local Whisper create its transcript and timestamps.</p>
+<button id="showSavedPlan" type="button" class="primary" hidden>Review saved scenes →</button>
 <div id="scenePlanProgress" class="scene-plan-progress" role="status" hidden><strong>Creating your sync plan…</strong><span id="scenePlanProgressTime">OpenAI is starting.</span><p>You do not need to click anything else. Review sync plan will open automatically when it is ready. Local AI can take several minutes.</p></div>
 <div class="timing-columns">
 <section id="timingInstructionsCard" class="timing-card timing-instructions-card" aria-label="Animation instructions"></section>
@@ -93,6 +94,6 @@ if (window.parent !== window) {
 </section>
 </div>
 </main>
-<script type="module" src="tts.js?v=2026111419"></script>
+<script type="module" src="tts.js?v=2026111420"></script>
 <script type="module" src="tts-forest.js?v=1"></script>
 </body></html>

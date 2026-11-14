@@ -445,6 +445,7 @@ function safeText(value){return String(value??'').replace(/[&<>"']/g,character=>
 function renderScenePlan(payload){
  scenePlanSaved=false;
  scenePlanPayload=structuredClone(payload);
+ $('showSavedPlan').hidden=false;
  $('scenePlanReview').querySelector('.review-summary strong').textContent='Review sync plan';$('editTimingPlan').hidden=false;
  const flow=document.querySelector('.ai-script-flow');flow.classList.remove('plan-generating');flow.classList.add('plan-review-active');$('scenePlanProgress').hidden=true;
  const scenes=payload.analysis.scenes;$('scenePlanReview').hidden=false;$('scenePlanSummary').textContent=`${scenes.length} scenes · ${clock(payload.analysis.transcript.duration)}`;
@@ -521,6 +522,7 @@ $('retryAnalysis').addEventListener('click',analyzeLocal);
 $('generateScenePlan').addEventListener('click',generateScenePlan);
 $('aiProviderChoice').addEventListener('change',event=>{if(!event.target.matches('[name="aiProvider"]'))return;aiProvider=event.target.value==='local'?'local':'cloud';localStorage.setItem(aiProviderKey,aiProvider);scenePlanSaved=false;updateProviderUi();scheduleScriptSyncSave();if(!$('scenePlanReview').hidden){$('scenePlanReview').hidden=true;document.querySelector('.ai-script-flow').classList.remove('plan-review-active');}$('localAnalysisStatus').textContent=timedTranscript?`Scene planner changed to ${providerName()}. Existing timing is still ready; generate the sync plan.`:aiProvider==='cloud'?'Scene planner changed to OpenAI. Local Whisper will run first; paid OpenAI timing will take over only if the laptop service is unavailable.':'Scene planner changed to Local Qwen. Local Whisper will create the timing after the final MP3 is ready.';refreshAvailability();});
 $('editTimingPlan').addEventListener('click',()=>{document.querySelector('.ai-script-flow').classList.remove('plan-review-active');$('timingHeading').scrollIntoView({behavior:'smooth',block:'start'});});
+$('showSavedPlan').addEventListener('click',()=>{if(!scenePlanPayload)return;const saved=scenePlanSaved;renderScenePlan(scenePlanPayload);scenePlanSaved=saved;refreshAvailability();});
 $('openMotionStudio').addEventListener('click',event=>{if(!scenePlanSaved){event.preventDefault();$('localAnalysisStatus').textContent='Wait for the generated sync plan and MP3 to finish saving, then continue.';return;}if(!projectVoiceoverId)return;event.preventDefault();window.parent.postMessage({type:'invincible-review-ai-maps'},location.origin);});
 $('resourceReview').addEventListener('click',event=>{const button=event.target.closest('[data-resource-action]');if(!button)return;window.parent.postMessage({type:'invincible-open-creator-resource',area:button.dataset.resourceAction==='map'?'Maps':'Assets',year:Number(button.dataset.resourceYear)||0,polityNames:String(button.dataset.resourcePolities||'').split('|').filter(Boolean)},location.origin);});
 $('reloadVoices').addEventListener('click',()=>fetchVoices());
