@@ -76,7 +76,7 @@ for ($i=0; $i -lt 20; $i++) {
     Start-Sleep -Milliseconds 500
 }
 if (-not $pluginReady) { throw 'Invincible Video Director did not start. Inspect E:\Invincible\ImageGen\logs\worker-startup-stderr.log.' }
-if (-not $VideoOnly -and $config.appOrigin -eq 'https://invincy.github.io') {
+if ($config.appOrigin -eq 'https://invincy.github.io') {
     try { & (Join-Path $PSScriptRoot 'start-image-relay.ps1') -ImageToken $pairingToken }
     catch { Write-Warning ('Image Studio is ready locally. Mobile connection could not start. ' + $_.Exception.Message) }
 }
