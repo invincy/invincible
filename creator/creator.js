@@ -212,7 +212,7 @@ $("board").onclick=handleProjectClick;
 $("projectGrid").onclick=handleProjectClick;
 
 $("board").onkeydown=event=>{if((event.key==="Enter"||event.key===" ")&&!event.target.closest("button")){event.preventDefault();const card=event.target.closest(".content-card");if(card)window.location.href="project.html?id="+encodeURIComponent(card.dataset.id);}};
-$("projectGrid").onkeydown=event=>{if((event.key==="Enter"||event.key===" ")&&!event.target.closest("button")){event.preventDefault();const card=event.target.closest(".content-card");if(card)window.location.href=projectDestination(card.dataset.id);}};
+$("projectGrid").onkeydown=event=>{if((event.key==="Enter"||event.key===" ")&&!event.target.closest("button")){event.preventDefault();const card=event.target.closest("[data-new-project]");if(card){window.location.href="project.html?draft=1";return;}const project=event.target.closest(".content-card");if(project)window.location.href=projectDestination(project.dataset.id);}};
 
 function openToolPicker(area,mode=""){
   pendingProjectArea=area;pendingToolMode=mode;
