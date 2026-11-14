@@ -53,6 +53,10 @@ test('advanced prompt imports still normalize into the existing production workf
 
 test('applying a reviewed sync plan reveals the loaded Motion Studio workspace',()=>{
  const source=fs.readFileSync(path.join(here,'../creator/project.js'),'utf8');
+ const workbench=fs.readFileSync(path.join(here,'../creator/production-workbench.js'),'utf8');
  assert.match(source,/const result=await storyboard\.openAiDraft\(\{reviewMaps:true\}\);\s*if\(result\)revealProjectArea\("Video Studio",result\.reviewingMaps\?"map-review":""\);/);
  assert.match(source,/function revealProjectArea\(area,mode=""\)[\s\S]*?\$\("projectVoiceoverStep"\)\.hidden=!showScriptWorkspace;[\s\S]*?\$\("projectEditingStep"\)\.hidden=showScriptWorkspace;/);
+ assert.match(workbench,/if\(directorHasMaps&&!hasMaps\)\{const result=await openAiVideo\(\{reviewMaps:true\}\);return !!result\?\.reviewingMaps;\}/,'Review maps imports an applied Director draft before inspecting its map queue');
+ assert.match(workbench,/createMediaClient\(getAccountId\?\.\(\)\)\.file\(cloudId\)/,'Reopened Director projects retrieve their private MP3 without returning to Script');
+ assert.match(workbench,/const pendingAiDraft=\(\)=>project\(\)\?\.pluginDraft\|\|loadPendingAiDraft/,'The applied Director draft outranks a stale ordinary-planner cache');
 });

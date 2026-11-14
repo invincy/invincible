@@ -51,15 +51,22 @@ Invincible connection page using the existing Firebase account.
 
 ## Timed transcript sync
 
-Local Whisper still runs on the laptop and the MP3 stays in the browser's
-device-local audio store. After timing is ready, Creator saves only a bounded
-project workspace to the existing `creatorProjects/{projectId}` document:
-segment text/start/end, animation instructions, duration, filename and speed.
-Word-level timing and audio bytes are deliberately omitted. This makes the
-timing visible to the cloud plugin without adding a second storage system or a
-Firebase Storage upload. Opening the project on another device restores the
-timed text, but Motion Studio still requires the original MP3 on the device
-that will export the video.
+Local Whisper still runs on the paired laptop. Creator saves the generated MP3
+once in the existing account-private media library, while the project document
+keeps only its stable cloud asset ID plus bounded segment text/start/end,
+animation instructions, duration, filename and speed. Word-level timing and
+audio bytes are deliberately omitted from the project document. The Director
+can send the private MP3 to the paired local worker for free timing, and a
+reopened Creator project can retrieve the same authorized MP3 when importing
+the compiled draft into Motion Studio.
+
+Applying a Director plan saves its executable `pluginDraft` on the project; it
+does not also create a Motion Studio draft. Choosing **Review maps** now imports
+that applied draft and private MP3 when Motion Studio is empty, then opens every
+compiled map in timeline order. A nonempty, different Motion Studio draft keeps
+the existing replacement confirmation. Creator project writes recursively omit
+undefined optional Director fields so later manual saves retain the applied
+draft instead of failing Firestore serialization.
 
 ## Local development endpoint
 

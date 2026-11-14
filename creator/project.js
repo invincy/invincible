@@ -1,6 +1,7 @@
 import{makeScene}from'./storyboard-model.js?v=3';
-import{createProductionWorkbench}from'./production-workbench.js?v=2026111415';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026111416';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
+import{copyProjectForWrite}from'./project-persistence.js?v=2026111416';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{createProductionReadiness,mountProductionReadiness}from'./video-studio/production-readiness.js?v=2026111322';
@@ -240,7 +241,6 @@ function updateStats(){
   $("projectProgressBar").style.width=progress+"%";
 }
 
-function copyProject(value){if(Array.isArray(value))return value.map(copyProject);if(value&&Object.getPrototypeOf(value)===Object.prototype)return Object.fromEntries(Object.entries(value).map(([key,item])=>[key,copyProject(item)]));return value}
 function legacyDraftKey(){return 'invincible.creatorDraft.'+user.uid+'.'+projectId}
 function draftKey(){const id=typeof tabId==='string'?tabId:'default';return legacyDraftKey()+'.'+id}
 function clearLocalDraft(){try{localStorage.removeItem(draftKey());if(typeof recoveredLegacyDraft!=='undefined'&&recoveredLegacyDraft){localStorage.removeItem(legacyDraftKey());recoveredLegacyDraft=false;}}catch{}}
@@ -262,7 +262,7 @@ function buildProjectWrite(payload,server,nextRev,{isCreate=false}={}){
 async function save(options={}){
  if(!user||!project||!projectRef)return false;
  const force=!!options?.force,writerUid=user.uid;
- clearTimeout(saveTimer);saveTimer=null;localDirty=true;const version=++editVersion,payload=copyProject(project),ref=projectRef;
+ clearTimeout(saveTimer);saveTimer=null;localDirty=true;const version=++editVersion,payload=copyProjectForWrite(project),ref=projectRef;
  keepDraft();status("Saving…");
  const result=saveChain.then(async()=>{
   const expectedBase=baseRevision;

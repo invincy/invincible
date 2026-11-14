@@ -4,6 +4,7 @@ import {makeScene} from './storyboard-model.js?v=3';
 import {METHODS,IMPORT_FIELDS,uid,methodsOf,inspectImport,parseProductionImport,uniqueScenes,groupFor,taskFor,setTask,animationStage,requirements,sceneState,projectProgress,queueScenes,canonicalScript,scriptReview,filterScenes,productionReadiness} from './production-model.js?v=2026111112';
 import {loadPendingAiDraft,loadPendingAiAudio,loadScriptSyncCheckpoint,clearPendingAiDraft} from './ai-draft.js?v=2026111410';
 import {renderAiScenePreviews} from './ai-preview.js?v=2026111415';
+import {createMediaClient} from './media-library.js?v=2026111416';
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const options=(values,current)=>values.map(value=>'<option '+(value===current?'selected':'')+'>'+esc(value)+'</option>').join('');
 const ICONS={"board":"<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M3 10h18M9 4v16\"/>","production":"<path d=\"m8 4 12 8-12 8z\"/>","assets":"<path d=\"M3 7h7l2-3h9v16H3z\"/>","overview":"<path d=\"M4 20V10m8 10V4m8 16v-7\"/>","Blender":"<path d=\"m3 4 8 5M2 9h10M5 18l6-6\"/><ellipse cx=\"15\" cy=\"13\" rx=\"6\" ry=\"5\"/><circle cx=\"15\" cy=\"13\" r=\"2\"/>","AI Video":"<rect x=\"3\" y=\"7\" width=\"13\" height=\"13\" rx=\"2\"/><path d=\"m16 11 5-3v11l-5-3M8 2v6M5 5h6\"/>","Editing":"<circle cx=\"6\" cy=\"6\" r=\"3\"/><circle cx=\"6\" cy=\"18\" r=\"3\"/><path d=\"m8 8 13 13M8 16 21 3\"/>","Existing Footage":"<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"M7 3v18M17 3v18M3 8h4m-4 8h4m10-8h4m-4 8h4\"/>","Mixed":"<path d=\"m4 4 16 16M4 20l6-6m4-4 6-6M15 4h5v5m-5 11h5v-5\"/>","copy":"<rect x=\"8\" y=\"8\" width=\"13\" height=\"13\" rx=\"2\"/><path d=\"M16 8V3H3v13h5\"/>","expand":"<path d=\"m6 9 6 6 6-6\"/>","close":"<path d=\"m6 6 12 12M6 18 18 6\"/>","add":"<path d=\"M12 4v16M4 12h16\"/>","reset":"<path d=\"M3 10a9 9 0 1 1 2 8M3 4v6h6\"/>","search":"<circle cx=\"10\" cy=\"10\" r=\"6\"/><path d=\"m15 15 6 6\"/>","next":"<path d=\"M4 12h16m-6-6 6 6-6 6\"/>","import":"<path d=\"M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5\"/>","trash":"<path d=\"M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7\"/>","insert":"<path d=\"M4 4h16v6H4zM12 13v8m-4-4h8\"/>","up":"<path d=\"m6 14 6-6 6 6\"/>","down":"<path d=\"m6 10 6 6 6-6\"/>","spark":"<path d=\"m12 3 3 6 6 3-6 3-3 6-3-6-6-3 6-3z\"/>","started":"<path d=\"m8 4 12 8-12 8z\"/>","modeling":"<path d=\"m12 2 9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10\"/>","animation":"<path d=\"m9 4 11 8-11 8zM4 5v14\"/>","rendering":"<rect x=\"3\" y=\"4\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"M8 22h8m-4-4v4m-5-11 3 3 7-7\"/>","ready":"<path d=\"m4 12 5 5L20 6\"/>"};
@@ -30,7 +31,9 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  for(const name of ['Assets','Production','Overview','Maps','Clips'])more.querySelector('div').append(nav.querySelector('[data-tab="'+name+'"]'));nav.append(more);
  }
  const project=()=>getProject();
- const pendingAiDraft=()=>loadPendingAiDraft({accountId:getAccountId?.(),projectId:project()?.id})||project()?.pluginDraft||null;
+ // An applied Director draft is the authoritative reviewed plan. A leftover
+ // ordinary-planner cache on this device must never replace it.
+ const pendingAiDraft=()=>project()?.pluginDraft||loadPendingAiDraft({accountId:getAccountId?.(),projectId:project()?.id})||null;
  const scenes=()=>project()?.scenes||[];
  const changed=(rerender=true)=>{onChange();if(rerender)render();};
  const findScene=id=>scenes().find(scene=>scene.id===id);
@@ -140,18 +143,37 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   const text=JSON.stringify(draft.creatorStudio);root.querySelector('[data-paste]').value=text;importTable=inspectImport(text);mapping=[...importTable.mapping];
   const box=root.querySelector('[data-import-preview]');box.innerHTML='<p>Local AI draft · '+importTable.rows.length+' scenes. Review every scene before importing.</p><div data-mapped-preview></div>';mappedPreview();
  }
+ async function directorAudio(){
+  if(!project()?.pluginDraft)return loadPendingAiAudio();
+  const checkpoint=await loadScriptSyncCheckpoint(getAccountId?.(),project()?.id).catch(()=>null);
+  let audio=checkpoint?.finalAudio||null;
+  if(audio)return audio;
+  const cloudId=String(project()?.scriptWorkspace?.audio?.cloudAssetId||'');
+  if(!/^cloud-[a-f0-9]{64}$/.test(cloudId))return null;
+  const blob=await createMediaClient(getAccountId?.()).file(cloudId);
+  return new File([blob],project()?.scriptWorkspace?.audio?.sourceFilename||'invincible-voiceover.mp3',{type:blob.type||'audio/mpeg'});
+ }
  async function openAiVideo({reviewMaps=false}={}){
-  const draft=pendingAiDraft();let audio=await loadPendingAiAudio();if(!audio&&project()?.pluginDraft){const checkpoint=await loadScriptSyncCheckpoint(getAccountId?.(),project()?.id).catch(()=>null);audio=checkpoint?.finalAudio||null;}const aiScenes=draft?.creatorStudio?.scenes;
+  const draft=pendingAiDraft(),audio=await directorAudio(),aiScenes=draft?.creatorStudio?.scenes;
   if(!Array.isArray(aiScenes)||!aiScenes.length)throw Error('This AI draft has no executable scene plan yet. Generate an animation-ready draft first.');
   if(!aiScenes.every(scene=>scene.mapAnimation||scene.canvasScene||scene.contextCard===true))throw Error('Review the missing or unverified scene information before applying this draft.');
-  if(!audio)throw Error('The compiled project is ready, but the original MP3 is not on this device. Open Script once on the device where you created the MP3, then continue to Motion Studio.');
+  if(!audio)throw Error('The compiled project is ready, but its saved private MP3 could not be retrieved. Reopen Script only if the project no longer shows an attached voiceover.');
   tab='Video Studio';render();await videoWorkspace?.ready;if(!videoWorkspace)throw Error('Video Studio could not be opened.');
   const current=videoWorkspace.manifest,hasDraft=current&&(current.scenes.length||(current.audioClips||[]).length||current.audio);
   if(hasDraft&&!confirm('Replace the current Motion Studio draft with this reviewed sync plan? The existing local video draft will be replaced; the Creator project and source MP3 remain saved.')){message('Existing Motion Studio draft kept. The reviewed sync plan is still available in Script & scenes.');return;}
   await videoWorkspace.importAiProduction(aiScenes,audio,{title:draft.title||'Invincible AI production',allowContextCards:true,replaceExisting:!!hasDraft});
   const reviewingMaps=reviewMaps&&await videoWorkspace.reviewGeneratedMaps();message(reviewingMaps?'Review each generated map. Save or discard to continue; Motion Studio opens automatically after the last map.':`${aiScenes.length} scenes and the exact MP3 are saved in Motion Studio. Preview the full timeline, then Export MP4.`);return {reviewingMaps};
  }
- async function reviewMaps(){tab='Video Studio';render();await videoWorkspace?.ready;if(!videoWorkspace)throw Error('Motion Studio could not be opened.');const reviewingMaps=await videoWorkspace.reviewGeneratedMaps();if(!reviewingMaps)message('This plan has no map scenes. Continue to Motion & export.');return reviewingMaps;}
+ async function reviewMaps(){
+  tab='Video Studio';render();await videoWorkspace?.ready;if(!videoWorkspace)throw Error('Motion Studio could not be opened.');
+  const manifest=videoWorkspace.manifest,hasScenes=!!manifest?.scenes?.length,hasMaps=manifest?.scenes?.some(scene=>scene.engineType==='map'),directorHasMaps=pendingAiDraft()?.creatorStudio?.scenes?.some(scene=>scene.mapAnimation);
+  // Applying through the Director saves the executable draft on the Creator project.
+  // A fresh device can therefore reach Review maps before Motion Studio has imported it.
+  if(directorHasMaps&&!hasMaps){const result=await openAiVideo({reviewMaps:true});return !!result?.reviewingMaps;}
+  const reviewingMaps=await videoWorkspace.reviewGeneratedMaps();
+  if(!reviewingMaps)message(hasScenes?'This Motion Studio draft has no map scenes. Continue to Motion & export.':'No compiled scenes are loaded in Motion Studio yet. Return to Sync plan and apply the reviewed Director draft.');
+  return reviewingMaps;
+ }
  function groupEditor(group){
   return '<section class="wb-group" data-group="'+esc(group.id)+'"><div class="wb-detail-grid"><label>Project name<input data-group-field="name" value="'+esc(group.name)+'"></label><label>Blender file<input data-group-field="blenderFile" value="'+esc(group.blenderFile||'')+'"></label>'+
    field('Resources','resources',group.resources||'','data-group-field="resources"')+'</div></section>';
