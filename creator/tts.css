@@ -84,6 +84,13 @@ audio{width:100%;height:36px}
  .settings-hint{display:none}
  .settings-body>.quiet{position:absolute;top:12px;right:20px;margin:0}
 }
+@media (max-width: 900px) {
+ .project-voiceover-embed:not(.project-timing-view) .voiceover-page .workspace.space-panels{grid-template-columns:minmax(0,1fr);grid-template-areas:"script" "controls" "recording"}
+ .project-voiceover-embed:not(.project-timing-view) .voiceover-page .workspace.space-panels > .voice-script-pane{display:contents}
+ .project-voiceover-embed:not(.project-timing-view) .script-panel{grid-area:script}
+ .project-voiceover-embed:not(.project-timing-view) .controls-panel{grid-area:controls}
+ .project-voiceover-embed:not(.project-timing-view) .result-panel{grid-area:recording}
+}
 /* Keep the existing assistant above the transport, including after export. */
 .voiceover-page .global-ai-widget[data-mode=closed],.voiceover-page .global-ai-widget[data-mode=menu]{bottom:150px}
 @media(min-width:901px) and (min-height:650px){
@@ -496,3 +503,19 @@ audio{width:100%;height:36px}
 }
 #showSavedPlan{margin:4px 0 12px;min-height:48px} .project-voiceover-embed.project-timing-view .scene-plan-review>.primary{position:sticky;top:0;bottom:auto}
 .shared-shell-voiceover,.shared-shell-voiceover body{background:transparent!important}.shared-shell-voiceover .tts-forest{display:none!important}
+
+/* Project step 1: three equal work areas in reading order. */
+@media (min-width: 901px) {
+ .project-voiceover-embed:not(.project-timing-view) .voiceover-page .workspace.space-panels {
+  grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"script controls recording";align-items:stretch;
+ }
+ .project-voiceover-embed:not(.project-timing-view) .voiceover-page .workspace.space-panels > .voice-script-pane{display:contents}
+ .project-voiceover-embed:not(.project-timing-view) .script-panel{grid-area:script}
+ .project-voiceover-embed:not(.project-timing-view) .controls-panel{grid-area:controls}
+ .project-voiceover-embed:not(.project-timing-view) .result-panel{grid-area:recording}
+ .project-voiceover-embed:not(.project-timing-view) .voiceover-page .workspace :is(.script-panel,.controls-panel,.result-panel){height:100%;min-height:520px;max-height:none;overflow:visible;box-sizing:border-box}
+ .project-voiceover-embed:not(.project-timing-view) .ai-provider-choice{flex-direction:column}
+ .project-voiceover-embed:not(.project-timing-view) .voiceover-page .workspace.space-panels .result-panel{align-content:start;align-items:start;padding:20px;gap:14px}
+ .project-voiceover-embed:not(.project-timing-view) .ai-provider-choice input[type=radio]{width:auto;min-height:0;flex:none;margin:0}
+ .project-voiceover-embed:not(.project-timing-view) .recording-actions{flex-wrap:wrap}
+}
