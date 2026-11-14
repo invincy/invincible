@@ -1,0 +1,10 @@
+interface:
+  display_name: Invincible Video Director
+  short_description: Build Creator Studio videos
+  default_prompt: Direct this Invincible Creator Studio video from narration through validated scenes, Motion Studio, and MP4 export.
+policy:
+  allow_implicit_invocation: true
+  products:
+    - CHAT
+    - CODEX
+    - HERMES

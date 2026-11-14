@@ -1,18 +1,49 @@
 ---
 name: direct-invincible-video
-description: Plan, diagnose, or refine an Invincible Creator Studio video from locked narration timing and animation direction using the registered compiler contract. Use for Invincible map, Motion Studio, scene-plan, asset-request, and video-quality work; do not use for unrelated video tools.
+description: Use automatically for any Invincible Creator Studio video-production request, including a new or existing project, narration, voiceover MP3, local Whisper timing, sync or scene planning, Map Editor, Motion Studio, assets, preview, export, or video-quality diagnosis. Coordinate Creator Studio for audio and timing and Invincible Video Director for contract validation, compilation, review, and application. Do not use for unrelated video apps.
 ---
 
 # Direct an Invincible video
 
-Use Invincible as a guarded compiler, not as a free-form JSON target.
+Own the complete Invincible workflow. Use Creator Studio as the local production surface and Invincible Video Director as the guarded semantic compiler. Never treat an empty plugin transcript as the end of the task.
 
-1. Obtain the locked timed transcript and the user's animation direction. Never rewrite or retime narration without an explicit request.
-2. Call `get_creator_contract` before making scene decisions. Use only its engines, scene kinds, presets, registered geography and supplied project assets.
-3. Return exactly one semantic scene for every transcript segment. Do not author coordinates, boundaries, colours, font sizes, keyframes, timestamps or renderer internals.
-4. When factual geography or artwork is absent, add a resource request and supported fallback. Do not drop or merge the affected scene.
-5. Call `compile_creator_plan`. If it rejects the plan or reports a fallback, revise the semantic choice or explain the missing verified resource and compile again. Stop after two materially different corrections unless the user asks to continue.
-6. Summarize the compiled engines, native map scenes, fallbacks and review items. Do not apply the draft until the user explicitly approves the reviewed result.
-7. After explicit approval, call `apply_creator_plan` with the exact current `writeRevision`. Confirm replacement separately when existing scenes would be replaced. Report the returned revision and whether `mutatedProject` is true.
+## Start from the real project state
 
-Prefer native Map Editor scenes for verified geographic relationships, Canvas/Motion for explanatory diagrams, and Battlefield Editor only when its formations are actually supported. Treat a successful compile as an editable draft, not proof of a polished MP4; preview and export verification remain required.
+1. Call `get_my_profile`, `get_creator_contract`, and the relevant project-list/context tools before making scene decisions.
+2. Respect the user's project intent. For a requested fresh project, create exactly one new project through Creator Studio. For an existing named project, open that project and never create, rename, replace, or repair a different project.
+3. Reuse narration and animation direction already supplied in the chat or project. Do not ask the user to paste them again.
+4. Never rewrite narration or invent timing unless the user explicitly requests a script change.
+
+## Recover missing audio or timing instead of stopping
+
+The plugin does not create audio and local audio bytes are not stored in its cloud context. When the project context has no final MP3 or locked transcript:
+
+1. Open the project's Script page in Creator Studio.
+2. Put the already-approved narration and animation direction into the existing fields.
+3. Generate the final MP3 with the project's chosen voice settings, or reuse its existing final MP3.
+4. Run Creator Studio's local Whisper analysis on the MP3, never the microphone.
+5. Correct only obvious transcript words while preserving Whisper's start and end times.
+6. Save the locked timing checkpoint, then reload the project context through the Director tools.
+
+Do not use Creator Studio's ordinary OpenAI or Qwen scene planner during a Director workflow. Creator Studio owns MP3 generation, local Whisper, map review, Motion Studio, preview, and export. Invincible Video Director owns semantic planning, contract validation, compilation, and reviewed application.
+
+## Compile through the registered contract
+
+1. Use only engines, scene kinds, presets, registered geography, reviewed routes, and supplied project assets returned by `get_creator_contract` and the project context.
+2. Return exactly one semantic scene for every locked transcript segment. Never author coordinates, boundaries, colours, font sizes, keyframes, timestamps, or renderer internals.
+3. Prefer native Map Editor scenes for verified geographic relationships, Canvas/Motion for explanatory diagrams, and Battlefield Editor only for supported formations.
+4. When factual geography or artwork is absent, add a resource request and supported fallback. Never drop or merge the affected locked segment.
+5. Call `compile_creator_plan`. If rejected, make up to two materially different contract-grounded corrections. Do not replace a supported map with a generic card merely to avoid validation.
+6. Present a concise review of timings, engines, presets, fallbacks, and genuine missing resources.
+
+## Apply and finish the video
+
+An explicit request to create, assemble, apply, or export the video end to end authorizes application to a new empty project after a valid compile. Replacing existing scenes always requires separate explicit confirmation.
+
+1. Apply only the exact reviewed semantic plan using the current `writeRevision`.
+2. Report the returned revision and confirm `mutatedProject` is true.
+3. Open every generated map in the real Map Editor. Save or deliberately discard each map and continue in timeline order.
+4. Open Motion Studio with the exact final MP3, preview the complete timeline, verify there are no black or empty gaps, and export the requested MP4.
+5. Do not stop after JSON, compilation, application, or a review table when the user requested a finished video.
+
+Only interrupt for an unavoidable login, payment approval, destructive replacement of existing scenes, unresolved factual decision, or genuinely unsupported required capability. A successful compile is an editable draft; only preview and export verification establish a finished video.

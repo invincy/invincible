@@ -1,13 +1,13 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "invincible-video-director",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Privately read and compile reviewed Invincible Creator Studio videos with Firebase authentication and the existing deterministic renderers.",
   "author": {
     "name": "Invincible"
   },
   "repository": "https://github.com/invincy/invincible",
-  "keywords": ["video", "creator", "maps", "motion-graphics"],
+  "keywords": ["video", "creator", "creator-studio", "whisper", "maps", "motion-studio"],
   "extensions": {
     "com.openai": {
       "onboardingSkill": "./skills/direct-video/SKILL.md",

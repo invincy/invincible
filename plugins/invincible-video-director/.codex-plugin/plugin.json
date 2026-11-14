@@ -1,0 +1,41 @@
+{
+  "interface": {
+    "displayName": "Invincible Video Director",
+    "shortDescription": "Direct Creator Studio videos",
+    "longDescription": "Uses ChatGPT for editorial decisions and the existing Invincible compiler to review, compile and explicitly apply validated Map Editor and Motion Studio drafts.",
+    "developerName": "Invincible",
+    "category": "Creativity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://invincy.github.io/invincible/creator/",
+    "defaultPrompt": [
+      "Turn this timed narration into a reviewed Invincible video plan.",
+      "Check why this Creator scene plan does not produce the map I expect."
+    ],
+    "brandColor": "#11B9D8"
+  },
+  "extensions": {
+    "com.openai": {
+      "onboardingSkill": "./skills/direct-video/SKILL.md"
+    }
+  },
+  "name": "invincible-video-director",
+  "version": "0.4.0",
+  "description": "Privately read and compile reviewed Invincible Creator Studio videos with Firebase authentication and the existing deterministic renderers.",
+  "author": {
+    "name": "Invincible"
+  },
+  "keywords": [
+    "video",
+    "creator",
+    "creator-studio",
+    "whisper",
+    "maps",
+    "motion-studio"
+  ],
+  "repository": "https://github.com/invincy/invincible",
+  "skills": "./skills",
+  "mcpServers": "./.mcp.json"
+}

@@ -55,6 +55,22 @@ the original contract and compile tools for offline development.
 The portable package in `plugins/invincible-video-director` points to the cloud
 endpoint. The repo marketplace entry is `.agents/plugins/marketplace.json`.
 
+## Automatic workflow activation
+
+The bundled `direct-invincible-video` skill is available for implicit use in
+ChatGPT and Codex. Its description deliberately covers the complete Creator
+Studio workflow: new or existing projects, narration, MP3 generation, local
+Whisper timing, Director compilation and application, Map Editor review, Motion
+Studio preview and MP4 export. New chats should not treat an empty plugin
+transcript as a blocker. They must complete the project's local MP3 and Whisper
+checkpoint first, then reload that project through the Director tools.
+
+During a Director workflow, Creator Studio remains responsible for audio,
+timing and the native editing/export surfaces. The Director plugin remains
+responsible for contract-grounded semantic planning and compilation. The
+ordinary OpenAI and Qwen scene planners are not used unless the user explicitly
+requests a non-plugin comparison.
+
 ## Cloud voiceover fallback
 
 Script & scenes still tries the paired laptop's local Whisper service first.
