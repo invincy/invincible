@@ -12,7 +12,11 @@ function Get-ImagePairingCredential {
                 $ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
                 try { $saved = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr) | ConvertFrom-Json }
                 finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr) }
-                if ($saved.ownerUid -eq $OwnerUid -and $saved.origin -eq $Origin -and $saved.token -cmatch '^[A-Za-z0-9_-]{32,100}$') { return $saved.token }
+                if ($saved.ownerUid -eq $OwnerUid -and $saved.origin -eq $Origin -and $saved.token -cmatch '^[A-Za-z0-9_-]{32,100}$') {
+                    try { $session = Invoke-RestMethod "$Origin/api/session" -Headers @{Authorization=('Bearer '+$saved.token)} -TimeoutSec 2 }
+                    catch { $session = $null }
+                    if ($session -and $session.uid -eq $OwnerUid -and $session.storage.available) { return $saved.token }
+                }
             } catch { throw 'Windows could not open this laptop pairing record for the current account.' }
             finally { if ($secure) { $secure.Dispose() } }
         }
