@@ -294,7 +294,7 @@ function updateAiFlow(){
  document.querySelectorAll('[data-ai-flow]').forEach(item=>{const state=states[item.dataset.aiFlow];item.classList.toggle('done',state.done);item.classList.toggle('current',state.current);if(state.current)item.setAttribute('aria-current','step');else item.removeAttribute('aria-current');});
 }
 function resetAiFlow(){timedTranscript=null;scenePlanPayload=null;analysisBusy=false;scenePlanBusy=false;scenePlanSaved=false;clearInterval(scenePlanProgressTimer);scenePlanProgressTimer=null;document.querySelector('.ai-script-flow').classList.remove('plan-generating','plan-review-active');$('scenePlanProgress').hidden=true;$('transcriptReview').hidden=true;$('transcriptSegments').replaceChildren();$('scenePlanReview').hidden=true;$('scenePlanScenes').replaceChildren();$('localAnalysisResult').hidden=true;$('localAnalysisResult').textContent='';$('localAnalysisStatus').textContent='Generate the final MP3, then let Whisper create its transcript and timestamps.';updateAiFlow();}
-function clearAudio(){if(audioUrl)URL.revokeObjectURL(audioUrl);audioUrl=null;audioBytes=null;sourceAudioBytes=null;sourceDuration=0;sourceFilename='';recordingLabel='';appliedSpeed=1;audioIsPreview=true;speedBusy=false;$('player').pause();$('player').removeAttribute('src');$('player').load();$('download').removeAttribute('href');$('recording').hidden=true;resetAiFlow();}
+function clearAudio(){if(audioUrl)URL.revokeObjectURL(audioUrl);audioUrl=null;audioBytes=null;sourceAudioBytes=null;sourceDuration=0;sourceFilename='';recordingLabel='';appliedSpeed=1;audioIsPreview=true;speedBusy=false;cloudFinalAudioId='';$('player').pause();$('player').removeAttribute('src');$('player').load();$('download').removeAttribute('href');$('recording').hidden=true;resetAiFlow();}
 function friendly(error){
  if(error?.code==='functions/not-found')return 'Voiceover generation has not been deployed to Invincible yet. Your script is kept here.';
  if(/unauthenticated/.test(error?.code||''))return 'Sign in to Invincible again. Your script is kept here.';
@@ -348,7 +348,8 @@ async function record(preview){
   $('player').src=audioUrl;applyPlaybackSpeed();$('download').href=audioUrl;$('download').download=result.filename;
   recordingLabel=result.voiceName+(preview?' · opening preview':'')+(data.engine==='gemini'?' · '+data.delivery+' · requested pace ≈ '+data.speed+'×':'');
   $('recording').hidden=false;$('recordingInfo').textContent=result.durationSeconds.toFixed(1)+' sec · '+recordingLabel;
-  status(preview?'Preview ready. Listen, adjust, then generate the full recording.':'MP3 ready. Choose the final speed, then Download or continue to Script & scenes.');updateAiFlow();
+  status(preview?'Preview ready. Listen, adjust, then generate the full recording.':'MP3 ready. Saving it privately for the Director…');updateAiFlow();
+  if(!preview&&projectVoiceoverId){await ensureCloudFinalAudio();status('MP3 ready and privately saved. The Director can now run free local Whisper without browser control.');}
   if(!preview)saveHistory({id:crypto.randomUUID(),version:1,createdAt:Date.now(),settings,request:data,filename:result.filename,voiceName:result.voiceName,durationSeconds:result.durationSeconds});
  }catch(error){if(current===epoch)status(friendly(error),true);}
  finally{if(current===epoch){busy=false;refreshAvailability();}}
@@ -490,7 +491,7 @@ function applyPlaybackSpeed(){
  $('player').defaultPlaybackRate=rate;
  $('player').playbackRate=rate;
 }
-$('playbackSpeed').addEventListener('change',()=>{applyPlaybackSpeed();if(timedTranscript){if(projectVoiceoverId&&user)clearScriptSyncCheckpoint(user.uid,projectVoiceoverId);resetAiFlow();}if(audioBytes)status('Final speed set to '+Number($('playbackSpeed').value).toFixed(2)+'×. Download or Next will prepare this exact-speed MP3.');});
+$('playbackSpeed').addEventListener('change',()=>{applyPlaybackSpeed();if(cloudFinalAudioId&&projectVoiceoverId){cloudFinalAudioId='';window.parent.postMessage({type:'invincible-clear-project-voiceover-asset'},location.origin);}if(timedTranscript){if(projectVoiceoverId&&user)clearScriptSyncCheckpoint(user.uid,projectVoiceoverId);resetAiFlow();}if(audioBytes)status('Final speed set to '+Number($('playbackSpeed').value).toFixed(2)+'×. Download or Next will prepare and privately save this exact-speed MP3.');});
 $('player').addEventListener('loadedmetadata',applyPlaybackSpeed);
 $('download').addEventListener('click',async event=>{event.preventDefault();if(!audioBytes||speedBusy)return;try{await ensureFinalSpeed();const link=document.createElement('a');link.href=$('download').href;link.download=$('download').download;link.click();}catch{}});
 $('generate').addEventListener('click',()=>record(false));$('preview').addEventListener('click',()=>record(true));

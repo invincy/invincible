@@ -91,6 +91,9 @@ window.addEventListener("message",async event=>{
     const asset=event.data.asset||{},id=String(asset.id||'');if(!/^cloud-[a-f0-9]{64}$/.test(id)){status("The private voiceover reference was not saved because it is invalid.","error");return;}
     project.scriptWorkspace={version:1,script:String(project.scriptWorkspace?.script||project.script||'').slice(0,30000),creativeInstructions:String(project.scriptWorkspace?.creativeInstructions||project.notes||'').slice(0,12000),transcript:project.scriptWorkspace?.transcript||null,timingProvider:String(project.scriptWorkspace?.timingProvider||'local-whisper').slice(0,40),audio:{...(project.scriptWorkspace?.audio||{}),sourceFilename:String(asset.name||'voiceover.mp3').slice(0,240),finalDuration:Number(asset.duration)||0,appliedSpeed:Number(asset.appliedSpeed)||1,cloudAssetId:id},updatedAtMs:Date.now()};queueSave();return;
   }
+  if(event.data?.type==="invincible-clear-project-voiceover-asset"){
+    if(project.scriptWorkspace?.audio?.cloudAssetId){project.scriptWorkspace={...project.scriptWorkspace,audio:{...project.scriptWorkspace.audio,cloudAssetId:''},transcript:null,updatedAtMs:Date.now()};queueSave();}return;
+  }
   if(event.data?.type==="invincible-open-script-timing"){
     selectProjectArea("Storyboard");
     return;
