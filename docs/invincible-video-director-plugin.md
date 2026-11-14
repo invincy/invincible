@@ -29,6 +29,10 @@ The cloud connection separates review from mutation. Its tools are:
 - `get_creator_workflow_status`: resumes from saved state and returns the exact
   next phase plus one consolidated laptop checkpoint when local media work is
   unavoidable.
+- `start_creator_local_timing`: queues a privately stored final MP3 directly to
+  the paired laptop's free local Whisper worker without browser control.
+- `get_creator_local_timing_status`: reports the job and the updated project
+  phase after its locked timestamps are saved.
 - `compile_creator_plan`: validates one semantic scene per locked segment and
   compiles the existing Creator Studio, Map Editor and Motion Studio shapes.
 - `apply_creator_plan`: recompiles the reviewed semantic plan against the latest
@@ -36,11 +40,12 @@ The cloud connection separates review from mutation. Its tools are:
   and an exact `writeRevision`. Existing scenes require a separate explicit
   replacement confirmation.
 
-It cannot delete projects, publish videos or upload assets. Final MP3 bytes,
-free local Whisper, native map review and MP4 rendering still run on the paired
-laptop; the plugin groups each of those device-only operations into a single
-resumable checkpoint instead of repeatedly asking for inputs already saved in
-the project. The connection is private because it is not submitted to a public plugin directory. Add its
+It cannot delete projects or publish videos. Creator Studio saves the selected
+final MP3 in the existing account-private media library. The Director can queue
+that MP3 to the paired laptop's free local Whisper worker; only the transcript
+and locked timing are written back to the project. Native map review and MP4
+rendering still run on the paired laptop. The connection is private because it
+is not submitted to a public plugin directory. Add its
 MCP endpoint as a personal custom connection in ChatGPT, then approve it on the
 Invincible connection page using the existing Firebase account.
 

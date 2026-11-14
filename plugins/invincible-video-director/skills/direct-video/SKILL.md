@@ -16,16 +16,16 @@ Own the complete Invincible workflow. Use Creator Studio as the local production
 
 ## Recover missing audio or timing instead of stopping
 
-The plugin does not create audio and local audio bytes are not stored in its cloud context. When the project context has no final MP3 or locked transcript, treat all laptop-only operations as one consolidated checkpoint:
+When the project context has no final MP3 or locked transcript, inspect `workflow.audioReady`. A generated final MP3 is saved privately in the existing Creator media library. When `audioReady` is true, call `start_creator_local_timing`, poll `get_creator_local_timing_status`, then reload project context and continue without opening Creator Studio or using paid transcription. Only when no final MP3 exists, treat audio creation as one consolidated checkpoint:
 
 1. Open the project's Script page in Creator Studio.
 2. Put the already-approved narration and animation direction into the existing fields.
 3. Generate the final MP3 with the project's chosen voice settings, or reuse its existing final MP3.
-4. Run Creator Studio's local Whisper analysis on the MP3, never the microphone.
+4. Let the Director queue that private MP3 to the paired laptop's local Whisper service, never the microphone.
 5. Correct only obvious transcript words while preserving Whisper's start and end times.
 6. Save the locked timing checkpoint, then reload the project context through the Director tools.
 
-Do not turn these actions into multiple user questions. Open the returned project URL once and carry out the complete MP3-and-timing checkpoint. Local Whisper is the free default; never switch to cloud transcription merely to avoid the local checkpoint. After timing is saved, call `get_creator_workflow_status` and continue automatically.
+Do not turn these actions into multiple user questions. Open the returned project URL only when the final MP3 genuinely does not exist. Local Whisper is the free default; never switch to cloud transcription merely to avoid the local checkpoint. After timing is saved, call `get_creator_workflow_status` and continue automatically.
 
 Do not use Creator Studio's ordinary OpenAI or Qwen scene planner during a Director workflow. Creator Studio owns MP3 generation, local Whisper, map review, Motion Studio, preview, and export. Invincible Video Director owns semantic planning, contract validation, compilation, and reviewed application.
 

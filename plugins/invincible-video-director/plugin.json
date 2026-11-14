@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "invincible-video-director",
-  "version": "0.5.0",
-  "description": "Create, resume, compile and apply Invincible Creator Studio videos with Firebase authentication and the existing deterministic renderers.",
+  "version": "0.6.0",
+  "description": "Create, time with private local Whisper, resume, compile and apply Invincible Creator Studio videos.",
   "author": {
     "name": "Invincible"
   },

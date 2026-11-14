@@ -82,10 +82,14 @@ window.addEventListener("message",async event=>{
     const valid=segments.length&&segments.every(segment=>Number.isFinite(Number(segment.start))&&Number.isFinite(Number(segment.end))&&Number(segment.end)>Number(segment.start)&&String(segment.text||'').trim().length<=4000);
     if(!valid){status("The timed transcript was not saved because it is incomplete.","error");return;}
     const transcript={language:String(source.transcript.language||'').slice(0,40),duration:Number(source.transcript.duration)||Number(segments.at(-1).end),text:String(source.transcript.text||'').slice(0,30000),segments:segments.map((segment,index)=>({id:String(segment.id||`segment-${index+1}`).slice(0,100),start:Number(segment.start),end:Number(segment.end),text:String(segment.text||'').slice(0,4000)}))};
-    project.scriptWorkspace={version:1,script:String(source.script||'').slice(0,30000),creativeInstructions:String(source.creativeInstructions||'').slice(0,12000),transcript,timingProvider:String(source.timingProvider||'local-whisper').slice(0,40),audio:{sourceFilename:String(source.audio?.sourceFilename||'').slice(0,240),finalDuration:Number(source.audio?.finalDuration)||transcript.duration,appliedSpeed:Number(source.audio?.appliedSpeed)||1},updatedAtMs:Number(source.updatedAtMs)||Date.now()};
+    project.scriptWorkspace={version:1,script:String(source.script||'').slice(0,30000),creativeInstructions:String(source.creativeInstructions||'').slice(0,12000),transcript,timingProvider:String(source.timingProvider||'local-whisper').slice(0,40),audio:{sourceFilename:String(source.audio?.sourceFilename||'').slice(0,240),finalDuration:Number(source.audio?.finalDuration)||transcript.duration,appliedSpeed:Number(source.audio?.appliedSpeed)||1,cloudAssetId:String(source.audio?.cloudAssetId||project.scriptWorkspace?.audio?.cloudAssetId||'').slice(0,80)},updatedAtMs:Number(source.updatedAtMs)||Date.now()};
     if(project.scriptWorkspace.script)project.script=project.scriptWorkspace.script;
     if(project.scriptWorkspace.creativeInstructions)project.notes=project.scriptWorkspace.creativeInstructions;
     queueSave();return;
+  }
+  if(event.data?.type==="invincible-sync-project-voiceover-asset"){
+    const asset=event.data.asset||{},id=String(asset.id||'');if(!/^cloud-[a-f0-9]{64}$/.test(id)){status("The private voiceover reference was not saved because it is invalid.","error");return;}
+    project.scriptWorkspace={version:1,script:String(project.scriptWorkspace?.script||project.script||'').slice(0,30000),creativeInstructions:String(project.scriptWorkspace?.creativeInstructions||project.notes||'').slice(0,12000),transcript:project.scriptWorkspace?.transcript||null,timingProvider:String(project.scriptWorkspace?.timingProvider||'local-whisper').slice(0,40),audio:{...(project.scriptWorkspace?.audio||{}),sourceFilename:String(asset.name||'voiceover.mp3').slice(0,240),finalDuration:Number(asset.duration)||0,appliedSpeed:Number(asset.appliedSpeed)||1,cloudAssetId:id},updatedAtMs:Date.now()};queueSave();return;
   }
   if(event.data?.type==="invincible-open-script-timing"){
     selectProjectArea("Storyboard");

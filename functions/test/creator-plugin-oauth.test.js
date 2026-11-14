@@ -43,6 +43,9 @@ test('plugin validates complete project briefs and reports resumable workflow ph
  assert.equal(audio.nextAction,'generate_mp3_and_run_local_whisper');
  assert.equal(audio.localCheckpointRequired,true);
  assert.equal(audio.costPolicy.localWhisper,'free');
+ const storedAudio=plugin.workflowStatus('project-1',{script:brief.narration,notes:brief.creativeInstructions,scriptWorkspace:{audio:{cloudAssetId:'cloud-'+'a'.repeat(64)}},scenes:[]},null);
+ assert.equal(storedAudio.nextAction,'start_private_local_whisper');
+ assert.equal(storedAudio.localCheckpointRequired,false);
  const transcript={duration:2,segments:[{id:'segment-1',start:0,end:2,text:brief.narration}]};
  const planning=plugin.workflowStatus('project-1',{script:brief.narration,notes:brief.creativeInstructions,scenes:[]},transcript);
  assert.equal(planning.nextAction,'compile_and_apply_scene_plan');

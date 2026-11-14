@@ -22,7 +22,7 @@
     }
   },
   "name": "invincible-video-director",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Privately read and compile reviewed Invincible Creator Studio videos with Firebase authentication and the existing deterministic renderers.",
   "author": {
     "name": "Invincible"
