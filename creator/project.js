@@ -162,8 +162,8 @@ async function selectProjectArea(area,mode=""){
   const isTiming=area==="Storyboard";
   if(showScriptWorkspace){
     const frame=$("projectVoiceoverFrame");
-    const sendWorkspace=()=>frame.contentWindow?.postMessage({type:"invincible-load-project-script-workspace",workspace:project.scriptWorkspace||null},location.origin);
-    if(!frame.hasAttribute("src")){frame.addEventListener("load",sendWorkspace,{once:true});frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId,view:isTiming?"timing":"script",build:"2026111413"});}
+    const sendWorkspace=()=>frame.contentWindow?.postMessage({type:"invincible-load-project-script-workspace",workspace:project.scriptWorkspace||null,directorDraft:project.pluginDraft||null},location.origin);
+    if(!frame.hasAttribute("src")){frame.addEventListener("load",sendWorkspace,{once:true});frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId,view:isTiming?"timing":"script",build:"2026111417"});}
     else{frame.contentWindow?.postMessage({type:"invincible-project-script-view",view:isTiming?"timing":"script"},location.origin);sendWorkspace();}
   }else if(area==="Video Studio"&&mode==="map-review"){const reviewing=await storyboard.reviewMaps();if(!reviewing)setProjectAreaState("Video Studio","");}
   else storyboard.open({area});

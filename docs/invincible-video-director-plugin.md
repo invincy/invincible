@@ -68,6 +68,15 @@ the existing replacement confirmation. Creator project writes recursively omit
 undefined optional Director fields so later manual saves retain the applied
 draft instead of failing Firestore serialization.
 
+The embedded **Sync plan** page also recognizes this applied Director draft. It
+shows the compiled scene review and enables **Next · Review generated maps**
+without requiring animation instructions in the ordinary-planner form. The
+OpenAI/Qwen selector and **Generate sync plan** action are hidden for that state,
+so resuming an applied Director project cannot accidentally invoke Creator's
+separate scene planner. Editing the displayed instructions does not silently
+change the applied plan; revised direction must be recompiled through the
+Director workflow.
+
 ## Local development endpoint
 
 The optional local endpoint is `http://127.0.0.1:8791/mcp`. Image Studio starts

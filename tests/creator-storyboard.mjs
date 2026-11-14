@@ -59,4 +59,5 @@ test('applying a reviewed sync plan reveals the loaded Motion Studio workspace',
  assert.match(workbench,/if\(directorHasMaps&&!hasMaps\)\{const result=await openAiVideo\(\{reviewMaps:true\}\);return !!result\?\.reviewingMaps;\}/,'Review maps imports an applied Director draft before inspecting its map queue');
  assert.match(workbench,/createMediaClient\(getAccountId\?\.\(\)\)\.file\(cloudId\)/,'Reopened Director projects retrieve their private MP3 without returning to Script');
  assert.match(workbench,/const pendingAiDraft=\(\)=>project\(\)\?\.pluginDraft\|\|loadPendingAiDraft/,'The applied Director draft outranks a stale ordinary-planner cache');
+ assert.match(source,/directorDraft:project\.pluginDraft\|\|null/,'The Sync Plan iframe receives the already-applied Director draft');
 });

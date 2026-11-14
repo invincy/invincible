@@ -8,7 +8,7 @@ import {resolveCreatorPlanResourcesFromLibrary} from './ai-resource-resolver.js?
 import {createMediaClient,inspectMedia} from './media-library.js?v=2026111401';
 const $=id=>document.getElementById(id),fields=['title','script','creativeInstructions','mode','engine','model','direction','language','gender','family','voice','preset','speed','pitch','volume','pause'];
 let user=null,voices=[],busy=false,loading=false,epoch=0,voiceEpoch=0,audioUrl=null,audioBytes=null,sourceAudioBytes=null,sourceDuration=0,sourceFilename='',recordingLabel='',appliedSpeed=1,audioIsPreview=true,speedBusy=false,saveTimer,cloudFinalAudioId='';
-let timedTranscript=null,scenePlanPayload=null,analysisBusy=false,scenePlanBusy=false,scenePlanSaved=false,scenePlanProgressTimer=null;
+let timedTranscript=null,scenePlanPayload=null,analysisBusy=false,scenePlanBusy=false,scenePlanSaved=false,scenePlanProgressTimer=null,directorPlanApplied=false,queuedProjectWorkspace=null;
 const aiProviderKey='invincible.ai.planner.v2';
 let aiProvider=localStorage.getItem(aiProviderKey)==='local'?'local':'cloud';
 let scriptSyncSaveTimer=null;
@@ -24,10 +24,24 @@ const basicVoiceover=document.documentElement.classList.contains('ai-voiceover-e
 const embedParams=new URLSearchParams(location.search);
 const projectVoiceoverId=document.documentElement.classList.contains('project-voiceover-embed')
  ? embedParams.get('project') : null;
+function applyProjectWorkspace(data){
+ queuedProjectWorkspace=data;if(!user)return;
+ const workspace=data?.workspace,director=data?.directorDraft;
+ if(workspace?.transcript?.segments?.length&&!timedTranscript){
+  timedTranscript=structuredClone(workspace.transcript);$('script').value=workspace.script||$('script').value;$('creativeInstructions').value=workspace.creativeInstructions||$('creativeInstructions').value;cloudFinalAudioId=String(workspace.audio?.cloudAssetId||'');renderTranscript();
+ }
+ if(director?.analysis?.scenes?.length&&director?.creatorStudio?.scenes?.length){
+  if(!$('creativeInstructions').value.trim())$('creativeInstructions').value=director.creativeInstructions||'';
+  directorPlanApplied=true;renderScenePlan({analysis:director.analysis,creatorStudio:director.creatorStudio});scenePlanSaved=true;
+  $('generateScenePlan').closest('.ai-next-row').hidden=true;$('aiProviderChoice').hidden=true;
+  $('localAnalysisStatus').textContent=`Director plan already applied · ${director.analysis.scenes.length} scenes. Continue directly to map review; OpenAI and Qwen planning are disabled for this project.`;
+  refreshAvailability();updateAiFlow();return;
+ }
+ if(timedTranscript){$('localAnalysisStatus').textContent='Saved project timing restored from Firebase. The final MP3 remains privately attached to this project.';meters();}
+}
 window.addEventListener('message',event=>{
  if(event.origin!==location.origin||event.source!==window.parent||event.data?.type!=='invincible-load-project-script-workspace')return;
- const workspace=event.data.workspace;if(!workspace?.transcript?.segments?.length||timedTranscript)return;
- timedTranscript=structuredClone(workspace.transcript);$('script').value=workspace.script||$('script').value;$('creativeInstructions').value=workspace.creativeInstructions||$('creativeInstructions').value;renderTranscript();$('localAnalysisStatus').textContent='Saved project timing restored from Firebase. The original MP3 remains on the device where it was created.';meters();
+ applyProjectWorkspace(event.data);
 });
 if(projectVoiceoverId){
  const scriptPanel=document.querySelector('.script-panel');
@@ -289,11 +303,11 @@ function languages(preferred=$('language').value){
  setOptions($('language'),[...new Set(matching.flatMap(v=>v.languageCodes))].sort().map(value=>({value,label:new Intl.DisplayNames(['en'],{type:'language'}).of(value)+' · '+value+(expressive()&&value==='gu-IN'?' · Preview':'')})),preferred);
 }
 function updateAiFlow(){
- const audioReady=!!audioBytes&&!audioIsPreview,timingReady=!!timedTranscript,planReady=!$('scenePlanReview').hidden;
+ const audioReady=!!audioBytes&&!audioIsPreview||/^cloud-[a-f0-9]{64}$/.test(cloudFinalAudioId),timingReady=!!timedTranscript,planReady=!$('scenePlanReview').hidden;
  const states={audio:{done:audioReady,current:!audioReady},timing:{done:timingReady,current:audioReady&&!timingReady},plan:{done:planReady,current:timingReady&&!planReady}};
  document.querySelectorAll('[data-ai-flow]').forEach(item=>{const state=states[item.dataset.aiFlow];item.classList.toggle('done',state.done);item.classList.toggle('current',state.current);if(state.current)item.setAttribute('aria-current','step');else item.removeAttribute('aria-current');});
 }
-function resetAiFlow(){timedTranscript=null;scenePlanPayload=null;analysisBusy=false;scenePlanBusy=false;scenePlanSaved=false;clearInterval(scenePlanProgressTimer);scenePlanProgressTimer=null;document.querySelector('.ai-script-flow').classList.remove('plan-generating','plan-review-active');$('scenePlanProgress').hidden=true;$('transcriptReview').hidden=true;$('transcriptSegments').replaceChildren();$('scenePlanReview').hidden=true;$('scenePlanScenes').replaceChildren();$('localAnalysisResult').hidden=true;$('localAnalysisResult').textContent='';$('localAnalysisStatus').textContent='Generate the final MP3, then let Whisper create its transcript and timestamps.';updateAiFlow();}
+function resetAiFlow(){timedTranscript=null;scenePlanPayload=null;analysisBusy=false;scenePlanBusy=false;scenePlanSaved=false;directorPlanApplied=false;clearInterval(scenePlanProgressTimer);scenePlanProgressTimer=null;document.querySelector('.ai-script-flow').classList.remove('plan-generating','plan-review-active');$('scenePlanProgress').hidden=true;$('transcriptReview').hidden=true;$('transcriptSegments').replaceChildren();$('scenePlanReview').hidden=true;$('scenePlanScenes').replaceChildren();$('generateScenePlan').closest('.ai-next-row').hidden=false;$('aiProviderChoice').hidden=false;$('localAnalysisResult').hidden=true;$('localAnalysisResult').textContent='';$('localAnalysisStatus').textContent='Generate the final MP3, then let Whisper create its transcript and timestamps.';updateAiFlow();}
 function clearAudio(){if(audioUrl)URL.revokeObjectURL(audioUrl);audioUrl=null;audioBytes=null;sourceAudioBytes=null;sourceDuration=0;sourceFilename='';recordingLabel='';appliedSpeed=1;audioIsPreview=true;speedBusy=false;cloudFinalAudioId='';$('player').pause();$('player').removeAttribute('src');$('player').load();$('download').removeAttribute('href');$('recording').hidden=true;resetAiFlow();}
 function friendly(error){
  if(error?.code==='functions/not-found')return 'Voiceover generation has not been deployed to Invincible yet. Your script is kept here.';
@@ -467,7 +481,7 @@ async function analyzeLocal(){
  finally{analysisBusy=false;updateScenePlanGate();updateAiFlow();}
 }
 async function generateScenePlan(){
- const check=validTimedTranscript();if(!check.valid||!$('creativeInstructions').value.trim()||scenePlanBusy)return;scenePlanBusy=true;scenePlanSaved=false;$('scenePlanReview').hidden=true;const started=Date.now(),flow=document.querySelector('.ai-script-flow');flow.classList.remove('plan-review-active');flow.classList.add('plan-generating');$('scenePlanProgress').hidden=false;
+ const check=validTimedTranscript();if(directorPlanApplied||!check.valid||!$('creativeInstructions').value.trim()||scenePlanBusy)return;scenePlanBusy=true;scenePlanSaved=false;$('scenePlanReview').hidden=true;const started=Date.now(),flow=document.querySelector('.ai-script-flow');flow.classList.remove('plan-review-active');flow.classList.add('plan-generating');$('scenePlanProgress').hidden=false;
  const showProgress=()=>{const seconds=Math.max(1,Math.round((Date.now()-started)/1000));$('localAnalysisStatus').textContent=`${providerName()} is creating the sync plan. Review will open automatically when it is ready.`;$('scenePlanProgressTime').textContent=`Matching ${timedTranscript.segments.length} locked timestamp${timedTranscript.segments.length===1?'':'s'} · ${seconds} sec elapsed`;};showProgress();scenePlanProgressTimer=setInterval(showProgress,1000);$('scenePlanProgress').scrollIntoView({behavior:'smooth',block:'start'});refreshAvailability();
  try{
   await persistScriptSync();
@@ -504,7 +518,7 @@ $('openMotionStudio').addEventListener('click',event=>{if(!scenePlanSaved){event
 $('resourceReview').addEventListener('click',event=>{const button=event.target.closest('[data-resource-action]');if(!button)return;window.parent.postMessage({type:'invincible-open-creator-resource',area:button.dataset.resourceAction==='map'?'Maps':'Assets',year:Number(button.dataset.resourceYear)||0,polityNames:String(button.dataset.resourcePolities||'').split('|').filter(Boolean)},location.origin);});
 $('reloadVoices').addEventListener('click',()=>fetchVoices());
  $('engine').addEventListener('change',()=>{voiceDemo.stop();languages();families();remember();});
- for(const id of ['model','direction','creativeInstructions'])$(id).addEventListener('input',()=>{remember();if(id==='creativeInstructions'){scenePlanSaved=false;scheduleScriptSyncSave();if(!$('scenePlanReview').hidden){$('scenePlanReview').hidden=true;document.querySelector('.ai-script-flow').classList.remove('plan-review-active');$('localAnalysisStatus').textContent='Animation instructions changed. Generate the sync plan again.';}updateScenePlanGate();}});
+ for(const id of ['model','direction','creativeInstructions'])$(id).addEventListener('input',()=>{remember();if(id==='creativeInstructions'){scheduleScriptSyncSave();if(directorPlanApplied){$('localAnalysisStatus').textContent='The applied Director plan is unchanged. Recompile through Invincible Video Director before applying revised animation instructions.';return;}scenePlanSaved=false;if(!$('scenePlanReview').hidden){$('scenePlanReview').hidden=true;document.querySelector('.ai-script-flow').classList.remove('plan-review-active');$('localAnalysisStatus').textContent='Animation instructions changed. Generate the sync plan again.';}updateScenePlanGate();}});
 $('language').addEventListener('change',()=>{families();remember();});
 $('gender').addEventListener('change',()=>{families();remember();});
 $('family').addEventListener('change',()=>{filterVoices();remember();});
@@ -540,6 +554,7 @@ observeAuth(next=>{
  // Restore narration even if the backend has not been activated yet.
  try{const draft=JSON.parse(localStorage.getItem(key())||'{}');$('script').value=draft.script||'';$('title').value=draft.title||'My voiceover';}catch{}
  meters();fetchVoices({initial:true}).finally(()=>restoreScriptSync());
+ if(queuedProjectWorkspace)applyProjectWorkspace(queuedProjectWorkspace);
 });
 updateProviderUi();
 window.addEventListener('beforeunload',()=>{voiceDemo.stop();clearTimeout(scriptSyncSaveTimer);if(timedTranscript)persistScriptSync().catch(()=>{});if(audioUrl)URL.revokeObjectURL(audioUrl);});
