@@ -1,5 +1,11 @@
 # Creator Studio: one video flow
 
+Inside the desktop spatial shell, Creator home and project surfaces use the shell's
+stationary backdrop and navigation. The embedded project Script surface is transparent
+as well; standalone Creator pages retain their own background. Connected-space smoke,
+voiceover browser checks, the production build and site-reference check passed. A live
+signed-in visual comparison across other modules and physical mobile remains open.
+
 ## Creator home and project entry
 
 Creator Studio opens on a project-first home. Existing projects are searchable

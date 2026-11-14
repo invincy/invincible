@@ -495,3 +495,4 @@ audio{width:100%;height:36px}
   }
 }
 #showSavedPlan{margin:4px 0 12px;min-height:48px} .project-voiceover-embed.project-timing-view .scene-plan-review>.primary{position:sticky;top:0;bottom:auto}
+.shared-shell-voiceover,.shared-shell-voiceover body{background:transparent!important}.shared-shell-voiceover .tts-forest{display:none!important}

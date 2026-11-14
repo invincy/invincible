@@ -6,6 +6,11 @@
 .connected-space-document .react-app-shell > main { padding-top:0; margin-top:0 }
 .connected-space-document :is(.studio-header,.project-header,.voiceover-page .page-header) { top:0 }
 .connected-space-document .voiceover-page .workspace.space-panels { height:calc(100dvh - 110px) }
+/* The Creator workspace sits above the shell's single, stationary backdrop. */
+.connected-space-document:has(body.project-page),.connected-space-document:has(body.project-page) body.project-page,
+.connected-space-document:has(body.creator-page),.connected-space-document:has(body.creator-page) body.creator-page { background:transparent!important }
+.connected-space-document :is(body.project-page,body.creator-page) .dashboard-backdrop { display:none }
+.connected-space-document body.project-page #projectVoiceoverFrame { background:transparent }
 @media(min-width:901px) {
   .connected-space-document .space-panels.space-panels { max-width:1560px; margin-inline:auto; grid-template-columns:repeat(3,minmax(0,1fr)); gap:clamp(12px,1.25vw,22px) }
   .connected-space-document .space-panels > .space-panel { min-width:0; font-size:15px; border-radius:16px }

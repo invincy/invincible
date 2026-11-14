@@ -5,7 +5,7 @@
 <title>Voiceover · Invincible</title>
 <link rel="icon" href="/invincible/favicon.ico" sizes="any">
 <link rel="stylesheet" href="../site-nav.css?v=19">
-  <link rel="stylesheet" href="tts.css?v=2026111421">
+  <link rel="stylesheet" href="tts.css?v=2026111422">
 <link rel="stylesheet" href="studio-ui.css?v=3">
 <link rel="stylesheet" href="tts-forest.css?v=1">
 <link rel="stylesheet" href="../shared/spatial-workspace.css?v=4">
@@ -16,6 +16,7 @@ if (window.parent !== window) {
  if (embed === 'ai') document.documentElement.classList.add('ai-voiceover-embed');
  if (embed === 'project') {
   document.documentElement.classList.add('project-voiceover-embed');
+  try { if (window.parent.parent !== window.parent) document.documentElement.classList.add('shared-shell-voiceover'); } catch {}
   if (new URLSearchParams(location.search).get('view') === 'timing') document.documentElement.classList.add('project-timing-view');
   document.title = 'Script · Invincible';
  }

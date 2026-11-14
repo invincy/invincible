@@ -17,7 +17,7 @@ export default function ConnectedSpace({region, active, onNavigate, onLocation, 
       const win=frame.current.contentWindow,doc=win.document;
       doc.documentElement.classList.add('connected-space-document');
       if(!doc.querySelector('[data-connected-style]')){
-        const style=doc.createElement('link');style.rel='stylesheet';style.href=APP_BASE+'shared/spatial-desktop.css?v=1';style.dataset.connectedStyle='';doc.head.append(style);
+        const style=doc.createElement('link');style.rel='stylesheet';style.href=APP_BASE+'shared/spatial-desktop.css?v=2';style.dataset.connectedStyle='';doc.head.append(style);
       }
       const click=event=>{
         if(event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
@@ -50,6 +50,6 @@ export default function ConnectedSpace({region, active, onNavigate, onLocation, 
   return <div className="v2-connected-space">
     {loading&&active&&<p className="v2-space-loading" role="status">Opening {region.label}…{region.id==='finance'&&<> <a href={region.href} target="_blank" rel="noopener">Open Finance in a new tab ↗</a></>}</p>}
     {failed&&<p role="alert">This space could not open. <a href={region.href} target="_blank" rel="noopener">Open {region.label} in a new tab ↗</a></p>}
-    {visited&&<iframe ref={frame} src={src} tabIndex={active?0:-1} style={{pointerEvents:active?undefined:'none'}} title={region.label+' workspace'} onLoad={loaded} allow="clipboard-write; microphone; fullscreen"/>}
+    {visited&&<iframe ref={frame} src={src} tabIndex={active?0:-1} style={{pointerEvents:active?undefined:'none',...(region.id==='creator'?{background:'transparent'}:{})}} title={region.label+' workspace'} onLoad={loaded} allow="clipboard-write; microphone; fullscreen"/>}
   </div>;
 }
