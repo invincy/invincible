@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "invincible-video-director",
-  "version": "0.4.0",
-  "description": "Privately read and compile reviewed Invincible Creator Studio videos with Firebase authentication and the existing deterministic renderers.",
+  "version": "0.5.0",
+  "description": "Create, resume, compile and apply Invincible Creator Studio videos with Firebase authentication and the existing deterministic renderers.",
   "author": {
     "name": "Invincible"
   },
@@ -14,7 +14,7 @@
       "interface": {
         "displayName": "Invincible Video Director",
         "shortDescription": "Direct Creator Studio videos",
-        "longDescription": "Uses ChatGPT for editorial decisions and the existing Invincible compiler to review, compile and explicitly apply validated Map Editor and Motion Studio drafts.",
+        "longDescription": "Uses ChatGPT for editorial decisions and the existing Invincible compiler to create or resume complete briefs, review, compile and explicitly apply validated Map Editor and Motion Studio drafts.",
         "developerName": "Invincible",
         "category": "Creativity",
         "capabilities": ["Read", "Write"],

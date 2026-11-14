@@ -9,14 +9,14 @@ Own the complete Invincible workflow. Use Creator Studio as the local production
 
 ## Start from the real project state
 
-1. Call `get_my_profile`, `get_creator_contract`, and the relevant project-list/context tools before making scene decisions.
-2. Respect the user's project intent. For a requested fresh project, create exactly one new project through Creator Studio. For an existing named project, open that project and never create, rename, replace, or repair a different project.
+1. Call `get_my_profile`, `get_creator_contract`, and the relevant project-list/context tools before making scene decisions. Call `get_creator_workflow_status` whenever resuming work; follow its saved phase instead of asking the user what comes next.
+2. Respect the user's project intent. For a requested fresh project, call `create_creator_project` exactly once with the complete supplied narration and animation direction and a stable idempotency key. For an existing empty project, use `update_creator_project_brief`. For an existing named project, never create, rename, replace, or repair a different project.
 3. Reuse narration and animation direction already supplied in the chat or project. Do not ask the user to paste them again.
 4. Never rewrite narration or invent timing unless the user explicitly requests a script change.
 
 ## Recover missing audio or timing instead of stopping
 
-The plugin does not create audio and local audio bytes are not stored in its cloud context. When the project context has no final MP3 or locked transcript:
+The plugin does not create audio and local audio bytes are not stored in its cloud context. When the project context has no final MP3 or locked transcript, treat all laptop-only operations as one consolidated checkpoint:
 
 1. Open the project's Script page in Creator Studio.
 2. Put the already-approved narration and animation direction into the existing fields.
@@ -24,6 +24,8 @@ The plugin does not create audio and local audio bytes are not stored in its clo
 4. Run Creator Studio's local Whisper analysis on the MP3, never the microphone.
 5. Correct only obvious transcript words while preserving Whisper's start and end times.
 6. Save the locked timing checkpoint, then reload the project context through the Director tools.
+
+Do not turn these actions into multiple user questions. Open the returned project URL once and carry out the complete MP3-and-timing checkpoint. Local Whisper is the free default; never switch to cloud transcription merely to avoid the local checkpoint. After timing is saved, call `get_creator_workflow_status` and continue automatically.
 
 Do not use Creator Studio's ordinary OpenAI or Qwen scene planner during a Director workflow. Creator Studio owns MP3 generation, local Whisper, map review, Motion Studio, preview, and export. Invincible Video Director owns semantic planning, contract validation, compilation, and reviewed application.
 

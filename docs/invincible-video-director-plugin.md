@@ -22,6 +22,13 @@ The cloud connection separates review from mutation. Its tools are:
 - `list_creator_projects`: lists projects owned by or shared with the account.
 - `get_creator_project_context`: returns bounded script, timing, instructions,
   assets and reviewed geography for one accessible project.
+- `create_creator_project`: idempotently creates one fresh project with the
+  complete narration and animation brief, without opening Creator Studio.
+- `update_creator_project_brief`: saves the complete brief into an existing
+  empty project while refusing to invalidate locked timing or scenes.
+- `get_creator_workflow_status`: resumes from saved state and returns the exact
+  next phase plus one consolidated laptop checkpoint when local media work is
+  unavoidable.
 - `compile_creator_plan`: validates one semantic scene per locked segment and
   compiles the existing Creator Studio, Map Editor and Motion Studio shapes.
 - `apply_creator_plan`: recompiles the reviewed semantic plan against the latest
@@ -29,8 +36,11 @@ The cloud connection separates review from mutation. Its tools are:
   and an exact `writeRevision`. Existing scenes require a separate explicit
   replacement confirmation.
 
-It cannot delete projects, publish videos or upload assets. The connection is
-private because it is not submitted to a public plugin directory. Add its
+It cannot delete projects, publish videos or upload assets. Final MP3 bytes,
+free local Whisper, native map review and MP4 rendering still run on the paired
+laptop; the plugin groups each of those device-only operations into a single
+resumable checkpoint instead of repeatedly asking for inputs already saved in
+the project. The connection is private because it is not submitted to a public plugin directory. Add its
 MCP endpoint as a personal custom connection in ChatGPT, then approve it on the
 Invincible connection page using the existing Firebase account.
 
