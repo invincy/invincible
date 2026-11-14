@@ -33,8 +33,9 @@ function applyProjectWorkspace(data){
  if(director?.analysis?.scenes?.length&&director?.creatorStudio?.scenes?.length){
   if(!$('creativeInstructions').value.trim())$('creativeInstructions').value=director.creativeInstructions||'';
   directorPlanApplied=true;renderScenePlan({analysis:director.analysis,creatorStudio:director.creatorStudio});scenePlanSaved=true;
+  $('scenePlanReview').querySelector('.review-summary strong').textContent='Saved sync plan';$('editTimingPlan').hidden=true;$('openMotionStudio').textContent='Continue · Review maps';
   $('generateScenePlan').closest('.ai-next-row').hidden=true;$('aiProviderChoice').hidden=true;
-  $('localAnalysisStatus').textContent=`Director plan already applied · ${director.analysis.scenes.length} scenes. Continue directly to map review; OpenAI and Qwen planning are disabled for this project.`;
+  $('localAnalysisStatus').textContent=`Director plan already applied · ${director.analysis.scenes.length} scenes. Continue once; unfinished maps open in order, then Motion Studio opens automatically.`;
   refreshAvailability();updateAiFlow();return;
  }
  if(timedTranscript){$('localAnalysisStatus').textContent='Saved project timing restored from Firebase. The final MP3 remains privately attached to this project.';meters();}
@@ -444,6 +445,7 @@ function safeText(value){return String(value??'').replace(/[&<>"']/g,character=>
 function renderScenePlan(payload){
  scenePlanSaved=false;
  scenePlanPayload=structuredClone(payload);
+ $('scenePlanReview').querySelector('.review-summary strong').textContent='Review sync plan';$('editTimingPlan').hidden=false;
  const flow=document.querySelector('.ai-script-flow');flow.classList.remove('plan-generating');flow.classList.add('plan-review-active');$('scenePlanProgress').hidden=true;
  const scenes=payload.analysis.scenes;$('scenePlanReview').hidden=false;$('scenePlanSummary').textContent=`${scenes.length} scenes · ${clock(payload.analysis.transcript.duration)}`;
  const resources=scenes.flatMap((scene,index)=>(scene.resourceResolutions||[]).map(item=>({...item,scene:index+1,year:scene.semanticPlan?.historicalYear||0,polityNames:scene.semanticPlan?.polityNames||[]}))),clarifications=scenes.flatMap((scene,index)=>(scene.clarifications||[]).map(item=>({...item,scene:index+1})));

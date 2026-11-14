@@ -240,6 +240,14 @@ Reopening Step 2 restores the finished plan at review instead of making the user
 regenerate it. The compatible pending-draft cache remains a fallback; a stale plan or a
 plan from another project is not shown.
 
+Applied Director projects reopen on **Saved sync plan** with one **Continue · Review
+maps** action. The Director's `area=Studio` handoff enters generated-map review directly.
+Exact scene start/end timestamps outrank rounded duration hints; Map animations are
+retimed to those locked bounds before Motion Studio validation. A failed map handoff
+returns to the still-saved Sync plan instead of leaving a blank Studio surface. Saved
+maps are skipped on retry, unfinished maps resume in order, and the last map returns to
+Motion Studio automatically.
+
 ## Reviewed-plan handoff verification — November 13, 2026
 
 A signed-in production test applied a four-scene OpenAI sync plan with its exact

@@ -1,7 +1,8 @@
 import {emptyVideo,PRESETS,compileTimeline,validateManifest} from './video-studio/model.js?v=2026111415';
 import {createStudioRenderer} from './video-studio/adapters.js?v=2026111415';
+import {resizeScene} from './video-studio/composition.js?v=2026111207';
 
-function timing(scene){const match=String(scene.timeline||'').match(/([0-9.]+)\s*[-–—]\s*([0-9.]+)/);const start=Number.isFinite(Number(scene.startSeconds))?Number(scene.startSeconds):(match?Number(match[1]):null);const seconds=Number(scene.durationSeconds)>0?Number(scene.durationSeconds):Number(scene.duration)>0?Number(scene.duration):match?Number(match[2])-Number(match[1]):2;return {start,seconds};}
+export function storyboardTiming(scene){const match=String(scene.timeline||'').match(/([0-9.]+)\s*[-–—]\s*([0-9.]+)/),start=Number.isFinite(Number(scene.startSeconds))?Number(scene.startSeconds):(match?Number(match[1]):null),end=Number(scene.endSeconds);const seconds=start!==null&&Number.isFinite(end)&&end>start?end-start:Number(scene.durationSeconds)>0?Number(scene.durationSeconds):Number(scene.duration)>0?Number(scene.duration):match?Number(match[2])-Number(match[1]):2;return {start,seconds};}
 export async function renderAiScenePreviews(scenes,{width=540,height=960,mapAssets=[]}={}){
  if(!Array.isArray(scenes)||!scenes.length)throw Error('There are no approved scenes to preview.');
  const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
@@ -80,7 +81,7 @@ export function compileAiStoryboardManifest(storyboard,{aspectRatio='9:16',audio
   manifest.scenes.push({id,name:String(idea.title||row.visual||'Canvas scene').slice(0,200),startSeconds,durationSeconds,engineType:'graphic',engineData:{background:'#071426',backgroundStyle:idea.backgroundStyle||'plain',gridColor:accent,gridSpacing:54},transition,overlays});
  }
  for(const [index,row] of storyboard.entries()){
-  const {start,seconds}=timing(row);const sceneStart=start===null?cursor:start;
+  const {start,seconds}=storyboardTiming(row);const sceneStart=start===null?cursor:start;
   if(seconds<=0||sceneStart<cursor-1e-6)throw Error(`Scene ${index+1} has invalid or overlapping timing.`);
   if(!allowContextCards&&Math.abs(sceneStart-cursor)>1/30)throw Error(`Scene ${index+1} leaves a timeline gap. Add an approved scene for that interval before import.`);
   if(allowContextCards&&row.contextCard===true&&!row.mapAnimation){
@@ -92,7 +93,8 @@ export function compileAiStoryboardManifest(storyboard,{aspectRatio='9:16',audio
   if(seconds<1/30)throw Error(`Scene ${index+1} has invalid timing.`);
   if(!row.mapAnimation)throw Error(`Scene ${index+1} has no executable map animation. Descriptive scenes cannot be exported.`);
   if(row.mapAnimation.aspectRatio!==aspectRatio)throw Error(`Scene ${index+1} aspect ratio differs from the production format.`);
-  manifest.scenes.push({id:String(row.id||`ai-scene-${index+1}`),name:String(row.visual||row.title||`Scene ${index+1}`).slice(0,200),startSeconds:sceneStart,durationSeconds:seconds,engineType:'map',engineData:{animation:row.mapAnimation,geometryReviewed:false},transition:{type:'cut',durationSeconds:0},overlays:documentaryFrame(row.semanticPlan?.title||row.mapAnimation.title||row.title)});cursor=sceneStart+seconds;
+  const mapScene={id:String(row.id||`ai-scene-${index+1}`),name:String(row.visual||row.title||`Scene ${index+1}`).slice(0,200),startSeconds:sceneStart,durationSeconds:Number(row.mapAnimation.duration),engineType:'map',engineData:{animation:row.mapAnimation,geometryReviewed:false},transition:{type:'cut',durationSeconds:0},overlays:documentaryFrame(row.semanticPlan?.title||row.mapAnimation.title||row.title)};
+  const fitted=Math.abs(mapScene.durationSeconds-seconds)>1e-6?resizeScene(mapScene,seconds):structuredClone(mapScene);fitted.startSeconds=sceneStart;fitted.durationSeconds=seconds;manifest.scenes.push(fitted);cursor=sceneStart+seconds;
  }
  if(!manifest.scenes.length)throw Error('The narration is too short to render a scene.');
  if(audioFileId){

@@ -6,6 +6,7 @@ import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client
 import{collection,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{createProductionReadiness,mountProductionReadiness}from'./video-studio/production-readiness.js?v=2026111322';
 import{splitVoiceoverScript}from"./scene-tools.js?v=2";
+import{defaultProjectRoute,normalizeProjectRoute}from'./project-flow.js?v=2026111401';
 
 const queryParams=new URLSearchParams(location.search),$=id=>document.getElementById(id);
 let isNewDraft=queryParams.get("draft")==="1";
@@ -14,7 +15,8 @@ if(isNewDraft&&!queryParams.has("id")){
   queryParams.set("id",projectId);
   history.replaceState(history.state,"",location.pathname+"?"+queryParams);
 }
-const requestedArea=queryParams.get("area"),requestedTool=queryParams.get("tool")||"";
+const requestedRoute=normalizeProjectRoute(queryParams.get("area"),queryParams.get("tool"));
+const requestedArea=requestedRoute.area,requestedTool=requestedRoute.tool;
 const tabId=(()=>{try{let id=sessionStorage.getItem("invincible.creatorTabId");if(!id){id=Math.random().toString(36).slice(2)+Date.now().toString(36);sessionStorage.setItem("invincible.creatorTabId",id);}return id;}catch{return "default";}})();
 let saveChain=Promise.resolve(),editVersion=0,cloudVersion=0,baseRevision=0;
 let productionReadiness;
@@ -110,7 +112,7 @@ window.addEventListener("message",async event=>{
     const result=await storyboard.openAiDraft({reviewMaps:true});
     if(result)revealProjectArea("Video Studio",result.reviewingMaps?"map-review":"");
   }
-  catch(error){status(error.message||"The reviewed scene plan could not be opened.","error");}
+  catch(error){await selectProjectArea("Storyboard");status((error.message||"The reviewed scene plan could not be opened.")+" The saved sync plan is still here; no timing or scenes were lost.","error");}
 });
 
 function projectCompletion(){
@@ -434,7 +436,11 @@ $("copyProjectLink").onclick=async()=>{
 document.querySelector(".project-workspace-nav").addEventListener("click",async event=>{
   const button=event.target.closest("[data-project-area]");
   if(!button)return;
-  await selectProjectArea(button.dataset.projectArea,button.dataset.toolMode||"");
+  try{await selectProjectArea(button.dataset.projectArea,button.dataset.toolMode||"");}
+  catch(error){
+    if(button.dataset.toolMode==="map-review")await selectProjectArea("Storyboard");
+    status((error.message||"This step could not be opened.")+(button.dataset.toolMode==="map-review"?" The saved sync plan is still here; no timing or scenes were lost.":""),"error");
+  }
 });
 $("saveProjectNow").onclick=async()=>{if(await save())status("Saved to Firebase","ok");};
 $("saveAndReturn").onclick=async()=>{const button=$("saveAndReturn");button.disabled=true;button.textContent="Saving…";if(await save())location.href="/invincible/creator/";else{button.disabled=false;button.textContent="Save & return";}};
@@ -553,8 +559,8 @@ async function load(){
       onConflict({source:'stale-draft',draft:recoveredStaleDraft,serverData:project,serverRevision:baseRevision,serverUpdatedAt:cloudVersion});
       status(storageError({code:'revision-conflict'})+" An earlier local draft is waiting for your decision.","error");
     }
-    if(requestedArea)selectProjectArea(requestedArea,requestedTool);
-    else selectProjectArea("Voiceover");
+    if(requestedArea)selectProjectArea(requestedArea,requestedTool).catch(async error=>{await selectProjectArea("Storyboard");status((error.message||"Review maps could not open.")+" The saved sync plan is still here; no timing or scenes were lost.","error");});
+    else{const route=defaultProjectRoute(project);selectProjectArea(route.area,route.tool);}
     if(!isNewDraft)watchProject();
   }catch(error){status("Could not load project: "+error.message,"error");}
 }

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {directorDraftMatchesManifest} from '../creator/director-resume.js';
+import {defaultProjectRoute,normalizeProjectRoute} from '../creator/project-flow.js';
 import {newStudioVideo,upgradeVideo,appendProjectMaps,arrangeScenes,resizeScene} from '../creator/video-studio/composition.js';
 import {emptyVideo,validateManifest,compileTimeline,PRESETS,sceneAt} from '../creator/video-studio/model.js';
 import {emptyBattlefield,poseAt,elevationAt,projectBattlePoint} from '../creator/video-studio/battlefield.js';
@@ -45,4 +46,10 @@ test('reopening the same Director plan reuses Motion Studio without replacement'
  assert.equal(directorDraftMatchesManifest(manifest,scenes),true);
  assert.equal(directorDraftMatchesManifest({...manifest,scenes:manifest.scenes.slice(0,1)},scenes),false);
  assert.equal(directorDraftMatchesManifest({...manifest,scenes:manifest.scenes.map((scene,index)=>index?{...scene,startSeconds:3.2}:scene)},scenes),false);
+});
+test('Creator routes Director links and applied projects into the visible workflow',()=>{
+ assert.deepEqual(normalizeProjectRoute('Studio',''),{area:'Video Studio',tool:'map-review'});
+ assert.deepEqual(normalizeProjectRoute('Sync plan',''),{area:'Storyboard',tool:''});
+ assert.deepEqual(defaultProjectRoute({pluginDraft:{creatorStudio:{scenes:[{id:'one'}]}}}),{area:'Storyboard',tool:''});
+ assert.deepEqual(defaultProjectRoute({}),{area:'Voiceover',tool:''});
 });

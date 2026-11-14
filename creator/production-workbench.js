@@ -3,7 +3,7 @@ import {mountHistoryWorkspace} from './history-workspace.js?v=2026111329';
 import {makeScene} from './storyboard-model.js?v=3';
 import {METHODS,IMPORT_FIELDS,uid,methodsOf,inspectImport,parseProductionImport,uniqueScenes,groupFor,taskFor,setTask,animationStage,requirements,sceneState,projectProgress,queueScenes,canonicalScript,scriptReview,filterScenes,productionReadiness} from './production-model.js?v=2026111112';
 import {loadPendingAiDraft,loadPendingAiAudio,loadScriptSyncCheckpoint,clearPendingAiDraft} from './ai-draft.js?v=2026111410';
-import {renderAiScenePreviews} from './ai-preview.js?v=2026111415';
+import {renderAiScenePreviews} from './ai-preview.js?v=2026111416';
 import {createMediaClient} from './media-library.js?v=2026111416';
 import {directorDraftMatchesManifest} from './director-resume.js?v=2026111401';
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));

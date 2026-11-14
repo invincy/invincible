@@ -5,7 +5,7 @@ import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,layerF
 import {DEFAULT_PARALLAX,parallaxTransform,projectLayer,trainTemplate} from '../creator/video-studio/parallax.js';
 import {audioChunk} from '../creator/video-studio/audio.js';
 import {encodeStudioVideo} from '../creator/video-studio/export.js';
-import {compileAiStoryboardManifest} from '../creator/ai-preview.js';
+import {compileAiStoryboardManifest,storyboardTiming} from '../creator/ai-preview.js';
 import {createStartingVoiceoverManifest} from '../creator/media-library.js';
 const graphic=(id,start=0,duration=2)=>({id,startSeconds:start,durationSeconds:duration,engineType:'graphic',engineData:{},overlays:[]});
 const video=()=>({...emptyVideo(),scenes:[graphic('one'),graphic('two',2)]});
@@ -173,4 +173,14 @@ test('generated map review resumes only unfinished maps',()=>{
  assert.equal(mapSceneNeedsReview({engineType:'map',engineData:{animation:{version:1},geometryReviewed:true}}),false);
  assert.equal(mapSceneNeedsReview({engineType:'map',engineData:{project:{scenes:[],historicalMap:{}},sourceStart:0}}),false);
  assert.equal(mapSceneNeedsReview({engineType:'map',engineData:{sourceId:'map-source',sourceStart:0}}),false);
+});
+test('Director start and end timestamps outrank rounded durations',()=>{
+ const timing=storyboardTiming({startSeconds:4.64,endSeconds:5.04,durationSeconds:1});assert.equal(timing.start,4.64);assert.ok(Math.abs(timing.seconds-.4)<1e-9);
+ const mapAnimation={format:'invincible-map-animation',version:1,title:'Map',duration:1.4,aspectRatio:'9:16',basemap:'physical',terrain:false,camera:[{time:0,center:[78,20],zoom:4,pitch:0,bearing:0}],assets:[],layers:[]};
+ const manifest=compileAiStoryboardManifest([
+  {id:'one',startSeconds:0,endSeconds:4.64,durationSeconds:5,mapAnimation:{...mapAnimation,duration:4.64}},
+  {id:'two',startSeconds:4.64,endSeconds:6.04,durationSeconds:2,mapAnimation}
+ ],{allowContextCards:true});
+ assert.equal(manifest.scenes[0].durationSeconds,4.64);
+ assert.ok(Math.abs(manifest.scenes[1].durationSeconds-1.4)<1e-9);
 });
