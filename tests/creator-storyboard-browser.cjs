@@ -56,7 +56,7 @@ const server=http.createServer((req,res)=>{
   await page.locator('#projectTitle').filter({hasText:'Untitled project'}).waitFor();
   await page.locator('#projectVoiceoverStep:not([hidden])').waitFor();
   assert.equal(await page.locator('[data-project-area="Voiceover"]').getAttribute('aria-current'),'step');
-  assert.deepEqual(await page.locator('.project-workspace-nav [data-project-area]').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('aria-label')||node.textContent.trim())),['1 Script','2 Timing & plan','3 Review scenes (optional)','4 Motion & export','Map Editor','Battlefield Editor','Assets and 3D']);
+  assert.deepEqual(await page.locator('.project-workspace-nav [data-project-area]').allTextContents(),['1 Script','2 Sync plan','3 Review maps','4 Motion & export','Map Editor','Battlefield Editor','Assets & 3D']);
   assert.match(await page.locator('#workflowGuide').innerText(),/Step 1 of 4/);
   assert.equal(await page.frameLocator('#projectVoiceoverFrame').locator('[name="aiProvider"][value="cloud"]').isChecked(),true,'Creator Studio reuses OpenAI by default while keeping Local AI selectable');
   assert.equal(await page.evaluate(()=>window.writes||0),0,'Opening an untitled project does not save it before the user edits it');
@@ -144,12 +144,12 @@ const server=http.createServer((req,res)=>{
    const recording=doc.querySelector('.result-panel').getBoundingClientRect();
    const script=doc.querySelector('.script-panel').getBoundingClientRect();
    const voice=doc.querySelector('.controls-panel').getBoundingClientRect();
-   return script.left<voice.left&&voice.left<recording.left&&
-    Math.abs(recording.width-script.width)<=2&&Math.abs(voice.width-script.width)<=2&&
-    Math.abs(voice.top-script.top)<=2&&Math.abs(recording.top-script.top)<=2&&
+   return recording.top>=script.bottom&&recording.top-script.bottom<=14&&
+    Math.abs(recording.left-script.left)<=1&&Math.abs(recording.width-script.width)<=1&&
+    Math.abs(voice.top-script.top)<=1&&
     doc.querySelector('#voiceFields').lastElementChild.id==='expressiveControls'&&
     !doc.querySelector('.project-voice-direction').open;
-  }),true,'Script, Voice and Recording share one desktop row and optional Voice direction stays collapsed');
+  }),true,'Recording sits directly below Script and optional Voice direction stays collapsed');
   assert.equal(await scriptFrame.getByRole('dialog',{name:'Voiceover history'}).count(),0);
   await scriptFrame.getByRole('button',{name:'History',exact:true}).click();
   await scriptFrame.getByRole('dialog',{name:'Voiceover history'}).waitFor();
@@ -160,11 +160,11 @@ const server=http.createServer((req,res)=>{
   assert.equal(await scriptFrame.locator('.recording-actions #analyzeLocal').innerText(),'Next · Script & scenes');
   assert.equal(await scriptFrame.locator('.ai-script-flow').isHidden(),true,'Whisper timing belongs to Script & scenes, not Script');
   const scriptDesktop=await scriptFrame.locator('#workspace').evaluate(workspace=>{const rect=name=>{const box=workspace.querySelector(name).getBoundingClientRect();return{left:box.left,top:box.top,right:box.right,bottom:box.bottom,width:box.width}};return{script:rect('.script-panel'),voice:rect('.controls-panel'),recording:rect('.result-panel'),overflow:document.documentElement.scrollWidth<=innerWidth+1}});
-  assert.equal(scriptDesktop.overflow,true,'The Script workspace has no horizontal overflow');assert.ok(scriptDesktop.script.left<scriptDesktop.voice.left&&scriptDesktop.voice.left<scriptDesktop.recording.left,'Script, Voice and Recording share the desktop row');
+  assert.equal(scriptDesktop.overflow,true,'The Script workspace has no horizontal overflow');assert.ok(scriptDesktop.script.left<scriptDesktop.voice.left&&scriptDesktop.recording.top>=scriptDesktop.script.bottom,'Script and Recording stay together beside Voice');
   await page.screenshot({path:path.join(root,'.test-output/creator-project-script-flow.png'),fullPage:true});
   await page.setViewportSize({width:393,height:852});
   const scriptMobile=await scriptFrame.locator('#workspace').evaluate(workspace=>{const top=name=>workspace.querySelector(name).getBoundingClientRect().top;return{script:top('.script-panel'),recording:top('.result-panel'),voice:top('.controls-panel'),overflow:document.documentElement.scrollWidth<=innerWidth+1}});
-  assert.equal(scriptMobile.overflow,true,'The collapsed Script workspace has no phone overflow');assert.ok(scriptMobile.script<scriptMobile.voice&&scriptMobile.voice<scriptMobile.recording,'Phone Script flow remains Script, Voice, then Recording');
+  assert.equal(scriptMobile.overflow,true,'The collapsed Script workspace has no phone overflow');assert.ok(scriptMobile.script<scriptMobile.recording&&scriptMobile.recording<scriptMobile.voice,'Phone Script flow remains Script, Recording, then Voice');
   await page.setViewportSize({width:1440,height:1000});
   await narration.evaluate(()=>window.parent.postMessage({type:'invincible-open-script-timing'},location.origin));
   await page.locator('[data-project-area="Storyboard"][aria-current="step"]').waitFor();await scriptFrame.locator('html.project-timing-view').waitFor();

@@ -1,14 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {directorDraftMatchesManifest,hasSavedVideoContent} from '../creator/director-resume.js';
-
-test('automatic plan loading treats any saved scene or audio as a draft to preserve',()=>{
- assert.equal(hasSavedVideoContent({scenes:[],audioClips:[],audio:null}),false);
- assert.equal(hasSavedVideoContent({scenes:[{id:'manual-scene'}]}),true);
- assert.equal(hasSavedVideoContent({scenes:[],audioClips:[{id:'voice'}]}),true);
- assert.equal(hasSavedVideoContent({scenes:[],audio:{fileId:'voice'}}),true);
-});
-import {defaultProjectRoute,normalizeProjectRoute} from '../creator/project-flow.js';
 import {newStudioVideo,upgradeVideo,appendProjectMaps,arrangeScenes,resizeScene} from '../creator/video-studio/composition.js';
 import {emptyVideo,validateManifest,compileTimeline,PRESETS,sceneAt} from '../creator/video-studio/model.js';
 import {emptyBattlefield,poseAt,elevationAt,projectBattlePoint} from '../creator/video-studio/battlefield.js';
@@ -16,17 +7,6 @@ import {mixAudioChunk,audioGainAt,scheduleAudioTracks} from '../creator/video-st
 import {compileAnimation} from '../creator/map-animation-import.js';
 const graphic=(id,durationSeconds=2)=>({id,startSeconds:0,durationSeconds,engineType:'graphic',engineData:{},overlays:[]});
 const source=()=>compileAnimation({scenes:[]},{format:'invincible-map-animation',version:1,duration:4,aspectRatio:'9:16',basemap:'physical',terrain:false,camera:[{time:0,center:[74,28],zoom:4,pitch:0,bearing:0},{time:4,center:[77,30],zoom:5,pitch:20,bearing:10}],layers:[]}).project;
-test('a native map shot can extend to fractional narration duration without modifying its shared source',()=>{
- const manifest=appendProjectMaps(newStudioVideo(),source());
- const before=structuredClone(manifest);
- const [shot]=manifest.scenes;
- const extended=resizeScene(shot,5.64,manifest.mapSources);
- const next=arrangeScenes(manifest,[extended]);
- assert.equal(next.scenes[0].id,shot.id);
- assert.equal(next.scenes[0].durationSeconds,5.64);
- assert.deepEqual(extended.engineData.project.historicalMap,before.mapSources[0].project.historicalMap);
- assert.deepEqual(manifest,before);
-});
 test('v1 upgrades only on an explicit edit and preserves the legacy recording',()=>{
  const old={...emptyVideo(),audio:{fileId:'voice',name:'original.wav',startSeconds:.5,gain:.7}},before=structuredClone(old);assert.throws(()=>upgradeVideo(old),/original/);const out=upgradeVideo(old,3);assert.equal(out.schemaVersion,2);assert.equal(out.audio,null);assert.equal(out.audioClips[0].durationSeconds,3);assert.equal(out.audioClips[0].startSeconds,.5);assert.deepEqual(old,before);assert.deepEqual(validateManifest(old),old);assert.equal(validateManifest(out).schemaVersion,2);assert.throws(()=>validateManifest({...old,schemaVersion:3}));
 });
@@ -51,23 +31,4 @@ test('invalid trims, unsupported engines, negative timing and excessive fades re
 });
 test('duration changes retime battlefield movement, camera and overlays together',()=>{
  const b={...graphic('b',4),engineType:'battlefield',engineData:emptyBattlefield(),overlays:[{id:'t',type:'text',text:'test',endSeconds:4,keyframes:[{timeSeconds:0,x:0},{timeSeconds:4,x:1}]}]};b.engineData.camera.push({...b.engineData.camera[0],timeSeconds:4,x:.7});const out=resizeScene(b,2);assert.equal(out.engineData.camera[1].timeSeconds,2);assert.equal(out.overlays[0].endSeconds,2);assert.equal(out.overlays[0].keyframes[1].timeSeconds,2);assert.equal(b.durationSeconds,4);validateManifest({...newStudioVideo(),scenes:[out]});
-});
-test('reopening the same Director plan reuses Motion Studio without replacement',()=>{
- const scenes=[
-  {id:'map-1',startSeconds:0,endSeconds:3,mapAnimation:{}},
-  {id:'canvas-2',startSeconds:3,endSeconds:5.5,canvasScene:{}}
- ];
- const manifest={scenes:[
-  {id:'map-1',startSeconds:0,durationSeconds:3,engineType:'map',engineData:{project:{}}},
-  {id:'canvas-2',startSeconds:3,durationSeconds:2.5,engineType:'graphic',engineData:{}}
- ]};
- assert.equal(directorDraftMatchesManifest(manifest,scenes),true);
- assert.equal(directorDraftMatchesManifest({...manifest,scenes:manifest.scenes.slice(0,1)},scenes),false);
- assert.equal(directorDraftMatchesManifest({...manifest,scenes:manifest.scenes.map((scene,index)=>index?{...scene,startSeconds:3.2}:scene)},scenes),false);
-});
-test('Creator routes Director links and applied projects into the visible workflow',()=>{
- assert.deepEqual(normalizeProjectRoute('Studio',''),{area:'Video Studio',tool:'map-review'});
- assert.deepEqual(normalizeProjectRoute('Sync plan',''),{area:'Storyboard',tool:''});
- assert.deepEqual(defaultProjectRoute({pluginDraft:{creatorStudio:{scenes:[{id:'one'}]}}}),{area:'Storyboard',tool:''});
- assert.deepEqual(defaultProjectRoute({}),{area:'Voiceover',tool:''});
 });

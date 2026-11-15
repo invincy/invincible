@@ -1,12 +1,10 @@
 import{makeScene}from'./storyboard-model.js?v=3';
-import{createProductionWorkbench}from'./production-workbench.js?v=2026111612';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026111401';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
-import{restoreProjectFromFirestore}from'./project-persistence.js?v=2026111501';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{createProductionReadiness,mountProductionReadiness}from'./video-studio/production-readiness.js?v=2026111322';
 import{splitVoiceoverScript}from"./scene-tools.js?v=2";
-import{defaultProjectRoute,normalizeProjectRoute}from'./project-flow.js?v=2026111604';
 
 const queryParams=new URLSearchParams(location.search),$=id=>document.getElementById(id);
 let isNewDraft=queryParams.get("draft")==="1";
@@ -15,8 +13,7 @@ if(isNewDraft&&!queryParams.has("id")){
   queryParams.set("id",projectId);
   history.replaceState(history.state,"",location.pathname+"?"+queryParams);
 }
-const requestedRoute=normalizeProjectRoute(queryParams.get("area"),queryParams.get("tool"));
-const requestedArea=requestedRoute.area,requestedTool=requestedRoute.tool;
+const requestedArea=queryParams.get("area"),requestedTool=queryParams.get("tool")||"";
 const tabId=(()=>{try{let id=sessionStorage.getItem("invincible.creatorTabId");if(!id){id=Math.random().toString(36).slice(2)+Date.now().toString(36);sessionStorage.setItem("invincible.creatorTabId",id);}return id;}catch{return "default";}})();
 let saveChain=Promise.resolve(),editVersion=0,cloudVersion=0,baseRevision=0;
 let productionReadiness;
@@ -80,23 +77,6 @@ window.addEventListener("message",async event=>{
     queueSave();
     return;
   }
-  if(event.data?.type==="invincible-sync-project-script-workspace"){
-    const source=event.data.workspace||{},segments=Array.isArray(source.transcript?.segments)?source.transcript.segments.slice(0,100):[];
-    const valid=segments.length&&segments.every(segment=>Number.isFinite(Number(segment.start))&&Number.isFinite(Number(segment.end))&&Number(segment.end)>Number(segment.start)&&String(segment.text||'').trim().length<=4000);
-    if(!valid){status("The timed transcript was not saved because it is incomplete.","error");return;}
-    const transcript={language:String(source.transcript.language||'').slice(0,40),duration:Number(source.transcript.duration)||Number(segments.at(-1).end),text:String(source.transcript.text||'').slice(0,30000),segments:segments.map((segment,index)=>({id:String(segment.id||`segment-${index+1}`).slice(0,100),start:Number(segment.start),end:Number(segment.end),text:String(segment.text||'').slice(0,4000)}))};
-    project.scriptWorkspace={version:1,script:String(source.script||'').slice(0,30000),creativeInstructions:String(source.creativeInstructions||'').slice(0,12000),transcript,timingProvider:String(source.timingProvider||'local-whisper').slice(0,40),audio:{sourceFilename:String(source.audio?.sourceFilename||'').slice(0,240),finalDuration:Number(source.audio?.finalDuration)||transcript.duration,appliedSpeed:Number(source.audio?.appliedSpeed)||1,cloudAssetId:String(source.audio?.cloudAssetId||project.scriptWorkspace?.audio?.cloudAssetId||'').slice(0,80)},updatedAtMs:Number(source.updatedAtMs)||Date.now()};
-    if(project.scriptWorkspace.script)project.script=project.scriptWorkspace.script;
-    if(project.scriptWorkspace.creativeInstructions)project.notes=project.scriptWorkspace.creativeInstructions;
-    queueSave();return;
-  }
-  if(event.data?.type==="invincible-sync-project-voiceover-asset"){
-    const asset=event.data.asset||{},id=String(asset.id||'');if(!/^cloud-[a-f0-9]{64}$/.test(id)){status("The private voiceover reference was not saved because it is invalid.","error");return;}
-    project.scriptWorkspace={version:1,script:String(project.scriptWorkspace?.script||project.script||'').slice(0,30000),creativeInstructions:String(project.scriptWorkspace?.creativeInstructions||project.notes||'').slice(0,12000),transcript:project.scriptWorkspace?.transcript||null,timingProvider:String(project.scriptWorkspace?.timingProvider||'local-whisper').slice(0,40),audio:{...(project.scriptWorkspace?.audio||{}),sourceFilename:String(asset.name||'voiceover.mp3').slice(0,240),finalDuration:Number(asset.duration)||0,appliedSpeed:Number(asset.appliedSpeed)||1,cloudAssetId:id},updatedAtMs:Date.now()};queueSave();return;
-  }
-  if(event.data?.type==="invincible-clear-project-voiceover-asset"){
-    if(project.scriptWorkspace?.audio?.cloudAssetId){project.scriptWorkspace={...project.scriptWorkspace,audio:{...project.scriptWorkspace.audio,cloudAssetId:''},transcript:null,updatedAtMs:Date.now()};queueSave();}return;
-  }
   if(event.data?.type==="invincible-open-script-timing"){
     selectProjectArea("Storyboard");
     return;
@@ -112,7 +92,7 @@ window.addEventListener("message",async event=>{
     const result=await storyboard.openAiDraft({reviewMaps:true});
     if(result)revealProjectArea("Video Studio",result.reviewingMaps?"map-review":"");
   }
-  catch(error){await selectProjectArea("Storyboard");status((error.message||"The reviewed scene plan could not be opened.")+" The saved sync plan is still here; no timing or scenes were lost.","error");}
+  catch(error){status(error.message||"The reviewed scene plan could not be opened.","error");}
 });
 
 function projectCompletion(){
@@ -138,8 +118,8 @@ function setProjectAreaState(area,mode=""){
   selectedArea=area;selectedTool=mode;
   const guides={
     Voiceover:'<strong>Step 1 of 4 · Script.</strong> Create the final MP3, then choose Next · Sync plan.',
-    Storyboard:'<strong>Step 2 of 4 · Timing &amp; plan.</strong> Review locked timestamps and scene instructions; continue to Review scenes when ready.',
-    'Video Studio:map-review':'<strong>Optional · Review scenes.</strong> Check geographic map layers if needed. You can skip this and go directly to Motion &amp; export for the complete composition.',
+    Storyboard:'<strong>Step 2 of 4 · Sync plan.</strong> Review timestamps and instructions; Next opens every generated map in order.',
+    'Video Studio:map-review':'<strong>Step 3 of 4 · Review maps.</strong> Save or discard each map; Motion & export opens automatically after the last one.',
     'Video Studio':'<strong>Step 4 of 4 · Motion & export.</strong> Preview the complete timeline, refine any scene, then export the MP4.',
     Maps:'<strong>Optional · Map Editor.</strong> Build or edit the project-wide map manually.',
     'Video Studio:battlefield':'<strong>Optional · Battlefield Editor.</strong> Use only when the story needs a tactical schematic.',
@@ -164,9 +144,8 @@ async function selectProjectArea(area,mode=""){
   const isTiming=area==="Storyboard";
   if(showScriptWorkspace){
     const frame=$("projectVoiceoverFrame");
-    const sendWorkspace=()=>frame.contentWindow?.postMessage({type:"invincible-load-project-script-workspace",workspace:project.scriptWorkspace||null,savedPlan:project.pluginDraft||null,script:project.scriptWorkspace?.script||project.script||project.pluginDraft?.script||canonicalScript(project),creativeInstructions:project.scriptWorkspace?.creativeInstructions||project.pluginDraft?.creativeInstructions||project.notes||'',title:project.title},location.origin);
-    if(!frame.hasAttribute("src")){frame.addEventListener("load",sendWorkspace,{once:true});frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId,view:isTiming?"timing":"script",build:"2026111609"});}
-    else{frame.contentWindow?.postMessage({type:"invincible-project-script-view",view:isTiming?"timing":"script"},location.origin);sendWorkspace();}
+    if(!frame.hasAttribute("src"))frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId,view:isTiming?"timing":"script",build:"2026111330"});
+    else frame.contentWindow?.postMessage({type:"invincible-project-script-view",view:isTiming?"timing":"script"},location.origin);
   }else if(area==="Video Studio"&&mode==="map-review"){const reviewing=await storyboard.reviewMaps();if(!reviewing)setProjectAreaState("Video Studio","");}
   else storyboard.open({area});
 }
@@ -243,17 +222,7 @@ function updateStats(){
   $("projectProgressBar").style.width=progress+"%";
 }
 
-// Compatibility wrapper kept self-contained because older embedded project pages
-// load this persistence seam without the module graph.
-function copyProject(value,inArray=false){
- if(Array.isArray(value)){
-  const clean=value.filter(item=>item!==undefined);
-  if(inArray)return {__invincibleSerializedArray:JSON.stringify(clean.map(item=>copyProject(item,false)))};
-  return clean.map(item=>copyProject(item,true));
- }
- if(value&&Object.getPrototypeOf(value)===Object.prototype)return Object.fromEntries(Object.entries(value).filter(([,item])=>item!==undefined).map(([key,item])=>[key,copyProject(item,false)]));
- return value;
-}
+function copyProject(value){if(Array.isArray(value))return value.map(copyProject);if(value&&Object.getPrototypeOf(value)===Object.prototype)return Object.fromEntries(Object.entries(value).map(([key,item])=>[key,copyProject(item)]));return value}
 function legacyDraftKey(){return 'invincible.creatorDraft.'+user.uid+'.'+projectId}
 function draftKey(){const id=typeof tabId==='string'?tabId:'default';return legacyDraftKey()+'.'+id}
 function clearLocalDraft(){try{localStorage.removeItem(draftKey());if(typeof recoveredLegacyDraft!=='undefined'&&recoveredLegacyDraft){localStorage.removeItem(legacyDraftKey());recoveredLegacyDraft=false;}}catch{}}
@@ -447,11 +416,7 @@ $("copyProjectLink").onclick=async()=>{
 document.querySelector(".project-workspace-nav").addEventListener("click",async event=>{
   const button=event.target.closest("[data-project-area]");
   if(!button)return;
-  try{await selectProjectArea(button.dataset.projectArea,button.dataset.toolMode||"");}
-  catch(error){
-    if(button.dataset.toolMode==="map-review")await selectProjectArea("Storyboard");
-    status((error.message||"This step could not be opened.")+(button.dataset.toolMode==="map-review"?" The saved sync plan is still here; no timing or scenes were lost.":""),"error");
-  }
+  await selectProjectArea(button.dataset.projectArea,button.dataset.toolMode||"");
 });
 $("saveProjectNow").onclick=async()=>{if(await save())status("Saved to Firebase","ok");};
 $("saveAndReturn").onclick=async()=>{const button=$("saveAndReturn");button.disabled=true;button.textContent="Saving…";if(await save())location.href="/invincible/creator/";else{button.disabled=false;button.textContent="Save & return";}};
@@ -533,7 +498,7 @@ async function load(){
         return {...clean,id:projectId,ownerUid:user.uid,ownerEmail:(user.email||"").toLowerCase(),editorEmails:[],writeRevision:1};
       });
     }
-    if(snapshot?.exists())project=restoreProjectFromFirestore(snapshot.data());
+    if(snapshot?.exists())project=snapshot.data();
     if(project)finishDraft();
     else if(isNewDraft){
       project={id:projectId,title:"Untitled project",stage:"Ideas",format:"Short",aspectRatio:"9:16",script:"",scenes:[],ownerUid:user.uid,ownerEmail:(user.email||"").toLowerCase(),editorEmails:[]};
@@ -570,8 +535,8 @@ async function load(){
       onConflict({source:'stale-draft',draft:recoveredStaleDraft,serverData:project,serverRevision:baseRevision,serverUpdatedAt:cloudVersion});
       status(storageError({code:'revision-conflict'})+" An earlier local draft is waiting for your decision.","error");
     }
-    if(requestedArea)selectProjectArea(requestedArea,requestedTool).catch(async error=>{await selectProjectArea("Storyboard");status((error.message||"Review maps could not open.")+" The saved sync plan is still here; no timing or scenes were lost.","error");});
-    else{const route=defaultProjectRoute(project);selectProjectArea(route.area,route.tool);}
+    if(requestedArea)selectProjectArea(requestedArea,requestedTool);
+    else selectProjectArea("Voiceover");
     if(!isNewDraft)watchProject();
   }catch(error){status("Could not load project: "+error.message,"error");}
 }
@@ -588,7 +553,7 @@ function watchProject(){
         }
         return;
       }
-      const data=restoreProjectFromFirestore(live.data()||{});
+      const data=live.data()||{};
       const remoteRev=Number.isInteger(data.writeRevision)?data.writeRevision:0;
       const remoteUpdatedAt=data.updatedAt?.toMillis?.()||0;
       // Repeated metadata/own-write acknowledgements must not remount an active editor.

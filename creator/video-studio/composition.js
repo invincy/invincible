@@ -7,24 +7,6 @@ export function upgradeVideo(manifest,audioDuration=0){
  out.audio=null;return out;
 }
 export const newStudioVideo=()=>({...emptyVideo(),schemaVersion:2,audioClips:[]});
-function repairTimedKeys(keys,duration){
- const repaired=[];
- for(const key of Array.isArray(keys)?keys:[]){
-  const time=Math.min(duration,Math.max(0,Number(key.time)||0));
-  if(repaired.length&&time<=repaired.at(-1).time){repaired[repaired.length-1]={...key,time:repaired.at(-1).time};continue;}
-  repaired.push({...key,time});
- }
- if(repaired.length&&repaired[0].time>0)repaired.unshift({...repaired[0],time:0});
- return repaired;
-}
-export function repairMapAnimationTiming(animation,duration){
- const out=structuredClone(animation),sourceDuration=Math.max(1/30,Number(animation?.duration)||duration),ratio=duration/sourceDuration;
- out.duration=duration;
- out.camera=repairTimedKeys((animation?.camera||[]).map(key=>({...key,time:Number(key.time)*ratio})),duration);
- if(Array.isArray(animation?.lighting))out.lighting=repairTimedKeys(animation.lighting.map(key=>({...key,time:Number(key.time)*ratio})),duration);
- for(const layer of out.layers||[]){layer.start=Math.min(duration,Math.max(0,Number(layer.start)*ratio));layer.end=Math.min(duration,Math.max(layer.start+0.1,Number(layer.end)*ratio));for(const key of ['fadeIn','fadeOut','revealDuration'])if(layer[key]!==undefined)layer[key]=Math.min(layer[key],Math.max(.05,layer.end-layer.start));}
- return out;
-}
 export function nativeMapScenes(project){
  validateMap(project.historicalMap,project);
  const snapshot={scenes:project.scenes.map(s=>({id:s.id,duration:Number(s.duration)})),historicalMap:structuredClone(project.historicalMap)};
@@ -37,27 +19,14 @@ export function appendProjectMaps(manifest,project){
 export function arrangeScenes(manifest,scenes,{mapAssets=[]}={}){
  const out=structuredClone(manifest);let at=0;out.scenes=scenes.map(s=>{const row={...structuredClone(s),startSeconds:at};at+=row.durationSeconds;return row;});return validateManifest(out,{mapAssets});
 }
-export function resizeScene(scene,duration,mapSources=[]){
- if(!Number.isFinite(duration)||duration<1/30||duration>600)throw Error('Scene duration must be between one frame and 600 seconds.');
+export function resizeScene(scene,duration){
  const out=structuredClone(scene),ratio=duration/out.durationSeconds;out.durationSeconds=duration;
  for(const layer of out.overlays){for(const p of ['startSeconds','endSeconds'])if(layer[p]!==undefined)layer[p]*=ratio;for(const key of layer.keyframes||[])key.timeSeconds*=ratio;}
  if(out.transition)out.transition.durationSeconds=Math.min(out.transition.durationSeconds,duration/2);
  if(out.engineType==='battlefield')for(const keys of [out.engineData.camera,...out.engineData.formations.map(f=>f.path)])for(const key of keys)key.timeSeconds*=ratio;
  for(const p of out.engineData.projectiles||[])for(const key of ['launchSeconds','flightSeconds','impactSeconds'])p[key]*=ratio;
  if(out.engineType==='lic')for(const key of out.engineData.points)key.timeSeconds*=ratio;
- if(out.engineType==='map'&&out.engineData.animation)out.engineData.animation=repairMapAnimationTiming(out.engineData.animation,duration);
- if(out.engineType==='map'&&!out.engineData.animation){
-  const data=out.engineData;
-  const source=data.project||mapSources.find(item=>item.id===data.sourceId)?.project;
-  const sourceDuration=source?.scenes.reduce((total,segment)=>total+segment.duration,0);
-  const extra=(data.sourceStart||0)+duration-sourceDuration;
-  if(extra>1e-6){
-   // Extend only this shot's copy. Existing map cue times and other shots stay intact.
-   data.project=structuredClone(source);
-   data.project.scenes.at(-1).duration+=extra;
-   delete data.sourceId;
-  }
- }
+ if(out.engineType==='map'&&out.engineData.animation){const a=out.engineData.animation;a.duration=duration;for(const key of [...a.camera,...(a.lighting||[])])key.time*=ratio;for(const layer of a.layers){layer.start*=ratio;layer.end*=ratio;for(const p of ['fadeIn','fadeOut','revealDuration'])if(layer[p]!==undefined)layer[p]*=ratio;}}
  return out;
 }
 export function fitMedia(ctx,source,fit='contain'){

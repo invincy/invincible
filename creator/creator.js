@@ -1,6 +1,6 @@
 import {initializeMapProject} from './map-defaults.js?v=2026110903';
 import {attachImportedGroups} from './production-model.js?v=2026111002';
-import{createProductionWorkbench}from'./production-workbench.js?v=2026111612';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026111401';
 import{createMediaClient,createStartingVoiceoverManifest,inspectMedia}from'./media-library.js?v=2026111301';
 import{PRESETS}from'./video-studio/model.js?v=2026111207';
 import{db,observeAuth,storageError}from'../shared/firebase-client.js';
@@ -64,10 +64,6 @@ function homeCard(item){
   return '<article class="content-card project-home-card" draggable="'+(!motionStudioMode)+'" data-id="'+item.id+'" tabindex="0" aria-label="'+actionLabel+' · '+attr(item.title)+'"><div class="project-home-top"><span class="project-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5zM9 8l7 4-7 4z"/></svg></span><div><span class="project-stage">'+esc(item.stage||"Ideas")+'</span><span class="due '+(overdue?'overdue':'')+'">'+(item.publishDate?dateLabel(item.publishDate):"No date")+'</span></div></div><h3>'+esc(item.title)+'</h3>'+(item.hook?'<p class="hook">'+esc(item.hook)+'</p>':'')+'<div class="project-home-meta"><span>'+esc(item.series||"General")+'</span><span class="access-tag '+(shared?'shared':'')+'">'+accessLabel+'</span></div><div class="project-progress-copy"><span>'+(sceneCount?sceneCount+' scenes':'Storyboard not started')+'</span><strong>'+(sceneCount?completeCount+' ready':item.format||'Project')+'</strong></div><div class="project-progress-bar" aria-label="'+progress+' percent of scenes ready"><span style="width:'+progress+'%"></span></div><div class="project-home-actions"><button class="open-project" data-open="'+item.id+'">'+actionLabel+' <span>→</span></button>'+(motionStudioMode?'':'<div class="card-actions"><button data-edit="'+item.id+'" aria-label="Edit '+attr(item.title)+'">Edit</button>'+moveButton(item,-1)+moveButton(item,1)+'</div>')+'</div></article>';
 }
 
-function newProjectCard(){
-  return '<article class="new-project-card" data-new-project tabindex="0" aria-label="Create a new project"><button type="button" class="new-project-card-action" data-new-project><span class="new-project-plus" aria-hidden="true">+</span><strong>New project</strong><span>Start with a blank project</span></button></article>';
-}
-
 function projectDestination(id){return "project.html?"+new URLSearchParams({id,...(motionStudioMode?{area:"Video Studio"}:{})});}
 
 function renderMetrics(){
@@ -82,7 +78,7 @@ function render(){
   $("stageTabs").innerHTML=stages.map(stage=>'<button data-stage="'+stage+'" class="'+(mobileStage===stage?'active':'')+'">'+stage+' · '+items.filter(item=>item.stage===stage).length+'</button>').join("");
   $("board").innerHTML=stages.map(stage=>{const rows=items.filter(item=>item.stage===stage).sort((a,b)=>(a.publishDate||"9999").localeCompare(b.publishDate||"9999"));return '<section class="column '+(mobileStage===stage?'mobile-active':'')+'" data-stage="'+stage+'"><div class="column-head"><h2>'+stage+'</h2><span class="column-count">'+rows.length+'</span></div><div class="cards">'+(rows.length?rows.map(card).join(""):'<div class="empty">No content here</div>')+'</div></section>';}).join("");
   const recent=[...items].sort((a,b)=>Number(b.updatedAt?.seconds||b.updatedAt||0)-Number(a.updatedAt?.seconds||a.updatedAt||0));
-  $("projectGrid").innerHTML=newProjectCard()+recent.map(homeCard).join("");
+  $("projectGrid").innerHTML=recent.map(homeCard).join("");
   $("projectCount").textContent=String(recent.length);
   $("projectEmpty").hidden=recent.length>0;
   bindDrag();
@@ -94,15 +90,6 @@ function mergeProjects(){
 }
 
 async function saveItem(item){
-  const firestoreSafe=(value,inArray=false)=>{
-    if(Array.isArray(value)){
-      const clean=value.filter(entry=>entry!==undefined);
-      if(inArray)return {__invincibleSerializedArray:JSON.stringify(clean.map(entry=>firestoreSafe(entry,false)))};
-      return clean.map(entry=>firestoreSafe(entry,true));
-    }
-    if(value&&Object.getPrototypeOf(value)===Object.prototype)return Object.fromEntries(Object.entries(value).filter(([,entry])=>entry!==undefined).map(([key,entry])=>[key,firestoreSafe(entry,false)]));
-    return value;
-  };
   attachImportedGroups(item,item.scenes||[]);
   if(!user)throw Error("Restore your Google session on Dashboard before saving.");
   status("Saving…");
@@ -119,7 +106,7 @@ async function saveItem(item){
           err.code="revision-conflict";
           throw err;
         }
-        tx.set(ref,{...firestoreSafe(clean),id:item.id,ownerUid:clean.ownerUid||user.uid,ownerEmail:clean.ownerEmail||(user.email||"").toLowerCase(),editorEmails:clean.editorEmails||[],writeRevision:1,writtenBy:user.uid,writtenAt:serverTimestamp(),createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+        tx.set(ref,{...clean,id:item.id,ownerUid:clean.ownerUid||user.uid,ownerEmail:clean.ownerEmail||(user.email||"").toLowerCase(),editorEmails:clean.editorEmails||[],writeRevision:1,writtenBy:user.uid,writtenAt:serverTimestamp(),createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
         return {writeRevision:1};
       }
       const remote=snap.data()||{};
@@ -137,7 +124,7 @@ async function saveItem(item){
       if(isRemoteOwner)payload.editorEmails=clean.editorEmails??remote.editorEmails??[];
       else if(remote.editorEmails!==undefined)payload.editorEmails=remote.editorEmails;
       if(remote.createdAt!==undefined)payload.createdAt=remote.createdAt;
-      tx.set(ref,firestoreSafe(payload));
+      tx.set(ref,payload);
       return {writeRevision:nextRev};
     });
     if(user?.uid!==writerUid)return result;
@@ -210,7 +197,6 @@ document.querySelector(".filter-group").onclick=event=>{const button=event.targe
 $("searchInput").oninput=event=>{queryText=event.target.value.trim().toLowerCase();render();};
 
 async function handleProjectClick(event){
-  if(event.target.closest("[data-new-project]")){event.stopPropagation();window.location.href="project.html?draft=1";return;}
   const move=event.target.closest("[data-move]");
   if(move){event.stopPropagation();const item=state.items.find(row=>row.id===move.dataset.id),next=stages.indexOf(item.stage)+Number(move.dataset.move);if(stages[next]){const prevStage=item.stage,prevMobile=mobileStage;item.stage=stages[next];mobileStage=item.stage;render();try{await saveItem(item,{mustExist:true});}catch{item.stage=prevStage;mobileStage=prevMobile;render();}}return;}
   const edit=event.target.closest("[data-edit]");if(edit){event.stopPropagation();openDialog(state.items.find(row=>row.id===edit.dataset.edit));return;}
@@ -221,7 +207,7 @@ $("board").onclick=handleProjectClick;
 $("projectGrid").onclick=handleProjectClick;
 
 $("board").onkeydown=event=>{if((event.key==="Enter"||event.key===" ")&&!event.target.closest("button")){event.preventDefault();const card=event.target.closest(".content-card");if(card)window.location.href="project.html?id="+encodeURIComponent(card.dataset.id);}};
-$("projectGrid").onkeydown=event=>{if((event.key==="Enter"||event.key===" ")&&!event.target.closest("button")){event.preventDefault();const card=event.target.closest("[data-new-project]");if(card){window.location.href="project.html?draft=1";return;}const project=event.target.closest(".content-card");if(project)window.location.href=projectDestination(project.dataset.id);}};
+$("projectGrid").onkeydown=event=>{if((event.key==="Enter"||event.key===" ")&&!event.target.closest("button")){event.preventDefault();const card=event.target.closest(".content-card");if(card)window.location.href=projectDestination(card.dataset.id);}};
 
 function openToolPicker(area,mode=""){
   pendingProjectArea=area;pendingToolMode=mode;

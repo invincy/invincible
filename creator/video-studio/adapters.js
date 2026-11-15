@@ -3,11 +3,11 @@ import {drawCanvasBackground,drawCanvasLayer} from './canvas.js?v=2026111206';
 import {ensureDocumentaryFonts} from '../map-fonts.js';
 import {compileAnimation} from '../map-animation-import.js?v=2026111002';
 import {createHistoryPlayer} from '../history-player.js?v=2026111002';
-import {layerFrame,visualSceneAt,referencedMapAssets} from './model.js?v=2026111415';
+import {layerFrame,sceneAt,referencedMapAssets} from './model.js?v=2026111207';
 import {resolveMapAsset} from '../map-assets-client.js?v=2026111002';
 import {drawBattlefield} from './battlefield.js?v=2026111014';
 import {parallaxTransform,projectLayer} from './parallax.js';
-import {fitMedia} from './composition.js?v=2026111505';
+import {fitMedia} from './composition.js?v=2026111207';
 export function mapDraft(animation,geometryReviewed,mapAssets=[]){
  return compileAnimation({scenes:[],historicalMap:{version:1,theme:'night',events:[],features:{type:'FeatureCollection',features:[]},camera:[],visual:{version:1,assets:referencedMapAssets(mapAssets,animation),layers:[]}}},animation,{geometryReviewed}).project;
 }
@@ -84,16 +84,13 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
  }
  async function draw(time,{exporting=false,signal:frameSignal}={}){
   if(disposed)throw new DOMException('Renderer closed','AbortError');frameSignal?.throwIfAborted();
-  ctx.globalAlpha=1;ctx.fillStyle=brand.background;ctx.fillRect(0,0,width,height);const visual=visualSceneAt(timeline,time),scene=visual?.scene;if(scene?.engineType!=='three')releaseStage();if(!scene)return;
-  const local=visual.localTime,transition=scene.transition?.type==='fade'?scene.transition.durationSeconds:0;
+  ctx.globalAlpha=1;ctx.fillStyle=brand.background;ctx.fillRect(0,0,width,height);const scene=sceneAt(timeline,time);if(scene?.engineType!=='three')releaseStage();if(!scene)return;
+  const local=time-scene.startSeconds,transition=scene.transition?.type==='fade'?scene.transition.durationSeconds:0;
   ctx.save();try{
    if(transition)ctx.globalAlpha=Math.max(0,Math.min(1,local/transition,(scene.durationSeconds-local)/transition));
    if(scene.engineData.background){ctx.fillStyle=scene.engineData.background;ctx.fillRect(0,0,width,height);}
    if(scene.engineType==='map'){
     const {player,host,errors}=await mapFor(scene,frameSignal);if(exporting&&(!player.isNative||errors.length))throw Error(errors[0]||'Map export needs WebGL2.');
-    // Mapbox renders asynchronously after seek/jumpTo. Waiting only during export
-    // let the live preview copy a half-cleared canvas, which appeared as flicker.
-    // Always wait for the settled map frame before compositing it into Motion Studio.
     player.seek(local+(scene.engineData.sourceStart||0));if(player.isNative)await player.settleFrame(frameSignal);
     if(exporting&&errors.length)throw Error(errors[0]);ctx.drawImage(player.map.getCanvas(),0,0,width,height);
     const overlay=host.querySelector('.history-overlay');if(overlay)ctx.drawImage(overlay,0,0,width,height);

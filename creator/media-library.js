@@ -1,21 +1,5 @@
 import {decodeVoiceover} from './video-studio/audio.js?v=2026111002';
 export const isCloudFile=id=>typeof id==='string'&&/^cloud-[a-f0-9]{64}$/.test(id);
-export async function downloadCloudOriginal(id,read,fetchOriginal=fetch){
- for(let attempt=0;attempt<2;attempt++){
-  // Read again before a retry so an expired or rejected signed URL is never reused.
-  const url=await read(id);
-  let response;
-  try{response=await fetchOriginal(url,{signal:AbortSignal.timeout(15000)});}
-  catch{
-   if(attempt===0)continue;
-   throw Error('Cloud storage did not respond. Retry when the connection is available.');
-  }
-  if(response.ok)return response.blob();
-  if(attempt===0&&([401,403,408,429].includes(response.status)||response.status>=500))continue;
-  if(response.status===404||response.status===410)throw Error(`The original is missing from cloud storage (HTTP ${response.status}).`);
-  throw Error(`Cloud storage rejected the original download (HTTP ${response.status}).`);
- }
-}
 export function createMediaClient(accountId){
  async function call(data){
   const [{mapAssetCall},{auth,authReady}]=await Promise.all([import('./map-assets-client.js?v=2026111002'),import('../shared/firebase-client.js')]);await authReady;
@@ -27,7 +11,7 @@ export function createMediaClient(accountId){
   async upload(file,metadata){const result=await call({action:'prepare',asset:metadata});if(result.asset)return result.asset;
    const uploaded=await fetch(result.uploadUrl,{method:'PUT',body:file,headers:{'Content-Type':metadata.mimeType}});if(!uploaded.ok&&uploaded.status!==412)throw Error('Upload did not finish. Choose the same file to retry.');return (await call({action:'commit',id:metadata.id})).asset;},
   async read(id){return (await call({action:'read',id})).url;},
-  file(id){return downloadCloudOriginal(id,async key=>(await call({action:'read',id:key})).url);},
+  async file(id){const url=await this.read(id),response=await fetch(url);if(!response.ok)throw Error('Could not retrieve the original cloud asset.');return response.blob();},
   async loadDraft(projectId){return (await call({action:'loadDraft',projectId})).draft;},
   saveDraft(projectId,manifest,brands,revision){return call({action:'saveDraft',projectId,manifest,brands,revision});}
  };

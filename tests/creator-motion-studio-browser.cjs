@@ -9,25 +9,12 @@ const ready=p=>p.waitForFunction(()=>document.querySelector('[data-vs=save]')&&!
  const manifest=JSON.parse(fs.readFileSync(path.join(root,'creator/video-studio/motion-example.json'),'utf8'));
  await page.locator('[data-vs-json]').fill(JSON.stringify(manifest));await page.locator('[data-vs=validate]').click();await ready(page);await page.locator('[data-vs=apply]').click();await ready(page);
  await page.locator('[data-compose-select]').first().click();await ready(page);await page.locator('[data-objects-panel] summary').click();assert.equal(await page.locator('[data-object-field=backgroundStyle]').inputValue(),'blueprint');
- await page.locator('[data-assembly-prop=duration]').fill('5.64');
- await page.locator('[data-assembly-prop=duration]').dispatchEvent('change');
- await ready(page);
- await page.locator('[data-vs=export]').click();
- await page.getByText('Apply or discard the pending scene change before saving or exporting the video.',{exact:true}).waitFor();
- await page.locator('[data-compose=apply-change]').click();
- await ready(page);
- assert.equal(await page.locator('[data-assembly-prop=duration]').inputValue(),'5.64');
  await page.locator('[data-object-select=title]').click();await ready(page);await page.locator('[data-object-field=fontSize]').fill('80');await page.locator('[data-object-field=fontSize]').dispatchEvent('change');await ready(page);assert.equal(await page.locator('[data-object-field=fontSize]').inputValue(),'80');
  await page.locator('[data-object-action=undo]').click();await ready(page);assert.equal(await page.locator('[data-object-field=fontSize]').inputValue(),'54');await page.locator('[data-object-action=redo]').click();await ready(page);assert.equal(await page.locator('[data-object-field=fontSize]').inputValue(),'80');
  await page.locator('[data-object-field=startSeconds]').fill('.2');await page.locator('[data-object-field=startSeconds]').dispatchEvent('change');await ready(page);assert.equal(Number(await page.locator('[data-object-field=startSeconds]').inputValue()),.2);
- await page.locator('[data-vs=save]').click();await ready(page);await page.reload();await ready(page);await page.locator('[data-compose-select]').first().click();await ready(page);if(!await page.locator('[data-object-select=title]').isVisible()) await page.locator('[data-objects-panel] summary').click();await page.locator('[data-object-select=title]').click();await ready(page);assert.equal(await page.locator('[data-object-field=fontSize]').inputValue(),'80');
- assert.equal(await page.locator('[data-assembly-prop=duration]').inputValue(),'5.64');
+ await page.locator('[data-vs=save]').click();await ready(page);await page.reload();await ready(page);await page.locator('[data-compose-select]').first().click();await ready(page);if(!await page.locator('[data-object-select=title]').isVisible())await page.locator('[data-objects-panel] summary').click();await page.locator('[data-object-select=title]').click();await ready(page);assert.equal(await page.locator('[data-object-field=fontSize]').inputValue(),'80');
  for(const width of [390,1440]){await page.setViewportSize({width,height:1000});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));}
  // Restore original JSON and export with no manual scene/object corrections.
  await page.locator('[data-vs-json]').fill(JSON.stringify(manifest));await page.locator('[data-vs=validate]').click();await ready(page);await page.locator('[data-vs=apply]').click();await ready(page);
- const download=page.waitForEvent('download');await page.locator('[data-vs=save-and-export]').click();const file=await download;await ready(page);fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});const output=path.join(root,'.test-output/creator-motion-studio.mp4');await file.saveAs(output);assert.ok(fs.statSync(output).size>1000);
- await page.reload();await ready(page);
- assert.equal(await page.locator('[data-compose-select]').count(),manifest.scenes.length);
- assert.match(await page.locator('[data-vs-time]').textContent(),/\/ 6\.00s$/);
- assert.deepEqual(errors,[]);console.log('Canvas edits, draft recovery and combined save-to-native-MP4 passed.');
+ const download=page.waitForEvent('download');await page.locator('[data-vs=export]').click();const file=await download;await ready(page);fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});const output=path.join(root,'.test-output/creator-motion-studio.mp4');await file.saveAs(output);assert.ok(fs.statSync(output).size>1000);assert.deepEqual(errors,[]);console.log('Canvas manual edits, undo/redo, reload, responsive width and JSON-to-native-MP4 passed.');
  }finally{await browser?.close();await new Promise(r=>server.close(r));}})().catch(e=>{console.error(e);process.exitCode=1;});

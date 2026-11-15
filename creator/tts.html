@@ -5,7 +5,7 @@
 <title>Voiceover · Invincible</title>
 <link rel="icon" href="/invincible/favicon.ico" sizes="any">
 <link rel="stylesheet" href="../site-nav.css?v=19">
-  <link rel="stylesheet" href="tts.css?v=2026111424">
+  <link rel="stylesheet" href="tts.css?v=2026111322">
 <link rel="stylesheet" href="studio-ui.css?v=3">
 <link rel="stylesheet" href="tts-forest.css?v=1">
 <link rel="stylesheet" href="../shared/spatial-workspace.css?v=4">
@@ -16,7 +16,6 @@ if (window.parent !== window) {
  if (embed === 'ai') document.documentElement.classList.add('ai-voiceover-embed');
  if (embed === 'project') {
   document.documentElement.classList.add('project-voiceover-embed');
-  try { if (window.parent.parent !== window.parent) document.documentElement.classList.add('shared-shell-voiceover'); } catch {}
   if (new URLSearchParams(location.search).get('view') === 'timing') document.documentElement.classList.add('project-timing-view');
   document.title = 'Script · Invincible';
  }
@@ -43,20 +42,16 @@ if (window.parent !== window) {
 <p id="inputHelp" class="help">Paragraph breaks can become pauses. Your wording stays unchanged.</p>
 <details id="ssmlGuide" class="ssml-guide"><summary>Fine control with SSML</summary><p>Use SSML to set pauses, emphasis and pronunciation. Available tags depend on the selected voice. External audio and voice-switching tags are not accepted.</p><pre>&lt;speak&gt;21 अप्रैल, 1526! &lt;break time="500ms"/&gt;पानीपत की कहानी।&lt;/speak&gt;</pre></details>
 </section>
-<section class="panel result-panel" aria-labelledby="resultHeading"><div class="result-status"><h2 id="resultHeading">Listen &amp; export</h2><p id="generationStatus" role="status" aria-live="polite">Your recording will appear here.</p></div><fieldset id="aiProviderChoice" class="ai-provider-choice"><legend>Scene planning AI</legend><label><input type="radio" name="aiProvider" value="cloud" checked><span><strong>OpenAI</strong><small>Local Whisper timing + OpenAI planning · recommended</small></span></label><label><input type="radio" name="aiProvider" value="local"><span><strong>Local Qwen</strong><small>Local Whisper timing + Qwen planning</small></span></label></fieldset><div class="transport-actions"><div class="generate-actions"><button id="preview" type="button" class="secondary" disabled>Preview opening</button><button id="generate" type="button" class="primary" disabled>Generate MP3</button></div><p class="help quota-note">Uses paid Google TTS quota.</p></div><div id="recording" hidden><audio id="player" controls preload="metadata" aria-label="Generated voiceover"></audio><div class="playback-controls"><label for="playbackSpeed">Final speed</label><select id="playbackSpeed" aria-describedby="playbackHelp"><option value="0.75">0.75×</option><option value="1">1.00×</option><option value="1.2" selected>1.20×</option><option value="1.4">1.40×</option><option value="1.55">1.55×</option><option value="1.6">1.60×</option><option value="1.75">1.75×</option><option value="2">2.00×</option></select><span id="playbackHelp" class="help">Preview the speed now. Download and Next use this exact speed for the final MP3 and local Whisper timing.</span></div><div class="download-row"><span id="recordingInfo"></span><div class="recording-actions"><a id="download" class="secondary" download>Download MP3 ↓</a><button id="analyzeLocal" type="button" class="primary" disabled>Scripting · Step 2</button></div></div></div></section>
+<section class="panel result-panel" aria-labelledby="resultHeading"><div class="result-status"><h2 id="resultHeading">Listen &amp; export</h2><p id="generationStatus" role="status" aria-live="polite">Your recording will appear here.</p></div><fieldset id="aiProviderChoice" class="ai-provider-choice"><legend>Scene planning AI</legend><label><input type="radio" name="aiProvider" value="cloud" checked><span><strong>OpenAI</strong><small>Local Whisper timing + OpenAI planning · recommended</small></span></label><label><input type="radio" name="aiProvider" value="local"><span><strong>Local Qwen</strong><small>Local Whisper timing + Qwen planning</small></span></label></fieldset><div class="transport-actions"><div class="generate-actions"><button id="preview" type="button" class="secondary" disabled>Preview opening</button><button id="generate" type="button" class="primary" disabled>Generate MP3</button></div><p class="help quota-note">Uses paid Google TTS quota.</p></div><div id="recording" hidden><audio id="player" controls preload="metadata" aria-label="Generated voiceover"></audio><div class="playback-controls"><label for="playbackSpeed">Final speed</label><select id="playbackSpeed" aria-describedby="playbackHelp"><option value="0.75">0.75×</option><option value="1" selected>1.00×</option><option value="1.2">1.20×</option><option value="1.4">1.40×</option><option value="1.55">1.55×</option><option value="1.6">1.60×</option><option value="1.75">1.75×</option><option value="2">2.00×</option></select><span id="playbackHelp" class="help">Preview the speed now. Download and Next use this exact speed for the final MP3 and local Whisper timing.</span></div><div class="download-row"><span id="recordingInfo"></span><div class="recording-actions"><a id="download" class="secondary" download>Download MP3 ↓</a><button id="analyzeLocal" type="button" class="primary" disabled>Scripting · Step 2</button></div></div></div></section>
 <section class="ai-script-flow" aria-labelledby="timingHeading">
-<div class="ai-step-heading"><div><span>Step 2</span><h2 id="timingHeading">Time the voiceover</h2></div><button id="connectTimingLaptop" type="button" class="secondary">Connect laptop</button><button id="retryAnalysis" type="button" class="secondary" hidden>Retry local Whisper timing</button></div>
+<div class="ai-step-heading"><div><span>Step 2</span><h2 id="timingHeading">Time the voiceover</h2></div><button id="retryAnalysis" type="button" class="secondary" hidden>Retry local Whisper timing</button></div>
 <ol class="ai-flow-progress" aria-label="Script production progress"><li data-ai-flow="audio" aria-current="step"><span>1</span>MP3 ready</li><li data-ai-flow="timing"><span>2</span><b id="timingProviderLabel">Local Whisper timing</b></li><li data-ai-flow="plan"><span>3</span>Sync plan</li></ol>
 <p id="localAnalysisStatus" class="help" role="status" aria-live="polite">Generate the final MP3, then let local Whisper create its transcript and timestamps.</p>
-<button id="showSavedPlan" type="button" class="primary" hidden>Review saved scenes →</button>
 <div id="scenePlanProgress" class="scene-plan-progress" role="status" hidden><strong>Creating your sync plan…</strong><span id="scenePlanProgressTime">OpenAI is starting.</span><p>You do not need to click anything else. Review sync plan will open automatically when it is ready. Local AI can take several minutes.</p></div>
 <div class="timing-columns">
 <section id="timingInstructionsCard" class="timing-card timing-instructions-card" aria-label="Animation instructions"></section>
 <div id="transcriptReview" class="timing-card transcript-review" hidden>
 <div class="review-summary"><strong>Timed transcript</strong><span id="transcriptDuration"></span></div>
-<button id="downloadTiming" type="button" class="secondary">Download timing for Codex</button>
-<button id="copyTiming" type="button" class="secondary">Copy timing for Codex</button>
-<details id="timingHandoff" hidden><summary>Timing handoff</summary><textarea id="timingHandoffText" aria-label="Timing JSON for Codex" readonly rows="6"></textarea></details>
 <p class="help">Correct only the words. Original start and end times stay locked.</p>
 <div id="transcriptSegments" class="transcript-segments"></div>
 <div class="ai-next-row"><button id="generateScenePlan" type="button" class="primary" disabled>Next · Generate sync plan</button><span id="scenePlanGate" class="help"></span></div>
@@ -98,6 +93,6 @@ if (window.parent !== window) {
 </section>
 </div>
 </main>
-<script type="module" src="tts.js?v=2026111609"></script>
+<script type="module" src="tts.js?v=2026111330"></script>
 <script type="module" src="tts-forest.js?v=1"></script>
 </body></html>

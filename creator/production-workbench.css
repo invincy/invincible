@@ -349,5 +349,3 @@ html.invincible-page-chrome .creator-focus-mode .wb-status:not(:empty){bottom:ca
 
 /* Leave room for the shared assistant launcher at the viewport's lower right. */
 .creator-focus-mode .wb-scene-footer{padding-right:90px}
-.project-page .wb-commandbar>.wb-tabs{display:none!important}
-.project-page.project-voiceover-active #projectEditingStep[hidden],.project-page.project-voiceover-active #projectEditingStep[hidden] *{display:none!important}
