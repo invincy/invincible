@@ -1,5 +1,5 @@
 import{makeScene}from'./storyboard-model.js?v=3';
-import{createProductionWorkbench}from'./production-workbench.js?v=2026111601';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026111602';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -419,7 +419,11 @@ document.querySelector(".project-workspace-nav").addEventListener("click",async 
   await selectProjectArea(button.dataset.projectArea,button.dataset.toolMode||"");
 });
 async function saveFromProjectBar(){
- if(!storyboard.mapFocused)return save();
+ if(!storyboard.mapFocused){
+  if(!storyboard.videoActive)return save();
+  try{await storyboard.saveVideo();status('Video saved to your account','ok');return true;}
+  catch(error){status(error.message,'error');return false;}
+ }
  try{
   status("Saving map scene…");
   const result=await storyboard.saveFocusedMap();

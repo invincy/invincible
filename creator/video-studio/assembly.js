@@ -93,6 +93,7 @@ export function mountAssembly(root,api){
   revealReview();
  }
  function revealReview(){
+  if(matchMedia('(max-width:700px)').matches)root.closest('.video-studio').dataset.mobilePanel='scenes';
   const panel=root.querySelector('[data-compose-review]');
   panel?.scrollIntoView({block:'nearest'});
   panel?.querySelector('[data-compose=apply-change]')?.focus({preventScroll:true});
@@ -128,7 +129,7 @@ export function mountAssembly(root,api){
   if(select){if(pending){status('Apply or discard the pending change first.');revealReview();return;}selected=select.dataset.composeSelect;setTime(scene().startSeconds);render();run(()=>previewManifest(getManifest()));return;}
   if(audio){audioSelected=audio.dataset.composeAudioSelect;render();return;}if(!action)return;
   run(async()=>{
-   if(action==='apply-change'&&pending){await apply(pending);return;}if(action==='discard-change'){pending=null;render();return;}
+   if(action==='apply-change'&&pending){const next=pending;await saveMapDraft(next);await apply(getManifest());return;}if(action==='discard-change'){pending=null;render();return;}
    if(action==='finish-edit'||action==='cancel-edit'){await closeEditor(action==='finish-edit');return;}
    if(pending){revealReview();throw Error('Apply or discard the pending change first.');}
    if(action==='edit'){await openEditor();return;}const m=await upgrade(),s=m.scenes.find(s=>s.id===selected),i=m.scenes.indexOf(s);
@@ -186,7 +187,7 @@ export function mountAssembly(root,api){
   // A programmatic change followed by blur must not cancel the user's Apply click.
   if(key?.startsWith('audio.')&&pending?.audioClips?.find(a=>a.id===audioSelected)?.[key.slice(6)]===Number(target.value))return;
   if(!key&&!target.matches('[data-compose-audio],[data-compose-media]'))return;run(async()=>{
-   if(pending)throw Error('Apply or discard the pending change first.');const m=await upgrade(),s=m.scenes.find(s=>s.id===selected);
+   if(pending){revealReview();throw Error('Apply or discard the pending change first.');}const m=await upgrade(),s=m.scenes.find(s=>s.id===selected);
    if(target.matches('[data-compose-audio]')&&importFiles){await importFiles([...target.files],{role:root.querySelector('[data-audio-role]').value});render();return;}
    if(target.matches('[data-compose-media]')&&importFiles){await importFiles([...target.files],{addScenes:true});render();return;}
    if(target.matches('[data-compose-audio]')){
@@ -213,5 +214,5 @@ export function mountAssembly(root,api){
    review(arrangeScenes(m,m.scenes,{mapAssets:mapAssets()}),'Apply selected scene changes?');
   });
  });
- render();return {sync:render,highlight:()=>objects.highlight(),startMapReview,focusedMapDraft,get mapFocused(){return focusScene?.engineType==='map';},get focused(){return !!focused;},destroy(){closed=true;lockNavigation(false);editor?.destroy();objects.destroy();},select(id){selected=id;render();}};
+ render();return {sync:render,highlight:()=>objects.highlight(),startMapReview,focusedMapDraft,get pending(){return !!pending;},get mapFocused(){return focusScene?.engineType==='map';},get focused(){return !!focused;},destroy(){closed=true;lockNavigation(false);editor?.destroy();objects.destroy();},select(id){selected=id;render();}};
 }

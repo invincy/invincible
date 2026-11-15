@@ -1,13 +1,14 @@
+import {createAgentOperations} from './agent.js?v=2026111602';
 import {checkStudioGlb, MAX_MODEL_BYTES} from './three-scene.js';
 import {mountConnectedImageGenerator} from '../image-generator.js?v=2026111206';
 import {callImageRelay,draftRemoteImagePrompt} from '../../shared/firebase-image-relay.js?v=2026111205';
-import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=2026111002';
+import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=2026111602';
 import {studioBrief} from './handoff.js?v=2026111207';
 import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111207';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111506';
 import {createStudioRenderer} from './adapters.js?v=2026111506';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111014';
-import {mountAssembly} from './assembly.js?v=2026111601';
+import {mountAssembly} from './assembly.js?v=2026111602';
 import {encodeStudioVideo} from './export.js?v=2026111209';
 import {openStudioStore} from './storage.js';
 import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111506';
@@ -65,6 +66,9 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  const jsonSection=setup.querySelector('[data-flow-json]');
  const viewJson=document.createElement('button');viewJson.type='button';viewJson.dataset.vs='view-json';viewJson.textContent='View current draft JSON';
  jsonSection.querySelector('.vs-actions').prepend(viewJson);
+ const summaryButton=document.createElement('button');summaryButton.type='button';summaryButton.dataset.vs='scene-summary';summaryButton.textContent='View scene summary';viewJson.after(summaryButton);
+ const summaryBox=document.createElement('textarea');summaryBox.dataset.vsSummary='';summaryBox.setAttribute('aria-label','Scene summary JSON');summaryBox.readOnly=true;summaryBox.hidden=true;jsonSection.append(summaryBox);
+ const instructions=document.createElement('details');instructions.innerHTML='<summary>Agent instructions</summary><button type="button" data-vs="view-brief">View instructions</button><textarea data-vs-brief readonly aria-label="Agent workflow instructions"></textarea>';jsonSection.append(instructions);
  jsonSection.append(jsonPanel,$('[data-vs=download]'));
  $('.vs-layout').before(Object.assign(document.createElement('h3'),{textContent:'3 · Review scenes & audio',className:'vs-review-heading'}));
  const exportNote=document.createElement('p');exportNote.className='vs-help';exportNote.textContent='4 · Export your complete MP4 with audio';$('.vs-preview').prepend(exportNote);
@@ -193,21 +197,11 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   const task=(async()=>{await prepare();if(disposed||!renderer)return;await renderer.draw(time);assembly?.highlight();state.time=time;$('[data-vs-seek]').value=time;$('[data-vs-time]').textContent=`${time.toFixed(2)} / ${timeline.duration.toFixed(2)}s`;})();drawing=task;try{await task;}finally{if(drawing===task)drawing=null;}
  }
  async function applyManifest(next,{brands:nextBrands=null}={}){
-  const prevManifest=state.manifest,prevBrands=state.brands,prevTime=time,prevPending=pending;
+  next=validateManifest(next,{mapAssets:mapAssets()});
   stop();renderer?.destroy();renderer=null;audioBuffer=null;audioTracks=[];
-  state.manifest=next;
-  if(nextBrands)state.brands=nextBrands;
-  try{
-   await draw();
-   pending=null;$('[data-vs=apply]').disabled=true;
-   sync();
-  }catch(error){
-   stop();renderer?.destroy();renderer=null;audioBuffer=null;audioTracks=[];
-   state.manifest=prevManifest;state.brands=prevBrands;time=prevTime;state.time=prevTime;pending=prevPending;
-   sync();
-   try{await draw();}catch{}
-   throw error;
-  }
+  state.manifest=next;if(nextBrands)state.brands=nextBrands;
+  pending=null;$('[data-vs=apply]').disabled=true;sync();
+  try{await draw();}catch(error){status('Draft retained. Preview unavailable: '+error.message);}
  }
  async function tick(){
   if(!playing||disposed)return;time=Math.min(timeline.duration,clockTime+context.currentTime-clock);
@@ -221,26 +215,22 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   stopTracks=scheduleAudioTracks(context,audioTracks,time);
   playing=true;raf=requestAnimationFrame(tick);
  }
- async function save(manifest=state.manifest,{preview=true}={}){
+ async function save(manifest=state.manifest,{preview=true,applying=false}={}){
+  if(assembly?.pending&&!applying)throw Error('Apply or discard the pending scene change before saving.');
   if(!store||!projectId)throw Error('Save and open the Creator project before saving its local video draft.');
+  if(disposed||!account||getAccountId()!==account||getProject()?.id!==projectId)throw Error('Project closed or account changed.');
   const cloud=getProject()?.ownerUid===account||!!mediaService;
   const next=validateManifest(manifest,{mapAssets:mapAssets()});
-  if(cloud){const refs=[...next.assets,...(next.audioClips||[]),...(next.audio?[next.audio]:[])],converted=new Map();for(const ref of refs){if(!ref.fileId||isCloudFile(ref.fileId))continue;const old=ref.fileId;if(!converted.has(old)){const file=await getFile(old);if(!file)throw Error('Missing original: '+ref.name);const named=new File([file],ref.name,{type:file.type});const a=await media.upload(named,await inspectMedia(named));converted.set(old,a.id);state.files.set(a.id,file);}ref.fileId=converted.get(old);}if(preview)await applyManifest(next);}
+  if(cloud){const refs=[...next.assets,...(next.audioClips||[]),...(next.audio?[next.audio]:[])],converted=new Map();for(const ref of refs){if(!ref.fileId||isCloudFile(ref.fileId))continue;const old=ref.fileId;if(!converted.has(old)){const file=await getFile(old);if(!file)throw Error('Missing original: '+ref.name);const named=new File([file],ref.name,{type:file.type});const a=await media.upload(named,await inspectMedia(named));converted.set(old,a.id);state.files.set(a.id,file);}ref.fileId=converted.get(old);}}
   const assets=new Set([...state.brandAssets,...next.assets].filter(a=>a.kind!=='glb').map(a=>a.id));state.brands.forEach(b=>validateBrand(b,assets));
   // Preserve byte-identical originals. A failed quota write never updates the draft pointer.
   for(const [id,file] of state.files)await store.put('file:'+id,file);
   state.brandAssets=[...new Map([...state.brandAssets,...next.assets].map(a=>[a.id,a])).values()];await store.put('brands',{brands:state.brands,assets:state.brandAssets});
+
+  if(cloud){const result=await media.saveDraft(projectId,next,state.brands,state.cloudRevision);state.cloudRevision=result.revision;state.cloudLoaded=true;state.savedManifest=structuredClone(next);await store.put('cloudRevision:'+projectId,state.cloudRevision);status('Saved to your account. Your video and cloud assets are available on your other devices.');}else status('Local video draft saved. Cloud draft sync is available to the project owner.');
   const version=uid();await store.put('version:'+projectId+':'+version,next);await store.put('draft:'+projectId,version);
-  if(cloud){const result=await media.saveDraft(projectId,next,state.brands,state.cloudRevision);state.cloudRevision=result.revision;await store.put('cloudRevision:'+projectId,state.cloudRevision);status('Saved to your account. Your video and cloud assets are available on your other devices.');}else status('Local video draft saved. Cloud draft sync is available to the project owner.');
-  state.manifest=next;
+  state.manifest=next;if(preview)await applyManifest(next);
   return cloud;
- }
- async function saveLocalDraft(){
-  if(!store||!projectId)throw Error('Open a saved Creator project before applying this video draft.');
-  validateManifest(state.manifest,{mapAssets:mapAssets()});const assets=new Set([...state.brandAssets,...state.manifest.assets].filter(a=>a.kind!=='glb').map(a=>a.id));state.brands.forEach(b=>validateBrand(b,assets));
-  for(const [id,file] of state.files)await store.put('file:'+id,file);
-  state.brandAssets=[...new Map([...state.brandAssets,...state.manifest.assets].map(a=>[a.id,a])).values()];await store.put('brands',{brands:state.brands,assets:state.brandAssets});
-  const version=uid();await store.put('version:'+projectId+':'+version,structuredClone(state.manifest));await store.put('draft:'+projectId,version);
  }
  function aiVoiceRequest(script,voices){
   const {saved,engine,language,selected}=selectProductionVoice(voices,account);
@@ -316,15 +306,19 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
     status('Current draft loaded into the JSON editor. Review any edits before applying.');
    }
    if(action==='library-refresh')await refreshLibrary();
-   if(action==='copy-brief'){const text=studioBrief(await upgraded(),catalogue);await navigator.clipboard.writeText(text);status('Complete-video brief copied, including asset IDs and current JSON. Add your script and exact voiceover cues.');}
+   if(action==='view-brief'||action==='copy-brief'){const text=studioBrief(await upgraded(),catalogue)+'\n\nAgent API: window.invincibleAgent offers getProjectJSON, validateJSON, applyPatch and getSceneSummary. Pass expectedRevision from the read response. Single-scene JSON: {patchSceneId, expectedRevision, changes}. Objects merge; arrays of IDs merge by ID; empty arrays preserve content. To replace an array explicitly, use {$replace: [...]}. Read the scene before editing. Full manifests replace the video after review.';$('[data-vs-brief]').value=text;if(action==='view-brief')return;await navigator.clipboard.writeText(text);status('Complete-video brief copied, including asset IDs and current JSON. Add your script and exact voiceover cues.');}
    if(action==='cloud-review'){const draft=await media.loadDraft(projectId);if(!draft)throw Error('No cloud draft has been saved for this video yet.');pending=validateManifest(draft.manifest,{mapAssets:mapAssets()});pendingCloud=draft;$('[data-vs-review]').textContent='Review cloud version '+draft.revision+': '+pending.scenes.length+' scenes. Applying replaces this local video draft; originals are retained.';status('Cloud draft ready for review. Apply reviewed import to load it.');}
    if(action.startsWith('media-')){const a=catalogue.find(x=>x.id===button.dataset.mediaId);if(!a)throw Error('Choose an asset from your library.');await useMedia(a,{scene:action==='media-scene',role:action==='media-music'?'music':action==='media-effect'?'effect':'voiceover'});}
-   if(action==='validate'){pendingCloud=null;
-    pending=null;const next=validateManifest($('[data-vs-json]').value,{mapAssets:mapAssets()});if(!state.brands.some(b=>b.id===next.brandPresetId))throw Error('Choose or create the referenced brand profile first.');
-    validateBrand(state.brands.find(b=>b.id===next.brandPresetId),new Set(next.assets.filter(a=>a.kind!=='glb').map(a=>a.id)));pending=next;
-    $('[data-vs-review]').textContent=`${next.scenes.length} scenes · ${next.aspectRatio} · ${next.audio?.name||(next.audioClips?.length?next.audioClips.length+' audio tracks':'no audio')} · applies only to the separate video draft.`;status('Import reviewed. Apply when ready.');
+   if(action==='scene-summary'){clearImportReview();const result=await agent.getSceneSummary();summaryBox.hidden=false;summaryBox.value=JSON.stringify(result,null,2);}
+   if(action==='validate'){pendingCloud=null;pending=null;
+    const result=await agent.validateJSON($('[data-vs-json]').value);if(!result.ok)throw Error(result.errors.map(e=>e.message).join('\n'));
+    pending={...result.manifest,expectedRevision:result.revision};
+    $('[data-vs-review]').textContent=`${result.scenes.length} scenes · saves to this project's cloud video. Review before replacing the current video.`;status('Import reviewed. Apply when ready.');
    }
-   if(action==='apply'&&pending){const next=pending,cloud=pendingCloud;await applyManifest(next,{brands:cloud?.brands});if(cloud){state.cloudRevision=cloud.revision;pendingCloud=null;}status('Complete video applied. Preview your scenes and audio, then Save and Export MP4.');}
+   if(action==='apply'&&pending){const next=pending,cloud=pendingCloud;
+    if(cloud){await applyManifest(next,{brands:cloud.brands});state.cloudRevision=cloud.revision;pendingCloud=null;}
+    else{const result=await agent.applyPatch(next);if(!result.ok)throw Error(result.errors.map(e=>e.message).join('\n'));status('Saved to your account. Scenes are ready for review and export.');}
+   }
    if(action==='example'){
     const next=emptyVideo();next.title='My first video';next.assets=state.manifest.assets.filter(a=>a.kind!=='glb');next.scenes=[{id:'explain',startSeconds:0,durationSeconds:5,engineType:'graphic',engineData:{},transition:{type:'fade',durationSeconds:.3},overlays:[{id:'heading',type:'text',text:'Your next story',fontSize:72,keyframes:[{timeSeconds:0,y:.65,opacity:0,easing:'smooth'},{timeSeconds:1,y:.5,opacity:1}]}]}];await applyManifest(next);$('[data-vs-json]').value=JSON.stringify(next,null,2);status('Example loaded in the video draft.');
    }
@@ -381,14 +375,27 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    validateManifest(next,{mapAssets:mapAssets()});await applyManifest(next);
   });
  });
- assembly=mountAssembly(assemblyRoot,{pause:stop,session:state,getManifest:()=>state.manifest,getProject,getFile,importFiles:uploadFiles,putFile:(id,file)=>state.files.set(id,file),deleteFile:id=>state.files.delete(id),run,status,getTime:()=>time,setTime:value=>{time=value;state.time=value;},releaseRenderer:async()=>{stop();if(drawing)await drawing.catch(()=>{});invalidate();},setManifest:applyManifest,saveMapDraft:next=>save(next,{preview:false}),previewManifest:async next=>{if(next===state.manifest){invalidate();await draw();return;}invalidate();try{const b=brand(),t=compileTimeline(next,b);audioTracks=await loadAudioTracks(next,getFile);const lead=t.audioClips[0]&&next.audioClips?.[0]?t.audioClips[0].startSeconds-next.audioClips[0].startSeconds:0;audioTracks=audioTracks.map(a=>({...a,startSeconds:a.startSeconds+lead}));const nextRenderer=await createStudioRenderer(canvas,next,t,b,{getFile,mapAssets:mapAssets(),signal:lifecycle.signal});if(disposed){nextRenderer.destroy();return;}renderer=nextRenderer;timeline=t;await renderer.draw(time);}catch(error){invalidate();try{await draw();}catch{}throw error;}}});
+ assembly=mountAssembly(assemblyRoot,{pause:stop,session:state,getManifest:()=>state.manifest,getProject,getFile,importFiles:uploadFiles,putFile:(id,file)=>state.files.set(id,file),deleteFile:id=>state.files.delete(id),run,status,getTime:()=>time,setTime:value=>{time=value;state.time=value;},releaseRenderer:async()=>{stop();if(drawing)await drawing.catch(()=>{});invalidate();},setManifest:applyManifest,saveMapDraft:next=>save(next,{preview:false,applying:true}),previewManifest:async next=>{if(next===state.manifest){invalidate();await draw();return;}invalidate();try{const b=brand(),t=compileTimeline(next,b);audioTracks=await loadAudioTracks(next,getFile);const lead=t.audioClips[0]&&next.audioClips?.[0]?t.audioClips[0].startSeconds-next.audioClips[0].startSeconds:0;audioTracks=audioTracks.map(a=>({...a,startSeconds:a.startSeconds+lead}));const nextRenderer=await createStudioRenderer(canvas,next,t,b,{getFile,mapAssets:mapAssets(),signal:lifecycle.signal});if(disposed){nextRenderer.destroy();return;}renderer=nextRenderer;timeline=t;await renderer.draw(time);}catch(error){invalidate();try{await draw();}catch{}throw error;}}});
  void refreshLibrary();
  const ready=run(async()=>{
   if(!state.loaded){if(store){const library=await store.get('brands');if(library){state.brands=library.brands;state.brandAssets=library.assets;}if(projectId){const version=await store.get('draft:'+projectId);if(version){const saved=await store.get('version:'+projectId+':'+version);if(saved)state.manifest=validateManifest(saved,{mapAssets:mapAssets()});}}}state.manifest.assets=assetsForBrand(brand(),state.manifest.assets,state.brandAssets);state.loaded=true;}
-  if(getProject()?.ownerUid===account||mediaService){try{state.cloudRevision=await store?.get('cloudRevision:'+projectId)||0;const cloud=await media.loadDraft(projectId);if(cloud&&!await store?.get('draft:'+projectId)){state.manifest=validateManifest(cloud.manifest,{mapAssets:mapAssets()});state.brands=cloud.brands;state.cloudRevision=cloud.revision;}else if(cloud&&cloud.revision!==state.cloudRevision)status('Another device has a newer cloud draft. Use Review cloud draft before saving.');}catch(e){status('Cloud draft unavailable. Your local copy is retained; check your connection and try again.');}}
-  sync();await draw();
+  if(getProject()?.ownerUid===account||mediaService){try{state.cloudRevision=await store?.get('cloudRevision:'+projectId)||0;const cloud=await media.loadDraft(projectId);if(cloud&&!state.cloudLoaded){state.manifest=validateManifest(cloud.manifest,{mapAssets:mapAssets()});state.brands=cloud.brands;state.cloudRevision=cloud.revision;state.cloudLoaded=true;state.savedManifest=structuredClone(state.manifest);}else if(cloud&&cloud.revision!==state.cloudRevision)status('Another device has a newer cloud draft. Use Review cloud draft before saving.');}catch(e){status('Cloud draft unavailable. Your local copy is retained; check your connection and try again.');}}
+  sync();try{await draw();}catch(error){status('Saved draft loaded. Preview unavailable: '+error.message);}
  });
- async function importAiProduction(storyboard,audioBlob,{title='Invincible AI production',allowContextCards=false,replaceExisting=false}={}){await ready;const hasDraft=state.manifest.scenes.length||(state.manifest.audioClips||[]).length||state.manifest.audio;if(hasDraft&&!replaceExisting)throw Error('Motion Studio already contains a different draft. Choose Replace when applying the reviewed sync plan, or keep the existing draft.');if(!Array.isArray(storyboard)||!storyboard.length)throw Error('The AI draft has no executable scenes.');if(!(audioBlob instanceof Blob)||!audioBlob.size)throw Error('The original voiceover MP3 is missing. Run AI timing again to attach it.');const file=new File([audioBlob],audioBlob.name||'invincible-voiceover.mp3',{type:audioBlob.type||'audio/mpeg'}),decoded=await decodeVoiceover(file),fileId=uid(),next=compileAiStoryboardManifest(storyboard,{aspectRatio:'9:16',audioFileId:fileId,audioName:file.name,audioDuration:decoded.duration,mapAssets:mapAssets(),allowContextCards});next.title=String(title).slice(0,200);state.files.set(fileId,file);try{await applyManifest(next);time=0;await draw();await saveLocalDraft();status(`${next.scenes.length} scenes and the exact MP3 are saved on this device. Next: Play the full preview, then Export MP4.`);return next;}catch(error){state.files.delete(fileId);throw error;}}
+ async function importAiProduction(storyboard,audioBlob,{title='Invincible AI production',allowContextCards=false,replaceExisting=false}={}){await ready;const hasDraft=state.manifest.scenes.length||(state.manifest.audioClips||[]).length||state.manifest.audio;if(hasDraft&&!replaceExisting)throw Error('Motion Studio already contains a different draft. Choose Replace when applying the reviewed sync plan, or keep the existing draft.');if(!Array.isArray(storyboard)||!storyboard.length)throw Error('The AI draft has no executable scenes.');if(!(audioBlob instanceof Blob)||!audioBlob.size)throw Error('The original voiceover MP3 is missing. Run AI timing again to attach it.');const file=new File([audioBlob],audioBlob.name||'invincible-voiceover.mp3',{type:audioBlob.type||'audio/mpeg'}),decoded=await decodeVoiceover(file),fileId=uid(),next=compileAiStoryboardManifest(storyboard,{aspectRatio:'9:16',audioFileId:fileId,audioName:file.name,audioDuration:decoded.duration,mapAssets:mapAssets(),allowContextCards});next.title=String(title).slice(0,200);state.files.set(fileId,file);try{await applyManifest(next);time=0;await draw();await save();status(`${next.scenes.length} scenes and the exact MP3 are saved to your account. Next: Play the full preview, then Export MP4.`);return next;}catch(error){state.files.delete(fileId);throw error;}}
+ const agent=createAgentOperations({
+  authorize:async()=>{await ready;if(disposed||!account||getAccountId()!==account||getProject()?.id!==projectId||(getProject()?.ownerUid!==account&&!mediaService))throw Object.assign(Error('Sign in as the project owner to use the agent API.'),{code:'UNAUTHORIZED'});},
+  getManifest:()=>state.manifest,getSavedManifest:()=>state.savedManifest||state.manifest,getRevision:()=>state.cloudRevision,getMapAssets:mapAssets,
+  isBlocked:()=>assembly.focused||assembly.pending,
+  checkResources:async manifest=>{
+   const profile=state.brands.find(b=>b.id===manifest.brandPresetId);if(!profile)throw Error('Choose or create the referenced brand profile first.');validateBrand(profile,new Set(manifest.assets.filter(a=>a.kind!=='glb').map(a=>a.id)));
+   const refs=[...manifest.assets,...(manifest.audioClips||[]),...(manifest.audio?[manifest.audio]:[])];
+   for(const ref of refs)if(ref.fileId){if(isCloudFile(ref.fileId))await media.read(ref.fileId);else if(!await getFile(ref.fileId))throw Error('Missing original asset: '+ref.name+' ('+ref.fileId+')');}
+   const projects=[...(manifest.mapSources||[]).map(s=>s.project),...manifest.scenes.map(s=>s.engineData.project).filter(Boolean)];
+   for(const project of projects)for(const asset of project.historicalMap.visual?.assets||[])if(asset.cloudAssetId)await media.read(asset.cloudAssetId);
+  },save:async next=>{await save(next);}
+ });
+ window.invincibleAgent=agent;
  const hidden=()=>{if(document.hidden)stop();};document.addEventListener('visibilitychange',hidden);
  async function reviewGeneratedMaps(){await ready;return assembly?.startMapReview()||false;}
  async function saveFocusedMap(){
@@ -399,5 +406,5 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   try{return {cloud:await save(next,{preview:false})};}
   finally{if(!disposed)lock(false);}
  }
- return {ready,get manifest(){return state.manifest;},get mapFocused(){return assembly.mapFocused;},saveFocusedMap,importAiProduction,reviewGeneratedMaps,destroy(){images.destroy();disposed=true;state.time=time;assembly?.destroy();stop();lifecycle.abort(new DOMException('Workspace closed','AbortError'));controller?.abort(new DOMException('Workspace closed','AbortError'));renderer?.destroy();context?.close();if(lastExportUrl)URL.revokeObjectURL(lastExportUrl);store?.close();document.removeEventListener('visibilitychange',hidden);}};
+ return {ready,save:()=>save(),get manifest(){return state.manifest;},get mapFocused(){return assembly.mapFocused;},saveFocusedMap,importAiProduction,reviewGeneratedMaps,destroy(){if(window.invincibleAgent===agent)delete window.invincibleAgent;images.destroy();disposed=true;state.time=time;assembly?.destroy();stop();lifecycle.abort(new DOMException('Workspace closed','AbortError'));controller?.abort(new DOMException('Workspace closed','AbortError'));renderer?.destroy();context?.close();if(lastExportUrl)URL.revokeObjectURL(lastExportUrl);store?.close();document.removeEventListener('visibilitychange',hidden);}};
 }

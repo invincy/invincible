@@ -329,3 +329,46 @@ remain unchanged. Non-geographic atmospheric mechanism scenes compile to an edit
 Canvas cross-section with an ocean surface, converging surface winds, rising air and
 restrained cloud cues. Older saved ITCZ-style Canvas instructions without an explicit
 preset receive the same compatibility treatment when reopened.
+
+## Structured agent updates — November 16, 2026
+
+Motion & export exposes `window.invincibleAgent` while that workspace is mounted:
+`getProjectJSON()`, `getSceneSummary()`, `validateJSON(payload)` and
+`applyPatch(payload)` return promises with `{ok, revision, ...}` or
+`{ok:false, errors:[{code,message}]}`. Reads identify staged manual edits; the
+manifest returned by getProjectJSON is the last saved canonical video when present.
+The existing `_creatorMedia/{uid}/drafts/{projectId}` record remains authoritative
+for the assembled video, tied to the existing Creator project and owner. No new
+collection, server or project URL is introduced. Script/storyboard remains its
+existing planning data; Review maps and Motion use the same video manifest.
+
+Use `expectedRevision` from the read response. Full manifests replace the video.
+A patch uses `{patchSceneId:"scene-4", expectedRevision:3, changes:{...}}`.
+Nested objects merge. Arrays of objects with IDs merge by ID; omitted items and
+empty arrays are preserved. Arrays without IDs (camera keys, coordinates) require
+an explicit `{$replace:[...]}`. This also supports intentional layer removal by
+replacing that array after reading it. A patch cannot rename its scene ID. Shared
+native sources detach before a scene's inline map is edited, preserving siblings.
+All results pass the existing manifest/map validators before persistence.
+
+Browser agents without console access use View scene summary (read-only), View
+instructions, and the existing Review import / Apply reviewed import buttons.
+The summary is separate from import input and cannot become a replacement manifest.
+Apply now saves through the same cloud save service as manual Save and Save now.
+Local file references are uploaded with the existing content-addressed media
+prepare/upload/commit flow before saving their cloud identities. Native maps are
+inline configuration, not missing media files: they need no fabricated cloud map
+receipt. Cloud media must already exist or have original bytes available locally.
+URLs and legacy map storage references retain their existing renderer/access checks.
+
+A preview failure leaves valid scene configuration intact and reports the media
+error; it never changes the engine to Canvas. Export still requires successful
+media decoding and the existing native renderer. Cloud saves use the existing
+transactional revision check; failed cloud saves do not advance the local draft
+pointer. Reload prefers the saved cloud video. The top project Save now action
+now saves the active Motion workspace as well as focused map edits.
+
+External agents can use the visible controls with the signed-in owner session.
+No new public HTTP write endpoint is exposed. The existing authenticated callable
+remains the persistence transport; client validation is not a security boundary,
+and its server ownership/revision enforcement is unchanged.
