@@ -16,6 +16,16 @@ test('normalizes cloud segment and word timestamps into the locked transcript co
  assert.equal(transcript.duration,2.4);
 });
 
+test('clamps overlapping cloud segments and drops zero-length duplicate tails',()=>{
+ const transcript=normalizeCloudTranscript({language:'hi',duration:1.14,text:'पहला भाग बादल बनने और',segments:[
+  {start:0,end:1.12,text:'पहला भाग बादल बनने और'},
+  {start:1.10,end:1.12,text:'बादल बनने और'}
+ ]});
+ assert.equal(transcript.segments.length,1);
+ assert.equal(transcript.segments[0].end,1.12);
+ assert.ok(Math.abs(Math.abs(transcript.duration-transcript.segments.at(-1).end)-.02)<1e-9);
+});
+
 test('cloud timing accepts real MP3 signatures and rejects arbitrary bytes',()=>{
  const mp3=Buffer.from([0x49,0x44,0x33,0x04,0x00,0x00]).toString('base64');
  assert.deepEqual(voiceoverAudio(mp3),Buffer.from([0x49,0x44,0x33,0x04,0x00,0x00]));

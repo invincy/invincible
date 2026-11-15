@@ -23,12 +23,16 @@ function voiceoverAudio(value){
 function normalizeCloudTranscript(result={}){
  const rawSegments=Array.isArray(result.segments)?result.segments:[];
  const rawWords=Array.isArray(result.words)?result.words:[];
- const segments=rawSegments.map((segment,index)=>{
-  const start=Number(segment.start),end=Number(segment.end),text=clean(segment.text,4000);
-  if(!Number.isFinite(start)||!Number.isFinite(end)||end<=start||!text)throw Error(`OpenAI returned invalid timing for segment ${index+1}.`);
+ const candidates=rawSegments.map((segment,index)=>({index,start:Number(segment.start),end:Number(segment.end),text:clean(segment.text,4000)}));
+ if(candidates.some(segment=>!Number.isFinite(segment.start)||!Number.isFinite(segment.end)||segment.end<=segment.start||!segment.text))throw Error('OpenAI returned invalid timing.');
+ candidates.sort((a,b)=>a.start-b.start||a.end-b.end||a.index-b.index);
+ const segments=[];let previousEnd=0;
+ for(const candidate of candidates){
+  const start=Math.max(previousEnd,candidate.start),end=candidate.end;
+  if(end<=start)continue;
   const words=rawWords.filter(word=>Number(word.start)>=start&&Number(word.end)<=end).map(word=>({word:clean(word.word,200),start:Number(word.start),end:Number(word.end)})).filter(word=>word.word&&Number.isFinite(word.start)&&Number.isFinite(word.end)&&word.end>word.start);
-  return{id:`segment-${index+1}`,start,end,text,words};
- });
+  segments.push({id:`segment-${segments.length+1}`,start,end,text:candidate.text,words});previousEnd=end;
+ }
  if(!segments.length||segments.length>100)throw Error('OpenAI did not return a supported timed transcript.');
  const duration=Number(result.duration)||segments.at(-1).end;
  if(!Number.isFinite(duration)||Math.abs(duration-segments.at(-1).end)>.75)throw Error('OpenAI transcript duration does not agree with its final timestamp.');
