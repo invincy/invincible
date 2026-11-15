@@ -11,6 +11,10 @@
     a { color: #96e8e0; }
     h1, h2 { line-height: 1.2; }
     h2 { font-size: 1.25rem; margin-top: 1.75rem; }
+    code { overflow-wrap: anywhere; }
+    nav ul { display: flex; flex-wrap: wrap; gap: .35rem 1rem; list-style: none; padding: 0; }
+    li + li { margin-top: .3rem; }
+    nav li + li { margin-top: 0; }
     blockquote { margin-inline: 0; padding: .75rem 1rem; border-inline-start: 3px solid #96e8e0; background: #162434; }
   </style>
 </head>
@@ -19,21 +23,62 @@
     <a href="./">Creator Studio</a>
     <h1>Make a video in Creator Studio</h1>
     <p>Use this workflow for every video you make with Codex, Gemini, or another assistant. Follow the same steps in the signed-in Studio project and pick up from whatever is already saved.</p>
+    <nav aria-label="Workflow guide topics">
+      <ul>
+        <li><a href="#start">Start a video</a></li>
+        <li><a href="#edit-scene">Edit one scene</a></li>
+        <li><a href="#artwork">Add and resize artwork</a></li>
+        <li><a href="#motion">Animate an object</a></li>
+        <li><a href="#maps">Edit maps and camera</a></li>
+        <li><a href="#json">Edit with JSON</a></li>
+        <li><a href="#verify">Save and verify</a></li>
+      </ul>
+    </nav>
+    <h2 id="start">Start or resume a video</h2>
     <ol>
       <li><h2>Open the project and prepare the voiceover</h2>
         <p>Open the project the user names, or create one for a new video. Under <strong>Script</strong>, generate the final MP3 from the supplied narration text. Select female Gemini Aoede, Social media · engaging, and 1.2× final speed when those are the requested settings. If the user supplies a recording, use that exact recording. Keep final audio in the project or private media library. Reuse a saved final recording whenever the script and audio are unchanged.</p></li>
       <li><h2>Get exact timing</h2>
         <p>Reuse timing already saved for the final recording. For new timing, use Local Whisper on the paired laptop or select OpenAI timing in a saved project. Keep measured times when correcting transcript words.</p></li>
-      <li><h2>Add supplied artwork to the private library</h2>
-        <p>In <strong>Motion &amp; export → Create &amp; import → Media → Upload &amp; voiceover</strong>, upload the exact attached PNG or other media once using Studio’s file picker. Reuse the existing library asset if that same file is already saved. Use its media reference in the scene. If the assistant can see the attachment but cannot pass the file to the picker, ask the user to upload that file in Studio, then continue. Use public or generated artwork only when the request calls for it. GitHub is unnecessary for attached files.</p></li>
-      <li><h2>Build and review editable scenes</h2>
-        <p>Use the narration cues and visual direction to build the first draft. For edits, open <strong>Motion &amp; export → Create &amp; import → View current draft JSON</strong> to load the active draft into the editor. Enter the complete updated manifest, then choose <strong>Review import → Apply reviewed import → Save</strong>.</p>
-        <p>Preview scenes individually and flag geography that needs checking. For a revision, open the latest saved version and change the requested scene or layer. Preserve scene IDs, other scenes, audio timing, and unrelated layers. Use the native controls for small changes. Get explicit confirmation before replacing existing scenes with a new draft.</p></li>
-      <li><h2>Save, export, and verify</h2>
-        <p>Use <strong>Save scene &amp; return</strong> after editing map layers and <strong>Apply change</strong> after reviewing a timing edit. Save the applied Motion Studio draft, preview the timeline, then choose <strong>Export MP4</strong>. Check the exported animation after the effects are due to appear and verify that the narration plays through. JPG previews show each scene’s first frame. Return the project link and the MP4 when export is requested. If browser access or a required file is missing, identify the exact step that needs the user and continue from the project once it is available.</p></li>
+      <li><h2>Build the first draft</h2>
+        <p>Use <strong>Sync plan → Review maps → Motion &amp; export</strong>. Match visuals to measured narration cues, review generated maps, and keep the result editable. Resume at the latest saved step when the draft already exists.</p></li>
     </ol>
+    <h2 id="edit-scene">Edit one scene</h2>
+    <ol>
+      <li>Open <strong>Motion &amp; export</strong> and select the scene in <strong>Scenes</strong> or the timeline. Confirm its name and time range before editing.</li>
+      <li>Use <strong>Selected scene</strong> for the name or scene type, <strong>Objects</strong> for screen overlays, and <strong>Edit scene</strong> for geographic map or battlefield content. You can add a new scene with <strong>Add scene</strong> when asked. Inspect its timing before saving.</li>
+      <li>For a conversion or timeline edit, review the proposed change and choose <strong>Apply change</strong> or <strong>Discard</strong>. Check that narration, scene timing, and unrelated layers match the requested scope. Get explicit confirmation before replacing existing scenes.</li>
+    </ol>
+    <h2 id="artwork">Add, move, and resize artwork</h2>
+    <ol>
+      <li>Open <strong>Media library → Upload &amp; voiceover</strong>. Search by filename. For an existing image, choose <strong>Use in video</strong>. For a new attachment, use <strong>Choose files or drop them here</strong> to upload the exact file once. If the session cannot pass the attachment to the picker, identify the file and continue when it is available in the library.</li>
+      <li>Select the target scene. Under <strong>Selected scene</strong>, choose <strong>Overlay artwork → Add image overlay</strong>. <strong>Add as scene</strong> in the media library creates a separate scene. For text, lines, and arrows, use <strong>Objects → Object type → Add object</strong>.</li>
+      <li>Select the object in <strong>Objects</strong> or click it in the preview. Drag it to reposition it and use <strong>Resize selected object</strong> to resize. For precise placement, use <strong>X</strong> and <strong>Y</strong>. Use <strong>Scale</strong> for proportional resizing and <strong>Width</strong> and <strong>Height</strong> for the image’s fit box. Use <strong>Rotation</strong>, <strong>Opacity</strong>, and <strong>Forward</strong> or <strong>Backward</strong> as needed.</li>
+      <li>In an overlay, X and Y locate the center of the object relative to the frame. The top-left is <code>0, 0</code> and the center is <code>0.5, 0.5</code>. For example, <code>x: 0.25</code>, <code>y: 0.72</code> places an object toward the lower left. Check the result at the actual playhead position.</li>
+    </ol>
+    <h2 id="motion">Animate an object</h2>
+    <ol>
+      <li>Set <strong>Start (s)</strong> and <strong>End (s)</strong> to control its visibility. These times are relative to the start of the selected scene.</li>
+      <li>Seek to the first pose, select the object, and choose <strong>Key at playhead</strong>. Move the playhead forward and change position, scale, rotation, or opacity to add or update the next pose. Use <strong>Motion keys</strong> to inspect the values and easing.</li>
+      <li>To shift a whole animated asset, change its base placement and the relevant position keys by the same amount. Check an early and a late frame to confirm its motion still lines up.</li>
+    </ol>
+    <h2 id="maps">Edit a map or camera move</h2>
+    <ul>
+      <li>Open a map through <strong>Review maps</strong> or <strong>Selected scene → Edit scene</strong>. Use Map Editor for geographic routes, labels, and map-anchored artwork. Use Motion Studio Objects for screen-space captions, foreground images, and diagrams.</li>
+      <li>Set the framing at the start of the shot and choose <strong>Add camera keyframe</strong>. Seek later, pan, zoom, or change camera pitch, then add another keyframe. For a quiet shot, use a slow push, drift, or slight pitch change. Ease the camera while labels need to be read.</li>
+      <li>Use <strong>Draw route</strong> or <strong>Import animation</strong> for geographic wind arrows. Shape curves with several points, use an arrowhead and timed reveal, and check them at multiple times. Geographic coordinates are <strong>longitude, latitude</strong>. For map-anchored artwork, use its layer’s <strong>Scale</strong> and preview its placement through the camera move.</li>
+      <li>For portrait geography, turn on <strong>Style → Shorts safe-area guide</strong> during review and keep labels clear of the bottom and right edges. Use <strong>Save now</strong> to checkpoint the current map, or <strong>Save scene &amp; continue</strong> to save and move to the next map.</li>
+    </ul>
+    <h2 id="json">Make precise or batch edits with JSON</h2>
+    <ol>
+      <li>Open <strong>Draft JSON → View current draft JSON</strong>. Read the textarea directly or use <strong>Download JSON</strong>. Select the intended scene by ID and time range.</li>
+      <li>In a copy of the complete manifest, change the requested fields. Keep stable scene IDs, ordering, timings, audio clips, asset references, and unrelated layers. Use only asset IDs present in the draft. Register an image through <strong>Use in video</strong> first if it’s only in the library.</li>
+      <li>Paste or upload the complete JSON. Choose <strong>Review import → Apply reviewed import → Save</strong>. If review rejects the file, read the exact error and correct the field before applying. If Studio says a change is pending, use the visible <strong>Apply change</strong> or <strong>Discard</strong> review first.</li>
+    </ol>
+    <h2 id="verify">Save, preview, and verify</h2>
+    <p>Save and reopen the draft. Verify the changed scene and its neighbors, then check the audio and timing. Preview movement after it begins. JPG previews show each scene’s first frame. When export is requested, choose <strong>Export MP4</strong> and check the downloaded video and narration. If the browser is in 2D fallback, verify saved camera keys and layers there and use a WebGL2 session for terrain, satellite imagery, and the final map render. Report any check that remains pending.</p>
     <h2>What to say in a new chat</h2>
-    <blockquote>First read the <a href="https://invincy.github.io/invincible/creator/video-workflow.html">Creator Studio video workflow</a>, then follow it to make a video from this voiceover and my visual instructions.</blockquote>
+    <blockquote>Read the <a href="https://invincy.github.io/invincible/creator/video-workflow.html">Creator Studio workflow guide</a>. Open my existing project and edit the scene or asset I name. Preserve the narration, timings, and other scenes. Save, reopen, and show me what changed.</blockquote>
   </main>
 </body>
 </html>

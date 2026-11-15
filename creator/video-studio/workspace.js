@@ -7,7 +7,7 @@ import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111207';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111506';
 import {createStudioRenderer} from './adapters.js?v=2026111506';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111014';
-import {mountAssembly} from './assembly.js?v=2026111506';
+import {mountAssembly} from './assembly.js?v=2026111601';
 import {encodeStudioVideo} from './export.js?v=2026111209';
 import {openStudioStore} from './storage.js';
 import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111506';
@@ -34,7 +34,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  const legacy=$('.vs-layout > div'),advanced=document.createElement('details'),assemblyRoot=document.createElement('section'),header=document.createElement('header');
  advanced.className='vs-advanced space-panel';advanced.innerHTML='<summary>Advanced · brand & project settings</summary>';legacy.before(advanced);advanced.append(legacy);legacy.querySelector('strong').textContent='Project settings';
  assemblyRoot.dataset.assembly='';assemblyRoot.className='vs-assembly space-panel';$('.vs-layout').prepend(assemblyRoot);
- header.className='vs-studio-header';header.innerHTML='<div><span class="vs-eyebrow">CREATOR</span><h2>Motion Studio</h2></div><div class="vs-actions" data-studio-actions></div>';root.prepend(header);const mobile=document.createElement('nav');
+ header.className='vs-studio-header';header.innerHTML='<div><span class="vs-eyebrow">CREATOR</span><h2>Motion Studio</h2><div class="vs-workspace-shortcuts"><a href="video-workflow.html" target="_blank" rel="noopener">Workflow guide</a></div></div><div class="vs-actions" data-studio-actions></div>';root.prepend(header);const mobile=document.createElement('nav');
  mobile.className='vs-mobile-tabs';mobile.setAttribute('aria-label','Studio panels');
  mobile.innerHTML='<button type="button" data-mobile-panel="scenes">Scenes &amp; audio</button><button type="button" data-mobile-panel="preview">Preview</button><button type="button" data-mobile-panel="settings">Settings</button>';
  header.after(mobile);
@@ -83,6 +83,22 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   aiCreate.querySelector('h3').textContent='Create with AI';
   setup.querySelector('.vs-step:not([data-ai-production]) h3').textContent='Media';
   setup.querySelector('[data-flow-json] h3').textContent='Import JSON';
+  const shortcuts=header.querySelector('.vs-workspace-shortcuts');
+  for(const [label,target] of [
+   ['Media library','[data-media-search]'],
+   ['Draft JSON','[data-vs=view-json]']
+  ]){
+   const button=document.createElement('button');
+   button.type='button';button.textContent=label;
+   button.onclick=()=>{
+    create.open=true;
+    if(target==='[data-media-search]')selectAssetTool('upload');
+    const control=setup.querySelector(target);
+    control.scrollIntoView({block:'nearest'});
+    control.focus({preventScroll:true});
+   };
+   shortcuts.append(button);
+  }
 
   const timelinePanel=document.createElement('section');
   timelinePanel.className='vs-editing-timeline';
