@@ -467,7 +467,7 @@ const server=http.createServer((req,res)=>{
   await scene(16).locator('[data-action=expand]').click();assert.equal(await scene(16).locator('[data-field=videoPrompt]').inputValue(),'Motion');
   await scene(16).locator('[data-action=duplicate]').click();assert.equal(await page.locator('.wb-scene').count(),18);
   await scene(17).locator('[data-action=insert]').click();assert.equal(await page.locator('.wb-scene').count(),19);
-  await scene(18).locator('[data-action=remove]').click();assert.equal(await page.locator('.wb-scene').count(),18);
+  await scene(18).locator('[data-action=remove]').click();await page.getByRole('dialog').getByRole('button',{name:'Confirm',exact:true}).click();assert.equal(await page.locator('.wb-scene').count(),18);
   if(await scene(17).locator('[data-action=expand]').getAttribute('aria-expanded')!=='true')await scene(17).locator('[data-action=expand]').click();
   await scene(17).locator('[data-action=up]').click();assert.equal(await scene(16).locator('[data-field=voiceover]').inputValue(),'Markdown voice');
   fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});

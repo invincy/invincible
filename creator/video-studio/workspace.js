@@ -227,6 +227,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   for(const [id,file] of state.files)await store.put('file:'+id,file);
   state.brandAssets=[...new Map([...state.brandAssets,...next.assets].map(a=>[a.id,a])).values()];await store.put('brands',{brands:state.brands,assets:state.brandAssets});
 
+  if(disposed||getAccountId()!==account||getProject()?.id!==projectId)throw Error('Project closed or account changed.');
   if(cloud){const result=await media.saveDraft(projectId,next,state.brands,state.cloudRevision);state.cloudRevision=result.revision;state.cloudLoaded=true;state.savedManifest=structuredClone(next);await store.put('cloudRevision:'+projectId,state.cloudRevision);status('Saved to your account. Your video and cloud assets are available on your other devices.');}else status('Local video draft saved. Cloud draft sync is available to the project owner.');
   const version=uid();await store.put('version:'+projectId+':'+version,next);await store.put('draft:'+projectId,version);
   state.manifest=next;if(preview)await applyManifest(next);
@@ -316,7 +317,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
     $('[data-vs-review]').textContent=`${result.scenes.length} scenes · saves to this project's cloud video. Review before replacing the current video.`;status('Import reviewed. Apply when ready.');
    }
    if(action==='apply'&&pending){const next=pending,cloud=pendingCloud;
-    if(cloud){await applyManifest(next,{brands:cloud.brands});state.cloudRevision=cloud.revision;pendingCloud=null;}
+    if(cloud){await applyManifest(next,{brands:cloud.brands});state.cloudRevision=cloud.revision;state.savedManifest=structuredClone(next);pendingCloud=null;}
     else{const result=await agent.applyPatch(next);if(!result.ok)throw Error(result.errors.map(e=>e.message).join('\n'));status('Saved to your account. Scenes are ready for review and export.');}
    }
    if(action==='example'){
@@ -395,7 +396,11 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    for(const project of projects)for(const asset of project.historicalMap.visual?.assets||[])if(asset.cloudAssetId)await media.read(asset.cloudAssetId);
   },save:async next=>{await save(next);}
  });
- window.invincibleAgent=agent;
+ const exposedAgent={...agent,applyPatch:async payload=>{
+  if(busy||disposed)return {ok:false,errors:[{code:'BUSY',message:'Wait for the current editor operation to finish.'}]};
+  lock(true);try{return await agent.applyPatch(payload);}finally{if(!disposed)lock(false);}
+ }};
+ window.invincibleAgent=exposedAgent;
  const hidden=()=>{if(document.hidden)stop();};document.addEventListener('visibilitychange',hidden);
  async function reviewGeneratedMaps(){await ready;return assembly?.startMapReview()||false;}
  async function saveFocusedMap(){
@@ -406,5 +411,5 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   try{return {cloud:await save(next,{preview:false})};}
   finally{if(!disposed)lock(false);}
  }
- return {ready,save:()=>save(),get manifest(){return state.manifest;},get mapFocused(){return assembly.mapFocused;},saveFocusedMap,importAiProduction,reviewGeneratedMaps,destroy(){if(window.invincibleAgent===agent)delete window.invincibleAgent;images.destroy();disposed=true;state.time=time;assembly?.destroy();stop();lifecycle.abort(new DOMException('Workspace closed','AbortError'));controller?.abort(new DOMException('Workspace closed','AbortError'));renderer?.destroy();context?.close();if(lastExportUrl)URL.revokeObjectURL(lastExportUrl);store?.close();document.removeEventListener('visibilitychange',hidden);}};
+ return {ready,save:()=>save(),get manifest(){return state.manifest;},get mapFocused(){return assembly.mapFocused;},saveFocusedMap,importAiProduction,reviewGeneratedMaps,destroy(){if(window.invincibleAgent===exposedAgent)delete window.invincibleAgent;images.destroy();disposed=true;state.time=time;assembly?.destroy();stop();lifecycle.abort(new DOMException('Workspace closed','AbortError'));controller?.abort(new DOMException('Workspace closed','AbortError'));renderer?.destroy();context?.close();if(lastExportUrl)URL.revokeObjectURL(lastExportUrl);store?.close();document.removeEventListener('visibilitychange',hidden);}};
 }
