@@ -12,7 +12,10 @@ narration, instructions and the private audio asset ID. In Motion Studio use **C
 ChatGPT brief** for the current manifest schema and media IDs, then **Review import**
 and **Apply reviewed import**, preview and export. Built-in planning remains optional.
 Project narration/instructions populate Script even before a transcript exists.
-New recordings default to final speed 1×; saved checkpoints retain their pace.
+New recordings default to final speed 1.4× with female Gemini Aoede and Social media /
+engaging delivery, as explicitly requested by the owner. Saved final MP3s retain
+their displayed speed without a second acceleration. Connect laptop is available
+directly on the timing step; pairing failures retain the recording for retry.
 Selecting a scene reuses the preview renderer instead of rebuilding unchanged maps.
 
 Inside the desktop spatial shell, Creator home and project surfaces use the shell's

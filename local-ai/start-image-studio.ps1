@@ -3,7 +3,6 @@ param([switch]$NoBrowser,[switch]$VideoOnly)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 $origin = 'http://127.0.0.1:8788'
-$pluginOrigin = 'http://127.0.0.1:8791'
 $log = 'E:\Invincible\AgentWorkspace\imagegen-test-worker.log'
 $credentialFile = 'E:\Invincible\ImageGen\worker-login.dpapi'
 $config = if (Test-Path -LiteralPath 'E:\Invincible\ImageGen\worker-config.json') { Get-Content -LiteralPath 'E:\Invincible\ImageGen\worker-config.json' -Raw | ConvertFrom-Json } else { @{ownerUid='local-imagegen-test'} }
@@ -27,11 +26,6 @@ function Test-LocalService([string]$Url) {
     catch { return $false }
 }
 if ($VideoOnly) {
-    if (-not (Test-LocalService 'http://127.0.0.1:11434/api/tags')) {
-        $env:OLLAMA_HOST = '127.0.0.1:11434'
-        $env:OLLAMA_MODELS = 'E:\AI\Models\Ollama'
-        Start-Process -FilePath 'E:\Ollama\ollama.exe' -ArgumentList 'serve' -WindowStyle Hidden -WorkingDirectory 'E:\Ollama'
-    }
     if (-not (Test-LocalService 'http://127.0.0.1:8790/health') -and -not (Get-NetTCPConnection -State Listen -LocalPort 8790 -ErrorAction SilentlyContinue)) {
         if (-not (Test-Path -LiteralPath $credentialFile)) { throw 'The Windows-encrypted worker login is missing.' }
         $whisperPassword = ConvertTo-SecureString ((Get-Content -LiteralPath $credentialFile -Raw).Trim())
@@ -70,13 +64,7 @@ for ($i=0; $i -lt 40; $i++) {
     Start-Sleep -Seconds 1
 }
 if (-not $ready) { throw 'Worker startup did not finish. Inspect E:\Invincible\ImageGen\logs\worker-startup-stderr.log.' }
-$pluginReady = $false
-for ($i=0; $i -lt 20; $i++) {
-    if (Test-LocalService "$pluginOrigin/health") { $pluginReady = $true; break }
-    Start-Sleep -Milliseconds 500
-}
-if (-not $pluginReady) { throw 'Invincible Video Director did not start. Inspect E:\Invincible\ImageGen\logs\worker-startup-stderr.log.' }
-if ($config.appOrigin -eq 'https://invincy.github.io') {
+if (-not $VideoOnly -and $config.appOrigin -eq 'https://invincy.github.io') {
     try { & (Join-Path $PSScriptRoot 'start-image-relay.ps1') -ImageToken $pairingToken }
     catch { Write-Warning ('Image Studio is ready locally. Mobile connection could not start. ' + $_.Exception.Message) }
 }
@@ -87,14 +75,14 @@ if ($VideoOnly) {
     $videoReady = $false
     for ($i=0; $i -lt 45; $i++) {
         try {
-            $videoReady = (Invoke-RestMethod "$origin/api/voiceover/catalog-status?check=production" -Headers @{Authorization=('Bearer '+$pairingToken)} -TimeoutSec 8).automaticContext -eq $true
+            $videoReady = (Invoke-RestMethod 'http://127.0.0.1:8790/health' -TimeoutSec 3).ready -eq $true
             if ($videoReady) { break }
         } catch {}
         Start-Sleep -Seconds 1
     }
-    if (-not $videoReady) { throw 'Video services are not ready. Check the Whisper startup log, Ollama and the laptop worker version.' }
+    if (-not $videoReady) { throw 'Video services are not ready. Check the Whisper startup log and the laptop worker version.' }
     if (-not $NoBrowser) { Start-Process 'https://invincy.github.io/invincible/creator/' }
-    Write-Output 'Invincible Video Studio and Video Director plugin are ready.'
+    Write-Output 'Creator Studio local timing is ready. Director and scene-planning services are not required.'
     exit
 }
 if (-not $NoBrowser) {

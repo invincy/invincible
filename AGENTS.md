@@ -24,6 +24,10 @@ export directly. Do not require a Director connection, compilation or plugin app
 to edit a project. Legacy plugin metadata is compatibility data, not an editing lock.
 Do not modify the separately maintained plugin as part of native Studio work.
 
+The owner's intended voice defaults are Gemini Aoede (female), Social media /
+engaging delivery, and 1.4× final speed. Preserve them. Retiming must happen once;
+reopening the final MP3 must retain its displayed speed without accelerating it again.
+
 These rules belong to `invincy/invincible`. Keep project knowledge in this repository; do not copy its creative style, film content or architecture into global agent settings. No global configuration change is needed for a task here.
 
 ### Read only the context the task needs

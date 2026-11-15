@@ -7,7 +7,7 @@ import {createLocalImageClient} from '../shared/local-image-client.js?v=20261113
 import {resolveCreatorPlanResourcesFromLibrary} from './ai-resource-resolver.js?v=2026111328';
 import {createMediaClient,inspectMedia} from './media-library.js?v=2026111401';
 const $=id=>document.getElementById(id),fields=['title','script','creativeInstructions','mode','engine','model','direction','language','gender','family','voice','preset','speed','pitch','volume','pause'];
-let user=null,voices=[],busy=false,loading=false,epoch=0,voiceEpoch=0,audioUrl=null,audioBytes=null,sourceAudioBytes=null,sourceDuration=0,sourceFilename='',recordingLabel='',appliedSpeed=1,audioIsPreview=true,speedBusy=false,saveTimer,cloudFinalAudioId='';
+let user=null,voices=[],busy=false,loading=false,epoch=0,voiceEpoch=0,audioUrl=null,audioBytes=null,sourceAudioBytes=null,sourceDuration=0,sourceSpeed=1,sourceFilename='',recordingLabel='',appliedSpeed=1,audioIsPreview=true,speedBusy=false,saveTimer,cloudFinalAudioId='';
 let timedTranscript=null,scenePlanPayload=null,analysisBusy=false,scenePlanBusy=false,scenePlanSaved=false,scenePlanProgressTimer=null,queuedProjectWorkspace=null;
 const aiProviderKey='invincible.ai.planner.v2';
 let aiProvider=localStorage.getItem(aiProviderKey)==='local'?'local':'cloud';
@@ -126,6 +126,7 @@ function refreshAvailability(){
  $('voiceFields').disabled=busy||loading||!user||!voices.length;
  $('generate').disabled=!ready||!$('script').value.trim();$('analyzeLocal').disabled=!audioBytes||audioIsPreview||busy||loading||speedBusy||analysisBusy||scenePlanBusy||!user;
  $('retryAnalysis').disabled=$('analyzeLocal').disabled;
+ $('connectTimingLaptop').disabled=analysisBusy||scenePlanBusy||!user;$('connectTimingLaptop').hidden=localWorker.hasPairing();
  $('playbackSpeed').disabled=!audioBytes||busy||loading||speedBusy;
  $('download').setAttribute('aria-disabled',String(!audioBytes||busy||loading||speedBusy));
  $('generateScenePlan').disabled=!timedTranscript||!validTimedTranscript().valid||!$('creativeInstructions').value.trim()||analysisBusy||scenePlanBusy||!user;
@@ -316,13 +317,14 @@ function updateAiFlow(){
  document.querySelectorAll('[data-ai-flow]').forEach(item=>{const state=states[item.dataset.aiFlow];item.classList.toggle('done',state.done);item.classList.toggle('current',state.current);if(state.current)item.setAttribute('aria-current','step');else item.removeAttribute('aria-current');});
 }
 function resetAiFlow(){timedTranscript=null;scenePlanPayload=null;analysisBusy=false;scenePlanBusy=false;scenePlanSaved=false;clearInterval(scenePlanProgressTimer);scenePlanProgressTimer=null;document.querySelector('.ai-script-flow').classList.remove('plan-generating','plan-review-active');$('scenePlanProgress').hidden=true;$('transcriptReview').hidden=true;$('transcriptSegments').replaceChildren();$('scenePlanReview').hidden=true;$('scenePlanScenes').replaceChildren();$('generateScenePlan').closest('.ai-next-row').hidden=false;$('aiProviderChoice').hidden=false;$('localAnalysisResult').hidden=true;$('localAnalysisResult').textContent='';$('localAnalysisStatus').textContent='Generate the final MP3, then let Whisper create its transcript and timestamps.';updateAiFlow();}
-function clearAudio(){if(audioUrl)URL.revokeObjectURL(audioUrl);audioUrl=null;audioBytes=null;sourceAudioBytes=null;sourceDuration=0;sourceFilename='';recordingLabel='';appliedSpeed=1;audioIsPreview=true;speedBusy=false;cloudFinalAudioId='';$('player').pause();$('player').removeAttribute('src');$('player').load();$('download').removeAttribute('href');$('recording').hidden=true;resetAiFlow();}
+function clearAudio(){if(audioUrl)URL.revokeObjectURL(audioUrl);audioUrl=null;audioBytes=null;sourceAudioBytes=null;sourceDuration=0;sourceSpeed=1;sourceFilename='';recordingLabel='';appliedSpeed=1;audioIsPreview=true;speedBusy=false;cloudFinalAudioId='';$('player').pause();$('player').removeAttribute('src');$('player').load();$('download').removeAttribute('href');$('recording').hidden=true;resetAiFlow();}
 function friendly(error){
  if(error?.code==='functions/not-found')return 'Voiceover generation has not been deployed to Invincible yet. Your script is kept here.';
  if(/unauthenticated/.test(error?.code||''))return 'Sign in to Invincible again. Your script is kept here.';
  return error?.message||'The request failed. Your script is kept here. Please retry when ready.';
 }
 function localVoiceoverError(error,step){
+ if(error?.code==='LOCAL_PAIRING_REQUIRED'||error?.status===401)return 'Connect this laptop to run local Whisper. Your MP3 is still here.';
  if(error?.status===404||/^not found\.?$/i.test(error?.message||''))return 'The laptop video service is out of date. Restart Invincible Video Studio on this laptop, then click '+step+' again. Your MP3 is still here.';
  if(error?.code==='LOCAL_WORKER_TIMEOUT')return 'Local AI took longer than expected. The laptop service is still running; click '+step+' to retry. Your MP3 is still here.';
  if(error?.code==='LOCAL_WORKER_UNREACHABLE')return 'The laptop video service is not running. Start Invincible Video Studio, then click '+step+' again. Your MP3 is still here.';
@@ -390,12 +392,12 @@ async function restoreProjectAudio(workspace){
   if(!bytes.length||duration<=0)throw Error('The saved recording is empty or has no measured duration.');
   // This is already the final-speed MP3. Treat its bytes as the new source,
   // rather than applying the original TTS speed to it a second time.
-  audioBytes=bytes;sourceAudioBytes=bytes;sourceDuration=duration;sourceFilename=workspace.audio.sourceFilename||'voiceover.mp3';appliedSpeed=1;audioIsPreview=false;cloudFinalAudioId=id;recordingLabel='saved final MP3';$('playbackSpeed').value='1';
+  audioBytes=bytes;sourceAudioBytes=bytes;sourceDuration=duration;sourceSpeed=Number(workspace.audio.appliedSpeed)||1;sourceFilename=workspace.audio.sourceFilename||'voiceover.mp3';appliedSpeed=sourceSpeed;audioIsPreview=false;cloudFinalAudioId=id;recordingLabel='saved final MP3';$('playbackSpeed').value=String(appliedSpeed);
   audioUrl=URL.createObjectURL(new Blob([bytes],{type:'audio/mpeg'}));$('player').src=audioUrl;$('download').href=audioUrl;$('download').download=sourceFilename;$('recording').hidden=false;$('recordingInfo').textContent=duration.toFixed(1)+' sec · saved final MP3';applyPlaybackSpeed();refreshAvailability();updateAiFlow();
  })().finally(()=>{loadingProjectAudio=null;});
  return loadingProjectAudio;
 }
-function scriptSyncSnapshot(){return{script:$('script').value,title:$('title').value,creativeInstructions:$('creativeInstructions').value,transcript:structuredClone(timedTranscript),scenePlan:scenePlanPayload?structuredClone(scenePlanPayload):null,aiProvider,appliedSpeed,playbackSpeed:$('playbackSpeed').value,sourceDuration,sourceFilename,recordingLabel,finalDuration:Number(timedTranscript?.duration)||0,downloadFilename:$('download').download||sourceFilename};}
+function scriptSyncSnapshot(){return{script:$('script').value,title:$('title').value,creativeInstructions:$('creativeInstructions').value,transcript:structuredClone(timedTranscript),scenePlan:scenePlanPayload?structuredClone(scenePlanPayload):null,aiProvider,appliedSpeed,playbackSpeed:$('playbackSpeed').value,sourceDuration,sourceSpeed,sourceFilename,recordingLabel,finalDuration:Number(timedTranscript?.duration)||0,downloadFilename:$('download').download||sourceFilename};}
 function syncCloudScriptWorkspace(){
  if(!projectVoiceoverId||!timedTranscript?.segments?.length)return;
  window.parent.postMessage({type:'invincible-sync-project-script-workspace',workspace:{version:1,script:$('script').value,creativeInstructions:$('creativeInstructions').value,transcript:structuredClone(timedTranscript),timingProvider:queuedProjectWorkspace?.workspace?.timingProvider||'local-whisper',audio:{sourceFilename:String(sourceFilename||'').slice(0,240),finalDuration:Number(timedTranscript.duration)||0,appliedSpeed:Number(appliedSpeed)||1,cloudAssetId:cloudFinalAudioId},updatedAtMs:Date.now()}},location.origin);
@@ -404,7 +406,7 @@ async function ensureCloudFinalAudio(){
  if(!projectVoiceoverId||!user||!audioBytes||audioIsPreview)return null;
  if(cloudFinalAudioId)return cloudFinalAudioId;
  const name=$('download').download||sourceFilename||'voiceover.mp3',file=new File([audioBytes],name,{type:'audio/mpeg'}),asset=await createMediaClient(user.uid).upload(file,await inspectMedia(file));
- cloudFinalAudioId=asset.id;window.parent.postMessage({type:'invincible-sync-project-voiceover-asset',asset:{id:asset.id,name:asset.name,duration:Number(asset.duration)||sourceDuration/appliedSpeed,appliedSpeed}},location.origin);return asset.id;
+ cloudFinalAudioId=asset.id;window.parent.postMessage({type:'invincible-sync-project-voiceover-asset',asset:{id:asset.id,name:asset.name,duration:Number(asset.duration)||sourceDuration*sourceSpeed/appliedSpeed,appliedSpeed}},location.origin);return asset.id;
 }
 async function persistScriptSync({includeAudio=false}={}){
  if(!projectVoiceoverId||!user||!timedTranscript)return;
@@ -422,7 +424,7 @@ async function restoreScriptSync(){
   const currentScript=$('script').value.trim();if(currentScript&&checkpoint.script?.trim()&&currentScript!==checkpoint.script.trim()){$('localAnalysisStatus').textContent='A saved Whisper timing belongs to an earlier script. Open Script to review it or generate a new final MP3.';return;}
   const finalBytes=new Uint8Array(await checkpoint.finalAudio.arrayBuffer()),sourceBytes=new Uint8Array(await checkpoint.sourceAudio.arrayBuffer());if(!finalBytes.length||!sourceBytes.length)throw Error('The saved final MP3 is empty.');
   clearAudio();$('script').value=checkpoint.script||$('script').value;$('title').value=checkpoint.title||$('title').value;$('creativeInstructions').value=checkpoint.creativeInstructions||'';
-  audioBytes=finalBytes;sourceAudioBytes=sourceBytes;sourceDuration=Number(checkpoint.sourceDuration)||Number(checkpoint.finalDuration)||Number(checkpoint.transcript.duration);sourceFilename=checkpoint.sourceFilename||'voiceover.mp3';recordingLabel=checkpoint.recordingLabel||'saved voiceover';appliedSpeed=Number(checkpoint.appliedSpeed)||1;audioIsPreview=false;
+  audioBytes=finalBytes;sourceAudioBytes=sourceBytes;sourceDuration=Number(checkpoint.sourceDuration)||Number(checkpoint.finalDuration)||Number(checkpoint.transcript.duration);sourceSpeed=Number(checkpoint.sourceSpeed)||1;sourceFilename=checkpoint.sourceFilename||'voiceover.mp3';recordingLabel=checkpoint.recordingLabel||'saved voiceover';appliedSpeed=Number(checkpoint.appliedSpeed)||1;audioIsPreview=false;
   const wanted=String(checkpoint.playbackSpeed||appliedSpeed);if([...$('playbackSpeed').options].some(option=>option.value===wanted))$('playbackSpeed').value=wanted;
   audioUrl=URL.createObjectURL(new Blob([audioBytes],{type:'audio/mpeg'}));$('player').src=audioUrl;$('download').href=audioUrl;$('download').download=checkpoint.downloadFilename||sourceFilename;$('recording').hidden=false;$('recordingInfo').textContent=`${Number(checkpoint.finalDuration||checkpoint.transcript.duration).toFixed(1)} sec · ${recordingLabel} · restored checkpoint`;applyPlaybackSpeed();
   timedTranscript=structuredClone(checkpoint.transcript);if(checkpoint.aiProvider==='cloud'||checkpoint.aiProvider==='local'){aiProvider=checkpoint.aiProvider;localStorage.setItem(aiProviderKey,aiProvider);}updateProviderUi();renderTranscript();syncCloudScriptWorkspace();status('Final MP3 restored from this project.');
@@ -436,7 +438,7 @@ async function ensureFinalSpeed(){
  speedBusy=true;refreshAvailability();status('Preparing the final '+target.toFixed(2)+'× MP3…');
  try{
   let bytes=sourceAudioBytes,filename=sourceFilename,duration=sourceDuration;
-  if(target!==1){const result=await retimeVoiceover({audioBase64:bytesBase64(sourceAudioBytes),speed:target,durationSeconds:sourceDuration,filename:sourceFilename});const decoded=atob(result.audioBase64);bytes=Uint8Array.from(decoded,c=>c.charCodeAt(0));filename=result.filename;duration=result.durationSeconds;}
+  if(target!==sourceSpeed){const result=await retimeVoiceover({audioBase64:bytesBase64(sourceAudioBytes),speed:target/sourceSpeed,durationSeconds:sourceDuration,filename:sourceFilename});const decoded=atob(result.audioBase64);bytes=Uint8Array.from(decoded,c=>c.charCodeAt(0));filename=result.filename;duration=result.durationSeconds;}
   if(audioUrl)URL.revokeObjectURL(audioUrl);audioBytes=bytes;appliedSpeed=target;audioUrl=URL.createObjectURL(new Blob([bytes],{type:'audio/mpeg'}));$('player').src=audioUrl;$('download').href=audioUrl;$('download').download=filename;$('recordingInfo').textContent=duration.toFixed(1)+' sec · '+recordingLabel+' · final '+target.toFixed(2)+'×';applyPlaybackSpeed();status('Final '+target.toFixed(2)+'× MP3 ready. Download it or continue to Script & scenes.');
  }catch(error){status(friendly(error),true);throw error;}
  finally{speedBusy=false;refreshAvailability();}
@@ -539,6 +541,12 @@ $('download').addEventListener('click',async event=>{event.preventDefault();if(!
 $('generate').addEventListener('click',()=>record(false));$('preview').addEventListener('click',()=>record(true));
 $('analyzeLocal').addEventListener('click',analyzeLocal);
 $('retryAnalysis').addEventListener('click',analyzeLocal);
+$('connectTimingLaptop').addEventListener('click',async()=>{
+ $('connectTimingLaptop').disabled=true;
+ try{await localWorker.pairInBrowser();$('localAnalysisStatus').textContent='Laptop connected. Running local Whisper…';await analyzeLocal();}
+ catch(error){$('localAnalysisStatus').textContent=localVoiceoverError(error,'Connect laptop');}
+ finally{refreshAvailability();}
+});
 $('generateScenePlan').addEventListener('click',generateScenePlan);
 $('downloadTiming').addEventListener('click',()=>{
  if(!timedTranscript)return;

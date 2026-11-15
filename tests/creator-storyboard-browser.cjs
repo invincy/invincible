@@ -56,7 +56,7 @@ const server=http.createServer((req,res)=>{
   await page.locator('#projectTitle').filter({hasText:'Untitled project'}).waitFor();
   await page.locator('#projectVoiceoverStep:not([hidden])').waitFor();
   assert.equal(await page.locator('[data-project-area="Voiceover"]').getAttribute('aria-current'),'step');
-  assert.deepEqual(await page.locator('.project-workspace-nav [data-project-area]').allTextContents(),['1 Script','2 Sync plan','3 Review maps','4 Motion & export','Map Editor','Battlefield Editor','Assets & 3D']);
+  assert.deepEqual(await page.locator('.project-workspace-nav [data-project-area]').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('aria-label')||node.textContent.trim())),['1 Script','2 Timing & plan','3 Review scenes (optional)','4 Motion & export','Map Editor','Battlefield Editor','Assets and 3D']);
   assert.match(await page.locator('#workflowGuide').innerText(),/Step 1 of 4/);
   assert.equal(await page.frameLocator('#projectVoiceoverFrame').locator('[name="aiProvider"][value="cloud"]').isChecked(),true,'Creator Studio reuses OpenAI by default while keeping Local AI selectable');
   assert.equal(await page.evaluate(()=>window.writes||0),0,'Opening an untitled project does not save it before the user edits it');
@@ -144,12 +144,12 @@ const server=http.createServer((req,res)=>{
    const recording=doc.querySelector('.result-panel').getBoundingClientRect();
    const script=doc.querySelector('.script-panel').getBoundingClientRect();
    const voice=doc.querySelector('.controls-panel').getBoundingClientRect();
-   return recording.top>=script.bottom&&recording.top-script.bottom<=14&&
-    Math.abs(recording.left-script.left)<=1&&Math.abs(recording.width-script.width)<=1&&
-    Math.abs(voice.top-script.top)<=1&&
+   return script.left<voice.left&&voice.left<recording.left&&
+    Math.abs(recording.width-script.width)<=2&&Math.abs(voice.width-script.width)<=2&&
+    Math.abs(voice.top-script.top)<=2&&Math.abs(recording.top-script.top)<=2&&
     doc.querySelector('#voiceFields').lastElementChild.id==='expressiveControls'&&
     !doc.querySelector('.project-voice-direction').open;
-  }),true,'Recording sits directly below Script and optional Voice direction stays collapsed');
+  }),true,'Script, Voice and Recording share one desktop row and optional Voice direction stays collapsed');
   assert.equal(await scriptFrame.getByRole('dialog',{name:'Voiceover history'}).count(),0);
   await scriptFrame.getByRole('button',{name:'History',exact:true}).click();
   await scriptFrame.getByRole('dialog',{name:'Voiceover history'}).waitFor();
@@ -160,11 +160,11 @@ const server=http.createServer((req,res)=>{
   assert.equal(await scriptFrame.locator('.recording-actions #analyzeLocal').innerText(),'Next · Script & scenes');
   assert.equal(await scriptFrame.locator('.ai-script-flow').isHidden(),true,'Whisper timing belongs to Script & scenes, not Script');
   const scriptDesktop=await scriptFrame.locator('#workspace').evaluate(workspace=>{const rect=name=>{const box=workspace.querySelector(name).getBoundingClientRect();return{left:box.left,top:box.top,right:box.right,bottom:box.bottom,width:box.width}};return{script:rect('.script-panel'),voice:rect('.controls-panel'),recording:rect('.result-panel'),overflow:document.documentElement.scrollWidth<=innerWidth+1}});
-  assert.equal(scriptDesktop.overflow,true,'The Script workspace has no horizontal overflow');assert.ok(scriptDesktop.script.left<scriptDesktop.voice.left&&scriptDesktop.recording.top>=scriptDesktop.script.bottom,'Script and Recording stay together beside Voice');
+  assert.equal(scriptDesktop.overflow,true,'The Script workspace has no horizontal overflow');assert.ok(scriptDesktop.script.left<scriptDesktop.voice.left&&scriptDesktop.voice.left<scriptDesktop.recording.left,'Script, Voice and Recording share the desktop row');
   await page.screenshot({path:path.join(root,'.test-output/creator-project-script-flow.png'),fullPage:true});
   await page.setViewportSize({width:393,height:852});
   const scriptMobile=await scriptFrame.locator('#workspace').evaluate(workspace=>{const top=name=>workspace.querySelector(name).getBoundingClientRect().top;return{script:top('.script-panel'),recording:top('.result-panel'),voice:top('.controls-panel'),overflow:document.documentElement.scrollWidth<=innerWidth+1}});
-  assert.equal(scriptMobile.overflow,true,'The collapsed Script workspace has no phone overflow');assert.ok(scriptMobile.script<scriptMobile.recording&&scriptMobile.recording<scriptMobile.voice,'Phone Script flow remains Script, Recording, then Voice');
+  assert.equal(scriptMobile.overflow,true,'The collapsed Script workspace has no phone overflow');assert.ok(scriptMobile.script<scriptMobile.voice&&scriptMobile.voice<scriptMobile.recording,'Phone Script flow remains Script, Voice, then Recording');
   await page.setViewportSize({width:1440,height:1000});
   await narration.evaluate(()=>window.parent.postMessage({type:'invincible-open-script-timing'},location.origin));
   await page.locator('[data-project-area="Storyboard"][aria-current="step"]').waitFor();await scriptFrame.locator('html.project-timing-view').waitFor();
@@ -253,8 +253,8 @@ const server=http.createServer((req,res)=>{
    if(width===390)await page.screenshot({path:path.join(root,'.test-output/creator-home-390.png'),fullPage:true});
   }
   await page.setViewportSize({width:1440,height:1000});
-  assert.equal(await page.locator('.tool-grid>*').count(),7);
-  assert.equal(await page.locator('.tool-grid .tool-icon').count(),7);
+  assert.equal(await page.locator('.tool-grid>*').count(),6);
+  assert.equal(await page.locator('.tool-grid .tool-icon').count(),6);
   assert.ok(await page.locator('.project-home-card .project-progress-bar').count()>=1);
   {const uiQuality=await page.evaluate(()=>({toolNames:[...document.querySelectorAll('.tool-copy>strong')].every(node=>node.scrollWidth<=node.clientWidth+1),controls:[...document.querySelectorAll('.creator-home button,.creator-home a')].map(node=>Math.min(node.getBoundingClientRect().width,node.getBoundingClientRect().height)),projectTitle:parseFloat(getComputedStyle(document.querySelector('.project-home-card h3')).fontSize),toolCards:[...document.querySelectorAll('.tool-grid>*')].map(card=>{const icon=card.querySelector('.tool-icon').getBoundingClientRect(),copy=card.querySelector('.tool-copy').getBoundingClientRect(),arrow=card.querySelector('i').getBoundingClientRect();return{iconWidth:icon.width,iconLeft:icon.left,copyLeft:copy.left,arrowLeft:arrow.left,cardRight:card.getBoundingClientRect().right}})}));assert.equal(uiQuality.toolNames,true,'Creator tool names remain readable');assert.ok(Math.min(...uiQuality.controls)>=43.5,'Creator home controls meet the 44px target');assert.ok(uiQuality.projectTitle>=16,'Project titles remain readable');assert.ok(uiQuality.toolCards.every(card=>card.iconWidth>=56&&card.iconLeft<card.copyLeft&&card.copyLeft<card.arrowLeft&&card.arrowLeft<card.cardRight),'Desktop tool cards use the available width: large icon, copy, then action');}
   {const denseCards=await page.evaluate(()=>{const grid=document.querySelector('#projectGrid'),source=grid.querySelector('.project-home-card'),clones=Array.from({length:6},()=>{const clone=source.cloneNode(true);grid.append(clone);return clone}),cards=[...grid.querySelectorAll('.project-home-card')],fits=cards.every(card=>[...card.children].every(child=>child.getBoundingClientRect().bottom<=card.getBoundingClientRect().bottom+1)),rows=new Set(cards.map(card=>Math.round(card.getBoundingClientRect().top))).size;clones.forEach(clone=>clone.remove());return{fits,rows}});assert.equal(denseCards.fits,true,'Dense project cards keep every action inside its card');assert.ok(denseCards.rows>=2,'Dense project grid creates multiple contained rows');}
