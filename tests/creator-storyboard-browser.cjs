@@ -39,6 +39,7 @@ const server=http.createServer((req,res)=>{
   page.on('dialog',dialog=>dialog.accept());
   await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.copied=text}}}));
   const openArea=async name=>{
+   await page.locator('#app:not([hidden])').waitFor();
    const direct=page.locator('[data-project-area="'+name+'"]:not([data-tool-mode])');
    if(name!=='Storyboard'&&await direct.count()){await direct.click();return;}
    // The old workbench remains covered for data compatibility, but it is no longer
