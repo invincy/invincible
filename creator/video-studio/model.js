@@ -89,7 +89,9 @@ function validateScene(scene,assets,mapAssets,{template=false,version=1,mapSourc
 export function validateManifest(input,{mapAssets=[]}={}){
  let m;try{m=typeof input==='string'?JSON.parse(input):structuredClone(input);}catch{fail('Choose a complete Video Studio JSON file.');}
  if(new TextEncoder().encode(JSON.stringify(m)).length>1000000)fail('Use a manifest under 1 MB.');
- keys(m,['schemaVersion','title','aspectRatio','fps','brandPresetId','scenes','assets','audio',...(m.schemaVersion===2?['audioClips','mapSources']:[]),'introEnabled','outroEnabled'],'manifest');
+ keys(m,['schemaVersion','title','aspectRatio','fps','brandPresetId','scenes','assets','audio','sourceProjectId','directorRevision',...(m.schemaVersion===2?['audioClips','mapSources']:[]),'introEnabled','outroEnabled'],'manifest');
+ if(m.sourceProjectId!==undefined)id(m.sourceProjectId);
+ if(m.directorRevision!==undefined){if(!Number.isInteger(m.directorRevision)||m.directorRevision<1)fail('Director revision must be a positive integer.');}
  if(![1,2].includes(m.schemaVersion)||m.fps!==30||!['9:16','16:9'].includes(m.aspectRatio))fail('Use schemaVersion 1 or 2, fps 30 and 9:16 or 16:9.');str(m.title,200,'title');id(m.brandPresetId);
  for(const p of ['introEnabled','outroEnabled'])if(m[p]!==undefined&&typeof m[p]!=='boolean')fail(p+' must be boolean.');
  if(!Array.isArray(m.assets)||m.assets.length>200)fail('Use up to 200 asset references.');const assets=new Set(),models=new Set(),assetIds=new Set();

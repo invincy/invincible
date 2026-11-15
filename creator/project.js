@@ -1,5 +1,5 @@
 import{makeScene}from'./storyboard-model.js?v=3';
-import{createProductionWorkbench}from'./production-workbench.js?v=2026111420';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026111502';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
 import{restoreProjectFromFirestore}from'./project-persistence.js?v=2026111501';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';

@@ -1,4 +1,4 @@
-import {mountVideoStudio} from './video-studio/workspace.js?v=2026111420';
+import {mountVideoStudio} from './video-studio/workspace.js?v=2026111502';
 import {mountHistoryWorkspace} from './history-workspace.js?v=2026111420';
 import {makeScene} from './storyboard-model.js?v=3';
 import {METHODS,IMPORT_FIELDS,uid,methodsOf,inspectImport,parseProductionImport,uniqueScenes,groupFor,taskFor,setTask,animationStage,requirements,sceneState,projectProgress,queueScenes,canonicalScript,scriptReview,filterScenes,productionReadiness} from './production-model.js?v=2026111112';
@@ -231,7 +231,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   if(!active&&scenes().length)active=scenes()[0].id;
   root.querySelectorAll('[data-tab]').forEach(button=>button.setAttribute('aria-current',button.dataset.tab===tab?'page':'false'));
   panel.innerHTML=tab==='Video Studio'?'<section data-video-mount></section>':['Maps','Clips'].includes(tab)?'<section data-history-mount></section>':tab==='Storyboard'?storyboard():tab==='Production'?production():tab==='Assets'?assets():overview();
-  if(tab==='Video Studio')videoWorkspace=mountVideoStudio(panel.querySelector('[data-video-mount]'),{getProject,getAccountId,mediaService,session:videoSession,readiness:getProductionReadiness?.()});
+  if(tab==='Video Studio')videoWorkspace=mountVideoStudio(panel.querySelector('[data-video-mount]'),{getProject,getAccountId,mediaService,session:videoSession,readiness:getProductionReadiness?.(),directorDraft:pendingAiDraft(),directorAudio});
   if(['Maps','Clips'].includes(tab))historyWorkspace=mountHistoryWorkspace(panel.querySelector('[data-history-mount]'),{getProject,onChange:()=>changed(false),copyText,onRefresh:render,area:tab});
   const tools=root.querySelector('[data-command-actions]');tools.replaceChildren();
   const toolbar=panel.querySelector('.wb-toolbar');if(toolbar)tools.append(toolbar);
