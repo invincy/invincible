@@ -1325,3 +1325,42 @@ passed; site reference check passed across 639 files. Browser-based end-to-end g
 with real Google TTS, Whisper/Qwen, sourced Panipat geometry and actual MP4 remains
 unverified. A completed render is downloadable from the browser; storing the MP4 as a
 persistent cloud project asset is not yet part of this flow.
+
+## Creator agent import and persistence — November 16, 2026
+
+Audit found no validator path that downgrades a native schemaVersion-2 map to
+Canvas. The reported cloud-original error originates in generic media download.
+Previously applying a manifest drew all media first and rolled back to the old
+manifest on any error, which could restore the prior graphic scene. Native maps
+are inline snapshots and do not require standalone cloud map assets. Existing
+planner fallback cards are a separate explicit planning feature.
+
+The project toolbar saved only storyboard data unless a map editor was focused.
+JSON apply did not persist, sync-plan import saved locally only, the local draft
+pointer advanced before cloud success, and local reload took priority over cloud.
+These paths now use the existing project-keyed cloud video save and revision
+checks. New shared agent operations add safe single-scene merge, schema validation,
+read-only summaries, readable instructions and persistent reviewed JSON import.
+Native sync-plan confirmation is now an accessible in-page dialog. Mobile pending
+review explicitly reveals the Scenes panel. No production video data was edited.
+
+Local verification: 38 focused model/composition/agent tests passed. Full root
+suite: 280 passed, two existing skips; Functions 30 passed; media backend 5 passed.
+Production build and site references passed. Browser launch in this workspace is
+blocked by Chromium's process-singleton socket permission (Operation not permitted),
+before a page opens. Browser, MP4 and rules verification is delegated to the
+repository's existing PR CI, not claimed from unit fixtures. Added a 13-scene
+browser acceptance scenario to the existing video-studio suite. Live signed-in
+Firebase access still requires a real owner session. Publication results belong
+to the release PR; this entry does not certify live account access or a finished film.
+
+Follow-up verification: local Creator Firestore emulator checks passed, including
+owner/editor authorization, monotonic revisions, immutable ownership and bounds.
+CI verified the existing Video Studio and composition browser suites, real native
+map/audio and mixed-engine MP4 encoding, cross-device reload, map edits and the
+Creator storyboard/history/map-editor/animation suite. The new 13-scene browser
+case reached saved conversion and editor return; its instructions disclosure
+locator was corrected to click the visible summary before finding its button.
+Broader CI failures include unchanged TTS layout and LIC CRM color assertions,
+a stale checked-in V2 bundle, and the universal test's missing Firebase Functions
+fixture exports (now repaired). These are not evidence of production permissions.

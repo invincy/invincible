@@ -42,3 +42,5 @@ body.creator-page{--bg:#0f0f0f;--panel:#181818;--panel2:#202020;--line:#333;--te
 
 .vs-workspace-shortcuts{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px}.vs-workspace-shortcuts a{color:var(--studio-accent,#96e8e0);font-size:13px}.video-studio .vs-workspace-shortcuts button{min-height:32px;padding:5px 9px}.vs-focusing .vs-workspace-shortcuts button{display:none}
 [data-compose-review]:not(:empty){border:1px solid var(--studio-accent,#96e8e0);border-radius:10px;padding:12px;margin-block:12px}
+
+.vs-flow .vs-agent-instructions>summary{display:list-item;cursor:pointer;min-height:44px;padding-block:12px;color:inherit}

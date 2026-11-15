@@ -6,7 +6,7 @@ const {chromium}=require('playwright'),root=path.resolve(__dirname,'..');
 const tinyPngBase64='iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAEklEQVR42mNk+M9Qz0AEYBxVSF8AxQEJ+Qf5AAAAAElFTkSuQmCC';
 
 const firebaseFixture=[
- "export const db={},auth={currentUser:{uid:'owner',email:'owner@example.com'}},authReady=Promise.resolve();export async function observeAuth(callback){queueMicrotask(()=>callback(auth.currentUser));return()=>{}}export const storageError=error=>error?.code==='revision-conflict'||error?.code==='failed-precondition'||error?.code==='aborted'?'This project was updated in another session or tab. Reload the latest cloud copy before overwriting.':'Save failed.';",
+ "export const firebaseApp={},getFunctions=()=>({}),httpsCallable=()=>async()=>{throw Error('Not available in this fixture')};export const db={},auth={currentUser:{uid:'owner',email:'owner@example.com'}},authReady=Promise.resolve();export async function observeAuth(callback){queueMicrotask(()=>callback(auth.currentUser));return()=>{}}export const storageError=error=>error?.code==='revision-conflict'||error?.code==='failed-precondition'||error?.code==='aborted'?'This project was updated in another session or tab. Reload the latest cloud copy before overwriting.':'Save failed.';",
  "let listeners=[];const read=()=>JSON.parse(localStorage.getItem('test.creator')||'{}');",
  "window.addEventListener('storage',e=>{if(e.key==='test.creator')listeners.forEach(fn=>fn());});",
  "export const doc=(db,...parts)=>parts.join('/');export const collection=(db,name)=>name;export const where=(...args)=>args;export const query=(collection,...filters)=>({collection,filters});export const serverTimestamp=()=>Date.now();",
@@ -61,7 +61,7 @@ const server=http.createServer((req,res)=>{
   res.setHeader('Content-Type',file.endsWith('.html')?'text/html; charset=utf-8':/\.m?js$/.test(file)?'text/javascript; charset=utf-8':file.endsWith('.css')?'text/css; charset=utf-8':/\.(json|geojson)$/.test(file)?'application/json; charset=utf-8':file.endsWith('.png')?'image/png':file.endsWith('.svg')?'image/svg+xml':'application/octet-stream');
   let content=fs.readFileSync(file);
   if(/\.(html|m?js)$/.test(file)){
-   const text=content.toString('utf8').replaceAll('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js','/fixture.mjs');
+   const text=content.toString('utf8').replaceAll('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js','/fixture.mjs').replaceAll('https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js','/fixture.mjs');
    res.end(text);return;
   }
   res.end(content);
@@ -249,13 +249,13 @@ const server=http.createServer((req,res)=>{
    page.on('pageerror',e=>errors.push('studio:'+e.message));
    await page.route('https://**/*',r=>r.abort());
    await page.goto(base+'/studio-fixture');
-   await page.getByRole('button',{name:'Video Studio',exact:true}).click();
+   await page.locator('[data-tab="Video Studio"]').click();
    await page.waitForFunction(()=>{const n=document.querySelector('[data-vs=example]');return n&&!n.disabled;});
    await page.locator('.vs-advanced').evaluate(n=>n.open=true);
    await page.locator('[data-vs=example]').click();
    await page.waitForFunction(()=>document.querySelector('[data-vs-title]').value==='My first video');
 
-   // http:// asset URLs are rejected at review (safeAssetUrl); a valid safe-relative 404 URL passes review then fails decode in applyManifest and rolls back.
+   // Unsafe URLs and missing resources reject during review, before any save.
    await page.locator('[data-vs-json]').evaluate(n=>n.closest('details').open=true);
    await page.locator('[data-vs-json]').fill(JSON.stringify({
     schemaVersion:2,title:'Unsafe HTTP',aspectRatio:'9:16',fps:30,brandPresetId:'adichimp',
@@ -282,9 +282,8 @@ const server=http.createServer((req,res)=>{
    };
    await page.locator('[data-vs-json]').fill(JSON.stringify(badManifest));
    await page.locator('[data-vs=validate]').click();
-   await page.waitForFunction(()=>!document.querySelector('[data-vs=apply]').disabled);
-   await page.locator('[data-vs=apply]').click();
-   await page.waitForFunction(()=>/Cannot load image/.test(document.querySelector('[data-vs-status]').textContent));
+   await page.waitForFunction(()=>/Missing asset/.test(document.querySelector('[data-vs-status]').textContent));
+   assert.equal(await page.locator('[data-vs=apply]').isDisabled(),true);
    assert.equal(await page.locator('[data-vs-title]').inputValue(),'My first video');
 
    // Data-driven artwork catalog in Assembly loads historical-army-commanders-v1 from index.json.

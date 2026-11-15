@@ -39,6 +39,7 @@ const server=http.createServer((req,res)=>{
   page.on('dialog',dialog=>dialog.accept());
   await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.copied=text}}}));
   const openArea=async name=>{
+   await page.locator('#app:not([hidden])').waitFor();
    const direct=page.locator('[data-project-area="'+name+'"]:not([data-tool-mode])');
    if(name!=='Storyboard'&&await direct.count()){await direct.click();return;}
    // The old workbench remains covered for data compatibility, but it is no longer
@@ -467,7 +468,7 @@ const server=http.createServer((req,res)=>{
   await scene(16).locator('[data-action=expand]').click();assert.equal(await scene(16).locator('[data-field=videoPrompt]').inputValue(),'Motion');
   await scene(16).locator('[data-action=duplicate]').click();assert.equal(await page.locator('.wb-scene').count(),18);
   await scene(17).locator('[data-action=insert]').click();assert.equal(await page.locator('.wb-scene').count(),19);
-  await scene(18).locator('[data-action=remove]').click();assert.equal(await page.locator('.wb-scene').count(),18);
+  await scene(18).locator('[data-action=remove]').click();await page.getByRole('dialog').getByRole('button',{name:'Confirm',exact:true}).click();assert.equal(await page.locator('.wb-scene').count(),18);
   if(await scene(17).locator('[data-action=expand]').getAttribute('aria-expanded')!=='true')await scene(17).locator('[data-action=expand]').click();
   await scene(17).locator('[data-action=up]').click();assert.equal(await scene(16).locator('[data-field=voiceover]').inputValue(),'Markdown voice');
   fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});

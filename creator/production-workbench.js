@@ -1,4 +1,5 @@
-import {mountVideoStudio} from './video-studio/workspace.js?v=2026111601';
+import {confirmAction} from './confirm-action.js?v=2026111602';
+import {mountVideoStudio} from './video-studio/workspace.js?v=2026111602';
 import {mountHistoryWorkspace} from './history-workspace.js?v=2026111506';
 import {makeScene} from './storyboard-model.js?v=3';
 import {METHODS,IMPORT_FIELDS,uid,methodsOf,inspectImport,parseProductionImport,uniqueScenes,groupFor,taskFor,setTask,animationStage,requirements,sceneState,projectProgress,queueScenes,canonicalScript,scriptReview,filterScenes,productionReadiness} from './production-model.js?v=2026111112';
@@ -147,7 +148,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   if(!audio)throw Error('The original MP3 is missing from this device. Run AI timing again to attach it.');
   tab='Video Studio';render();await videoWorkspace?.ready;if(!videoWorkspace)throw Error('Video Studio could not be opened.');
   const current=videoWorkspace.manifest,hasDraft=current&&(current.scenes.length||(current.audioClips||[]).length||current.audio);
-  if(hasDraft&&!confirm('Replace the current Motion Studio draft with this reviewed sync plan? The existing local video draft will be replaced; the Creator project and source MP3 remain saved.')){message('Existing Motion Studio draft kept. The reviewed sync plan is still available in Script & scenes.');return;}
+  if(hasDraft&&!await confirmAction('Replace the current Motion Studio draft with this reviewed sync plan? The existing local video draft will be replaced; the Creator project and source MP3 remain saved.','Replace')){message('Existing Motion Studio draft kept. The reviewed sync plan is still available in Script & scenes.');return;}
   await videoWorkspace.importAiProduction(aiScenes,audio,{title:draft.title||'Invincible AI production',allowContextCards:true,replaceExisting:!!hasDraft});
   const reviewingMaps=reviewMaps&&await videoWorkspace.reviewGeneratedMaps();message(reviewingMaps?'Review each generated map. Save or discard to continue; Motion Studio opens automatically after the last map.':`${aiScenes.length} scenes and the exact MP3 are saved in Motion Studio. Preview the full timeline, then Export MP4.`);return {reviewingMaps};
  }
@@ -301,7 +302,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    const asset=(project().assets||[]).find(item=>item.id===button.closest('[data-asset]')?.dataset.asset);
    if(button.dataset.copyText){await copyText(scene?.[button.dataset.copyText]||'');message('Text copied.');return;}
    if(button.hasAttribute('data-copy-path')){await copyText(asset.path||'');message('Reference copied.');return;}
-   if(button.hasAttribute('data-delete-asset')){if(!confirm('Remove this asset metadata? Files are unaffected.'))return;project().assets=project().assets.filter(item=>item.id!==asset.id);changed();return;}
+   if(button.hasAttribute('data-delete-asset')){if(!await confirmAction('Remove this asset metadata? Files are unaffected.'))return;project().assets=project().assets.filter(item=>item.id!==asset.id);changed();return;}
    if(button.dataset.task){
     const method=button.dataset.taskMethod,task=taskFor(project(),scene,method),key=button.dataset.task;
     if(key==='ready'&&method==='Blender'&&!['modeling','animation','rendering'].every(field=>task[field])){message('Finish modeling, animation and rendering first.');return;}
@@ -370,7 +371,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    if(action==='add-check'){const text=button.closest('[data-scene]').querySelector('[data-new-check]').value.trim();if(!text)return;scene.checklist||=[];scene.checklist.push({id:uid(),text,done:false});scene.completed=false;}
    if(action==='duplicate'){expandAll=false;const copy=makeScene({...JSON.parse(JSON.stringify(scene)),id:uid(),completed:false,sceneState:'Planned',voiceoverReady:false,editingDone:false,checklist:(scene.checklist||[]).map(item=>({...item,id:uid(),done:false})),production:{}});project().scenes.splice(index+1,0,copy);active=copy.id;expandedScene=copy.id;}
    if(action==='insert'){expandAll=false;const item=makeScene({productionMethods:[],sceneState:'Planned'});project().scenes.splice(index+1,0,item);active=item.id;expandedScene=item.id;}
-   if(action==='remove'){if(!confirm('Delete this scene and its production notes?'))return;const next=visibleScenes()[visibleScenes().indexOf(scene)+1]||visibleScenes()[visibleScenes().indexOf(scene)-1];project().scenes.splice(index,1);if(active===scene.id)active=next?.id||'';for(const asset of project().assets||[])asset.sceneIds=(asset.sceneIds||[]).filter(id=>id!==scene.id);}
+   if(action==='remove'){if(!await confirmAction('Delete this scene and its production notes?'))return;const next=visibleScenes()[visibleScenes().indexOf(scene)+1]||visibleScenes()[visibleScenes().indexOf(scene)-1];project().scenes.splice(index,1);if(active===scene.id)active=next?.id||'';for(const asset of project().assets||[])asset.sceneIds=(asset.sceneIds||[]).filter(id=>id!==scene.id);}
    if(action==='up'||action==='down'){const next=index+(action==='up'?-1:1);if(next<0||next>=scenes().length)return;[project().scenes[index],project().scenes[next]]=[project().scenes[next],project().scenes[index]];}
    changed();
   }catch(error){message(error.message);}
@@ -381,5 +382,5 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  root.addEventListener('dragover',event=>{if(dragId&&event.target.closest('[data-scene],[data-nav-scene]'))event.preventDefault();});
  root.addEventListener('drop',event=>{event.preventDefault();dragId=event.dataTransfer?.getData('text/plain')||dragId;const target=event.target.closest('[data-scene],[data-nav-scene]'),id=target?.dataset.scene||target?.dataset.navScene;if(!dragId||!id||id===dragId)return;const from=scenes().findIndex(scene=>scene.id===dragId),to=scenes().findIndex(scene=>scene.id===id);if(from<0||to<0)return;const [item]=project().scenes.splice(from,1);project().scenes.splice(to,0,item);dragId='';changed();});
  root.addEventListener('dragend',()=>dragId='');
- return {render,openAiDraft:openAiVideo,reviewMaps,get mapFocused(){return !!videoWorkspace?.mapFocused;},saveFocusedMap:()=>videoWorkspace?.saveFocusedMap(),suspend(){historyWorkspace?.destroy();historyWorkspace=null;videoWorkspace?.destroy();videoWorkspace=null;},open({area='Production',method,sceneId}={}){tab=area;viewMode='focused';expandAll=false;if(method)workspace=method;active=sceneId||'';render();if(active)root.querySelector('[data-scene="'+CSS.escape(active)+'"]')?.scrollIntoView({block:'nearest'});},reset(){videoSession={};tab=defaultArea;workspace="All";assetFilter="All";completionFilter="All";searchQuery="";groupBy="project";active="";activeAsset="";expandAll=false;viewMode="focused";expandedScene="";editorPane="plan";promptKey="blenderPrompt";message("");render();}};
+ return {render,openAiDraft:openAiVideo,reviewMaps,get videoActive(){return !!videoWorkspace;},saveVideo:()=>videoWorkspace?.save(),get mapFocused(){return !!videoWorkspace?.mapFocused;},saveFocusedMap:()=>videoWorkspace?.saveFocusedMap(),suspend(){historyWorkspace?.destroy();historyWorkspace=null;videoWorkspace?.destroy();videoWorkspace=null;},open({area='Production',method,sceneId}={}){tab=area;viewMode='focused';expandAll=false;if(method)workspace=method;active=sceneId||'';render();if(active)root.querySelector('[data-scene="'+CSS.escape(active)+'"]')?.scrollIntoView({block:'nearest'});},reset(){videoSession={};tab=defaultArea;workspace="All";assetFilter="All";completionFilter="All";searchQuery="";groupBy="project";active="";activeAsset="";expandAll=false;viewMode="focused";expandedScene="";editorPane="plan";promptKey="blenderPrompt";message("");render();}};
 }
