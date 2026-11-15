@@ -94,7 +94,7 @@ export function compileAiStoryboardManifest(storyboard,{aspectRatio='9:16',audio
   if(!row.mapAnimation)throw Error(`Scene ${index+1} has no executable map animation. Descriptive scenes cannot be exported.`);
   if(row.mapAnimation.aspectRatio!==aspectRatio)throw Error(`Scene ${index+1} aspect ratio differs from the production format.`);
   const mapScene={id:String(row.id||`ai-scene-${index+1}`),name:String(row.visual||row.title||`Scene ${index+1}`).slice(0,200),startSeconds:sceneStart,durationSeconds:Number(row.mapAnimation.duration),engineType:'map',engineData:{animation:row.mapAnimation,geometryReviewed:false},transition:{type:'cut',durationSeconds:0},overlays:documentaryFrame(row.semanticPlan?.title||row.mapAnimation.title||row.title)};
-  const fitted=Math.abs(mapScene.durationSeconds-seconds)>1e-6?resizeScene(mapScene,seconds):structuredClone(mapScene);fitted.startSeconds=sceneStart;fitted.durationSeconds=seconds;manifest.scenes.push(fitted);cursor=sceneStart+seconds;
+  const fitted=resizeScene(mapScene,seconds);fitted.startSeconds=sceneStart;fitted.durationSeconds=seconds;manifest.scenes.push(fitted);cursor=sceneStart+seconds;
  }
  if(!manifest.scenes.length)throw Error('The narration is too short to render a scene.');
  if(audioFileId){
