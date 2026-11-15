@@ -422,7 +422,7 @@ async function saveFromProjectBar(){
  if($("projectEditingStep").hidden)return save();
  if(!storyboard.mapFocused){
   if(!storyboard.videoActive)return save();
-  try{await storyboard.saveVideo();status('Video saved to your account','ok');return true;}
+  try{const cloud=await storyboard.saveVideo();status(cloud?'Video saved to your account':'Video saved on this device','ok');return true;}
   catch(error){status(error.message,'error');return false;}
  }
  try{
