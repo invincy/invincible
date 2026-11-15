@@ -343,7 +343,8 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  async function syncAppliedDirectorDraft(){
   const draft=directorDraft,revision=Number(draft?.directorRevision||getProject()?.writeRevision||0),storyboard=draft?.creatorStudio?.scenes;
   if(!revision||!Array.isArray(storyboard)||!storyboard.length)return;
-  if(state.manifest.sourceProjectId===projectId&&state.manifest.directorRevision===revision)return;
+  const mapOverlaysReady=state.manifest.scenes.filter(scene=>scene.engineType==='map').every(scene=>Array.isArray(scene.overlays)&&scene.overlays.some(layer=>layer.id==='frame-top'));
+  if(state.manifest.sourceProjectId===projectId&&state.manifest.directorRevision===revision&&mapOverlaysReady)return;
   directorSyncPending=true;status('A newer Director plan is being loaded into Motion Studio…');
   const audio=typeof directorAudio==='function'?await directorAudio():null;
   if(!audio){status('The Director plan is ready, but its final MP3 is unavailable. Export is blocked until the saved voiceover is restored.');return;}
