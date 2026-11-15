@@ -20,21 +20,17 @@ For **any** Map Editor or map-video task, read and follow [docs/map-editor-produ
 
 Before making or editing a video, read the shared [Creator Studio video workflow](creator/video-workflow.html). This is the same guide available from Creator Studio and shared with Gemini.
 
-Creator Studio production is independent of Invincible Video Director. Use the native
-project, MP3, local Whisper, timing download, reviewed JSON import, editors and MP4
-export directly. Do not require a Director connection, compilation or plugin approval
-to edit a project. Legacy plugin metadata is compatibility data, not an editing lock.
-Do not modify the separately maintained plugin as part of native Studio work.
-
-The Director may optionally propose the first draft when requested. It must never
-take ownership of the editable result or require disabling to permit revisions.
-Codex, Gemini and human edits use the same native project and manifest contract.
+Use Creator Studio's four-step workflow for video production: Script, Sync plan,
+Review maps, and Motion & export. Reuse the saved MP3 and measured timing where
+available. For new timing, use the project's selected Local Whisper or OpenAI mode.
+Codex, Gemini and human edits use the same native project and manifest.
 Treat generated scenes as drafts for scene-by-scene review, not verified geography.
-Before a revision, read the latest saved manifest; preserve stable scene IDs,
+Before a revision, open **Motion & export → Create & import → View current draft JSON**
+to read the active draft. Preserve stable scene IDs,
 unselected scenes, audio timing and unrelated layers. Change only the requested
 scene/property. Do not regenerate the whole film for a colour, artwork or geography
-correction. Use reviewed native import until the Director apply path is separately
-corrected and tested. Finish with preview and a verified MP4, not just scene JSON.
+correction. Apply changes through **Review import → Apply reviewed import → Save**.
+When the user requests a finished video, preview the result and verify the MP4 export.
 
 The owner's intended voice defaults are Gemini Aoede (female), Social media /
 engaging delivery, and 1.2× final speed. Preserve them. Retiming must happen once;
