@@ -162,14 +162,14 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   const current=videoWorkspace.manifest,hasDraft=current&&(current.scenes.length||(current.audioClips||[]).length||current.audio);
   if(hasDraft&&directorDraftMatchesManifest(current,aiScenes)){
    const reviewingMaps=reviewMaps&&await videoWorkspace.reviewGeneratedMaps();
-   message(reviewingMaps?'Resumed the unfinished generated maps. Saved maps were skipped.':'This Director plan is already in Motion Studio. Nothing was replaced; continue to preview and Export MP4.');
+   message(reviewingMaps?'Resumed Review scenes. Saved map layers were skipped. After the last map, Motion & export opens automatically.':'This Director plan is already in Motion Studio. Nothing was replaced; continue to preview the complete scene composition and Export MP4.');
    return {reviewingMaps,reused:true};
   }
   const audio=await directorAudio();
   if(!audio)throw Error('The compiled project is ready, but its saved private MP3 could not be retrieved. Reopen Script only if the project no longer shows an attached voiceover.');
   if(hasDraft&&!confirm('Replace the current Motion Studio draft with this reviewed sync plan? The existing local video draft will be replaced; the Creator project and source MP3 remain saved.')){message('Existing Motion Studio draft kept. The reviewed sync plan is still available in Script & scenes.');return;}
   await videoWorkspace.importAiProduction(aiScenes,audio,{title:draft.title||'Invincible AI production',allowContextCards:true,replaceExisting:!!hasDraft});
-  const reviewingMaps=reviewMaps&&await videoWorkspace.reviewGeneratedMaps();message(reviewingMaps?'Review each generated map. Save or discard to continue; Motion Studio opens automatically after the last map.':`${aiScenes.length} scenes and the exact MP3 are saved in Motion Studio. Preview the full timeline, then Export MP4.`);return {reviewingMaps};
+  const reviewingMaps=reviewMaps&&await videoWorkspace.reviewGeneratedMaps();message(reviewingMaps?'Review each scene map layer. Save or discard to continue; Motion Studio opens automatically after the last map. Then preview overlays, timing and voiceover together.':`${aiScenes.length} scenes and the exact MP3 are saved in Motion Studio. Preview the full timeline, then Export MP4.`);return {reviewingMaps};
  }
  async function reviewMaps(){
   tab='Video Studio';render();await videoWorkspace?.ready;if(!videoWorkspace)throw Error('Motion Studio could not be opened.');
@@ -178,7 +178,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   // A fresh device can therefore reach Review maps before Motion Studio has imported it.
   if(directorHasMaps&&!hasMaps){const result=await openAiVideo({reviewMaps:true});return !!result?.reviewingMaps;}
   const reviewingMaps=await videoWorkspace.reviewGeneratedMaps();
-  if(!reviewingMaps)message(hasMaps?'All generated maps are already reviewed. Continue to Motion & export.':hasScenes?'This Motion Studio draft has no map scenes. Continue to Motion & export.':'No compiled scenes are loaded in Motion Studio yet. Return to Sync plan and apply the reviewed Director draft.');
+  if(!reviewingMaps)message(hasMaps?'All scene map layers are already reviewed. Continue to Motion & export for the complete composition.':hasScenes?'This Motion Studio draft has no map scenes. Continue to Motion & export.':'No compiled scenes are loaded in Motion Studio yet. Return to Timing & plan and apply the reviewed Director draft.');
   return reviewingMaps;
  }
  function groupEditor(group){
