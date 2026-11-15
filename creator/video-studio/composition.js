@@ -7,6 +7,24 @@ export function upgradeVideo(manifest,audioDuration=0){
  out.audio=null;return out;
 }
 export const newStudioVideo=()=>({...emptyVideo(),schemaVersion:2,audioClips:[]});
+function repairTimedKeys(keys,duration){
+ const repaired=[];
+ for(const key of Array.isArray(keys)?keys:[]){
+  const time=Math.min(duration,Math.max(0,Number(key.time)||0));
+  if(repaired.length&&time<=repaired.at(-1).time){repaired[repaired.length-1]={...key,time:repaired.at(-1).time};continue;}
+  repaired.push({...key,time});
+ }
+ if(repaired.length&&repaired[0].time>0)repaired.unshift({...repaired[0],time:0});
+ return repaired;
+}
+export function repairMapAnimationTiming(animation,duration){
+ const out=structuredClone(animation),sourceDuration=Math.max(1/30,Number(animation?.duration)||duration),ratio=duration/sourceDuration;
+ out.duration=duration;
+ out.camera=repairTimedKeys((animation?.camera||[]).map(key=>({...key,time:Number(key.time)*ratio})),duration);
+ if(Array.isArray(animation?.lighting))out.lighting=repairTimedKeys(animation.lighting.map(key=>({...key,time:Number(key.time)*ratio})),duration);
+ for(const layer of out.layers||[]){layer.start=Math.min(duration,Math.max(0,Number(layer.start)*ratio));layer.end=Math.min(duration,Math.max(layer.start+0.1,Number(layer.end)*ratio));for(const key of ['fadeIn','fadeOut','revealDuration'])if(layer[key]!==undefined)layer[key]=Math.min(layer[key],Math.max(.05,layer.end-layer.start));}
+ return out;
+}
 export function nativeMapScenes(project){
  validateMap(project.historicalMap,project);
  const snapshot={scenes:project.scenes.map(s=>({id:s.id,duration:Number(s.duration)})),historicalMap:structuredClone(project.historicalMap)};
@@ -26,7 +44,7 @@ export function resizeScene(scene,duration){
  if(out.engineType==='battlefield')for(const keys of [out.engineData.camera,...out.engineData.formations.map(f=>f.path)])for(const key of keys)key.timeSeconds*=ratio;
  for(const p of out.engineData.projectiles||[])for(const key of ['launchSeconds','flightSeconds','impactSeconds'])p[key]*=ratio;
  if(out.engineType==='lic')for(const key of out.engineData.points)key.timeSeconds*=ratio;
- if(out.engineType==='map'&&out.engineData.animation){const a=out.engineData.animation;a.duration=duration;for(const key of [...a.camera,...(a.lighting||[])])key.time*=ratio;for(const layer of a.layers){layer.start*=ratio;layer.end*=ratio;for(const p of ['fadeIn','fadeOut','revealDuration'])if(layer[p]!==undefined)layer[p]*=ratio;}}
+ if(out.engineType==='map'&&out.engineData.animation)out.engineData.animation=repairMapAnimationTiming(out.engineData.animation,duration);
  return out;
 }
 export function fitMedia(ctx,source,fit='contain'){

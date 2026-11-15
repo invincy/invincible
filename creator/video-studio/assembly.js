@@ -2,7 +2,7 @@ import {BUILTIN_MODELS, CAMERA_FIELDS, MODEL_FIELDS, MAX_MODELS, modelMotion, tr
 import {DEFAULT_PARALLAX,trainTemplate} from './parallax.js';
 import {mountObjectEditor} from './object-editor.js?v=2026111207';
 import {createDefaultMap} from '../map-defaults.js?v=2026110903';
-import {appendProjectMaps,arrangeScenes,upgradeVideo,resizeScene} from './composition.js?v=2026111207';
+import {appendProjectMaps,arrangeScenes,upgradeVideo,resizeScene} from './composition.js?v=2026111505';
 import {emptyBattlefield} from './battlefield.js?v=2026111014';
 import {decodeVoiceover} from './audio.js?v=2026111014';
 import {validateManifest} from './model.js?v=2026111207';
