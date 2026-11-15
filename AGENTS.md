@@ -18,6 +18,8 @@ For **any** Map Editor or map-video task, read and follow [docs/map-editor-produ
 
 ## Shared Antigravity / Codex project instructions
 
+Before making or editing a video, read the shared [Creator Studio video workflow](creator/video-workflow.html). This is the same guide available from Creator Studio and shared with Gemini.
+
 Creator Studio production is independent of Invincible Video Director. Use the native
 project, MP3, local Whisper, timing download, reviewed JSON import, editors and MP4
 export directly. Do not require a Director connection, compilation or plugin approval

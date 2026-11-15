@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Video workflow · Creator Studio</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; background: #0b1420; color: #edf3fa; font: 1rem/1.6 system-ui, sans-serif; }
+    main { max-width: 44rem; margin: auto; padding: 2rem 1.25rem 3rem; }
+    a { color: #96e8e0; }
+    h1, h2 { line-height: 1.2; }
+    h2 { font-size: 1.25rem; margin-top: 1.75rem; }
+    blockquote { margin-inline: 0; padding: .75rem 1rem; border-inline-start: 3px solid #96e8e0; background: #162434; }
+  </style>
+</head>
+<body>
+  <main>
+    <a href="./">Creator Studio</a>
+    <h1>Make a video in Creator Studio</h1>
+    <p>Use this workflow for every video you make with Codex, Gemini, or another assistant. Follow the same steps in the signed-in Studio project and pick up from whatever is already saved.</p>
+    <ol>
+      <li><h2>Open the project and prepare the voiceover</h2>
+        <p>Open the project the user names, or create one for a new video. Under <strong>Script</strong>, generate the final MP3 from the supplied narration text. The default is female Gemini Aoede, Social media · engaging, at 1.2× final speed. If the user supplies a recording, use that exact recording. Keep final audio in the project or private media library. Reuse a saved final recording whenever the script and audio are unchanged.</p></li>
+      <li><h2>Get exact timing</h2>
+        <p>Use <strong>Timing &amp; plan</strong> to run local Whisper on the final recording, or reuse timing already saved for that recording. Timing needs the paired laptop. Use <strong>Copy timing for Codex</strong> when you need the timestamps for scene planning. Download timing only if you need a file handoff and copying is unavailable. Keep measured times when correcting transcript words.</p></li>
+      <li><h2>Add supplied artwork to the private library</h2>
+        <p>In <strong>Motion &amp; export → Create &amp; import → Media → Upload &amp; voiceover</strong>, upload the exact attached PNG or other media once using Studio’s file picker. Reuse the existing library asset if that same file is already saved. Use its media reference in the scene. If the assistant can see the attachment but cannot pass the file to the picker, ask the user to upload that file in Studio, then continue. Use public or generated artwork only when the request calls for it. GitHub is unnecessary for attached files.</p></li>
+      <li><h2>Build and review editable scenes</h2>
+        <p>Use the narration cues and visual direction to build the first draft. Director is optional for proposing that draft. For an assistant handoff, use <strong>Motion &amp; export → Create &amp; import → Copy ChatGPT brief</strong> for the current manifest and media references. Paste the complete updated manifest into <strong>Review import</strong>, then use <strong>Apply reviewed import</strong>. JSON can be copied and pasted directly.</p>
+        <p>Preview scenes individually and flag geography that needs checking. For a revision, open the latest saved version and change the requested scene or layer. Preserve scene IDs, other scenes, audio timing, and unrelated layers. Use the native controls for small changes. Get explicit confirmation before replacing existing scenes with a new draft.</p></li>
+      <li><h2>Save, export, and verify</h2>
+        <p>Preview the full timeline, save the editable project, and use <strong>Export MP4</strong>. Check that the exported file plays with picture and narration. Return the project link and the MP4. If browser access or a required file is missing, identify the exact step that needs the user and continue from the project once it is available.</p></li>
+    </ol>
+    <h2>What to say in a new chat</h2>
+    <blockquote>First read the <a href="https://invincy.github.io/invincible/creator/video-workflow.html">Creator Studio video workflow</a>, then follow it to make a video from this voiceover and my visual instructions.</blockquote>
+  </main>
+</body>
+</html>
