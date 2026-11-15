@@ -35,6 +35,18 @@ test('plugin apply requires explicit confirmation and preserves compiled timing'
  assert.equal(scenes[0].startSeconds,0);assert.equal(scenes[0].endSeconds,.8);assert.equal(scenes[0].voiceoverTimestamp,'0.000-0.800s');assert.equal(scenes[0].duration,1);
 });
 
+test('plugin scene patches replace only matching timed scenes',()=>{
+ const existing=[
+  {id:'scene-1',sourceSegmentIds:['segment-1'],visual:'old one'},
+  {id:'scene-2',sourceSegmentIds:['segment-2'],visual:'old two'},
+  {id:'scene-3',sourceSegmentIds:['segment-3'],visual:'old three'}
+ ];
+ const patch=[{id:'scene-1',sourceSegmentIds:['segment-1'],visual:'new one'}];
+ const merged=plugin.mergeScenePatch(existing,patch);
+ assert.deepEqual(merged.map(scene=>scene.visual),['new one','old two','old three']);
+ assert.throws(()=>plugin.mergeScenePatch(existing,[{id:'scene-9',sourceSegmentIds:['segment-9']}]),/not present/);
+});
+
 test('plugin validates complete project briefs and reports resumable workflow phases',()=>{
  const brief=plugin.createProjectInput.parse({title:'ITCZ test',narration:'भारत के Monsoon का रास्ता कौन बदलता है?',creativeInstructions:'Show India and the Indian Ocean.',aspectRatio:'9:16',format:'Short',idempotencyKey:'itcz-test-001'});
  assert.equal(brief.title,'ITCZ test');
