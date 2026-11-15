@@ -1,6 +1,6 @@
 import {emptyVideo,PRESETS,compileTimeline,validateManifest} from './video-studio/model.js?v=2026111415';
 import {createStudioRenderer} from './video-studio/adapters.js?v=2026111504';
-import {resizeScene} from './video-studio/composition.js?v=2026111207';
+import {resizeScene} from './video-studio/composition.js?v=2026111505';
 
 export function storyboardTiming(scene){const match=String(scene.timeline||'').match(/([0-9.]+)\s*[-–—]\s*([0-9.]+)/),start=Number.isFinite(Number(scene.startSeconds))?Number(scene.startSeconds):(match?Number(match[1]):null),end=Number(scene.endSeconds);const seconds=start!==null&&Number.isFinite(end)&&end>start?end-start:Number(scene.durationSeconds)>0?Number(scene.durationSeconds):Number(scene.duration)>0?Number(scene.duration):match?Number(match[2])-Number(match[1]):2;return {start,seconds};}
 export async function renderAiScenePreviews(scenes,{width=540,height=960,mapAssets=[]}={}){

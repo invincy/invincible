@@ -5,7 +5,7 @@ import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=
 import {studioBrief} from './handoff.js?v=2026111207';
 import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111505';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111502';
-import {createStudioRenderer} from './adapters.js?v=2026111504';
+import {createStudioRenderer} from './adapters.js?v=2026111506';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111014';
 import {mountAssembly} from './assembly.js?v=2026111420';
 import {encodeStudioVideo} from './export.js?v=2026111209';
@@ -344,7 +344,17 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   const draft=directorDraft,revision=Number(draft?.directorRevision||getProject()?.writeRevision||0),storyboard=draft?.creatorStudio?.scenes;
   if(!revision||!Array.isArray(storyboard)||!storyboard.length)return;
   const mapOverlaysReady=state.manifest.scenes.filter(scene=>scene.engineType==='map').every(scene=>Array.isArray(scene.overlays)&&scene.overlays.some(layer=>layer.id==='frame-top'));
-  if(state.manifest.sourceProjectId===projectId&&state.manifest.directorRevision===revision&&mapOverlaysReady)return;
+  const sameDirectorRevision=state.manifest.sourceProjectId===projectId&&state.manifest.directorRevision===revision;
+  if(sameDirectorRevision&&mapOverlaysReady)return;
+  if(sameDirectorRevision&&!mapOverlaysReady&&state.manifest.scenes.length){
+   const audio=typeof directorAudio==='function'?await directorAudio():null;
+   if(!audio){status('The Director plan is ready, but its final MP3 is unavailable. Export is blocked until the saved voiceover is restored.');return;}
+   directorSyncPending=true;status('Repairing missing Director overlays without replacing your scenes…');
+   const decoded=await decodeVoiceover(audio),fresh=compileAiStoryboardManifest(storyboard,{aspectRatio:'9:16',audioFileId:null,audioDuration:decoded.duration,mapAssets:mapAssets(),allowContextCards:true}),merged=structuredClone(state.manifest);
+   for(const scene of merged.scenes){const source=fresh.scenes.find(item=>item.id===scene.id);if(source&&(!Array.isArray(scene.overlays)||!scene.overlays.length))scene.overlays=structuredClone(source.overlays||[]);}
+   merged.sourceProjectId=projectId;merged.directorRevision=revision;await applyManifest(merged);directorSyncPending=false;await saveLocalDraft();status('Missing Director overlays repaired. Your scenes, timing and voiceover were preserved.');return;
+  }
+  if(state.manifest.scenes.length&&state.manifest.sourceProjectId===projectId&&state.manifest.directorRevision!==revision){status('A newer Director plan is available. Your current Motion Studio edits are preserved; apply the new plan explicitly when ready.');return;}
   directorSyncPending=true;status('A newer Director plan is being loaded into Motion Studio…');
   const audio=typeof directorAudio==='function'?await directorAudio():null;
   if(!audio){status('The Director plan is ready, but its final MP3 is unavailable. Export is blocked until the saved voiceover is restored.');return;}
