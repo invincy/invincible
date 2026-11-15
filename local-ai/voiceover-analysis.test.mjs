@@ -195,6 +195,34 @@ test('production finds dated and modern locators and falls back without invented
   assert.deepEqual(video.scenes.map(scene=>scene.engineType),['map','map','graphic']);
 });
 
+test('imports locked OpenAI map-to-canvas boundaries without adding a timing offset', () => {
+  const canvasScene = { title: 'Pressure diagram', visual: 'Compare pressure zones' };
+  const mapAnimation = {
+    format: 'invincible-map-animation', version: 1, aspectRatio: '9:16',
+    duration: 4.637, camera: [], layers: []
+  };
+  const storyboard = [
+    { startSeconds: 0, endSeconds: 35.12364, durationSeconds: 35.124, canvasScene },
+    { startSeconds: 35.12364, endSeconds: 39.7602, durationSeconds: 4.637, mapAnimation },
+    { startSeconds: 39.7602, endSeconds: 43, durationSeconds: 3.24, canvasScene }
+  ];
+  const withCanvasStart = startSeconds => storyboard.map((scene, index) =>
+    index === 2 ? { ...scene, startSeconds } : scene);
+
+  for (const start of [39.7602, 39.7601]) {
+    const manifest = compileAiStoryboardManifest(withCanvasStart(start));
+    const [first, map, canvas] = manifest.scenes;
+    assert.equal(first.durationSeconds, map.startSeconds);
+    assert.equal(map.startSeconds + map.durationSeconds, 39.7602);
+    assert.equal(canvas.startSeconds, 39.7602);
+    assert.equal(canvas.startSeconds + canvas.durationSeconds, 43);
+    assert.equal(map.engineData.project.scenes[0].duration, 4.637);
+    assert.equal(canvas.engineType, 'graphic');
+  }
+  assert.throws(() => compileAiStoryboardManifest(withCanvasStart(39.759)),
+    /Scene 3 has invalid or overlapping timing/);
+});
+
 test('local semantic planning uses explicit historical fields before narration heuristics', async () => {
   const root = new URL('..', import.meta.url).pathname.replace(/^\/(\w:)/, '$1');
   const catalog = await loadCreatorAssetCatalog(root, { includeHistory: true });

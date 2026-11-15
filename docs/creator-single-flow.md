@@ -283,6 +283,11 @@ Reopening Step 2 restores the finished plan at review instead of making the user
 regenerate it. The compatible pending-draft cache remains a fallback; a stale plan or a
 plan from another project is not shown.
 
+The native OpenAI handoff uses the saved scene endpoints when they are available.
+Rounded map durations are fitted to those bounds at import. Adjacent scenes may share
+a boundary, and a real overlap remains a validation error. Previously generated
+plans can use this fix without running transcription or scene planning again.
+
 Applied Director projects reopen on **Saved sync plan** with one **Continue · Review
 maps** action. The Director's `area=Studio` handoff enters generated-map review directly.
 Exact scene start/end timestamps outrank rounded duration hints; Map animations are
