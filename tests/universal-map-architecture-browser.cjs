@@ -249,13 +249,13 @@ const server=http.createServer((req,res)=>{
    page.on('pageerror',e=>errors.push('studio:'+e.message));
    await page.route('https://**/*',r=>r.abort());
    await page.goto(base+'/studio-fixture');
-   await page.getByRole('button',{name:'Video Studio',exact:true}).click();
+   await page.locator('[data-tab="Video Studio"]').click();
    await page.waitForFunction(()=>{const n=document.querySelector('[data-vs=example]');return n&&!n.disabled;});
    await page.locator('.vs-advanced').evaluate(n=>n.open=true);
    await page.locator('[data-vs=example]').click();
    await page.waitForFunction(()=>document.querySelector('[data-vs-title]').value==='My first video');
 
-   // http:// asset URLs are rejected at review (safeAssetUrl); a valid safe-relative 404 URL passes review then fails decode in applyManifest and rolls back.
+   // Unsafe URLs and missing resources reject during review, before any save.
    await page.locator('[data-vs-json]').evaluate(n=>n.closest('details').open=true);
    await page.locator('[data-vs-json]').fill(JSON.stringify({
     schemaVersion:2,title:'Unsafe HTTP',aspectRatio:'9:16',fps:30,brandPresetId:'adichimp',
@@ -282,9 +282,8 @@ const server=http.createServer((req,res)=>{
    };
    await page.locator('[data-vs-json]').fill(JSON.stringify(badManifest));
    await page.locator('[data-vs=validate]').click();
-   await page.waitForFunction(()=>!document.querySelector('[data-vs=apply]').disabled);
-   await page.locator('[data-vs=apply]').click();
-   await page.waitForFunction(()=>/Cannot load image/.test(document.querySelector('[data-vs-status]').textContent));
+   await page.waitForFunction(()=>/Missing asset/.test(document.querySelector('[data-vs-status]').textContent));
+   assert.equal(await page.locator('[data-vs=apply]').isDisabled(),true);
    assert.equal(await page.locator('[data-vs-title]').inputValue(),'My first video');
 
    // Data-driven artwork catalog in Assembly loads historical-army-commanders-v1 from index.json.

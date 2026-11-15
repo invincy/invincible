@@ -201,7 +201,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   stop();renderer?.destroy();renderer=null;audioBuffer=null;audioTracks=[];
   state.manifest=next;if(nextBrands)state.brands=nextBrands;
   pending=null;$('[data-vs=apply]').disabled=true;sync();
-  try{await draw();}catch(error){status('Draft retained. Preview unavailable: '+error.message);}
+  try{await draw();state.previewError=null;}catch(error){state.previewError=error.message;status('Draft retained. Preview unavailable: '+error.message);}
  }
  async function tick(){
   if(!playing||disposed)return;time=Math.min(timeline.duration,clockTime+context.currentTime-clock);
@@ -318,7 +318,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    }
    if(action==='apply'&&pending){const next=pending,cloud=pendingCloud;
     if(cloud){await applyManifest(next,{brands:cloud.brands});state.cloudRevision=cloud.revision;state.savedManifest=structuredClone(next);pendingCloud=null;}
-    else{const result=await agent.applyPatch(next);if(!result.ok)throw Error(result.errors.map(e=>e.message).join('\n'));status('Saved to your account. Scenes are ready for review and export.');}
+    else{const result=await agent.applyPatch(next);if(!result.ok)throw Error(result.errors.map(e=>e.message).join('\n'));status('Saved to your account. '+(state.previewError?'Preview unavailable: '+state.previewError:'Scenes are ready for review and export.'));}
    }
    if(action==='example'){
     const next=emptyVideo();next.title='My first video';next.assets=state.manifest.assets.filter(a=>a.kind!=='glb');next.scenes=[{id:'explain',startSeconds:0,durationSeconds:5,engineType:'graphic',engineData:{},transition:{type:'fade',durationSeconds:.3},overlays:[{id:'heading',type:'text',text:'Your next story',fontSize:72,keyframes:[{timeSeconds:0,y:.65,opacity:0,easing:'smooth'},{timeSeconds:1,y:.5,opacity:1}]}]}];await applyManifest(next);$('[data-vs-json]').value=JSON.stringify(next,null,2);status('Example loaded in the video draft.');
@@ -386,14 +386,17 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  async function importAiProduction(storyboard,audioBlob,{title='Invincible AI production',allowContextCards=false,replaceExisting=false}={}){await ready;const hasDraft=state.manifest.scenes.length||(state.manifest.audioClips||[]).length||state.manifest.audio;if(hasDraft&&!replaceExisting)throw Error('Motion Studio already contains a different draft. Choose Replace when applying the reviewed sync plan, or keep the existing draft.');if(!Array.isArray(storyboard)||!storyboard.length)throw Error('The AI draft has no executable scenes.');if(!(audioBlob instanceof Blob)||!audioBlob.size)throw Error('The original voiceover MP3 is missing. Run AI timing again to attach it.');const file=new File([audioBlob],audioBlob.name||'invincible-voiceover.mp3',{type:audioBlob.type||'audio/mpeg'}),decoded=await decodeVoiceover(file),fileId=uid(),next=compileAiStoryboardManifest(storyboard,{aspectRatio:'9:16',audioFileId:fileId,audioName:file.name,audioDuration:decoded.duration,mapAssets:mapAssets(),allowContextCards});next.title=String(title).slice(0,200);state.files.set(fileId,file);try{await applyManifest(next);time=0;await draw();await save();status(`${next.scenes.length} scenes and the exact MP3 are saved to your account. Next: Play the full preview, then Export MP4.`);return next;}catch(error){state.files.delete(fileId);throw error;}}
  const agent=createAgentOperations({
   authorize:async()=>{await ready;if(disposed||!account||getAccountId()!==account||getProject()?.id!==projectId||(getProject()?.ownerUid!==account&&!mediaService))throw Object.assign(Error('Sign in as the project owner to use the agent API.'),{code:'UNAUTHORIZED'});},
-  getManifest:()=>state.manifest,getSavedManifest:()=>state.savedManifest||state.manifest,getRevision:()=>state.cloudRevision,getMapAssets:mapAssets,
+  getManifest:()=>state.manifest,getSavedManifest:()=>state.savedManifest||state.manifest,getRevision:()=>state.cloudRevision,getMapAssets:mapAssets,getAvailableAssets:()=>catalogue.map(({id,name,kind,mimeType,duration,width,height})=>({id,name,kind,mimeType,duration,width,height})),
   isBlocked:()=>assembly.focused||assembly.pending,
   checkResources:async manifest=>{
    const profile=state.brands.find(b=>b.id===manifest.brandPresetId);if(!profile)throw Error('Choose or create the referenced brand profile first.');validateBrand(profile,new Set(manifest.assets.filter(a=>a.kind!=='glb').map(a=>a.id)));
+   const checked=new Set();
+   const checkUrl=async asset=>{if(!asset.url||checked.has(asset.url))return;checked.add(asset.url);let response;try{response=await fetch(asset.url,{signal:AbortSignal.timeout(15000)});}catch(error){throw Error('Cannot retrieve asset '+asset.name+': '+error.message);}if(!response.ok)throw Error('Missing asset '+asset.name+' (HTTP '+response.status+'): '+asset.url);};
+   for(const asset of manifest.assets)await checkUrl(asset);
    const refs=[...manifest.assets,...(manifest.audioClips||[]),...(manifest.audio?[manifest.audio]:[])];
    for(const ref of refs)if(ref.fileId){if(isCloudFile(ref.fileId))await media.read(ref.fileId);else if(!await getFile(ref.fileId))throw Error('Missing original asset: '+ref.name+' ('+ref.fileId+')');}
    const projects=[...(manifest.mapSources||[]).map(s=>s.project),...manifest.scenes.map(s=>s.engineData.project).filter(Boolean)];
-   for(const project of projects)for(const asset of project.historicalMap.visual?.assets||[])if(asset.cloudAssetId)await media.read(asset.cloudAssetId);
+   for(const project of projects)for(const asset of project.historicalMap.visual?.assets||[]){if(asset.cloudAssetId)await media.read(asset.cloudAssetId);await checkUrl(asset);}
   },save:async next=>{await save(next);}
  });
  const exposedAgent={...agent,applyPatch:async payload=>{

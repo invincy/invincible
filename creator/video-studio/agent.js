@@ -53,11 +53,11 @@ export function sceneSummary(manifest){
   return {id:scene.id,name:scene.name||scene.id,startSeconds:scene.startSeconds,durationSeconds:scene.durationSeconds,engineType:scene.engineType,layerCount:(scene.overlays?.length||0)+(visual?.layers?.length||scene.engineData.animation?.layers?.length||0),mapAssetStatus:scene.engineType!=='map'?'not-applicable':project?'inline-native':scene.engineData.animation?'animation':'missing',validationStatus:'schema-valid'};
  });
 }
-export function createAgentOperations({authorize,getManifest,getSavedManifest=getManifest,getRevision,getMapAssets=()=>[],checkResources=async()=>{},save,read=async()=>{},isBlocked=()=>false}){
+export function createAgentOperations({authorize,getManifest,getSavedManifest=getManifest,getRevision,getMapAssets=()=>[],getAvailableAssets=()=>[],checkResources=async()=>{},save,read=async()=>{},isBlocked=()=>false}){
  let writing=false;
  const result=async fn=>{try{await authorize();return await fn();}catch(error){return {ok:false,errors:[{code:error.code||'VALIDATION_ERROR',message:error.message}]};}};
  return {
-  getProjectJSON:()=>result(async()=>{await read();await authorize();return {ok:true,revision:getRevision(),manifest:structuredClone(getSavedManifest()),staged:JSON.stringify(getSavedManifest())!==JSON.stringify(getManifest()),assets:structuredClone(getManifest().assets),audioTiming:structuredClone(getManifest().audioClips||getManifest().audio||[])};}),
+  getProjectJSON:()=>result(async()=>{await read();await authorize();return {ok:true,revision:getRevision(),manifest:structuredClone(getSavedManifest()),staged:JSON.stringify(getSavedManifest())!==JSON.stringify(getManifest()),assets:structuredClone(getSavedManifest().assets),availableAssets:structuredClone(getAvailableAssets()),audioTiming:structuredClone(getSavedManifest().audioClips||getSavedManifest().audio||[])};}),
   getSceneSummary:()=>result(async()=>({ok:true,revision:getRevision(),scenes:sceneSummary(validateManifest(getManifest(),{mapAssets:getMapAssets()}))})),
   validateJSON:payload=>result(async()=>{const manifest=prepareAgentUpdate(getManifest(),payload,{revision:getRevision(),mapAssets:getMapAssets()});await checkResources(manifest);await authorize();return {ok:true,revision:getRevision(),manifest,scenes:sceneSummary(manifest)};}),
   applyPatch:payload=>result(async()=>{
