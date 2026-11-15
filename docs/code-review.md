@@ -1353,3 +1353,14 @@ repository's existing PR CI, not claimed from unit fixtures. Added a 13-scene
 browser acceptance scenario to the existing video-studio suite. Live signed-in
 Firebase access still requires a real owner session. Publication results belong
 to the release PR; this entry does not certify live account access or a finished film.
+
+Follow-up verification: local Creator Firestore emulator checks passed, including
+owner/editor authorization, monotonic revisions, immutable ownership and bounds.
+CI verified the existing Video Studio and composition browser suites, real native
+map/audio and mixed-engine MP4 encoding, cross-device reload, map edits and the
+Creator storyboard/history/map-editor/animation suite. The new 13-scene browser
+case reached saved conversion and editor return; its instructions disclosure
+locator was corrected to click the visible summary before finding its button.
+Broader CI failures include unchanged TTS layout and LIC CRM color assertions,
+a stale checked-in V2 bundle, and the universal test's missing Firebase Functions
+fixture exports (now repaired). These are not evidence of production permissions.

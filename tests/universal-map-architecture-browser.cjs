@@ -6,7 +6,7 @@ const {chromium}=require('playwright'),root=path.resolve(__dirname,'..');
 const tinyPngBase64='iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAEklEQVR42mNk+M9Qz0AEYBxVSF8AxQEJ+Qf5AAAAAElFTkSuQmCC';
 
 const firebaseFixture=[
- "export const db={},auth={currentUser:{uid:'owner',email:'owner@example.com'}},authReady=Promise.resolve();export async function observeAuth(callback){queueMicrotask(()=>callback(auth.currentUser));return()=>{}}export const storageError=error=>error?.code==='revision-conflict'||error?.code==='failed-precondition'||error?.code==='aborted'?'This project was updated in another session or tab. Reload the latest cloud copy before overwriting.':'Save failed.';",
+ "export const firebaseApp={},getFunctions=()=>({}),httpsCallable=()=>async()=>{throw Error('Not available in this fixture')};export const db={},auth={currentUser:{uid:'owner',email:'owner@example.com'}},authReady=Promise.resolve();export async function observeAuth(callback){queueMicrotask(()=>callback(auth.currentUser));return()=>{}}export const storageError=error=>error?.code==='revision-conflict'||error?.code==='failed-precondition'||error?.code==='aborted'?'This project was updated in another session or tab. Reload the latest cloud copy before overwriting.':'Save failed.';",
  "let listeners=[];const read=()=>JSON.parse(localStorage.getItem('test.creator')||'{}');",
  "window.addEventListener('storage',e=>{if(e.key==='test.creator')listeners.forEach(fn=>fn());});",
  "export const doc=(db,...parts)=>parts.join('/');export const collection=(db,name)=>name;export const where=(...args)=>args;export const query=(collection,...filters)=>({collection,filters});export const serverTimestamp=()=>Date.now();",
@@ -61,7 +61,7 @@ const server=http.createServer((req,res)=>{
   res.setHeader('Content-Type',file.endsWith('.html')?'text/html; charset=utf-8':/\.m?js$/.test(file)?'text/javascript; charset=utf-8':file.endsWith('.css')?'text/css; charset=utf-8':/\.(json|geojson)$/.test(file)?'application/json; charset=utf-8':file.endsWith('.png')?'image/png':file.endsWith('.svg')?'image/svg+xml':'application/octet-stream');
   let content=fs.readFileSync(file);
   if(/\.(html|m?js)$/.test(file)){
-   const text=content.toString('utf8').replaceAll('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js','/fixture.mjs');
+   const text=content.toString('utf8').replaceAll('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js','/fixture.mjs').replaceAll('https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js','/fixture.mjs');
    res.end(text);return;
   }
   res.end(content);
