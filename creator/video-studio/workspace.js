@@ -243,7 +243,8 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  function lock(value){busy=value;root.querySelectorAll('button,input,textarea,select').forEach(n=>{if(!imageRoot.contains(n))n.disabled=value;});imageRoot.inert=value;$('[data-vs=cancel]').disabled=!value||!controller;$('[data-vs=apply]').disabled=value||!pending;}
  const run=async fn=>{if(busy||disposed)return;lock(true);stop();try{if(drawing)await drawing.catch(()=>{});await fn();}catch(e){if(!disposed)sync();status(e.name==='AbortError'?'Export cancelled.':e.message);}finally{if(!disposed)lock(false);}};
  async function renderExport(){
-  if(directorSyncPending)throw Error('A newer Director plan is waiting to be loaded. Motion Studio export is disabled until the current plan and MP3 are imported.');
+  if(directorSyncPending)throw Error('A scene plan is still loading. Wait for it to finish, then preview your video before exporting.');
+  if(!state.manifest.scenes.length)throw Error('There are no scenes to export. Add scenes or import a reviewed plan first.');
   stop();controller=new AbortController();$('[data-vs=cancel]').disabled=false;root.dataset.exporting='true';let codec=null;try{await prepare();status('Rendering MP4…');const blob=await encodeStudioVideo({canvas,timeline,audioBuffer,audioTracks,audioGain:state.manifest.audio?.gain??1,signal:controller.signal,onAudioCodec:value=>{codec=value;status(`Rendering H.264 + ${value.toUpperCase()} audio…`);},onProgress:p=>{if(!disposed)$('[data-vs-progress]').value=p.progress;},drawFrame:(t,signal)=>renderer.draw(t,{exporting:true,signal})});if(!disposed){const name=(state.manifest.title||'video').replace(/[^\p{L}\p{N}_-]/gu,'_')+'.mp4';if(lastExportUrl)URL.revokeObjectURL(lastExportUrl);lastExportBlob=blob;lastExportName=name;lastExportUrl=URL.createObjectURL(blob);lastExport.href=lastExportUrl;lastExport.download=name;lastExport.hidden=false;saveLastExport.hidden=false;cloudExport.hidden=true;download(blob,name);status(audioBuffer||audioTracks.length?`MP4 exported with synchronized ${codec.toUpperCase()} voiceover and audio. Download it now or save it to your private library.${codec==='opus'?' Opus MP4 needs a compatible player.':''}`:'MP4 exported without audio (no voiceover selected). Download it now or save it to your private library.');}return blob;}finally{if(controller?.signal.aborted)invalidate();controller=null;$('[data-vs=cancel]').disabled=true;root.dataset.exporting='false';if(!disposed)await draw();}
  }
  async function renderJpgPreviews(){
@@ -349,12 +350,14 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    if(state.manifest.sourceProjectId!==projectId||state.manifest.directorRevision!==revision)status('A saved scene plan is available. Your current video draft is unchanged; review the plan before replacing it.');
    return;
   }
-  directorSyncPending=true;status('A newer Director plan is being loaded into Motion Studio…');
-  const audio=typeof directorAudio==='function'?await directorAudio():null;
-  if(!audio){status('The Director plan is ready, but its final MP3 is unavailable. Export is blocked until the saved voiceover is restored.');return;}
-  await importAiProduction(storyboard,audio,{title:draft.title||getProject()?.title||'Invincible video',allowContextCards:true,replaceExisting:false,directorRevision:revision});
+  directorSyncPending=true;status('Loading the saved scene plan into Motion Studio…');
+  try{
+   const audio=typeof directorAudio==='function'?await directorAudio():null;
+   if(!audio){status('The saved scene plan could not load because its voiceover is unavailable. You can continue editing your video.');return;}
+   await importAiProduction(storyboard,audio,{title:draft.title||getProject()?.title||'Invincible video',allowContextCards:true,replaceExisting:false,directorRevision:revision});
+  }finally{directorSyncPending=false;}
  }
- ready.then(()=>syncAppliedDirectorDraft().catch(error=>{directorSyncPending=true;status('Motion Studio could not load the current Director plan: '+error.message);}));
+ ready.then(()=>syncAppliedDirectorDraft().catch(error=>{status('The saved scene plan could not be loaded: '+error.message+' Your current video draft is unchanged.');}));
  async function importAiProduction(storyboard,audioBlob,{title='Invincible AI production',allowContextCards=false,replaceExisting=false,directorRevision=0}={}){await ready;const hasDraft=state.manifest.scenes.length||(state.manifest.audioClips||[]).length||state.manifest.audio;if(hasDraft&&!replaceExisting)throw Error('Motion Studio already contains a different draft. Choose Replace when applying the reviewed sync plan.');if(!Array.isArray(storyboard)||!storyboard.length)throw Error('The AI draft has no executable scenes.');if(!(audioBlob instanceof Blob)||!audioBlob.size)throw Error('The original voiceover MP3 is missing. Run AI timing again to attach it.');const file=new File([audioBlob],audioBlob.name||'invincible-voiceover.mp3',{type:audioBlob.type||'audio/mpeg'}),decoded=await decodeVoiceover(file),fileId=uid(),next=compileAiStoryboardManifest(storyboard,{aspectRatio:'9:16',audioFileId:fileId,audioName:file.name,audioDuration:decoded.duration,mapAssets:mapAssets(),allowContextCards});next.title=String(title).slice(0,200);if(directorRevision){next.sourceProjectId=projectId;next.directorRevision=directorRevision;}state.files.set(fileId,file);try{await applyManifest(next);time=0;directorSyncPending=false;await draw();await saveLocalDraft();status(`${next.scenes.length} scenes and the exact MP3 are saved in Motion Studio. Next: Play the full preview, then Export MP4.`);return next;}catch(error){state.files.delete(fileId);throw error;}}
  const hidden=()=>{if(document.hidden)stop();};document.addEventListener('visibilitychange',hidden);
  async function reviewGeneratedMaps(){await ready;return assembly?.startMapReview()||false;}
