@@ -94,7 +94,7 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
     // Mapbox renders asynchronously after seek/jumpTo. Waiting only during export
     // let the live preview copy a half-cleared canvas, which appeared as flicker.
     // Always wait for the settled map frame before compositing it into Motion Studio.
-    player.seek(local+(scene.engineData.sourceStart||0));await player.settleFrame(frameSignal);
+    player.seek(local+(scene.engineData.sourceStart||0));if(player.isNative)await player.settleFrame(frameSignal);
     if(exporting&&errors.length)throw Error(errors[0]);ctx.drawImage(player.map.getCanvas(),0,0,width,height);
     const overlay=host.querySelector('.history-overlay');if(overlay)ctx.drawImage(overlay,0,0,width,height);
    }else if(scene.engineType==='graphic')drawCanvasBackground(ctx,scene.engineData,images);
