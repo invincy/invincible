@@ -1,5 +1,5 @@
 import {MAX_MODEL_BYTES} from './three-scene.js';
-import {drawCanvasBackground,drawCanvasLayer} from './canvas.js?v=2026111206';
+import {drawCanvasBackground,drawCanvasLayer} from './canvas.js?v=2026111505';
 import {ensureDocumentaryFonts} from '../map-fonts.js';
 import {compileAnimation} from '../map-animation-import.js?v=2026111002';
 import {createHistoryPlayer} from '../history-player.js?v=2026111002';

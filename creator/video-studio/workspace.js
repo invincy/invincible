@@ -5,12 +5,12 @@ import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=
 import {studioBrief} from './handoff.js?v=2026111207';
 import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111207';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111207';
-import {createStudioRenderer} from './adapters.js?v=2026111207';
+import {createStudioRenderer} from './adapters.js?v=2026111505';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111014';
 import {mountAssembly} from './assembly.js?v=2026111328';
 import {encodeStudioVideo} from './export.js?v=2026111209';
 import {openStudioStore} from './storage.js';
-import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111504';
+import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111505';
 import {runAiProduction} from '../ai-production-runner.mjs?v=2026111203';
 import {generateVoiceover} from '../tts-api.js';
 import {createProductionReadiness,selectProductionVoice} from './production-readiness.js?v=2026111322';
@@ -61,7 +61,11 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  const projectAtOpen=getProject()||{},scriptAtOpen=String(projectAtOpen.script||projectAtOpen.scenes?.map(scene=>scene.voiceover||'').filter(Boolean).join('\n\n')||''),styleAtOpen=typeof projectAtOpen.visualStyle==='string'?projectAtOpen.visualStyle:'';
  const aiCreate=document.createElement('section');aiCreate.className='vs-step';aiCreate.dataset.aiProduction='';aiCreate.innerHTML='<h3>1 · Create with AI</h3><p class="vs-help">Generate narration, timed scenes and an MP4 using Google TTS, your paired laptop AI and this project’s renderer. Google TTS uses your existing quota.</p><label>Voiceover script<textarea data-ai-script rows="5" maxlength="30000" placeholder="Add the narration for this video"></textarea></label><label>Creative direction<textarea data-ai-instructions rows="3" maxlength="4000" placeholder="Describe the map, movement, camera and visual style"></textarea></label><button type="button" data-vs="generate-ai">Generate video</button><p class="vs-help" data-ai-status role="status" aria-live="polite"></p>';
  aiCreate.querySelector('[data-ai-script]').value=scriptAtOpen;aiCreate.querySelector('[data-ai-instructions]').value=styleAtOpen;setup.prepend(aiCreate);
- header.after(setup);const jsonPanel=$('[data-vs-json]').closest('details');jsonPanel.open=true;setup.querySelector('[data-flow-json]').append(jsonPanel);setup.querySelector('[data-flow-json]').append($('[data-vs=download]'));
+ header.after(setup);const jsonPanel=$('[data-vs-json]').closest('details');jsonPanel.open=true;
+ const jsonSection=setup.querySelector('[data-flow-json]');
+ const viewJson=document.createElement('button');viewJson.type='button';viewJson.dataset.vs='view-json';viewJson.textContent='View current draft JSON';
+ jsonSection.querySelector('.vs-actions').prepend(viewJson);
+ jsonSection.append(jsonPanel,$('[data-vs=download]'));
  $('.vs-layout').before(Object.assign(document.createElement('h3'),{textContent:'3 · Review scenes & audio',className:'vs-review-heading'}));
  const exportNote=document.createElement('p');exportNote.className='vs-help';exportNote.textContent='4 · Export your complete MP4 with audio';$('.vs-preview').prepend(exportNote);
  if(root.closest('.project-page')){
@@ -240,6 +244,11 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  }
  function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
  function lock(value){busy=value;root.querySelectorAll('button,input,textarea,select').forEach(n=>{if(!imageRoot.contains(n))n.disabled=value;});imageRoot.inert=value;$('[data-vs=cancel]').disabled=!value||!controller;$('[data-vs=apply]').disabled=value||!pending;}
+ function clearImportReview(){
+  pendingCloud=null;pending=null;
+  $('[data-vs=apply]').disabled=true;
+  $('[data-vs-review]').textContent='';
+ }
  const run=async fn=>{if(busy||disposed)return;lock(true);stop();try{if(drawing)await drawing.catch(()=>{});await fn();}catch(e){if(!disposed)sync();status(e.name==='AbortError'?'Export cancelled.':e.message);}finally{if(!disposed)lock(false);}};
  async function renderExport(){
   stop();controller=new AbortController();$('[data-vs=cancel]').disabled=false;root.dataset.exporting='true';let codec=null;try{await prepare();status('Rendering MP4…');const blob=await encodeStudioVideo({canvas,timeline,audioBuffer,audioTracks,audioGain:state.manifest.audio?.gain??1,signal:controller.signal,onAudioCodec:value=>{codec=value;status(`Rendering H.264 + ${value.toUpperCase()} audio…`);},onProgress:p=>{if(!disposed)$('[data-vs-progress]').value=p.progress;},drawFrame:(t,signal)=>renderer.draw(t,{exporting:true,signal})});if(!disposed){const name=(state.manifest.title||'video').replace(/[^\p{L}\p{N}_-]/gu,'_')+'.mp4';if(lastExportUrl)URL.revokeObjectURL(lastExportUrl);lastExportBlob=blob;lastExportName=name;lastExportUrl=URL.createObjectURL(blob);lastExport.href=lastExportUrl;lastExport.download=name;lastExport.hidden=false;saveLastExport.hidden=false;cloudExport.hidden=true;download(blob,name);status(audioBuffer||audioTracks.length?`MP4 exported with synchronized ${codec.toUpperCase()} voiceover and audio. Download it now or save it to your private library.${codec==='opus'?' Opus MP4 needs a compatible player.':''}`:'MP4 exported without audio (no voiceover selected). Download it now or save it to your private library.');}return blob;}finally{if(controller?.signal.aborted)invalidate();controller=null;$('[data-vs=cancel]').disabled=true;root.dataset.exporting='false';if(!disposed)await draw();}
@@ -267,6 +276,12 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
     catch(error){if(!disposed)$('[data-ai-status]').textContent=error.message;throw error;}
    }
    if(action==='download')download(new Blob([JSON.stringify(state.manifest,null,2)],{type:'application/json'}),'video-studio.json');
+   if(action==='view-json'){
+    clearImportReview();
+    jsonPanel.open=true;
+    $('[data-vs-json]').value=JSON.stringify(state.manifest,null,2);
+    status('Current draft loaded into the JSON editor. Review any edits before applying.');
+   }
    if(action==='library-refresh')await refreshLibrary();
    if(action==='copy-brief'){const text=studioBrief(await upgraded(),catalogue);await navigator.clipboard.writeText(text);status('Complete-video brief copied, including asset IDs and current JSON. Add your script and exact voiceover cues.');}
    if(action==='cloud-review'){const draft=await media.loadDraft(projectId);if(!draft)throw Error('No cloud draft has been saved for this video yet.');pending=validateManifest(draft.manifest,{mapAssets:mapAssets()});pendingCloud=draft;$('[data-vs-review]').textContent='Review cloud version '+draft.revision+': '+pending.scenes.length+' scenes. Applying replaces this local video draft; originals are retained.';status('Cloud draft ready for review. Apply reviewed import to load it.');}
@@ -296,7 +311,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  });
  root.addEventListener('input',event=>{
   if(event.target.matches('[data-media-search]'))renderLibrary();
-  if(event.target.matches('[data-vs-json]')){pendingCloud=null;pending=null;$('[data-vs=apply]').disabled=true;$('[data-vs-review]').textContent='';}
+  if(event.target.matches('[data-vs-json]'))clearImportReview();
   if(event.target.matches('[data-vs-seek]')&&!busy){stop();time=Number(event.target.value);if(!drawBusy){drawBusy=true;draw().catch(e=>status(e.message)).finally(()=>drawBusy=false);}}
  });
  root.addEventListener('change',event=>{
@@ -304,7 +319,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   const target=event.target;if(target.matches('[data-vs-seek]'))return;
   run(async()=>{
    if(target.matches('[data-media-upload]')){await uploadFiles([...target.files]);target.value='';return;}
-   if(target.matches('[data-vs-json-file]')){const file=target.files[0];if(file){if(file.size>1000000)throw Error('Use JSON under 1 MB.');$('[data-vs-json]').value=await file.text();pending=null;status('File loaded. Review it before applying.');}return;}
+   if(target.matches('[data-vs-json-file]')){const file=target.files[0];if(file){if(file.size>1000000)throw Error('Use JSON under 1 MB.');$('[data-vs-json]').value=await file.text();clearImportReview();status('File loaded. Review it before applying.');}return;}
    if(target.matches('[data-vs-images],[data-vs-audio]')){await uploadFiles([...target.files]);target.value='';return;}
    if(target.matches('[data-vs-images]')){
     const files=[...target.files];

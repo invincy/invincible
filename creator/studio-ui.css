@@ -1,4 +1,12 @@
 /* Shared Creator UI, independent of film artwork and export presentation. */
+@font-face{
+ font-family:"Noto Sans Devanagari";
+ src:url("./fonts/noto-devanagari-600.ttf") format("truetype");
+ font-weight:400 800;
+ font-display:swap;
+ unicode-range:U+0900-097F,U+A8E0-A8FF;
+}
+.studio-ui .video-studio [data-vs-json]{font-family:"Cascadia Code",Consolas,"Noto Sans Devanagari",monospace}
 body.studio-ui{
  --studio-canvas:#080f1b;--studio-surface:#0e1927b8;--studio-raised:#132332e0;
  --studio-line:#243646;--studio-accent:#75d9d0;--studio-muted:#9bafbd;

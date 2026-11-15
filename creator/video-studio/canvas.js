@@ -36,7 +36,16 @@ export function drawCanvasLayer(ctx,l,brand,images){
  const {width,height}=ctx.canvas,unit=Math.min(width,height)/1080;
  ctx.save();ctx.globalAlpha*=l.opacity;ctx.translate(l.x*width,l.y*height);ctx.rotate(l.rotation*Math.PI/180);ctx.scale(l.scale,l.scale);ctx.fillStyle=l.color||brand.foreground;ctx.strokeStyle=l.color||brand.foreground;
  const w=(l.width??.8)*width,h=(l.height??.3)*height;
- if(l.type==='text'){const size=(l.fontSize??56)*unit;ctx.textAlign=l.textAlign||'center';ctx.textBaseline='middle';ctx.font=`${l.fontWeight??600} ${size}px ${l.fontFamily?(l.fontFamily.startsWith("Invincible")?`"${l.fontFamily}"`:l.fontFamily):brand.font}`;const x=l.textAlign==='left'?-w/2:l.textAlign==='right'?w/2:0;const lines=l.text.split('\n');lines.forEach((line,i)=>ctx.fillText(line,x,(i-(lines.length-1)/2)*size*1.3,w));}
+ if(l.type==='text'){
+  const size=(l.fontSize??56)*unit;
+  const family=l.fontFamily?.startsWith('Invincible')?`"${l.fontFamily}"`:l.fontFamily||brand.font;
+  const fonts=/\p{Script=Devanagari}/u.test(l.text)&&l.fontFamily!=='Invincible Hindi'?`"Invincible Hindi", ${family}`:family;
+  ctx.textAlign=l.textAlign||'center';ctx.textBaseline='middle';
+  ctx.font=`${l.fontWeight??600} ${size}px ${fonts}`;
+  const x=l.textAlign==='left'?-w/2:l.textAlign==='right'?w/2:0;
+  const lines=l.text.split('\n');
+  lines.forEach((line,i)=>ctx.fillText(line,x,(i-(lines.length-1)/2)*size*1.3,w));
+ }
  if(l.type==='rectangle')ctx.fillRect(-w/2,-h/2,w,h);
  if(l.type==='circle'){ctx.beginPath();ctx.ellipse(0,0,w/2,h/2,0,0,Math.PI*2);ctx.fill();}
  if(l.type==='arrow'||l.type==='line'){ctx.lineWidth=(l.lineWidth??5)*unit;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-w/2,0);ctx.lineTo(w/2,0);ctx.stroke();if(l.type==='arrow'){const tip=Math.min(w/3,24*unit);ctx.beginPath();ctx.moveTo(w/2,0);ctx.lineTo(w/2-tip,-tip*.45);ctx.lineTo(w/2-tip,tip*.45);ctx.closePath();ctx.fill();}}

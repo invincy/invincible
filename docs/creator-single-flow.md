@@ -288,6 +288,11 @@ Rounded map durations are fitted to those bounds at import. Adjacent scenes may 
 a boundary, and a real overlap remains a validation error. Previously generated
 plans can use this fix without running transcription or scene planning again.
 
+In Motion Studio, **Create & import → View current draft JSON** loads the active
+draft into the existing JSON editor. This works without clipboard access. Review
+edited or uploaded JSON before applying it, then use **Save** to sync the draft.
+Hindi Canvas overlays use the bundled Devanagari font in both preview and export.
+
 Applied Director projects reopen on **Saved sync plan** with one **Continue · Review
 maps** action. The Director's `area=Studio` handoff enters generated-map review directly.
 Exact scene start/end timestamps outrank rounded duration hints; Map animations are
