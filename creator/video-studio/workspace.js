@@ -1,7 +1,7 @@
 import {checkStudioGlb, MAX_MODEL_BYTES} from './three-scene.js';
 import {mountConnectedImageGenerator} from '../image-generator.js?v=2026111206';
 import {callImageRelay,draftRemoteImagePrompt} from '../../shared/firebase-image-relay.js?v=2026111205';
-import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=2026111002';
+import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=2026111612';
 import {studioBrief} from './handoff.js?v=2026111207';
 import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111505';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111502';
@@ -106,7 +106,20 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  let drawing=null;
  let renderer=null,timeline=null,audioBuffer=null,audioTracks=[],stopTracks=null,assembly=null,playing=false,raf=0,time=state.time||0,context=null,source=null,gainNode=null,clock=0,clockTime=0,disposed=false,busy=false,pending=null,controller=null,drawBusy=false,preparing=null;
  const status=text=>{if(!disposed)$('[data-vs-status]').textContent=text;};
- const getFile=async fileId=>{let file=state.files.get(fileId)||await store?.get('file:'+fileId);if(!file&&isCloudFile(fileId)){file=await media.file(fileId);if(disposed||getAccountId()!==account)throw Error('Project closed or account changed.');state.files.set(fileId,file);}return file;};
+ async function getFile(fileId){
+  let file=state.files.get(fileId)||await store?.get('file:'+fileId);
+  if(file||!isCloudFile(fileId))return file;
+  try{file=await media.file(fileId);}
+  catch(error){
+   const {assets,audioClips,audio}=state.manifest;
+   const reference=[...assets,...(audioClips||[]),audio].find(item=>item?.fileId===fileId);
+   const label=reference?.name||catalogue.find(item=>item.id===fileId)?.name||fileId;
+   throw Error(`Could not load “${label}” from the private media library. ${error.message}`,{cause:error});
+  }
+  if(disposed||getAccountId()!==account)throw Error('Project closed or account changed.');
+  state.files.set(fileId,file);
+  return file;
+ }
  function renderLibrary(){const query=$('[data-media-search]').value.trim().toLowerCase();$('[data-media-library]').innerHTML=catalogue.filter(a=>a.name.toLowerCase().includes(query)).map(a=>`<article><strong>${esc(a.name)}</strong><small>${esc(a.kind)}${a.width?' · '+a.width+' × '+a.height:''}${a.duration?' · '+a.duration.toFixed(2)+'s':''}</small><div class="vs-actions"><button data-vs="media-use" data-media-id="${esc(a.id)}">${a.kind==='audio'?'Add voiceover':a.kind==='glb'?'Register 3D model':'Use in video'}</button>${a.kind==='audio'?`<button data-vs="media-music" data-media-id="${esc(a.id)}">Music</button><button data-vs="media-effect" data-media-id="${esc(a.id)}">Sound effect</button>`:''}${['image','video'].includes(a.kind)?`<button data-vs="media-scene" data-media-id="${esc(a.id)}">Add as scene</button>`:''}</div></article>`).join('')||'<p class="vs-help">No matching assets. Add files above.</p>';};
  async function refreshLibrary(){catalogue=await media.list();if(disposed)return;renderLibrary();$('[data-media-status]').textContent=catalogue.length+' assets in your private cloud library.';}
  async function upgraded(){const original=state.manifest.audio&&await getFile(state.manifest.audio.fileId);return upgradeVideo(state.manifest,original?(await decodeVoiceover(original)).duration:0);}
