@@ -1,7 +1,7 @@
 import{makeScene}from'./storyboard-model.js?v=3';
 import{createProductionWorkbench}from'./production-workbench.js?v=2026111420';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
-import{copyProjectForWrite,restoreProjectFromFirestore}from'./project-persistence.js?v=2026111501';
+import{restoreProjectFromFirestore}from'./project-persistence.js?v=2026111501';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{createProductionReadiness,mountProductionReadiness}from'./video-studio/production-readiness.js?v=2026111322';
@@ -243,6 +243,17 @@ function updateStats(){
   $("projectProgressBar").style.width=progress+"%";
 }
 
+// Compatibility wrapper kept self-contained because older embedded project pages
+// load this persistence seam without the module graph.
+function copyProject(value,inArray=false){
+ if(Array.isArray(value)){
+  const clean=value.filter(item=>item!==undefined);
+  if(inArray)return {__invincibleSerializedArray:JSON.stringify(clean.map(item=>copyProject(item,false)))};
+  return clean.map(item=>copyProject(item,true));
+ }
+ if(value&&Object.getPrototypeOf(value)===Object.prototype)return Object.fromEntries(Object.entries(value).filter(([,item])=>item!==undefined).map(([key,item])=>[key,copyProject(item,false)]));
+ return value;
+}
 function legacyDraftKey(){return 'invincible.creatorDraft.'+user.uid+'.'+projectId}
 function draftKey(){const id=typeof tabId==='string'?tabId:'default';return legacyDraftKey()+'.'+id}
 function clearLocalDraft(){try{localStorage.removeItem(draftKey());if(typeof recoveredLegacyDraft!=='undefined'&&recoveredLegacyDraft){localStorage.removeItem(legacyDraftKey());recoveredLegacyDraft=false;}}catch{}}
@@ -264,7 +275,7 @@ function buildProjectWrite(payload,server,nextRev,{isCreate=false}={}){
 async function save(options={}){
  if(!user||!project||!projectRef)return false;
  const force=!!options?.force,writerUid=user.uid;
- clearTimeout(saveTimer);saveTimer=null;localDirty=true;const version=++editVersion,payload=copyProjectForWrite(project),ref=projectRef;
+ clearTimeout(saveTimer);saveTimer=null;localDirty=true;const version=++editVersion,payload=copyProject(project),ref=projectRef;
  keepDraft();status("Saving…");
  const result=saveChain.then(async()=>{
   const expectedBase=baseRevision;
