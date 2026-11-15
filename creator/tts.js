@@ -548,9 +548,15 @@ $('connectTimingLaptop').addEventListener('click',async()=>{
  finally{refreshAvailability();}
 });
 $('generateScenePlan').addEventListener('click',generateScenePlan);
+function timingPayload(){return {format:'invincible-creator-timing',version:1,projectId:projectVoiceoverId,title:$('title').value,script:$('script').value,creativeInstructions:$('creativeInstructions').value,transcript:structuredClone(timedTranscript),audio:{cloudAssetId:cloudFinalAudioId,duration:timedTranscript.duration},next:'Use Motion Studio: Copy ChatGPT brief for the current manifest schema, then Review import and Apply reviewed import.'};}
+$('copyTiming').addEventListener('click',async()=>{
+ if(!timedTranscript)return;
+ try{await navigator.clipboard.writeText(JSON.stringify(timingPayload(),null,2));$('localAnalysisStatus').textContent='Timing copied for Codex. Continue in Motion & export.';}
+ catch(error){$('localAnalysisStatus').textContent='Could not copy timing. Use Download timing for Codex.';}
+});
 $('downloadTiming').addEventListener('click',()=>{
  if(!timedTranscript)return;
- const payload={format:'invincible-creator-timing',version:1,projectId:projectVoiceoverId,title:$('title').value,script:$('script').value,creativeInstructions:$('creativeInstructions').value,transcript:structuredClone(timedTranscript),audio:{cloudAssetId:cloudFinalAudioId,duration:timedTranscript.duration},next:'Use Motion Studio: Copy ChatGPT brief for the current manifest schema, then Review import and Apply reviewed import.'};
+ const payload=timingPayload();
  const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'})),link=document.createElement('a');link.href=url;link.download='creator-timing.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 });
 $('aiProviderChoice').addEventListener('change',event=>{if(!event.target.matches('[name="aiProvider"]'))return;aiProvider=event.target.value==='local'?'local':'cloud';localStorage.setItem(aiProviderKey,aiProvider);scenePlanSaved=false;updateProviderUi();scheduleScriptSyncSave();if(!$('scenePlanReview').hidden){$('scenePlanReview').hidden=true;document.querySelector('.ai-script-flow').classList.remove('plan-review-active');}$('localAnalysisStatus').textContent=timedTranscript?`Scene planner changed to ${providerName()}. Existing timing is still ready; generate the sync plan.`:aiProvider==='cloud'?'Scene planner changed to OpenAI. Timing still uses local Whisper; retry timing when the laptop service is available.':'Scene planner changed to Local Qwen. Local Whisper will create the timing after the final MP3 is ready.';refreshAvailability();});
