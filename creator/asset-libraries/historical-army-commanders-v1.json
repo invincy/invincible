@@ -71,7 +71,7 @@
       ],
       "name": "Infantry · Shield bearer",
       "type": "image",
-      "url": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Historical_Army_Assets/Infantry/infantry_shield.png",
+      "url": "https://invincy.github.io/invincible/creator/asset-libraries/artwork/infantry_shield.png",
       "credit": "Illustrative military miniature; icon counts do not establish historical troop-type totals."
     },
     {
@@ -79,7 +79,7 @@
       "panipatKey": "troop_infantry_spear",
       "name": "Infantry · Spearman",
       "type": "image",
-      "url": "https://raw.githubusercontent.com/invincy/invincible/eb7476ee7a49d2a3cf8b8b32f3222364b3a4d536/creator/history-data/panipat/Historical_Army_Assets/Infantry/infantry_spear.png",
+      "url": "https://invincy.github.io/invincible/creator/asset-libraries/artwork/infantry_spear.png",
       "credit": "Illustrative military miniature; icon counts do not establish historical troop-type totals."
     },
     {

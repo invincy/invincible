@@ -2,6 +2,8 @@
 
 ## Historical Army & Commanders — v1
 
+Shield and spear infantry PNGs are also bundled under `artwork/`, byte-for-byte from the shared-input commit. Their catalogue URLs use this site's origin so ordinary assembly does not depend on raw.githubusercontent.com being reachable.
+
 19 named PNG references: 6 commanders, 5 infantry, 3 cavalry, 2 elephants and 3 artillery. Original files remain unchanged and durable URLs are pinned to the shared-input commit. The clean Abdali cutout is the preferred version.
 
 Download [the native asset library](historical-army-commanders-v1.json). In any existing Map Editor project, expand **Images & 3D assets**, choose **Import asset library**, and select this JSON. Search the library by name or category, then choose **Place**. Importing adds references without replacing scenes or layers; repeated imports of the same URLs are deduplicated. Save the destination project through its normal save controls afterward.
