@@ -1,7 +1,7 @@
 import{makeScene}from'./storyboard-model.js?v=3';
 import{createProductionWorkbench}from'./production-workbench.js?v=2026111420';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
-import{copyProjectForWrite}from'./project-persistence.js?v=2026111416';
+import{copyProjectForWrite,restoreProjectFromFirestore}from'./project-persistence.js?v=2026111501';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{createProductionReadiness,mountProductionReadiness}from'./video-studio/production-readiness.js?v=2026111322';
@@ -522,7 +522,7 @@ async function load(){
         return {...clean,id:projectId,ownerUid:user.uid,ownerEmail:(user.email||"").toLowerCase(),editorEmails:[],writeRevision:1};
       });
     }
-    if(snapshot?.exists())project=snapshot.data();
+    if(snapshot?.exists())project=restoreProjectFromFirestore(snapshot.data());
     if(project)finishDraft();
     else if(isNewDraft){
       project={id:projectId,title:"Untitled project",stage:"Ideas",format:"Short",aspectRatio:"9:16",script:"",scenes:[],ownerUid:user.uid,ownerEmail:(user.email||"").toLowerCase(),editorEmails:[]};
@@ -577,7 +577,7 @@ function watchProject(){
         }
         return;
       }
-      const data=live.data()||{};
+      const data=restoreProjectFromFirestore(live.data()||{});
       const remoteRev=Number.isInteger(data.writeRevision)?data.writeRevision:0;
       const remoteUpdatedAt=data.updatedAt?.toMillis?.()||0;
       // Repeated metadata/own-write acknowledgements must not remount an active editor.

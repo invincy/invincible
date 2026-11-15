@@ -225,6 +225,12 @@ MP4 output is rendered locally and downloaded, never automatically uploaded or
 saved to Firestore. Local audio remains session-only. Existing collaboration and
 document-size limits remain. No account, collection, rule or backend changes.
 
+Nested map geometry compatibility (November 15, 2026): Firestore-safe project
+writes encode arrays nested directly inside another array (for example route
+coordinate pairs) as tagged JSON values. The client restores those values when a
+project is loaded, so Map Editor and Director render the original geometry. This
+avoids changing the existing `creatorProjects/{id}` path or discarding map data.
+
 Named animation asset references (November 6, 2026) resolve to existing asset IDs during atomic import; private descriptors and binary storage locations are unchanged. The copied ChatGPT brief shares asset names, types and IDs only, without signed URLs or storage paths. No new collections, backend deployment, rules or migrations. Direct private file upload enablement remains a separate prerequisite.
 
 ## Unified Studio composition — November 9, 2026

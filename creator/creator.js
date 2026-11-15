@@ -94,6 +94,15 @@ function mergeProjects(){
 }
 
 async function saveItem(item){
+  const firestoreSafe=(value,inArray=false)=>{
+    if(Array.isArray(value)){
+      const clean=value.filter(entry=>entry!==undefined);
+      if(inArray)return {__invincibleSerializedArray:JSON.stringify(clean.map(entry=>firestoreSafe(entry,false)))};
+      return clean.map(entry=>firestoreSafe(entry,true));
+    }
+    if(value&&Object.getPrototypeOf(value)===Object.prototype)return Object.fromEntries(Object.entries(value).filter(([,entry])=>entry!==undefined).map(([key,entry])=>[key,firestoreSafe(entry,false)]));
+    return value;
+  };
   attachImportedGroups(item,item.scenes||[]);
   if(!user)throw Error("Restore your Google session on Dashboard before saving.");
   status("Saving…");
@@ -110,7 +119,7 @@ async function saveItem(item){
           err.code="revision-conflict";
           throw err;
         }
-        tx.set(ref,{...clean,id:item.id,ownerUid:clean.ownerUid||user.uid,ownerEmail:clean.ownerEmail||(user.email||"").toLowerCase(),editorEmails:clean.editorEmails||[],writeRevision:1,writtenBy:user.uid,writtenAt:serverTimestamp(),createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+        tx.set(ref,{...firestoreSafe(clean),id:item.id,ownerUid:clean.ownerUid||user.uid,ownerEmail:clean.ownerEmail||(user.email||"").toLowerCase(),editorEmails:clean.editorEmails||[],writeRevision:1,writtenBy:user.uid,writtenAt:serverTimestamp(),createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
         return {writeRevision:1};
       }
       const remote=snap.data()||{};
@@ -128,7 +137,7 @@ async function saveItem(item){
       if(isRemoteOwner)payload.editorEmails=clean.editorEmails??remote.editorEmails??[];
       else if(remote.editorEmails!==undefined)payload.editorEmails=remote.editorEmails;
       if(remote.createdAt!==undefined)payload.createdAt=remote.createdAt;
-      tx.set(ref,payload);
+      tx.set(ref,firestoreSafe(payload));
       return {writeRevision:nextRev};
     });
     if(user?.uid!==writerUid)return result;
