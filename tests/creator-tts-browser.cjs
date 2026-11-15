@@ -105,7 +105,7 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   await page.locator('#preview').click();await page.locator('#recording').waitFor();
   const preview=await page.evaluate(()=>window.lastTtsRequest);
   assert.ok(preview.text.length<await page.locator('#script').inputValue().then(x=>x.length));
-  assert.equal(await page.locator('#player').evaluate(audio=>audio.playbackRate),1);
+  assert.equal(await page.locator('#player').evaluate(audio=>audio.playbackRate),1.4);
   assert.equal(preview.speed,1.6);assert.equal(preview.volume,3);assert.equal(preview.paragraphPause,500);
   assert.equal(await page.locator('#analyzeLocal').isDisabled(),true,'An opening preview cannot be sent to Whisper as the final MP3');
   assert.equal(historyDb.size,0,'Opening previews do not create history');
@@ -259,6 +259,7 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   for(const delivery of ['social','empathetic'])assert.equal(await page.locator('#preset option[value='+delivery+']').evaluate(el=>el.disabled),true);
   const projectHost=new URL('../test-project-host.html',base).href;
   await page.goto(projectHost);const projectFrame=page.frameLocator('#voice');await projectFrame.locator('#accountStatus').filter({hasText:'voices available'}).waitFor();
+  assert.equal(await projectFrame.locator('#engine').inputValue(),'gemini');assert.equal(await projectFrame.locator('#gender').inputValue(),'FEMALE');assert.equal(await projectFrame.locator('#voice').inputValue(),'hi-IN-Gemini-Aoede');assert.equal(await projectFrame.locator('#preset').inputValue(),'social');assert.equal(await projectFrame.locator('#playbackSpeed').inputValue(),'1.4');
   const cards=await Promise.all(['.script-panel','.controls-panel','.result-panel'].map(s=>projectFrame.locator(s).boundingBox()));
   assert.ok(cards.every(Boolean));assert.ok(Math.abs(cards[0].width-cards[1].width)<2&&Math.abs(cards[1].width-cards[2].width)<2,'Project Script, Voice and Recording have equal widths');assert.ok(cards[0].x<cards[1].x&&cards[1].x<cards[2].x,'Project cards follow the workflow order');assert.ok(Math.abs(cards[0].y-cards[2].y)<2,'Project cards align at the top');await page.screenshot({path:path.join(out,'project-three-cards.png')});
   await projectFrame.locator('#engine').selectOption('classic');await projectFrame.locator('#family').selectOption('Neural2');await projectFrame.locator('#script').fill('Saved project timing survives an app restart.');await projectFrame.locator('#generate').click();await projectFrame.locator('#generationStatus').filter({hasText:'MP3 ready'}).waitFor();await projectFrame.locator('#analyzeLocal').click();await projectFrame.locator('#transcriptReview').waitFor();await projectFrame.locator('#creativeInstructions').fill('Keep the atmosphere restrained and reveal the title slowly.');await page.waitForTimeout(400);

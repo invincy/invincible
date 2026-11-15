@@ -207,9 +207,11 @@ function restore(saved){
  $('direction').value=basicVoiceover?'':draft.direction||'';$('creativeInstructions').value=basicVoiceover?'':draft.creativeInstructions||'';
  for(const id of ['speed','pitch','volume','pause','preset'])if(typeof draft[id]==='string')$(id).value=draft[id];
  languages(draft.language||'hi-IN');
- $('gender').value=basicVoiceover?'':draft.gender??'MALE';
+ $('gender').value=basicVoiceover?'':draft.gender??(expressive()?'FEMALE':'MALE');
  families(basicVoiceover?'':draft.family??'Neural2');
- if(draft.voice&&Array.from($('voice').options).some(o=>o.value===draft.voice))$('voice').value=draft.voice;
+ const preferredVoice=draft.voice||(!basicVoiceover&&hasGemini?$('language').value+'-Gemini-Aoede':'');
+ if(preferredVoice&&Array.from($('voice').options).some(o=>o.value===preferredVoice))$('voice').value=preferredVoice;
+ if(!draft.preset&&!basicVoiceover&&expressive())$('preset').value='social';
  for(const id of ['speed','pitch','volume','pause','preset'])if(typeof draft[id]==='string')$(id).value=draft[id];
  voiceDetails();
 }
@@ -364,7 +366,7 @@ async function record(preview){
   recordingLabel=result.voiceName+(preview?' · opening preview':'')+(data.engine==='gemini'?' · '+data.delivery+' · requested pace ≈ '+data.speed+'×':'');
   $('recording').hidden=false;$('recordingInfo').textContent=result.durationSeconds.toFixed(1)+' sec · '+recordingLabel;
   status(preview?'Preview ready. Listen, adjust, then generate the full recording.':'MP3 ready. Saving it privately for the Director…');updateAiFlow();
-  if(!preview&&projectVoiceoverId){await ensureCloudFinalAudio();status('MP3 ready and privately saved. The Director can now run free local Whisper without browser control.');}
+  if(!preview&&projectVoiceoverId){await ensureFinalSpeed();await ensureCloudFinalAudio();status('MP3 ready and privately saved. The Director can now run free local Whisper without browser control.');}
   if(!preview)saveHistory({id:crypto.randomUUID(),version:1,createdAt:Date.now(),settings,request:data,filename:result.filename,voiceName:result.voiceName,durationSeconds:result.durationSeconds});
  }catch(error){if(current===epoch)status(friendly(error),true);}
  finally{if(current===epoch){busy=false;refreshAvailability();}}
