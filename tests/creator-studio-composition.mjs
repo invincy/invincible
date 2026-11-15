@@ -7,6 +7,24 @@ import {mixAudioChunk,audioGainAt,scheduleAudioTracks} from '../creator/video-st
 import {compileAnimation} from '../creator/map-animation-import.js';
 const graphic=(id,durationSeconds=2)=>({id,startSeconds:0,durationSeconds,engineType:'graphic',engineData:{},overlays:[]});
 const source=()=>compileAnimation({scenes:[]},{format:'invincible-map-animation',version:1,duration:4,aspectRatio:'9:16',basemap:'physical',terrain:false,camera:[{time:0,center:[74,28],zoom:4,pitch:0,bearing:0},{time:4,center:[77,30],zoom:5,pitch:20,bearing:10}],layers:[]}).project;
+test('native map JSON normalizes editor fields and round-trips without changing source trim',()=>{
+ const manifest=appendProjectMaps(newStudioVideo(),source());
+ const scene=manifest.scenes[0],snapshot=manifest.mapSources[0].project;
+ scene.startSeconds=0;scene.durationSeconds=2;
+ delete scene.engineData.sourceStart;
+ scene.sourceStart=1;scene.sourceEnd=3;
+ for(const key of ['camera','visual','basemap','projection','overlayPreset']){
+  if(snapshot.historicalMap[key]===undefined)continue;
+  snapshot[key]=snapshot.historicalMap[key];
+  delete snapshot.historicalMap[key];
+ }
+ const normalized=validateManifest(manifest);
+ assert.deepEqual(normalized.scenes[0].engineData,{sourceId:scene.engineData.sourceId,sourceStart:1});
+ assert.equal(normalized.mapSources[0].project.historicalMap.camera.length,2);
+ assert.deepEqual(validateManifest(JSON.stringify(normalized)),normalized);
+ scene.sourceEnd=4;
+ assert.throws(()=>validateManifest(manifest),/source end must match/);
+});
 test('v1 upgrades only on an explicit edit and preserves the legacy recording',()=>{
  const old={...emptyVideo(),audio:{fileId:'voice',name:'original.wav',startSeconds:.5,gain:.7}},before=structuredClone(old);assert.throws(()=>upgradeVideo(old),/original/);const out=upgradeVideo(old,3);assert.equal(out.schemaVersion,2);assert.equal(out.audio,null);assert.equal(out.audioClips[0].durationSeconds,3);assert.equal(out.audioClips[0].startSeconds,.5);assert.deepEqual(old,before);assert.deepEqual(validateManifest(old),old);assert.equal(validateManifest(out).schemaVersion,2);assert.throws(()=>validateManifest({...old,schemaVersion:3}));
 });

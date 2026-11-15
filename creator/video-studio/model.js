@@ -52,12 +52,33 @@ export function validateLayer(layer,duration,assets){
  }
 }
 function validateNativeProject(nativeProject){
-   keys(nativeProject,['scenes','historicalMap'],'native map snapshot');
+   const editorFields=['camera','visual','basemap','projection','overlayPreset'];
+   keys(nativeProject,['scenes','historicalMap',...editorFields],'native map snapshot');
+   for(const field of editorFields){
+    if(!Object.hasOwn(nativeProject,field))continue;
+    if(!nativeProject.historicalMap||typeof nativeProject.historicalMap!=='object')fail('Native map snapshot needs historicalMap.');
+    nativeProject.historicalMap[field]=nativeProject[field];
+    delete nativeProject[field];
+   }
    if(!Array.isArray(nativeProject.scenes)||!nativeProject.scenes.length||nativeProject.scenes.length>100)fail('Native map needs scenes.');
    const ids=new Set();for(const s of nativeProject.scenes){keys(s,['id','duration'],'native map scene');id(s.id);num(s.duration,1/30,600,'map duration');if(ids.has(s.id))fail('Duplicate native map scene.');ids.add(s.id);}
    validateMap(nativeProject.historicalMap,nativeProject);
 }
 function validateScene(scene,assets,mapAssets,{template=false,version=1,mapSources=[],models=new Set()}={}){
+ if(version===2&&scene?.engineType==='map'&&scene.engineData&&(scene.engineData.project||scene.engineData.sourceId)){
+  const data=scene.engineData;
+  for(const key of ['sourceStart','sourceEnd']){
+   if(scene[key]===undefined)continue;
+   if(data[key]!==undefined&&data[key]!==scene[key])fail('Conflicting map '+key+' values.');
+   data[key]=scene[key];delete scene[key];
+  }
+  if(data.sourceEnd!==undefined){
+   num(data.sourceEnd,0,600,'map source end');
+   if(data.sourceStart===undefined)data.sourceStart=data.sourceEnd-scene.durationSeconds;
+   if(Math.abs(data.sourceStart+scene.durationSeconds-data.sourceEnd)>1e-6)fail('Map source end must match the scene duration.');
+   delete data.sourceEnd;
+  }
+ }
  keys(scene,['id','name','startSeconds','durationSeconds','engineType','engineData','overlays','transition'],'scene');id(scene.id);if(scene.name!==undefined)str(scene.name,200,'scene name');num(scene.startSeconds,0,600,'scene start');num(scene.durationSeconds,1/30,600,'scene duration');
  if(!(version===2?['map','lic','graphic','battlefield','image','video','three']:['map','lic','graphic']).includes(scene.engineType)||template&&scene.engineType!=='graphic')fail('Unsupported scene engine for this manifest version.');
  const data=scene.engineData;

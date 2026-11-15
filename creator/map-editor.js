@@ -5,8 +5,8 @@ import {resolveMapAsset,uploadMapAsset} from './map-assets-client.js?v=202611100
 import {cameraPreset,surfacePosition,locationVisible} from './map-globe.js';
 import {validateMap,sceneTimeline,durationOf,productionId,mapFrame} from './history-model.js?v=2026111002';
 import {visualMap,icons,uid,imageCorners,moveLayer,scenePackage,appendScenePackage,assetLibrary,importAssetLibrary} from './map-editor-model.js?v=2026111002';
-import {createHistoryPlayer,downloadBlob,sizeMapFrame} from './history-player.js?v=2026111002';
-import {mapStyles,defaultTerrain} from './map-style-library.js';
+import {createHistoryPlayer,downloadBlob,sizeMapFrame} from './history-player.js?v=2026111506';
+import {mapStyles,defaultTerrain} from './map-style-library.js?v=2026111506';
 import {readAnimation,compileAnimation,animationBrief} from './map-animation-import.js?v=2026111002';
 import {mapLibraryPanel,instructionPanel,mapExportPanel,handleMapExport} from './map-editor-panels.js?v=2026111002';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -17,7 +17,7 @@ const cliopatriaSource='https://github.com/Seshat-Global-History-Databank/cliopa
 const cliopatriaLicense='https://creativecommons.org/licenses/by/4.0/';
 const cliopatriaFile=new URL('./history-data/cliopatria-south-asia-v021.json',import.meta.url);
 
-export function mountMapEditor(root,{getProject,onChange,onAdvanced,initialTime=0}){
+export function mountMapEditor(root,{getProject,onChange,onAdvanced,initialTime=0,embeddedScene=false}){
  let sharedMedia=[];
  let referenceCatalog, referenceMatches=[], referenceYear;
  const project=getProject(),initialized=initializeMapProject(project);let spec=visualMap(project.historicalMap),player,disposed=false,selected='',armed='',route=[],drag=null,pendingPosition=null,localPreview=null,playing=false,working=false,editingAsset='';let pendingFile=null,pendingUploadId='';
@@ -61,8 +61,9 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced,initialTime=
  const requireReady=()=>{if(!player||working)throw Error('Wait for the map to finish loading.');};
  function refresh(){
   const preset=mapStyles.find(s=>s.id===(spec.basemap?.id||'physical'));for(const card of root.querySelectorAll('[data-map-style]'))card.setAttribute('aria-pressed',String(card.dataset.mapStyle===preset.id));
-  q('[data-map-style-note]').textContent=preset.credit+' · '+preset.detail+(preset.modern?' · Modern reference map':'');q('[data-basemap-labels]').checked=!!spec.basemap?.labels;q('[data-basemap-borders]').checked=!!spec.basemap?.borders;
-  q('[data-basemap-saturation]').value=spec.basemap?.saturation??0.15;q('[data-basemap-contrast]').value=spec.basemap?.contrast??0.05;for(const control of root.querySelectorAll('[data-basemap-labels],[data-basemap-borders]'))control.disabled=!preset.modern;
+  const modernOverlay=preset.referenceOverlay&&(spec.basemap.labels||spec.basemap.borders);
+  q('[data-map-style-note]').textContent=preset.credit+' · '+preset.detail+(preset.modern?' · Modern reference map':modernOverlay?' · Modern reference overlays from OpenFreeMap':'');q('[data-basemap-labels]').checked=!!spec.basemap?.labels;q('[data-basemap-borders]').checked=!!spec.basemap?.borders;
+  q('[data-basemap-saturation]').value=spec.basemap?.saturation??0.15;q('[data-basemap-contrast]').value=spec.basemap?.contrast??0.05;for(const control of root.querySelectorAll('[data-basemap-labels],[data-basemap-borders]'))control.disabled=!(preset.modern||preset.referenceOverlay);
   for(const control of root.querySelectorAll('[data-basemap-saturation],[data-basemap-contrast]'))control.disabled=!preset.raster;
   q('[data-projection]').value=spec.projection||'mercator';q('[data-projection-note]').textContent=spec.projection==='globe'?'Globe view · drag to rotate, scroll to zoom. 3D models are retained and shown in Flat map view.':'';q('[data-camera-script]').value=JSON.stringify(spec.camera,null,2);
   q('[data-json]').value=JSON.stringify(spec,null,2);q('[data-seek]').max=durationOf(project);q('.history-scene-track').innerHTML=sceneTimeline(project).map((r,i)=>`<button type="button" data-time-jump="${r.start}">S${i+1}<small>${r.start}–${r.end}s</small></button>`).join('');
@@ -105,7 +106,7 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced,initialTime=
    undo.splice(0,undo.length,...prevUndo);redo.splice(0,redo.length,...prevRedo);
    throw error;
   }finally{working=false;}
-  if(disposed)return;refresh();status('Map changes saved to the current project draft.');
+  if(disposed)return;refresh();status(embeddedScene?'Map updated. Use Save now or Save scene to keep the changes.':'Map changes saved to the current project draft.');
  }
  async function edit(fn,options){requireReady();const next=structuredClone(spec);fn(next);await commit(next,options);}
  async function add(kind,position,assetId){const timing=anchor();const l={id:uid(),kind,name:kind==='icon'?armed:kind==='label'?'New label':kind,classification:'illustrative',visible:true,opacity:1,...(spec.presentation&&['label','icon'].includes(kind)?{inheritTextColor:true}:{}),color:spec.presentation?.textColor||'#d8b873',...timing,position,scale:kind==='glb'?1000:1,rotation:0,altitude:0};if(kind==='icon')l.icon=armed;if(assetId){l.assetId=assetId;l.name=spec.visual.assets.find(a=>a.id===assetId)?.name||kind;}if(kind==='image')l.corners=await cornersFor(spec.visual.assets.find(a=>a.id===assetId),position);await edit(m=>m.visual.layers.push(l),{selectId:l.id});armed='';}
@@ -285,5 +286,5 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced,initialTime=
  }catch(error){status(error.message);}};
  refresh();working=true;
  try{validateMap(spec,project);createHistoryPlayer(host,project,spec,{onTime:t=>{if(disposed)return;q('[data-time]').textContent=t.toFixed(1)+'s';q('[data-seek]').value=t;if(t>=durationOf(project))playing=false;},onError:status}).then(async p=>{if(disposed){p.destroy();return;}player=p;try{await p.loaded;if(disposed)return;working=false;if(initialized)onChange();p.seek(initialTime);refresh();status(p.isNative?'Drag artwork, pan the map, or import reviewed geography.':'2D fallback: icons and labels can be placed at camera center. Images, models, terrain and direct dragging require WebGL2.');}catch(error){working=false;status(error.message);}}).catch(error=>{working=false;status(error.message);});}catch(error){working=false;status(error.message);}
- return {destroy(){disposed=true;player?.destroy();if(localPreview)URL.revokeObjectURL(localPreview);root.onclick=root.oninput=root.onchange=root.ondragstart=null;host.ondrop=host.ondragover=null;host.removeEventListener('pointerdown',begin,true);host.removeEventListener('pointermove',move);host.removeEventListener('pointerup',end);host.removeEventListener('pointercancel',cancelDrag);root.classList.remove('visual-map-editor');}};
+ return {get busy(){return working;},destroy(){disposed=true;player?.destroy();if(localPreview)URL.revokeObjectURL(localPreview);root.onclick=root.oninput=root.onchange=root.ondragstart=null;host.ondrop=host.ondragover=null;host.removeEventListener('pointerdown',begin,true);host.removeEventListener('pointermove',move);host.removeEventListener('pointerup',end);host.removeEventListener('pointercancel',cancelDrag);root.classList.remove('visual-map-editor');}};
 }

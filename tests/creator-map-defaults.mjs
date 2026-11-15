@@ -4,7 +4,31 @@ import {createDefaultMap,initializeMapProject,DEFAULT_PRESENTATION,imagePlacemen
 import {emptyMap,validateMap,mapFrame} from '../creator/history-model.js';
 import {compileAnimation} from '../creator/map-animation-import.js';
 import {visualMap,scenePackage,appendScenePackage} from '../creator/map-editor-model.js';
+import {baseStyle} from '../creator/map-style-library.js';
 const project=()=>({scenes:[{id:'scene',duration:5}],historicalMap:createDefaultMap()});
+test('Blue Marble optionally layers provider boundaries and place labels over imagery',async t=>{
+ const map=createDefaultMap();
+ const fetch=t.mock.method(globalThis,'fetch',async()=>({ok:true,json:async()=>({
+  sources:{openmaptiles:{type:'vector',url:'https://example.test/tiles.json'}},
+  glyphs:'https://example.test/{fontstack}/{range}.pbf',
+  layers:[
+   {id:'boundary_2',type:'line',source:'openmaptiles','source-layer':'boundary'},
+   {id:'label_city',type:'symbol',source:'openmaptiles','source-layer':'place'},
+   {id:'roads',type:'line',source:'openmaptiles','source-layer':'transportation'}
+  ]
+ })}));
+ const original=await baseStyle(map);
+ assert.equal(fetch.mock.callCount(),0);
+ map.basemap.labels=true;
+ assert.deepEqual((await baseStyle(map)).layers.map(layer=>layer.id),
+  ['water','library-imagery','modern-reference-label_city']);
+ map.basemap.borders=true;
+ const combined=await baseStyle(map);
+ assert.deepEqual(combined.layers.map(layer=>layer.id),
+  ['water','library-imagery','modern-reference-boundary_2','modern-reference-label_city']);
+ assert.deepEqual(combined.sources['library-imagery'],original.sources['library-imagery']);
+ assert.equal(combined.sources.openmaptiles.type,'vector');
+});
 test('fresh projects save isolated NASA, portrait and presentation defaults without content',()=>{const a={},b={};assert.equal(initializeMapProject(a),true);initializeMapProject(b);assert.equal(a.aspectRatio,'9:16');assert.equal(a.historicalMap.basemap.id,'satellite');assert.equal(a.historicalMap.visual.terrain.enabled,true);assert.deepEqual(a.historicalMap.presentation,DEFAULT_PRESENTATION);assert.equal(a.historicalMap.cameraDefaults.bearing,0);assert.equal(mapFrame({scenes:[]},a.historicalMap,0).camera.bearing,0);a.historicalMap.presentation.labelSize=72;assert.equal(b.historicalMap.presentation.labelSize,56);assert.equal(DEFAULT_PRESENTATION.labelSize,56);assert.equal(a.scenes,undefined);});
 test('saved legacy maps and explicit aspect ratios remain untouched',()=>{const p={aspectRatio:'16:9',historicalMap:emptyMap(),custom:1},before=JSON.stringify(p);assert.equal(initializeMapProject(p),false);assert.equal(JSON.stringify(p),before);const b={aspectRatio:'16:9'};initializeMapProject(b);assert.equal(b.aspectRatio,'16:9');});
 test('project overrides survive serialization, validation and scene reuse',()=>{const p=project();p.historicalMap=createDefaultMap({basemap:{id:'terrain'},presentation:{labelSize:64,textColor:'#abcdef',safeMargin:80}});const saved=JSON.parse(JSON.stringify(p));assert.deepEqual(validateMap(saved.historicalMap,saved),p.historicalMap);const pkg=scenePackage(saved,saved.historicalMap,'scene');const next=appendScenePackage({scenes:[]},pkg);assert.equal(next.historicalMap.presentation.labelSize,64);assert.equal(next.historicalMap.basemap.id,'terrain');assert.equal(DEFAULT_PRESENTATION.labelSize,56);});

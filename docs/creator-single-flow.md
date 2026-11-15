@@ -293,6 +293,14 @@ draft into the existing JSON editor. This works without clipboard access. Review
 edited or uploaded JSON before applying it, then use **Save** to sync the draft.
 Hindi Canvas overlays use the bundled Devanagari font in both preview and export.
 
+During generated-map review, the project bar's **Save now** checkpoints the active
+map into the video draft without advancing the review. **Save scene & continue**
+checkpoints before advancing. The embedded map frame starts in the video aspect ratio.
+Native Map and Canvas scenes can be converted from **Selected scene** through the
+review step, preserving the scene ID, timing, and separate overlays.
+Blue Marble supports optional modern OpenFreeMap place labels and borders.
+The private media panel reports connection failures and times out with a retry action.
+
 Applied Director projects reopen on **Saved sync plan** with one **Continue · Review
 maps** action. The Director's `area=Studio` handoff enters generated-map review directly.
 Exact scene start/end timestamps outrank rounded duration hints; Map animations are

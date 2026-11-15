@@ -4,13 +4,13 @@ import {callImageRelay,draftRemoteImagePrompt} from '../../shared/firebase-image
 import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=2026111002';
 import {studioBrief} from './handoff.js?v=2026111207';
 import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111207';
-import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111207';
-import {createStudioRenderer} from './adapters.js?v=2026111505';
+import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111506';
+import {createStudioRenderer} from './adapters.js?v=2026111506';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111014';
-import {mountAssembly} from './assembly.js?v=2026111328';
+import {mountAssembly} from './assembly.js?v=2026111506';
 import {encodeStudioVideo} from './export.js?v=2026111209';
 import {openStudioStore} from './storage.js';
-import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111505';
+import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111506';
 import {runAiProduction} from '../ai-production-runner.mjs?v=2026111203';
 import {generateVoiceover} from '../tts-api.js';
 import {createProductionReadiness,selectProductionVoice} from './production-readiness.js?v=2026111322';
@@ -107,7 +107,20 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  const status=text=>{if(!disposed)$('[data-vs-status]').textContent=text;};
  const getFile=async fileId=>{let file=state.files.get(fileId)||await store?.get('file:'+fileId);if(!file&&isCloudFile(fileId)){file=await media.file(fileId);if(disposed||getAccountId()!==account)throw Error('Project closed or account changed.');state.files.set(fileId,file);}return file;};
  function renderLibrary(){const query=$('[data-media-search]').value.trim().toLowerCase();$('[data-media-library]').innerHTML=catalogue.filter(a=>a.name.toLowerCase().includes(query)).map(a=>`<article><strong>${esc(a.name)}</strong><small>${esc(a.kind)}${a.width?' · '+a.width+' × '+a.height:''}${a.duration?' · '+a.duration.toFixed(2)+'s':''}</small><div class="vs-actions"><button data-vs="media-use" data-media-id="${esc(a.id)}">${a.kind==='audio'?'Add voiceover':a.kind==='glb'?'Register 3D model':'Use in video'}</button>${a.kind==='audio'?`<button data-vs="media-music" data-media-id="${esc(a.id)}">Music</button><button data-vs="media-effect" data-media-id="${esc(a.id)}">Sound effect</button>`:''}${['image','video'].includes(a.kind)?`<button data-vs="media-scene" data-media-id="${esc(a.id)}">Add as scene</button>`:''}</div></article>`).join('')||'<p class="vs-help">No matching assets. Add files above.</p>';};
- async function refreshLibrary(){catalogue=await media.list();if(disposed)return;renderLibrary();$('[data-media-status]').textContent=catalogue.length+' assets in your private cloud library.';}
+ async function refreshLibrary(){
+  const note=$('[data-media-status]');
+  note.textContent='Loading your shared library…';
+  let timer;
+  try{
+   const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Request timed out.')),15000);});
+   const entries=await Promise.race([media.list(),timeout]);
+   if(disposed)return;
+   catalogue=entries;renderLibrary();
+   note.textContent=catalogue.length+' assets in your private cloud library.';
+  }catch(error){
+   if(!disposed)note.textContent='Shared library unavailable: '+error.message+' Choose Refresh library to retry.';
+  }finally{clearTimeout(timer);}
+ }
  async function upgraded(){const original=state.manifest.audio&&await getFile(state.manifest.audio.fileId);return upgradeVideo(state.manifest,original?(await decodeVoiceover(original)).duration:0);}
  async function useMedia(a,{scene=false,role='voiceover'}={}){
   if(a.kind==='glb'){
@@ -192,15 +205,19 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   stopTracks=scheduleAudioTracks(context,audioTracks,time);
   playing=true;raf=requestAnimationFrame(tick);
  }
- async function save(){
+ async function save(manifest=state.manifest,{preview=true}={}){
   if(!store||!projectId)throw Error('Save and open the Creator project before saving its local video draft.');
-  if(getProject()?.ownerUid===account||mediaService){const next=structuredClone(state.manifest),refs=[...next.assets,...(next.audioClips||[]),...(next.audio?[next.audio]:[])],converted=new Map();for(const ref of refs){if(!ref.fileId||isCloudFile(ref.fileId))continue;const old=ref.fileId;if(!converted.has(old)){const file=await getFile(old);if(!file)throw Error('Missing original: '+ref.name);const named=new File([file],ref.name,{type:file.type});const a=await media.upload(named,await inspectMedia(named));converted.set(old,a.id);state.files.set(a.id,file);}ref.fileId=converted.get(old);}await applyManifest(next);}
-  validateManifest(state.manifest,{mapAssets:mapAssets()});const assets=new Set([...state.brandAssets,...state.manifest.assets].filter(a=>a.kind!=='glb').map(a=>a.id));state.brands.forEach(b=>validateBrand(b,assets));
+  const cloud=getProject()?.ownerUid===account||!!mediaService;
+  const next=validateManifest(manifest,{mapAssets:mapAssets()});
+  if(cloud){const refs=[...next.assets,...(next.audioClips||[]),...(next.audio?[next.audio]:[])],converted=new Map();for(const ref of refs){if(!ref.fileId||isCloudFile(ref.fileId))continue;const old=ref.fileId;if(!converted.has(old)){const file=await getFile(old);if(!file)throw Error('Missing original: '+ref.name);const named=new File([file],ref.name,{type:file.type});const a=await media.upload(named,await inspectMedia(named));converted.set(old,a.id);state.files.set(a.id,file);}ref.fileId=converted.get(old);}if(preview)await applyManifest(next);}
+  const assets=new Set([...state.brandAssets,...next.assets].filter(a=>a.kind!=='glb').map(a=>a.id));state.brands.forEach(b=>validateBrand(b,assets));
   // Preserve byte-identical originals. A failed quota write never updates the draft pointer.
   for(const [id,file] of state.files)await store.put('file:'+id,file);
-  state.brandAssets=[...new Map([...state.brandAssets,...state.manifest.assets].map(a=>[a.id,a])).values()];await store.put('brands',{brands:state.brands,assets:state.brandAssets});
-  const version=uid();await store.put('version:'+projectId+':'+version,structuredClone(state.manifest));await store.put('draft:'+projectId,version);
-  if(getProject()?.ownerUid===account||mediaService){const result=await media.saveDraft(projectId,state.manifest,state.brands,state.cloudRevision);state.cloudRevision=result.revision;await store.put('cloudRevision:'+projectId,state.cloudRevision);status('Saved to your account. Your video and cloud assets are available on your other devices.');}else status('Local video draft saved. Cloud draft sync is available to the project owner.');
+  state.brandAssets=[...new Map([...state.brandAssets,...next.assets].map(a=>[a.id,a])).values()];await store.put('brands',{brands:state.brands,assets:state.brandAssets});
+  const version=uid();await store.put('version:'+projectId+':'+version,next);await store.put('draft:'+projectId,version);
+  if(cloud){const result=await media.saveDraft(projectId,next,state.brands,state.cloudRevision);state.cloudRevision=result.revision;await store.put('cloudRevision:'+projectId,state.cloudRevision);status('Saved to your account. Your video and cloud assets are available on your other devices.');}else status('Local video draft saved. Cloud draft sync is available to the project owner.');
+  state.manifest=next;
+  return cloud;
  }
  async function saveLocalDraft(){
   if(!store||!projectId)throw Error('Open a saved Creator project before applying this video draft.');
@@ -348,14 +365,23 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    validateManifest(next,{mapAssets:mapAssets()});await applyManifest(next);
   });
  });
- assembly=mountAssembly(assemblyRoot,{pause:stop,session:state,getManifest:()=>state.manifest,getProject,getFile,importFiles:uploadFiles,putFile:(id,file)=>state.files.set(id,file),deleteFile:id=>state.files.delete(id),run,status,getTime:()=>time,setTime:value=>{time=value;state.time=value;},releaseRenderer:async()=>{stop();if(drawing)await drawing.catch(()=>{});invalidate();},setManifest:applyManifest,previewManifest:async next=>{if(next===state.manifest){invalidate();await draw();return;}invalidate();try{const b=brand(),t=compileTimeline(next,b);audioTracks=await loadAudioTracks(next,getFile);const lead=t.audioClips[0]&&next.audioClips?.[0]?t.audioClips[0].startSeconds-next.audioClips[0].startSeconds:0;audioTracks=audioTracks.map(a=>({...a,startSeconds:a.startSeconds+lead}));const nextRenderer=await createStudioRenderer(canvas,next,t,b,{getFile,mapAssets:mapAssets(),signal:lifecycle.signal});if(disposed){nextRenderer.destroy();return;}renderer=nextRenderer;timeline=t;await renderer.draw(time);}catch(error){invalidate();try{await draw();}catch{}throw error;}}});
+ assembly=mountAssembly(assemblyRoot,{pause:stop,session:state,getManifest:()=>state.manifest,getProject,getFile,importFiles:uploadFiles,putFile:(id,file)=>state.files.set(id,file),deleteFile:id=>state.files.delete(id),run,status,getTime:()=>time,setTime:value=>{time=value;state.time=value;},releaseRenderer:async()=>{stop();if(drawing)await drawing.catch(()=>{});invalidate();},setManifest:applyManifest,saveMapDraft:next=>save(next,{preview:false}),previewManifest:async next=>{if(next===state.manifest){invalidate();await draw();return;}invalidate();try{const b=brand(),t=compileTimeline(next,b);audioTracks=await loadAudioTracks(next,getFile);const lead=t.audioClips[0]&&next.audioClips?.[0]?t.audioClips[0].startSeconds-next.audioClips[0].startSeconds:0;audioTracks=audioTracks.map(a=>({...a,startSeconds:a.startSeconds+lead}));const nextRenderer=await createStudioRenderer(canvas,next,t,b,{getFile,mapAssets:mapAssets(),signal:lifecycle.signal});if(disposed){nextRenderer.destroy();return;}renderer=nextRenderer;timeline=t;await renderer.draw(time);}catch(error){invalidate();try{await draw();}catch{}throw error;}}});
+ void refreshLibrary();
  const ready=run(async()=>{
   if(!state.loaded){if(store){const library=await store.get('brands');if(library){state.brands=library.brands;state.brandAssets=library.assets;}if(projectId){const version=await store.get('draft:'+projectId);if(version){const saved=await store.get('version:'+projectId+':'+version);if(saved)state.manifest=validateManifest(saved,{mapAssets:mapAssets()});}}}state.manifest.assets=assetsForBrand(brand(),state.manifest.assets,state.brandAssets);state.loaded=true;}
   if(getProject()?.ownerUid===account||mediaService){try{state.cloudRevision=await store?.get('cloudRevision:'+projectId)||0;const cloud=await media.loadDraft(projectId);if(cloud&&!await store?.get('draft:'+projectId)){state.manifest=validateManifest(cloud.manifest,{mapAssets:mapAssets()});state.brands=cloud.brands;state.cloudRevision=cloud.revision;}else if(cloud&&cloud.revision!==state.cloudRevision)status('Another device has a newer cloud draft. Use Review cloud draft before saving.');}catch(e){status('Cloud draft unavailable. Your local copy is retained; check your connection and try again.');}}
-  sync();await draw();refreshLibrary().catch(e=>{if(!disposed)$('[data-media-status]').textContent='Cloud library unavailable. Check your connection, then choose Refresh library.';});
+  sync();await draw();
  });
  async function importAiProduction(storyboard,audioBlob,{title='Invincible AI production',allowContextCards=false,replaceExisting=false}={}){await ready;const hasDraft=state.manifest.scenes.length||(state.manifest.audioClips||[]).length||state.manifest.audio;if(hasDraft&&!replaceExisting)throw Error('Motion Studio already contains a different draft. Choose Replace when applying the reviewed sync plan, or keep the existing draft.');if(!Array.isArray(storyboard)||!storyboard.length)throw Error('The AI draft has no executable scenes.');if(!(audioBlob instanceof Blob)||!audioBlob.size)throw Error('The original voiceover MP3 is missing. Run AI timing again to attach it.');const file=new File([audioBlob],audioBlob.name||'invincible-voiceover.mp3',{type:audioBlob.type||'audio/mpeg'}),decoded=await decodeVoiceover(file),fileId=uid(),next=compileAiStoryboardManifest(storyboard,{aspectRatio:'9:16',audioFileId:fileId,audioName:file.name,audioDuration:decoded.duration,mapAssets:mapAssets(),allowContextCards});next.title=String(title).slice(0,200);state.files.set(fileId,file);try{await applyManifest(next);time=0;await draw();await saveLocalDraft();status(`${next.scenes.length} scenes and the exact MP3 are saved on this device. Next: Play the full preview, then Export MP4.`);return next;}catch(error){state.files.delete(fileId);throw error;}}
  const hidden=()=>{if(document.hidden)stop();};document.addEventListener('visibilitychange',hidden);
  async function reviewGeneratedMaps(){await ready;return assembly?.startMapReview()||false;}
- return {ready,get manifest(){return state.manifest;},importAiProduction,reviewGeneratedMaps,destroy(){images.destroy();disposed=true;state.time=time;assembly?.destroy();stop();lifecycle.abort(new DOMException('Workspace closed','AbortError'));controller?.abort(new DOMException('Workspace closed','AbortError'));renderer?.destroy();context?.close();if(lastExportUrl)URL.revokeObjectURL(lastExportUrl);store?.close();document.removeEventListener('visibilitychange',hidden);}};
+ async function saveFocusedMap(){
+  if(busy||disposed)throw Error('Wait for the current operation to finish, then save again.');
+  const next=assembly.focusedMapDraft();
+  if(!next)return null;
+  lock(true);
+  try{return {cloud:await save(next,{preview:false})};}
+  finally{if(!disposed)lock(false);}
+ }
+ return {ready,get manifest(){return state.manifest;},get mapFocused(){return assembly.mapFocused;},saveFocusedMap,importAiProduction,reviewGeneratedMaps,destroy(){images.destroy();disposed=true;state.time=time;assembly?.destroy();stop();lifecycle.abort(new DOMException('Workspace closed','AbortError'));controller?.abort(new DOMException('Workspace closed','AbortError'));renderer?.destroy();context?.close();if(lastExportUrl)URL.revokeObjectURL(lastExportUrl);store?.close();document.removeEventListener('visibilitychange',hidden);}};
 }

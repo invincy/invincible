@@ -1,5 +1,5 @@
 import{makeScene}from'./storyboard-model.js?v=3';
-import{createProductionWorkbench}from'./production-workbench.js?v=2026111505';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026111506';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -144,7 +144,7 @@ async function selectProjectArea(area,mode=""){
   const isTiming=area==="Storyboard";
   if(showScriptWorkspace){
     const frame=$("projectVoiceoverFrame");
-    if(!frame.hasAttribute("src"))frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId,view:isTiming?"timing":"script",build:"2026111505"});
+    if(!frame.hasAttribute("src"))frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId,view:isTiming?"timing":"script",build:"2026111506"});
     else frame.contentWindow?.postMessage({type:"invincible-project-script-view",view:isTiming?"timing":"script"},location.origin);
   }else if(area==="Video Studio"&&mode==="map-review"){const reviewing=await storyboard.reviewMaps();if(!reviewing)setProjectAreaState("Video Studio","");}
   else storyboard.open({area});
@@ -418,8 +418,18 @@ document.querySelector(".project-workspace-nav").addEventListener("click",async 
   if(!button)return;
   await selectProjectArea(button.dataset.projectArea,button.dataset.toolMode||"");
 });
-$("saveProjectNow").onclick=async()=>{if(await save())status("Saved to Firebase","ok");};
-$("saveAndReturn").onclick=async()=>{const button=$("saveAndReturn");button.disabled=true;button.textContent="Saving…";if(await save())location.href="/invincible/creator/";else{button.disabled=false;button.textContent="Save & return";}};
+async function saveFromProjectBar(){
+ if(!storyboard.mapFocused)return save();
+ try{
+  status("Saving map scene…");
+  const result=await storyboard.saveFocusedMap();
+  if(!result)return false;
+  status(result.cloud?"Map scene saved to your account":"Map scene saved on this device","ok");
+  return true;
+ }catch(error){status(error.message||"Could not save the map scene.","error");return false;}
+}
+$("saveProjectNow").onclick=async()=>{const button=$("saveProjectNow");button.disabled=true;try{await saveFromProjectBar();}finally{button.disabled=false;}};
+$("saveAndReturn").onclick=async()=>{const button=$("saveAndReturn");button.disabled=true;button.textContent="Saving…";if(await saveFromProjectBar())location.href="/invincible/creator/";else{button.disabled=false;button.textContent="Save & return";}};
 
 function applyIncomingProject(data){
   const incoming={...data,id:projectId};

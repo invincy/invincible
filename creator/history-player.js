@@ -5,7 +5,7 @@ import {locationVisible} from './map-globe.js';
 import {CanvasHistoricalMap} from './history-canvas.js';
 import {mapFrame,durationOf,sceneTimeline} from './history-model.js?v=2026111002';
 import {createVisualRenderer} from './map-editor-renderer.js?v=2026111002';
-import {baseStyle,styleFor} from './map-style-library.js';
+import {baseStyle,styleFor} from './map-style-library.js?v=2026111506';
 import {layerAlpha} from './map-editor-model.js?v=2026111002';
 import {exportDimensions,encodeMapVideo} from './map-video-export.js';
 import {resolveOverlayPolicy} from './map-overlay-presets.js?v=2026110903';
