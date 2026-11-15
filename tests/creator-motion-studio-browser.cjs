@@ -25,5 +25,9 @@ const ready=p=>p.waitForFunction(()=>document.querySelector('[data-vs=save]')&&!
  for(const width of [390,1440]){await page.setViewportSize({width,height:1000});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));}
  // Restore original JSON and export with no manual scene/object corrections.
  await page.locator('[data-vs-json]').fill(JSON.stringify(manifest));await page.locator('[data-vs=validate]').click();await ready(page);await page.locator('[data-vs=apply]').click();await ready(page);
- const download=page.waitForEvent('download');await page.locator('[data-vs=export]').click();const file=await download;await ready(page);fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});const output=path.join(root,'.test-output/creator-motion-studio.mp4');await file.saveAs(output);assert.ok(fs.statSync(output).size>1000);assert.deepEqual(errors,[]);console.log('Canvas manual edits, undo/redo, reload, responsive width and JSON-to-native-MP4 passed.');
+ const download=page.waitForEvent('download');await page.locator('[data-vs=save-and-export]').click();const file=await download;await ready(page);fs.mkdirSync(path.join(root,'.test-output'),{recursive:true});const output=path.join(root,'.test-output/creator-motion-studio.mp4');await file.saveAs(output);assert.ok(fs.statSync(output).size>1000);
+ await page.reload();await ready(page);
+ assert.equal(await page.locator('[data-compose-select]').count(),manifest.scenes.length);
+ assert.match(await page.locator('[data-vs-time]').textContent(),/\/ 6\.00s$/);
+ assert.deepEqual(errors,[]);console.log('Canvas edits, draft recovery and combined save-to-native-MP4 passed.');
  }finally{await browser?.close();await new Promise(r=>server.close(r));}})().catch(e=>{console.error(e);process.exitCode=1;});

@@ -46,6 +46,11 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   if(button){root.dataset.mobilePanel=button.dataset.mobilePanel;mobile.querySelectorAll('[data-mobile-panel]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));panels[button.dataset.mobilePanel].scrollIntoView({block:'nearest',inline:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}
  };
  for(const key of ['save','export'])header.querySelector('[data-studio-actions]').append($(`[data-vs=${key}]`));
+ const saveAndExport=document.createElement('button');
+ saveAndExport.type='button';
+ saveAndExport.dataset.vs='save-and-export';
+ saveAndExport.textContent='Save & export MP4';
+ header.querySelector('[data-studio-actions]').append(saveAndExport);
  const lastExport=document.createElement('a');lastExport.dataset.vsLastExport='';lastExport.className='secondary';lastExport.textContent='Download last MP4';lastExport.hidden=true;header.querySelector('[data-studio-actions]').append(lastExport);
  const saveLastExport=document.createElement('button');saveLastExport.type='button';saveLastExport.dataset.vs='save-last-export';saveLastExport.textContent='Save MP4 to library';saveLastExport.hidden=true;header.querySelector('[data-studio-actions]').append(saveLastExport);
  const cloudExport=document.createElement('a');cloudExport.dataset.vsCloudExport='';cloudExport.className='secondary';cloudExport.textContent='Download saved MP4';cloudExport.hidden=true;header.querySelector('[data-studio-actions]').append(cloudExport);
@@ -265,6 +270,14 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   if(action==='cancel'){controller?.abort(new DOMException('Export cancelled','AbortError'));return;}
   run(async()=>{
    if(action==='save')await save();
+   if(action==='save-and-export'){
+    requireCommittedScene();
+    if(pending)throw Error('Apply the reviewed import or clear the import field before saving and exporting.');
+    if(!state.manifest.scenes.length)throw Error('Add a scene before saving and exporting a video.');
+    status('Saving the video draft before export…');
+    await save();
+    await renderExport();
+   }
    if(action==='save-last-export'){
     if(!(lastExportBlob instanceof Blob)||!lastExportBlob.size)throw Error('Export the MP4 before saving it to your library.');
     status('Saving the MP4 to your private library…');const file=new File([lastExportBlob],lastExportName||'creator-export.mp4',{type:'video/mp4'}),info=await inspectMedia(file),asset=await media.upload(file,info),url=await media.read(asset.id);cloudExport.href=url;cloudExport.download=file.name;cloudExport.hidden=false;status('MP4 saved to your private library. Download saved MP4 remains available from this page.');
