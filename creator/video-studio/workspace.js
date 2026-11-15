@@ -15,6 +15,7 @@ import {runAiProduction} from '../ai-production-runner.mjs?v=2026111203';
 import {generateVoiceover} from '../tts-api.js';
 import {createProductionReadiness,selectProductionVoice} from './production-readiness.js?v=2026111322';
 import {loadPendingAiDraft,loadPendingAiAudio,savePendingAiDraft} from '../ai-draft.js?v=2026111319';
+import {hasSavedVideoContent} from '../director-resume.js?v=2026111602';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>crypto.randomUUID();
 const template=(name,text)=>({id:name,startSeconds:0,durationSeconds:2,engineType:'graphic',engineData:{},transition:{type:'fade',durationSeconds:.3},overlays:[{id:'title',type:'text',text,x:.5,y:.5,fontSize:64}]});
@@ -343,22 +344,15 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  async function syncAppliedDirectorDraft(){
   const draft=directorDraft,revision=Number(draft?.directorRevision||getProject()?.writeRevision||0),storyboard=draft?.creatorStudio?.scenes;
   if(!revision||!Array.isArray(storyboard)||!storyboard.length)return;
-  const mapOverlaysReady=state.manifest.scenes.filter(scene=>scene.engineType==='map').every(scene=>Array.isArray(scene.overlays)&&scene.overlays.some(layer=>layer.id==='frame-top'));
-  const sameDirectorRevision=state.manifest.sourceProjectId===projectId&&state.manifest.directorRevision===revision;
-  if(sameDirectorRevision&&mapOverlaysReady)return;
-  if(sameDirectorRevision&&!mapOverlaysReady&&state.manifest.scenes.length){
-   const audio=typeof directorAudio==='function'?await directorAudio():null;
-   if(!audio){status('The Director plan is ready, but its final MP3 is unavailable. Export is blocked until the saved voiceover is restored.');return;}
-   directorSyncPending=true;status('Repairing missing Director overlays without replacing your scenes…');
-   const decoded=await decodeVoiceover(audio),fresh=compileAiStoryboardManifest(storyboard,{aspectRatio:'9:16',audioFileId:null,audioDuration:decoded.duration,mapAssets:mapAssets(),allowContextCards:true}),merged=structuredClone(state.manifest);
-   for(const scene of merged.scenes){const source=fresh.scenes.find(item=>item.id===scene.id);if(source&&(!Array.isArray(scene.overlays)||!scene.overlays.length))scene.overlays=structuredClone(source.overlays||[]);}
-   merged.sourceProjectId=projectId;merged.directorRevision=revision;await applyManifest(merged);directorSyncPending=false;await saveLocalDraft();status('Missing Director overlays repaired. Your scenes, timing and voiceover were preserved.');return;
+  const hasDraft=hasSavedVideoContent(state.manifest);
+  if(hasDraft){
+   if(state.manifest.sourceProjectId!==projectId||state.manifest.directorRevision!==revision)status('A saved scene plan is available. Your current video draft is unchanged; review the plan before replacing it.');
+   return;
   }
-  if(state.manifest.scenes.length&&state.manifest.sourceProjectId===projectId&&state.manifest.directorRevision!==revision){status('A newer Director plan is available. Your current Motion Studio edits are preserved; apply the new plan explicitly when ready.');return;}
   directorSyncPending=true;status('A newer Director plan is being loaded into Motion Studio…');
   const audio=typeof directorAudio==='function'?await directorAudio():null;
   if(!audio){status('The Director plan is ready, but its final MP3 is unavailable. Export is blocked until the saved voiceover is restored.');return;}
-  await importAiProduction(storyboard,audio,{title:draft.title||getProject()?.title||'Invincible video',allowContextCards:true,replaceExisting:true,directorRevision:revision});
+  await importAiProduction(storyboard,audio,{title:draft.title||getProject()?.title||'Invincible video',allowContextCards:true,replaceExisting:false,directorRevision:revision});
  }
  ready.then(()=>syncAppliedDirectorDraft().catch(error=>{directorSyncPending=true;status('Motion Studio could not load the current Director plan: '+error.message);}));
  async function importAiProduction(storyboard,audioBlob,{title='Invincible AI production',allowContextCards=false,replaceExisting=false,directorRevision=0}={}){await ready;const hasDraft=state.manifest.scenes.length||(state.manifest.audioClips||[]).length||state.manifest.audio;if(hasDraft&&!replaceExisting)throw Error('Motion Studio already contains a different draft. Choose Replace when applying the reviewed sync plan.');if(!Array.isArray(storyboard)||!storyboard.length)throw Error('The AI draft has no executable scenes.');if(!(audioBlob instanceof Blob)||!audioBlob.size)throw Error('The original voiceover MP3 is missing. Run AI timing again to attach it.');const file=new File([audioBlob],audioBlob.name||'invincible-voiceover.mp3',{type:audioBlob.type||'audio/mpeg'}),decoded=await decodeVoiceover(file),fileId=uid(),next=compileAiStoryboardManifest(storyboard,{aspectRatio:'9:16',audioFileId:fileId,audioName:file.name,audioDuration:decoded.duration,mapAssets:mapAssets(),allowContextCards});next.title=String(title).slice(0,200);if(directorRevision){next.sourceProjectId=projectId;next.directorRevision=directorRevision;}state.files.set(fileId,file);try{await applyManifest(next);time=0;directorSyncPending=false;await draw();await saveLocalDraft();status(`${next.scenes.length} scenes and the exact MP3 are saved in Motion Studio. Next: Play the full preview, then Export MP4.`);return next;}catch(error){state.files.delete(fileId);throw error;}}

@@ -1,3 +1,6 @@
+export function hasSavedVideoContent(manifest){
+ return !!(manifest?.scenes?.length||manifest?.audioClips?.length||manifest?.audio);
+}
 export function directorDraftMatchesManifest(manifest,scenes){
  if(!manifest||!Array.isArray(manifest.scenes)||!Array.isArray(scenes)||manifest.scenes.length!==scenes.length)return false;
  const close=(a,b)=>Number.isFinite(Number(a))&&Number.isFinite(Number(b))&&Math.abs(Number(a)-Number(b))<.002;

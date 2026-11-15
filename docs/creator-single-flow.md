@@ -1,5 +1,7 @@
 # Creator Studio: one video flow
 
+On reopening Motion Studio, automatic plan loading runs only when the video draft has no scenes and no audio. Existing drafts, including manually edited scenes and recordings, are left untouched. A different saved plan is offered for explicit review; automatic overlay repair no longer recreates layers the creator may have removed. This protects the editing handoff but does not certify generated artwork or MP4 export on every device.
+
 Inside the desktop spatial shell, Creator home and project surfaces use the shell's
 stationary backdrop and navigation. The embedded project Script surface is transparent
 as well; standalone Creator pages retain their own background. Connected-space smoke,

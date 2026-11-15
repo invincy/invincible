@@ -1,6 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {directorDraftMatchesManifest} from '../creator/director-resume.js';
+import {directorDraftMatchesManifest,hasSavedVideoContent} from '../creator/director-resume.js';
+
+test('automatic plan loading treats any saved scene or audio as a draft to preserve',()=>{
+ assert.equal(hasSavedVideoContent({scenes:[],audioClips:[],audio:null}),false);
+ assert.equal(hasSavedVideoContent({scenes:[{id:'manual-scene'}]}),true);
+ assert.equal(hasSavedVideoContent({scenes:[],audioClips:[{id:'voice'}]}),true);
+ assert.equal(hasSavedVideoContent({scenes:[],audio:{fileId:'voice'}}),true);
+});
 import {defaultProjectRoute,normalizeProjectRoute} from '../creator/project-flow.js';
 import {newStudioVideo,upgradeVideo,appendProjectMaps,arrangeScenes,resizeScene} from '../creator/video-studio/composition.js';
 import {emptyVideo,validateManifest,compileTimeline,PRESETS,sceneAt} from '../creator/video-studio/model.js';
