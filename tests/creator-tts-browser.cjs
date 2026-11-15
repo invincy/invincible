@@ -105,7 +105,7 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   await page.locator('#preview').click();await page.locator('#recording').waitFor();
   const preview=await page.evaluate(()=>window.lastTtsRequest);
   assert.ok(preview.text.length<await page.locator('#script').inputValue().then(x=>x.length));
-  assert.equal(await page.locator('#player').evaluate(audio=>audio.playbackRate),1.4);
+  assert.equal(await page.locator('#player').evaluate(audio=>audio.playbackRate),1);
   assert.equal(preview.speed,1.6);assert.equal(preview.volume,3);assert.equal(preview.paragraphPause,500);
   assert.equal(await page.locator('#analyzeLocal').isDisabled(),true,'An opening preview cannot be sent to Whisper as the final MP3');
   assert.equal(historyDb.size,0,'Opening previews do not create history');
@@ -259,7 +259,7 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   for(const delivery of ['social','empathetic'])assert.equal(await page.locator('#preset option[value='+delivery+']').evaluate(el=>el.disabled),true);
   const projectHost=new URL('../test-project-host.html',base).href;
   await page.goto(projectHost);const projectFrame=page.frameLocator('#voice');await projectFrame.locator('#accountStatus').filter({hasText:'voices available'}).waitFor();
-  assert.equal(await projectFrame.locator('#engine').inputValue(),'gemini');assert.equal(await projectFrame.locator('#gender').inputValue(),'FEMALE');assert.equal(await projectFrame.locator('#voice').inputValue(),'hi-IN-Gemini-Aoede');assert.equal(await projectFrame.locator('#preset').inputValue(),'social');assert.equal(await projectFrame.locator('#playbackSpeed').inputValue(),'1.4');
+  assert.equal(await projectFrame.locator('#engine').inputValue(),'gemini');assert.equal(await projectFrame.locator('#gender').inputValue(),'FEMALE');assert.equal(await projectFrame.locator('#voice').inputValue(),'hi-IN-Gemini-Aoede');assert.equal(await projectFrame.locator('#preset').inputValue(),'social');assert.equal(await projectFrame.locator('#playbackSpeed').inputValue(),'1');
   const cards=await Promise.all(['.script-panel','.controls-panel','.result-panel'].map(s=>projectFrame.locator(s).boundingBox()));
   assert.ok(cards.every(Boolean));assert.ok(Math.abs(cards[0].width-cards[1].width)<2&&Math.abs(cards[1].width-cards[2].width)<2,'Project Script, Voice and Recording have equal widths');assert.ok(cards[0].x<cards[1].x&&cards[1].x<cards[2].x,'Project cards follow the workflow order');assert.ok(Math.abs(cards[0].y-cards[2].y)<2,'Project cards align at the top');await page.screenshot({path:path.join(out,'project-three-cards.png')});
   await projectFrame.locator('#engine').selectOption('classic');await projectFrame.locator('#family').selectOption('Neural2');await projectFrame.locator('#script').fill('Saved project timing survives an app restart.');await projectFrame.locator('#generate').click();await projectFrame.locator('#generationStatus').filter({hasText:'MP3 ready'}).waitFor();await projectFrame.locator('#analyzeLocal').click();await projectFrame.locator('#transcriptReview').waitFor();await projectFrame.locator('#creativeInstructions').fill('Keep the atmosphere restrained and reveal the title slowly.');await page.waitForTimeout(400);
@@ -268,7 +268,38 @@ const {normalizeVoices,makeWav}=require('../functions-tts/src/tts-model'),{encod
   const directorTranscript={text:'Warm air rises.',language:'en',duration:1,segments:[{id:'segment-1',start:0,end:1,text:'Warm air rises.'}]},directorScene={id:'scene-1',startSeconds:0,endSeconds:1,durationSeconds:1,voiceover:'Warm air rises.',visual:'Show atmospheric flow over India.',missingInfo:[],mapAnimation:{format:'invincible-map-animation',version:1,title:'India winds',duration:1,aspectRatio:'9:16',basemap:'physical',terrain:false,camera:[{time:0,center:[78,20],zoom:4,pitch:0,bearing:0}],assets:[],layers:[]},semanticPlan:{engine:'map',presetId:'pressure-driven-flow'}};
   const directorDraft={creativeInstructions:'Use the reviewed Director map.',analysis:{format:'invincible-voiceover-analysis',version:1,transcript:directorTranscript,scenes:[directorScene],errors:[],valid:true},creatorStudio:{schemaVersion:1,title:'Director test',aspectRatio:'9:16',assets:[],audio:null,scenes:[directorScene]}};
   await page.evaluate(({transcript,draft})=>document.querySelector('#voice').contentWindow.postMessage({type:'invincible-load-project-script-workspace',workspace:{script:'Warm air rises.',creativeInstructions:'',transcript,audio:{cloudAssetId:'cloud-'+'a'.repeat(64)}},directorDraft:draft},location.origin),{transcript:directorTranscript,draft:directorDraft});
-  await restoredFrame.locator('#localAnalysisStatus').filter({hasText:'Director plan already applied'}).waitFor();assert.equal(await restoredFrame.locator('#generateScenePlan').isHidden(),true,'Applied Director projects never expose the ordinary planner gate');assert.equal(await restoredFrame.locator('#aiProviderChoice').isHidden(),true);assert.equal(await restoredFrame.locator('.scene-plan-scenes article').count(),1);assert.equal(await restoredFrame.locator('#scenePlanReview > .review-summary > strong').innerText(),'Saved sync plan');assert.equal(await restoredFrame.locator('#editTimingPlan').isHidden(),true);assert.equal(await restoredFrame.locator('#openMotionStudio').innerText(),'Continue · Review maps');assert.equal(await restoredFrame.locator('#openMotionStudio').getAttribute('aria-disabled'),'false');await restoredFrame.locator('#openMotionStudio').click();await page.waitForFunction(()=>window.directorReviewRequested===true);
+  await restoredFrame.locator('#localAnalysisStatus').filter({hasText:'Saved plan restored'}).waitFor();
+  assert.equal(await restoredFrame.locator('#aiProviderChoice').evaluate(el=>el.hidden),false,'Saved plans do not disable the planner');
+  assert.equal(await restoredFrame.locator('#editTimingPlan').isHidden(),false);
+  assert.equal(await restoredFrame.locator('.scene-plan-scenes article').count(),1);
+  await restoredFrame.locator('#editTimingPlan').click();
+  expectedPlanInstructions='Revise the old map in Creator Studio without Director.';
+  await restoredFrame.locator('#creativeInstructions').fill(expectedPlanInstructions);
+  assert.equal(await restoredFrame.locator('#generateScenePlan').isEnabled(),true);
+  const timingDownload=page.waitForEvent('download');await restoredFrame.locator('#downloadTiming').click();
+  const timingFile=await (await timingDownload).path(),timing=JSON.parse(fs.readFileSync(timingFile,'utf8'));
+  assert.equal(timing.creativeInstructions,expectedPlanInstructions);assert.deepEqual(timing.transcript.segments[0].words.map(word=>word.start),[0,.2,.4]);
+  await restoredFrame.locator('#generateScenePlan').click();
+  await restoredFrame.locator('#localAnalysisStatus').filter({hasText:'Sync plan ready'}).waitFor();
+  assert.equal(await restoredFrame.locator('#openMotionStudio').getAttribute('aria-disabled'),'false');
+  await restoredFrame.locator('#openMotionStudio').click();await page.waitForFunction(()=>window.directorReviewRequested===true);
+  // Another device has only the project's cloud checkpoint, not local draft bytes.
+  const recoveryPage=await browser.newPage({acceptDownloads:true});
+  await recoveryPage.route('https://**/*',route=>route.abort());
+  await recoveryPage.route('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js',route=>route.fulfill({contentType:'text/javascript',body:fixtureFirestore}));
+  await recoveryPage.route('**/creator/media-library.js*',route=>route.fulfill({contentType:'text/javascript',body:`export function createMediaClient(){return {file:async()=>new Blob([Uint8Array.from(atob('${mp3.toString('base64')}'),c=>c.charCodeAt(0))],{type:'audio/mpeg'})};} export async function inspectMedia(){return {duration:1};}`}));
+  await recoveryPage.goto(projectHost);const recoveryFrame=recoveryPage.frameLocator('#voice');
+  await recoveryFrame.locator('#accountStatus').filter({hasText:'voices available'}).waitFor();
+  await recoveryPage.evaluate(transcript=>document.querySelector('#voice').contentWindow.postMessage({type:'invincible-load-project-script-workspace',title:'Native recovery',workspace:{script:'Recovered narration.',creativeInstructions:'Recovered movement.',transcript,audio:{cloudAssetId:'cloud-'+'b'.repeat(64),sourceFilename:'saved-final.mp3',finalDuration:1,appliedSpeed:1.4}}},location.origin),directorTranscript);
+  await recoveryFrame.locator('#recordingInfo').filter({hasText:'saved final MP3'}).waitFor();
+  assert.equal(await recoveryFrame.locator('#script').inputValue(),'Recovered narration.');
+  assert.equal(await recoveryFrame.locator('#creativeInstructions').inputValue(),'Recovered movement.');
+  assert.equal(await recoveryFrame.locator('#playbackSpeed').inputValue(),'1','Saved final bytes are not accelerated again');
+  const recoveredDownload=recoveryPage.waitForEvent('download');await recoveryFrame.locator('#download').click();
+  assert.deepEqual(fs.readFileSync(await (await recoveredDownload).path()),mp3);
+  assert.equal(await recoveryFrame.locator('#generateScenePlan').isEnabled(),true);
+  await recoveryPage.close();
+
   await page.goto(base);await page.locator('#accountStatus').filter({hasText:'voices available'}).waitFor();
     await page.evaluate(()=>{window.failGenerate=false;window.generationGate=new Promise(resolve=>{window.releaseGeneration=resolve;});});await page.locator('#generate').click();
     assert.equal(await page.locator('#generate').isDisabled(),true,'Generation disables duplicate requests');

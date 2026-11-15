@@ -1,5 +1,33 @@
 # Cleanup review — 2026-10-03
 
+## Native Creator workflow cleanup — November 15, 2026
+
+Removed Director-specific instruction locks, background plan application/export gating
+and the connection card from Creator home. Native account/project-scoped plans take
+priority; legacy metadata remains readable without replacing an existing video draft.
+Map export controls no longer depend on the project's creation source. The plugin,
+backend functions, Firebase rules and existing project documents were not modified.
+
+Script now receives project narration/instructions before timing exists, can reload
+the saved private final MP3, and offers a timing JSON download for direct Codex work.
+Final speed defaults to 1× and restored final bytes are not sped up again. Local Whisper
+failure retains the MP3 for retry instead of silently using paid transcription. A failed
+private upload does not hide the generated MP3 or block its download. New video drafts
+inherit the project title. Selecting a scene reuses the unchanged preview renderer.
+
+Verification: root tests passed (279 passed, two fixture skips), Functions 29/29 and
+media 5/5; focused storyboard/composition/video units 45/45; voiceover browser including
+editable legacy plans, exact timing download and cloud-only MP3 recovery; native video,
+composition, single-flow, history and Map Editor browser checks passed. Composition
+encoded maps, battlefield motion, PNG, video and mixed audio; FFmpeg decoded the map
+and multi-editor proof MP4s completely. Site references and diff whitespace passed.
+Node 24 and desktop Chrome were used. React output is unchanged.
+
+The older storyboard browser suite fails its toolbar-text assertion at line 59, with
+the same failure reproduced in an untouched ea92116 worktree. Physical mobile/Safari,
+real paid TTS and local Whisper service availability were not certified by fixtures.
+Publication and a read-only signed-in smoke check are tracked in the release handoff.
+
 ## UI/UX design agent foundation — November 12, 2026
 
 Follow-up clarification: Nielsen Norman Group, Apple HIG and Material Design are

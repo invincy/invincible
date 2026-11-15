@@ -56,8 +56,8 @@ test('applying a reviewed sync plan reveals the loaded Motion Studio workspace',
  const workbench=fs.readFileSync(path.join(here,'../creator/production-workbench.js'),'utf8');
  assert.match(source,/const result=await storyboard\.openAiDraft\(\{reviewMaps:true\}\);\s*if\(result\)revealProjectArea\("Video Studio",result\.reviewingMaps\?"map-review":""\);/);
  assert.match(source,/function revealProjectArea\(area,mode=""\)[\s\S]*?\$\("projectVoiceoverStep"\)\.hidden=!showScriptWorkspace;[\s\S]*?\$\("projectEditingStep"\)\.hidden=showScriptWorkspace;/);
- assert.match(workbench,/if\(directorHasMaps&&!hasMaps\)\{const result=await openAiVideo\(\{reviewMaps:true\}\);return !!result\?\.reviewingMaps;\}/,'Review maps imports an applied Director draft before inspecting its map queue');
+ assert.match(workbench,/if\(planHasMaps&&!hasScenes\)\{const result=await openAiVideo\(\{reviewMaps:true\}\);return !!result\?\.reviewingMaps;\}/,'Review maps imports a saved plan only into an empty video');
  assert.match(workbench,/createMediaClient\(getAccountId\?\.\(\)\)\.file\(cloudId\)/,'Reopened Director projects retrieve their private MP3 without returning to Script');
- assert.match(workbench,/const pendingAiDraft=\(\)=>project\(\)\?\.pluginDraft\|\|loadPendingAiDraft/,'The applied Director draft outranks a stale ordinary-planner cache');
- assert.match(source,/directorDraft:project\.pluginDraft\|\|null/,'The Sync Plan iframe receives the already-applied Director draft');
+ assert.match(workbench,/const pendingAiDraft=\(\)=>nativePlan\(\)/,'Native revisions remain usable after a legacy plugin plan');
+ assert.match(source,/savedPlan:project\.pluginDraft\|\|null/,'The Sync Plan iframe receives the already-applied Director draft');
 });

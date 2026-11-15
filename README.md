@@ -30,12 +30,13 @@ The main React app chooses and lazily loads its page in `react/src/App.jsx`. Its
 
 Studio now opens with shared cloud uploads, one complete-video JSON import, the scene/audio timeline and MP4 export on the same screen. Assets uploaded through Studio, Maps or production clips use the same private account library; owners can sync complete video drafts across devices. Existing projects and detailed editors remain available. See [the workflow and storage contract](docs/creator-single-flow.md).
 
-The private [Invincible Video Director plugin](docs/invincible-video-director-plugin.md)
-exposes the existing semantic contract and deterministic compiler to ChatGPT.
-The cloud connection can apply a reviewed plan with explicit write permission,
-confirmation and revision protection. Script timing remains local-first, with
-an explicit billable OpenAI transcription fallback when the laptop service is
-unavailable and OpenAI planning is selected.
+Creator Studio works directly with Codex through its native project tools, measured
+Whisper timing and reviewed video JSON import. Director is not required. Legacy
+plugin plans remain readable and editable, but do not take over Motion Studio or
+lock revised instructions. Timing uses local Whisper; a failed connection retains
+the MP3 for retry without automatically buying cloud transcription. The separately
+maintained [Director integration](docs/invincible-video-director-plugin.md) is outside
+the normal Creator workflow.
 
 ## Universal Creator Studio
 

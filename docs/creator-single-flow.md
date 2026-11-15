@@ -1,8 +1,19 @@
 # Creator Studio: one video flow
 
-On reopening Motion Studio, automatic plan loading runs only when the video draft has no scenes and no audio. Existing drafts, including manually edited scenes and recordings, are left untouched. A different saved plan is offered for explicit review; automatic overlay repair no longer recreates layers the creator may have removed. This protects the editing handoff but does not certify generated artwork or MP4 export on every device.
+Motion Studio opens its saved video draft without importing a plugin plan in the
+background. Plans enter through explicit review/apply; an existing draft still needs
+confirmation before replacement. Old plugin metadata remains readable without locking
+instruction edits, hiding map export controls or taking priority over a native plan.
+Export requires at least one scene.
 
-An automatic plan import blocks export only while it is actively loading. If the saved voiceover or import fails, the loading state clears and the creator can continue editing the current draft. Export requires at least one scene so an empty draft is not mistaken for a completed video.
+For direct Codex production: create/open the project, generate the final MP3, run local
+Whisper and choose **Download timing for Codex**. This includes exact segment/word times,
+narration, instructions and the private audio asset ID. In Motion Studio use **Copy
+ChatGPT brief** for the current manifest schema and media IDs, then **Review import**
+and **Apply reviewed import**, preview and export. Built-in planning remains optional.
+Project narration/instructions populate Script even before a transcript exists.
+New recordings default to final speed 1×; saved checkpoints retain their pace.
+Selecting a scene reuses the preview renderer instead of rebuilding unchanged maps.
 
 Inside the desktop spatial shell, Creator home and project surfaces use the shell's
 stationary backdrop and navigation. The embedded project Script surface is transparent
@@ -44,9 +55,9 @@ or reload, so the generated recording remains available to Whisper.
 Timing tries the paired laptop's local Whisper service first. The scene-planning
 choice is independent: OpenAI is the recommended planner, while local Qwen
 remains an optional fallback. When OpenAI is selected and the local timing
-service is unavailable, Creator explicitly switches to the paid OpenAI
-transcription fallback and checkpoints the returned segment/word timestamps.
-Local Whisper remains local and free; only the fallback uploads the final MP3.
+service is unavailable, Creator retains the MP3 and exposes retry. Selecting OpenAI
+for scene planning does not authorize or trigger paid transcription. Local Whisper
+remains local and free.
 After generation, Final speed previews the chosen pace. Download MP3 and Next ·
 Script & scenes both prepare the same pitch-preserving, speed-adjusted MP3.
 Whisper receives those adjusted bytes rather than the original recording, so

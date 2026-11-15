@@ -18,6 +18,12 @@ For **any** Map Editor or map-video task, read and follow [docs/map-editor-produ
 
 ## Shared Antigravity / Codex project instructions
 
+Creator Studio production is independent of Invincible Video Director. Use the native
+project, MP3, local Whisper, timing download, reviewed JSON import, editors and MP4
+export directly. Do not require a Director connection, compilation or plugin approval
+to edit a project. Legacy plugin metadata is compatibility data, not an editing lock.
+Do not modify the separately maintained plugin as part of native Studio work.
+
 These rules belong to `invincy/invincible`. Keep project knowledge in this repository; do not copy its creative style, film content or architecture into global agent settings. No global configuration change is needed for a task here.
 
 ### Read only the context the task needs

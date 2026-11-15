@@ -1,12 +1,12 @@
 import{makeScene}from'./storyboard-model.js?v=3';
-import{createProductionWorkbench}from'./production-workbench.js?v=2026111603';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026111604';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
 import{restoreProjectFromFirestore}from'./project-persistence.js?v=2026111501';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{createProductionReadiness,mountProductionReadiness}from'./video-studio/production-readiness.js?v=2026111322';
 import{splitVoiceoverScript}from"./scene-tools.js?v=2";
-import{defaultProjectRoute,normalizeProjectRoute}from'./project-flow.js?v=2026111401';
+import{defaultProjectRoute,normalizeProjectRoute}from'./project-flow.js?v=2026111604';
 
 const queryParams=new URLSearchParams(location.search),$=id=>document.getElementById(id);
 let isNewDraft=queryParams.get("draft")==="1";
@@ -164,8 +164,8 @@ async function selectProjectArea(area,mode=""){
   const isTiming=area==="Storyboard";
   if(showScriptWorkspace){
     const frame=$("projectVoiceoverFrame");
-    const sendWorkspace=()=>frame.contentWindow?.postMessage({type:"invincible-load-project-script-workspace",workspace:project.scriptWorkspace||null,directorDraft:project.pluginDraft||null},location.origin);
-    if(!frame.hasAttribute("src")){frame.addEventListener("load",sendWorkspace,{once:true});frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId,view:isTiming?"timing":"script",build:"2026111417"});}
+    const sendWorkspace=()=>frame.contentWindow?.postMessage({type:"invincible-load-project-script-workspace",workspace:project.scriptWorkspace||null,savedPlan:project.pluginDraft||null,script:project.scriptWorkspace?.script||project.script||project.pluginDraft?.script||canonicalScript(project),creativeInstructions:project.scriptWorkspace?.creativeInstructions||project.pluginDraft?.creativeInstructions||project.notes||'',title:project.title},location.origin);
+    if(!frame.hasAttribute("src")){frame.addEventListener("load",sendWorkspace,{once:true});frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId,view:isTiming?"timing":"script",build:"2026111604"});}
     else{frame.contentWindow?.postMessage({type:"invincible-project-script-view",view:isTiming?"timing":"script"},location.origin);sendWorkspace();}
   }else if(area==="Video Studio"&&mode==="map-review"){const reviewing=await storyboard.reviewMaps();if(!reviewing)setProjectAreaState("Video Studio","");}
   else storyboard.open({area});

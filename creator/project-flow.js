@@ -7,6 +7,6 @@ export function normalizeProjectRoute(area='',tool=''){
 }
 
 export function defaultProjectRoute(project){
- const hasAppliedPlan=Array.isArray(project?.pluginDraft?.creatorStudio?.scenes)&&project.pluginDraft.creatorStudio.scenes.length>0;
+ const hasAppliedPlan=!!project?.scriptWorkspace?.transcript?.segments?.length||!!project?.pluginDraft?.creatorStudio?.scenes?.length;
  return{area:hasAppliedPlan?'Storyboard':'Voiceover',tool:''};
 }
