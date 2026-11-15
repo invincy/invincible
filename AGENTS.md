@@ -24,8 +24,18 @@ export directly. Do not require a Director connection, compilation or plugin app
 to edit a project. Legacy plugin metadata is compatibility data, not an editing lock.
 Do not modify the separately maintained plugin as part of native Studio work.
 
+The Director may optionally propose the first draft when requested. It must never
+take ownership of the editable result or require disabling to permit revisions.
+Codex, Gemini and human edits use the same native project and manifest contract.
+Treat generated scenes as drafts for scene-by-scene review, not verified geography.
+Before a revision, read the latest saved manifest; preserve stable scene IDs,
+unselected scenes, audio timing and unrelated layers. Change only the requested
+scene/property. Do not regenerate the whole film for a colour, artwork or geography
+correction. Use reviewed native import until the Director apply path is separately
+corrected and tested. Finish with preview and a verified MP4, not just scene JSON.
+
 The owner's intended voice defaults are Gemini Aoede (female), Social media /
-engaging delivery, and 1.4× final speed. Preserve them. Retiming must happen once;
+engaging delivery, and 1.2× final speed. Preserve them. Retiming must happen once;
 reopening the final MP3 must retain its displayed speed without accelerating it again.
 
 These rules belong to `invincy/invincible`. Keep project knowledge in this repository; do not copy its creative style, film content or architecture into global agent settings. No global configuration change is needed for a task here.

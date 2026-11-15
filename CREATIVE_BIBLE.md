@@ -5,7 +5,7 @@ Use with [AGENTS.md](AGENTS.md) and the [permanent Map Editor production standar
 ## Editorial identity
 
 Creator voiceover defaults: Gemini Aoede, female, Social media / engaging delivery,
-with final playback/export speed 1.4×. This is the owner's intended default. Apply
+with final playback/export speed 1.2×. This is the owner's intended default. Apply
 the final-speed conversion once; never speed up an already-final MP3 again.
 
 Make documentary-style historical, geographic and science explainers. The viewer should understand where something happened, how places relate and why a process matters. Established interests include Panipat, the Siliguri Corridor, Gaganyaan and Himalayan earthquakes; these are topic references, not reusable factual claims, fixed scene lists or universal overlays.

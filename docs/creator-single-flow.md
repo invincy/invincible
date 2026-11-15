@@ -12,11 +12,29 @@ narration, instructions and the private audio asset ID. In Motion Studio use **C
 ChatGPT brief** for the current manifest schema and media IDs, then **Review import**
 and **Apply reviewed import**, preview and export. Built-in planning remains optional.
 Project narration/instructions populate Script even before a transcript exists.
-New recordings default to final speed 1.4× with female Gemini Aoede and Social media /
+New recordings default to final speed 1.2× with female Gemini Aoede and Social media /
 engaging delivery, as explicitly requested by the owner. Saved final MP3s retain
 their displayed speed without a second acceleration. Connect laptop is available
 directly on the timing step; pairing failures retain the recording for retry.
 Selecting a scene reuses the preview renderer instead of rebuilding unchanged maps.
+
+### First draft and scene-by-scene revisions
+
+The Director is an optional first-draft planner, not the project owner. A normal
+workflow does not toggle the plugin off and on: call it for a proposal, explicitly
+review/import that proposal, then edit the native result. The older Director apply
+path needs its own authenticated integration verification before relying on it.
+Codex and Gemini can use the same timing handoff and Video Studio manifest schema.
+The timing step offers a selectable JSON handoff as well as copy/download; this
+retains exact timestamps and recovers the privately saved audio reference.
+
+Review each draft scene for geography, appearance, motion and audio cues. A draft
+can be revised freely; uncertain geography must be identified rather than silently
+certified. Before editing, read the latest project version. Preserve scene IDs,
+other scenes, audio, and unrelated layers. A complete-manifest import must carry
+those unchanged sections forward exactly. Use native scene/object controls for
+small edits where practical. Explicit whole-project replacement is a separate action.
+Preview the affected scene and full timeline, save, export and inspect the MP4.
 
 Inside the desktop spatial shell, Creator home and project surfaces use the shell's
 stationary backdrop and navigation. The embedded project Script surface is transparent
