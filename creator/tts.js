@@ -551,6 +551,7 @@ $('generateScenePlan').addEventListener('click',generateScenePlan);
 function timingPayload(){return {format:'invincible-creator-timing',version:1,projectId:projectVoiceoverId,title:$('title').value,script:$('script').value,creativeInstructions:$('creativeInstructions').value,transcript:structuredClone(timedTranscript),audio:{cloudAssetId:cloudFinalAudioId,duration:timedTranscript.duration},next:'Use Motion Studio: Copy ChatGPT brief for the current manifest schema, then Review import and Apply reviewed import.'};}
 $('copyTiming').addEventListener('click',async()=>{
  if(!timedTranscript)return;
+ $('timingHandoffText').value=JSON.stringify(timingPayload(),null,2);$('timingHandoff').hidden=false;$('timingHandoff').open=true;
  try{await navigator.clipboard.writeText(JSON.stringify(timingPayload(),null,2));$('localAnalysisStatus').textContent='Timing copied for Codex. Continue in Motion & export.';}
  catch(error){$('localAnalysisStatus').textContent='Could not copy timing. Use Download timing for Codex.';}
 });
