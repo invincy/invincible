@@ -45,6 +45,9 @@ test('plugin scene patches replace only matching timed scenes',()=>{
  const merged=plugin.mergeScenePatch(existing,patch);
  assert.deepEqual(merged.map(scene=>scene.visual),['new one','old two','old three']);
  assert.throws(()=>plugin.mergeScenePatch(existing,[{id:'scene-9',sourceSegmentIds:['segment-9']}]),/not present/);
+ const transcript={duration:3,segments:[{id:'segment-1',start:0,end:1,text:'one'},{id:'segment-2',start:1,end:2,text:'two'},{id:'segment-3',start:2,end:3,text:'three'}]};
+ const partial=plugin.transcriptForPlan(transcript,{scenes:[{sourceSegmentId:'segment-1'}]});
+ assert.deepEqual(partial.segments.map(segment=>segment.id),['segment-1']);
 });
 
 test('plugin validates complete project briefs and reports resumable workflow phases',()=>{

@@ -188,13 +188,21 @@ function mergeScenePatch(existing,patch){
  }
  return existing.map((scene,index)=>merged.get(sceneSourceKey(scene,index))||scene);
 }
+function transcriptForPlan(transcript,semanticPlan){
+ const requested=Array.isArray(semanticPlan?.scenes)?semanticPlan.scenes.map(scene=>String(scene?.sourceSegmentId||'')):[ ];
+ if(!requested.length||requested.length>=transcript.segments.length)return transcript;
+ const wanted=new Set(requested),segments=transcript.segments.filter(segment=>wanted.has(String(segment.id)));
+ if(segments.length!==requested.length)throw Error('Partial plan references a transcript segment that is not present in the locked timing.');
+ return{...transcript,segments};
+}
 async function applyCompiledDraft(identity,input){
  requireScope(identity,'creator.write');const ref=db().collection('creatorProjects').doc(input.projectId);
  return db().runTransaction(async transaction=>{
   const snap=await transaction.get(ref),project=snap.exists?snap.data():null;assertAccess({uid:identity.uid,token:{email:identity.email,email_verified:identity.emailVerified}},project);
   const revision=Number.isInteger(project.writeRevision)?project.writeRevision:0;if(revision!==input.expectedRevision)throw Error(`Project changed since review (expected revision ${input.expectedRevision}, current revision ${revision}). Read it again before applying.`);
   const existing=Array.isArray(project.scenes)?project.scenes:[];
-  const compiled=buildPlan(input.semanticPlan,input.transcript,input.title,projectCatalog(project)),plannedScenes=creatorScenes(compiled);
+  const compileTranscript=transcriptForPlan(input.transcript,input.semanticPlan);
+  const compiled=buildPlan(input.semanticPlan,compileTranscript,input.title,projectCatalog(project)),plannedScenes=creatorScenes(compiled);
   const isPartialPatch=existing.length>plannedScenes.length&&plannedScenes.length>0;
   if(existing.length&&!input.replaceExisting&&!isPartialPatch)throw Error(`This project already has ${existing.length} scenes. A full-plan apply would replace them; submit a partial plan containing only the scenes to edit, or explicitly confirm replacement.`);
   const scenes=isPartialPatch?mergeScenePatch(existing,plannedScenes):plannedScenes;
@@ -235,4 +243,4 @@ exports.creatorPluginMcp=onRequest({region:REGION,timeoutSeconds:120,memory:'512
  finally{await transport.close().catch(()=>{});await server.close().catch(()=>{});}
 });
 
-Object.defineProperties(exports,{createServer:{value:createServer},creatorScenes:{value:creatorScenes},mergeScenePatch:{value:mergeScenePatch},applyInput:{value:applyInput},createProjectInput:{value:createProjectInput},updateBriefInput:{value:updateBriefInput},workflowStatus:{value:workflowStatus},MCP_RESOURCE:{value:MCP_RESOURCE},AUTH_BASE:{value:AUTH_BASE}});
+Object.defineProperties(exports,{createServer:{value:createServer},creatorScenes:{value:creatorScenes},mergeScenePatch:{value:mergeScenePatch},transcriptForPlan:{value:transcriptForPlan},applyInput:{value:applyInput},createProjectInput:{value:createProjectInput},updateBriefInput:{value:updateBriefInput},workflowStatus:{value:workflowStatus},MCP_RESOURCE:{value:MCP_RESOURCE},AUTH_BASE:{value:AUTH_BASE}});
