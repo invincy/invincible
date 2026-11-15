@@ -73,12 +73,13 @@ the in-memory final MP3 while activating the project's second navigation step.
 Script & scenes owns Whisper timing, timed-transcript correction, animation
 instructions and scene-plan review. The browser does not open a separate page
 or reload, so the generated recording remains available to Whisper.
-Timing tries the paired laptop's local Whisper service first. The scene-planning
-choice is independent: OpenAI is the recommended planner, while local Qwen
-remains an optional fallback. When OpenAI is selected and the local timing
-service is unavailable, Creator retains the MP3 and exposes retry. Selecting OpenAI
-for scene planning does not authorize or trigger paid transcription. Local Whisper
-remains local and free.
+Timing defaults to the paired laptop's local Whisper service, with OpenAI
+available as a selectable cloud timestamp provider inside a saved project. The
+cloud path sends the final MP3 through Invincible's authenticated server
+function, receives segment and word timestamps, and saves the same project
+checkpoint; no separate browser API key is exposed. The scene-planning choice
+is independent: OpenAI is the recommended planner, while local Qwen remains an
+optional fallback. Local Whisper remains available and free.
 After generation, Final speed previews the chosen pace. Download MP3 and Next ·
 Script & scenes both prepare the same pitch-preserving, speed-adjusted MP3.
 Whisper receives those adjusted bytes rather than the original recording, so
