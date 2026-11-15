@@ -139,7 +139,7 @@ function setProjectAreaState(area,mode=""){
   const guides={
     Voiceover:'<strong>Step 1 of 4 · Script.</strong> Create the final MP3, then choose Next · Sync plan.',
     Storyboard:'<strong>Step 2 of 4 · Timing &amp; plan.</strong> Review locked timestamps and scene instructions; continue to Review scenes when ready.',
-    'Video Studio:map-review':'<strong>Step 3 of 4 · Review scenes.</strong> Check each geographic map layer in order. Canvas overlays, timing and voiceover are reviewed together in Motion &amp; export.',
+    'Video Studio:map-review':'<strong>Optional · Review scenes.</strong> Check geographic map layers if needed. You can skip this and go directly to Motion &amp; export for the complete composition.',
     'Video Studio':'<strong>Step 4 of 4 · Motion & export.</strong> Preview the complete timeline, refine any scene, then export the MP4.',
     Maps:'<strong>Optional · Map Editor.</strong> Build or edit the project-wide map manually.',
     'Video Studio:battlefield':'<strong>Optional · Battlefield Editor.</strong> Use only when the story needs a tactical schematic.',
