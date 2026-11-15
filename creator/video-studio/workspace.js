@@ -68,7 +68,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  jsonSection.querySelector('.vs-actions').prepend(viewJson);
  const summaryButton=document.createElement('button');summaryButton.type='button';summaryButton.dataset.vs='scene-summary';summaryButton.textContent='View scene summary';viewJson.after(summaryButton);
  const summaryBox=document.createElement('textarea');summaryBox.dataset.vsSummary='';summaryBox.setAttribute('aria-label','Scene summary JSON');summaryBox.readOnly=true;summaryBox.hidden=true;jsonSection.append(summaryBox);
- const instructions=document.createElement('details');instructions.innerHTML='<summary>Agent instructions</summary><button type="button" data-vs="view-brief">View instructions</button><textarea data-vs-brief readonly aria-label="Agent workflow instructions"></textarea>';jsonSection.append(instructions);
+ const instructions=document.createElement('details');instructions.className='vs-agent-instructions';instructions.innerHTML='<summary>Agent instructions</summary><button type="button" data-vs="view-brief">View instructions</button><textarea data-vs-brief readonly aria-label="Agent workflow instructions"></textarea>';jsonSection.append(instructions);
  jsonSection.append(jsonPanel,$('[data-vs=download]'));
  $('.vs-layout').before(Object.assign(document.createElement('h3'),{textContent:'3 · Review scenes & audio',className:'vs-review-heading'}));
  const exportNote=document.createElement('p');exportNote.className='vs-help';exportNote.textContent='4 · Export your complete MP4 with audio';$('.vs-preview').prepend(exportNote);

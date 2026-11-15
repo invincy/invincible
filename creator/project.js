@@ -419,6 +419,7 @@ document.querySelector(".project-workspace-nav").addEventListener("click",async 
   await selectProjectArea(button.dataset.projectArea,button.dataset.toolMode||"");
 });
 async function saveFromProjectBar(){
+ if($("projectEditingStep").hidden)return save();
  if(!storyboard.mapFocused){
   if(!storyboard.videoActive)return save();
   try{await storyboard.saveVideo();status('Video saved to your account','ok');return true;}
