@@ -7,7 +7,7 @@ import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111505';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111502';
 import {createStudioRenderer} from './adapters.js?v=2026111506';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111014';
-import {mountAssembly} from './assembly.js?v=2026111604';
+import {mountAssembly} from './assembly.js?v=2026111610';
 import {encodeStudioVideo} from './export.js?v=2026111209';
 import {openStudioStore} from './storage.js';
 import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111416';
@@ -188,7 +188,12 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   stopTracks=scheduleAudioTracks(context,audioTracks,time);
   playing=true;raf=requestAnimationFrame(tick);
  }
+ function requireCommittedScene(){
+  if(assembly?.focused)throw Error('Save scene & return or Discard & return before saving or exporting the video.');
+  if(assembly?.hasPendingChange)throw Error('Apply or discard the pending scene change before saving or exporting the video.');
+ }
  async function save(){
+  requireCommittedScene();
   if(!store||!projectId)throw Error('Save and open the Creator project before saving its local video draft.');
   if(getProject()?.ownerUid===account||mediaService){const next=structuredClone(state.manifest),refs=[...next.assets,...(next.audioClips||[]),...(next.audio?[next.audio]:[])],converted=new Map();for(const ref of refs){if(!ref.fileId||isCloudFile(ref.fileId))continue;const old=ref.fileId;if(!converted.has(old)){const file=await getFile(old);if(!file)throw Error('Missing original: '+ref.name);const named=new File([file],ref.name,{type:file.type});const a=await media.upload(named,await inspectMedia(named));converted.set(old,a.id);state.files.set(a.id,file);}ref.fileId=converted.get(old);}await applyManifest(next);}
   validateManifest(state.manifest,{mapAssets:mapAssets()});const assets=new Set([...state.brandAssets,...state.manifest.assets].filter(a=>a.kind!=='glb').map(a=>a.id));state.brands.forEach(b=>validateBrand(b,assets));
@@ -242,10 +247,12 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  function lock(value){busy=value;root.querySelectorAll('button,input,textarea,select').forEach(n=>{if(!imageRoot.contains(n))n.disabled=value;});imageRoot.inert=value;$('[data-vs=cancel]').disabled=!value||!controller;$('[data-vs=apply]').disabled=value||!pending;}
  const run=async fn=>{if(busy||disposed)return;lock(true);stop();try{if(drawing)await drawing.catch(()=>{});await fn();}catch(e){if(!disposed)sync();status(e.name==='AbortError'?'Export cancelled.':e.message);}finally{if(!disposed)lock(false);}};
  async function renderExport(){
+  requireCommittedScene();
   if(!state.manifest.scenes.length)throw Error('There are no scenes to export. Add scenes or import a reviewed plan first.');
   stop();controller=new AbortController();$('[data-vs=cancel]').disabled=false;root.dataset.exporting='true';let codec=null;try{await prepare();status('Rendering MP4…');const blob=await encodeStudioVideo({canvas,timeline,audioBuffer,audioTracks,audioGain:state.manifest.audio?.gain??1,signal:controller.signal,onAudioCodec:value=>{codec=value;status(`Rendering H.264 + ${value.toUpperCase()} audio…`);},onProgress:p=>{if(!disposed)$('[data-vs-progress]').value=p.progress;},drawFrame:(t,signal)=>renderer.draw(t,{exporting:true,signal})});if(!disposed){const name=(state.manifest.title||'video').replace(/[^\p{L}\p{N}_-]/gu,'_')+'.mp4';if(lastExportUrl)URL.revokeObjectURL(lastExportUrl);lastExportBlob=blob;lastExportName=name;lastExportUrl=URL.createObjectURL(blob);lastExport.href=lastExportUrl;lastExport.download=name;lastExport.hidden=false;saveLastExport.hidden=false;cloudExport.hidden=true;download(blob,name);status(audioBuffer||audioTracks.length?`MP4 exported with synchronized ${codec.toUpperCase()} voiceover and audio. Download it now or save it to your private library.${codec==='opus'?' Opus MP4 needs a compatible player.':''}`:'MP4 exported without audio (no voiceover selected). Download it now or save it to your private library.');}return blob;}finally{if(controller?.signal.aborted)invalidate();controller=null;$('[data-vs=cancel]').disabled=true;root.dataset.exporting='false';if(!disposed)await draw();}
  }
  async function renderJpgPreviews(){
+  requireCommittedScene();
   stop();await prepare();if(!renderer||!timeline?.scenes?.length)throw Error('Add or apply a video scene before generating previews.');
   const results=[];status('Rendering JPG previews…');
   for(const scene of timeline.scenes){await renderer.draw(scene.startSeconds,{exporting:true});const blob=await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(Error('Canvas could not be exported as JPG.')),'image/jpeg',.92));const name=(state.manifest.title||'invincible').replace(/[^\p{L}\p{N}_-]/gu,'_')+'-scene-'+String(results.length+1).padStart(2,'0')+'.jpg';download(blob,name);results.push({sceneId:scene.id,name,durationSeconds:scene.durationSeconds});}

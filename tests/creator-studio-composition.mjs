@@ -16,6 +16,17 @@ import {mixAudioChunk,audioGainAt,scheduleAudioTracks} from '../creator/video-st
 import {compileAnimation} from '../creator/map-animation-import.js';
 const graphic=(id,durationSeconds=2)=>({id,startSeconds:0,durationSeconds,engineType:'graphic',engineData:{},overlays:[]});
 const source=()=>compileAnimation({scenes:[]},{format:'invincible-map-animation',version:1,duration:4,aspectRatio:'9:16',basemap:'physical',terrain:false,camera:[{time:0,center:[74,28],zoom:4,pitch:0,bearing:0},{time:4,center:[77,30],zoom:5,pitch:20,bearing:10}],layers:[]}).project;
+test('a native map shot can extend to fractional narration duration without modifying its shared source',()=>{
+ const manifest=appendProjectMaps(newStudioVideo(),source());
+ const before=structuredClone(manifest);
+ const [shot]=manifest.scenes;
+ const extended=resizeScene(shot,5.64,manifest.mapSources);
+ const next=arrangeScenes(manifest,[extended]);
+ assert.equal(next.scenes[0].id,shot.id);
+ assert.equal(next.scenes[0].durationSeconds,5.64);
+ assert.deepEqual(extended.engineData.project.historicalMap,before.mapSources[0].project.historicalMap);
+ assert.deepEqual(manifest,before);
+});
 test('v1 upgrades only on an explicit edit and preserves the legacy recording',()=>{
  const old={...emptyVideo(),audio:{fileId:'voice',name:'original.wav',startSeconds:.5,gain:.7}},before=structuredClone(old);assert.throws(()=>upgradeVideo(old),/original/);const out=upgradeVideo(old,3);assert.equal(out.schemaVersion,2);assert.equal(out.audio,null);assert.equal(out.audioClips[0].durationSeconds,3);assert.equal(out.audioClips[0].startSeconds,.5);assert.deepEqual(old,before);assert.deepEqual(validateManifest(old),old);assert.equal(validateManifest(out).schemaVersion,2);assert.throws(()=>validateManifest({...old,schemaVersion:3}));
 });

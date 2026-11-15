@@ -37,7 +37,8 @@ export function appendProjectMaps(manifest,project){
 export function arrangeScenes(manifest,scenes,{mapAssets=[]}={}){
  const out=structuredClone(manifest);let at=0;out.scenes=scenes.map(s=>{const row={...structuredClone(s),startSeconds:at};at+=row.durationSeconds;return row;});return validateManifest(out,{mapAssets});
 }
-export function resizeScene(scene,duration){
+export function resizeScene(scene,duration,mapSources=[]){
+ if(!Number.isFinite(duration)||duration<1/30||duration>600)throw Error('Scene duration must be between one frame and 600 seconds.');
  const out=structuredClone(scene),ratio=duration/out.durationSeconds;out.durationSeconds=duration;
  for(const layer of out.overlays){for(const p of ['startSeconds','endSeconds'])if(layer[p]!==undefined)layer[p]*=ratio;for(const key of layer.keyframes||[])key.timeSeconds*=ratio;}
  if(out.transition)out.transition.durationSeconds=Math.min(out.transition.durationSeconds,duration/2);
@@ -45,6 +46,18 @@ export function resizeScene(scene,duration){
  for(const p of out.engineData.projectiles||[])for(const key of ['launchSeconds','flightSeconds','impactSeconds'])p[key]*=ratio;
  if(out.engineType==='lic')for(const key of out.engineData.points)key.timeSeconds*=ratio;
  if(out.engineType==='map'&&out.engineData.animation)out.engineData.animation=repairMapAnimationTiming(out.engineData.animation,duration);
+ if(out.engineType==='map'&&!out.engineData.animation){
+  const data=out.engineData;
+  const source=data.project||mapSources.find(item=>item.id===data.sourceId)?.project;
+  const sourceDuration=source?.scenes.reduce((total,segment)=>total+segment.duration,0);
+  const extra=(data.sourceStart||0)+duration-sourceDuration;
+  if(extra>1e-6){
+   // Extend only this shot's copy. Existing map cue times and other shots stay intact.
+   data.project=structuredClone(source);
+   data.project.scenes.at(-1).duration+=extra;
+   delete data.sourceId;
+  }
+ }
  return out;
 }
 export function fitMedia(ctx,source,fit='contain'){
