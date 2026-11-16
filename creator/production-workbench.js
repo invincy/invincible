@@ -173,13 +173,13 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  function assets(){
   const legacy=scenes().flatMap((scene,index)=>['characterAssetUrl','imageAssetUrl','videoAssetUrl'].filter(key=>scene[key]).map(key=>'<li>Scene '+(index+1)+' · '+esc(key)+': '+esc(scene[key])+'</li>'));
   const library=cloudAssetsLoading?'<p class="wb-cloud-library-status">Loading your current cloud assets…</p>':cloudAssets.length?'<div class="wb-cloud-assets-grid">'+cloudAssets.filter(asset=>['image','glb'].includes(asset.kind)).map(cloudAssetCard).join('')+'</div>':'<p class="wb-cloud-library-status">No image or GLB assets found in your private library.</p>';
-  return '<div class="wb-toolbar"><span>Assets &amp; 3D</span>'+action('refresh-cloud-assets','Refresh cloud assets','reset', 'data-refresh-cloud-assets')+action('add-asset','Add asset','add')+'</div><section class="wb-cloud-library"><div class="wb-cloud-library-head"><div><h3>Current cloud assets</h3><p>Browse uploaded images and 3D models, then add them to this project one by one.</p></div><span>'+cloudAssets.length+' assets</span></div>'+library+'</section>'+
+  return '<div class="wb-toolbar"><span>Assets &amp; 3D</span>'+action('add-asset','Add asset','add')+'</div><section class="wb-cloud-library"><div class="wb-cloud-library-head"><div><h3>Current cloud assets</h3><p>Browse uploaded images and 3D models, then add them to this project one by one.</p></div><div>'+action('refresh-cloud-assets','Refresh cloud assets','reset', 'data-refresh-cloud-assets')+'<span>'+cloudAssets.length+' assets</span></div></div>'+library+'</section>'+
    (project().assets||[]).map(assetEditor).join('')+(legacy.length?'<details><summary>Existing scene asset links</summary><ul>'+legacy.join('')+'</ul></details>':'');
  }
  async function loadCloudAssets(){
   if(cloudAssetsLoading||!getAccountId?.())return;
   cloudAssetsLoading=true;render();
-  try{const client=createMediaClient(getAccountId());const listed=await client.list();cloudAssets=await Promise.all(listed.map(async asset=>asset.kind==='image'?{...asset,previewUrl:await client.read(asset.id).catch(()=>null)}:asset));message('Cloud asset library updated.');}
+  try{const client=createMediaClient(getAccountId());const listed=await client.list();cloudAssets=await Promise.all(listed.map(async asset=>asset.kind==='image'?{...asset,previewUrl:await client.read(asset.id).catch(()=>null)}:asset));cloudAssetsLoaded=true;message('Cloud asset library updated.');}
   catch(error){message(error.message||'Could not load cloud assets.');}
   finally{cloudAssetsLoading=false;render();}
  }
