@@ -25,6 +25,17 @@ test('native map JSON normalizes editor fields and round-trips without changing 
  scene.sourceEnd=4;
  assert.throws(()=>validateManifest(manifest),/source end must match/);
 });
+test('map backgrounds survive cloud validation and timeline compilation',()=>{
+ const manifest=appendProjectMaps(newStudioVideo(),source());
+ const scene=manifest.scenes[0];
+ scene.engineData.background='#102030';
+ const opened=validateManifest(JSON.stringify(manifest));
+ assert.equal(opened.scenes[0].engineData.background,'#102030');
+ assert.equal(compileTimeline(opened,PRESETS[0]).scenes[0].engineData.background,'#102030');
+ assert.deepEqual(validateManifest(opened),opened);
+ scene.engineData.background='invalid';
+ assert.throws(()=>validateManifest(manifest),/Colors must be #rrggbb/);
+});
 test('v1 upgrades only on an explicit edit and preserves the legacy recording',()=>{
  const old={...emptyVideo(),audio:{fileId:'voice',name:'original.wav',startSeconds:.5,gain:.7}},before=structuredClone(old);assert.throws(()=>upgradeVideo(old),/original/);const out=upgradeVideo(old,3);assert.equal(out.schemaVersion,2);assert.equal(out.audio,null);assert.equal(out.audioClips[0].durationSeconds,3);assert.equal(out.audioClips[0].startSeconds,.5);assert.deepEqual(old,before);assert.deepEqual(validateManifest(old),old);assert.equal(validateManifest(out).schemaVersion,2);assert.throws(()=>validateManifest({...old,schemaVersion:3}));
 });
