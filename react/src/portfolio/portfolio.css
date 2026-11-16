@@ -325,3 +325,38 @@ body.portfolio-page:has(.pf) {
   .pf-equity-ranges button { flex: 1; padding-inline: 4px; }
   .pf-analysis-sort :is(select,button) { padding-block: 5px; }
 }
+
+
+.pf-projection { margin-top: 1rem; }
+.pf-projection summary { cursor: pointer; font-weight: 650; }
+.pf-extra-controls, .pf-projection-results, .pf-watch-periods {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .65rem;
+}
+.pf-extra-controls { margin-block: .8rem; }
+.pf-extra-controls label { display: grid; gap: .3rem; }
+.pf-extra-controls :is(input, select) {
+  width: 100%;
+  min-width: 0;
+  color: inherit;
+  background: #142920;
+  border: 1px solid #5a7868;
+  border-radius: .45rem;
+  padding: .45rem .55rem;
+  font: inherit;
+}
+.pf-projection-results dd { margin: .2rem 0 0; }
+.pf-watch { display: grid; gap: .8rem; }
+.pf-watch-list { list-style: none; padding: 0; margin: 0; }
+.pf-watch-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: .65rem;
+  border-top: 1px solid #38574a;
+  padding: .55rem 0;
+}
+.pf-watch-list li > span:first-child { display: grid; }
+.pf-watch-list li > span:first-child small { overflow-wrap: anywhere; }
+.pf-watch-list button { min-width: 2.5rem; min-height: 2.5rem; font-size: 1.1rem; }

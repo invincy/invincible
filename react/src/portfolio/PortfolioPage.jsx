@@ -5,7 +5,10 @@ import {usePortfolio} from './usePortfolio';
 import {holding,totals,importKite,replaceEquity,recordSnapshot,trade,dueSips,todayIST,estimateDueSips} from './model.mjs';
 import {EquityChart, percentage, useEquityAnalysis} from './EquityChart';
 import {frontMovers, unrealised} from './equity-analysis.mjs';
+import {SipProjection} from './SipProjection';
+import {WatchPanel} from './WatchPanel';
 import './portfolio.css';
+const emptyWatchlist = [];
 const money=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(n||0);
 const savedDate=new Intl.DateTimeFormat('en-IN',{day:'numeric',month:'short',timeZone:'UTC'});
 const freshSip=()=>({holdingId:'',amount:'',day:1,start:todayIST()});
@@ -67,6 +70,13 @@ function PortfolioWorkspace(){
    : (filter==='all' ? frontMovers(state.holdings) : state.holdings.filter(h=>h.kind==='mf')).filter(matchesSearch);
  const selectedHolding=state.holdings.find(h=>h.id===selectedId);
  const selectedSip=state.sips.find(s=>s.id===selectedId);
+ const watchlist=state.watchlist??emptyWatchlist;
+ async function toggleWatch(stock){
+   const watched=watchlist.some(item=>item.id===stock.id);
+   const next=watched?watchlist.filter(item=>item.id!==stock.id):[...watchlist,stock];
+   try{await save({...state,watchlist:next},watched?'Remove watched stock':'Watch stock');setMessage('');}
+   catch(error){setMessage(error.message);}
+ }
  const sipTotal=state.sips.reduce((sum,s)=>sum+s.amount,0);
  const fundName=id=>state.holdings.find(h=>h.id===id)?.name||'Missing fund';
  function openTrade(h){
@@ -77,7 +87,8 @@ function PortfolioWorkspace(){
  const exportData=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=`portfolio-${todayIST()}.json`;a.click();URL.revokeObjectURL(url)};
  return <main className="pf"><header className="pf-heading"><div><h1>Portfolio</h1><p>{state.asOf&&<time dateTime={state.asOf} title={state.asOf}>Saved {savedDate.format(new Date(state.asOf))}</time>}</p></div><div className="pf-actions"><button disabled={busy||!state.revision} onClick={()=>openPanel('undo')}><i className="fa-solid fa-rotate-left" aria-hidden="true"/>Undo</button><button onClick={exportData}><i className="fa-solid fa-arrow-down-to-line" aria-hidden="true"/>Export</button><label className="pf-primary"><i className="fa-solid fa-arrow-up-from-bracket" aria-hidden="true"/>{importing?'Reading…':'Import Kite'}<input aria-label="Import Kite statement" type="file" accept=".xlsx" disabled={busy||importing} onChange={e=>{upload(e.target.files[0]);e.target.value=''}}/></label></div></header>
  <div role="status" className="pf-message">{error||message}</div>
- <nav className="pf-switch" aria-label="Asset class">{[['all','All assets'],['equity','Equity'],['mf','Mutual funds']].map(([v,label])=><button aria-pressed={filter===v} className={filter===v?'active':''} key={v} onClick={()=>{setFilter(v);setShowHoldings(false)}}>{label}</button>)}</nav>
+ <nav className="pf-switch" aria-label="Asset class">{[['all','All assets'],['equity','Equity'],['mf','Mutual funds'],['watch','Watch']].map(([v,label])=><button aria-pressed={filter===v} className={filter===v?'active':''} key={v} onClick={()=>{setFilter(v);setShowHoldings(false)}}>{label}</button>)}</nav>
+ {filter==='watch'?<WatchPanel watchlist={watchlist} onToggle={toggleWatch} busy={busy}/>:<>
  <section className="pf-summary"><div className="pf-balance"><span>Portfolio value</span><strong>{money(summary.value)}</strong><span className="pf-balance-icon"><PageIcon page="portfolio"/></span></div><div><span>Invested</span><strong>{money(summary.cost)}</strong></div><div><span>Unrealised return</span><strong className={summary.gain<0?'pf-down':'pf-up'}>{summary.gain>=0?'+':''}{money(summary.gain)}</strong><small>{summary.cost?`${(summary.gain/summary.cost*100).toFixed(2)}%`:'—'}</small></div></section>
  {filter==='equity'&&<EquityChart range={range} setRange={setRange} money={money} {...equityHistory}/>}
  <div className="pf-columns space-panels" tabIndex={0} aria-label="Portfolio panels">
@@ -142,6 +153,8 @@ function PortfolioWorkspace(){
      </div>
    </aside>
  <details className="pf-surface pf-sales space-panel"><summary>Sales & “if I had held”</summary>{state.events.filter(e=>e.type==='sell').map(e=>{const h=state.holdings.find(h=>h.id===e.holdingId);return <div className="pf-sale" key={e.id}><b>{e.name} · {e.date}</b><span>Sold {e.units} for {money(e.units*e.price)}</span><span>Realised {money(e.realised)}</span><span>{h?`If held: ${money(e.units*h.price)} · difference ${money(e.units*(h.price-e.price))} as of ${h.priceDate}`:'Current quote unavailable'}</span></div>})}{!state.events.some(e=>e.type==='sell')&&<p>No recorded sales</p>}</details></div>
+ {filter==='mf'&&<SipProjection balance={summary.value} scheduled={sipTotal} money={money}/>}
+ </>}
  {panel&&<dialog ref={dialogRef} className={`pf-dialog${panel==='import'?' pf-dialog-import':''}`} aria-labelledby="pf-dialog-title" onCancel={e=>{e.preventDefault();closePanel()}} onClick={e=>{if(e.target===e.currentTarget)closePanel()}}>
  <section className="pf-dialog-content">
    <header><h2 id="pf-dialog-title">{({details:selectedHolding?.name||'Holding',holding:'Holding details',trade:'Record transaction',sip:'SIP schedule',import:'Review Kite import',removeSip:'Remove SIP schedule?',undo:'Undo last change?'})[panel]}</h2><button type="button" aria-label="Close" onClick={closePanel}>×</button></header>
@@ -172,3 +185,4 @@ function PortfolioWorkspace(){
  </section></dialog>}
  </main>
 }
+
