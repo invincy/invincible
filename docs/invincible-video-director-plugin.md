@@ -19,8 +19,8 @@ by this update.
   reuse the same asset ID.
 - `apply_creator_scene_patch` validates and saves one scene patch with an
   exact `expectedRevision`. Unmentioned scenes and layers remain unchanged.
-- `get_creator_workflow_status`, `start_creator_local_timing`, and
-  `get_creator_local_timing_status` retain the existing timing checkpoint.
+- `get_creator_workflow_status` reports the saved project phase without
+  invoking a transcription provider.
 
 The old full-plan Director registrations are no longer exposed. The server
 does not create projects, replace a full timeline, or publish a video. Existing
@@ -36,7 +36,8 @@ and colour checks quick before a full MP4 export.
 
 ## Production rules
 
-Reuse the project's final MP3 and measured timing. Use supplied assets and
+Reuse the project's final MP3 and measured timing. If new timing is needed,
+use the configured OpenAI timing service. Use supplied assets and
 verified geography, label estimates or reconstructions, and never invent
 precise troop movements. For the Second Battle of Panipat, prefer the existing
 top-down battlefield formations, elephant assets, commander assets, and

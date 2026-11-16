@@ -95,6 +95,8 @@ test('plugin exposes OAuth tool metadata before sign-in and returns a linking ch
  assert.deepEqual(resume._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read']}]);
  assert.equal(server._registeredTools.create_creator_project,undefined);
  assert.equal(server._registeredTools.apply_creator_plan,undefined);
+ assert.equal(server._registeredTools.start_creator_local_timing,undefined);
+ assert.equal(server._registeredTools.get_creator_local_timing_status,undefined);
  const result=await profile.handler({});
  assert.equal(result.isError,true);
  assert.match(result._meta['mcp/www_authenticate'][0],/resource_metadata=/);
