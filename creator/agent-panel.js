@@ -1,5 +1,28 @@
 import {loadScriptSyncCheckpoint} from './ai-draft.js?v=2026111319';
 
+// Coordinates, keyframes and other unkeyed arrays need explicit replacement
+// so the JSON from View JSON can be submitted directly to the patch validator.
+function patchValue(value) {
+ if (Array.isArray(value)) {
+  return value.every(item => item && typeof item.id === 'string')
+   ? value.map(patchValue) : {$replace: value};
+ }
+ if (value && typeof value === 'object') {
+  return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, patchValue(item)]));
+ }
+ return value;
+}
+
+export function scenePatch(scene, revision) {
+ const {name, engineType, sourceStart, transition, overlays, engineData} = scene;
+ const fields = {name, engineType, sourceStart, transition, overlays, engineData};
+ return {
+  patchSceneId: scene.id,
+  expectedRevision: revision,
+  changes: patchValue(Object.fromEntries(Object.entries(fields).filter(([, value]) => value !== undefined)))
+ };
+}
+
 export function mountAgentPanel(root, {openMotion, getProject, getAccountId}) {
  const find = id => root.querySelector('#' + id);
  const target = find('agentTarget');
@@ -62,8 +85,9 @@ export function mountAgentPanel(root, {openMotion, getProject, getAccountId}) {
  }
  function showJSON() {
   if (!snapshot) return;
-  input.value = JSON.stringify(target.value
-   ? {patchSceneId: target.value, expectedRevision: snapshot.revision, changes: {}}
+  const scene = snapshot.manifest.scenes.find(item => item.id === target.value);
+  input.value = JSON.stringify(scene
+   ? scenePatch(scene, snapshot.revision)
    : {...snapshot.manifest, expectedRevision: snapshot.revision}, null, 2);
  }
  root.addEventListener('toggle', () => {

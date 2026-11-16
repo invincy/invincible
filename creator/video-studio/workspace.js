@@ -7,7 +7,7 @@ import {studioBrief} from './handoff.js?v=2026111207';
 import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111207';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111603';
 import {createStudioRenderer} from './adapters.js?v=2026111603';
-import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111014';
+import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111604';
 import {mountAssembly} from './assembly.js?v=2026111603';
 import {encodeStudioVideo} from './export.js?v=2026111209';
 import {openStudioStore} from './storage.js';
@@ -53,6 +53,12 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  $('.vs-layout').append(advanced);advanced.append($('[data-vs-status]'));root.append($('[data-vs-status]'));
  $('.vs-preview .vs-help').textContent='Full HD · 30 fps. Your scenes and audio export together.';
  $('[data-vs=play]').textContent='Preview full video';$('[data-vs=save]').textContent='Save';$('[data-vs=export]').textContent='Export MP4';
+ const audioWarning = document.createElement('p');
+ audioWarning.dataset.vsAudioWarning = '';
+ audioWarning.className = 'vs-help';
+ audioWarning.setAttribute('role', 'status');
+ audioWarning.hidden = true;
+ header.after(audioWarning);
  const jpgButton=document.createElement('button');jpgButton.type='button';jpgButton.dataset.vs='jpg-previews';jpgButton.textContent='Export JPG previews';$('[data-vs=export]').before(jpgButton);
  const account=getAccountId(),projectId=getProject()?.id;const store=account?openStudioStore(account):null;
  const state=session;if(state.account!==account||state.projectId!==projectId){for(const key of Object.keys(state))delete state[key];state.account=account;state.projectId=projectId;}state.manifest??=emptyVideo();state.brands??=structuredClone(PRESETS);state.files??=new Map();state.brandAssets??=[];state.cloudRevision??=0;
@@ -178,12 +184,43 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   $('[data-vs-library]').innerHTML='<option value="">Choose existing map image</option>'+mapAssets().filter(a=>a.type==='image').map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
   assembly?.sync();
  }
+ async function loadPreviewAudio(manifest) {
+  const unavailable = [];
+  audioBuffer = null;
+  if (manifest.audio) {
+   try {
+    const file = await getFile(manifest.audio.fileId);
+    if (!file) throw Error('Original MP3 is missing.');
+    audioBuffer = await decodeVoiceover(file);
+   } catch (error) {
+    if (error.name === 'AbortError') throw error;
+    unavailable.push(manifest.audio.name);
+   }
+  }
+  audioTracks = await loadAudioTracks(manifest, getFile, {
+   onUnavailable: clip => unavailable.push(clip.name)
+  });
+  audioWarning.hidden = unavailable.length === 0;
+  audioWarning.textContent = unavailable.length
+   ? 'Audio clip unavailable — re-link or regenerate in Step 1. Playback and exports mute: ' + [...new Set(unavailable)].join(', ')
+   : '';
+ }
+ async function registerVoiceover(file) {
+  const metadata = await inspectMedia(file);
+  const asset = await media.upload(file, metadata);
+  if (asset.id !== metadata.id) throw Error('The cloud library returned a different recording ID.');
+  // Check the same private read path another device uses before saving the reference.
+  await media.file(asset.id);
+  if (disposed || getAccountId() !== account || getProject()?.id !== projectId) throw new DOMException('Project closed or account changed.', 'AbortError');
+  state.files.set(asset.id, file);
+  if (!catalogue.some(item => item.id === asset.id)) { catalogue.unshift(asset); renderLibrary(); }
+  return asset.id;
+ }
  async function prepare(){
   if(renderer)return;if(preparing)return preparing;
   preparing=(async()=>{
    const m=validateManifest(state.manifest,{mapAssets:mapAssets()}),b=validateBrand(brand(),new Set(m.assets.filter(a=>a.kind!=='glb').map(a=>a.id)));
-   if(m.audio){const file=await getFile(m.audio.fileId);if(!file)throw Error('Voiceover is missing on this device. Upload the original recording again.');audioBuffer??=await decodeVoiceover(file);}
-   audioTracks=await loadAudioTracks(m,getFile);
+   await loadPreviewAudio(m);
    timeline=compileTimeline(m,b,audioBuffer?.duration||0);const size=exportDimensions(m.aspectRatio);canvas.width=size.width;canvas.height=size.height;
    const lead=timeline.audioClips[0]&&m.audioClips?.[0]?timeline.audioClips[0].startSeconds-m.audioClips[0].startSeconds:0;audioTracks=audioTracks.map(t=>({...t,startSeconds:t.startSeconds+lead}));time=Math.min(time,timeline.duration);
    const next=await createStudioRenderer(canvas,m,timeline,b,{getFile,mapAssets:mapAssets(),signal:controller?.signal||lifecycle.signal});
@@ -275,7 +312,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  }
  const run=async fn=>{if(busy||disposed)return;lock(true);stop();try{if(drawing)await drawing.catch(()=>{});await fn();}catch(e){if(!disposed)sync();status(e.name==='AbortError'?'Export cancelled.':e.message);}finally{if(!disposed)lock(false);}};
  async function renderExport(){
-  stop();controller=new AbortController();$('[data-vs=cancel]').disabled=false;root.dataset.exporting='true';let codec=null;try{await prepare();status('Rendering MP4…');const blob=await encodeStudioVideo({canvas,timeline,audioBuffer,audioTracks,audioGain:state.manifest.audio?.gain??1,signal:controller.signal,onAudioCodec:value=>{codec=value;status(`Rendering H.264 + ${value.toUpperCase()} audio…`);},onProgress:p=>{if(!disposed)$('[data-vs-progress]').value=p.progress;},drawFrame:(t,signal)=>renderer.draw(t,{exporting:true,signal})});if(!disposed){const name=(state.manifest.title||'video').replace(/[^\p{L}\p{N}_-]/gu,'_')+'.mp4';if(lastExportUrl)URL.revokeObjectURL(lastExportUrl);lastExportBlob=blob;lastExportName=name;lastExportUrl=URL.createObjectURL(blob);lastExport.href=lastExportUrl;lastExport.download=name;lastExport.hidden=false;saveLastExport.hidden=false;cloudExport.hidden=true;download(blob,name);status(audioBuffer||audioTracks.length?`MP4 exported with synchronized ${codec.toUpperCase()} voiceover and audio. Download it now or save it to your private library.${codec==='opus'?' Opus MP4 needs a compatible player.':''}`:'MP4 exported without audio (no voiceover selected). Download it now or save it to your private library.');}return blob;}finally{if(controller?.signal.aborted)invalidate();controller=null;$('[data-vs=cancel]').disabled=true;root.dataset.exporting='false';if(!disposed)await draw();}
+  stop();controller=new AbortController();$('[data-vs=cancel]').disabled=false;root.dataset.exporting='true';let codec=null;try{await prepare();status('Rendering MP4…');const blob=await encodeStudioVideo({canvas,timeline,audioBuffer,audioTracks,audioGain:state.manifest.audio?.gain??1,signal:controller.signal,onAudioCodec:value=>{codec=value;status(`Rendering H.264 + ${value.toUpperCase()} audio…`);},onProgress:p=>{if(!disposed)$('[data-vs-progress]').value=p.progress;},drawFrame:(t,signal)=>renderer.draw(t,{exporting:true,signal})});if(!disposed){const name=(state.manifest.title||'video').replace(/[^\p{L}\p{N}_-]/gu,'_')+'.mp4';if(lastExportUrl)URL.revokeObjectURL(lastExportUrl);lastExportBlob=blob;lastExportName=name;lastExportUrl=URL.createObjectURL(blob);lastExport.href=lastExportUrl;lastExport.download=name;lastExport.hidden=false;saveLastExport.hidden=false;cloudExport.hidden=true;download(blob,name);status(audioBuffer||audioTracks.length?`MP4 exported with synchronized ${codec.toUpperCase()} voiceover and audio. Download it now or save it to your private library.${codec==='opus'?' Opus MP4 needs a compatible player.':''}`:(audioWarning.hidden?'MP4 exported without audio.':'MP4 exported with unavailable audio muted.')+' Download it now or save it to your private library.');}return blob;}finally{if(controller?.signal.aborted)invalidate();controller=null;$('[data-vs=cancel]').disabled=true;root.dataset.exporting='false';if(!disposed)await draw();}
  }
  async function renderJpgPreviews(){
   stop();await prepare();if(!renderer||!timeline?.scenes?.length)throw Error('Add or apply a video scene before generating previews.');
@@ -376,14 +413,32 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    validateManifest(next,{mapAssets:mapAssets()});await applyManifest(next);
   });
  });
- assembly=mountAssembly(assemblyRoot,{pause:stop,session:state,getManifest:()=>state.manifest,getProject,getFile,importFiles:uploadFiles,putFile:(id,file)=>state.files.set(id,file),deleteFile:id=>state.files.delete(id),run,status,getTime:()=>time,setTime:value=>{time=value;state.time=value;},releaseRenderer:async()=>{stop();if(drawing)await drawing.catch(()=>{});invalidate();},setManifest:applyManifest,saveMapDraft:next=>save(next,{preview:false,applying:true}),previewManifest:async next=>{if(next===state.manifest){invalidate();await draw();return;}invalidate();try{const b=brand(),t=compileTimeline(next,b);audioTracks=await loadAudioTracks(next,getFile);const lead=t.audioClips[0]&&next.audioClips?.[0]?t.audioClips[0].startSeconds-next.audioClips[0].startSeconds:0;audioTracks=audioTracks.map(a=>({...a,startSeconds:a.startSeconds+lead}));const nextRenderer=await createStudioRenderer(canvas,next,t,b,{getFile,mapAssets:mapAssets(),signal:lifecycle.signal});if(disposed){nextRenderer.destroy();return;}renderer=nextRenderer;timeline=t;await renderer.draw(time);}catch(error){invalidate();try{await draw();}catch{}throw error;}}});
+ assembly=mountAssembly(assemblyRoot,{pause:stop,session:state,getManifest:()=>state.manifest,getProject,getFile,importFiles:uploadFiles,putFile:(id,file)=>state.files.set(id,file),deleteFile:id=>state.files.delete(id),run,status,getTime:()=>time,setTime:value=>{time=value;state.time=value;},releaseRenderer:async()=>{stop();if(drawing)await drawing.catch(()=>{});invalidate();},setManifest:applyManifest,saveMapDraft:next=>save(next,{preview:false,applying:true}),previewManifest:async next=>{if(next===state.manifest){invalidate();await draw();return;}invalidate();try{const b=brand(),t=compileTimeline(next,b);await loadPreviewAudio(next);const lead=t.audioClips[0]&&next.audioClips?.[0]?t.audioClips[0].startSeconds-next.audioClips[0].startSeconds:0;audioTracks=audioTracks.map(a=>({...a,startSeconds:a.startSeconds+lead}));const nextRenderer=await createStudioRenderer(canvas,next,t,b,{getFile,mapAssets:mapAssets(),signal:lifecycle.signal});if(disposed){nextRenderer.destroy();return;}renderer=nextRenderer;timeline=t;await renderer.draw(time);}catch(error){invalidate();try{await draw();}catch{}throw error;}}});
  const libraryReady = refreshLibrary();
  const ready=run(async()=>{
   if(!state.loaded){if(store){const library=await store.get('brands');if(library){state.brands=library.brands;state.brandAssets=library.assets;}if(projectId){const version=await store.get('draft:'+projectId);if(version){const saved=await store.get('version:'+projectId+':'+version);if(saved)state.manifest=validateManifest(saved,{mapAssets:mapAssets()});}}}state.manifest.assets=assetsForBrand(brand(),state.manifest.assets,state.brandAssets);state.loaded=true;}
   if(getProject()?.ownerUid===account||mediaService){try{state.cloudRevision=await store?.get('cloudRevision:'+projectId)||0;const cloud=await media.loadDraft(projectId);if(cloud&&!state.cloudLoaded){state.manifest=validateManifest(cloud.manifest,{mapAssets:mapAssets()});state.brands=cloud.brands;state.cloudRevision=cloud.revision;state.cloudLoaded=true;state.savedManifest=structuredClone(state.manifest);}else if(cloud&&cloud.revision!==state.cloudRevision)status('Another device has a newer cloud draft. Use Review cloud draft before saving.');}catch(e){status('Cloud draft unavailable. Your local copy is retained; check your connection and try again.');}}
   sync();try{await draw();}catch(error){status('Saved draft loaded. Preview unavailable: '+error.message);}
  });
- async function importAiProduction(storyboard,audioBlob,{title='Invincible AI production',allowContextCards=false,replaceExisting=false}={}){await ready;const hasDraft=state.manifest.scenes.length||(state.manifest.audioClips||[]).length||state.manifest.audio;if(hasDraft&&!replaceExisting)throw Error('Motion Studio already contains a different draft. Choose Replace when applying the reviewed sync plan, or keep the existing draft.');if(!Array.isArray(storyboard)||!storyboard.length)throw Error('The AI draft has no executable scenes.');if(!(audioBlob instanceof Blob)||!audioBlob.size)throw Error('The original voiceover MP3 is missing. Run AI timing again to attach it.');const file=new File([audioBlob],audioBlob.name||'invincible-voiceover.mp3',{type:audioBlob.type||'audio/mpeg'}),decoded=await decodeVoiceover(file),fileId=uid(),next=compileAiStoryboardManifest(storyboard,{aspectRatio:'9:16',audioFileId:fileId,audioName:file.name,audioDuration:decoded.duration,mapAssets:mapAssets(),allowContextCards});next.title=String(title).slice(0,200);state.files.set(fileId,file);try{await applyManifest(next);time=0;await draw();await save();status(`${next.scenes.length} scenes and the exact MP3 are saved to your account. Next: Play the full preview, then Export MP4.`);return next;}catch(error){state.files.delete(fileId);throw error;}}
+ async function importAiProduction(storyboard, audioBlob, {title='Invincible AI production', allowContextCards=false, replaceExisting=false}={}){
+  await ready;
+  const hasDraft = state.manifest.scenes.length || state.manifest.audioClips?.length || state.manifest.audio;
+  if (hasDraft && !replaceExisting) throw Error('Motion Studio already contains a different draft. Choose Replace when applying the reviewed sync plan, or keep the existing draft.');
+  if (!Array.isArray(storyboard) || !storyboard.length) throw Error('The AI draft has no executable scenes.');
+  if (!(audioBlob instanceof Blob) || !audioBlob.size) throw Error('The original voiceover MP3 is missing. Run AI timing again to attach it.');
+  const file = new File([audioBlob], audioBlob.name || 'invincible-voiceover.mp3', {type: audioBlob.type || 'audio/mpeg'});
+  const decoded = await decodeVoiceover(file);
+  const registration = await registerVoiceover(file);
+  const next = compileAiStoryboardManifest(storyboard, {
+   aspectRatio: '9:16', audioFileId: registration, audioName: file.name,
+   audioDuration: decoded.duration, mapAssets: mapAssets(), allowContextCards
+  });
+  next.title = String(title).slice(0, 200);
+  time = 0;
+  await save(next);
+  status(`${next.scenes.length} scenes and the exact MP3 are saved to your account. Next: Play the full preview, then Export MP4.`);
+  return next;
+ }
  const agent=createAgentOperations({
   authorize:async()=>{await ready;if(disposed||!account||getAccountId()!==account||getProject()?.id!==projectId||(getProject()?.ownerUid!==account&&!mediaService))throw Object.assign(Error('Sign in as the project owner to use the agent API.'),{code:'UNAUTHORIZED'});},
   getManifest:()=>state.manifest,getSavedManifest:()=>state.savedManifest||state.manifest,getRevision:()=>state.cloudRevision,getMapAssets:mapAssets,getAvailableAssets:()=>catalogue.map(({id,name,kind,mimeType,duration,width,height})=>({id,name,kind,mimeType,duration,width,height})),
@@ -394,7 +449,10 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    const checked=new Set();
    const checkUrl=async asset=>{if(!asset.url||checked.has(asset.url))return;checked.add(asset.url);let response;try{response=await fetch(asset.url,{signal:AbortSignal.timeout(15000)});}catch(error){throw Error('Cannot retrieve asset '+asset.name+': '+error.message);}if(!response.ok)throw Error('Missing asset '+asset.name+' (HTTP '+response.status+'): '+asset.url);};
    for(const asset of manifest.assets)await checkUrl(asset);
-   const refs=[...manifest.assets,...(manifest.audioClips||[]),...(manifest.audio?[manifest.audio]:[])];
+   const previousAudio = new Set([...(state.manifest.audioClips || []), ...(state.manifest.audio ? [state.manifest.audio] : [])].map(clip => clip.fileId));
+   const audio = [...(manifest.audioClips || []), ...(manifest.audio ? [manifest.audio] : [])];
+   for (const clip of audio) if (!previousAudio.has(clip.fileId) && !await getFile(clip.fileId)) throw Error('Missing original recording: ' + clip.name);
+   const refs=manifest.assets;
    for(const ref of refs)if(ref.fileId){if(isCloudFile(ref.fileId))await media.read(ref.fileId);else if(!await getFile(ref.fileId))throw Error('Missing original asset: '+ref.name+' ('+ref.fileId+')');}
    const projects=[...(manifest.mapSources||[]).map(s=>s.project),...manifest.scenes.map(s=>s.engineData.project).filter(Boolean)];
    for(const project of projects)for(const asset of project.historicalMap.visual?.assets||[]){if(asset.cloudAssetId)await media.read(asset.cloudAssetId);await checkUrl(asset);}

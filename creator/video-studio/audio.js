@@ -23,9 +23,24 @@ export function mixAudioChunk(tracks,at,length,rate=48000){
  for(let i=0;i<data.length;i++)data[i]=Math.max(-1,Math.min(1,data[i]));return {data,channels};
 }
 export function audioTrimWithinSource(clip,buffer){return clip.trimStart+(clip.loop?clip.sourceDurationSeconds:clip.durationSeconds)<=buffer.duration+1/Math.min(48000,buffer.sampleRate)+Number.EPSILON;}
-export async function loadAudioTracks(manifest,getFile){
- const clips=manifest.audioClips||[],buffers=new Map(),tracks=[];
- for(const clip of clips){let buffer=buffers.get(clip.fileId);if(!buffer){const file=await getFile(clip.fileId);if(!file)throw Error('Missing recording on this device: '+clip.name);buffer=await decodeVoiceover(file);buffers.set(clip.fileId,buffer);}if(!audioTrimWithinSource(clip,buffer))throw Error('Audio trim exceeds original recording: '+clip.name);tracks.push({...clip,buffer});}return tracks;
+export async function loadAudioTracks(manifest,getFile,{onUnavailable,decode=decodeVoiceover}={}){
+ const buffers = new Map(), tracks = [];
+ for (const clip of manifest.audioClips || []) {
+  if (!buffers.has(clip.fileId)) buffers.set(clip.fileId, (async () => {
+   const file = await getFile(clip.fileId);
+   if (!file) throw Error('Missing recording on this device: ' + clip.name);
+   return decode(file);
+  })());
+  try {
+   const buffer = await buffers.get(clip.fileId);
+   if (!audioTrimWithinSource(clip, buffer)) throw Error('Audio trim exceeds original recording: ' + clip.name);
+   tracks.push({...clip, buffer});
+  } catch (error) {
+   if (!onUnavailable || error.name === 'AbortError') throw error;
+   onUnavailable(clip, error);
+  }
+ }
+ return tracks;
 }
 // Piecewise-linear envelopes match audioGainAt, including playback from the middle of a fade.
 export function scheduleAudioTracks(context,tracks,time){
