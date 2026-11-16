@@ -41,6 +41,15 @@ test('map backgrounds survive cloud validation and timeline compilation',()=>{
  scene.engineData.background='invalid';
  assert.throws(()=>validateManifest(manifest),/colors must be #rrggbb/i);
 });
+test('map overlays preserve CSS font weights across cloud open and save validation',()=>{
+ const manifest=appendProjectMaps(newStudioVideo(),source());
+ manifest.scenes[0].overlays=[800,'900','normal','bold',650.5].map((fontWeight,index)=>({id:'title-'+index,type:'text',text:'Panipat',fontWeight}));
+ const opened=validateManifest(JSON.stringify(manifest));
+ assert.deepEqual(opened.scenes[0].overlays.map(layer=>layer.fontWeight),[800,900,400,700,650.5]);
+ assert.deepEqual(validateManifest(opened),opened);
+ manifest.scenes[0].overlays[0].fontWeight=1001;
+ assert.throws(()=>validateManifest(manifest),/Font weight must be between 1 and 1000/);
+});
 test('v1 upgrades only on an explicit edit and preserves the legacy recording',()=>{
  const old={...emptyVideo(),audio:{fileId:'voice',name:'original.wav',startSeconds:.5,gain:.7}},before=structuredClone(old);assert.throws(()=>upgradeVideo(old),/original/);const out=upgradeVideo(old,3);assert.equal(out.schemaVersion,2);assert.equal(out.audio,null);assert.equal(out.audioClips[0].durationSeconds,3);assert.equal(out.audioClips[0].startSeconds,.5);assert.deepEqual(old,before);assert.deepEqual(validateManifest(old),old);assert.equal(validateManifest(out).schemaVersion,2);assert.throws(()=>validateManifest({...old,schemaVersion:3}));
 });

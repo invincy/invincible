@@ -1,5 +1,5 @@
 import {validateThreeScene} from './three-scene.js';
-import {validateCanvas,CANVAS_FONTS,BACKGROUND_FIELDS} from './canvas.js?v=2026111704';
+import {validateCanvas,CANVAS_FONTS,BACKGROUND_FIELDS} from './canvas.js?v=2026111705';
 import {compileAnimation} from '../map-animation-import.js?v=2026111603';
 import {safeAssetUrl} from '../map-editor-model.js?v=2026111603';
 import {validateMap,durationOf} from '../history-model.js?v=2026111603';
@@ -35,7 +35,15 @@ export function validateLayer(layer,duration,assets){
  if(!['text','image','rectangle','circle','line','arrow'].includes(layer.type))fail('Choose text, image, rectangle, circle, line or arrow.');
  if(layer.type==='text')str(layer.text,2000,'layer text');
  if(layer.fontFamily!==undefined&&!CANVAS_FONTS.includes(layer.fontFamily))fail('Choose a bundled or standard canvas font.');
- if(layer.fontWeight!==undefined&&![400,600,700].includes(layer.fontWeight))fail('Choose font weight 400, 600 or 700.');
+ if(layer.fontWeight!==undefined){
+  if(typeof layer.fontWeight==='string'){
+   const weight=layer.fontWeight.trim().toLowerCase();
+   if(weight==='normal')layer.fontWeight=400;
+   else if(weight==='bold')layer.fontWeight=700;
+   else if(/^\d+(?:\.\d+)?$/.test(weight))layer.fontWeight=Number(weight);
+  }
+  num(layer.fontWeight,1,1000,'Font weight');
+ }
  if(layer.textAlign!==undefined&&!['left','center','right'].includes(layer.textAlign))fail('Invalid text alignment.');
  if(layer.lineWidth!==undefined)num(layer.lineWidth,1,40,'line width');
  if(layer.type==='image'&&!assets.has(layer.assetId))fail('Image refers to a missing asset: '+layer.assetId);

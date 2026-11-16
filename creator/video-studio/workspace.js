@@ -1,17 +1,17 @@
-import {createAgentOperations} from './agent.js?v=2026111704';
+import {createAgentOperations} from './agent.js?v=2026111705';
 import {checkStudioGlb, MAX_MODEL_BYTES} from './three-scene.js';
 import {mountConnectedImageGenerator} from '../image-generator.js?v=2026111206';
 import {callImageRelay,draftRemoteImagePrompt} from '../../shared/firebase-image-relay.js?v=2026111205';
 import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=2026111603';
 import {studioBrief} from './handoff.js?v=2026111207';
-import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111704';
-import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111704';
-import {createStudioRenderer} from './adapters.js?v=2026111704';
+import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111705';
+import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111705';
+import {createStudioRenderer} from './adapters.js?v=2026111705';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111604';
-import {mountAssembly} from './assembly.js?v=2026111704';
+import {mountAssembly} from './assembly.js?v=2026111705';
 import {encodeStudioVideo} from './export.js?v=2026111209';
 import {openStudioStore} from './storage.js';
-import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111704';
+import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111705';
 import {runAiProduction} from '../ai-production-runner.mjs?v=2026111203';
 import {generateVoiceover} from '../tts-api.js';
 import {createProductionReadiness,selectProductionVoice} from './production-readiness.js?v=2026111322';
@@ -147,7 +147,13 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  retryCloud.dataset.vs='cloud-retry';
  retryCloud.textContent='Retry cloud draft';
  retryCloud.hidden=true;
- cloudNotice.append(cloudMessage,' ',retryCloud);
+ const downloadCloud=document.createElement('button');
+ downloadCloud.type='button';
+ downloadCloud.dataset.vs='cloud-download';
+ downloadCloud.textContent='Download cloud draft JSON';
+ downloadCloud.hidden=true;
+ let rejectedCloudDraft=null;
+ cloudNotice.append(cloudMessage,' ',retryCloud,' ',downloadCloud);
  header.after(cloudNotice);
  const showCloud=(message,retry=false)=>{if(!disposed){cloudMessage.textContent=message;retryCloud.hidden=!retry;}};
  const draftSignature=()=>JSON.stringify([state.manifest,state.brands]);
@@ -163,11 +169,17 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   showCloud('Cloud draft · revision '+draft.revision);
  }
  async function fetchCloudDraft(){
+  rejectedCloudDraft=null;
+  downloadCloud.hidden=true;
   const draft=await media.loadDraft(projectId);
-  if(!draft)return null;
+  if(!draft||!currentProject())return null;
   let manifest;
   try{manifest=validateManifest(draft.manifest,{mapAssets:mapAssets()});}
-  catch(error){throw Error('Cloud revision '+draft.revision+' could not be opened: '+error.message);}
+  catch(error){
+   rejectedCloudDraft=draft;
+   downloadCloud.hidden=false;
+   throw Error('Cloud revision '+draft.revision+' could not be opened: '+error.message);
+  }
   return {draft,manifest};
  }
  async function refreshCloudDraft(){
@@ -406,7 +418,11 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   if(action==='cancel'){controller?.abort(new DOMException('Export cancelled','AbortError'));return;}
   run(async()=>{
    if(action==='save')await save();
-   if(action==='cloud-retry'){await refreshCloudDraft();sync();await draw();}
+   if(action==='cloud-retry'){await refreshCloudDraft();if(currentProject()){sync();await draw();}}
+   if(action==='cloud-download'&&rejectedCloudDraft&&currentProject()){
+    const {manifest,revision}=rejectedCloudDraft;
+    download(new Blob([JSON.stringify(manifest,null,2)],{type:'application/json'}),'cloud-video-revision-'+revision+'.json');
+   }
    if(action==='save-last-export'){
     if(!(lastExportBlob instanceof Blob)||!lastExportBlob.size)throw Error('Export the MP4 before saving it to your library.');
     status('Saving the MP4 to your private library…');const file=new File([lastExportBlob],lastExportName||'creator-export.mp4',{type:'video/mp4'}),info=await inspectMedia(file),asset=await media.upload(file,info),url=await media.read(asset.id);cloudExport.href=url;cloudExport.download=file.name;cloudExport.hidden=false;status('MP4 saved to your private library. Download saved MP4 remains available from this page.');
