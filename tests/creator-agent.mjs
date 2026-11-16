@@ -42,3 +42,16 @@ test('patching a shared native map detaches only the selected scene',()=>{
  assert.equal(next.scenes[3].engineData.project.historicalMap.cameraDefaults.zoom,6);
  assert.deepEqual(next.mapSources,m.mapSources);assert.deepEqual(next.scenes[0],m.scenes[0]);
 });
+
+test('map imports repair only sub-millisecond timing overflow', () => {
+ const manifest = fixture();
+ const scene = manifest.scenes[0];
+ const map = scene.engineData.project;
+ map.scenes[0].duration = 1.9999;
+ map.historicalMap.camera = [{sceneId: 'map-0', offset: 2.0001, center: [91, 25], zoom: 5}];
+ const parsed = prepareAgentUpdate(manifest, manifest);
+ assert.equal(parsed.scenes[0].engineData.project.scenes[0].duration, 2);
+ assert.equal(parsed.scenes[0].engineData.project.historicalMap.camera[0].offset, 2);
+ map.historicalMap.camera[0].offset = 2.01;
+ assert.throws(() => prepareAgentUpdate(manifest, manifest), /Offset must be within/);
+});

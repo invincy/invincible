@@ -1,5 +1,6 @@
+import {mountAgentPanel} from './agent-panel.js';
 import{makeScene}from'./storyboard-model.js?v=3';
-import{createProductionWorkbench}from'./production-workbench.js?v=2026111602';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026111603';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -144,13 +145,22 @@ async function selectProjectArea(area,mode=""){
   const isTiming=area==="Storyboard";
   if(showScriptWorkspace){
     const frame=$("projectVoiceoverFrame");
-    if(!frame.hasAttribute("src"))frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId,view:isTiming?"timing":"script",build:"2026111506"});
+    if(!frame.hasAttribute("src"))frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId,view:isTiming?"timing":"script",build:"2026111603"});
     else frame.contentWindow?.postMessage({type:"invincible-project-script-view",view:isTiming?"timing":"script"},location.origin);
   }else if(area==="Video Studio"&&mode==="map-review"){const reviewing=await storyboard.reviewMaps();if(!reviewing)setProjectAreaState("Video Studio","");}
   else storyboard.open({area});
 }
 
 $("projectStoryboard").addEventListener("invincible-map-review-complete",()=>setProjectAreaState("Video Studio",""));
+
+mountAgentPanel($("ai-agent-panel"), {
+ openMotion: () => {
+  if ($("projectEditingStep").hidden) storyboard.open({area: "Video Studio"});
+  else return selectProjectArea("Video Studio");
+ },
+ getProject: () => project,
+ getAccountId: () => user?.uid
+});
 
 const renameForm=$("renameProjectForm"), titleInput=$("projectTitleInput");
 function closeRename(){

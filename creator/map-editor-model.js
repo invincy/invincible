@@ -1,5 +1,5 @@
 // Additive visual metadata. Historical events/features remain in the original schema.
-export const icons = {gold:'◆',diamond:'◇',ship:'⛵',fort:'♜',army:'⚑',bsf:'BSF',itbp:'ITBP',ssb:'SSB',assamRifles:'AR'};
+export const icons = {gold:'◆',diamond:'◇',ship:'⛵',fort:'♜',army:'⚑',bsf:'BSF',itbp:'ITBP',ssb:'SSB',assamRifles:'AR',mountain:'⛰',cloud:'☁',rain:'☂',highPressure:'H',lowPressure:'L',heatZone:'♨'};
 export const uid = () => crypto.randomUUID();
 export function assetLibrary(map){return {format:'invincible-map-assets',version:1,assets:structuredClone(map.visual?.assets||[])};}
 export function importAssetLibrary(map,pkg){

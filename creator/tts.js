@@ -338,7 +338,15 @@ async function record(preview){
  voiceDemo.stop();
  busy=true;refreshAvailability();status(preview?'Generating an opening preview…':'Generating your MP3… Long scripts can take a few minutes.');
  try{
-  const result=await generateVoiceover(data);
+  let result;
+  try {
+   result = await generateVoiceover(data);
+  } catch (error) {
+   const transient = ['functions/internal', 'functions/unavailable'].includes(error.code);
+   if (preview || !transient || current !== epoch || user?.uid !== owner) throw error;
+   status('The first request failed. Retrying your MP3 once…');
+   result = await generateVoiceover(data);
+  }
   if(current!==epoch||user?.uid!==owner)return;
   if(typeof result.audioBase64!=='string'||result.mimeType!=='audio/mpeg')throw Error('The server returned no MP3.');
   const decoded=atob(result.audioBase64),buffer=Uint8Array.from(decoded,c=>c.charCodeAt(0));
@@ -404,7 +412,26 @@ function validTimedTranscript(){
  return{valid:true,message:`${timedTranscript.segments.length} segments · ${clock(timedTranscript.duration)} · timing locked`};
 }
 function updateScenePlanGate(){const check=validTimedTranscript();$('scenePlanGate').textContent=!check.valid?check.message:!$('creativeInstructions').value.trim()?'Paste animation instructions to continue.':check.message;refreshAvailability();}
+function repairTranscriptTiming(transcript) {
+ const repaired = [];
+ for (const item of transcript.segments) {
+  const segment = {...item};
+  const previous = repaired.at(-1);
+  if (previous && segment.start <= previous.end &&
+      segment.start >= previous.end - 0.025 && segment.end >= segment.start) {
+   if (segment.end - previous.end < 1 / 30) {
+    previous.end = Math.max(previous.end, segment.end);
+    previous.text += ' ' + segment.text;
+    continue;
+   }
+   segment.start = previous.end;
+  }
+  repaired.push(segment);
+ }
+ return {...transcript, segments: repaired};
+}
 function renderTranscript(){
+ timedTranscript = repairTranscriptTiming(timedTranscript);
  $('transcriptReview').hidden=false;$('transcriptDuration').textContent=`${clock(timedTranscript.duration)} total`;
  $('transcriptSegments').replaceChildren(...timedTranscript.segments.map((segment,index)=>{
   const row=document.createElement('label');row.className='transcript-segment';
