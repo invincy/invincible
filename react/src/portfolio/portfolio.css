@@ -360,4 +360,3 @@ body.portfolio-page:has(.pf) {
 .pf-watch-list li > span:first-child { display: grid; }
 .pf-watch-list li > span:first-child small { overflow-wrap: anywhere; }
 .pf-watch-list button { min-width: 2.5rem; min-height: 2.5rem; font-size: 1.1rem; }
-.pf-watch-import { display: grid; gap: .3rem; margin-top: .55rem; }

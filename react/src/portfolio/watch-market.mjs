@@ -60,7 +60,10 @@ const cache = new Map();
 
 async function fetchCloses(key, start, end, signal) {
   const url = 'https://api.upstox.com/v3/historical-candle/' + key + '/days/1/' + end + '/' + start;
-  const response = await fetch(url, {signal, credentials: 'omit', referrerPolicy: 'no-referrer'});
+  const response = await fetch(url, {
+    signal: AbortSignal.any([signal, AbortSignal.timeout(20000)]),
+    credentials: 'omit', referrerPolicy: 'no-referrer',
+  });
   if (!response.ok) return [];
   const payload = await response.json();
   return Array.isArray(payload.data?.candles) ? normalizeCandles(payload.data.candles, start, end) : [];

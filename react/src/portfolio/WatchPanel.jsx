@@ -1,5 +1,6 @@
 import {useEffect, useState} from 'react';
-import {loadWatchPrices, parseConstituents, rankStocks, stockMove, universes, watchRanges} from './watch-market.mjs';
+import constituents from './watch-constituents.json';
+import {loadWatchPrices, rankStocks, stockMove, universes, watchRanges} from './watch-market.mjs';
 
 const marketClock = new Intl.DateTimeFormat('sv-SE', {
   timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23',
@@ -15,13 +16,10 @@ export function WatchPanel({watchlist, onToggle, busy}) {
   const [universe, setUniverse] = useState('large');
   const [range, setRange] = useState('7D');
   const [direction, setDirection] = useState('gainers');
-  const [imports, setImports] = useState({});
   const [attempt, setAttempt] = useState(0);
   const [market, setMarket] = useState(null);
   const [savedPrices, setSavedPrices] = useState(null);
-  const [fileError, setFileError] = useState('');
-  const selected = universes[universe];
-  const imported = imports[universe];
+  const stocks = constituents.lists[universe];
   const day = closingDate();
   const marketKey = universe + ':' + attempt + ':' + day;
   const watchKey = watchlist.map(stock => stock.id).join(',') + ':' + attempt + ':' + day;
@@ -29,23 +27,11 @@ export function WatchPanel({watchlist, onToggle, busy}) {
   useEffect(() => {
     const controller = new AbortController();
     const {signal} = controller;
-    async function load() {
-      try {
-        let stocks = imported;
-        if (!stocks) {
-          const response = await fetch(selected.file, {signal, credentials: 'omit'});
-          if (!response.ok) throw Error('Constituent list unavailable.');
-          stocks = parseConstituents(await response.text(), selected.size);
-        }
-        const series = await loadWatchPrices(stocks, day, signal);
-        if (!signal.aborted) setMarket({key: marketKey, stocks, series});
-      } catch {
-        if (!signal.aborted) setMarket({key: marketKey, error: true});
-      }
-    }
-    load();
+    loadWatchPrices(stocks, day, signal).then(series => {
+      if (!signal.aborted) setMarket({key: marketKey, series});
+    });
     return () => controller.abort();
-  }, [selected, imported, marketKey, day]);
+  }, [stocks, marketKey, day]);
 
   useEffect(() => {
     if (!watchlist.length) return;
@@ -57,23 +43,10 @@ export function WatchPanel({watchlist, onToggle, busy}) {
   }, [watchlist, watchKey, day]);
 
   const current = market?.key === marketKey ? market : null;
-  const ranking = current?.stocks && rankStocks(current.stocks, current.series, range);
+  const ranking = current && rankStocks(stocks, current.series, range);
   const saved = savedPrices?.key === watchKey ? savedPrices.series : null;
   const savedEnd = Object.values(saved || {}).map(candles => candles.at(-1)?.[0]).filter(Boolean).sort().at(-1);
   const watchedIds = new Set(watchlist.map(stock => stock.id));
-
-  async function loadFile(file) {
-    if (!file) return;
-    try {
-      if (file.size > 250000) throw Error('Use a CSV under 250 KB.');
-      const stocks = parseConstituents(await file.text(), selected.size);
-      setImports(previous => ({...previous, [universe]: stocks}));
-      setFileError('');
-      setAttempt(previous => previous + 1);
-    } catch (error) {
-      setFileError(error.message);
-    }
-  }
 
   function watchButton(stock) {
     const watched = watchedIds.has(stock.id);
@@ -83,9 +56,9 @@ export function WatchPanel({watchlist, onToggle, busy}) {
 
   return <div className="pf-watch">
     <section className="pf-surface">
-      <div className="pf-section-heading"><h2>Market movers</h2><button type="button" onClick={() => setAttempt(attempt + 1)}>Retry data</button></div>
+      <div className="pf-section-heading"><h2>Market movers</h2><button type="button" onClick={() => setAttempt(previous => previous + 1)}>Refresh prices</button></div>
       <div className="pf-extra-controls">
-        <label>Index<select value={universe} onChange={event => {setUniverse(event.target.value);setFileError('');}}>
+        <label>Index<select value={universe} onChange={event => setUniverse(event.target.value)}>
           {Object.entries(universes).map(([key, {name}]) => <option key={key} value={key}>{name}</option>)}
         </select></label>
         <label>Period<select value={range} onChange={event => setRange(event.target.value)}>
@@ -96,14 +69,8 @@ export function WatchPanel({watchlist, onToggle, busy}) {
         </select></label>
       </div>
       {!current && <p role="status">Loading constituents and closing prices…</p>}
-      {current?.error && <div>
-        <p role="status">Couldn’t load the index list. Download the official CSV and import it here.</p>
-        <a href={selected.file} target="_blank" rel="noreferrer">Download {selected.name} CSV</a>
-        <label className="pf-watch-import">Import constituents CSV<input type="file" accept=".csv,text/csv" onChange={event => {loadFile(event.target.files[0]);event.target.value = '';}}/></label>
-      </div>}
-      {fileError && <p role="alert">{fileError}</p>}
       {ranking && <>
-        <p role="status">{ranking.included ? ranking.included + '/' + current.stocks.length + ' stocks with comparable closes · ' + ranking.end : 'No comparable closing prices available for this period.'}</p>
+        <p role="status">{ranking.included ? ranking.included + '/' + stocks.length + ' stocks with comparable closes · ' + ranking.end : 'No comparable closing prices available for this period.'}</p>
         <ul className="pf-watch-list">
           {ranking[direction].map(stock => <li key={stock.id}>
             <span><b>{stock.symbol}</b><small>{stock.name}</small></span>
@@ -113,6 +80,7 @@ export function WatchPanel({watchlist, onToggle, busy}) {
         </ul>
         {!!ranking.included && !ranking[direction].length && <p>No {direction} in the available data.</p>}
       </>}
+      <small>Index membership checked {constituents.checked}.</small>
     </section>
     <section className="pf-surface">
       <div className="pf-section-heading"><h2>My watchlist</h2></div>

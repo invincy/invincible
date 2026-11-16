@@ -84,9 +84,11 @@ card ordering.
 
 The Watch tab ranks the ten biggest gainers or losers by closing-price change for
 the selected period and current Nifty 50, Midcap 100 or Smallcap 100 constituent
-list. It reports the date and coverage, skips missing and suspect price series,
-and offers official constituent CSV import if the index host blocks browser
-requests. 1D uses the previous trading close. The watchlist is saved through the
+list snapshot. It reports the date and coverage and skips missing and suspect
+price series. Nifty Indices sends a duplicated CORS value, so the official CSVs
+are bundled as dated, validated constituent lists in
+`react/src/portfolio/watch-constituents.json`. Refresh the snapshot from the
+three CSV URLs in `watch-market.mjs` when index membership changes. 1D uses the previous trading close. The watchlist is saved through the
 existing private Portfolio transaction. Only instrument identifiers and dates
 are sent to the price provider.
 
@@ -97,5 +99,8 @@ payment. The Nifty 50 scenario is a dated five-year total-return CAGR from the
 Custom assumptions are available. Projections exclude fees and taxes and do not
 write to the portfolio.
 
-Five focused model tests passed locally. JSX syntax was checked. The production
-build and the browser market-data and signed-in paths still need verification.
+The production build, site reference check, repository unit suite and Portfolio
+browser fixtures passed. The browser fixtures cover the SIP step-up, Watch
+filters and watchlist persistence at mobile width. Upstox returned a full
+year of daily data for a sampled stock and allowed the GitHub Pages origin.
+The browser fixtures use mock data and local account state.
