@@ -216,7 +216,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   const navScroll=root.querySelector('.wb-nav-list')?.scrollTop||0;
   if(!active&&scenes().length)active=scenes()[0].id;
   root.querySelectorAll('[data-tab]').forEach(button=>button.setAttribute('aria-current',button.dataset.tab===tab?'page':'false'));
-  panel.innerHTML=tab==='Video Studio'?'<section data-video-mount></section>':['Maps','Clips'].includes(tab)?'<section data-history-mount></section>':tab==='Storyboard'?storyboard():tab==='Production'?production():tab==='Assets'?assets():overview();
+  panel.innerHTML=tab==='Video Studio'?'<section data-video-mount></section>':['Maps','Clips'].includes(tab)?'<section data-history-mount></section>':tab==='Storyboard'?storyboard():tab==='Production'?production():tab==='Assets'?assets():overview();\n  if(tab==='Assets'&&!cloudAssetsLoaded&&!cloudAssetsLoading)loadCloudAssets();
   if(tab==='Video Studio')videoWorkspace=mountVideoStudio(panel.querySelector('[data-video-mount]'),{getProject,getAccountId,mediaService,session:videoSession,readiness:getProductionReadiness?.(),quickPreview:videoQuickPreview});
   if(['Maps','Clips'].includes(tab))historyWorkspace=mountHistoryWorkspace(panel.querySelector('[data-history-mount]'),{getProject,onChange:()=>changed(false),copyText,onRefresh:render,area:tab});
   const tools=root.querySelector('[data-command-actions]');tools.replaceChildren();
