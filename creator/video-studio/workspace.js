@@ -325,7 +325,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  async function renderSelectedJpg(){
   stop();await prepare();if(!renderer||!timeline?.scenes?.length)throw Error('Add or apply a video scene before generating a preview.');
   const selectedId=state.selected||timeline.scenes[0].id,scene=timeline.scenes.find(item=>item.id===selectedId)||timeline.scenes[0];
-  const rawOffset=Number(jpgOffset.value),offset=Number.isFinite(rawOffset)?Math.max(0,Math.min(scene.durationSeconds,rawOffset)):scene.durationSeconds/2,captureAt=scene.startSeconds+offset;
+  const rawText=String(jpgOffset.value||'').trim(),rawOffset=rawText===''?NaN:Number(rawText),offset=Number.isFinite(rawOffset)?Math.max(0,Math.min(scene.durationSeconds,rawOffset)):scene.durationSeconds/2,captureAt=scene.startSeconds+offset;
   await renderer.draw(captureAt,{exporting:true});
   const blob=await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(Error('Canvas could not be exported as JPG.')),'image/jpeg',.92));
   const index=timeline.scenes.findIndex(item=>item.id===scene.id)+1;
