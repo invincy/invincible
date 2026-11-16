@@ -67,5 +67,38 @@ await p3.getByRole('button',{name:'Media library',exact:true}).click();
 assert.equal(await p3.locator('[data-media-search]').evaluate(el=>document.activeElement===el),true);
 await p3.getByRole('button',{name:'Draft JSON',exact:true}).click();
 assert.equal(await p3.getByRole('button',{name:'View current draft JSON'}).evaluate(el=>document.activeElement===el),true);
+// Simulate a plugin write while the editor is open and after an older copy was cached.
+const writeExternalRevision = (page, change) => page.evaluate(async change => {
+ const {testMedia}=await import('/test-media-client.js');
+ const media=testMedia('owner');
+ const draft=await media.loadDraft('single-flow');
+ Object.assign(draft.manifest.scenes[0],change);
+ return media.saveDraft('single-flow',draft.manifest,draft.brands,draft.revision);
+},change);
+const updated=await writeExternalRevision(p2,{name:'Plugin updated scene 1'});
+await page.evaluate(()=>workbench.open({area:'Video Studio',quickPreview:true}));
+await ready(page);
+await page.waitForFunction(revision=>document.querySelector('[data-vs-cloud-notice]').textContent.includes('revision '+revision),updated.revision);
+assert.match(await page.locator('[data-vs-scene-id=map-army]').textContent(),/Plugin updated scene 1/);
+await page.locator('[data-vs=save]').click();
+await ready(page);
+assert.match(await page.locator('[data-vs-status]').textContent(),/Saved to your account/);
+
+await writeExternalRevision(p2,{unsupportedPluginField:true});
+await page.reload();
+await ready(page);
+assert.match(await page.locator('[data-vs-cloud-notice]').textContent(),/Showing local copy.*unsupportedPluginField/);
+const fresh=await browser.newContext({viewport:{width:390,height:844}});
+const mobile=await fresh.newPage();
+await mobile.goto(url);
+await ready(mobile);
+const mobileNotice=await mobile.locator('[data-vs-cloud-notice]').textContent();
+assert.match(mobileNotice,/Cloud draft unavailable.*unsupportedPluginField/);
+assert.doesNotMatch(mobileNotice,/Showing local copy/);
+await mobile.locator('[data-vs=save]').click();
+await ready(mobile);
+assert.match(await mobile.locator('[data-vs-status]').textContent(),/Check the cloud draft before saving/);
+await fresh.close();
+
 assert.deepEqual(errors,[]);console.log('Single upload, full JSON, map army overlay, audio MP4, independent-device retrieval, revision conflict and account isolation passed.');
 }finally{await browser?.close();await new Promise(r=>server.close(r));}})().catch(e=>{console.error(e);process.exitCode=1;});
