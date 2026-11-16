@@ -179,7 +179,7 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  async function loadCloudAssets(){
   if(cloudAssetsLoading||!getAccountId?.())return;
   cloudAssetsLoading=true;render();
-  try{cloudAssets=await createMediaClient(getAccountId()).list();message('Cloud asset library updated.');}
+  try{const client=createMediaClient(getAccountId());const listed=await client.list();cloudAssets=await Promise.all(listed.map(async asset=>asset.kind==='image'?{...asset,previewUrl:await client.read(asset.id).catch(()=>null)}:asset));message('Cloud asset library updated.');}
   catch(error){message(error.message||'Could not load cloud assets.');}
   finally{cloudAssetsLoading=false;render();}
  }
