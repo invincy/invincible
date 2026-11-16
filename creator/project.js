@@ -2,7 +2,7 @@ import {mountAgentPanel} from './agent-panel.js?v=2026111604';
 import{makeScene}from'./storyboard-model.js?v=3';
 import{createProductionWorkbench}from'./production-workbench.js?v=2026111613';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
-import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js';
+import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js?v=2026111701';
 import{collection,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import{createProductionReadiness,mountProductionReadiness}from'./video-studio/production-readiness.js?v=2026111322';
 import{splitVoiceoverScript}from"./scene-tools.js?v=2";
@@ -100,6 +100,8 @@ function projectCompletion(){
   const scenes=project?.scenes||[];
   return projectProgress(project);
 }
+
+function withTimeout(promise,message,ms=12000){return Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(Error(message)),ms))]);}
 
 function render(){
   if(!project)return;
@@ -507,13 +509,13 @@ function finishDraft(){
 
 async function load(){
   if(!projectId){status("No project was selected.","error");return;}
-  await authReady;user=auth.currentUser;
+  await withTimeout(authReady,"Firebase sign-in is taking too long. Please reload and sign in again.",10000);user=auth.currentUser;
   if(!user){status("Sign in on the Dashboard first.","error");$("status").insertAdjacentHTML("beforeend",' <a href="/invincible/">Open Dashboard</a>');return;}
   try{
     projectRef=doc(db,"creatorProjects",projectId);
     let snapshot=null;
-    try{snapshot=await getDoc(projectRef);}catch(error){
-      const legacy=await getDoc(doc(db,"users",user.uid,"creator","main"));
+    try{snapshot=await withTimeout(getDoc(projectRef),"Firebase could not open this project within 12 seconds.");}catch(error){
+      const legacy=await withTimeout(getDoc(doc(db,"users",user.uid,"creator","main")),"Firebase could not open the project data within 12 seconds.");
       const legacyProject=(legacy.data()?.items||[]).find(item=>item.id===projectId);
       if(!legacyProject)throw error;
       project=await runTransaction(db,async tx=>{
