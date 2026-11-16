@@ -55,3 +55,30 @@ test('map imports repair only sub-millisecond timing overflow', () => {
  map.historicalMap.camera[0].offset = 2.01;
  assert.throws(() => prepareAgentUpdate(manifest, manifest), /Offset must be within/);
 });
+
+test('selected scene JSON is a valid patch and round-trips map coordinates and keyframes', async () => {
+ const {scenePatch} = await import('../creator/agent-panel.js');
+ const manifest = fixture();
+ const scene = manifest.scenes[0];
+ scene.engineData.project.historicalMap.camera = [{sceneId:'map-0',offset:0,center:[91,25],zoom:5}];
+ scene.overlays = [{id:'title',type:'text',text:'Rain',keyframes:[{timeSeconds:0,opacity:0},{timeSeconds:1,opacity:1}]}];
+ const patch = scenePatch(scene, 3);
+ assert.equal(patch.changes.name, scene.name);
+ assert.deepEqual(prepareAgentUpdate(manifest,patch,{revision:3}),prepareAgentUpdate(manifest,manifest));
+});
+
+test('motion preview skips inaccessible clips and retains healthy tracks', async () => {
+ const {loadAudioTracks} = await import('../creator/video-studio/audio.js');
+ const clips = ['denied','healthy','denied'].map((fileId, index) => ({id:String(index),fileId,name:fileId,trimStart:0,durationSeconds:1}));
+ const attempts = [], muted = [];
+ const getFile = async id => {
+  attempts.push(id);
+  if(id === 'denied') throw Error('HTTP 403');
+  return new Blob(['audio']);
+ };
+ const decode = async () => ({duration:1,sampleRate:48000});
+ const tracks = await loadAudioTracks({audioClips:clips},getFile,{decode,onUnavailable:clip=>muted.push(clip.id)});
+ assert.deepEqual(tracks.map(clip=>clip.id),['1']);
+ assert.deepEqual(muted,['0','2']);
+ assert.deepEqual(attempts,['denied','healthy']);
+});

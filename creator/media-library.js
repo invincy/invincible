@@ -1,4 +1,4 @@
-import {decodeVoiceover} from './video-studio/audio.js?v=2026111002';
+import {decodeVoiceover} from './video-studio/audio.js?v=2026111604';
 export const isCloudFile=id=>typeof id==='string'&&/^cloud-[a-f0-9]{64}$/.test(id);
 export function createMediaClient(accountId){
  async function call(data){
