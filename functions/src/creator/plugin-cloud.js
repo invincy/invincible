@@ -125,11 +125,12 @@ function authenticationRequired(scopes){
 function requireScope(identity,scope){if(!identity.scope.includes(scope))throw Error(`Reconnect the Invincible plugin and grant ${scope} permission.`);}
 function timestamp(value){return value?.toDate?.().toISOString?.()||value||null;}
 function projectSummary(doc){const value=doc.data();return{id:doc.id,title:String(value.title||'Untitled project'),stage:String(value.stage||'Ideas'),format:String(value.format||''),sceneCount:Array.isArray(value.scenes)?value.scenes.length:0,updatedAt:timestamp(value.updatedAt)};}
-function projectContext(id,project){
+function projectContext(id,project,audioOverride=null){
  const timedScenes=(project.scenes||[]).filter(scene=>Number.isFinite(Number(scene.startSeconds))&&Number.isFinite(Number(scene.endSeconds))&&Number(scene.endSeconds)>Number(scene.startSeconds));
  const derivedTranscript=timedScenes.length?{duration:Number(timedScenes.at(-1).endSeconds),text:timedScenes.map(scene=>String(scene.voiceover||'')).join(' '),segments:timedScenes.map((scene,index)=>({id:String(scene.sourceSegmentIds?.[0]||`segment-${index+1}`),start:Number(scene.startSeconds),end:Number(scene.endSeconds),text:String(scene.voiceover||'')}))}:null;
  const transcript=project.voiceoverAnalysis?.transcript||project.aiDraft?.analysis?.transcript||project.scriptWorkspace?.transcript||derivedTranscript;
- return{id,title:String(project.title||'Untitled project'),instructions:String(project.instructions||project.notes||'').slice(0,12000),script:String(project.script||'').slice(0,30000),transcript,audio:project.scriptWorkspace?.audio||null,aspectRatio:String(project.aspectRatio||'9:16'),catalog:projectCatalog(project),existingSceneCount:Array.isArray(project.scenes)?project.scenes.length:0,writeRevision:Number.isInteger(project.writeRevision)?project.writeRevision:0,workflow:workflowStatus(id,project,transcript),readOnly:false};
+ const audio=audioOverride||project.scriptWorkspace?.audio||null;
+ return{id,title:String(project.title||'Untitled project'),instructions:String(project.instructions||project.notes||'').slice(0,12000),script:String(project.script||'').slice(0,30000),transcript,audio,aspectRatio:String(project.aspectRatio||'9:16'),catalog:projectCatalog(project),existingSceneCount:Array.isArray(project.scenes)?project.scenes.length:0,writeRevision:Number.isInteger(project.writeRevision)?project.writeRevision:0,workflow:workflowStatus(id,project,transcript,audio),readOnly:false};
 }
 async function listProjects(identity){
  const projects=db().collection('creatorProjects'),owned=await projects.where('ownerUid','==',identity.uid).get(),shared=identity.email&&identity.emailVerified?await projects.where('editorEmails','array-contains',identity.email).get():{docs:[]},all=new Map();
@@ -137,8 +138,11 @@ async function listProjects(identity){
 }
 async function readProject(identity,projectId){
  if(!/^[A-Za-z0-9_-]{1,100}$/.test(projectId))throw Error('Invalid project ID.');
- const snap=await db().collection('creatorProjects').doc(projectId).get(),project=snap.exists?snap.data():null;
- assertAccess({uid:identity.uid,token:{email:identity.email,email_verified:identity.emailVerified}},project);return projectContext(projectId,project);
+ const [snap,draftSnap]=await Promise.all([db().collection('creatorProjects').doc(projectId).get(),videoDraftRef(identity,projectId).get()]),project=snap.exists?snap.data():null;
+ assertAccess({uid:identity.uid,token:{email:identity.email,email_verified:identity.emailVerified}},project);
+ const manifest=draftSnap.exists?draftSnap.data()?.manifest:null,voiceover=[...(Array.isArray(manifest?.audioClips)?manifest.audioClips:[]),manifest?.audio].find(clip=>clip?.fileId&&(!clip.role||clip.role==='voiceover'));
+ const fallbackAudio=voiceover?{cloudAssetId:String(voiceover.fileId),sourceFilename:String(voiceover.name||''),duration:Number(voiceover.durationSeconds)||0}:null;
+ return projectContext(projectId,project,fallbackAudio);
 }
 const compileInput=z.object({title:z.string().trim().min(1).max(200),transcript:z.object({duration:z.number().positive().max(36000),language:z.string().max(40).optional(),text:z.string().max(30000).optional(),segments:z.array(z.object({id:z.string().regex(/^[A-Za-z0-9_-]{1,100}$/),start:z.number().min(0),end:z.number().positive(),text:z.string().trim().min(1).max(4000),words:z.array(z.object({word:z.string(),start:z.number(),end:z.number()})).optional()})).min(1).max(100)}),semanticPlan:z.record(z.string(),z.unknown()),projectId:z.string().regex(/^[A-Za-z0-9_-]{1,100}$/).optional()});
 const applyInput=compileInput.extend({projectId:z.string().regex(/^[A-Za-z0-9_-]{1,100}$/),expectedRevision:z.number().int().min(0),confirmed:z.literal(true),replaceExisting:z.boolean().default(false),creativeInstructions:z.string().max(12000).optional()});
@@ -147,7 +151,7 @@ const briefFields={title:z.string().trim().min(1).max(200),narration:z.string().
 const createProjectInput=z.object({...briefFields,idempotencyKey:z.string().regex(/^[A-Za-z0-9._:-]{8,160}$/)});
 const updateBriefInput=z.object({...briefFields,projectId:projectIdSchema,expectedRevision:z.number().int().min(0)});
 
-function workflowStatus(id,project,transcript){
+function workflowStatus(id,project,transcript,audioOverride=null){
  const script=String(project.script||'').trim(),instructions=String(project.instructions||project.notes||project.scriptWorkspace?.creativeInstructions||'').trim(),scenes=Array.isArray(project.scenes)?project.scenes:[];
  const timingReady=Boolean(transcript?.segments?.length&&Number(transcript.duration)>0),briefReady=Boolean(script&&instructions),scenePlanApplied=scenes.length>0;
  let phase='brief',nextAction='complete_brief',summary='Add narration and animation instructions.';
@@ -155,7 +159,7 @@ function workflowStatus(id,project,transcript){
  if(timingReady&&!scenePlanApplied){phase='semantic_plan';nextAction='compile_and_apply_scene_plan';summary='Timing is locked. Continue directly with Director planning, compilation, review and application.';}
  if(scenePlanApplied){phase='native_review_export';nextAction='review_maps_preview_and_export';summary='Scenes are applied. Review native maps, preview the continuous Motion Studio timeline and export the MP4.';}
  const area=phase==='audio_timing'?'Voiceover':phase==='native_review_export'?'Studio':'Storyboard';
- const audioReady=/^cloud-[a-f0-9]{64}$/.test(String(project.scriptWorkspace?.audio?.cloudAssetId||''));if(phase==='audio_timing'&&audioReady){nextAction='start_private_local_whisper';summary='The final MP3 is privately stored. Start the paired laptop timing job directly; browser control is not required.';}
+ const audioReady=/^cloud-[a-f0-9]{64}$/.test(String((audioOverride||project.scriptWorkspace?.audio)?.cloudAssetId||''));if(phase==='audio_timing'&&audioReady){nextAction='start_private_local_whisper';summary='The final MP3 is privately stored. Start the paired laptop timing job directly; browser control is not required.';}
  return{phase,nextAction,summary,briefReady,audioReady,timingReady,scenePlanApplied,sceneCount:scenes.length,localCheckpointRequired:(phase==='audio_timing'&&!audioReady)||phase==='native_review_export',localCheckpointReason:phase==='audio_timing'&&!audioReady?'Generate or choose the final MP3 once so it can be saved privately.':phase==='native_review_export'?'Native map review and MP4 rendering run on the paired laptop.':'',openUrl:`https://invincy.github.io/invincible/creator/project.html?id=${encodeURIComponent(id)}&area=${encodeURIComponent(area)}`,costPolicy:{localWhisper:'free',cloudTranscription:'disabled-by-default',ordinaryCreatorPlanner:'disabled',directorPlanning:'uses the active ChatGPT session'}};
 }
 async function startLocalTiming(identity,{projectId,expectedRevision}){
