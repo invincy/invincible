@@ -79,3 +79,23 @@ Browser fixtures exercise range switching, price-chart controls, a missing
 history case, contribution filtering, and the Mutual funds view. Model tests
 cover calendar boundaries, aligned dates, exclusions, contribution, and front
 card ordering.
+
+## Watch and SIP projections
+
+The Watch tab ranks the ten biggest gainers or losers by closing-price change for
+the selected period and current Nifty 50, Midcap 100 or Smallcap 100 constituent
+list. It reports the date and coverage, skips missing and suspect price series,
+and offers official constituent CSV import if the index host blocks browser
+requests. 1D uses the previous trading close. The watchlist is saved through the
+existing private Portfolio transaction. Only instrument identifiers and dates
+are sent to the price provider.
+
+The Mutual funds tab adds an optional SIP projection. It starts from saved fund
+value and SIP schedules. The rupee increase applies to every successive monthly
+payment. The Nifty 50 scenario is a dated five-year total-return CAGR from the
+30 October 2026 factsheet. It is a snapshot and must be refreshed explicitly.
+Custom assumptions are available. Projections exclude fees and taxes and do not
+write to the portfolio.
+
+Five focused model tests passed locally. JSX syntax was checked. The production
+build and the browser market-data and signed-in paths still need verification.
