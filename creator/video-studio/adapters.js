@@ -3,11 +3,11 @@ import {drawCanvasBackground,drawCanvasLayer} from './canvas.js?v=2026111505';
 import {ensureDocumentaryFonts} from '../map-fonts.js';
 import {compileAnimation} from '../map-animation-import.js?v=2026111603';
 import {createHistoryPlayer} from '../history-player.js?v=2026111603';
-import {layerFrame,sceneAt,referencedMapAssets} from './model.js?v=2026111703';
+import {layerFrame,sceneAt,referencedMapAssets} from './model.js?v=2026111704';
 import {resolveMapAsset} from '../map-assets-client.js?v=2026111002';
 import {drawBattlefield} from './battlefield.js?v=2026111014';
 import {parallaxTransform,projectLayer} from './parallax.js';
-import {fitMedia} from './composition.js?v=2026111703';
+import {fitMedia} from './composition.js?v=2026111704';
 export function mapDraft(animation,geometryReviewed,mapAssets=[]){
  return compileAnimation({scenes:[],historicalMap:{version:1,theme:'night',events:[],features:{type:'FeatureCollection',features:[]},camera:[],visual:{version:1,assets:referencedMapAssets(mapAssets,animation),layers:[]}}},animation,{geometryReviewed}).project;
 }
@@ -90,6 +90,7 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
    if(transition)ctx.globalAlpha=Math.max(0,Math.min(1,local/transition,(scene.durationSeconds-local)/transition));
    if(scene.engineData.background){ctx.fillStyle=scene.engineData.background;ctx.fillRect(0,0,width,height);}
    if(scene.engineType==='map'){
+    drawCanvasBackground(ctx,scene.engineData,images);
     const {player,host,errors}=await mapFor(scene,frameSignal);if(exporting&&(!player.isNative||errors.length))throw Error(errors[0]||'Map export needs WebGL2.');
     player.seek(local+(scene.engineData.sourceStart||0));if(player.isNative)await player.settleFrame(frameSignal);
     if(exporting&&errors.length)throw Error(errors[0]);ctx.drawImage(player.map.getCanvas(),0,0,width,height);

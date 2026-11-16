@@ -1,5 +1,5 @@
 import {validateThreeScene} from './three-scene.js';
-import {validateCanvas,CANVAS_FONTS} from './canvas.js?v=2026111206';
+import {validateCanvas,CANVAS_FONTS,BACKGROUND_FIELDS} from './canvas.js?v=2026111704';
 import {compileAnimation} from '../map-animation-import.js?v=2026111603';
 import {safeAssetUrl} from '../map-editor-model.js?v=2026111603';
 import {validateMap,durationOf} from '../history-model.js?v=2026111603';
@@ -92,7 +92,10 @@ function validateScene(scene,assets,mapAssets,{template=false,version=1,mapSourc
  if(!(version===2?['map','lic','graphic','battlefield','image','video','three']:['map','lic','graphic']).includes(scene.engineType)||template&&scene.engineType!=='graphic')fail('Unsupported scene engine for this manifest version.');
  const data=scene.engineData;
  if(scene.engineType==='map'){
-  keys(data,version===2?['animation','geometryReviewed','project','sourceId','sourceStart','background']:['animation','geometryReviewed','background'],'map engine');if(data.geometryReviewed!==undefined&&typeof data.geometryReviewed!=='boolean')fail('geometryReviewed must be boolean.');
+  const mapFields=version===2?['animation','geometryReviewed','project','sourceId','sourceStart']:['animation','geometryReviewed'];
+  keys(data,[...mapFields,...BACKGROUND_FIELDS],'map engine');
+  validateCanvas(Object.fromEntries(BACKGROUND_FIELDS.filter(key=>Object.hasOwn(data,key)).map(key=>[key,data[key]])),assets);
+  if(data.geometryReviewed!==undefined&&typeof data.geometryReviewed!=='boolean')fail('geometryReviewed must be boolean.');
   if(data.sourceId&&data.project)fail('Choose one map source.');
   const nativeProject=data.project||(data.sourceId?mapSources.find(s=>s.id===data.sourceId)?.project:null);
   if(data.sourceId&&!nativeProject)fail('Missing native map source.');

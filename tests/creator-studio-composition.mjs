@@ -28,13 +28,18 @@ test('native map JSON normalizes editor fields and round-trips without changing 
 test('map backgrounds survive cloud validation and timeline compilation',()=>{
  const manifest=appendProjectMaps(newStudioVideo(),source());
  const scene=manifest.scenes[0];
- scene.engineData.background='#102030';
+ const background={background:'#102030',backgroundStyle:'grid',gridColor:'#446688',gridSpacing:54};
+ Object.assign(scene.engineData,background);
  const opened=validateManifest(JSON.stringify(manifest));
- assert.equal(opened.scenes[0].engineData.background,'#102030');
+ assert.deepEqual(opened.scenes[0].engineData,scene.engineData);
  assert.equal(compileTimeline(opened,PRESETS[0]).scenes[0].engineData.background,'#102030');
  assert.deepEqual(validateManifest(opened),opened);
+ Object.assign(scene.engineData,{backgroundStyle:'image',backgroundAssetId:'map-art',backgroundFit:'cover'});
+ assert.throws(()=>validateManifest(manifest),/Missing background artwork/);
+ manifest.assets.push({id:'map-art',name:'Map artwork',fileId:'original'});
+ assert.equal(validateManifest(manifest).scenes[0].engineData.backgroundAssetId,'map-art');
  scene.engineData.background='invalid';
- assert.throws(()=>validateManifest(manifest),/Colors must be #rrggbb/);
+ assert.throws(()=>validateManifest(manifest),/colors must be #rrggbb/i);
 });
 test('v1 upgrades only on an explicit edit and preserves the legacy recording',()=>{
  const old={...emptyVideo(),audio:{fileId:'voice',name:'original.wav',startSeconds:.5,gain:.7}},before=structuredClone(old);assert.throws(()=>upgradeVideo(old),/original/);const out=upgradeVideo(old,3);assert.equal(out.schemaVersion,2);assert.equal(out.audio,null);assert.equal(out.audioClips[0].durationSeconds,3);assert.equal(out.audioClips[0].startSeconds,.5);assert.deepEqual(old,before);assert.deepEqual(validateManifest(old),old);assert.equal(validateManifest(out).schemaVersion,2);assert.throws(()=>validateManifest({...old,schemaVersion:3}));

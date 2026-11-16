@@ -1,7 +1,8 @@
 // Declarative Canvas scenes share the Studio compositor and clock with maps.
 export const CANVAS_FONTS=['system-ui','Invincible Sans','Invincible Hindi','serif','monospace'];
+export const BACKGROUND_FIELDS=['background','backgroundStyle','gridColor','gridSpacing','backgroundAssetId','backgroundFit'];
 export function validateCanvas(data,assets){
- const allowed=['background','backgroundStyle','gridColor','gridSpacing','backgroundAssetId','backgroundFit','parallax'];
+ const allowed=[...BACKGROUND_FIELDS,'parallax'];
  if(!data||typeof data!=='object'||Array.isArray(data)||Object.keys(data).some(k=>!allowed.includes(k)))throw Error('Unsupported canvas background field.');
  for(const key of ['background','gridColor'])if(data[key]!==undefined&&!/^#[a-f\d]{6}$/i.test(data[key]))throw Error('Canvas colors must be #rrggbb.');
  if(data.backgroundStyle!==undefined&&!['plain','grid','blueprint','image'].includes(data.backgroundStyle))throw Error('Choose plain, grid, blueprint or image.');
