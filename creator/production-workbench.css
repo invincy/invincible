@@ -349,3 +349,18 @@ html.invincible-page-chrome .creator-focus-mode .wb-status:not(:empty){bottom:ca
 
 /* Leave room for the shared assistant launcher at the viewport's lower right. */
 .creator-focus-mode .wb-scene-footer{padding-right:90px}
+
+.wb-cloud-library{margin:1rem 0;padding:1rem;border:1px solid rgba(140,190,210,.2);border-radius:18px;background:rgba(5,18,27,.5)}
+.wb-cloud-library-head{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;margin-bottom:1rem}
+.wb-cloud-library-head h3{margin:0 0 .25rem}
+.wb-cloud-library-head p,.wb-cloud-library-status{margin:.25rem 0;color:var(--muted,#9fb2c6)}
+.wb-cloud-assets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.75rem}
+.wb-cloud-asset{display:grid;grid-template-columns:56px 1fr;gap:.75rem;align-items:center;padding:.7rem;border:1px solid rgba(140,190,210,.16);border-radius:14px;background:rgba(8,28,40,.72)}
+.wb-cloud-asset-preview{width:56px;height:56px;display:grid;place-items:center;border-radius:10px;overflow:hidden;background:#0b2230;color:#8fd8e8}
+.wb-cloud-asset-preview img{width:100%;height:100%;object-fit:cover}
+.wb-cloud-asset-copy{min-width:0;display:grid;gap:.18rem}
+.wb-cloud-asset-copy strong,.wb-cloud-asset-copy span,.wb-cloud-asset-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wb-cloud-asset-copy span,.wb-cloud-asset-copy small{color:var(--muted,#9fb2c6);font-size:.78rem}
+.wb-cloud-asset>button{grid-column:1/-1}
+.wb-cloud-asset.is-added{border-color:rgba(120,210,160,.4)}
+@media(max-width:640px){.wb-cloud-assets-grid{grid-template-columns:1fr}.wb-cloud-library-head{display:block}}
