@@ -14,7 +14,7 @@ if(isNewDraft&&!queryParams.has("id")){
   queryParams.set("id",projectId);
   history.replaceState(history.state,"",location.pathname+"?"+queryParams);
 }
-const requestedAreaRaw=queryParams.get("area"),requestedArea=requestedAreaRaw==="Studio"?"Video Studio":requestedAreaRaw,requestedTool=queryParams.get("tool")||"";
+const requestedAreaRaw=queryParams.get("area"),requestedArea=requestedAreaRaw==="Studio"?"Video Studio":requestedAreaRaw,requestedTool=queryParams.get("tool")||"",cloudOnly=queryParams.get("cloud")==="1";
 const tabId=(()=>{try{let id=sessionStorage.getItem("invincible.creatorTabId");if(!id){id=Math.random().toString(36).slice(2)+Date.now().toString(36);sessionStorage.setItem("invincible.creatorTabId",id);}return id;}catch{return "default";}})();
 let saveChain=Promise.resolve(),editVersion=0,cloudVersion=0,baseRevision=0;
 let productionReadiness;
@@ -536,7 +536,9 @@ async function load(){
     baseRevision=Number.isInteger(project.writeRevision)?project.writeRevision:0;
     let recoveredStaleDraft=null;
     recoveredLegacyDraft=false;
+    if(cloudOnly)clearLocalDraft();
     try{
+     if(cloudOnly)throw Error('Cloud-only load');
       let rawDraft=localStorage.getItem(draftKey()),fromLegacy=false;
       if(!rawDraft){rawDraft=localStorage.getItem(legacyDraftKey());fromLegacy=!!rawDraft;}
       const draft=JSON.parse(rawDraft||'null');
