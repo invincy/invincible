@@ -14,7 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../site-nav.css?v=19">
   <link rel="stylesheet" href="../shared/dashboard-backdrop.css?v=4">
-  <link rel="stylesheet" href="project.css?v=2026111318">
+  <link rel="stylesheet" href="project.css?v=2026111603">
   <link rel="stylesheet" href="storyboard.css?v=5">
   <link rel="stylesheet" href="production-workbench.css?v=12">
   <link rel="stylesheet" href="history-workspace.css?v=2026110903">
@@ -67,6 +67,43 @@
     <button id="shareProject" class="project-icon" type="button" title="Share project" aria-label="Share project" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m9 10 6-4M9 14l6 4"/></svg></button>
     <span id="syncIndicator" class="project-icon" role="img" data-state="pending" title="Connecting" aria-label="Connecting"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10a9 9 0 0 1 15-5l3 3M21 3v5h-5M21 14A9 9 0 0 1 6 19l-3-3m0 5v-5h5"/></svg></span>
   </header>
+  <details id="ai-agent-runbook" class="panel project-agent">
+    <summary>🤖 AI Agent Runbook (Read First — Zero Exploration Needed)</summary>
+    <h2>🤖 INVINCIBLE CREATOR STUDIO — AI AGENT RUNBOOK (READ FIRST)</h2>
+    <p>Do NOT explore tabs or click individual sidebar controls by trial and error. Follow the recipe for your task below.</p>
+    <h3>Route A · Build a brand-new video</h3>
+    <ol>
+      <li>In <strong>1 Script</strong>, paste the narration. For the Hindi Shorts preset, choose Gemini · expressive, Hindi (India) · hi-IN, Female, Aoede, Social media · engaging, and pace 1.20×. Choose <strong>OpenAI only</strong> for remote timing. Generate MP3. Set Final speed to 1.20× if requested, then click <strong>Next · Script &amp; scenes</strong> to prepare the final audio.</li>
+      <li>In <strong>2 Sync plan</strong>, wait for timestamps, paste Animation instructions, click <strong>Next · Generate sync plan</strong> and then <strong>Next · Review generated maps</strong>. Confirm in the page if prompted.</li>
+      <li>Open <strong>AI Agent Panel</strong>, select Full Video Manifest, and click <strong>View JSON</strong>. Preserve audio and scene timing. Paste the updated schemaVersion 2 manifest and click <strong>Validate &amp; Save to Cloud</strong>.</li>
+    </ol>
+    <h3>Route B · Edit existing scenes</h3>
+    <ol>
+      <li>Open <strong>AI Agent Panel</strong>. The target list has scene names and IDs. Use <strong>Available Media</strong> for file IDs and dimensions.</li>
+      <li>Read the current manifest using <strong>View JSON</strong> with Full Video Manifest selected. Select the target scene for a patch template. Put the fields to change in <code>changes</code> and keep <code>expectedRevision</code>. Use Validate &amp; Save to Cloud.</li>
+      <li>Motion &amp; export → Create &amp; import also offers View scene summary, View current draft JSON, Agent instructions, Review import and Apply reviewed import.</li>
+    </ol>
+    <h3>Schema and validation · Version 2</h3>
+    <ul>
+      <li>Preserve <code>startSeconds</code>, <code>durationSeconds</code> and <code>audioClips</code>. Overlay keyframe times must fit the video scene. Camera offsets fit their associated native map scene. The native source must cover the trim.</li>
+      <li>For NASA Blue Marble, start with an existing native map snapshot. Use map engine, <code>sourceStart: 0</code>, satellite basemap with labels and borders, mercator projection, and documentary overlay preset inside <code>engineData.project.historicalMap</code>. Use two smooth camera keyframes for a moving shot. Pair a broad translucent cyan route with a narrower arrow route for wind.</li>
+      <li>For cloud images, register <code>{id, name, fileId}</code> in manifest <code>assets</code>, then reference that ID as <code>assetId</code> on an image overlay. To add a new asset reference, use a full manifest update. Overlays render back-to-front. Coordinates are normalized; keep Shorts labels within x 0.12–0.84 and y 0.12–0.78.</li>
+      <li>Patches merge objects and arrays of items with IDs. Explicitly use <code>{"$replace": [...]}</code> when replacing an array.</li>
+    </ul>
+  </details>
+  <details id="ai-agent-panel" class="panel project-agent">
+    <summary>⚡ AI Agent Panel</summary>
+    <p id="agentState">Open to load project state.</p>
+    <label>Available Media <textarea id="agentMedia" readonly rows="4"></textarea></label>
+    <form>
+      <label>Target <select id="agentTarget"><option value="">Full Video Manifest</option></select></label>
+      <button id="agentRefresh" type="button">Refresh project state</button>
+      <button id="agentRead" type="button">View JSON</button>
+      <label>Manifest or scene patch JSON <textarea id="agentPayload" rows="7" required></textarea></label>
+      <button id="agentSave" type="submit" disabled>Validate &amp; Save to Cloud</button>
+      <p id="agentStatus" role="status"></p>
+    </form>
+  </details>
   <div class="project-progress" aria-hidden="true"><span id="projectProgressBar"></span></div>
   <nav class="project-workspace-nav" aria-label="Project tools">
     <button type="button" data-project-area="Voiceover"><span aria-hidden="true">1</span> Script</button>
@@ -125,6 +162,6 @@
       <div class="share-footer"><button id="copyProjectLink" type="button" class="secondary">Copy project link</button><button value="cancel" class="primary">Done</button></div>
     </form>
   </dialog>
-<script type="module" src="project.js?v=2026111602"></script>
+<script type="module" src="project.js?v=2026111603"></script>
 </body>
 </html>

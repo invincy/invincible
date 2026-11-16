@@ -593,3 +593,9 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
  .project-workspace-nav .project-tool-divider{margin-left:2px;padding-left:10px}
  .project-workflow-guide{padding:7px 12px}
 }
+
+.project-agent { margin-block: .5rem; padding: .75rem; overflow-wrap: anywhere; }
+.project-agent > summary { cursor: pointer; font-weight: 600; }
+.project-agent textarea { display: block; box-sizing: border-box; width: 100%; font-family: monospace; }
+.project-agent button, .project-agent select { margin-block: .35rem; max-width: 100%; }
+#agentStatus { white-space: pre-wrap; }

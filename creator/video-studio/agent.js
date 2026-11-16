@@ -1,4 +1,4 @@
-import {validateManifest} from './model.js?v=2026111506';
+import {validateManifest} from './model.js?v=2026111603';
 const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 const fail=(code,message)=>{throw Object.assign(Error(message),{code});};
 // Objects merge recursively; ID arrays merge by ID. Destruction is explicit.

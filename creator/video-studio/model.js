@@ -1,8 +1,8 @@
 import {validateThreeScene} from './three-scene.js';
 import {validateCanvas,CANVAS_FONTS} from './canvas.js?v=2026111206';
-import {compileAnimation} from '../map-animation-import.js?v=2026111002';
-import {safeAssetUrl} from '../map-editor-model.js?v=2026111002';
-import {validateMap,durationOf} from '../history-model.js?v=2026111002';
+import {compileAnimation} from '../map-animation-import.js?v=2026111603';
+import {safeAssetUrl} from '../map-editor-model.js?v=2026111603';
+import {validateMap,durationOf} from '../history-model.js?v=2026111603';
 import {validateBattlefield} from './battlefield.js?v=2026111014';
 import {exportDimensions} from '../map-video-export.js';
 export {exportDimensions};
@@ -51,6 +51,11 @@ export function validateLayer(layer,duration,assets){
   }
  }
 }
+const TIMING_TOLERANCE = 0.0005;
+function clampTiming(value, limit) {
+ return Number.isFinite(value) && Number.isFinite(limit) &&
+  value > limit && value - limit <= TIMING_TOLERANCE ? limit : value;
+}
 function validateNativeProject(nativeProject){
    const editorFields=['camera','visual','basemap','projection','overlayPreset'];
    keys(nativeProject,['scenes','historicalMap',...editorFields],'native map snapshot');
@@ -62,6 +67,10 @@ function validateNativeProject(nativeProject){
    }
    if(!Array.isArray(nativeProject.scenes)||!nativeProject.scenes.length||nativeProject.scenes.length>100)fail('Native map needs scenes.');
    const ids=new Set();for(const s of nativeProject.scenes){keys(s,['id','duration'],'native map scene');id(s.id);num(s.duration,1/30,600,'map duration');if(ids.has(s.id))fail('Duplicate native map scene.');ids.add(s.id);}
+   for(const key of nativeProject.historicalMap?.camera || []){
+    const source = nativeProject.scenes.find(scene => scene.id === key.sceneId);
+    if(source && key.offset !== undefined) key.offset = clampTiming(key.offset, source.duration);
+   }
    validateMap(nativeProject.historicalMap,nativeProject);
 }
 function validateScene(scene,assets,mapAssets,{template=false,version=1,mapSources=[],models=new Set()}={}){
@@ -89,6 +98,10 @@ function validateScene(scene,assets,mapAssets,{template=false,version=1,mapSourc
   if(data.sourceId&&!nativeProject)fail('Missing native map source.');
   if(nativeProject){
    if(data.animation)fail('Choose native map or animation instructions, not both.');
+   if(data.project && nativeProject.scenes?.length === 1){
+    const source = nativeProject.scenes[0], end = data.sourceStart + scene.durationSeconds;
+    if(end <= 600 && clampTiming(end, source.duration) !== end) source.duration = end;
+   }
    validateNativeProject(nativeProject);num(data.sourceStart,0,600,'map source start');if(data.sourceStart+scene.durationSeconds>durationOf(nativeProject)+1e-6)fail('Native map trim exceeds its source.');
   }else{
   const compiled=compileAnimation({scenes:[],historicalMap:{version:1,theme:'night',events:[],features:{type:'FeatureCollection',features:[]},camera:[],visual:{version:1,layers:[],assets:referencedMapAssets(mapAssets,data.animation)}}},data.animation,{geometryReviewed:data.geometryReviewed===true});
@@ -104,7 +117,11 @@ function validateScene(scene,assets,mapAssets,{template=false,version=1,mapSourc
   for(const p of data.points){keys(p,['timeSeconds','year','label','premium','addition','income','booster','maturity'],'milestone');num(p.timeSeconds,0,scene.durationSeconds,'milestone time');if(p.timeSeconds<previous)fail('Milestones must follow timeline order.');previous=p.timeSeconds;num(p.year,0,100,'policy year');str(p.label,100,'milestone label');for(const field of ['premium','addition','income','booster','maturity'])if(p[field]!==undefined)num(p[field],0,1e10,field);}
  }else validateCanvas(data,assets);
  if(data.background!==undefined)color(data.background);
- if(!Array.isArray(scene.overlays)||scene.overlays.length>100)fail('Use up to 100 overlays per scene.');const ids=new Set();for(const l of scene.overlays){validateLayer(l,scene.durationSeconds,assets);if(ids.has(l.id))fail('Duplicate layer ID.');ids.add(l.id);}
+ if(!Array.isArray(scene.overlays)||scene.overlays.length>100)fail('Use up to 100 overlays per scene.');const ids=new Set();for(const l of scene.overlays){
+  if(Array.isArray(l?.keyframes)) for(const key of l.keyframes){
+   if(key) key.timeSeconds = clampTiming(key.timeSeconds, scene.durationSeconds);
+  }
+  validateLayer(l,scene.durationSeconds,assets);if(ids.has(l.id))fail('Duplicate layer ID.');ids.add(l.id);}
  if(scene.transition!==undefined){keys(scene.transition,['type','durationSeconds'],'transition');if(!['cut','fade'].includes(scene.transition.type))fail('Transition must be cut or fade.');num(scene.transition.durationSeconds,0,scene.durationSeconds/2,'transition duration');}
 }
 export function validateManifest(input,{mapAssets=[]}={}){

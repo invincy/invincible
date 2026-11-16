@@ -11,7 +11,12 @@ export function createMediaClient(accountId){
   async upload(file,metadata){const result=await call({action:'prepare',asset:metadata});if(result.asset)return result.asset;
    const uploaded=await fetch(result.uploadUrl,{method:'PUT',body:file,headers:{'Content-Type':metadata.mimeType}});if(!uploaded.ok&&uploaded.status!==412)throw Error('Upload did not finish. Choose the same file to retry.');return (await call({action:'commit',id:metadata.id})).asset;},
   async read(id){return (await call({action:'read',id})).url;},
-  async file(id){const url=await this.read(id),response=await fetch(url);if(!response.ok)throw Error('Could not retrieve cloud media '+id+' (HTTP '+response.status+'). Check the original upload and Storage access. The scene configuration is retained.');return response.blob();},
+  async file(id){let response = await fetch(await this.read(id));
+   if (response.status === 401 || response.status === 403) {
+    await response.body?.cancel();
+    response = await fetch(await this.read(id));
+   }
+   if(!response.ok)throw Error('Could not retrieve cloud media '+id+' (HTTP '+response.status+'). Check the original upload and Storage access. The scene configuration is retained.');return response.blob();},
   async loadDraft(projectId){return (await call({action:'loadDraft',projectId})).draft;},
   saveDraft(projectId,manifest,brands,revision){return call({action:'saveDraft',projectId,manifest,brands,revision});}
  };
