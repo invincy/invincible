@@ -61,6 +61,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  header.after(audioWarning);
  const jpgButton=document.createElement('button');jpgButton.type='button';jpgButton.dataset.vs='jpg-previews';jpgButton.textContent='Export JPG previews';$('[data-vs=export]').before(jpgButton);
  const jpgSceneButton=document.createElement('button');jpgSceneButton.type='button';jpgSceneButton.dataset.vs='jpg-scene';jpgSceneButton.textContent='Export selected scene JPG';jpgButton.before(jpgSceneButton);
+ const jpgOffsetLabel=document.createElement('label');jpgOffsetLabel.className='vs-help';jpgOffsetLabel.textContent='JPG moment (s; blank = midpoint)';const jpgOffset=document.createElement('input');jpgOffset.type='number';jpgOffset.min='0';jpgOffset.step='.1';jpgOffset.placeholder='midpoint';jpgOffset.dataset.vsJpgOffset='';jpgOffset.setAttribute('aria-label','JPG moment within selected scene in seconds');jpgOffsetLabel.append(jpgOffset);jpgButton.before(jpgOffsetLabel);
  const account=getAccountId(),projectId=getProject()?.id;const store=account?openStudioStore(account):null;
  const state=session;if(state.account!==account||state.projectId!==projectId){for(const key of Object.keys(state))delete state[key];state.account=account;state.projectId=projectId;}state.manifest??=emptyVideo();state.brands??=structuredClone(PRESETS);state.files??=new Map();state.brandAssets??=[];state.cloudRevision??=0;
  const media=mediaService||createMediaClient(account);let catalogue=[],pendingCloud=null,lastExportUrl='',lastExportBlob=null,lastExportName='';
@@ -324,11 +325,12 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  async function renderSelectedJpg(){
   stop();await prepare();if(!renderer||!timeline?.scenes?.length)throw Error('Add or apply a video scene before generating a preview.');
   const selectedId=state.selected||timeline.scenes[0].id,scene=timeline.scenes.find(item=>item.id===selectedId)||timeline.scenes[0];
-  await renderer.draw(scene.startSeconds,{exporting:true});
+  const rawOffset=Number(jpgOffset.value),offset=Number.isFinite(rawOffset)?Math.max(0,Math.min(scene.durationSeconds,rawOffset)):scene.durationSeconds/2,captureAt=scene.startSeconds+offset;
+  await renderer.draw(captureAt,{exporting:true});
   const blob=await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(Error('Canvas could not be exported as JPG.')),'image/jpeg',.92));
   const index=timeline.scenes.findIndex(item=>item.id===scene.id)+1;
-  const name=(state.manifest.title||'invincible').replace(/[^\p{L}\p{N}_-]/gu,'_')+'-scene-'+String(index).padStart(2,'0')+'.jpg';
-  download(blob,name);status(`Scene ${index} JPG preview exported.`);return {sceneId:scene.id,name};
+  const name=(state.manifest.title||'invincible').replace(/[^\p{L}\p{N}_-]/gu,'_')+'-scene-'+String(index).padStart(2,'0')+'-t-'+offset.toFixed(2)+'s.jpg';
+  download(blob,name);status(`Scene ${index} JPG preview exported at ${offset.toFixed(2)}s.`);return {sceneId:scene.id,name,offsetSeconds:offset};
  }
  root.addEventListener('click',event=>{
   if(event.target.closest('[data-assembly]'))return;
