@@ -50,6 +50,24 @@ test('plugin scene patches replace only matching timed scenes',()=>{
  assert.deepEqual(partial.segments.map(segment=>segment.id),['segment-1']);
 });
 
+test('Motion Studio scene patch merge preserves stable IDs and rejects unsafe array replacement',()=>{
+ const base={id:'scene-6',overlays:[{id:'hemу',assetId:'cloud-a'.padEnd(71,'0')},{id:'terrain',assetId:'cloud-b'.padEnd(71,'0')}],visual:{camera:'top'}};
+ const merged=plugin.mergeDraftValue(base,{visual:{camera:'isometric'},overlays:[{id:'hemу',opacity:.9}]});
+ assert.equal(merged.id,base.id);
+ assert.equal(merged.visual.camera,'isometric');
+ assert.equal(merged.overlays.length,2);
+ assert.equal(merged.overlays[0].opacity,.9);
+ assert.throws(()=>plugin.mergeDraftValue(base,{overlays:[{assetId:'cloud-new'}]}),/use \{\$replace/);
+ assert.throws(()=>plugin.mergeDraftValue(base,JSON.parse('{"__proto__":{"polluted":true}}')),/Unsafe patch key/);
+});
+
+test('Motion Studio manifest validation protects timing and asset references',()=>{
+ const manifest={schemaVersion:1,assets:[{id:'cloud-'+ 'a'.repeat(64)}],scenes:[{id:'scene-1',engineType:'battlefield',startSeconds:0,durationSeconds:2,overlays:[{assetId:'cloud-'+ 'a'.repeat(64)}]}]};
+ assert.equal(plugin.validateVideoManifest(manifest),manifest);
+ assert.throws(()=>plugin.validateVideoManifest({...manifest,scenes:[{...manifest.scenes[0],overlays:[{assetId:'missing'}]}]}),/missing asset/);
+ assert.throws(()=>plugin.validateVideoManifest({...manifest,scenes:[{...manifest.scenes[0],startSeconds:-1}]}),/timing/);
+});
+
 test('plugin validates complete project briefs and reports resumable workflow phases',()=>{
  const brief=plugin.createProjectInput.parse({title:'ITCZ test',narration:'भारत के Monsoon का रास्ता कौन बदलता है?',creativeInstructions:'Show India and the Indian Ocean.',aspectRatio:'9:16',format:'Short',idempotencyKey:'itcz-test-001'});
  assert.equal(brief.title,'ITCZ test');
@@ -70,11 +88,13 @@ test('plugin validates complete project briefs and reports resumable workflow ph
 });
 
 test('plugin exposes OAuth tool metadata before sign-in and returns a linking challenge',async()=>{
- const server=plugin.createServer(null),profile=server._registeredTools.get_my_profile,apply=server._registeredTools.apply_creator_plan,create=server._registeredTools.create_creator_project,resume=server._registeredTools.get_creator_workflow_status;
+ const server=plugin.createServer(null),profile=server._registeredTools.get_my_profile,apply=server._registeredTools.apply_creator_scene_patch,draft=server._registeredTools.get_creator_video_draft,resume=server._registeredTools.get_creator_workflow_status;
  assert.deepEqual(profile._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read']}]);
  assert.deepEqual(apply._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read','creator.compile','creator.write']}]);
- assert.deepEqual(create._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read','creator.compile','creator.write']}]);
+ assert.deepEqual(draft._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read']}]);
  assert.deepEqual(resume._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read']}]);
+ assert.equal(server._registeredTools.create_creator_project,undefined);
+ assert.equal(server._registeredTools.apply_creator_plan,undefined);
  const result=await profile.handler({});
  assert.equal(result.isError,true);
  assert.match(result._meta['mcp/www_authenticate'][0],/resource_metadata=/);

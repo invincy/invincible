@@ -1,27 +1,27 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "invincible-video-director",
-  "version": "0.6.0",
-  "description": "Create, time with private local Whisper, resume, compile and apply Invincible Creator Studio videos.",
+  "version": "1.0.0",
+  "description": "Operate existing Invincible Creator Studio projects with bounded reads, asset lookup, revision-safe scene patches and preview export.",
   "author": {
     "name": "Invincible"
   },
   "repository": "https://github.com/invincy/invincible",
-  "keywords": ["video", "creator", "creator-studio", "whisper", "maps", "motion-studio"],
+  "keywords": ["video", "creator", "creator-studio", "assets", "maps", "motion-studio"],
   "extensions": {
     "com.openai": {
       "onboardingSkill": "./skills/direct-video/SKILL.md",
       "interface": {
-        "displayName": "Invincible Video Director",
-        "shortDescription": "Direct Creator Studio videos",
-        "longDescription": "Uses ChatGPT for editorial decisions and the existing Invincible compiler to create or resume complete briefs, review, compile and explicitly apply validated Map Editor and Motion Studio drafts.",
+        "displayName": "Invincible Creator Studio",
+        "shortDescription": "Edit Creator Studio scenes safely",
+        "longDescription": "Reads the existing Motion Studio draft and private asset library, then applies bounded scene patches while preserving project IDs, voiceover timing, stable scene IDs and unrelated layers.",
         "developerName": "Invincible",
         "category": "Creativity",
         "capabilities": ["Read", "Write"],
         "websiteURL": "https://invincy.github.io/invincible/creator/",
         "defaultPrompt": [
-          "Turn this timed narration into a reviewed Invincible video plan.",
-          "Check why this Creator scene plan does not produce the map I expect."
+          "Read this Creator Studio draft and patch only the selected scene.",
+          "Export a JPG preview of the selected scene."
         ],
         "brandColor": "#11B9D8"
       }

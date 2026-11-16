@@ -1,7 +1,7 @@
 interface:
-  display_name: Invincible Video Director
-  short_description: Build Creator Studio videos
-  default_prompt: Direct this Invincible Creator Studio video from narration through validated scenes, Motion Studio, and MP4 export.
+  display_name: Invincible Creator Studio
+  short_description: Edit Creator Studio scenes safely
+  default_prompt: Read the existing Creator Studio draft, find existing assets, apply one safe scene patch, and export a selected-scene JPG preview when requested.
 policy:
   allow_implicit_invocation: true
   products:

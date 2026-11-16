@@ -60,6 +60,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  audioWarning.hidden = true;
  header.after(audioWarning);
  const jpgButton=document.createElement('button');jpgButton.type='button';jpgButton.dataset.vs='jpg-previews';jpgButton.textContent='Export JPG previews';$('[data-vs=export]').before(jpgButton);
+ const jpgSceneButton=document.createElement('button');jpgSceneButton.type='button';jpgSceneButton.dataset.vs='jpg-scene';jpgSceneButton.textContent='Export selected scene JPG';jpgButton.before(jpgSceneButton);
  const account=getAccountId(),projectId=getProject()?.id;const store=account?openStudioStore(account):null;
  const state=session;if(state.account!==account||state.projectId!==projectId){for(const key of Object.keys(state))delete state[key];state.account=account;state.projectId=projectId;}state.manifest??=emptyVideo();state.brands??=structuredClone(PRESETS);state.files??=new Map();state.brandAssets??=[];state.cloudRevision??=0;
  const media=mediaService||createMediaClient(account);let catalogue=[],pendingCloud=null,lastExportUrl='',lastExportBlob=null,lastExportName='';
@@ -320,6 +321,15 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   for(const scene of timeline.scenes){await renderer.draw(scene.startSeconds,{exporting:true});const blob=await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(Error('Canvas could not be exported as JPG.')),'image/jpeg',.92));const name=(state.manifest.title||'invincible').replace(/[^\p{L}\p{N}_-]/gu,'_')+'-scene-'+String(results.length+1).padStart(2,'0')+'.jpg';download(blob,name);results.push({sceneId:scene.id,name,durationSeconds:scene.durationSeconds});}
   status(`${results.length} JPG previews exported. Each file was captured from the existing renderer.`);return results;
  }
+ async function renderSelectedJpg(){
+  stop();await prepare();if(!renderer||!timeline?.scenes?.length)throw Error('Add or apply a video scene before generating a preview.');
+  const selectedId=state.selected||timeline.scenes[0].id,scene=timeline.scenes.find(item=>item.id===selectedId)||timeline.scenes[0];
+  await renderer.draw(scene.startSeconds,{exporting:true});
+  const blob=await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(Error('Canvas could not be exported as JPG.')),'image/jpeg',.92));
+  const index=timeline.scenes.findIndex(item=>item.id===scene.id)+1;
+  const name=(state.manifest.title||'invincible').replace(/[^\p{L}\p{N}_-]/gu,'_')+'-scene-'+String(index).padStart(2,'0')+'.jpg';
+  download(blob,name);status(`Scene ${index} JPG preview exported.`);return {sceneId:scene.id,name};
+ }
  root.addEventListener('click',event=>{
   if(event.target.closest('[data-assembly]'))return;
   const at=event.target.closest('[data-vs-at]');if(at&&!busy){stop();time=Number(at.dataset.vsAt);assembly?.select(at.dataset.vsSceneId);run(draw);return;}
@@ -337,6 +347,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
     catch(error){if(!disposed)$('[data-ai-status]').textContent=error.message;throw error;}
    }
    if(action==='download')download(new Blob([JSON.stringify(state.manifest,null,2)],{type:'application/json'}),'video-studio.json');
+   if(action==='jpg-scene')await renderSelectedJpg();
    if(action==='view-json'){
     clearImportReview();
     jsonPanel.open=true;
