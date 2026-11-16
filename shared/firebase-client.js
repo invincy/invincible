@@ -8,7 +8,13 @@ let restoredAuth;
 try{restoredAuth=initializeAuth(firebaseApp,{persistence:[browserLocalPersistence,indexedDBLocalPersistence],popupRedirectResolver:browserPopupRedirectResolver})}
 catch(error){if(error.code!=='auth/already-initialized')throw error;restoredAuth=getAuth(firebaseApp)}
 export const auth=restoredAuth,db=getFirestore(firebaseApp);
-export const authReady=auth.authStateReady();
+// Embedded Creator pages must not remain permanently on “Connecting to Firebase”
+// when another tab holds an IndexedDB/auth lock. Let the normal auth listener
+// continue resolving in the background, but unblock the page after a short wait.
+export const authReady=Promise.race([
+ auth.authStateReady(),
+ new Promise(resolve=>setTimeout(resolve,8000))
+]);
 export async function observeAuth(callback){await authReady;return onAuthStateChanged(auth,callback)}
 export function storageError(error){
  if(error?.code==='permission-denied')return 'Firebase denied access for this account. Your change was not saved. Check the deployed Firestore rules.';
