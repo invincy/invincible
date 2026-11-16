@@ -122,6 +122,7 @@ function setProjectAreaState(area,mode=""){
     Storyboard:'<strong>Step 2 of 4 · Sync plan.</strong> Review timestamps and instructions; Next opens every generated map in order.',
     'Video Studio:map-review':'<strong>Step 3 of 4 · Review maps.</strong> Save or discard each map; Motion & export opens automatically after the last one.',
     'Video Studio':'<strong>Step 4 of 4 · Motion & export.</strong> Preview the complete timeline, refine any scene, then export the MP4.',
+    'Video Studio:quick-preview':'<strong>Quick scene preview.</strong> Review one selected scene and export its midpoint JPG without opening the full editor.',
     Maps:'<strong>Optional · Map Editor.</strong> Build or edit the project-wide map manually.',
     'Video Studio:battlefield':'<strong>Optional · Battlefield Editor.</strong> Use only when the story needs a tactical schematic.',
     Assets:'<strong>Optional · Assets & 3D.</strong> Add reusable artwork or models.'
@@ -148,7 +149,7 @@ async function selectProjectArea(area,mode=""){
     if(!frame.hasAttribute("src"))frame.src="tts.html?"+new URLSearchParams({embed:"project",project:projectId,view:isTiming?"timing":"script",build:"2026111603"});
     else frame.contentWindow?.postMessage({type:"invincible-project-script-view",view:isTiming?"timing":"script"},location.origin);
   }else if(area==="Video Studio"&&mode==="map-review"){const reviewing=await storyboard.reviewMaps();if(!reviewing)setProjectAreaState("Video Studio","");}
-  else storyboard.open({area});
+  else storyboard.open({area,quickPreview:mode==='quick-preview'});
 }
 
 $("projectStoryboard").addEventListener("invincible-map-review-complete",()=>setProjectAreaState("Video Studio",""));

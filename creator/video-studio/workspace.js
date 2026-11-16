@@ -19,7 +19,8 @@ import {loadPendingAiDraft,loadPendingAiAudio,savePendingAiDraft} from '../ai-dr
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>crypto.randomUUID();
 const template=(name,text)=>({id:name,startSeconds:0,durationSeconds:2,engineType:'graphic',engineData:{},transition:{type:'fade',durationSeconds:.3},overlays:[{id:'title',type:'text',text,x:.5,y:.5,fontSize:64}]});
-export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session={},mediaService=null,readiness=createProductionReadiness(getAccountId)}){
+export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session={},mediaService=null,readiness=createProductionReadiness(getAccountId),quickPreview=false}){
+ root.classList.toggle('vs-quick-preview',quickPreview);
  root.className='video-studio';
  root.innerHTML=`<div class="vs-layout space-panels" tabindex="0" aria-label="Motion Studio panels"><div><strong>Video Studio · Phase 1</strong><p class="vs-help">Separate video draft. Existing storyboard, map and LIC pages are preserved. Use the shared uploader above for cloud media. The owner can Save the complete video draft to sync it across devices.</p>
  <div class="vs-actions"><button data-vs="save">Save video draft</button><button data-vs="download">Download JSON</button><button data-vs="example">Load example</button></div>

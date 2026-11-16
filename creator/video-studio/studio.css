@@ -44,3 +44,4 @@ body.creator-page{--bg:#0f0f0f;--panel:#181818;--panel2:#202020;--line:#333;--te
 [data-compose-review]:not(:empty){border:1px solid var(--studio-accent,#96e8e0);border-radius:10px;padding:12px;margin-block:12px}
 
 .vs-flow .vs-agent-instructions>summary{display:list-item;cursor:pointer;min-height:44px;padding-block:12px;color:inherit}
+ .vs-quick-preview .vs-flow,.vs-quick-preview .vs-assembly,.vs-quick-preview .vs-advanced,.vs-quick-preview .vs-review-heading{display:none}.vs-quick-preview .vs-layout{display:block}.vs-quick-preview .vs-preview{position:static;max-width:720px;margin:0 auto}.vs-quick-preview .vs-preview canvas{max-height:72vh}.vs-quick-preview .vs-preview:before{content:'Quick scene preview · blank JPG moment uses midpoint';display:block;color:#b9b9b9;font-size:12px;margin-bottom:10px}
