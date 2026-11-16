@@ -88,10 +88,12 @@ test('plugin validates complete project briefs and reports resumable workflow ph
 });
 
 test('plugin exposes OAuth tool metadata before sign-in and returns a linking challenge',async()=>{
- const server=plugin.createServer(null),profile=server._registeredTools.get_my_profile,apply=server._registeredTools.apply_creator_scene_patch,draft=server._registeredTools.get_creator_video_draft,resume=server._registeredTools.get_creator_workflow_status;
+ const server=plugin.createServer(null),profile=server._registeredTools.get_my_profile,apply=server._registeredTools.apply_creator_scene_patch,draft=server._registeredTools.get_creator_video_draft,jpg=server._registeredTools.request_creator_scene_jpg,jpgStatus=server._registeredTools.get_creator_scene_jpg_status,resume=server._registeredTools.get_creator_workflow_status;
  assert.deepEqual(profile._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read']}]);
  assert.deepEqual(apply._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read','creator.compile','creator.write']}]);
  assert.deepEqual(draft._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read']}]);
+ assert.deepEqual(jpg._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read','creator.compile','creator.write']}]);
+ assert.deepEqual(jpgStatus._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read']}]);
  assert.deepEqual(resume._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read']}]);
  assert.equal(server._registeredTools.create_creator_project,undefined);
  assert.equal(server._registeredTools.apply_creator_plan,undefined);

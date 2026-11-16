@@ -19,6 +19,9 @@ by this update.
   reuse the same asset ID.
 - `apply_creator_scene_patch` validates and saves one scene patch with an
   exact `expectedRevision`. Unmentioned scenes and layers remain unchanged.
+- `request_creator_scene_jpg` and `get_creator_scene_jpg_status` queue and
+  poll a timestamped selected-scene JPG through the paired renderer. A blank
+  offset means the scene midpoint; the timeline itself is never changed.
 - `get_creator_workflow_status` reports the saved project phase without
   invoking a transcription provider.
 
