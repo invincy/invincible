@@ -20,7 +20,7 @@ const icon=name=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 const action=(name,label,glyph,extra='')=>'<button type="button" class="wb-icon" data-action="'+name+'" title="'+esc(label)+'" aria-label="'+esc(label)+'" '+extra+'>'+icon(glyph)+'</button>';
 export function createProductionWorkbench(root,{getProject,onChange,onFocus,copyText,onCopyBrief,onSplitScript,getAccountId,getProductionReadiness,enableVideoStudio=false,defaultArea='Storyboard',mediaService=null}){
  let historyWorkspace=null,videoWorkspace=null,videoSession={},videoQuickPreview=false;
- let tab=defaultArea,workspace='All',groupBy='project',assetFilter='All',completionFilter='All',searchQuery='',active='',pending=[],mapping=[],importTable=null,scriptChanges=null,dragId='',activeAsset='',expandAll=false,viewMode='focused',expandedScene='',sidebarCollapsed=false,editorPane='plan',filtersVisible=false,promptKey='blenderPrompt',messageTimer,cloudAssets=[],cloudAssetsLoading=false;
+ let tab=defaultArea,workspace='All',groupBy='project',assetFilter='All',completionFilter='All',searchQuery='',active='',pending=[],mapping=[],importTable=null,scriptChanges=null,dragId='',activeAsset='',expandAll=false,viewMode='focused',expandedScene='',sidebarCollapsed=false,editorPane='plan',filtersVisible=false,promptKey='blenderPrompt',messageTimer,cloudAssets=[],cloudAssetsLoading=false,cloudAssetsLoaded=false;
  root.classList.add('production-workbench');
  const projectStudio=enableVideoStudio&&(defaultArea==='Video Studio'||!!root.closest('.project-page'));
  root.classList.toggle('wb-studio-home',projectStudio);
