@@ -4,6 +4,7 @@ import {mountHistoryWorkspace} from './history-workspace.js?v=2026111603';
 import {makeScene} from './storyboard-model.js?v=3';
 import {METHODS,IMPORT_FIELDS,uid,methodsOf,inspectImport,parseProductionImport,uniqueScenes,groupFor,taskFor,setTask,animationStage,requirements,sceneState,projectProgress,queueScenes,canonicalScript,scriptReview,filterScenes,productionReadiness} from './production-model.js?v=2026111112';
 import {loadPendingAiDraft,loadPendingAiAudio,clearPendingAiDraft} from './ai-draft.js?v=2026111319';
+import {createMediaClient,mapAssetFromMedia} from './media-library.js?v=2026111610';
 import {renderAiScenePreviews} from './ai-preview.js?v=2026111506';
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const options=(values,current)=>values.map(value=>'<option '+(value===current?'selected':'')+'>'+esc(value)+'</option>').join('');
@@ -19,7 +20,7 @@ const icon=name=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 const action=(name,label,glyph,extra='')=>'<button type="button" class="wb-icon" data-action="'+name+'" title="'+esc(label)+'" aria-label="'+esc(label)+'" '+extra+'>'+icon(glyph)+'</button>';
 export function createProductionWorkbench(root,{getProject,onChange,onFocus,copyText,onCopyBrief,onSplitScript,getAccountId,getProductionReadiness,enableVideoStudio=false,defaultArea='Storyboard',mediaService=null}){
  let historyWorkspace=null,videoWorkspace=null,videoSession={},videoQuickPreview=false;
- let tab=defaultArea,workspace='All',groupBy='project',assetFilter='All',completionFilter='All',searchQuery='',active='',pending=[],mapping=[],importTable=null,scriptChanges=null,dragId='',activeAsset='',expandAll=false,viewMode='focused',expandedScene='',sidebarCollapsed=false,editorPane='plan',filtersVisible=false,promptKey='blenderPrompt',messageTimer;
+ let tab=defaultArea,workspace='All',groupBy='project',assetFilter='All',completionFilter='All',searchQuery='',active='',pending=[],mapping=[],importTable=null,scriptChanges=null,dragId='',activeAsset='',expandAll=false,viewMode='focused',expandedScene='',sidebarCollapsed=false,editorPane='plan',filtersVisible=false,promptKey='blenderPrompt',messageTimer,cloudAssets=[],cloudAssetsLoading=false;
  root.classList.add('production-workbench');
  const projectStudio=enableVideoStudio&&(defaultArea==='Video Studio'||!!root.closest('.project-page'));
  root.classList.toggle('wb-studio-home',projectStudio);
@@ -164,10 +165,23 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
  function assetEditor(asset){
   return '<details class="wb-asset" data-asset="'+esc(asset.id)+'" '+(activeAsset===asset.id?'open':'')+'><summary><strong>'+esc(asset.name)+'</strong><span>'+esc(asset.type)+' · '+esc(asset.status)+'</span></summary><div class="wb-detail-grid"><label>Name<input data-asset-field="name" value="'+esc(asset.name)+'"></label><label>Type<select data-asset-field="type">'+options(['Blender file','Video','Image','Audio','Reference','Model','Other'],asset.type)+'</select></label><label>Path / URL<input data-asset-field="path" value="'+esc(asset.path||'')+'"></label><label>Status<select data-asset-field="status">'+options(['Not Started','In Progress','Ready'],asset.status)+'</select></label>'+field('Notes','notes',asset.notes||'','data-asset-field="notes"')+'</div><div class="wb-associations"><strong>Scenes</strong>'+scenes().map((scene,index)=>'<label><input type="checkbox" data-associate-scene="'+esc(scene.id)+'" '+((asset.sceneIds||[]).includes(scene.id)?'checked':'')+'>Scene '+(index+1)+'</label>').join('')+'<strong>Animation groups</strong>'+(project().animationGroups||[]).map(group=>'<label><input type="checkbox" data-associate-group="'+esc(group.id)+'" '+((asset.groupIds||[]).includes(group.id)?'checked':'')+'>'+esc(group.name)+'</label>').join('')+'</div><div class="wb-actions"><button type="button" data-copy-path>Copy path</button>'+'<span data-asset-open-reference>'+(/^https?:\/\//i.test(asset.path||'')?'<a href="'+esc(asset.path)+'" target="_blank" rel="noopener noreferrer">Open URL ↗</a>':'Local reference')+'</span><button type="button" data-delete-asset>Remove</button></div></details>';
  }
+ function cloudAssetCard(asset){
+  const added=(project().assets||[]).some(item=>item.cloudAssetId===asset.id||item.id===asset.id);
+  const dimensions=asset.width&&asset.height?asset.width+' × '+asset.height:'';
+  return '<article class="wb-cloud-asset '+(added?'is-added':'')+'"><div class="wb-cloud-asset-preview">'+(asset.kind==='image'&&asset.previewUrl?'<img src="'+esc(asset.previewUrl)+'" alt="">':'<span>'+icon(asset.kind==='glb'?'modeling':'assets')+'</span>')+'</div><div class="wb-cloud-asset-copy"><strong>'+esc(asset.name)+'</strong><span>'+esc(asset.kind.toUpperCase())+(dimensions?' · '+esc(dimensions):'')+'</span><small>'+esc(asset.id)+'</small></div><button type="button" class="secondary" data-cloud-add="'+esc(asset.id)+'" '+(added?'disabled':'')+'>'+(added?'Added to project':'Add to this project')+'</button></article>';
+ }
  function assets(){
   const legacy=scenes().flatMap((scene,index)=>['characterAssetUrl','imageAssetUrl','videoAssetUrl'].filter(key=>scene[key]).map(key=>'<li>Scene '+(index+1)+' · '+esc(key)+': '+esc(scene[key])+'</li>'));
-  return '<div class="wb-toolbar"><span>Assets</span>'+action('add-asset','Add asset','add')+'</div>'+
+  const library=cloudAssetsLoading?'<p class="wb-cloud-library-status">Loading your current cloud assets…</p>':cloudAssets.length?'<div class="wb-cloud-assets-grid">'+cloudAssets.filter(asset=>['image','glb'].includes(asset.kind)).map(cloudAssetCard).join('')+'</div>':'<p class="wb-cloud-library-status">No image or GLB assets found in your private library.</p>';
+  return '<div class="wb-toolbar"><span>Assets &amp; 3D</span>'+action('refresh-cloud-assets','Refresh cloud assets','reset', 'data-refresh-cloud-assets')+action('add-asset','Add asset','add')+'</div><section class="wb-cloud-library"><div class="wb-cloud-library-head"><div><h3>Current cloud assets</h3><p>Browse uploaded images and 3D models, then add them to this project one by one.</p></div><span>'+cloudAssets.length+' assets</span></div>'+library+'</section>'+
    (project().assets||[]).map(assetEditor).join('')+(legacy.length?'<details><summary>Existing scene asset links</summary><ul>'+legacy.join('')+'</ul></details>':'');
+ }
+ async function loadCloudAssets(){
+  if(cloudAssetsLoading||!getAccountId?.())return;
+  cloudAssetsLoading=true;render();
+  try{cloudAssets=await createMediaClient(getAccountId()).list();message('Cloud asset library updated.');}
+  catch(error){message(error.message||'Could not load cloud assets.');}
+  finally{cloudAssetsLoading=false;render();}
  }
  function overview(){
   const progress=projectProgress(project()),script=canonicalScript(project());
@@ -296,7 +310,9 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
    if(button.dataset.openScene){viewMode='focused';expandAll=false;tab='Production';workspace='All';assetFilter='All';completionFilter='All';searchQuery='';active=button.dataset.openScene;render();return;}
    if(button.dataset.editorPane){editorPane=button.dataset.editorPane;render();return;}
    if(button.dataset.selectScene){active=button.dataset.selectScene;viewMode='focused';expandAll=false;render();return;}
-   if(button.dataset.tab){const more=root.querySelector('.wb-more');if(more)more.open=false;tab=button.dataset.tab;message('');render();return;}
+   if(button.dataset.tab){const more=root.querySelector('.wb-more');if(more)more.open=false;tab=button.dataset.tab;message('');render();if(tab==='Assets')loadCloudAssets();return;}
+   if(button.dataset.refreshCloudAssets){loadCloudAssets();return;}
+   if(button.dataset.cloudAdd){const cloud=cloudAssets.find(item=>item.id===button.dataset.cloudAdd);if(!cloud)return;const mapped=mapAssetFromMedia(cloud);project().assets=[...(project().assets||[]),{...mapped,type:cloud.kind==='glb'?'Model':'Image',status:'Ready',path:'',notes:'Imported from private cloud asset library.'}];changed();message('Asset added to this project.');return;}
    if(button.dataset.workspace){workspace=button.dataset.workspace;active='';render();return;}
    const scene=findScene(button.closest('[data-scene]')?.dataset.scene),index=scenes().indexOf(scene),action=button.dataset.action;
    const asset=(project().assets||[]).find(item=>item.id===button.closest('[data-asset]')?.dataset.asset);
