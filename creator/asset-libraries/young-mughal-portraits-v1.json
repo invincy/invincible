@@ -1,0 +1,11 @@
+{
+  "format": "invincible-map-assets",
+  "version": 1,
+  "assets": [{
+    "id": "akbar-age13-facing-left",
+    "type": "image",
+    "name": "Akbar · age thirteen · facing left",
+    "url": "https://invincy.github.io/invincible/creator/asset-libraries/artwork/akbar-age13-facing-left.png",
+    "credit": "AI-generated artistic reconstruction, 18 November 2026. Depicts Akbar as an approximately thirteen-year-old adolescent; not a verified historical likeness. Transparent cutout, facing left."
+  }]
+}

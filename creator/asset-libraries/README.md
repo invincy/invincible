@@ -1,5 +1,9 @@
 # Invincible reusable map assets
 
+## Young Mughal portraits — v1
+
+[Native asset library](young-mughal-portraits-v1.json): a transparent, left-facing artistic reconstruction of Akbar at approximately thirteen. It is AI-generated, not a verified likeness. [Provenance and prompt](artwork/akbar-age13-facing-left.provenance.json) accompany the original RGBA PNG. Import through the existing Map Editor asset-library controls; keep portraits free of decorative PNG borders.
+
 ## Historical Army & Commanders — v1
 
 Shield and spear infantry PNGs are also bundled under `artwork/`, byte-for-byte from the shared-input commit. Their catalogue URLs use this site's origin so ordinary assembly does not depend on raw.githubusercontent.com being reachable.
