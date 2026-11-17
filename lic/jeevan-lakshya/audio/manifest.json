@@ -208,14 +208,6 @@
       "delivery": "social",
       "speed": 1.2,
       "playbackRate": 1.23
-    },
-    "intro.chime": {
-      "file": "intro.chime.mp3",
-      "duration": 1.65,
-      "bytes": 20781,
-      "sha256": "8dbbbcbe4f9516888c4faac357385fab00423137eac4484bff248e5c6fc741c2",
-      "playbackRate": 1,
-      "kind": "sound-effect"
     }
   }
 }

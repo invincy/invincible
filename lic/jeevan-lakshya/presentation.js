@@ -1,5 +1,5 @@
 import {eligibleTerms,computePlan} from './benefits.mjs';
-import {createNarrator} from './narration.mjs?v=22';
+import {createNarrator} from './narration.mjs?v=23';
 const $=id=>document.getElementById(id),stage=$('stageContainer');
 const money=n=>n===null?'LIC quote required':'₹'+n.toLocaleString('en-IN');
 const shortMoney=n=>'₹'+Number((n/100000).toFixed(2)).toLocaleString('en-IN')+' lakh';
@@ -65,18 +65,16 @@ function stopVoice(){narration.cancel();}
 function voiceCue(key,done,fallback,onStart){stage.dataset.voiceCue=key;stage.dispatchEvent(new CustomEvent('plan733:voice-cue',{detail:{key,goal,age,term,sumAssured:sa}}));narration.cue(key,done,fallback,onStart);}
 function beginOpening(){
  stage.dataset.opening='family';
- later(300,()=>{
-  stage.dataset.opening='path';
-  voiceCue('intro.chime');
- });
- later(1000,()=>{stage.dataset.opening='coin';});
- later(1100,()=>{stage.dataset.opening='dreams';});
- later(2000,()=>voiceCue('intro.dreams',()=>{
+ voiceCue('intro.dreams',()=>{
   stage.dataset.opening='plan';
   $('subtitleText').hidden=false;
   $('subtitleText').textContent='Savings + life cover, planned around a goal.';
   voiceCue('intro.plan',chooseGoalReady,2800);
- },4200));
+ },4200,()=>{
+  later(300,()=>{stage.dataset.opening='path';});
+  later(650,()=>{stage.dataset.opening='coin';});
+  later(780,()=>{stage.dataset.opening='dreams';});
+ });
 }
 function chooseGoalReady(){stage.dataset.opening='settled';ready=true;$('goalHint').hidden=false;$('goalHint').textContent='Choose your child’s goal';$('subtitleText').hidden=true;control();openGoals(true);voiceCue('goal.choose');}
 function openGoals(open){if(open&&(state!=='intro'||!ready))return;stage.dataset.goalsOpen=String(open);$('scene1').classList.toggle('goals-open',open);coin.setAttribute('aria-expanded',String(open));choices.inert=!open;choices.setAttribute('aria-hidden',String(!open));}

@@ -18,15 +18,12 @@ const server=http.createServer((req,res)=>{
   await page.getByRole('link',{name:'Open Jeevan Lakshya presentation'}).click();
   const cue=async key=>{
    await page.waitForFunction(k=>document.querySelector('#stageContainer').dataset.voiceCue===k&&document.querySelector('#stageContainer').dataset.audioStatus==='playing',key,{timeout:15000});
-   const expectedRate=key==='intro.chime'?1:1.23;
-   assert.equal(await page.locator('#storyNarration').evaluate(audio=>audio.playbackRate),expectedRate,key);
+   assert.equal(await page.locator('#storyNarration').evaluate(audio=>audio.playbackRate),1.23,key);
   };
   const finish=async()=>{await page.evaluate(()=>{const a=document.querySelector('#storyNarration');a.currentTime=a.duration-.08;});};
   // Seeking only accelerates this test; native media ended events still drive transitions.
-  await cue('intro.chime');
-  assert.equal(await page.locator('#stageContainer').getAttribute('data-opening'),'path');
   await cue('intro.dreams');
-  assert.equal(await page.locator('#stageContainer').getAttribute('data-opening'),'dreams');
+  assert.match(await page.locator('#storyNarration').getAttribute('src'),/intro\.dreams\.mp3\?v=23$/);
   const openingEnd=page.locator('#storyNarration').evaluate(audio=>new Promise(resolve=>{
    audio.addEventListener('ended',()=>resolve({time:audio.currentTime,duration:audio.duration}),{once:true});
   }));
@@ -82,7 +79,7 @@ const server=http.createServer((req,res)=>{
   await page.locator('#ctaPrevBtn').click();await cue('story.close');
   await page.locator('#ctaPrevBtn').click();await cue('family.maturity-question');await finish();await cue('family.maturity');await finish();
   assert.equal(await page.locator('#stageContainer').getAttribute('data-benefit-step'),'4');
-  await page.getByRole('button',{name:'Replay benefit journey'}).click();await cue('family.rider');await page.locator('#ctaPrevBtn').click();await cue('family.whatif');assert.match(await page.locator('#storyNarration').getAttribute('src'),/family\.whatif\.mp3\?v=22$/);assert.equal(await page.locator('#stageContainer').getAttribute('data-flow-step'),'whatif');
+  await page.getByRole('button',{name:'Replay benefit journey'}).click();await cue('family.rider');await page.locator('#ctaPrevBtn').click();await cue('family.whatif');assert.match(await page.locator('#storyNarration').getAttribute('src'),/family\.whatif\.mp3\?v=23$/);assert.equal(await page.locator('#stageContainer').getAttribute('data-flow-step'),'whatif');
   const durations=await page.evaluate(async()=>{
    const manifest=await fetch('./audio/manifest.json').then(r=>r.json()),context=new AudioContext(),out=[];
    for(const [key,clip] of Object.entries(manifest.clips)){
@@ -93,13 +90,12 @@ const server=http.createServer((req,res)=>{
   });
   const {clips}=JSON.parse(fs.readFileSync('lic/jeevan-lakshya/audio/manifest.json','utf8'));
   for(const [key,clip] of Object.entries(clips)){
-   if(key==='intro.chime')continue;
    assert.equal(clip.voice,(key.endsWith('-question')||key==='family.whatif')?'hi-IN-Gemini-Charon':'hi-IN-Gemini-Aoede',key);
    assert.equal(clip.delivery,'social',key);
    assert.equal(clip.speed,1.2,key);
    assert.equal(clip.playbackRate,1.23,key);
   }
-  assert.equal(durations.length,19);for(const d of durations){assert.ok(d.duration>1,d.key+' audible duration');assert.ok(Math.abs(d.duration-d.expected)<.15,d.key+' measured duration');}
-  assert.deepEqual(errors,[]);console.log('PASS 19 audio clips, automatic sound from plan card, four goals, Other Goal narration, pause/resume, mute, cancellation and maturity');
+  assert.equal(durations.length,18);for(const d of durations){assert.ok(d.duration>1,d.key+' audible duration');assert.ok(Math.abs(d.duration-d.expected)<.15,d.key+' measured duration');}
+  assert.deepEqual(errors,[]);console.log('PASS 18 audio clips, automatic sound from plan card, four goals, Other Goal narration, pause/resume, mute, cancellation and maturity');
  }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1;});
