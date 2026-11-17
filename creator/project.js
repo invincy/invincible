@@ -1,4 +1,4 @@
-import {mountAgentPanel} from './agent-panel.js?v=2026111604';
+import {mountAgentPanel} from './agent-panel.js?v=2026111711';
 import{makeScene}from'./storyboard-model.js?v=3';
 import{createProductionWorkbench}from'./production-workbench.js?v=2026111710';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';

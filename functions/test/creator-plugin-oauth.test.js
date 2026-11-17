@@ -68,6 +68,26 @@ test('Motion Studio manifest validation protects timing and asset references',()
  assert.throws(()=>plugin.validateVideoManifest({...manifest,scenes:[{...manifest.scenes[0],startSeconds:-1}]}),/timing/);
 });
 
+test('plugin reads a resolved map scene and edits only that scene',()=>{
+ const manifest={schemaVersion:2,assets:[],mapSources:[{id:'india-map',project:{camera:{zoom:4},visual:{layers:[{id:'rain-band',opacity:.4}]}}}],scenes:[
+  {id:'scene-1',engineType:'map',startSeconds:0,durationSeconds:2,engineData:{sourceId:'india-map'},overlays:[{id:'title',type:'text',text:'Rain'}]},
+  {id:'scene-2',engineType:'map',startSeconds:2,durationSeconds:2,engineData:{sourceId:'india-map'},overlays:[]}
+ ]};
+ const read=plugin.resolvedScene(manifest,'scene-1');
+ assert.equal(read.mapSource.id,'india-map');
+ assert.equal(read.resolvedMapProject.camera.zoom,4);
+ const patched=plugin.patchVideoScene(manifest,'scene-1',{engineData:{project:{camera:{zoom:5}}},overlays:[{id:'title',text:'Heavy rain'}]});
+ assert.equal(patched.scenes[0].engineData.project.camera.zoom,5);
+ assert.equal(patched.scenes[0].engineData.project.visual.layers[0].opacity,.4);
+ assert.equal(patched.scenes[0].engineData.sourceId,undefined);
+ assert.equal(patched.scenes[1].engineData.sourceId,'india-map');
+ assert.equal(patched.mapSources[0].project.camera.zoom,4);
+ assert.equal(patched.scenes[0].overlays[0].text,'Heavy rain');
+ assert.equal(manifest.scenes[0].overlays[0].text,'Rain');
+ assert.throws(()=>plugin.patchVideoScene(manifest,'scene-1',{id:'changed'}),/cannot change its ID/);
+ assert.throws(()=>plugin.resolvedScene(manifest,'missing'),/does not exist/);
+});
+
 test('plugin validates built-in and user visual styling presets without scene downgrade',()=>{
  const manifest={schemaVersion:2,assets:[],visualStylePresetId:'history-archive-gold',visualStylePresets:[{id:'user-archive-blue',name:'Archive blue',category:'History',description:'A saved historical variation.',baseId:'history-archive-gold',tokens:{palette:{accent:'#65B7E6'},map:{contrast:.28,labelStyle:'card'}}}],scenes:[{id:'scene-1',engineType:'map',startSeconds:0,durationSeconds:2,visualStylePresetId:'user-archive-blue',engineData:{},overlays:[]}]};
  assert.equal(plugin.validateVideoManifest(manifest).scenes[0].engineType,'map');
@@ -97,10 +117,11 @@ test('plugin validates complete project briefs and reports resumable workflow ph
 });
 
 test('plugin exposes OAuth tool metadata before sign-in and returns a linking challenge',async()=>{
- const server=plugin.createServer(null),profile=server._registeredTools.get_my_profile,apply=server._registeredTools.apply_creator_scene_patch,draft=server._registeredTools.get_creator_video_draft,jpg=server._registeredTools.request_creator_scene_jpg,jpgStatus=server._registeredTools.get_creator_scene_jpg_status,resume=server._registeredTools.get_creator_workflow_status,styles=server._registeredTools.list_creator_style_presets,applyStyle=server._registeredTools.apply_creator_style_preset,updateStyle=server._registeredTools.update_creator_style_preset;
+ const server=plugin.createServer(null),profile=server._registeredTools.get_my_profile,apply=server._registeredTools.apply_creator_scene_patch,draft=server._registeredTools.get_creator_video_draft,scene=server._registeredTools.get_creator_resolved_scene,jpg=server._registeredTools.request_creator_scene_jpg,jpgStatus=server._registeredTools.get_creator_scene_jpg_status,resume=server._registeredTools.get_creator_workflow_status,styles=server._registeredTools.list_creator_style_presets,applyStyle=server._registeredTools.apply_creator_style_preset,updateStyle=server._registeredTools.update_creator_style_preset;
  assert.deepEqual(profile._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read']}]);
  assert.deepEqual(apply._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read','creator.compile','creator.write']}]);
  assert.deepEqual(draft._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read']}]);
+ assert.deepEqual(scene._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read']}]);
  assert.deepEqual(jpg._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read','creator.compile','creator.write']}]);
  assert.deepEqual(jpgStatus._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read']}]);
  assert.deepEqual(resume._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read']}]);

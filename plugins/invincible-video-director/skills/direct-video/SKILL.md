@@ -11,6 +11,7 @@ Use the existing Creator Studio project as the source of truth. Do not create a 
 
 1. Call `get_my_profile`, `list_creator_projects`, and `get_creator_project_context` for the named project.
 2. Call `get_creator_video_draft` to read the canonical Motion Studio manifest, revision, stable scene IDs and asset catalogue.
+   For a focused edit, call `get_creator_resolved_scene` with the existing scene ID to read its overlays, resolved map project and current revision without opening the browser.
 3. Call `list_creator_assets` before requesting a new upload. Asset IDs are stable and exact duplicate bytes reuse the existing private asset rather than creating another one.
 4. Preserve the final MP3, measured timing, scene IDs and all unrelated layers. Do not ask the user to repeat narration or animation instructions already present in the chat or project.
 
@@ -23,6 +24,7 @@ Style application must preserve scene IDs, timing, engine types, maps, assets an
 ## Patch scenes safely
 
 Use `apply_creator_scene_patch` for one existing scene at a time. Always pass the revision returned by `get_creator_video_draft` as `expectedRevision`. Change only the requested fields. Keep a scene's `id`, timing and engine type unless the user explicitly requests that change. Arrays of overlays, labels or keyframes are ID-merged; use an explicit replacement only when the user clearly requests a full-array replacement.
+For a map scene backed by a shared map source, put a scene-specific map change under `changes.engineData.project`. The plugin detaches that scene before saving so other scenes using the shared source keep their maps. Read the new revision after every patch. The on-page AI Agent Panel and plugin use the same saved draft.
 
 Historical visuals must remain cautious: use supplied assets and verified geography, label estimates or reconstructions, and do not invent precise troop movements. For the Second Battle of Panipat, prefer top-down battlefield formations, the existing elephant and commander assets, and symbolic routes over unsupported tactical detail.
 

@@ -13,8 +13,15 @@ function patchValue(value) {
  return value;
 }
 
-export function scenePatch(scene, revision) {
- const {name, engineType, sourceStart, transition, overlays, engineData} = scene;
+export function scenePatch(scene, revision, mapSources = []) {
+ const {name, engineType, sourceStart, transition, overlays} = scene;
+ const engineData = structuredClone(scene.engineData || {});
+ if (engineData.sourceId && !engineData.project) {
+  const source = mapSources.find(item => item.id === engineData.sourceId);
+  if (!source) throw Error('Map source is missing: ' + engineData.sourceId);
+  engineData.project = structuredClone(source.project);
+  delete engineData.sourceId;
+ }
  const fields = {name, engineType, sourceStart, transition, overlays, engineData};
  return {
   patchSceneId: scene.id,
@@ -87,7 +94,7 @@ export function mountAgentPanel(root, {openMotion, getProject, getAccountId}) {
   if (!snapshot) return;
   const scene = snapshot.manifest.scenes.find(item => item.id === target.value);
   input.value = JSON.stringify(scene
-   ? scenePatch(scene, snapshot.revision)
+   ? scenePatch(scene, snapshot.revision, snapshot.manifest.mapSources)
    : {...snapshot.manifest, expectedRevision: snapshot.revision}, null, 2);
  }
  root.addEventListener('toggle', () => {

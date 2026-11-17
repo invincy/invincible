@@ -80,6 +80,7 @@
     </ol>
     <h3>Route B · Edit existing scenes</h3>
     <ol>
+      <li>From Codex or Gemini, use the Invincible plugin to call <code>get_creator_video_draft</code>, then <code>get_creator_resolved_scene</code> for the selected scene. Apply a focused change with <code>apply_creator_scene_patch</code> and the returned revision. The plugin and this panel save to the same Motion Studio draft.</li>
       <li>Open <strong>AI Agent Panel</strong>. The target list has scene names and IDs. Use <strong>Available Media</strong> for file IDs and dimensions.</li>
       <li>Read the current manifest using <strong>View JSON</strong> with Full Video Manifest selected. Select the target scene for a patch template. Put the fields to change in <code>changes</code> and keep <code>expectedRevision</code>. Use Validate &amp; Save to Cloud.</li>
       <li>Motion &amp; export → Create &amp; import also offers View scene summary, View current draft JSON, Agent instructions, Review import and Apply reviewed import.</li>
@@ -164,6 +165,6 @@
       <div class="share-footer"><button id="copyProjectLink" type="button" class="secondary">Copy project link</button><button value="cancel" class="primary">Done</button></div>
     </form>
   </dialog>
-<script type="module" src="project.js?v=2026111710"></script>
+<script type="module" src="project.js?v=2026111711"></script>
 </body>
 </html>

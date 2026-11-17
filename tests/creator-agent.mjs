@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {createAgentOperations,prepareAgentUpdate,mergeSceneChanges} from '../creator/video-studio/agent.js';
 import {newStudioVideo} from '../creator/video-studio/composition.js';
 import {createDefaultMap} from '../creator/map-defaults.js';
+import {scenePatch} from '../creator/agent-panel.js';
 const fixture=()=>({...newStudioVideo(),scenes:Array.from({length:13},(_,i)=>({id:'scene-'+(i+1),name:'Scene '+(i+1),startSeconds:i*2,durationSeconds:2,engineType:'map',engineData:{project:{scenes:[{id:'map-'+i,duration:2}],historicalMap:createDefaultMap()},sourceStart:0},overlays:[]}))});
 test('13 native maps survive validation, canonical save and reload',async()=>{
  let manifest=newStudioVideo(),revision=0,saved;const api=createAgentOperations({authorize:()=>{},getManifest:()=>manifest,getRevision:()=>revision,save:async next=>{saved=JSON.stringify(next);manifest=JSON.parse(saved);revision++;}});
@@ -49,6 +50,18 @@ test('patching a shared native map detaches only the selected scene',()=>{
  const next=prepareAgentUpdate(m,{patchSceneId:'scene-4',changes:{engineData:{project:{historicalMap:{cameraDefaults:{zoom:6}}}}}});
  assert.equal(next.scenes[3].engineData.project.historicalMap.cameraDefaults.zoom,6);
  assert.deepEqual(next.mapSources,m.mapSources);assert.deepEqual(next.scenes[0],m.scenes[0]);
+});
+test('AI Agent Panel View JSON resolves a shared map for a single-scene patch',()=>{
+ const m=fixture(),project=m.scenes[0].engineData.project;m.mapSources=[{id:'shared',project}];m.scenes[0].engineData={sourceId:'shared',sourceStart:0};
+ const payload=scenePatch(m.scenes[0],7,m.mapSources);
+ assert.equal(payload.expectedRevision,7);
+ assert.equal(payload.changes.engineData.sourceId,undefined);
+ assert.deepEqual(payload.changes.engineData.project.historicalMap.cameraDefaults.center,{$replace:project.historicalMap.cameraDefaults.center});
+ assert.deepEqual(m.scenes[0].engineData,{sourceId:'shared',sourceStart:0});
+ const next=prepareAgentUpdate(m,payload,{revision:7});
+ assert.equal(next.scenes[0].engineData.sourceId,undefined);
+ assert.deepEqual(next.scenes[0].engineData.project,project);
+ assert.deepEqual(next.scenes[1],m.scenes[1]);
 });
 
 test('map imports repair only sub-millisecond timing overflow', () => {

@@ -14,11 +14,15 @@ by this update.
   read the signed-in account and existing project state.
 - `get_creator_video_draft` reads the saved Motion Studio manifest, revision,
   stable scene IDs, timing, and private asset catalogue.
+- `get_creator_resolved_scene` reads one scene and its resolved map source at
+  the same saved revision shown in the AI Agent Panel. Use it for focused edits.
 - `list_creator_assets` lists existing private assets without uploading or
   duplicating files. Creator media IDs are content-addressed, so exact bytes
   reuse the same asset ID.
 - `apply_creator_scene_patch` validates and saves one scene patch with an
   exact `expectedRevision`. Unmentioned scenes and layers remain unchanged.
+  A map edit under `changes.engineData.project` detaches that scene from a
+  shared map source, so sibling scenes keep their map unchanged.
 - `request_creator_scene_jpg` and `get_creator_scene_jpg_status` queue and
   poll a timestamped selected-scene JPG through the paired renderer. A blank
   offset means the scene midpoint; the timeline itself is never changed.
@@ -29,6 +33,11 @@ The old full-plan Director registrations are no longer exposed. The server
 does not create projects, replace a full timeline, or publish a video. Existing
 project IDs, voiceover timing, stable scene IDs, and unrelated layers remain
 the source of truth.
+
+The AI Agent Panel and plugin are two clients of the same saved Motion Studio
+draft. Agents can read and patch scene JSON through the plugin without opening
+the browser. A browser or paired renderer is still needed for visual review
+and MP4 export; the plugin JPG request uses that renderer.
 
 ## Selected-scene preview
 
