@@ -8,7 +8,7 @@ import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111705';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111707';
 import {createStudioRenderer} from './adapters.js?v=2026111707';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111604';
-import {mountAssembly} from './assembly.js?v=2026111707';
+import {mountAssembly} from './assembly.js?v=2026111708';
 import {encodeStudioVideo} from './export.js?v=2026111209';
 import {openStudioStore} from './storage.js';
 import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111705';
@@ -96,6 +96,11 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   $('.vs-review-heading').remove();
   exportNote.remove();
   $('.vs-preview .vs-help').remove();
+  const styles=document.createElement('details');
+  styles.className='vs-style-settings';
+  styles.innerHTML='<summary>Visual styles</summary>';
+  advanced.before(styles);
+  styles.append(styleRoot);
 
   const create=document.createElement('details');
   create.className='vs-create';
@@ -130,6 +135,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   for(const child of [...preview.children])if(child!==canvas)timelinePanel.append(child);
   $('.vs-layout').after(timelinePanel);
   timelinePanel.after(advanced);
+  advanced.after(styles);
 
   const empty=document.createElement('div');
   empty.className='vs-editing-empty';

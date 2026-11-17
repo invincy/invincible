@@ -1,6 +1,6 @@
 import {BUILTIN_MODELS, CAMERA_FIELDS, MODEL_FIELDS, MAX_MODELS, modelMotion, trainStage} from './three-scene.js';
 import {DEFAULT_PARALLAX,trainTemplate} from './parallax.js';
-import {mountObjectEditor} from './object-editor.js?v=2026111705';
+import {mountObjectEditor} from './object-editor.js?v=2026111708';
 import {createDefaultMap} from '../map-defaults.js?v=2026110903';
 import {appendProjectMaps,arrangeScenes,upgradeVideo,resizeScene} from './composition.js?v=2026111705';
 import {emptyBattlefield} from './battlefield.js?v=2026111014';
@@ -43,7 +43,10 @@ export async function loadAssetLibraryCatalog(url=catalogUrl){
 export function mountAssembly(root,api){
  const {getManifest,setManifest,saveMapDraft,getProject,getFile,putFile,deleteFile,importFiles,run,status,getTime,setTime,releaseRenderer,previewManifest}=api;
  let modelId='',selected=api.session.selected||'',audioSelected='',pending=null,reviewMarkup='',focused=null,editor=null,focusScene=null,returnTime=0,closed=false,catalog=null,mapReviewQueue=[],mapReviewTotal=0;
- const objectRoot=document.createElement('section');objectRoot.className='vs-object-editor';root.closest('.video-studio').querySelector('.vs-preview').append(objectRoot);
+ const studio=root.closest('.video-studio');
+ const objectRoot=document.createElement('section');
+ objectRoot.className='vs-object-editor';
+ (studio.querySelector('.vs-editing-timeline')||studio.querySelector('.vs-preview')).append(objectRoot);
  const objects=mountObjectEditor(objectRoot,{canvas:root.closest('.video-studio').querySelector('canvas'),getScene:()=>focused?null:scene(),getManifest,getTime,setTime,run,pause:api.pause,seek:()=>previewManifest(getManifest()),change:async(fn,replacement)=>{const m=replacement||await upgrade();if(fn)fn(m.scenes.find(s=>s.id===selected));await apply(m);}});
  const lockNavigation=value=>root.closest('.production-workbench')?.querySelectorAll('[data-tab]').forEach(b=>b.disabled=value);
  const mapAssets=()=>getProject()?.historicalMap?.visual?.assets||[];

@@ -4,6 +4,7 @@ const {handler:mediaHandler}=require('./fixtures/creator-media-service.cjs');
 const {chromium}=require('playwright'),root=path.resolve(__dirname,'..');
 const readinessMarkup=fs.readFileSync(path.join(root,'creator/project.html'),'utf8').match(/<section class="project-readiness"[^>]*>[\s\S]+?<\/section>/)[0];
 const fixture=`<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/creator/production-workbench.css"><link rel="stylesheet" href="/creator/video-studio/studio.css"><link rel="stylesheet" href="/shared/spatial-workspace.css"><style>body{margin:0;background:#071426;font-family:system-ui}*{box-sizing:border-box}</style><link rel="stylesheet" href="/creator/project.css">${readinessMarkup}<div id="root"></div><script type="module">import {createProductionWorkbench} from '/creator/production-workbench.js';window.project={id:new URLSearchParams(location.search).get('project')||'test-video',title:'Original',scenes:[],historicalMap:{version:1,theme:'night',events:[],features:{type:'FeatureCollection',features:[]},camera:[]},unknown:{keep:true}};window.before=JSON.stringify(project);window.changes=0;const mediaService=(await import('/test-media-client.js')).testMedia(new URLSearchParams(location.search).get('account')||'owner');const readinessRoot=document.querySelector('.project-readiness');let readiness;
+if(location.search.includes('objectTracks'))document.body.classList.add('project-page');
 if(project.id==='automatic-video'){
  const {createProductionReadiness,mountProductionReadiness}=await import('/creator/video-studio/production-readiness.js?v=2026111209');
  readiness=mountProductionReadiness(readinessRoot,createProductionReadiness(()=> 'owner'));
@@ -15,6 +16,27 @@ function wav(){const rate=48000,frames=rate,b=Buffer.alloc(44+frames*2);b.write(
 (async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;try{
  browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE||undefined,args:['--enable-unsafe-swiftshader']});const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(30000);const url=`http://127.0.0.1:${server.address().port}/fixture`;
  if(process.env.STUDIO_READINESS_ONLY!=='1'){
+ if(process.env.STUDIO_OBJECT_TRACKS_ONLY==='1'){
+  await page.goto(url+'?objectTracks');
+  await page.getByRole('button',{name:'Video Studio',exact:true}).click();
+  await waitReady(page);
+  await page.locator('[data-vs=example]').click();
+  await page.locator('[data-vs-scene-id]').first().click();
+  const tracks=page.locator('.vs-editing-timeline [data-objects-panel]');
+  await tracks.locator('[data-object-select]').first().click();
+  const size=tracks.getByRole('spinbutton',{name:'Scale',exact:true});
+  const initial=Number(await size.inputValue());
+  await tracks.getByRole('button',{name:'Enlarge selected object'}).click();
+  await page.waitForFunction(expected=>Number(document.querySelector('[data-object-field=scale]')?.value)===expected,initial+.05);
+  const styleSettings=page.locator('.vs-style-settings');
+  assert.equal(await styleSettings.evaluate(element=>element.open),false);
+  assert.ok(await tracks.isVisible());
+  await page.setViewportSize({width:393,height:852});
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+  assert.deepEqual(errors,[]);
+  console.log('Project timeline exposes object tracks, proportional resizing, and compact settings.');
+  return;
+ }
  await page.goto(url);assert.equal(await page.locator('.video-studio').count(),0,'workspace opt-in');await page.getByRole('button',{name:'Video Studio',exact:true}).click();await waitReady(page);
  if(process.env.STUDIO_LAYOUT_ONLY==='1'){
   const track=page.locator('.vs-layout');

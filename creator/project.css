@@ -532,7 +532,13 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
   background: #101923d9;
 }
 .vs-editing-first .vs-editing-timeline h3 { margin: 0; font-size: 17px; }
-.vs-editing-first .vs-editing-timeline input { min-height: 28px; }
+.vs-editing-first .vs-editing-timeline > input { min-height: 28px; }
+.vs-editing-first .vs-editing-timeline > .vs-object-editor { grid-column: 1 / -1; }
+.vs-editing-first .vs-editing-timeline .vs-object-tracks {
+  max-height: 230px;
+  overflow: auto;
+}
+.vs-editing-first .vs-style-settings { margin-top: 12px; }
 .vs-editing-first .vs-editing-empty { flex: 1; }
 .vs-editing-first .vs-scene-rail .vs-assembly-header > strong,
 .vs-editing-first .vs-inspector h3 { font-size: 18px; }
@@ -552,8 +558,8 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
   }
   .vs-editing-first .vs-editing-timeline :is(.vs-track,.vs-audio-track):empty { display: none; }
   .vs-editing-first .vs-editing-timeline h3 { grid-row: 1; }
-  .vs-editing-first .vs-editing-timeline input { grid-area: 1 / 2; }
-  .vs-editing-first .vs-editing-timeline output { grid-area: 1 / 3; margin: 0; }
+  .vs-editing-first .vs-editing-timeline > input { grid-area: 1 / 2; }
+  .vs-editing-first .vs-editing-timeline > output { grid-area: 1 / 3; margin: 0; }
   .project-page .vs-editing-first:not(.vs-focusing) .vs-layout {
     display: grid;
     grid-template-columns: minmax(205px, 1fr) minmax(0, 2.5fr);
