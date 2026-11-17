@@ -191,3 +191,13 @@ The 16 main recordings now use Gemini 2.5 Pro Aoede with Social delivery. Gemini
 The approved four-act script uses 18 speech clips across the original scenes and goal branches. Aoede narrates 15 clips, and Charon asks the three questions. All speech plays at 1.23x with pitch preserved. Voiceover Studio used the 1.20x directed generation setting. The opening chime stays at its original rate. The family maturity exchange plays both voices before Continue unlocks. Closing graphics follow the revised audio.
 
 The opening now starts with the first narration clip as soon as the opening assets are ready. The chime and lead-in wait were removed. Narration remains at 1.23x.
+
+## LIC Presentation Builder
+
+LIC Plans links to a separate authoring preview at `lic/presentation-builder/`. The sample uses 733 goal-choice and profile audio and artwork, then shows the premium for the selected profile. It leaves the live 733 presentation and calculator on their existing routes.
+
+The first editor supports one browser-local draft with IndexedDB-backed artwork and voiceover uploads. Authors can add and reorder scenes, time an appearance against narration, choose how a scene advances, and route choices to other scenes. The preview warns about incomplete routes and unreachable scenes. Media can be replaced or removed per scene.
+
+Premium and bonus inputs are explicit CSV rows with `age,term,cover,amount,basis`. Amounts are INR, with no currency symbols or thousands separators. Premium basis supports annual, monthly, quarterly and half-yearly. Bonus basis supports declared and illustrative totals for the chosen profile. Duplicate keys are rejected. The preview matches the exact profile and basis, with no fallback price. No production tables are bundled with the builder.
+
+Verified with the site reference check and a 390px Chromium test covering the LIC entry, sample branch with real audio, premium and bonus lookup, file upload, and draft reload. AI draft generation, workbook import, cross-device drafts, and customer presentation publishing are outside this first release.

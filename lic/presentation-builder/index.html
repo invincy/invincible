@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Presentation Builder · LIC Plans</title>
+<link rel="stylesheet" href="builder.css">
+</head>
+<body>
+<main>
+  <a class="back" href="../agent/">← LIC Plans</a>
+  <header><div><h1>Presentation Builder</h1><p>Build and test an interactive plan presentation.</p></div><button id="sample" type="button">Load Plan 733 sample</button></header>
+  <div class="workspace">
+    <div class="authoring">
+      <section aria-labelledby="data-heading">
+        <h2 id="data-heading">Plan data</h2>
+        <label>Draft title <input id="draft-title" maxlength="100"></label>
+        <details><summary>Premium and bonus tables</summary>
+          <p>Upload a CSV with columns <code>age,term,cover,amount,basis</code>. Use rupees without commas. Premium bases are annual, monthly, quarterly or half-yearly. Bonus bases are declared or illustrative.</p>
+          <div class="table-inputs">
+            <label>Premium table <input type="file" accept=".csv,text/csv" id="premium-file"><span id="premium-count"></span></label>
+            <label>Bonus table <input type="file" accept=".csv,text/csv" id="bonus-file"><span id="bonus-count"></span></label>
+          </div>
+          <div id="table-review"></div>
+        </details>
+      </section>
+      <section aria-labelledby="scenes-heading">
+        <div class="toolbar"><h2 id="scenes-heading">Scenes</h2><button id="add-scene" type="button">Add scene</button></div>
+        <ol id="scene-list"></ol>
+        <div id="editor"></div>
+      </section>
+      <p id="status" role="status" aria-live="polite"></p>
+    </div>
+    <section class="preview" aria-labelledby="preview-heading">
+      <div class="toolbar"><h2 id="preview-heading">Phone preview</h2><button id="start" type="button">Play from start</button></div>
+      <div id="phone" class="phone">
+        <div id="screen" class="screen"></div>
+        <audio id="narration" preload="metadata"></audio>
+      </div>
+      <button id="preview-scene" type="button">Play selected scene</button>
+      <div id="warnings" role="status"></div>
+    </section>
+  </div>
+</main>
+<script type="module" src="builder.mjs"></script>
+</body>
+</html>
