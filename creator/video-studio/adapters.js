@@ -14,7 +14,9 @@ export function mapDraft(animation,geometryReviewed,mapAssets=[]){
  return compileAnimation({scenes:[],historicalMap:{version:1,theme:'night',events:[],features:{type:'FeatureCollection',features:[]},camera:[],visual:{version:1,assets:referencedMapAssets(mapAssets,animation),layers:[]}}},animation,{geometryReviewed}).project;
 }
 export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFile,mapAssets=[],signal}={}){
- const ctx=canvas.getContext('2d'),images=new Map(),maps=new Map(),videos=new Map();let disposed=false,stage=null;
+ // Compose offscreen so async map/video work never exposes a cleared preview frame.
+ const frameCanvas=document.createElement('canvas');frameCanvas.width=canvas.width;frameCanvas.height=canvas.height;
+ const frameCtx=frameCanvas.getContext('2d',{alpha:false}),presentCtx=canvas.getContext('2d',{alpha:false}),images=new Map(),maps=new Map(),videos=new Map();let ctx=frameCtx,disposed=false,stage=null;
  const ownedUrls=[],hosts=[],missingAssets=new Map();
  const releaseStage=()=>{stage?.renderer.destroy();stage=null;};
  const destroy=()=>{if(disposed)return;disposed=true;releaseStage();for(const {player} of maps.values())player.destroy();for(const v of videos.values())v.input.dispose();for(const h of hosts)h.remove();for(const url of ownedUrls)URL.revokeObjectURL(url);};
@@ -116,10 +118,12 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
   const p=points.at(-1);if(p){ctx.fillStyle=brand.foreground;ctx.font=`600 42px ${brand.font}`;ctx.fillText(p.label,width*.5,height*.77,width*.9);ctx.font=`32px ${brand.font}`;const rows=['premium','addition','income','booster','maturity'].filter(k=>p[k]!==undefined);rows.forEach((k,i)=>ctx.fillText(k+' · '+money(p[k]),width*.5,height*.80+i*height*.03,width*.88));}
   ctx.fillStyle=brand.foreground;ctx.font=`20px ${brand.font}`;ctx.fillText('Illustration: '+d.source,width*.5,height*.97,width*.94);
  }
- async function draw(time,{exporting=false,allowPlaceholders=false,signal:frameSignal}={}){
+ async function renderFrame(time,{exporting=false,allowPlaceholders=false,signal:frameSignal}={}){
   if(disposed)throw new DOMException('Renderer closed','AbortError');frameSignal?.throwIfAborted();
+  // Export writes straight to the encoder canvas; only interactive preview needs a staging copy.
+  ctx=exporting?presentCtx:frameCtx;
   if(exporting&&!allowPlaceholders&&missingAssets.size)throw Error('Missing visual assets: '+[...missingAssets.values()].map(a=>a.name).join(', '));
-  ctx.globalAlpha=1;ctx.fillStyle=brand.background;ctx.fillRect(0,0,width,height);const scene=sceneAt(timeline,time);if(scene?.engineType!=='three')releaseStage();if(!scene)return;
+  ctx.globalAlpha=1;ctx.fillStyle=brand.background;ctx.fillRect(0,0,width,height);const scene=sceneAt(timeline,time);if(scene?.engineType!=='three')releaseStage();if(!scene){if(!exporting)presentCtx.drawImage(frameCanvas,0,0);return;}
   const local=time-scene.startSeconds,transition=scene.transition?.type==='fade'?scene.transition.durationSeconds:0,sceneStyle=resolveSceneStyle(manifest,scene);
   ctx.save();try{
    if(transition)ctx.globalAlpha=Math.max(0,Math.min(1,local/transition,(scene.durationSeconds-local)/transition));
@@ -152,6 +156,9 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
    graphics(scene,local);
    if(brand.logoAssetId){const image=images.get(brand.logoAssetId);const size=width*.12;if(image){const scale=Math.min(size/image.width,size/image.height);ctx.drawImage(image,width*.84,height*.04,image.width*scale,image.height*scale);}else if(missingAssets.has(brand.logoAssetId))placeholder(missingAssets.get(brand.logoAssetId),width*.84,height*.04,size,size);}
   }finally{ctx.restore();}
+  frameSignal?.throwIfAborted();if(!disposed&&!exporting)presentCtx.drawImage(frameCanvas,0,0);
  }
+ let frameQueue=Promise.resolve();
+ function draw(time,options){const task=frameQueue.then(()=>renderFrame(time,options));frameQueue=task.catch(()=>{});return task;}
  return {draw,destroy,missingAssets:[...missingAssets.values()]};
 }

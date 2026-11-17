@@ -6,7 +6,7 @@ import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=
 import {studioBrief} from './handoff.js?v=2026111207';
 import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111705';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111707';
-import {createStudioRenderer} from './adapters.js?v=2026111707';
+import {createStudioRenderer} from './adapters.js?v=2026111712';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111604';
 import {mountAssembly} from './assembly.js?v=2026111710';
 import {encodeStudioVideo} from './export.js?v=2026111209';
@@ -212,7 +212,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  }
  setup.ondragover=e=>{e.preventDefault();};setup.ondrop=e=>{e.preventDefault();if(e.dataTransfer.files.length)run(()=>uploadFiles([...e.dataTransfer.files]));};
  const lifecycle=new AbortController();
- let drawing=null;
+ let drawing=null,lastPreviewFrameAt=-Infinity;
  let renderer=null,timeline=null,audioBuffer=null,audioTracks=[],stopTracks=null,assembly=null,styleGallery=null,playing=false,raf=0,time=state.time||0,context=null,source=null,gainNode=null,clock=0,clockTime=0,disposed=false,busy=false,pending=null,controller=null,drawBusy=false,preparing=null;
  const status=text=>{if(!disposed)$('[data-vs-status]').textContent=text;};
  const canSync=()=>getProject()?.ownerUid===account||!!mediaService;
@@ -400,9 +400,9 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   pending=null;$('[data-vs=apply]').disabled=true;sync();
   try{await draw();state.previewError=null;}catch(error){state.previewError=error.message;status('Draft retained. Preview unavailable: '+error.message);}
  }
- async function tick(){
+ async function tick(now){
   if(!playing||disposed)return;time=Math.min(timeline.duration,clockTime+context.currentTime-clock);
-  if(!drawBusy){drawBusy=true;try{await draw();}catch(e){stop();status(e.message);}finally{drawBusy=false;}}
+  if(!drawBusy&&(now-lastPreviewFrameAt>=1000/30||time>=timeline.duration)){drawBusy=true;lastPreviewFrameAt=now;try{await draw();}catch(e){stop();status(e.message);}finally{drawBusy=false;}}
   if(time>=timeline.duration)stop();if(playing)raf=requestAnimationFrame(tick);
  }
  async function play(){
@@ -410,7 +410,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   context??=new AudioContext();await context.resume();clock=context.currentTime;clockTime=time;
   if(audioBuffer){const offset=Math.max(0,time-timeline.audioStart);if(offset<audioBuffer.duration){source=context.createBufferSource();source.buffer=audioBuffer;gainNode=context.createGain();gainNode.gain.value=state.manifest.audio.gain;source.connect(gainNode);gainNode.connect(context.destination);source.start(clock+Math.max(0,timeline.audioStart-time),offset);}}
   stopTracks=scheduleAudioTracks(context,audioTracks,time);
-  playing=true;raf=requestAnimationFrame(tick);
+  lastPreviewFrameAt=-Infinity;playing=true;raf=requestAnimationFrame(tick);
  }
  async function save(manifest=state.manifest,{preview=true,applying=false}={}){
   if(assembly?.pending&&!applying)throw Error('Apply or discard the pending scene change before saving.');

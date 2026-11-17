@@ -1,5 +1,11 @@
 # Cleanup review — 2026-10-03
 
+## Motion Studio preview stability — November 17, 2026
+
+Motion Studio now composes interactive frames on a hidden 2D canvas and presents each only after its map, video, effects and overlays finish. This keeps the previous complete frame visible while asynchronous work runs. Playback draws at most 30 frames per second, matching the MP4 timeline. Export still draws directly to the full-resolution encoder canvas and uses the same renderer; the preview staging copy is not part of MP4 encoding. Renderer draws are serialized so a slow map frame cannot overwrite a later frame.
+
+Focused agent and video unit checks and the Studio browser playback check passed. The browser check confirmed that playback only presents complete frames to the visible canvas. This machine's Chromium reports H.264 encoding unavailable, so the MP4 encoding assertion was skipped; no private production project was opened for a visual before/after comparison.
+
 ## Visible creation tools — November 17, 2026
 
 Motion Studio places Text, Images, Shapes, Audio and Styles in a labeled left rail and Scenes on the right. Text and shape buttons use the existing object creation and draft mutation path. Text creation selects the wording field immediately; formatting remains in Object settings. Mobile shows the tools as a horizontal strip. Shape tracks use readable type names for UUID-based objects.
