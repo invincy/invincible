@@ -207,3 +207,7 @@ Verified with the site reference check and a 390px Chromium test covering the LI
 Use Edit scene layout to drag the selected scene's title, artwork, text, amount, and goal choices in the phone preview. The inspector supports percentage position and width, plus an entrance preset and delay. Choices can each use their own artwork. Playback uses the same layout while preserving choice routing and waiting until the scene audio finishes before accepting a choice. Existing drafts without saved placements retain their original stacked playback until an item is edited. The 733 sample starts with four staggered goal coins.
 
 The builder browser test checks dragging, the saved position after reload, animation selection and delay in playback, and the separate Career branch audio.
+
+### Payment and payout artwork
+
+The portrait presentation shows an illustrated hand transferring a banknote for premium payment, and a receiving hand for rider, annual-income and maturity payouts. Annual income repeats the arrival animation. Reduced-motion mode uses static artwork. The premium amount uses a right-aligned card that fades during normal maturity, and the spoken maturity paragraph is retained for accessibility while the illustration carries a short visible label. Verified with the portrait browser suite and inspected 320px premium, maturity and rider captures.

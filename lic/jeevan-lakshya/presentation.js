@@ -113,7 +113,7 @@ function renderState(next,{focus=true,restartOpening=false,benefitStart=0}={}){
  stage.dataset.flowStep=state;stage.dataset.storyStep=({intro:1,selected:1,configure:1,preview:2,whatif:3,protection:3,closing:3,details:4})[state];
  stage.classList.remove('pills-out','family-away','child-in','path-restored','goal-restored');benefitIndex=-1;delete stage.dataset.benefitStep;delete stage.dataset.previewBeat;stage.style.setProperty('--journey-progress','0');
  for(const id of panels)$(id).hidden=true;
- for(const id of ['maturityPill','maturityMessage','paymentMotion','previewBonusNote','familyBonusNote','whatIfCaption','assurancePill','riderPill','ceasesPill','incomePill','deathMaturityPill'])$(id).hidden=true;
+ for(const id of ['maturityPill','maturityMoney','maturityMessage','paymentMotion','previewBonusNote','familyBonusNote','whatIfCaption','assurancePill','riderPill','ceasesPill','incomePill','deathMaturityPill'])$(id).hidden=true;
  const visible=({intro:['scene1'],selected:['scene1','selectionPanel'],configure:['configurationPanel'],preview:['previewPanel'],whatif:['previewPanel','whatIfPanel'],protection:['protectionPanel'],closing:['closingPanel'],details:['detailsPanel']})[state];visible.forEach(id=>$(id).hidden=false);
  const data=copy[state];$('eyebrowChip').textContent=data[0];$('headlineMain').innerHTML=data[1];$('headlineIndic').textContent=data[2];$('subtitleText').textContent=data[3];$('subtitleText').hidden=!data[3];
  const storyGoal=$('storyGoal');
@@ -156,6 +156,7 @@ function renderState(next,{focus=true,restartOpening=false,benefitStart=0}={}){
     if(reduced())reveal('maturityPill');
     else later(850,()=>reveal('maturityPill'));
     $('maturityMessage').hidden=false;
+    reveal('maturityMoney');
     voiceCue('plan.goal-maturity',()=>setState('whatif'),5000);
    },1800);
   },1500,()=>{
