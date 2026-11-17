@@ -17,7 +17,7 @@ export function mountObjectEditor(root,{canvas,getScene,getManifest,getTime,setT
  const displayed=(s,l)=>projectLayer(layerFrame(l,localTime()),transformFor(s,l));
  function highlight(){const l=current();box.hidden=!l;if(!l)return;const v=displayed(getScene(),l);box.hidden=getTime()<getScene().startSeconds||getTime()>=getScene().startSeconds+getScene().durationSeconds||localTime()<(l.startSeconds??0)||localTime()>=(l.endSeconds??getScene().durationSeconds);Object.assign(box.style,{left:(v.x*100)+'%',top:(v.y*100)+'%',width:((v.width??.8)*v.scale*100)+'%',height:((v.height??.3)*v.scale*100)+'%',transform:`translate(-50%,-50%) rotate(${v.rotation}deg)`});}
  async function edit(fn,{record=true}={}){if(busy)return;busy=true;const before=structuredClone(getManifest());try{await change(fn);if(record){undo.push(before);if(undo.length>30)undo.shift();redo.length=0;}}finally{busy=false;sync();}}
- function sync(){const s=getScene(),m=getManifest(),l=current(),signature=JSON.stringify(m);if(lastSignature&&signature!==lastSignature&&!busy){undo.length=0;redo.length=0;}lastSignature=signature;if(!s){root.innerHTML=m.scenes.length?'<p class="vs-help">Select a scene in the timeline to see its object tracks.</p>':'';box.hidden=true;return;}
+ function sync(){const s=getScene(),m=getManifest(),l=current(),signature=JSON.stringify(m);const openTools=new Set([...root.querySelectorAll('[data-object-tools][open]')].map(node=>node.dataset.objectTools));if(lastSignature&&signature!==lastSignature&&!busy){undo.length=0;redo.length=0;}lastSignature=signature;if(!s){root.innerHTML=m.scenes.length?'<p class="vs-help">Select a scene in the timeline to see its object tracks.</p>':'';box.hidden=true;return;}
   root.innerHTML=`<details data-objects-panel open><summary>Object tracks · ${s.overlays.length}</summary><div class="vs-actions"><select data-object-kind aria-label="Object type">${['text','image','rectangle','circle','line','arrow'].map(t=>`<option>${t}</option>`).join('')}</select><button data-object-action="add">Add object</button><button data-object-action="undo" ${undo.length?'':'disabled'}>Undo</button><button data-object-action="redo" ${redo.length?'':'disabled'}>Redo</button></div>
   ${s.engineType==='graphic'?`<div class="vs-grid">${select('Background','backgroundStyle',['plain','grid','blueprint','image'],s.engineData.backgroundStyle||'plain')}<label>Color<input type="color" data-object-field="background" value="${s.engineData.background||'#071426'}"></label><label>Artwork<select data-object-field="backgroundAssetId"><option value="">Choose image</option>${m.assets.filter(a=>a.kind!=='glb').map(a=>`<option value="${esc(a.id)}" ${a.id===s.engineData.backgroundAssetId?'selected':''}>${esc(a.name)}</option>`).join('')}</select></label>${field('Grid spacing','gridSpacing',s.engineData.gridSpacing??48,16,240,1)}</div><div class="vs-actions"><label><input type="checkbox" data-object-field="parallax" ${s.engineData.parallax?'checked':''}>2.5D camera</label></div>${s.engineData.parallax?`<div class="vs-grid">${field('Pan X','camera.panX',s.engineData.parallax.panX,-.5,.5)}${field('Pan Y','camera.panY',s.engineData.parallax.panY,-.5,.5)}${field('End zoom','camera.zoom',s.engineData.parallax.zoom,.5,2)}</div>`:''}`:''}
   <div class="vs-object-tracks" aria-label="Object timeline">${s.overlays.map(o=>{const start=o.startSeconds??0,end=o.endSeconds??s.durationSeconds;return `<div class="vs-object-track"><button data-object-select="${esc(o.id)}" aria-pressed="${o.id===selected}" title="${esc(o.text||o.type)}" style="margin-left:${start/s.durationSeconds*100}%;width:${Math.max(2,(end-start)/s.durationSeconds*100)}%"><span data-track-edge="start" aria-hidden="true">▏</span>${esc((o.text||m.assets.find(asset=>asset.id===o.assetId)?.name||o.effectType||o.id.replaceAll('-',' ')).slice(0,60))}<span data-track-edge="end" aria-hidden="true">▕</span></button></div>`;}).join('')}</div>
@@ -26,6 +26,33 @@ export function mountObjectEditor(root,{canvas,getScene,getManifest,getTime,setT
   ${l.type==='text'?`<label>Text<textarea data-object-field="text">${esc(l.text)}</textarea></label><div class="vs-grid">${field('Font size','fontSize',l.fontSize??56,8,400,1)}${select('Font','fontFamily',CANVAS_FONTS,l.fontFamily||'system-ui')}${field('Weight','fontWeight',l.fontWeight??600,1,1000,'any')}${select('Align','textAlign',['left','center','right'],l.textAlign||'center')}</div>`:''}
   ${l.type==='image'?`<label>Artwork<select data-object-field="assetId">${m.assets.filter(a=>a.kind!=='glb').map(a=>`<option value="${esc(a.id)}" ${a.id===l.assetId?'selected':''}>${esc(a.name)}</option>`).join('')}</select></label>`:''}
   <div class="vs-actions"><button data-object-action="up">Forward</button><button data-object-action="down">Backward</button><button data-object-action="duplicate">Duplicate</button><button data-object-action="delete">Delete</button><button data-object-action="key">Key at playhead</button></div><details><summary>Motion keys</summary>${(l.keyframes||[]).map((k,i)=>`<div class="vs-keyrow">${field('Seconds',`key.${i}.timeSeconds`,k.timeSeconds,0,s.durationSeconds,.05)}${['x','y','scale','rotation','opacity'].filter(p=>k[p]!==undefined).map(p=>field(p,`key.${i}.${p}`,k[p],p==='opacity'||p==='scale'?0:p==='rotation'?-3600:-2,p==='opacity'?1:p==='scale'?10:p==='rotation'?3600:3)).join('')}${select('Easing',`key.${i}.easing`,['linear','smooth','hold'],k.easing||'linear')}<button data-object-remove-key="${i}">Remove key</button></div>`).join('')}</details>`:''}</details>`;highlight();
+  if(root.closest('.vs-human-editor')){
+   const panel=root.querySelector('[data-objects-panel]');
+   const tracks=panel.querySelector('.vs-object-tracks');
+   const sizing=panel.querySelector('.vs-object-sizing');
+   const toolbar=panel.querySelector('.vs-actions');
+   const backgroundNodes=[];
+   for(let node=toolbar.nextElementSibling;node&&node!==tracks;node=node.nextElementSibling)backgroundNodes.push(node);
+   function disclosure(label,key,nodes){
+    const details=document.createElement('details');
+    details.dataset.objectTools=key;
+    details.open=openTools.has(key);
+    const summary=document.createElement('summary');
+    summary.textContent=label;
+    details.append(summary,...nodes);
+    return details;
+   }
+   const properties=[];
+   for(let node=sizing?.nextElementSibling;node;node=node.nextElementSibling)properties.push(node);
+   const tools=document.createElement('div');
+   tools.className='vs-object-toolstrip';
+   tools.append(disclosure('＋ Object','add',[toolbar]));
+   if(backgroundNodes.length)tools.append(disclosure('▧ Background','background',backgroundNodes));
+   if(properties.length)tools.append(disclosure('⚙ Object settings','properties',properties));
+   panel.append(tools);
+   panel.querySelector('summary').after(tracks);
+   if(sizing)tracks.after(sizing);
+  }
  }
  root.onclick=e=>{if(trackDrag)return;
   const resize=e.target.closest('[data-object-scale-step]');

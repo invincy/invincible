@@ -1,6 +1,6 @@
 import {BUILTIN_MODELS, CAMERA_FIELDS, MODEL_FIELDS, MAX_MODELS, modelMotion, trainStage} from './three-scene.js';
 import {DEFAULT_PARALLAX,trainTemplate} from './parallax.js';
-import {mountObjectEditor} from './object-editor.js?v=2026111708';
+import {mountObjectEditor} from './object-editor.js?v=2026111709';
 import {createDefaultMap} from '../map-defaults.js?v=2026110903';
 import {appendProjectMaps,arrangeScenes,upgradeVideo,resizeScene} from './composition.js?v=2026111705';
 import {emptyBattlefield} from './battlefield.js?v=2026111014';
@@ -74,6 +74,21 @@ export function mountAssembly(root,api){
   <details><summary>Audio</summary><div class="vs-grid"><label>Type<select data-audio-role><option value="voiceover">Voice</option><option value="music">Music</option><option value="effect">Sound effect</option></select></label><label class="vs-upload">Add recording<input data-compose-audio type="file" accept=".mp3,.wav,audio/mpeg,audio/wav" multiple></label></div><div class="vs-audio-list">${(m.audioClips||[]).map(a=>`<button data-compose-audio-select="${esc(a.id)}" aria-pressed="${a.id===audioSelected}">${esc(a.name)}<small>${esc(a.role)} · ${a.startSeconds.toFixed(1)}–${(a.startSeconds+a.durationSeconds).toFixed(1)}s</small></button>`).join('')}${m.audio?'<p class="vs-help">An existing voiceover is loaded. Adding audio retains it as the first voice track.</p>':''}</div>${a?`<h4>${esc(a.name)}</h4><div class="vs-grid">${number('Timeline start','audio.startSeconds',a.startSeconds)}${number('Source trim start','audio.trimStart',a.trimStart)}${number('Duration','audio.durationSeconds',a.durationSeconds,1/48000)}${number('Volume','audio.gain',a.gain,0,2,.05)}${a.role!=='voiceover'?`<label>Repeat sound<select data-assembly-prop="audio.loop"><option value="false" ${!a.loop?'selected':''}>Off</option><option value="true" ${a.loop?'selected':''}>Loop</option></select></label>${a.loop?number('Loop source length','audio.sourceDurationSeconds',a.sourceDurationSeconds,1/48000):''}`:''}${number('Fade in','audio.fadeIn',a.fadeIn)}${number('Fade out','audio.fadeOut',a.fadeOut)}</div><button data-compose="remove-audio-clip">Remove recording</button>`:''}</details><details><summary>Reusable artwork</summary><div class="vs-actions"><select data-asset-library aria-label="Reusable artwork library"><option value="">Loading libraries…</option></select><button data-compose="load-asset-library">Load artwork library</button></div><p class="vs-help" data-asset-library-note>Choose a reusable artwork library, with source and rights notes. Choose formation artwork inside Edit scene.</p></details><div data-compose-review></div>`;
   if(pending)root.querySelector('[data-compose-review]').innerHTML=reviewMarkup;
   if(root.closest('.vs-editing-first')){
+   const addTools=document.createElement('details');
+   addTools.className='vs-add-tools';
+   addTools.innerHTML='<summary>＋ Add scene or media</summary>';
+   const heading=root.querySelector('.vs-assembly-header');
+   heading.querySelector('strong').remove();
+   addTools.append(heading,heading.nextElementSibling);
+   root.prepend(addTools);
+   const inspector=root.querySelector('.vs-inspector');
+   if(inspector){
+    const settings=document.createElement('details');
+    settings.className='vs-scene-settings';
+    settings.innerHTML='<summary>⚙ Scene settings</summary>';
+    inspector.before(settings);
+    settings.append(inspector);
+   }
    const rail=document.createElement('div');
    rail.className='vs-scene-rail';
    for(const child of [...root.children])if(!child.matches('.vs-inspector'))rail.append(child);

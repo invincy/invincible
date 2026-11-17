@@ -8,7 +8,7 @@ import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111705';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111707';
 import {createStudioRenderer} from './adapters.js?v=2026111707';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111604';
-import {mountAssembly} from './assembly.js?v=2026111708';
+import {mountAssembly} from './assembly.js?v=2026111709';
 import {encodeStudioVideo} from './export.js?v=2026111209';
 import {openStudioStore} from './storage.js';
 import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111705';
@@ -47,7 +47,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  mobile.querySelector('[data-mobile-panel="preview"]').setAttribute('aria-pressed','true');
  mobile.onclick=event=>{
   const button=event.target.closest('[data-mobile-panel]');
-  if(button){root.dataset.mobilePanel=button.dataset.mobilePanel;mobile.querySelectorAll('[data-mobile-panel]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));panels[button.dataset.mobilePanel].scrollIntoView({block:'nearest',inline:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}
+  if(button){root.dataset.mobilePanel=button.dataset.mobilePanel;mobile.querySelectorAll('[data-mobile-panel]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));if(button.dataset.mobilePanel==='settings'){const menu=advanced.closest('.vs-tool-menu');if(menu)menu.open=true;}panels[button.dataset.mobilePanel].scrollIntoView({block:'nearest',inline:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}
  };
  for(const key of ['save','export'])header.querySelector('[data-studio-actions]').append($(`[data-vs=${key}]`));
  const lastExport=document.createElement('a');lastExport.dataset.vsLastExport='';lastExport.className='secondary';lastExport.textContent='Download last MP4';lastExport.hidden=true;header.querySelector('[data-studio-actions]').append(lastExport);
@@ -133,9 +133,48 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   timelinePanel.innerHTML='<h3>Timeline</h3>';
   const preview=$('.vs-preview');
   for(const child of [...preview.children])if(child!==canvas)timelinePanel.append(child);
-  $('.vs-layout').after(timelinePanel);
-  timelinePanel.after(advanced);
+  $('.vs-layout').append(timelinePanel);
+  $('.vs-layout').after(advanced);
   advanced.after(styles);
+
+  const actions=header.querySelector('[data-studio-actions]');
+  function menu(label,className,nodes){
+   const details=document.createElement('details');
+   details.className='vs-tool-menu '+className;
+   const summary=document.createElement('summary');
+   summary.textContent=label;
+   const content=document.createElement('div');
+   content.className='vs-tool-content';
+   content.append(...nodes);
+   details.append(summary,content);
+   actions.insertBefore(details,$('[data-vs=export]'));
+   details.addEventListener('toggle',()=>{
+    if(details.open)for(const other of actions.querySelectorAll('.vs-tool-menu,.vs-create'))if(other!==details)other.open=false;
+   });
+   details.addEventListener('keydown',event=>{
+    if(event.key==='Escape'){details.open=false;summary.focus();event.stopPropagation();}
+   });
+   return details;
+  }
+  menu('▧ Styles','vs-styles-menu',[styles]);
+  menu('⚙ Settings','vs-settings-menu',[advanced]);
+  menu('↓ Export options','vs-export-menu',[jpgSceneButton,jpgOffsetLabel,jpgButton,allowPlaceholders,lastExport,saveLastExport,cloudExport]);
+  create.addEventListener('toggle',()=>{
+   if(create.open)for(const other of actions.querySelectorAll('.vs-tool-menu'))other.open=false;
+  });
+  root.addEventListener('click',event=>{
+   for(const popup of actions.querySelectorAll('.vs-tool-menu[open],.vs-create[open]')){
+    if(!popup.contains(event.target)&&!event.target.closest('.vs-workspace-shortcuts,.vs-mobile-tabs'))popup.open=false;
+   }
+  });
+  styles.open=true;
+  advanced.open=true;
+  styles.querySelector('summary').hidden=true;
+  advanced.querySelector('summary').hidden=true;
+  header.querySelector('h2').textContent='Motion Studio';
+  $('[data-vs=play]').textContent='▶ Play';
+  $('[data-vs=pause]').textContent='Ⅱ Pause';
+  root.classList.add('vs-human-editor');
 
   const empty=document.createElement('div');
   empty.className='vs-editing-empty';

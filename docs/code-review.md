@@ -1,5 +1,11 @@
 # Cleanup review — 2026-10-03
 
+## Motion Studio human editing shell — November 17, 2026
+
+The project editor now aligns the timeline directly under the preview, with scene tools in their own left column. Add/media, scene settings, background and object properties use disclosures. Styles, project settings and JPG/export options use labeled toolbar menus with Escape and outside-click dismissal. Existing controls and delegated handlers continue to edit the canonical manifest.
+
+Verified in Chrome using the normal project workspace fixture: preview/timeline edge alignment, object selection and scale edits, export menu visibility and keyboard dismissal, phone overflow and panel switching. Desktop and phone screenshots were visually inspected. The nine agent module tests and the 13-map agent browser workflow passed, including revision-safe patches, remote reload, map editing and account rejection. Site references and diff checks passed. The private production rainfall project and its media access were not part of this UI verification.
+
 ## Modular Creator visual styling library — November 17, 2026
 
 Added four renderer-native Motion Studio presets—Historical Archive, Field Atlas, Signal Blueprint and Executive Ledger—with History and Geography as the primary production treatments. Optional manifest, scene and overlay style fields use validated inheritance and preserve legacy output when absent. The shared compositor now renders deterministic text plates, clean non-crossing corner brackets, grounded/framed PNGs and clock-based entrances. Native maps receive contrast, tint, label/card, relief and easing tokens on an immutable render copy; saved geography, camera keys, scene IDs, timing and engine types are unchanged.
