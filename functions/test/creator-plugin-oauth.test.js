@@ -68,6 +68,15 @@ test('Motion Studio manifest validation protects timing and asset references',()
  assert.throws(()=>plugin.validateVideoManifest({...manifest,scenes:[{...manifest.scenes[0],startSeconds:-1}]}),/timing/);
 });
 
+test('plugin validates built-in and user visual styling presets without scene downgrade',()=>{
+ const manifest={schemaVersion:2,assets:[],visualStylePresetId:'history-archive-gold',visualStylePresets:[{id:'user-archive-blue',name:'Archive blue',category:'History',description:'A saved historical variation.',baseId:'history-archive-gold',tokens:{palette:{accent:'#65B7E6'},map:{contrast:.28,labelStyle:'card'}}}],scenes:[{id:'scene-1',engineType:'map',startSeconds:0,durationSeconds:2,visualStylePresetId:'user-archive-blue',engineData:{},overlays:[]}]};
+ assert.equal(plugin.validateVideoManifest(manifest).scenes[0].engineType,'map');
+ assert.equal(plugin.visualStyleList(manifest).length,5);
+ assert.equal(plugin.savedVisualStyleSchema.parse(manifest.visualStylePresets[0]).baseId,'history-archive-gold');
+ assert.throws(()=>plugin.validateVideoManifest({...manifest,visualStylePresetId:'invented-style'}),/Unknown video visual preset/);
+ assert.throws(()=>plugin.savedVisualStyleSchema.parse({...manifest.visualStylePresets[0],tokens:{map:{contrast:2}}}),/Too big|<=1/);
+});
+
 test('plugin validates complete project briefs and reports resumable workflow phases',()=>{
  const brief=plugin.createProjectInput.parse({title:'ITCZ test',narration:'भारत के Monsoon का रास्ता कौन बदलता है?',creativeInstructions:'Show India and the Indian Ocean.',aspectRatio:'9:16',format:'Short',idempotencyKey:'itcz-test-001'});
  assert.equal(brief.title,'ITCZ test');
@@ -88,13 +97,16 @@ test('plugin validates complete project briefs and reports resumable workflow ph
 });
 
 test('plugin exposes OAuth tool metadata before sign-in and returns a linking challenge',async()=>{
- const server=plugin.createServer(null),profile=server._registeredTools.get_my_profile,apply=server._registeredTools.apply_creator_scene_patch,draft=server._registeredTools.get_creator_video_draft,jpg=server._registeredTools.request_creator_scene_jpg,jpgStatus=server._registeredTools.get_creator_scene_jpg_status,resume=server._registeredTools.get_creator_workflow_status;
+ const server=plugin.createServer(null),profile=server._registeredTools.get_my_profile,apply=server._registeredTools.apply_creator_scene_patch,draft=server._registeredTools.get_creator_video_draft,jpg=server._registeredTools.request_creator_scene_jpg,jpgStatus=server._registeredTools.get_creator_scene_jpg_status,resume=server._registeredTools.get_creator_workflow_status,styles=server._registeredTools.list_creator_style_presets,applyStyle=server._registeredTools.apply_creator_style_preset,updateStyle=server._registeredTools.update_creator_style_preset;
  assert.deepEqual(profile._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read']}]);
  assert.deepEqual(apply._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read','creator.compile','creator.write']}]);
  assert.deepEqual(draft._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read']}]);
  assert.deepEqual(jpg._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read','creator.compile','creator.write']}]);
  assert.deepEqual(jpgStatus._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read']}]);
  assert.deepEqual(resume._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read']}]);
+ assert.deepEqual(styles._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read']}]);
+ assert.deepEqual(applyStyle._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read','creator.compile','creator.write']}]);
+ assert.deepEqual(updateStyle._meta.securitySchemes,[{type:'oauth2',scopes:['creator.read','creator.compile','creator.write']}]);
  assert.equal(server._registeredTools.create_creator_project,undefined);
  assert.equal(server._registeredTools.apply_creator_plan,undefined);
  assert.equal(server._registeredTools.start_creator_local_timing,undefined);

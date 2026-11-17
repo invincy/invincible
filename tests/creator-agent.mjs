@@ -16,6 +16,14 @@ test('13 native maps survive validation, canonical save and reload',async()=>{
  assert.equal(manifest.scenes[3].engineData.project.historicalMap.cameraDefaults.zoom,5);
  assert.equal((await api.applyPatch({patchSceneId:'scene-4',expectedRevision:1,changes:{name:'Stale'}})).errors[0].code,'REVISION_CONFLICT');
 });
+test('agent style operations list, inspect, apply and update presets revision-safely',async()=>{
+ let manifest=fixture(),revision=0;const api=createAgentOperations({authorize:()=>{},getManifest:()=>manifest,getRevision:()=>revision,save:async next=>{manifest=structuredClone(next);revision++;}});
+ const listed=await api.listStylePresets();assert.equal(listed.ok,true);assert.deepEqual(listed.presets.map(item=>item.category),['History','Geography','Science','Finance']);
+ const historical=await api.getStylePreset('history-archive-gold');assert.equal(historical.preset.tokens.ornament.kind,'corner-brackets');
+ let applied=await api.applyStylePreset({presetId:'history-archive-gold',sceneId:'scene-4',expectedRevision:0});assert.equal(applied.ok,true);assert.equal(manifest.scenes[3].visualStylePresetId,'history-archive-gold');assert.equal(manifest.scenes[3].engineType,'map');
+ const preset={id:'user-field-gold',name:'Field gold',category:'Geography',description:'Saved geography variant.',baseId:'geography-field-atlas',tokens:{palette:{accent:'#D6B25E'},map:{accentColor:'#D6B25E'}}};const updated=await api.updateStylePreset({preset,expectedRevision:1});assert.equal(updated.ok,true);assert.equal(updated.preset.tokens.map.labelStyle,'card');assert.equal(manifest.visualStylePresets[0].id,preset.id);
+ applied=await api.applyStylePreset({presetId:preset.id,expectedRevision:2});assert.equal(applied.ok,true);assert.equal(manifest.visualStylePresetId,preset.id);assert.equal((await api.applyStylePreset({presetId:'history-archive-gold',expectedRevision:2})).errors[0].code,'REVISION_CONFLICT');
+});
 test('patch arrays preserve siblings and require explicit replacement for unkeyed values',()=>{
  const base={layers:[{id:'a',color:'red',name:'Keep'},{id:'b',color:'blue'}]};
  assert.deepEqual(mergeSceneChanges(base,{layers:[]}),base);
@@ -34,7 +42,7 @@ test('invalid maps, targets, timing and missing assets do not mutate saved state
 });
 test('unauthorized API operations reject including reads and validation',async()=>{
  const api=createAgentOperations({authorize:()=>{throw Object.assign(Error('Sign in'),{code:'UNAUTHORIZED'});},getManifest:fixture,getRevision:()=>0});
- for(const operation of ['getProjectJSON','getSceneSummary','validateJSON','applyPatch'])assert.equal((await api[operation](fixture())).errors[0].code,'UNAUTHORIZED');
+ for(const operation of ['getProjectJSON','getSceneSummary','validateJSON','applyPatch','listStylePresets'])assert.equal((await api[operation](fixture())).errors[0].code,'UNAUTHORIZED');
 });
 test('patching a shared native map detaches only the selected scene',()=>{
  const m=fixture(),project=m.scenes[0].engineData.project;m.mapSources=[{id:'shared',project}];for(const s of m.scenes)s.engineData={sourceId:'shared',sourceStart:0};

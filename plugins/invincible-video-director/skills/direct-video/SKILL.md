@@ -14,6 +14,12 @@ Use the existing Creator Studio project as the source of truth. Do not create a 
 3. Call `list_creator_assets` before requesting a new upload. Asset IDs are stable and exact duplicate bytes reuse the existing private asset rather than creating another one.
 4. Preserve the final MP3, measured timing, scene IDs and all unrelated layers. Do not ask the user to repeat narration or animation instructions already present in the chat or project.
 
+## Reuse visual styles
+
+Call `list_creator_style_presets` before describing low-level colors, fonts, plates, corners, image treatments or map contrast. Use `get_creator_style_preset` when a preset needs inspection, then `apply_creator_style_preset` with the current draft revision at video or scene scope. Use `update_creator_style_preset` only for a validated `user-` preset derived from a built-in base. Prefer the curated History and Geography presets when they fit; keep element-level overrides limited to genuine exceptions.
+
+Style application must preserve scene IDs, timing, engine types, maps, assets and layout. After applying a preset, request a selected-scene JPG and inspect labels, portrait grounding, ornament corners and terrain contrast before full export.
+
 ## Patch scenes safely
 
 Use `apply_creator_scene_patch` for one existing scene at a time. Always pass the revision returned by `get_creator_video_draft` as `expectedRevision`. Change only the requested fields. Keep a scene's `id`, timing and engine type unless the user explicitly requests that change. Arrays of overlays, labels or keyframes are ID-merged; use an explicit replacement only when the user clearly requests a full-array replacement.

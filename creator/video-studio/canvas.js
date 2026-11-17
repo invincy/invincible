@@ -1,4 +1,5 @@
 // Declarative Canvas scenes share the Studio compositor and clock with maps.
+import {drawStyledLayer} from './style-presets.js?v=2026111706';
 export const CANVAS_FONTS=['system-ui','Invincible Sans','Invincible Hindi','serif','monospace'];
 export const BACKGROUND_FIELDS=['background','backgroundStyle','gridColor','gridSpacing','backgroundAssetId','backgroundFit'];
 export function validateCanvas(data,assets){
@@ -33,7 +34,8 @@ export function drawCanvasBackground(ctx,data,images){
   ctx.stroke();ctx.globalAlpha/=(major?.35:.15);
  }ctx.restore();
 }
-export function drawCanvasLayer(ctx,l,brand,images){
+export function drawCanvasLayer(ctx,l,brand,images,style=null){
+ if(style)return drawStyledLayer(ctx,l,l,style,images,()=>drawCanvasLayer(ctx,l,brand,images));
  const {width,height}=ctx.canvas,unit=Math.min(width,height)/1080;
  ctx.save();ctx.globalAlpha*=l.opacity;ctx.translate(l.x*width,l.y*height);ctx.rotate(l.rotation*Math.PI/180);ctx.scale(l.scale,l.scale);ctx.fillStyle=l.color||brand.foreground;ctx.strokeStyle=l.color||brand.foreground;
  const w=(l.width??.8)*width,h=(l.height??.3)*height;

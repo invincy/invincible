@@ -1,4 +1,5 @@
-import {validateManifest} from './model.js?v=2026111705';
+import {validateManifest} from './model.js?v=2026111706';
+import {applyStylePreset as applyVisualStyle,getStylePreset,listStylePresets,updateSavedStylePreset} from './style-presets.js?v=2026111706';
 const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 const fail=(code,message)=>{throw Object.assign(Error(message),{code});};
 // Objects merge recursively; ID arrays merge by ID. Destruction is explicit.
@@ -59,11 +60,21 @@ export function createAgentOperations({authorize,getManifest,getSavedManifest=ge
  return {
   getProjectJSON:()=>result(async()=>{await read();await authorize();return {ok:true,revision:getRevision(),manifest:structuredClone(getSavedManifest()),staged:JSON.stringify(getSavedManifest())!==JSON.stringify(getManifest()),assets:structuredClone(getSavedManifest().assets),availableAssets:structuredClone(getAvailableAssets()),audioTiming:structuredClone(getSavedManifest().audioClips||getSavedManifest().audio||[])};}),
   getSceneSummary:()=>result(async()=>({ok:true,revision:getRevision(),scenes:sceneSummary(validateManifest(getManifest(),{mapAssets:getMapAssets()}))})),
+  listStylePresets:()=>result(async()=>({ok:true,revision:getRevision(),presets:listStylePresets(getManifest()).map(({id,name,category,description,custom=false})=>({id,name,category,description,custom}))})),
+  getStylePreset:id=>result(async()=>({ok:true,revision:getRevision(),preset:getStylePreset(getManifest(),id)})),
   validateJSON:payload=>result(async()=>{const manifest=prepareAgentUpdate(getManifest(),payload,{revision:getRevision(),mapAssets:getMapAssets()});await checkResources(manifest);await authorize();return {ok:true,revision:getRevision(),manifest,scenes:sceneSummary(manifest)};}),
   applyPatch:payload=>result(async()=>{
    if(writing||isBlocked())fail('BUSY','Finish or discard the pending editor change first.');
    writing=true;
    try{const revision=getRevision(),snapshot=JSON.stringify(getManifest()),manifest=prepareAgentUpdate(getManifest(),payload,{revision,mapAssets:getMapAssets()});await checkResources(manifest);await authorize();if(revision!==getRevision()||snapshot!==JSON.stringify(getManifest()))fail('REVISION_CONFLICT','Project changed during validation.');await save(manifest);return {ok:true,revision:getRevision(),scenes:sceneSummary(getManifest())};}finally{writing=false;}
+  }),
+  applyStylePreset:payload=>result(async()=>{
+   if(writing||isBlocked())fail('BUSY','Finish or discard the pending editor change first.');if(payload?.expectedRevision!==getRevision())fail('REVISION_CONFLICT','Project revision changed. Read it again before applying.');writing=true;
+   try{const revision=getRevision(),snapshot=JSON.stringify(getManifest()),manifest=applyVisualStyle(getManifest(),payload.presetId,{sceneId:payload.sceneId||null});await checkResources(manifest);await authorize();if(revision!==getRevision()||snapshot!==JSON.stringify(getManifest()))fail('REVISION_CONFLICT','Project changed during validation.');await save(manifest);return{ok:true,revision:getRevision(),presetId:payload.presetId,sceneId:payload.sceneId||null};}finally{writing=false;}
+  }),
+  updateStylePreset:payload=>result(async()=>{
+   if(writing||isBlocked())fail('BUSY','Finish or discard the pending editor change first.');if(payload?.expectedRevision!==getRevision())fail('REVISION_CONFLICT','Project revision changed. Read it again before updating.');writing=true;
+   try{const revision=getRevision(),snapshot=JSON.stringify(getManifest()),manifest=updateSavedStylePreset(getManifest(),payload.preset);await checkResources(manifest);await authorize();if(revision!==getRevision()||snapshot!==JSON.stringify(getManifest()))fail('REVISION_CONFLICT','Project changed during validation.');await save(manifest);return{ok:true,revision:getRevision(),preset:getStylePreset(manifest,payload.preset.id)};}finally{writing=false;}
   })
  };
 }

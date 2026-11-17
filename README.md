@@ -38,6 +38,8 @@ the MP3 for retry without automatically buying cloud transcription. The separate
 maintained [Director integration](docs/invincible-video-director-plugin.md) is outside
 the normal Creator workflow.
 
+Motion Studio includes a small [renderer-native visual styling library](docs/creator-visual-styles.md) for History, Geography, Science and Finance. Presets inherit at video, scene and element scope, preserve existing layout/maps/timing, support saved variants, render identically in preview and MP4, and are available through the authenticated Creator agent/plugin tools.
+
 ## Universal Creator Studio
 
 Creator Studio is a shared production workspace for independent videos. Film content stays in each project’s JSON, assets, voiceover and timing; the shared Map Editor never selects rendering by a film title or ID. Optional overlays use explicitly registered, versioned plugin factories. New projects share the saved default style, while older projects retain their appearance.

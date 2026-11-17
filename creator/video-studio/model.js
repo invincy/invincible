@@ -5,6 +5,7 @@ import {safeAssetUrl} from '../map-editor-model.js?v=2026111603';
 import {validateMap,durationOf} from '../history-model.js?v=2026111603';
 import {validateBattlefield} from './battlefield.js?v=2026111014';
 import {exportDimensions} from '../map-video-export.js';
+import {validateStyleLibrary} from './style-presets.js?v=2026111706';
 export {exportDimensions};
 export const PRESETS = Object.freeze([
  {id:'adichimp',name:'AdiChimp',background:'#071426',foreground:'#f4f5f7',accent:'#edc46a',font:'system-ui',logoAssetId:'',intro:null,outro:null},
@@ -31,7 +32,7 @@ const color = x=>{if(!/^#[\da-f]{6}$/i.test(x))fail('Colors must be #rrggbb.');}
 const id = x=>{if(typeof x!=='string'||!x.length||x.length>150)fail('Use nonempty IDs up to 150 characters.');};
 export function emptyVideo(){return {schemaVersion:1,title:'Untitled video',aspectRatio:'9:16',fps:30,brandPresetId:'adichimp',scenes:[],assets:[],audio:null,introEnabled:false,outroEnabled:false};}
 export function validateLayer(layer,duration,assets){
- keys(layer,['id','type','text','assetId','x','y','width','height','scale','rotation','opacity','fontSize','fontFamily','fontWeight','textAlign','lineWidth','color','startSeconds','endSeconds','keyframes','depth'],'layer');id(layer.id);
+ keys(layer,['id','type','text','assetId','x','y','width','height','scale','rotation','opacity','fontSize','fontFamily','fontWeight','textAlign','lineWidth','color','startSeconds','endSeconds','keyframes','depth','styleRole','visualStylePresetId','styleOverrides'],'layer');id(layer.id);
  if(!['text','image','rectangle','circle','line','arrow'].includes(layer.type))fail('Choose text, image, rectangle, circle, line or arrow.');
  if(layer.type==='text')str(layer.text,2000,'layer text');
  if(layer.fontFamily!==undefined&&!CANVAS_FONTS.includes(layer.fontFamily))fail('Choose a bundled or standard canvas font.');
@@ -96,7 +97,7 @@ function validateScene(scene,assets,mapAssets,{template=false,version=1,mapSourc
    delete data.sourceEnd;
   }
  }
- keys(scene,['id','name','startSeconds','durationSeconds','engineType','engineData','overlays','transition'],'scene');id(scene.id);if(scene.name!==undefined)str(scene.name,200,'scene name');num(scene.startSeconds,0,600,'scene start');num(scene.durationSeconds,1/30,600,'scene duration');
+ keys(scene,['id','name','startSeconds','durationSeconds','engineType','engineData','overlays','transition','visualStylePresetId','styleOverrides'],'scene');id(scene.id);if(scene.name!==undefined)str(scene.name,200,'scene name');num(scene.startSeconds,0,600,'scene start');num(scene.durationSeconds,1/30,600,'scene duration');
  if(!(version===2?['map','lic','graphic','battlefield','image','video','three']:['map','lic','graphic']).includes(scene.engineType)||template&&scene.engineType!=='graphic')fail('Unsupported scene engine for this manifest version.');
  const data=scene.engineData;
  if(scene.engineType==='map'){
@@ -138,7 +139,7 @@ function validateScene(scene,assets,mapAssets,{template=false,version=1,mapSourc
 export function validateManifest(input,{mapAssets=[]}={}){
  let m;try{m=typeof input==='string'?JSON.parse(input):structuredClone(input);}catch{fail('Choose a complete Video Studio JSON file.');}
  if(new TextEncoder().encode(JSON.stringify(m)).length>1000000)fail('Use a manifest under 1 MB.');
- keys(m,['schemaVersion','title','aspectRatio','fps','brandPresetId','scenes','assets','audio',...(m.schemaVersion===2?['audioClips','mapSources']:[]),'introEnabled','outroEnabled'],'manifest');
+ keys(m,['schemaVersion','title','aspectRatio','fps','brandPresetId','scenes','assets','audio','visualStylePresetId','visualStylePresets',...(m.schemaVersion===2?['audioClips','mapSources']:[]),'introEnabled','outroEnabled'],'manifest');
  if(![1,2].includes(m.schemaVersion)||m.fps!==30||!['9:16','16:9'].includes(m.aspectRatio))fail('Use schemaVersion 1 or 2, fps 30 and 9:16 or 16:9.');str(m.title,200,'title');id(m.brandPresetId);
  for(const p of ['introEnabled','outroEnabled'])if(m[p]!==undefined&&typeof m[p]!=='boolean')fail(p+' must be boolean.');
  if(!Array.isArray(m.assets)||m.assets.length>200)fail('Use up to 200 asset references.');const assets=new Set(),models=new Set(),assetIds=new Set();
@@ -157,6 +158,7 @@ export function validateManifest(input,{mapAssets=[]}={}){
   if(!Array.isArray(m.audioClips)||m.audioClips.length>100)fail('Use up to 100 audio clips.');const ids=new Set();
   for(const a of m.audioClips){keys(a,['id','fileId','name','role','startSeconds','trimStart','durationSeconds','gain','fadeIn','fadeOut','loop','sourceDurationSeconds'],'audio clip');id(a.id);if(a.loop!==undefined&&typeof a.loop!=='boolean')fail('Audio loop must be boolean.');if(a.loop){if(a.role==='voiceover')fail('Voiceover cannot loop.');num(a.sourceDurationSeconds,1/48000,600,'loop source duration');}else if(a.sourceDurationSeconds!==undefined)fail('Source duration requires loop:true.');if(ids.has(a.id))fail('Duplicate audio clip.');ids.add(a.id);id(a.fileId);str(a.name,200,'audio name');if(!['voiceover','music','effect'].includes(a.role))fail('Invalid audio role.');num(a.startSeconds,0,600,'audio start');num(a.trimStart,0,600,'audio trim');num(a.durationSeconds,1/48000,600,'audio duration');num(a.gain,0,2,'gain');num(a.fadeIn,0,a.durationSeconds,'fade in');num(a.fadeOut,0,a.durationSeconds,'fade out');if(a.fadeIn+a.fadeOut>a.durationSeconds||a.startSeconds+a.durationSeconds>600)fail('Audio timing exceeds its bounds.');}
  }
+ validateStyleLibrary(m);
  return m;
 }
 export function validateBrand(input,assets=new Set()){

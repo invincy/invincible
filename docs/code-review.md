@@ -1,5 +1,13 @@
 # Cleanup review — 2026-10-03
 
+## Modular Creator visual styling library — November 17, 2026
+
+Added four renderer-native Motion Studio presets—Historical Archive, Field Atlas, Signal Blueprint and Executive Ledger—with History and Geography as the primary production treatments. Optional manifest, scene and overlay style fields use validated inheritance and preserve legacy output when absent. The shared compositor now renders deterministic text plates, clean non-crossing corner brackets, grounded/framed PNGs and clock-based entrances. Native maps receive contrast, tint, label/card, relief and easing tokens on an immutable render copy; saved geography, camera keys, scene IDs, timing and engine types are unchanged.
+
+The existing Motion Studio UI now contains a discoverable gallery, live preview, one-click video/scene apply and compact custom-preset editing. Saved presets remain in the canonical revisioned video draft. The browser agent and authenticated cloud plugin expose list/get/apply/update operations; the semantic planning contract and bundled plugin instructions advertise the same stable preset IDs.
+
+Verification: all 298 root module tests passed (296 pass, two fixture skips); Functions passed 33/33 and syntax checks. Focused style/agent coverage passed 14/14. The installed-Chrome Motion Studio workflow applied Historical Archive, saved/reloaded it, preserved graphic/LIC scene engines, captured the actual renderer, exported 1080×1920 H.264/AAC MP4, decoded video and audio completely and retained the measured 2.30-second audio onset. The existing agent browser passed its 13-map revision/patch/editor workflow. Map default and universal-map module tests passed, while their older full-page browser fixtures stop before the editor because their Firebase stubs do not provide newer shared media/bridge exports; no production path was changed to hide those fixture failures. Live Firebase permissions, physical-device/Safari rendering and a user-specific historical project with its private commander artwork remain unverified. No production data, rules or deployment changed.
+
 ## Native Creator workflow cleanup — November 15, 2026
 
 Removed Director-specific instruction locks, background plan application/export gating

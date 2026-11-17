@@ -57,6 +57,13 @@
     "avoidCrowding": true,
     "transitions": ["fade", "cut"]
   },
+  "visualStylePresets": [
+    {"id": "history-archive-gold", "name": "Historical Archive", "category": "History", "useFor": "history, archival portraits, dates and political geography"},
+    {"id": "geography-field-atlas", "name": "Field Atlas", "category": "Geography", "useFor": "terrain relationships, locators, routes and regional labels"},
+    {"id": "science-signal-blueprint", "name": "Signal Blueprint", "category": "Science", "useFor": "mechanisms, diagrams and measured explanations"},
+    {"id": "finance-ledger-green", "name": "Executive Ledger", "category": "Finance", "useFor": "figures, comparisons, timelines and financial charts"}
+  ],
+  "visualStyleInheritance": "built-in preset → video preset → scene preset → element role and overrides",
   "historicalIntegrity": {
     "useVerifiedAssetsOnly": true,
     "doNotInventCoordinates": true,

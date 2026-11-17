@@ -5,8 +5,8 @@ import {createDefaultMap} from '../map-defaults.js?v=2026110903';
 import {appendProjectMaps,arrangeScenes,upgradeVideo,resizeScene} from './composition.js?v=2026111705';
 import {emptyBattlefield} from './battlefield.js?v=2026111014';
 import {decodeVoiceover} from './audio.js?v=2026111604';
-import {validateManifest} from './model.js?v=2026111705';
-import {mapDraft} from './adapters.js?v=2026111705';
+import {validateManifest} from './model.js?v=2026111706';
+import {mapDraft} from './adapters.js?v=2026111706';
 import {mountMapEditor} from '../map-editor.js?v=2026111603';
 import {safeRelativeAssetPath} from '../map-editor-model.js?v=2026111603';
 import {mountBattlefieldEditor} from './battlefield-editor.js?v=2026111014';
@@ -214,5 +214,5 @@ export function mountAssembly(root,api){
    review(arrangeScenes(m,m.scenes,{mapAssets:mapAssets()}),'Apply selected scene changes?');
   });
  });
- render();return {sync:render,highlight:()=>objects.highlight(),startMapReview,focusedMapDraft,get pending(){return !!pending;},get mapFocused(){return focusScene?.engineType==='map';},get focused(){return !!focused;},destroy(){closed=true;lockNavigation(false);editor?.destroy();objects.destroy();},select(id){selected=id;render();}};
+ render();return {sync:render,highlight:()=>objects.highlight(),startMapReview,focusedMapDraft,get selectedId(){return selected;},get pending(){return !!pending;},get mapFocused(){return focusScene?.engineType==='map';},get focused(){return !!focused;},destroy(){closed=true;lockNavigation(false);editor?.destroy();objects.destroy();},select(id){selected=id;render();}};
 }

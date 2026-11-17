@@ -1,13 +1,14 @@
 import {MAX_MODEL_BYTES} from './three-scene.js';
-import {drawCanvasBackground,drawCanvasLayer} from './canvas.js?v=2026111505';
+import {drawCanvasBackground,drawCanvasLayer} from './canvas.js?v=2026111706';
 import {ensureDocumentaryFonts} from '../map-fonts.js';
 import {compileAnimation} from '../map-animation-import.js?v=2026111603';
 import {createHistoryPlayer} from '../history-player.js?v=2026111603';
-import {layerFrame,sceneAt,referencedMapAssets} from './model.js?v=2026111705';
+import {layerFrame,sceneAt,referencedMapAssets} from './model.js?v=2026111706';
 import {resolveMapAsset} from '../map-assets-client.js?v=2026111002';
 import {drawBattlefield} from './battlefield.js?v=2026111014';
 import {parallaxTransform,projectLayer} from './parallax.js';
 import {fitMedia} from './composition.js?v=2026111705';
+import {applyStyleToMapProject,drawStyleFrame,resolveSceneStyle,styledLayerFrame} from './style-presets.js?v=2026111706';
 export function mapDraft(animation,geometryReviewed,mapAssets=[]){
  return compileAnimation({scenes:[],historicalMap:{version:1,theme:'night',events:[],features:{type:'FeatureCollection',features:[]},camera:[],visual:{version:1,assets:referencedMapAssets(mapAssets,animation),layers:[]}}},animation,{geometryReviewed}).project;
 }
@@ -41,7 +42,7 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
   if(maps.has(scene.id))return maps.get(scene.id);
   for(const {player,host} of maps.values()){player.destroy();host.remove();}maps.clear();
   const sourceProject=scene.engineData.project||manifest.mapSources?.find(s=>s.id===scene.engineData.sourceId)?.project;
-  const draft=sourceProject?structuredClone(sourceProject):mapDraft(scene.engineData.animation,scene.engineData.geometryReviewed===true,mapAssets),host=document.createElement('div');
+  const sourceDraft=sourceProject?structuredClone(sourceProject):mapDraft(scene.engineData.animation,scene.engineData.geometryReviewed===true,mapAssets),draft=applyStyleToMapProject(sourceDraft,resolveSceneStyle(manifest,scene)),host=document.createElement('div');
   host.className='vs-map-host';Object.assign(host.style,{position:'fixed',left:'-20000px',top:'0',width:width+'px',height:height+'px',pointerEvents:'none'});document.body.append(host);hosts.push(host);
   const errors=[];let player;
   try{player=await createHistoryPlayer(host,draft,draft.historicalMap,{onError:e=>errors.push(e)});const entry={player,host,errors};maps.set(scene.id,entry);await player.loaded;frameSignal?.throwIfAborted();if(disposed)throw new DOMException('Renderer closed','AbortError');player.map.setPixelRatio?.(1);player.map.resize();await player.setSpec(draft.historicalMap);return entry;}catch(e){player?.destroy();host.remove();maps.delete(scene.id);throw e;}
@@ -67,9 +68,9 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
  }
  function graphics(scene,time){for(const layer of scene.overlays){
   if(time<(layer.startSeconds??0)||time>=(layer.endSeconds??scene.durationSeconds))continue;
-  const pose=layerFrame(layer,time);
+  const style=resolveSceneStyle(manifest,scene,layer),pose=styledLayerFrame(layer,layerFrame(layer,time),time,style);
   const transform=parallaxTransform(scene.engineType==='graphic'?scene.engineData.parallax:null,layer.depth,time,scene.durationSeconds);
-  drawCanvasLayer(ctx,projectLayer(pose,transform),brand,images);
+  drawCanvasLayer(ctx,projectLayer(pose,transform),brand,images,style);
  }}
  const money=n=>'₹'+Math.round(n).toLocaleString('en-IN');
  function financial(scene,time){
@@ -85,10 +86,10 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
  async function draw(time,{exporting=false,signal:frameSignal}={}){
   if(disposed)throw new DOMException('Renderer closed','AbortError');frameSignal?.throwIfAborted();
   ctx.globalAlpha=1;ctx.fillStyle=brand.background;ctx.fillRect(0,0,width,height);const scene=sceneAt(timeline,time);if(scene?.engineType!=='three')releaseStage();if(!scene)return;
-  const local=time-scene.startSeconds,transition=scene.transition?.type==='fade'?scene.transition.durationSeconds:0;
+  const local=time-scene.startSeconds,transition=scene.transition?.type==='fade'?scene.transition.durationSeconds:0,sceneStyle=resolveSceneStyle(manifest,scene);
   ctx.save();try{
    if(transition)ctx.globalAlpha=Math.max(0,Math.min(1,local/transition,(scene.durationSeconds-local)/transition));
-   if(scene.engineData.background){ctx.fillStyle=scene.engineData.background;ctx.fillRect(0,0,width,height);}
+   if(sceneStyle){ctx.fillStyle=sceneStyle.tokens.palette.background;ctx.fillRect(0,0,width,height);}if(scene.engineData.background){ctx.fillStyle=scene.engineData.background;ctx.fillRect(0,0,width,height);}
    if(scene.engineType==='map'){
     drawCanvasBackground(ctx,scene.engineData,images);
     const {player,host,errors}=await mapFor(scene,frameSignal);if(exporting&&(!player.isNative||errors.length))throw Error(errors[0]||'Map export needs WebGL2.');
@@ -105,6 +106,7 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
     frameSignal?.throwIfAborted();const video=videos.get(scene.engineData.assetId),abort=()=>video.input.dispose();frameSignal?.addEventListener('abort',abort,{once:true});
     try{const frame=await video.sink.getCanvas(scene.engineData.trimStart+local);frameSignal?.throwIfAborted();if(!frame)throw Error('No video frame at requested source time.');fitMedia(ctx,frame.canvas,scene.engineData.fit);}catch(error){frameSignal?.throwIfAborted();throw error;}finally{frameSignal?.removeEventListener('abort',abort);}
    }
+   drawStyleFrame(ctx,sceneStyle);
    graphics(scene,local);
    if(brand.logoAssetId){const image=images.get(brand.logoAssetId);if(!image)throw Error('Brand logo asset is missing.');const size=width*.12,scale=Math.min(size/image.width,size/image.height);ctx.drawImage(image,width*.84,height*.04,image.width*scale,image.height*scale);}
   }finally{ctx.restore();}
