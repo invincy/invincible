@@ -1,5 +1,11 @@
 # Cleanup review — 2026-10-03
 
+## Motion Studio in-place Sync — November 18, 2026
+
+Added Sync beside Save, using the existing account/project-scoped cloud draft loader and validation. A newer clean draft reloads without navigating away, preserving the selected scene and playhead. Unsaved local changes, pending review and focused editors retain the existing cloud-conflict protection. Versioned imports carry the new action through the project entry point.
+
+The 45 focused agent/video/composition unit checks, UI design checks and site-reference checks passed. The 13-map agent browser check now verifies external draft updates, retained scene/playhead and preservation of unsaved edits. The single-flow browser check passed, including fixture audio MP4 export, revision conflicts and account isolation. Composition browser checks passed, including native maps, battlefield layers and overlapping audio encoding. The Studio UI/import/playback check passed with its encoding assertions deliberately skipped; export is covered by the other two checks. These fixtures do not establish signed-in production Firebase permissions. Panipat Scene 1's crossed corner swords were saved separately through the plugin at revision 202; no production video was downloaded or exported for this change.
+
 ## Motion Studio preview stability — November 17, 2026
 
 Motion Studio now composes interactive frames on a hidden 2D canvas and presents each only after its map, video, effects and overlays finish. This keeps the previous complete frame visible while asynchronous work runs. Playback draws at most 30 frames per second, matching the MP4 timeline. Export still draws directly to the full-resolution encoder canvas and uses the same renderer; the preview staging copy is not part of MP4 encoding. Renderer draws are serialized so a slow map frame cannot overwrite a later frame.

@@ -50,6 +50,12 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   if(button){root.dataset.mobilePanel=button.dataset.mobilePanel;mobile.querySelectorAll('[data-mobile-panel]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));if(button.dataset.mobilePanel==='settings'){const menu=advanced.closest('.vs-tool-menu');if(menu)menu.open=true;}panels[button.dataset.mobilePanel].scrollIntoView({block:'nearest',inline:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}
  };
  for(const key of ['save','export'])header.querySelector('[data-studio-actions]').append($(`[data-vs=${key}]`));
+ const syncCloud=document.createElement('button');
+ syncCloud.type='button';
+ syncCloud.dataset.vs='cloud-sync';
+ syncCloud.textContent='Sync';
+ syncCloud.title='Load saved changes from your account';
+ $('[data-vs=save]').before(syncCloud);
  const lastExport=document.createElement('a');lastExport.dataset.vsLastExport='';lastExport.className='secondary';lastExport.textContent='Download last MP4';lastExport.hidden=true;header.querySelector('[data-studio-actions]').append(lastExport);
  const saveLastExport=document.createElement('button');saveLastExport.type='button';saveLastExport.dataset.vs='save-last-export';saveLastExport.textContent='Save MP4 to library';saveLastExport.hidden=true;header.querySelector('[data-studio-actions]').append(saveLastExport);
  const cloudExport=document.createElement('a');cloudExport.dataset.vsCloudExport='';cloudExport.className='secondary';cloudExport.textContent='Download saved MP4';cloudExport.hidden=true;header.querySelector('[data-studio-actions]').append(cloudExport);
@@ -498,7 +504,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   if(action==='cancel'){controller?.abort(new DOMException('Export cancelled','AbortError'));return;}
   run(async()=>{
    if(action==='save')await save();
-   if(action==='cloud-retry'){await refreshCloudDraft();if(currentProject()){sync();await draw();}}
+   if(action==='cloud-retry'||action==='cloud-sync'){await refreshCloudDraft();if(currentProject()){sync();await draw();}}
    if(action==='cloud-download'&&rejectedCloudDraft&&currentProject()){
     const {manifest,revision}=rejectedCloudDraft;
     download(new Blob([JSON.stringify(manifest,null,2)],{type:'application/json'}),'cloud-video-revision-'+revision+'.json');

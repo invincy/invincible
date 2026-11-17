@@ -17,6 +17,10 @@ engaging delivery, as explicitly requested by the owner. Saved final MP3s retain
 their displayed speed without a second acceleration. Connect laptop is available
 directly on the timing step; pairing failures retain the recording for retry.
 Selecting a scene reuses the preview renderer instead of rebuilding unchanged maps.
+Use **Sync** beside Save to load a newer saved draft from a plugin or another device
+without leaving Motion Studio. The selected scene and playhead stay in place. If
+local edits or a focused editor are open, Sync keeps them and directs you to review
+the newer cloud draft before saving.
 
 ### First draft and scene-by-scene revisions
 

@@ -16,6 +16,24 @@ const ready=p=>p.waitForFunction(()=>document.querySelector('[data-vs=save]')&&!
  await p.locator('[data-compose-select="scene-4"]').click();await ready(p);await p.getByRole('button',{name:'Convert to Map',exact:true}).click();await ready(p);assert.equal(await p.getByRole('button',{name:'Apply change',exact:true}).isVisible(),true);await p.getByRole('button',{name:'Apply change',exact:true}).click();await ready(p);await p.reload();await ready(p);result=await p.evaluate(()=>invincibleAgent.getProjectJSON());assert.equal(result.manifest.scenes[3].engineType,'map');
  await p.locator('[data-compose-select="scene-4"]').click();await ready(p);await p.getByRole('button',{name:'Edit scene',exact:true}).click();await ready(p);await p.locator('[data-focused-editor] [data-editor-status]').filter({hasText:/Drag artwork|2D fallback/}).waitFor();assert.equal(await p.locator('[data-focused-editor]').count(),1);await p.getByRole('button',{name:'Discard & return',exact:true}).click();await ready(p);
  await p.getByText('Agent instructions',{exact:true}).click();await p.getByRole('button',{name:'View instructions',exact:true}).click();await ready(p);assert.match(await p.getByRole('textbox',{name:'Agent workflow instructions'}).inputValue(),/patchSceneId/);
+ // A plugin update can be loaded in place while retaining scene selection and playhead.
+ await p.locator('[data-compose-select="scene-4"]').click();await ready(p);
+ await p.locator('[data-vs-seek]').evaluate(el=>{el.value='6.5';el.dispatchEvent(new Event('input',{bubbles:true}));});await ready(p);
+ const playhead=await p.locator('[data-vs-seek]').inputValue();
+ const externalUpdate=async name=>p.evaluate(async name=>{const {testMedia}=await import('/test-media-client.js');const media=testMedia('owner'),draft=await media.loadDraft('agent-acceptance');draft.manifest.scenes[3].name=name;return media.saveDraft('agent-acceptance',draft.manifest,draft.brands,draft.revision);},name);
+ const remote=await externalUpdate('Synced scene 4');
+ await p.getByRole('button',{name:'Sync',exact:true}).click();await ready(p);
+ assert.match(await p.locator('[data-vs-cloud-notice]').textContent(),new RegExp('revision '+remote.revision));
+ assert.equal(await p.locator('[data-compose-select="scene-4"]').getAttribute('aria-pressed'),'true');
+ assert.equal(await p.locator('[data-vs-seek]').inputValue(),playhead);
+ assert.equal((await p.evaluate(()=>invincibleAgent.getProjectJSON())).manifest.scenes[3].name,'Synced scene 4');
+ // Sync retains unsaved edits and leaves the existing reviewed-cloud workflow available.
+ await p.locator('.vs-advanced > summary').click();
+ await p.locator('[data-vs-title]').fill('Local unsaved title');await p.locator('[data-vs-title]').dispatchEvent('change');await ready(p);
+ await externalUpdate('Plugin update with local edits');
+ await p.getByRole('button',{name:'Sync',exact:true}).click();await ready(p);
+ assert.equal(await p.locator('[data-vs-title]').inputValue(),'Local unsaved title');
+ assert.match(await p.locator('[data-vs-cloud-notice]').textContent(),/Local edits are open/);
  const bad=await p.evaluate(()=>invincibleAgent.applyPatch({patchSceneId:'scene-4',changes:{engineData:{project:{$replace:{}}}}}));assert.equal(bad.ok,false);
  await p.evaluate(()=>account='other');for(const method of ['getProjectJSON','getSceneSummary','validateJSON','applyPatch'])assert.equal((await p.evaluate(method=>invincibleAgent[method]({}),method)).errors[0].code,'UNAUTHORIZED');
  console.log('13 native maps, remote reload, visible summary/patch, isolated scene changes, conversion/editor, invalid maps and account rejection passed.');
