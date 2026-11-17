@@ -20,7 +20,7 @@ export function mountObjectEditor(root,{canvas,getScene,getManifest,getTime,setT
  function sync(){const s=getScene(),m=getManifest(),l=current(),signature=JSON.stringify(m);const openTools=new Set([...root.querySelectorAll('[data-object-tools][open]')].map(node=>node.dataset.objectTools));if(lastSignature&&signature!==lastSignature&&!busy){undo.length=0;redo.length=0;}lastSignature=signature;if(!s){root.innerHTML=m.scenes.length?'<p class="vs-help">Select a scene in the timeline to see its object tracks.</p>':'';box.hidden=true;return;}
   root.innerHTML=`<details data-objects-panel open><summary>Object tracks · ${s.overlays.length}</summary><div class="vs-actions"><select data-object-kind aria-label="Object type">${['text','image','rectangle','circle','line','arrow'].map(t=>`<option>${t}</option>`).join('')}</select><button data-object-action="add">Add object</button><button data-object-action="undo" ${undo.length?'':'disabled'}>Undo</button><button data-object-action="redo" ${redo.length?'':'disabled'}>Redo</button></div>
   ${s.engineType==='graphic'?`<div class="vs-grid">${select('Background','backgroundStyle',['plain','grid','blueprint','image'],s.engineData.backgroundStyle||'plain')}<label>Color<input type="color" data-object-field="background" value="${s.engineData.background||'#071426'}"></label><label>Artwork<select data-object-field="backgroundAssetId"><option value="">Choose image</option>${m.assets.filter(a=>a.kind!=='glb').map(a=>`<option value="${esc(a.id)}" ${a.id===s.engineData.backgroundAssetId?'selected':''}>${esc(a.name)}</option>`).join('')}</select></label>${field('Grid spacing','gridSpacing',s.engineData.gridSpacing??48,16,240,1)}</div><div class="vs-actions"><label><input type="checkbox" data-object-field="parallax" ${s.engineData.parallax?'checked':''}>2.5D camera</label></div>${s.engineData.parallax?`<div class="vs-grid">${field('Pan X','camera.panX',s.engineData.parallax.panX,-.5,.5)}${field('Pan Y','camera.panY',s.engineData.parallax.panY,-.5,.5)}${field('End zoom','camera.zoom',s.engineData.parallax.zoom,.5,2)}</div>`:''}`:''}
-  <div class="vs-object-tracks" aria-label="Object timeline">${s.overlays.map(o=>{const start=o.startSeconds??0,end=o.endSeconds??s.durationSeconds;return `<div class="vs-object-track"><button data-object-select="${esc(o.id)}" aria-pressed="${o.id===selected}" title="${esc(o.text||o.type)}" style="margin-left:${start/s.durationSeconds*100}%;width:${Math.max(2,(end-start)/s.durationSeconds*100)}%"><span data-track-edge="start" aria-hidden="true">▏</span>${esc((o.text||m.assets.find(asset=>asset.id===o.assetId)?.name||o.effectType||o.id.replaceAll('-',' ')).slice(0,60))}<span data-track-edge="end" aria-hidden="true">▕</span></button></div>`;}).join('')}</div>
+  <div class="vs-object-tracks" aria-label="Object timeline">${s.overlays.map(o=>{const start=o.startSeconds??0,end=o.endSeconds??s.durationSeconds;return `<div class="vs-object-track"><button data-object-select="${esc(o.id)}" aria-pressed="${o.id===selected}" title="${esc(o.text||o.type)}" style="margin-left:${start/s.durationSeconds*100}%;width:${Math.max(2,(end-start)/s.durationSeconds*100)}%"><span data-track-edge="start" aria-hidden="true">▏</span>${esc((o.text||m.assets.find(asset=>asset.id===o.assetId)?.name||o.effectType||(/^[a-f0-9-]{36}$/i.test(o.id)?o.type:o.id.replaceAll('-',' '))).slice(0,60))}<span data-track-edge="end" aria-hidden="true">▕</span></button></div>`;}).join('')}</div>
   ${l?`<div class="vs-actions vs-object-sizing" aria-label="Resize selected object"><span>Size</span><button type="button" data-object-scale-step="-.05" aria-label="Shrink selected object">−</button><button type="button" data-object-scale-step=".05" aria-label="Enlarge selected object">+</button></div>`:''}
   ${l?`<div class="vs-grid">${field('Start (s)','startSeconds',l.startSeconds??0,0,s.durationSeconds,.05)}${field('End (s)','endSeconds',l.endSeconds??s.durationSeconds,0,s.durationSeconds,.05)}${field('X','x',layerFrame(l,localTime()).x)}${field('Y','y',layerFrame(l,localTime()).y)}${field('Width','width',layerFrame(l,localTime()).width??.8,.001,4)}${field('Height','height',layerFrame(l,localTime()).height??.3,.001,4)}${field('Scale','scale',layerFrame(l,localTime()).scale,0,10)}${field('Rotation °','rotation',layerFrame(l,localTime()).rotation,-3600,3600,1)}${field('Opacity','opacity',layerFrame(l,localTime()).opacity,0,1,.05)}${s.engineType==='graphic'&&s.engineData.parallax?field('Depth (0 = fixed)','depth',l.depth??0,0,1):''}<label>Color<input type="color" data-object-field="color" value="${l.color||'#ffffff'}"></label></div>
   ${l.type==='text'?`<label>Text<textarea data-object-field="text">${esc(l.text)}</textarea></label><div class="vs-grid">${field('Font size','fontSize',l.fontSize??56,8,400,1)}${select('Font','fontFamily',CANVAS_FONTS,l.fontFamily||'system-ui')}${field('Weight','fontWeight',l.fontWeight??600,1,1000,'any')}${select('Align','textAlign',['left','center','right'],l.textAlign||'center')}</div>`:''}
@@ -52,6 +52,8 @@ export function mountObjectEditor(root,{canvas,getScene,getManifest,getTime,setT
    panel.append(tools);
    panel.querySelector('summary').after(tracks);
    if(sizing)tracks.after(sizing);
+   const textLabel=panel.querySelector('[data-object-field=text]')?.closest('label');
+   if(textLabel&&sizing)sizing.after(textLabel);
   }
  }
  root.onclick=e=>{if(trackDrag)return;
@@ -72,6 +74,10 @@ export function mountObjectEditor(root,{canvas,getScene,getManifest,getTime,setT
     const i=s.overlays.indexOf(l),j=i+(action==='up'?1:-1);if(['up','down'].includes(action)&&j>=0&&j<s.overlays.length)[s.overlays[i],s.overlays[j]]=[s.overlays[j],s.overlays[i]];
     if(action==='key'){const t=Number(localTime().toFixed(5)),v=layerFrame(l,t);l.keyframes??=[];l.keyframes=l.keyframes.filter(k=>Math.abs(k.timeSeconds-t)>.00001);l.keyframes.push({timeSeconds:t,...Object.fromEntries(['x','y','scale','rotation','opacity'].map(p=>[p,v[p]])),easing:'smooth'});l.keyframes.sort((a,b)=>a.timeSeconds-b.timeSeconds);}
    });
+   if(action==='add'){
+    const text=root.querySelector('[data-object-field=text]');
+    if(text){text.focus();text.select();}
+   }
   });
  };
  root.onpointerdown=e=>{const b=e.target.closest('[data-object-select]');if(!b||e.button!==0||busy)return;pause();const l=getScene().overlays.find(o=>o.id===b.dataset.objectSelect);selected=l.id;trackDrag={id:l.id,start:l.startSeconds??0,end:l.endSeconds??getScene().durationSeconds,x:e.clientX,width:b.parentElement.getBoundingClientRect().width,mode:e.target.dataset.trackEdge||'move',button:b};b.setPointerCapture(e.pointerId);e.preventDefault();};
@@ -102,5 +108,12 @@ export function mountObjectEditor(root,{canvas,getScene,getManifest,getTime,setT
   else{box.style.left=visible.x*100+'%';box.style.top=visible.y*100+'%';}}
  function pointerUp(e){if(!drag)return;const d=drag;drag=null;surface.releasePointerCapture(e.pointerId);if(!d.next){highlight();return;}run(()=>edit(s=>{const l=s.overlays.find(o=>o.id===d.id);if(l.keyframes?.length){const t=Number(localTime().toFixed(5));let k=l.keyframes.find(k=>Math.abs(k.timeSeconds-t)<.00001);if(!k){k={timeSeconds:t,easing:'smooth'};l.keyframes.push(k);l.keyframes.sort((a,b)=>a.timeSeconds-b.timeSeconds);}Object.assign(k,d.next);}else Object.assign(l,d.next);}));}
  surface.addEventListener('pointerdown',pointerDown);surface.addEventListener('pointermove',pointerMove);surface.addEventListener('pointerup',pointerUp);surface.addEventListener('pointercancel',()=>{drag=null;highlight();});
- return {sync,highlight,destroy(){root.onclick=root.onchange=root.onpointerdown=root.onpointermove=root.onpointerup=root.onpointercancel=null;surface.replaceWith(canvas);root.remove();}};
+ return {sync,highlight,add(type){
+  if(busy||!getScene())return false;
+  const picker=root.querySelector('[data-object-kind]');
+  if(!picker||![...picker.options].some(option=>option.value===type))return false;
+  picker.value=type;
+  root.querySelector('[data-object-action=add]').click();
+  return true;
+ },destroy(){root.onclick=root.onchange=root.onpointerdown=root.onpointermove=root.onpointerup=root.onpointercancel=null;surface.replaceWith(canvas);root.remove();}};
 }

@@ -1,5 +1,11 @@
 # Cleanup review — 2026-10-03
 
+## Visible creation tools — November 17, 2026
+
+Motion Studio places Text, Images, Shapes, Audio and Styles in a labeled left rail and Scenes on the right. Text and shape buttons use the existing object creation and draft mutation path. Text creation selects the wording field immediately; formatting remains in Object settings. Mobile shows the tools as a horizontal strip. Shape tracks use readable type names for UUID-based objects.
+
+Chrome project-workspace coverage passed for right-side Scenes, left-side tools, preview/timeline alignment, adding and editing text, adding a rectangle, opening media/styles, resizing, and phone panel switching. Nine agent unit checks and the site reference check passed. Private production project access was not tested in this UI change.
+
 ## Motion Studio human editing shell — November 17, 2026
 
 The project editor now aligns the timeline directly under the preview, with scene tools in their own left column. Add/media, scene settings, background and object properties use disclosures. Styles, project settings and JPG/export options use labeled toolbar menus with Escape and outside-click dismissal. Existing controls and delegated handlers continue to edit the canonical manifest.

@@ -1,6 +1,6 @@
 import {BUILTIN_MODELS, CAMERA_FIELDS, MODEL_FIELDS, MAX_MODELS, modelMotion, trainStage} from './three-scene.js';
 import {DEFAULT_PARALLAX,trainTemplate} from './parallax.js';
-import {mountObjectEditor} from './object-editor.js?v=2026111709';
+import {mountObjectEditor} from './object-editor.js?v=2026111710';
 import {createDefaultMap} from '../map-defaults.js?v=2026110903';
 import {appendProjectMaps,arrangeScenes,upgradeVideo,resizeScene} from './composition.js?v=2026111705';
 import {emptyBattlefield} from './battlefield.js?v=2026111014';
@@ -92,6 +92,9 @@ export function mountAssembly(root,api){
    const rail=document.createElement('div');
    rail.className='vs-scene-rail';
    for(const child of [...root.children])if(!child.matches('.vs-inspector'))rail.append(child);
+   const title=document.createElement('h3');
+   title.textContent='Scenes';
+   rail.prepend(title);
    root.prepend(rail);
    root.closest('.video-studio').toggleAttribute('data-empty-scenes',!m.scenes.length);
   }
@@ -232,5 +235,15 @@ export function mountAssembly(root,api){
    review(arrangeScenes(m,m.scenes,{mapAssets:mapAssets()}),'Apply selected scene changes?');
   });
  });
- render();return {sync:render,highlight:()=>objects.highlight(),startMapReview,focusedMapDraft,get selectedId(){return selected;},get pending(){return !!pending;},get mapFocused(){return focusScene?.engineType==='map';},get focused(){return !!focused;},destroy(){closed=true;lockNavigation(false);editor?.destroy();objects.destroy();},select(id){selected=id;render();}};
+ render();return {sync:render,highlight:()=>objects.highlight(),startMapReview,focusedMapDraft,addObject(type){
+  if(focused||pending||closed)return false;
+  if(!scene()){
+   const target=getManifest().scenes.find(item=>getTime()>=item.startSeconds&&getTime()<item.startSeconds+item.durationSeconds)||getManifest().scenes[0];
+   if(!target)return false;
+   selected=target.id;
+   setTime(target.startSeconds);
+   render();
+  }
+  return objects.add(type);
+ },get selectedId(){return selected;},get pending(){return !!pending;},get mapFocused(){return focusScene?.engineType==='map';},get focused(){return !!focused;},destroy(){closed=true;lockNavigation(false);editor?.destroy();objects.destroy();},select(id){selected=id;render();}};
 }

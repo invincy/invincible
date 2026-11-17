@@ -1,4 +1,32 @@
 /* Human editing shell. Controls retain their existing events and draft state. */
+.vs-creation-tools {
+ grid-column: 1; grid-row: 1 / 3; display: flex; flex-direction: column;
+ gap: 8px; padding: 8px 4px; border-radius: 12px; background: #121c28ee;
+ position: relative; z-index: 6;
+}
+.vs-human-editor .vs-creation-tools > button,
+.vs-human-editor .vs-creation-tools > details > summary {
+ display: flex; flex-direction: column; align-items: center; justify-content: center;
+ gap: 6px; min-height: 70px; width: 100%; padding: 8px 2px;
+ box-sizing: border-box; font-size: 14px; border: 0; background: transparent;
+ list-style: none; cursor: pointer; border-radius: 8px;
+}
+.vs-human-editor .vs-creation-tools span { font-size: 24px; line-height: 1; }
+.vs-human-editor .vs-creation-tools > details { position: relative; padding: 0; margin: 0; border: 0; }
+.vs-human-editor .vs-creation-tools :is(button,summary):hover { background: #24424c; }
+.vs-shape-picker > div {
+ position: absolute; left: calc(100% + 10px); top: 0; display: grid; gap: 8px;
+ min-width: 170px; background: #182735; padding: 12px;
+ border: 1px solid #456170; border-radius: 12px; box-shadow: 0 10px 35px #0008;
+}
+.vs-focusing .vs-creation-tools { display: none; }
+@media(max-width:700px) {
+ .vs-human-editor .vs-creation-tools { flex-direction: row; width: 100%; box-sizing: border-box; order: 0; margin-bottom: 10px; }
+ .vs-human-editor .vs-creation-tools > :is(button,details) { flex: 1; min-width: 0; }
+ .vs-human-editor .vs-creation-tools > button,
+ .vs-human-editor .vs-creation-tools > details > summary { min-height: 64px; font-size: 12px; }
+ .vs-shape-picker > div { left: 50%; transform: translateX(-50%); top: calc(100% + 8px); min-width: 150px; }
+}
 .project-page .vs-human-editor {
  --editor-line: #ffffff18;
  --editor-panel: #121c28ee;
@@ -37,11 +65,11 @@
 .vs-human-editor .vs-style-editor .vs-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
 .project-page .vs-human-editor:not(.vs-focusing) .vs-layout,
 .project-page .vs-human-editor:not(.vs-focusing) .vs-layout:has(.vs-inspector) {
- display: grid; grid-template-columns: 250px minmax(0,1fr);
+ display: grid; grid-template-columns: 82px minmax(0,1fr) 250px;
  grid-template-rows: auto auto; align-items: start; gap: 0 16px;
 }
 .project-page .vs-human-editor:not(.vs-focusing) .vs-assembly {
- display: block; grid-column: 1; grid-row: 1 / 3;
+ display: block; grid-column: 3; grid-row: 1 / 3;
  max-height: 78vh; overflow: auto; padding: 14px;
  background: var(--editor-panel); border-radius: 12px;
 }
@@ -89,7 +117,7 @@
 .vs-human-editor[data-mobile-panel=settings] .vs-tool-menu:has(.vs-advanced) { display: block; }
 @media(max-width:900px) {
  .project-page .vs-human-editor:not(.vs-focusing) .vs-layout,
- .project-page .vs-human-editor:not(.vs-focusing) .vs-layout:has(.vs-inspector) { grid-template-columns: 210px minmax(0,1fr); gap: 0 10px; }
+ .project-page .vs-human-editor:not(.vs-focusing) .vs-layout:has(.vs-inspector) { grid-template-columns: 72px minmax(0,1fr) 210px; gap: 0 10px; }
  .vs-human-editor .vs-studio-header { flex-wrap: wrap; }
 }
 @media(max-width:700px) {

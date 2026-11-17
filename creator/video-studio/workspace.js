@@ -8,7 +8,7 @@ import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111705';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111707';
 import {createStudioRenderer} from './adapters.js?v=2026111707';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111604';
-import {mountAssembly} from './assembly.js?v=2026111709';
+import {mountAssembly} from './assembly.js?v=2026111710';
 import {encodeStudioVideo} from './export.js?v=2026111209';
 import {openStudioStore} from './storage.js';
 import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111705';
@@ -164,7 +164,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   });
   root.addEventListener('click',event=>{
    for(const popup of actions.querySelectorAll('.vs-tool-menu[open],.vs-create[open]')){
-    if(!popup.contains(event.target)&&!event.target.closest('.vs-workspace-shortcuts,.vs-mobile-tabs'))popup.open=false;
+    if(!popup.contains(event.target)&&!event.target.closest('.vs-workspace-shortcuts,.vs-mobile-tabs,.vs-creation-tools'))popup.open=false;
    }
   });
   styles.open=true;
@@ -175,6 +175,33 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   $('[data-vs=play]').textContent='▶ Play';
   $('[data-vs=pause]').textContent='Ⅱ Pause';
   root.classList.add('vs-human-editor');
+  const tools=document.createElement('nav');
+  tools.className='vs-creation-tools';
+  tools.setAttribute('aria-label','Add to video');
+  tools.innerHTML='<button type="button" data-create-tool="text"><span aria-hidden="true">T</span>Text</button><button type="button" data-create-tool="images"><span aria-hidden="true">▧</span>Images</button><details class="vs-shape-picker"><summary><span aria-hidden="true">◇</span>Shapes</summary><div><button type="button" data-create-tool="rectangle">Rectangle</button><button type="button" data-create-tool="circle">Circle</button><button type="button" data-create-tool="line">Line</button><button type="button" data-create-tool="arrow">Arrow</button></div></details><button type="button" data-create-tool="audio"><span aria-hidden="true">♫</span>Audio</button><button type="button" data-create-tool="styles"><span aria-hidden="true">◐</span>Styles</button>';
+  $('.vs-layout').prepend(tools);
+  tools.addEventListener('click',event=>{
+   const tool=event.target.closest('[data-create-tool]')?.dataset.createTool;
+   if(!tool)return;
+   if(tool==='images'){
+    create.open=true;
+    selectAssetTool('upload');
+    setup.querySelector('[data-media-search]').focus();
+   }else if(tool==='styles'){
+    $('.vs-styles-menu').open=true;
+   }else if(tool==='audio'){
+    mobile.querySelector('[data-mobile-panel=scenes]').click();
+    const audioDetails=[...assemblyRoot.querySelectorAll('details')].find(item=>item.querySelector('summary')?.textContent==='Audio');
+    if(audioDetails){audioDetails.open=true;audioDetails.scrollIntoView({block:'nearest'});audioDetails.querySelector('summary').focus();}
+   }else{
+    mobile.querySelector('[data-mobile-panel=preview]').click();
+    if(!assembly?.addObject(tool))status('Select or add a scene before adding an object.');
+    tools.querySelector('details').open=false;
+   }
+  });
+  tools.addEventListener('keydown',event=>{
+   if(event.key==='Escape'){tools.querySelector('details').open=false;tools.querySelector('summary').focus();}
+  });
 
   const empty=document.createElement('div');
   empty.className='vs-editing-empty';
