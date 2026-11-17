@@ -1,5 +1,5 @@
 import {eligibleTerms,computePlan} from './benefits.mjs';
-import {createNarrator} from './narration.mjs?v=21';
+import {createNarrator} from './narration.mjs?v=22';
 const $=id=>document.getElementById(id),stage=$('stageContainer');
 const money=n=>n===null?'LIC quote required':'₹'+n.toLocaleString('en-IN');
 const shortMoney=n=>'₹'+Number((n/100000).toFixed(2)).toLocaleString('en-IN')+' lakh';
@@ -82,8 +82,8 @@ function chooseGoalReady(){stage.dataset.opening='settled';ready=true;$('goalHin
 function openGoals(open){if(open&&(state!=='intro'||!ready))return;stage.dataset.goalsOpen=String(open);$('scene1').classList.toggle('goals-open',open);coin.setAttribute('aria-expanded',String(open));choices.inert=!open;choices.setAttribute('aria-hidden',String(!open));}
 function control(){
  const n=steps.indexOf(state);document.querySelector('.stage-counter-text').textContent=(n+1)+' / '+steps.length;document.querySelector('.stage-progress-fill').style.width=((n+1)/steps.length*100)+'%';$('ctaPrevBtn').disabled=state==='intro';
- const next=$('ctaNextBtn');next.hidden=['intro','selected','configure'].includes(state);next.disabled=transitioning||beatMoving||(state==='protection'?false:!ready);coin.disabled=transitioning||capturing||!ready||!['intro','selected'].includes(state);
- next.textContent=({preview:'What if the parent dies? →',whatif:'How does the plan help? →',protection:ready?'Continue →':'Next benefit →',closing:'View plan details →',details:'Open base-plan calculator →'})[state]||'Continue →';next.setAttribute('aria-label',next.textContent);
+ const next=$('ctaNextBtn');next.hidden=['intro','selected','configure'].includes(state);next.disabled=transitioning||beatMoving||(!ready&&(state!=='protection'||benefitIndex===3));coin.disabled=transitioning||capturing||!ready||!['intro','selected'].includes(state);
+ next.textContent=({preview:'What if the parent dies? →',whatif:'How does the plan help? →',protection:benefitIndex===3?'Continue →':'Next benefit →',closing:'View plan details →',details:'Open base-plan calculator →'})[state]||'Continue →';next.setAttribute('aria-label',next.textContent);
  const toggle=$('storyModeToggle');
  const introRunning=state==='intro'&&!ready&&!capturing;
  const replay=ready&&['protection','closing'].includes(state);
@@ -185,22 +185,28 @@ function renderState(next,{focus=true,restartOpening=false,benefitStart=0}={}){
    ready=true;
    control();
   },9000,()=>{
-   later(6280,()=>{message.hidden=false;});
-   later(7200,()=>trust.classList.add('is-visible'));
+   later(6120,()=>{message.hidden=false;});
+   later(7340,()=>trust.classList.add('is-visible'));
   });
  }
 
  control();if(focus){$('headlineMain').tabIndex=-1;$('headlineMain').focus({preventScroll:true});}
 }
 function showBenefit(index){
- if(state!=='protection'||index<0||index>=benefitIds.length)return;cancelSequence();benefitIndex=index;beatMoving=!reduced();ready=index===benefitIds.length-1;
+ if(state!=='protection'||index<0||index>=benefitIds.length)return;cancelSequence();benefitIndex=index;beatMoving=!reduced();ready=false;
  const progress=[.08,.38,.68,1][index];stage.dataset.benefitStep=String(index+1);stage.style.setProperty('--journey-progress',String(progress));
  stage.classList.toggle('path-restored',index>=2);stage.classList.toggle('goal-restored',index>=3);
  benefitIds.forEach((id,i)=>{$(id).hidden=i>index;$(id).classList.toggle('is-current',i===index);$(id).classList.toggle('is-settled',i<index);});
  const trail=$('benefitTrail'),point=trail.getPointAtLength(trail.getTotalLength()*progress);$('journeyOrb').setAttribute('cx',point.x);$('journeyOrb').setAttribute('cy',point.y);
  $('journeyStatus').textContent=['1 / 4 · Term Rider payout','2 / 4 · Future premiums stop','3 / 4 · Income every eligible year','4 / 4 · Maturity'][index];
  $('familyBonusNote').hidden=index!==3;
- alignMaturity();control();if(beatMoving)later(1100,()=>{beatMoving=false;control();});voiceCue(['family.rider','family.premiums-stop','family.annual-income','family.maturity'][index],index<3?()=>showBenefit(index+1):null,BENEFIT_HOLD);
+ alignMaturity();control();if(beatMoving)later(1100,()=>{beatMoving=false;control();});
+ if(index===3){
+  voiceCue('family.maturity-question',()=>voiceCue('family.maturity',()=>{
+   ready=true;
+   control();
+  },BENEFIT_HOLD),2600);
+ }else voiceCue(['family.rider','family.premiums-stop','family.annual-income'][index],()=>showBenefit(index+1),BENEFIT_HOLD);
 }
 function back(){const previous={selected:'intro',configure:'intro',preview:'configure',whatif:'preview',protection:'whatif',closing:'protection',details:'closing'}[state];if(previous)setState(previous,{benefitStart:state==='closing'?3:0});else if(capturing)setState('intro');}
 function next(){if(transitioning||beatMoving)return;if(state==='protection'&&!ready){if(paused)resumeTimeline();showBenefit(benefitIndex+1);return;}if(!ready||capturing)return;const target={preview:'whatif',whatif:'protection',protection:'closing',closing:'details'}[state];if(target)setState(target);else if(state==='details')location.href=$('fullCalculatorLink').href;}
