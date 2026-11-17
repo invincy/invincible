@@ -1,4 +1,4 @@
-import {BUILTIN_STYLE_PRESETS,applyStylePreset,listStylePresets,updateSavedStylePreset} from './style-presets.js?v=2026111706';
+import {BUILTIN_STYLE_PRESETS,applyStylePreset,listStylePresets,updateSavedStylePreset} from './style-presets.js?v=2026111707';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 

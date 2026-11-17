@@ -40,6 +40,34 @@ export async function verifyMedia(onProgress=()=>{},onBlob=()=>{}){
  // Cancel during encoding and require an explicit rejection, never a partial file.
  const abort=new AbortController();let rejected=false;try{await encodeStudioVideo({canvas,timeline:{duration:2,audioStart:0},audioBuffer:audio,signal:abort.signal,drawFrame:()=>abort.abort(new DOMException('Test cancelled','AbortError'))});}catch(e){rejected=e.name==='AbortError';}check(rejected,'Cancellation did not reject.');results.push({cancelled:true,originalBytesPreserved:true});
  onProgress('Checking Map adapter and native framebuffer');
+ const weather=validateManifest({...emptyVideo(),assets:[{id:'building',name:'building.png',fileId:'building-file'}],scenes:[{
+  id:'flood',startSeconds:0,durationSeconds:4,engineType:'graphic',engineData:{background:'#000000'},overlays:[
+   {id:'building-overlay',type:'image',assetId:'building',slot:'bottom-left-stage'},
+   {id:'water',type:'effect',effectType:'water-rise',slot:'bottom-left-stage',params:{endProgress:1,waveAmplitude:0}},
+   {id:'rain',type:'effect',effectType:'rain',seed:14}
+  ]
+ }]});
+ const weatherCanvas=document.createElement('canvas');
+ Object.assign(weatherCanvas,exportDimensions('9:16'));
+ const context=weatherCanvas.getContext('2d',{willReadFrequently:true});
+ const weatherRenderer=await createStudioRenderer(weatherCanvas,weather,compileTimeline(weather,PRESETS[0]),PRESETS[0],{getFile:()=>{throw Error('HTTP 403');}});
+ try{
+  await weatherRenderer.draw(2);
+  const first=context.getImageData(0,0,canvas.width,canvas.height).data;
+  await weatherRenderer.draw(3);
+  await weatherRenderer.draw(2);
+  const repeated=context.getImageData(0,0,canvas.width,canvas.height).data;
+  check(first.every((value,index)=>value===repeated[index]),'Scrubbing changed procedural pixels.');
+  const pixel=y=>context.getImageData(270,y,1,1).data[2];
+  check(pixel(1500)>pixel(1060),'Half-full water should color the bottom of the building slot.');
+  check(weatherRenderer.missingAssets[0]?.reason==='HTTP 403','Failed image was not isolated.');
+  let blocked=false;try{await weatherRenderer.draw(2,{exporting:true});}catch(error){blocked=/Missing visual assets/.test(error.message);}
+  check(blocked,'Export accepted a missing image without consent.');
+  await weatherRenderer.draw(2,{exporting:true,allowPlaceholders:true});
+  const contextPixels=context.getImageData(0,0,canvas.width,canvas.height).data;
+  check(first.every((value,index)=>value===contextPixels[index]),'Preview and opted-in export frames differ.');
+  results.push({weatherEffects:true,missingImageIsolated:true});
+ }finally{weatherRenderer.destroy();}
  const animation={format:'invincible-map-animation',version:1,duration:1,aspectRatio:'9:16',basemap:'physical',terrain:false,camera:[{time:0,center:[73,28],zoom:4,pitch:0,bearing:0},{time:1,center:[75,30],zoom:5,pitch:0,bearing:0}],layers:[{id:'route',type:'route',name:'Synthetic route',start:0,end:1,coordinates:[[72,27],[76,32]],color:'#edc46a'}]};
  const mapManifest={...emptyVideo(),scenes:[{id:'map',startSeconds:0,durationSeconds:1,engineType:'map',engineData:{animation},overlays:[]}]};validateManifest(mapManifest);const mapTimeline=compileTimeline(mapManifest,PRESETS[0]);const mapRenderer=await createStudioRenderer(canvas,mapManifest,mapTimeline,PRESETS[0],{getFile:()=>null});
  try{await mapRenderer.draw(.25,{exporting:true});const host=document.querySelector('.vs-map-host .maplibregl-canvas');check(host?.width===1080&&host?.height===1920,'Map framebuffer is not 1080×1920.');const blob=await encodeStudioVideo({canvas,timeline:mapTimeline,audioBuffer:audio,drawFrame:(t,signal)=>mapRenderer.draw(t,{exporting:true,signal})}),result=await inspectVideo(blob);check(result.energy>100&&result.width===1080&&result.height===1920,'Map/audio export failed.');results.push({mapAdapter:true,...result});onBlob(blob,'map');}finally{mapRenderer.destroy();}

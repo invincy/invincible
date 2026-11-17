@@ -1,20 +1,21 @@
 import {MAX_MODEL_BYTES} from './three-scene.js';
-import {drawCanvasBackground,drawCanvasLayer} from './canvas.js?v=2026111706';
+import {drawCanvasBackground,drawCanvasLayer} from './canvas.js?v=2026111707';
 import {ensureDocumentaryFonts} from '../map-fonts.js';
 import {compileAnimation} from '../map-animation-import.js?v=2026111603';
 import {createHistoryPlayer} from '../history-player.js?v=2026111603';
-import {layerFrame,sceneAt,referencedMapAssets} from './model.js?v=2026111706';
+import {layerFrame,sceneAt,referencedMapAssets} from './model.js?v=2026111707';
 import {resolveMapAsset} from '../map-assets-client.js?v=2026111002';
 import {drawBattlefield} from './battlefield.js?v=2026111014';
 import {parallaxTransform,projectLayer} from './parallax.js';
 import {fitMedia} from './composition.js?v=2026111705';
-import {applyStyleToMapProject,drawStyleFrame,resolveSceneStyle,styledLayerFrame} from './style-presets.js?v=2026111706';
+import {applyStyleToMapProject,drawStyleFrame,resolveSceneStyle,styledLayerFrame} from './style-presets.js?v=2026111707';
+import {drawWeatherEffect,orderOverlays,resolveOverlayLayout} from './weather-effects.js';
 export function mapDraft(animation,geometryReviewed,mapAssets=[]){
  return compileAnimation({scenes:[],historicalMap:{version:1,theme:'night',events:[],features:{type:'FeatureCollection',features:[]},camera:[],visual:{version:1,assets:referencedMapAssets(mapAssets,animation),layers:[]}}},animation,{geometryReviewed}).project;
 }
 export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFile,mapAssets=[],signal}={}){
  const ctx=canvas.getContext('2d'),images=new Map(),maps=new Map(),videos=new Map();let disposed=false,stage=null;
- const ownedUrls=[],hosts=[];
+ const ownedUrls=[],hosts=[],missingAssets=new Map();
  const releaseStage=()=>{stage?.renderer.destroy();stage=null;};
  const destroy=()=>{if(disposed)return;disposed=true;releaseStage();for(const {player} of maps.values())player.destroy();for(const v of videos.values())v.input.dispose();for(const h of hosts)h.remove();for(const url of ownedUrls)URL.revokeObjectURL(url);};
  try{
@@ -23,6 +24,7 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
   const videoIds=new Set(timeline.scenes.filter(s=>s.engineType==='video').map(s=>s.engineData.assetId));
   for(const asset of manifest.assets.filter(asset=>required.has(asset.id))){
    signal?.throwIfAborted();let url=asset.url;
+   try{
    if(asset.fileId){const file=await getFile(asset.fileId);if(!file)throw Error(`Upload missing image again: ${asset.name}`);url=URL.createObjectURL(file);ownedUrls.push(url);}
    if(asset.libraryId){const ref=mapAssets.find(a=>a.id===asset.libraryId);if(!ref)throw Error('Missing image in existing map library: '+asset.libraryId);url=await resolveMapAsset(ref);}
    if(videoIds.has(asset.id)){
@@ -32,6 +34,11 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
    }
    const image=new Image();image.crossOrigin='anonymous';image.src=url;
    await image.decode().catch(()=>{throw Error(`Cannot load image ${asset.name}. Check its URL and CORS permissions.`);});images.set(asset.id,image);
+   }catch(error){
+    signal?.throwIfAborted();
+    if(error.name==='AbortError'||videoIds.has(asset.id))throw error;
+    missingAssets.set(asset.id,{id:asset.id,name:asset.name,reason:error.message});
+   }
   }
   // Maps are opened on demand below: a long film must not allocate one WebGL context per shot.
   // Probe the canvas after images load: fail before encoding if a remote source taints it.
@@ -66,12 +73,38 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
   stage={id:scene.id,renderer};
   return renderer;
  }
- function graphics(scene,time){for(const layer of scene.overlays){
+ function graphics(scene,time){for(const raw of orderOverlays(scene.overlays)){
+  const layer=resolveOverlayLayout(raw);
   if(time<(layer.startSeconds??0)||time>=(layer.endSeconds??scene.durationSeconds))continue;
   const style=resolveSceneStyle(manifest,scene,layer),pose=styledLayerFrame(layer,layerFrame(layer,time),time,style);
   const transform=parallaxTransform(scene.engineType==='graphic'?scene.engineData.parallax:null,layer.depth,time,scene.durationSeconds);
-  drawCanvasLayer(ctx,projectLayer(pose,transform),brand,images,style);
+  const projected=projectLayer(pose,transform),missing=missingAssets.get(layer.assetId);
+  if(layer.type==='effect'){
+   drawWeatherEffect(ctx,projected,time,scene.durationSeconds);
+  }else if(layer.type==='image'&&missing){
+   ctx.save();
+   ctx.translate(projected.x*width,projected.y*height);
+   ctx.rotate(projected.rotation*Math.PI/180);
+   ctx.scale(projected.scale,projected.scale);
+   ctx.globalAlpha*=projected.opacity;
+   placeholder(missing,-(projected.width??.8)*width/2,-(projected.height??.3)*height/2,(projected.width??.8)*width,(projected.height??.3)*height);
+   ctx.restore();
+  }else drawCanvasLayer(ctx,projected,brand,images,style);
  }}
+ function placeholder(asset,x,y,w,h){
+  ctx.save();
+  ctx.fillStyle='#142238';ctx.fillRect(x,y,w,h);
+  ctx.strokeStyle='#f4c970';ctx.lineWidth=3;ctx.setLineDash([12,8]);
+  ctx.strokeRect(x,y,w,h);ctx.setLineDash([]);
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='600 24px system-ui';
+  ctx.fillStyle='#ffffff';ctx.fillText(`[Missing: ${asset.name} (${asset.id})]`,x+w/2,y+h/2,Math.max(1,w-16));
+  ctx.restore();
+ }
+ function background(data){
+  const missing=missingAssets.get(data.backgroundAssetId);
+  if(missing&&data.backgroundStyle==='image')placeholder(missing,0,0,width,height);
+  else drawCanvasBackground(ctx,data,images);
+ }
  const money=n=>'₹'+Math.round(n).toLocaleString('en-IN');
  function financial(scene,time){
   const d=scene.engineData,points=d.points.filter(p=>p.timeSeconds<=time),maxYear=Math.max(1,...points.map(p=>p.year)),maxValue=Math.max(1,...d.points.map(p=>(p.addition||0)+(p.income||0)+(p.booster||0)+(p.maturity||0)));
@@ -83,33 +116,42 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
   const p=points.at(-1);if(p){ctx.fillStyle=brand.foreground;ctx.font=`600 42px ${brand.font}`;ctx.fillText(p.label,width*.5,height*.77,width*.9);ctx.font=`32px ${brand.font}`;const rows=['premium','addition','income','booster','maturity'].filter(k=>p[k]!==undefined);rows.forEach((k,i)=>ctx.fillText(k+' · '+money(p[k]),width*.5,height*.80+i*height*.03,width*.88));}
   ctx.fillStyle=brand.foreground;ctx.font=`20px ${brand.font}`;ctx.fillText('Illustration: '+d.source,width*.5,height*.97,width*.94);
  }
- async function draw(time,{exporting=false,signal:frameSignal}={}){
+ async function draw(time,{exporting=false,allowPlaceholders=false,signal:frameSignal}={}){
   if(disposed)throw new DOMException('Renderer closed','AbortError');frameSignal?.throwIfAborted();
+  if(exporting&&!allowPlaceholders&&missingAssets.size)throw Error('Missing visual assets: '+[...missingAssets.values()].map(a=>a.name).join(', '));
   ctx.globalAlpha=1;ctx.fillStyle=brand.background;ctx.fillRect(0,0,width,height);const scene=sceneAt(timeline,time);if(scene?.engineType!=='three')releaseStage();if(!scene)return;
   const local=time-scene.startSeconds,transition=scene.transition?.type==='fade'?scene.transition.durationSeconds:0,sceneStyle=resolveSceneStyle(manifest,scene);
   ctx.save();try{
    if(transition)ctx.globalAlpha=Math.max(0,Math.min(1,local/transition,(scene.durationSeconds-local)/transition));
    if(sceneStyle){ctx.fillStyle=sceneStyle.tokens.palette.background;ctx.fillRect(0,0,width,height);}if(scene.engineData.background){ctx.fillStyle=scene.engineData.background;ctx.fillRect(0,0,width,height);}
    if(scene.engineType==='map'){
-    drawCanvasBackground(ctx,scene.engineData,images);
+    background(scene.engineData);
     const {player,host,errors}=await mapFor(scene,frameSignal);if(exporting&&(!player.isNative||errors.length))throw Error(errors[0]||'Map export needs WebGL2.');
     player.seek(local+(scene.engineData.sourceStart||0));if(player.isNative)await player.settleFrame(frameSignal);
     if(exporting&&errors.length)throw Error(errors[0]);ctx.drawImage(player.map.getCanvas(),0,0,width,height);
     const overlay=host.querySelector('.history-overlay');if(overlay)ctx.drawImage(overlay,0,0,width,height);
-   }else if(scene.engineType==='graphic')drawCanvasBackground(ctx,scene.engineData,images);
+   }else if(scene.engineType==='graphic')background(scene.engineData);
    else if(scene.engineType==='three'){
     const three=await threeFor(scene,frameSignal);ctx.drawImage(three.frame(local,scene.durationSeconds),0,0,width,height);
    }else if(scene.engineType==='lic')financial(scene,local);
-   else if(scene.engineType==='battlefield')drawBattlefield(ctx,scene.engineData,local,images);
-   else if(scene.engineType==='image')fitMedia(ctx,images.get(scene.engineData.assetId),scene.engineData.fit);
+   else if(scene.engineType==='battlefield'){
+    drawBattlefield(ctx,{...scene.engineData,formations:scene.engineData.formations.filter(row=>!missingAssets.has(row.assetId))},local,images);
+    const missing=scene.engineData.formations.find(row=>missingAssets.has(row.assetId));
+    if(missing)placeholder(missingAssets.get(missing.assetId),width*.1,height*.8,width*.8,height*.08);
+   }
+   else if(scene.engineType==='image'){
+    const asset=missingAssets.get(scene.engineData.assetId);
+    if(asset)placeholder(asset,0,0,width,height);
+    else fitMedia(ctx,images.get(scene.engineData.assetId),scene.engineData.fit);
+   }
    else if(scene.engineType==='video'){
     frameSignal?.throwIfAborted();const video=videos.get(scene.engineData.assetId),abort=()=>video.input.dispose();frameSignal?.addEventListener('abort',abort,{once:true});
     try{const frame=await video.sink.getCanvas(scene.engineData.trimStart+local);frameSignal?.throwIfAborted();if(!frame)throw Error('No video frame at requested source time.');fitMedia(ctx,frame.canvas,scene.engineData.fit);}catch(error){frameSignal?.throwIfAborted();throw error;}finally{frameSignal?.removeEventListener('abort',abort);}
    }
    drawStyleFrame(ctx,sceneStyle);
    graphics(scene,local);
-   if(brand.logoAssetId){const image=images.get(brand.logoAssetId);if(!image)throw Error('Brand logo asset is missing.');const size=width*.12,scale=Math.min(size/image.width,size/image.height);ctx.drawImage(image,width*.84,height*.04,image.width*scale,image.height*scale);}
+   if(brand.logoAssetId){const image=images.get(brand.logoAssetId);const size=width*.12;if(image){const scale=Math.min(size/image.width,size/image.height);ctx.drawImage(image,width*.84,height*.04,image.width*scale,image.height*scale);}else if(missingAssets.has(brand.logoAssetId))placeholder(missingAssets.get(brand.logoAssetId),width*.84,height*.04,size,size);}
   }finally{ctx.restore();}
  }
- return {draw,destroy};
+ return {draw,destroy,missingAssets:[...missingAssets.values()]};
 }

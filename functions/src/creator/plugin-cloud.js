@@ -121,7 +121,22 @@ async function authenticate(request){
  const data=snap.data();if(data.kind!=='access'||data.resource!==MCP_RESOURCE||hasExpired(data.expiresAt))return null;
  return{uid:data.uid,email:data.email||'',emailVerified:data.emailVerified===true,scope:String(data.scope||'').split(/\s+/)};
 }
-function contract(){const pack=plannerPack();return{workflow:['Read this contract','Read the selected project context','Create exactly one semantic scene per locked segment','Compile the complete semantic plan','Show the compiled result for review','Apply only after explicit user confirmation, using the exact project revision'],...pack};}
+function contract(){
+ const pack=plannerPack();
+ return {...pack,workflow:['Read the saved Motion Studio draft and its revision','Patch only the requested scene','Request a timestamped scene JPG and inspect the result'],
+  motionStudio:{
+   effectLayer:{type:'effect',seed:'Optional unsigned 32-bit integer',color:'Optional #rrggbb',params:{
+    rain:{intensity:[.1,1],angle:[-89,89],speed:[.5,3]},
+    lightning:{intensity:[.1,1],timing:'Automatic periodic sky glow'},
+    'water-rise':{startProgress:[0,1],endProgress:[0,1],waveAmplitude:[0,.05],waveFrequency:[0,10],crestColor:'#rrggbb'}
+   }},
+   zPlane:['background','midground-back','midground-front','foreground'],
+   slot:['top-banner','top-subtitle','bottom-left-stage','bottom-right-stage','center-stage','bottom-caption-safe'],
+   example:{id:'flood',type:'effect',effectType:'water-rise',slot:'bottom-left-stage',zPlane:'midground-front',params:{startProgress:0,endProgress:.5}},
+   styleField:'visualStylePresetId',
+   timing:'Layer times are scene-local. Existing x/y/width/height override slot defaults.'
+  }};
+}
 function textResult(data,summary){return{content:[{type:'text',text:summary}],structuredContent:data};}
 function toolMeta(scopes,extra={}){return{...extra,securitySchemes:[{type:'oauth2',scopes}]};}
 function authenticationRequired(scopes){
@@ -199,12 +214,30 @@ function mergeDraftValue(base,changes,path='changes'){
  }
  return structuredClone(changes);
 }
+const weatherParams = {
+ rain:z.object({intensity:z.number().min(.1).max(1).optional(),angle:z.number().min(-89).max(89).optional(),speed:z.number().min(.5).max(3).optional()}).strict(),
+ lightning:z.object({intensity:z.number().min(.1).max(1).optional()}).strict(),
+ 'water-rise':z.object({startProgress:z.number().min(0).max(1).optional(),endProgress:z.number().min(0).max(1).optional(),waveAmplitude:z.number().min(0).max(.05).optional(),waveFrequency:z.number().min(0).max(10).optional(),crestColor:z.string().regex(/^#[a-f0-9]{6}$/i).optional()}).strict()
+};
+function validateWeatherOverlay(overlay){
+ const weather=contract().motionStudio;
+ if(overlay.slot!==undefined&&!weather.slot.includes(overlay.slot))throw Error('Unknown layout slot.');
+ if(overlay.zPlane!==undefined&&!weather.zPlane.includes(overlay.zPlane))throw Error('Unknown depth plane.');
+ if(overlay.type!=='effect'){
+  if(overlay.effectType!==undefined||overlay.params!==undefined||overlay.seed!==undefined)throw Error('Effect properties require an effect layer.');
+  return;
+ }
+ if(!Object.hasOwn(weatherParams,overlay.effectType))throw Error('Unknown procedural effect.');
+ weatherParams[overlay.effectType].parse(overlay.params??{});
+ if(overlay.seed!==undefined)z.number().int().min(0).max(4294967295).parse(overlay.seed);
+}
 function validateVideoManifest(manifest){
  if(!manifest||![1,2].includes(manifest.schemaVersion)||!Array.isArray(manifest.scenes)||manifest.scenes.length>100)throw Error('Invalid Creator video manifest.');
  const ids=new Set(),assetIds=new Set((manifest.assets||[]).map(asset=>asset?.id));let cursor=0;
  for(const scene of manifest.scenes){if(!scene||typeof scene.id!=='string'||ids.has(scene.id))throw Error('Scene IDs must be unique.');ids.add(scene.id);if(!['graphic','image','video','map','battlefield','three','lic','parallax'].includes(scene.engineType))throw Error(`Unsupported scene engine: ${scene.engineType}`);if(!Number.isFinite(scene.startSeconds)||!Number.isFinite(scene.durationSeconds)||scene.startSeconds<0||scene.durationSeconds<=0)throw Error('Scene timing is invalid.');if(scene.startSeconds<cursor-0.001)throw Error('Scene timing overlaps an earlier scene.');cursor=scene.startSeconds+scene.durationSeconds;for(const overlay of scene.overlays||[])if(overlay.assetId&&!assetIds.has(overlay.assetId))throw Error(`Scene references missing asset: ${overlay.assetId}`);}
  if(manifest.visualStylePresets!==undefined){if(!Array.isArray(manifest.visualStylePresets)||manifest.visualStylePresets.length>20)throw Error('Use up to 20 saved visual presets.');manifest.visualStylePresets.forEach(item=>savedVisualStyleSchema.parse(item));}
  const styleIds=new Set([...BUILTIN_VISUAL_STYLES.map(item=>item.id),...(manifest.visualStylePresets||[]).map(item=>item.id)]);if(manifest.visualStylePresetId&&!styleIds.has(manifest.visualStylePresetId))throw Error('Unknown video visual preset.');for(const scene of manifest.scenes){if(scene.visualStylePresetId&&!styleIds.has(scene.visualStylePresetId))throw Error(`Unknown scene visual preset: ${scene.visualStylePresetId}`);if(scene.styleOverrides)visualStyleTokensSchema.parse(scene.styleOverrides);for(const overlay of scene.overlays||[]){if(overlay.visualStylePresetId&&!styleIds.has(overlay.visualStylePresetId))throw Error(`Unknown overlay visual preset: ${overlay.visualStylePresetId}`);if(overlay.styleOverrides)visualStyleTokensSchema.parse(overlay.styleOverrides);}}
+ for(const scene of manifest.scenes)for(const overlay of scene.overlays||[])validateWeatherOverlay(overlay);
  return manifest;
 }
 function visualStyleList(manifest){return[...BUILTIN_VISUAL_STYLES.map(item=>({...item,custom:false})),...(manifest.visualStylePresets||[]).map(item=>({...item,custom:true}))];}

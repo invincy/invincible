@@ -1,5 +1,5 @@
 // Declarative Canvas scenes share the Studio compositor and clock with maps.
-import {drawStyledLayer} from './style-presets.js?v=2026111706';
+import {drawStyledLayer} from './style-presets.js?v=2026111707';
 export const CANVAS_FONTS=['system-ui','Invincible Sans','Invincible Hindi','serif','monospace'];
 export const BACKGROUND_FIELDS=['background','backgroundStyle','gridColor','gridSpacing','backgroundAssetId','backgroundFit'];
 export function validateCanvas(data,assets){

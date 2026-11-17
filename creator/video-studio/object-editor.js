@@ -1,5 +1,5 @@
 import {DEFAULT_PARALLAX,parallaxTransform,projectLayer} from './parallax.js';
-import {layerFrame} from './model.js?v=2026111706';
+import {layerFrame} from './model.js?v=2026111707';
 import {CANVAS_FONTS} from './canvas.js?v=2026111705';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const field=(label,key,value,min=-2,max=3,step=.01)=>`<label>${label}<input type="number" data-object-field="${key}" value="${value}" min="${min}" max="${max}" step="${step}"></label>`;

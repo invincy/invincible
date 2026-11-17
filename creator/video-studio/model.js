@@ -5,7 +5,8 @@ import {safeAssetUrl} from '../map-editor-model.js?v=2026111603';
 import {validateMap,durationOf} from '../history-model.js?v=2026111603';
 import {validateBattlefield} from './battlefield.js?v=2026111014';
 import {exportDimensions} from '../map-video-export.js';
-import {validateStyleLibrary} from './style-presets.js?v=2026111706';
+import {validateStyleLibrary} from './style-presets.js?v=2026111707';
+import {validateWeatherLayer} from './weather-effects.js';
 export {exportDimensions};
 export const PRESETS = Object.freeze([
  {id:'adichimp',name:'AdiChimp',background:'#071426',foreground:'#f4f5f7',accent:'#edc46a',font:'system-ui',logoAssetId:'',intro:null,outro:null},
@@ -32,8 +33,9 @@ const color = x=>{if(!/^#[\da-f]{6}$/i.test(x))fail('Colors must be #rrggbb.');}
 const id = x=>{if(typeof x!=='string'||!x.length||x.length>150)fail('Use nonempty IDs up to 150 characters.');};
 export function emptyVideo(){return {schemaVersion:1,title:'Untitled video',aspectRatio:'9:16',fps:30,brandPresetId:'adichimp',scenes:[],assets:[],audio:null,introEnabled:false,outroEnabled:false};}
 export function validateLayer(layer,duration,assets){
- keys(layer,['id','type','text','assetId','x','y','width','height','scale','rotation','opacity','fontSize','fontFamily','fontWeight','textAlign','lineWidth','color','startSeconds','endSeconds','keyframes','depth','styleRole','visualStylePresetId','styleOverrides'],'layer');id(layer.id);
- if(!['text','image','rectangle','circle','line','arrow'].includes(layer.type))fail('Choose text, image, rectangle, circle, line or arrow.');
+ keys(layer,['id','type','text','assetId','x','y','width','height','scale','rotation','opacity','fontSize','fontFamily','fontWeight','textAlign','lineWidth','color','startSeconds','endSeconds','keyframes','depth','styleRole','visualStylePresetId','styleOverrides','slot','zPlane','effectType','params','seed'],'layer');id(layer.id);
+ if(!['text','image','rectangle','circle','line','arrow','effect'].includes(layer.type))fail('Unsupported overlay type.');
+ validateWeatherLayer(layer);
  if(layer.type==='text')str(layer.text,2000,'layer text');
  if(layer.fontFamily!==undefined&&!CANVAS_FONTS.includes(layer.fontFamily))fail('Choose a bundled or standard canvas font.');
  if(layer.fontWeight!==undefined){

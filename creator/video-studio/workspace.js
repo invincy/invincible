@@ -1,14 +1,14 @@
-import {createAgentOperations} from './agent.js?v=2026111706';
+import {createAgentOperations} from './agent.js?v=2026111707';
 import {checkStudioGlb, MAX_MODEL_BYTES} from './three-scene.js';
 import {mountConnectedImageGenerator} from '../image-generator.js?v=2026111206';
 import {callImageRelay,draftRemoteImagePrompt} from '../../shared/firebase-image-relay.js?v=2026111205';
 import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=2026111603';
 import {studioBrief} from './handoff.js?v=2026111207';
 import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111705';
-import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111706';
-import {createStudioRenderer} from './adapters.js?v=2026111706';
+import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111707';
+import {createStudioRenderer} from './adapters.js?v=2026111707';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111604';
-import {mountAssembly} from './assembly.js?v=2026111706';
+import {mountAssembly} from './assembly.js?v=2026111707';
 import {encodeStudioVideo} from './export.js?v=2026111209';
 import {openStudioStore} from './storage.js';
 import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111705';
@@ -17,7 +17,7 @@ import {generateVoiceover} from '../tts-api.js';
 import {createProductionReadiness,selectProductionVoice} from './production-readiness.js?v=2026111322';
 import {loadPendingAiDraft,loadPendingAiAudio,savePendingAiDraft} from '../ai-draft.js?v=2026111319';
 import {startBrowserSceneJpgBridge} from './browser-scene-jpg-bridge.js?v=2026111605';
-import {mountStyleGallery} from './style-gallery.js?v=2026111706';
+import {mountStyleGallery} from './style-gallery.js?v=2026111707';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>crypto.randomUUID();
 const template=(name,text)=>({id:name,startSeconds:0,durationSeconds:2,engineType:'graphic',engineData:{},transition:{type:'fade',durationSeconds:.3},overlays:[{id:'title',type:'text',text,x:.5,y:.5,fontSize:64}]});
@@ -62,6 +62,11 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  audioWarning.setAttribute('role', 'status');
  audioWarning.hidden = true;
  header.after(audioWarning);
+ const allowPlaceholders=document.createElement('label');
+ const placeholderConsent=document.createElement('input');
+ placeholderConsent.type='checkbox';
+ allowPlaceholders.append(placeholderConsent,' Allow placeholders or muted missing audio in MP4 export');
+ audioWarning.after(allowPlaceholders);
  const jpgButton=document.createElement('button');jpgButton.type='button';jpgButton.dataset.vs='jpg-previews';jpgButton.textContent='Export JPG previews';$('[data-vs=export]').before(jpgButton);
  const jpgSceneButton=document.createElement('button');jpgSceneButton.type='button';jpgSceneButton.dataset.vs='jpg-scene';jpgSceneButton.textContent='Export selected scene JPG';jpgButton.before(jpgSceneButton);
  const jpgOffsetLabel=document.createElement('label');jpgOffsetLabel.className='vs-help';jpgOffsetLabel.textContent='JPG moment (s; blank = midpoint)';const jpgOffset=document.createElement('input');jpgOffset.type='number';jpgOffset.min='0';jpgOffset.step='.1';jpgOffset.placeholder='midpoint';jpgOffset.dataset.vsJpgOffset='';jpgOffset.setAttribute('aria-label','JPG moment within selected scene in seconds');jpgOffsetLabel.append(jpgOffset);jpgButton.before(jpgOffsetLabel);
@@ -396,7 +401,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  }
  const run=async fn=>{if(busy||disposed)return;lock(true);stop();try{if(drawing)await drawing.catch(()=>{});await fn();}catch(e){if(!disposed)sync();status(e.name==='AbortError'?'Export cancelled.':e.message);}finally{if(!disposed)lock(false);}};
  async function renderExport(){
-  stop();controller=new AbortController();$('[data-vs=cancel]').disabled=false;root.dataset.exporting='true';let codec=null;try{await prepare();status('Rendering MP4…');const blob=await encodeStudioVideo({canvas,timeline,audioBuffer,audioTracks,audioGain:state.manifest.audio?.gain??1,signal:controller.signal,onAudioCodec:value=>{codec=value;status(`Rendering H.264 + ${value.toUpperCase()} audio…`);},onProgress:p=>{if(!disposed)$('[data-vs-progress]').value=p.progress;},drawFrame:(t,signal)=>renderer.draw(t,{exporting:true,signal})});if(!disposed){const name=(state.manifest.title||'video').replace(/[^\p{L}\p{N}_-]/gu,'_')+'.mp4';if(lastExportUrl)URL.revokeObjectURL(lastExportUrl);lastExportBlob=blob;lastExportName=name;lastExportUrl=URL.createObjectURL(blob);lastExport.href=lastExportUrl;lastExport.download=name;lastExport.hidden=false;saveLastExport.hidden=false;cloudExport.hidden=true;download(blob,name);status(audioBuffer||audioTracks.length?`MP4 exported with synchronized ${codec.toUpperCase()} voiceover and audio. Download it now or save it to your private library.${codec==='opus'?' Opus MP4 needs a compatible player.':''}`:(audioWarning.hidden?'MP4 exported without audio.':'MP4 exported with unavailable audio muted.')+' Download it now or save it to your private library.');}return blob;}finally{if(controller?.signal.aborted)invalidate();controller=null;$('[data-vs=cancel]').disabled=true;root.dataset.exporting='false';if(!disposed)await draw();}
+  stop();controller=new AbortController();$('[data-vs=cancel]').disabled=false;root.dataset.exporting='true';let codec=null;try{await prepare();if(!placeholderConsent.checked&&(!audioWarning.hidden||renderer.missingAssets.length))throw Error('Resolve unavailable media or enable Allow placeholders before exporting.');status('Rendering MP4…');const blob=await encodeStudioVideo({canvas,timeline,audioBuffer,audioTracks,audioGain:state.manifest.audio?.gain??1,signal:controller.signal,onAudioCodec:value=>{codec=value;status(`Rendering H.264 + ${value.toUpperCase()} audio…`);},onProgress:p=>{if(!disposed)$('[data-vs-progress]').value=p.progress;},drawFrame:(t,signal)=>renderer.draw(t,{exporting:true,allowPlaceholders:placeholderConsent.checked,signal})});if(!disposed){const name=(state.manifest.title||'video').replace(/[^\p{L}\p{N}_-]/gu,'_')+'.mp4';if(lastExportUrl)URL.revokeObjectURL(lastExportUrl);lastExportBlob=blob;lastExportName=name;lastExportUrl=URL.createObjectURL(blob);lastExport.href=lastExportUrl;lastExport.download=name;lastExport.hidden=false;saveLastExport.hidden=false;cloudExport.hidden=true;download(blob,name);status(audioBuffer||audioTracks.length?`MP4 exported with synchronized ${codec.toUpperCase()} voiceover and audio. Download it now or save it to your private library.${codec==='opus'?' Opus MP4 needs a compatible player.':''}`:(audioWarning.hidden?'MP4 exported without audio.':'MP4 exported with unavailable audio muted.')+' Download it now or save it to your private library.');}return blob;}finally{if(controller?.signal.aborted)invalidate();controller=null;$('[data-vs=cancel]').disabled=true;root.dataset.exporting='false';if(!disposed)await draw();}
  }
  async function renderJpgPreviews(){
   stop();await prepare();if(!renderer||!timeline?.scenes?.length)throw Error('Add or apply a video scene before generating previews.');
