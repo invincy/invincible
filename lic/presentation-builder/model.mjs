@@ -76,7 +76,14 @@ export function demo733() {
   Object.assign(intro, {
     mode: 'choice', image: '../jeevan-lakshya/assets/dad%26daughter.png',
     audio: '../jeevan-lakshya/audio/goal.choose.mp3',
-    choices: branches.map(({ title, id }) => ({ label: title, target: id })),
+    choices: branches.map(({ title, id, image }) => ({ label: title, target: id, image })),
+    layout: {
+      artwork: { x: 3, y: 11, width: 94, effect: 'fade' },
+      'choice:0': { x: 4, y: 62, width: 20, effect: 'pop', delay: .06 },
+      'choice:1': { x: 28, y: 65, width: 20, effect: 'pop', delay: .18 },
+      'choice:2': { x: 52, y: 64, width: 20, effect: 'pop', delay: .13 },
+      'choice:3': { x: 76, y: 60, width: 19, effect: 'pop', delay: .26 },
+    },
   });
   Object.assign(profile, { mode: 'tap', target: premium.id, audio: '../jeevan-lakshya/audio/profile.choose.mp3', profile: true });
   Object.assign(premium, { metric: 'premium', basis: 'annual' });

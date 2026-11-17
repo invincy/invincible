@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Presentation Builder · LIC Plans</title>
-<link rel="stylesheet" href="builder.css">
+<link rel="stylesheet" href="builder.css?v=2">
 </head>
 <body>
 <main>
@@ -37,11 +37,15 @@
         <div id="screen" class="screen"></div>
         <audio id="narration" preload="metadata"></audio>
       </div>
-      <button id="preview-scene" type="button">Play selected scene</button>
+      <div class="toolbar">
+        <button id="edit-layout" type="button" aria-pressed="false">Edit scene layout</button>
+        <button id="preview-scene" type="button">Play selected scene</button>
+      </div>
+      <div class="layout-tools" id="layout-tools" hidden></div>
       <div id="warnings" role="status"></div>
     </section>
   </div>
 </main>
-<script type="module" src="builder.mjs"></script>
+<script type="module" src="builder.mjs?v=2"></script>
 </body>
 </html>

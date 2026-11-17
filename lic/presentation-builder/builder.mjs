@@ -1,4 +1,5 @@
-import { demo733, emptyTables, fields, findAmount, flowIssues, newScene, parseTable } from './model.mjs';
+import { demo733, emptyTables, fields, findAmount, flowIssues, newScene, parseTable } from './model.mjs?v=2';
+import { constrain, effects, enableDrag, place, placement } from './layout.mjs?v=2';
 
 const $ = id => document.getElementById(id);
 const el = (tag, text) => {
@@ -39,6 +40,11 @@ draft ??= { title: 'Untitled presentation', scenes: [newScene('Opening')], table
 let selected = draft.scenes[0].id;
 let urls = [];
 let previewRun = 0;
+let editingLayout = false;
+let activeLayer = '';
+let lastLayoutScene;
+const layoutTools = $('layout-tools');
+
 
 async function save() {
   try {
@@ -84,7 +90,7 @@ function source(value) {
   urls.push(url);
   return url;
 }
-function upload(kind, scene) {
+function upload(kind, scene, caption) {
   const node = el('input');
   node.type = 'file';
   node.accept = kind === 'audio' ? 'audio/*' : 'image/png,image/jpeg,image/webp,image/gif';
@@ -98,7 +104,7 @@ function upload(kind, scene) {
     scene[kind] = file;
     updateEditor();
   });
-  const field = label(kind === 'audio' ? 'Voiceover' : 'Artwork', node);
+  const field = label(caption ?? (kind === 'audio' ? 'Voiceover' : 'Artwork'), node);
   if (scene[kind]) {
     field.append(el('span', scene[kind].name ?? scene[kind].split('/').at(-1)));
   }
@@ -156,8 +162,23 @@ function renderEditor() {
       row.className = 'choice-row';
       row.append(label('Choice ' + (choiceIndex + 1), input(choice.label, value => { choice.label = value; updateEditor(); })),
         label('Goes to', select(choice.target, destinations(scene.id), value => { choice.target = value; updateEditor(); })),
-        button('Remove choice', () => { scene.choices.splice(choiceIndex, 1); updateEditor(); }));
-      editor.append(row);
+        button('Remove choice', () => {
+          scene.choices.splice(choiceIndex, 1);
+          if (scene.layout) {
+            for (let i = choiceIndex; i < scene.choices.length; i++) {
+              const next = scene.layout['choice:' + (i + 1)];
+              delete scene.layout['choice:' + i];
+              if (next) scene.layout['choice:' + i] = next;
+            }
+            delete scene.layout['choice:' + scene.choices.length];
+          }
+          updateEditor();
+        }));
+      editor.append(row, upload('image', choice, 'Choice ' + (choiceIndex + 1) + ' artwork'));
+      if (choice.image) editor.append(button('Remove choice ' + (choiceIndex + 1) + ' artwork', () => {
+        delete choice.image;
+        updateEditor();
+      }));
     });
     editor.append(button('Add choice', () => { scene.choices.push({ label: '', target: '' }); updateEditor(); }));
   }
@@ -195,6 +216,7 @@ function renderEditor() {
   actions.append(remove);
   editor.append(actions);
   $('warnings').textContent = flowIssues(draft.scenes).join(' ');
+  if (editingLayout) preview(selected, true);
 }
 
 function reviewTables() {
@@ -208,7 +230,43 @@ function reviewTables() {
   }
 }
 
-function preview(id) {
+function showPlacementControls(node, key, scene, value, caption) {
+  activeLayer = key;
+  for (const layer of screen.querySelectorAll('.placed-layer')) {
+    layer.dataset.selected = String(layer === node);
+  }
+  layoutTools.replaceChildren(el('strong', caption));
+  const positionFields = el('div');
+  positionFields.className = 'layout-values';
+  const controls = {};
+  const apply = (next, persist = true) => {
+    Object.assign(value, next);
+    place(node, value, true);
+    for (const [field, control] of Object.entries(controls)) control.value = value[field];
+    if (persist) {
+      scene.layout ??= {};
+      scene.layout[key] = { ...value };
+      void save();
+    }
+  };
+  for (const [field, name] of [['x', 'Left %'], ['y', 'Top %'], ['width', 'Width %']]) {
+    const control = input(value[field], next => apply(constrain({ ...value, [field]: Number(next) || 0 })), 'number');
+    control.min = '0';
+    control.max = '100';
+    controls[field] = control;
+    positionFields.append(label(name, control));
+  }
+  const delay = input(value.delay, next => apply({ delay: Math.min(30, Math.max(0, Number(next) || 0)) }), 'number');
+  delay.min = '0';
+  delay.max = '30';
+  delay.step = '0.05';
+  const entrance = select(value.effect, effects, effect => apply({ effect }));
+  entrance.id = 'layout-entrance';
+  layoutTools.append(positionFields, label('Entrance', entrance), label('Entrance delay (seconds)', delay));
+  return apply;
+}
+
+function preview(id, edit = false) {
   const scene = draft.scenes.find(item => item.id === id);
   if (!scene) return;
   const run = ++previewRun;
@@ -219,12 +277,38 @@ function preview(id) {
   audio.load();
   for (const url of urls) URL.revokeObjectURL(url);
   urls = [];
-  screen.replaceChildren(el('h3', scene.title));
+  editingLayout = edit;
+  $('edit-layout').setAttribute('aria-pressed', String(edit));
+  layoutTools.hidden = !edit;
+  layoutTools.replaceChildren(el('p', 'Drag an item on the phone. Use arrow keys or the position fields for fine adjustments.'));
+  if (lastLayoutScene !== id) activeLayer = '';
+  lastLayoutScene = id;
+  const positioned = edit || Boolean(scene.layout);
+  screen.classList.toggle('positioned', positioned);
+  screen.classList.toggle('layout-mode', edit);
+  screen.replaceChildren();
+  function mount(node, key, caption, animate = true) {
+    screen.append(node);
+    if (!positioned) return;
+    const value = placement(scene, key);
+    place(node, value, edit, animate);
+    if (!edit) return;
+    let apply;
+    const selectLayer = () => {
+      if (!apply || activeLayer !== key) apply = showPlacementControls(node, key, scene, value, caption);
+    };
+    enableDrag(node, screen, value, selectLayer, (next, persist) => {
+      selectLayer();
+      apply(next, persist);
+    });
+    if (activeLayer === key) selectLayer();
+  }
+  mount(el('h3', scene.title), 'title', 'Scene title');
   if (scene.image) {
     const image = el('img');
     image.src = source(scene.image);
     image.alt = '';
-    screen.append(image);
+    mount(image, 'artwork', 'Artwork');
   }
   const text = el('p', scene.text);
   const value = el('p');
@@ -234,11 +318,11 @@ function preview(id) {
     value.textContent = row ? (scene.metric === 'premium' ? 'Premium' : 'Bonus') + ' (' + row.basis + ') · ' + rupees.format(row.amount)
       : scene.metric === 'premium' ? 'LIC quote required' : 'Bonus figure unavailable';
   };
-  if (scene.text) screen.append(text);
+  if (scene.text) mount(text, 'text', 'On-screen text');
   if (scene.metric) {
-    value.className = 'metric';
+    value.className = 'metric amount-layer';
     updateAmount();
-    screen.append(value);
+    mount(value, 'amount', 'Table amount');
   }
   const reveal = hidden => {
     for (const node of [text, value]) {
@@ -246,7 +330,7 @@ function preview(id) {
       node.dataset.reveal = '';
     }
   };
-  reveal(Boolean(scene.audio && scene.reveal > 0));
+  reveal(Boolean(!edit && scene.audio && scene.reveal > 0));
   if (scene.profile) {
     const group = el('div');
     group.className = 'preview-profile';
@@ -262,6 +346,7 @@ function preview(id) {
   }
   const actions = el('div');
   actions.className = 'actions';
+  const positionedChoices = [];
   const go = (caption, target) => {
     const control = button(caption, () => preview(target));
     control.disabled = !draft.scenes.some(candidate => candidate.id === target);
@@ -274,17 +359,44 @@ function preview(id) {
       preview(scene.target);
     } else {
       actions.hidden = false;
+      positionedChoices.forEach(({ control, target }) => {
+        control.disabled = !draft.scenes.some(candidate => candidate.id === target);
+      });
     }
   };
-  if (scene.mode === 'choice') scene.choices.forEach(choice => go(choice.label || 'Untitled choice', choice.target));
+  if (scene.mode === 'choice') scene.choices.forEach((choice, index) => {
+    const caption = choice.label || 'Untitled choice';
+    if (!positioned) {
+      go(caption, choice.target);
+      return;
+    }
+    const control = button('', () => { if (!edit) preview(choice.target); });
+    control.className = 'goal-layer' + (choice.image ? ' coin' : '');
+    if (choice.image) {
+      const image = el('img');
+      image.src = source(choice.image);
+      image.alt = '';
+      image.draggable = false;
+      control.append(image);
+    }
+    control.append(el('span', caption));
+    control.disabled = !edit && (Boolean(scene.audio) || !draft.scenes.some(candidate => candidate.id === choice.target));
+    positionedChoices.push({ control, target: choice.target });
+    mount(control, 'choice:' + index, caption);
+  });
   if (['tap', 'audio'].includes(scene.mode)) go('Continue', scene.target);
   screen.append(actions);
+  if (edit) {
+    actions.querySelectorAll('button').forEach(control => { control.disabled = true; });
+    return;
+  }
   if (!scene.audio) {
     reveal(false);
     return;
   }
   actions.hidden = true;
   const controls = el('div');
+  controls.className = 'audio-controls';
   const play = button('Play narration', () => {
     audio.play().catch(() => { if (current()) skip.hidden = false; });
   });
@@ -301,6 +413,10 @@ function preview(id) {
 
 $('sample').addEventListener('click', () => {
   if (!confirm('Replace the current local draft with the Plan 733 sample?')) return;
+  editingLayout = false;
+  layoutTools.hidden = true;
+  $('edit-layout').setAttribute('aria-pressed', 'false');
+  screen.classList.remove('positioned', 'layout-mode');
   draft = demo733();
   selected = draft.scenes[0].id;
   $('draft-title').value = draft.title;
@@ -338,6 +454,10 @@ for (const type of ['premium', 'bonus']) {
   });
 }
 $('start').addEventListener('click', () => preview(draft.scenes[0].id));
+$('edit-layout').addEventListener('click', () => {
+  if (editingLayout) preview(selected);
+  else { activeLayer = ''; preview(selected, true); }
+});
 $('preview-scene').addEventListener('click', () => preview(selected));
 renderEditor();
 reviewTables();

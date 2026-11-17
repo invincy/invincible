@@ -201,3 +201,9 @@ The first editor supports one browser-local draft with IndexedDB-backed artwork 
 Premium and bonus inputs are explicit CSV rows with `age,term,cover,amount,basis`. Amounts are INR, with no currency symbols or thousands separators. Premium basis supports annual, monthly, quarterly and half-yearly. Bonus basis supports declared and illustrative totals for the chosen profile. Duplicate keys are rejected. The preview matches the exact profile and basis, with no fallback price. No production tables are bundled with the builder.
 
 Verified with the site reference check and a 390px Chromium test covering the LIC entry, sample branch with real audio, premium and bonus lookup, file upload, and draft reload. AI draft generation, workbook import, cross-device drafts, and customer presentation publishing are outside this first release.
+
+### Scene layout
+
+Use Edit scene layout to drag the selected scene's title, artwork, text, amount, and goal choices in the phone preview. The inspector supports percentage position and width, plus an entrance preset and delay. Choices can each use their own artwork. Playback uses the same layout while preserving choice routing and waiting until the scene audio finishes before accepting a choice. Existing drafts without saved placements retain their original stacked playback until an item is edited. The 733 sample starts with four staggered goal coins.
+
+The builder browser test checks dragging, the saved position after reload, animation selection and delay in playback, and the separate Career branch audio.
