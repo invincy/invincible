@@ -18,7 +18,7 @@ export function createNarrator({schedule,onStatus}){
   })
   .then(data=>{
    clips=data.clips;
-   if(clips['intro.chime'])audio.src=clipUrl(clips['intro.chime']);
+   if(clips['intro.dreams'])audio.src=clipUrl(clips['intro.dreams']);
   })
   .catch(()=>{});
 

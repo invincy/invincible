@@ -185,3 +185,9 @@ The arrow starts with a short chime, then the 733 coin and the four goal coins a
 ### Unified narration
 
 The 16 main recordings now use Gemini 2.5 Pro Aoede with Social delivery. Gemini Charon voices the one normal-maturity question before Aoede answers. All speech uses the 1.2x Studio pace setting and 1.2x playback, with the opening chime at its original pitch and playback rate. The opening voice is cued 2 seconds into the opening timeline, after the path and goal reveal begin. The closing calendar and shield are timed to the new recording.
+
+### Four-act dialogue
+
+The approved four-act script uses 18 speech clips across the original scenes and goal branches. Aoede narrates 15 clips, and Charon asks the three questions. All speech plays at 1.23x with pitch preserved. Voiceover Studio used the 1.20x directed generation setting. The opening chime stays at its original rate. The family maturity exchange plays both voices before Continue unlocks. Closing graphics follow the revised audio.
+
+The opening now starts with the first narration clip as soon as the opening assets are ready. The chime and lead-in wait were removed. Narration remains at 1.23x.
