@@ -1,5 +1,9 @@
 # Invincible reusable map assets
 
+## Panipat battle poses — v1
+
+[Native asset library](panipat-battle-poses-v1.json): a matching transparent artistic reconstruction of Hemu unconscious in Hawai's howdah, with the elephant still upright. Use for a non-graphic command-loss explanation, retaining the full battle formation. [Provenance](artwork/hemu-hawai-unconscious.provenance.json) records the AI edit and supplied reference; likeness and equipment are illustrative.
+
 ## Young Mughal portraits — v1
 
 [Native asset library](young-mughal-portraits-v1.json): a transparent, left-facing artistic reconstruction of Akbar at approximately thirteen. It is AI-generated, not a verified likeness. [Provenance and prompt](artwork/akbar-age13-facing-left.provenance.json) accompany the original RGBA PNG. Import through the existing Map Editor asset-library controls; keep portraits free of decorative PNG borders.
