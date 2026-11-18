@@ -8,7 +8,7 @@ import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111705';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111707';
 import {createStudioRenderer} from './adapters.js?v=2026111712';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111604';
-import {mountAssembly} from './assembly.js?v=2026111710';
+import {mountAssembly} from './assembly.js?v=2026111812';
 import {encodeStudioVideo} from './export.js?v=2026111209';
 import {openStudioStore} from './storage.js';
 import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111705';
@@ -387,7 +387,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   preparing=(async()=>{
    const m=validateManifest(state.manifest,{mapAssets:mapAssets()}),b=validateBrand(brand(),new Set(m.assets.filter(a=>a.kind!=='glb').map(a=>a.id)));
    await loadPreviewAudio(m);
-   timeline=compileTimeline(m,b,audioBuffer?.duration||0);const size=exportDimensions(m.aspectRatio);canvas.width=size.width;canvas.height=size.height;
+   timeline=compileTimeline(m,b,audioBuffer?.duration||0);const size=exportDimensions(m.aspectRatio);canvas.style.aspectRatio=`${size.width} / ${size.height}`;canvas.width=size.width;canvas.height=size.height;
    const lead=timeline.audioClips[0]&&m.audioClips?.[0]?timeline.audioClips[0].startSeconds-m.audioClips[0].startSeconds:0;audioTracks=audioTracks.map(t=>({...t,startSeconds:t.startSeconds+lead}));time=Math.min(time,timeline.duration);
    const next=await createStudioRenderer(canvas,m,timeline,b,{getFile,mapAssets:mapAssets(),signal:controller?.signal||lifecycle.signal});
    if(disposed){next.destroy();return;}renderer=next;

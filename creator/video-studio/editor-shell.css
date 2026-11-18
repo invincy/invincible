@@ -34,6 +34,7 @@
  border: 1px solid var(--editor-line);
  border-radius: 16px;
  background: #0b121bd9 !important;
+ container: studio-editor / inline-size;
 }
 .vs-human-editor .vs-studio-header { gap: 16px; align-items: center; }
 .vs-human-editor .vs-studio-header h2 { font-size: 22px; margin: 0 0 8px; }
@@ -80,8 +81,25 @@
  padding: 0; max-height: none; overflow: visible; background: transparent;
 }
 .vs-human-editor .vs-scene-list { max-height: 35vh; margin: 14px 0; }
-.vs-human-editor .vs-scene-list button { text-align: left; padding: 12px; }
-.vs-human-editor .vs-scene-list small { font-size: 12px; }
+.vs-human-editor .vs-scene-list > button {
+ display: grid; grid-template-columns: 42px minmax(0,1fr); align-items: start;
+ gap: 10px; padding: 11px; text-align: left;
+}
+.vs-human-editor .vs-scene-code {
+ display: grid; place-items: center; width: 40px; min-height: 32px; margin-top: 1px;
+ border: 1px solid #5f8790; border-radius: 8px; color: #a5eee4;
+ background: #16313d; font: 700 12px/1 Roboto,system-ui,sans-serif; font-variant-numeric: tabular-nums;
+}
+.vs-human-editor .vs-scene-copy { display: grid; gap: 6px; min-width: 0; text-align: left; }
+.vs-human-editor .vs-scene-copy strong {
+ display: -webkit-box; min-width: 0; overflow: hidden; overflow-wrap: anywhere;
+ -webkit-box-orient: vertical; -webkit-line-clamp: 3; text-align: left;
+ font-size: 13px; line-height: 1.4; font-weight: 600;
+}
+.vs-human-editor .vs-scene-copy small {
+ display: block; min-width: 0; overflow: hidden; color: #a9bfca; font-size: 12px;
+ line-height: 1.35; white-space: nowrap; text-overflow: ellipsis; text-align: left;
+}
 .vs-human-editor :is(.vs-add-tools,.vs-scene-settings) > summary { min-height: 44px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
 .project-page .vs-human-editor:not(.vs-focusing) .vs-preview {
  grid-column: 2; grid-row: 1; height: 48vh; min-height: 280px;
@@ -115,6 +133,14 @@
 .vs-human-editor .vs-object-toolstrip > details > summary { padding: 12px; font-size: 14px; }
 .vs-human-editor .vs-object-toolstrip > details[open] { flex-basis: 100%; padding: 0 12px 12px; }
 .vs-human-editor[data-mobile-panel=settings] .vs-tool-menu:has(.vs-advanced) { display: block; }
+
+/* Size the frame from the chosen ratio before its backing resolution changes. */
+.vs-human-editor .vs-preview { contain: layout paint; }
+.vs-human-editor .vs-preview canvas {
+ width: auto; height: auto; aspect-ratio: 9 / 16; max-width: 100%;
+ max-height: min(48dvh,620px); object-fit: contain;
+}
+
 @media(max-width:900px) {
  .project-page .vs-human-editor:not(.vs-focusing) .vs-layout,
  .project-page .vs-human-editor:not(.vs-focusing) .vs-layout:has(.vs-inspector) { grid-template-columns: 72px minmax(0,1fr) 210px; gap: 0 10px; }
@@ -137,4 +163,23 @@
  .vs-human-editor[data-mobile-panel=scenes] .vs-editing-timeline,
  .vs-human-editor[data-mobile-panel=settings] .vs-editing-timeline { display: none; }
  .vs-human-editor .vs-tool-content .vs-style-cards { grid-template-columns: 1fr; }
+}
+
+@container studio-editor (max-width: 1180px) {
+ .project-page .vs-human-editor:not(.vs-focusing) .vs-layout,
+ .project-page .vs-human-editor:not(.vs-focusing) .vs-layout:has(.vs-inspector) {
+  grid-template-columns: 68px minmax(0,1fr) minmax(240px,270px); gap: 0 12px;
+ }
+ .project-page .vs-human-editor:not(.vs-focusing) .vs-preview { height: min(48dvh,620px); }
+}
+@container studio-editor (max-width: 880px) {
+ .project-page .vs-human-editor:not(.vs-focusing) .vs-layout,
+ .project-page .vs-human-editor:not(.vs-focusing) .vs-layout:has(.vs-inspector) {
+  grid-template-columns: 60px minmax(0,1fr); grid-template-rows: auto auto;
+ }
+ .project-page .vs-human-editor:not(.vs-focusing) .vs-preview { grid-column: 2; grid-row: 1; height: min(52dvh,620px); }
+ .project-page .vs-human-editor:not(.vs-focusing) .vs-assembly {
+  grid-column: 2; grid-row: 2; max-height: 38dvh; min-width: 0;
+ }
+ .vs-human-editor .vs-scene-list { max-height: 30dvh; }
 }

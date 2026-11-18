@@ -6,6 +6,12 @@ Added Sync beside Save, using the existing account/project-scoped cloud draft lo
 
 The 45 focused agent/video/composition unit checks, UI design checks and site-reference checks passed. The 13-map agent browser check now verifies external draft updates, retained scene/playhead and preservation of unsaved edits. The single-flow browser check passed, including fixture audio MP4 export, revision conflicts and account isolation. Composition browser checks passed, including native maps, battlefield layers and overlapping audio encoding. The Studio UI/import/playback check passed with its encoding assertions deliberately skipped; export is covered by the other two checks. These fixtures do not establish signed-in production Firebase permissions. Panipat Scene 1's crossed corner swords were saved separately through the plugin at revision 202; no production video was downloaded or exported for this change.
 
+## Motion Studio scene identity and persistent resizing — November 18, 2026
+
+Scene cards keep a fixed C1/C2 badge beside left-aligned, wrapped scene text, so long narration cannot hide the clip number. The canvas receives its selected aspect ratio before its backing resolution changes, and the editor uses width-based breakpoints for narrow layouts. Object resize handles and size buttons now apply a clip-wide multiplier to the saved base scale and existing scale keyframes, preserving animated motion without shrinking back after the playhead moves. These edits use the canonical video manifest and existing undo/save flow; no project scenes or content were changed here.
+
+The changed files received a focused diff and whitespace review. Automated tests and browser verification were not run for this pass.
+
 ## Motion Studio preview stability — November 17, 2026
 
 Motion Studio now composes interactive frames on a hidden 2D canvas and presents each only after its map, video, effects and overlays finish. This keeps the previous complete frame visible while asynchronous work runs. Playback draws at most 30 frames per second, matching the MP4 timeline. Export still draws directly to the full-resolution encoder canvas and uses the same renderer; the preview staging copy is not part of MP4 encoding. Renderer draws are serialized so a slow map frame cannot overwrite a later frame.
