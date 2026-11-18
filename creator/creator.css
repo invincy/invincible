@@ -120,12 +120,6 @@ body.creator-page{display:flex;min-height:0;flex-direction:column}
 .creator-page>main#app:has(.pipeline-details[open]) .creator-home{display:none}
 .creator-page .pipeline-details[open]{min-height:0;flex:1;overflow:auto}
 
-@media(max-width:900px){
- .creator-page .creator-home{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:100%;gap:12px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-inline:contain}
- .creator-page .creator-projects,.creator-page .creator-toolbox{order:0;scroll-snap-align:start;scroll-snap-stop:always}
- .creator-page .creator-toolbox{order:-1}
- .creator-page .tool-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(70px,1fr))}
-}
 @media(max-height:760px){
  .creator-page .studio-header{padding-block:10px 8px}
  .creator-page .studio-header p{display:none}
@@ -345,4 +339,54 @@ body.creator-page.studio-ui::before { display: none; }
 @media (max-width: 700px) {
   .creator-page .studio-header { padding-inline: 16px; }
   .creator-page .creator-projects .creator-section-head { align-items: flex-start; }
+}
+
+@media (max-width: 900px) {
+  .creator-page:not(.motion-studio-home) > main#app:not([hidden]) {
+    overflow-y: auto;
+  }
+  .creator-page:not(.motion-studio-home) .creator-home {
+    flex: none;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .creator-page:not(.motion-studio-home) .creator-home > :is(.creator-projects, .creator-toolbox) {
+    height: auto;
+    padding: 12px;
+  }
+  .creator-page:not(.motion-studio-home) .project-grid {
+    flex: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+  .creator-page:not(.motion-studio-home) .creator-home .creator-section-head {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .creator-page:not(.motion-studio-home) .creator-section-head .search { width: min(330px, 62%); }
+  .creator-page .creator-toolbox .tool-grid {
+    flex: none;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: auto;
+    gap: 8px;
+    padding: 0;
+    overflow: visible;
+  }
+  .creator-page .creator-toolbox .tool-grid > :is(a, button) {
+    grid-template-columns: 22px minmax(0, 1fr);
+    min-height: 52px;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid var(--creator-border);
+    border-radius: 10px;
+    background: var(--creator-surface);
+  }
+  .creator-page .tool-grid .tool-icon,
+  .creator-page .tool-grid .tool-icon svg { width: 22px; height: 22px; }
+  .creator-page .tool-grid .tool-copy > strong { font-size: 14px; }
+  .creator-page .tool-grid .tool-copy > span,
+  .creator-page .tool-grid > * > i { display: none; }
 }

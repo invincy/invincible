@@ -9,7 +9,7 @@ const fixture=[
 "export async function getDoc(ref){return snapshot(ref)}export async function getDocs(ref){return snapshot(ref)}",
 "export function onSnapshot(ref,...args){const callback=args.find(item=>typeof item==='function');const listener=()=>callback(snapshot(ref));listeners.push(listener);queueMicrotask(listener);return()=>listeners=listeners.filter(item=>item!==listener)}",
 "export async function runTransaction(db,fn){window.writes=(window.writes||0)+1;await new Promise(resolve=>setTimeout(resolve,window.saveDelay||20));if(window.failSave)throw Object.assign(Error('denied'),{code:'permission-denied'});const reads=new Map(),writes=[];const result=await fn({async get(ref){const snap=snapshot(ref);reads.set(ref,snap.exists()?JSON.stringify(snap.data()):null);return snap;},set(ref,value){writes.push([ref,value]);}});const all=read();for(const [ref,expected] of reads){const current=Object.prototype.hasOwnProperty.call(all,ref)?JSON.stringify(all[ref]):null;if(current!==expected)throw Object.assign(Error('aborted'),{code:'aborted'});}for(const [ref,value] of writes)all[ref]=value;localStorage.setItem('test.creator',JSON.stringify(all));listeners.forEach(fn=>fn());return result;}export async function setDoc(ref,value){window.writes=(window.writes||0)+1;await new Promise(resolve=>setTimeout(resolve,window.saveDelay||20));if(window.failSave)throw Error('denied');const all=read();all[ref]={...all[ref],...value};localStorage.setItem('test.creator',JSON.stringify(all));listeners.forEach(fn=>fn())}export async function deleteDoc(ref){const all=read();delete all[ref];localStorage.setItem('test.creator',JSON.stringify(all));listeners.forEach(fn=>fn())}"
- ,"export const orderBy=()=>({}),limit=()=>({}),startAfter=()=>({});"
+ ,"export const orderBy=()=>({}),limit=()=>({}),startAfter=()=>({});export {setDoc as updateDoc};"
 ].join('\n');
 const server=http.createServer((req,res)=>{
  const url=new URL(req.url,'http://localhost').pathname;
@@ -248,7 +248,23 @@ const server=http.createServer((req,res)=>{
    const homeBounds=await page.evaluate(()=>({pageHeight:document.documentElement.scrollHeight,pageWidth:document.documentElement.scrollWidth,viewportHeight:innerHeight,viewportWidth:innerWidth,home:(()=>{const box=document.querySelector('.creator-home').getBoundingClientRect();return{top:box.top,bottom:box.bottom,height:box.height}})(),panels:[...document.querySelectorAll('.creator-home>*')].map(node=>{const box=node.getBoundingClientRect();return{top:box.top,bottom:box.bottom,height:box.height,scrollHeight:node.scrollHeight}})}));
    assert.ok(homeBounds.pageWidth<=homeBounds.viewportWidth+1,'Creator home has no horizontal page overflow at '+width+'x'+height+': '+JSON.stringify(homeBounds));
    assert.ok(homeBounds.pageHeight<=homeBounds.viewportHeight+1,'Creator home has no vertical page overflow at '+width+'x'+height+': '+JSON.stringify(homeBounds));
-   assert.ok(homeBounds.home.bottom<=homeBounds.viewportHeight+1&&homeBounds.panels.every(panel=>panel.bottom<=homeBounds.viewportHeight+1),'Creator panels fit the current window at '+width+'x'+height+': '+JSON.stringify(homeBounds));
+   if(width>900){
+    assert.ok(homeBounds.home.bottom<=homeBounds.viewportHeight+1&&homeBounds.panels.every(panel=>panel.bottom<=homeBounds.viewportHeight+1),'Desktop Creator panels fit the current window at '+width+'x'+height+': '+JSON.stringify(homeBounds));
+   }else{
+    const tiles=await page.locator('.tool-grid>*').evaluateAll(nodes=>nodes.map(node=>{
+     const {x,y,width,height}=node.getBoundingClientRect();
+     return{x,y,width,height,description:getComputedStyle(node.querySelector('.tool-copy>span')).display};
+    }));
+    assert.equal(new Set(tiles.map(tile=>tile.x)).size,2,'Tools use two columns');
+    assert.equal(new Set(tiles.map(tile=>tile.y)).size,3,'Tools use three rows');
+    assert.ok(tiles.every(tile=>Math.min(tile.width,tile.height)>=48&&tile.description==='none'),'Tool shortcuts keep comfortable tap targets and show compact labels');
+    const projects=await page.locator('#projectsHeading').boundingBox();
+    assert.ok(projects.y>Math.max(...tiles.map(tile=>tile.y+tile.height))&&projects.y+projects.height<height-50,'Projects are visible below the tools on first load');
+    if(width===390){
+     const open=await page.locator('#projectGrid .open-project').first().boundingBox();
+     assert.ok(open.y+open.height<height-50,'The first project can be opened without scrolling on a typical phone');
+    }
+   }
    assert.equal(await page.locator('#addContent').isVisible(),true);
    assert.equal(await page.locator('.tool-grid').isVisible(),true);
    if(width===390)await page.screenshot({path:path.join(root,'.test-output/creator-home-390.png'),fullPage:true});

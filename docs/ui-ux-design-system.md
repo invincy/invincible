@@ -87,6 +87,11 @@ one plain heading per section, matching translucent borderless panels over
 the theme backdrop, and readable flat rows with unboxed icons. Page headers
 need the page title and primary action. Surface sync problems when they
 require attention and keep routine success messages out of the visual layout.
+At widths up to 900 px, Creator Studio home uses a single vertical scroll area.
+Six icon-and-name shortcuts form three rows of two above Projects, with the
+publishing pipeline and filters below the project list.
+The landing-page browser check covers the layout from 320 to 1440 px and
+checks that the first project’s Open button is visible at 390 × 844 px.
 
 ### Motion Studio desktop
 
