@@ -4,6 +4,7 @@ import {resolveMapAsset} from './map-assets-client.js?v=2026111002';
 import {icons,layerActive,layerStart,layerAlpha,transformedCorners} from './map-editor-model.js?v=2026111603';
 import {routeAt,timeOf,lightingFrame} from './history-model.js?v=2026111603';
 import {resolveOverlayPolicy} from './map-overlay-presets.js?v=2026110903';
+import {tintedArtworkUrl} from './image-tint.js?v=2026111813';
 // Each geographic object gets its own style layer, in the saved bottom-to-top order.
 export function createVisualRenderer(map,project,onError,initialPolicy=null){
  let spec=null,policy=resolveOverlayPolicy(project,null,initialPolicy),revision=0,owned=[],images=[],disposed=false,assetErrors=[];const models=new Map(),geometryCache=new Map();
@@ -24,7 +25,7 @@ export function createVisualRenderer(map,project,onError,initialPolicy=null){
      const {createModelLayer}=await import('./vendor/map-model.mjs');if(disposed||rev!==revision)return;
      const asset=spec.visual.assets.find(a=>a.id===l.assetId),model=createModelLayer(key,l,await resolveMapAsset(asset),message=>{assetErrors.push(message);onError(message);});if(disposed||rev!==revision)return;models.set(key,model);map.addLayer(model);continue;
     }
-    if(l.kind==='image'){const a=spec.visual.assets.find(a=>a.id===l.assetId),url=await resolveMapAsset(a);if(disposed||rev!==revision)return;map.addSource(key,{type:'image',url,coordinates:transformedCorners(l)});map.addLayer({id:key,type:'raster',source:key,paint:{'raster-opacity':l.opacity,'raster-fade-duration':0}});continue;}
+    if(l.kind==='image'){const a=spec.visual.assets.find(a=>a.id===l.assetId),url=await tintedArtworkUrl(await resolveMapAsset(a),l.tintColor);if(disposed||rev!==revision)return;map.addSource(key,{type:'image',url,coordinates:transformedCorners(l)});map.addLayer({id:key,type:'raster',source:key,paint:{'raster-opacity':l.opacity,'raster-fade-duration':0,'raster-opacity-transition':{duration:0}}});continue;}
     map.addSource(key,{type:'geojson',data:{type:'FeatureCollection',features:[]}});
     if(l.kind==='feature'||l.kind==='route'){
      const f=spec.features.features.find(f=>f.properties.id===l.ref),line=l.kind==='route'||f?.geometry.type==='LineString';

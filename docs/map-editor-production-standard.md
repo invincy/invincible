@@ -111,6 +111,8 @@ Inventory actual PNG/GLB files before placement: dimensions, alpha, crop, facing
 
 Register images consistently by asset ID and resolved URL. Preload required artwork and fail clearly if it cannot load. Preserve aspect ratio, full intended subject and clean alpha. A repaired/generated artistic likeness must not be described as a verified historical portrait.
 
+Explicit image `tintColor` can tint faction artwork in the existing Studio and native Map Editor renderers. Missing/white colour retains the source; a non-white colour applies a shaded tint while preserving the original alpha, footprint and asset reference. Studio's image inspector calls this control **Tint**. Treat these colours as an editorial identification aid, not evidence of historical uniform colours. The same cached tint is used for preview and export; native raster opacity transitions are disabled so fades follow timeline time.
+
 For armies, declare whether a scene is a **schematic comparison** or a **geographic deployment**. A left/right comparison does not establish west/east historical positions. Geographic deployments follow source-supported sectors and directions; do not invent exact troop coordinates or unit-type percentages.
 
 Use a common personnel scale within each comparison, retain ranges/uncertainty, compare like-for-like forces and keep equipment separate from personnel. If qualifications are needed to avoid a misleading comparison but the user has prohibited such screen text, redesign the visual instead of hiding the qualification. Animate assembly, route following, deployment and settling deliberately; do not use endless formation oscillation as a substitute for tactical storytelling.
@@ -169,3 +171,5 @@ Antigravity rule discovery/activation format was checked against its [official R
 Every future history film must include date-appropriate kingdom/polity overlays for the powers relevant to the narration. Plan their reveal, terrain transparency, boundary treatment and camera framing as part of the map sequence. Use sourced historical extents with dates and precision notes; label schematic influence/extent in metadata and never present it as a surveyed frontier. Do not substitute modern borders or invent exact boundaries. Current user instructions remain authoritative.
 
 The current Panipat geography v7 revision is explicitly unchanged in this respect: the user asked to save this rule for future videos, not add kingdom overlays to that export.
+
+Image tint is opt-in through `tintColor`; legacy image `color` remains inert so older saved artwork keeps its appearance.

@@ -5,10 +5,10 @@ import {resolveMapAsset,uploadMapAsset} from './map-assets-client.js?v=202611100
 import {cameraPreset,surfacePosition,locationVisible} from './map-globe.js';
 import {validateMap,sceneTimeline,durationOf,productionId,mapFrame} from './history-model.js?v=2026111603';
 import {visualMap,icons,uid,imageCorners,moveLayer,scenePackage,appendScenePackage,assetLibrary,importAssetLibrary} from './map-editor-model.js?v=2026111603';
-import {createHistoryPlayer,downloadBlob,sizeMapFrame} from './history-player.js?v=2026111603';
+import {createHistoryPlayer,downloadBlob,sizeMapFrame} from './history-player.js?v=2026111813';
 import {mapStyles,defaultTerrain} from './map-style-library.js?v=2026111506';
 import {readAnimation,compileAnimation,animationBrief} from './map-animation-import.js?v=2026111603';
-import {mapLibraryPanel,instructionPanel,mapExportPanel,handleMapExport} from './map-editor-panels.js?v=2026111002';
+import {mapLibraryPanel,instructionPanel,mapExportPanel,handleMapExport} from './map-editor-panels.js?v=2026111813';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const button=(action,text)=>`<button type="button" data-edit="${action}">${text}</button>`;
 const number=(label,key,value,min,max,step='any')=>`<label>${label}<input type="number" data-prop="${key}" value="${esc(typeof value==='number'?Number(value.toFixed(6)):value)}" min="${min}" max="${max}" step="${step}"></label>`;

@@ -1,4 +1,5 @@
 import {DEFAULT_PRESENTATION} from '../map-defaults.js?v=2026110903';
+import {tintedArtwork} from '../image-tint.js?v=2026111813';
 
 const deepFreeze=value=>{if(value&&typeof value==='object'){Object.freeze(value);for(const child of Object.values(value))deepFreeze(child);}return value;};
 const clone=value=>structuredClone(value);
@@ -93,7 +94,7 @@ export function drawStyledLayer(ctx,layer,pose,style,images,drawBase){
  }
  if(layer.type==='image'){
   const image=images.get(layer.assetId);if(!image){ctx.restore();throw Error('Overlay artwork did not load.');}const treatment=t.image,scale=Math.min(w/image.width,h/image.height),dw=image.width*scale,dh=image.height*scale;if(treatment.kind==='grounded-portrait'){ctx.save();ctx.globalAlpha*=treatment.groundOpacity;ctx.fillStyle=t.palette.shadow;ctx.filter=`blur(${Math.max(1,treatment.shadowBlur*.5*unit)}px)`;ctx.beginPath();ctx.ellipse(0,dh*.42,dw*.42,Math.max(5,dh*.055),0,0,Math.PI*2);ctx.fill();ctx.restore();}
-  ctx.save();ctx.shadowColor=rgba(t.palette.shadow,.72);ctx.shadowBlur=treatment.shadowBlur*unit;roundRect(ctx,-dw/2,-dh/2,dw,dh,treatment.radius*unit);ctx.clip();ctx.drawImage(image,-dw/2,-dh/2,dw,dh);ctx.restore();if(treatment.borderWidth){roundRect(ctx,-dw/2,-dh/2,dw,dh,treatment.radius*unit);ctx.strokeStyle=treatment.borderColor;ctx.lineWidth=treatment.borderWidth*unit;ctx.stroke();}ctx.restore();return;
+  ctx.save();ctx.shadowColor=rgba(t.palette.shadow,.72);ctx.shadowBlur=treatment.shadowBlur*unit;roundRect(ctx,-dw/2,-dh/2,dw,dh,treatment.radius*unit);ctx.clip();ctx.drawImage(tintedArtwork(image,layer.tintColor),-dw/2,-dh/2,dw,dh);ctx.restore();if(treatment.borderWidth){roundRect(ctx,-dw/2,-dh/2,dw,dh,treatment.radius*unit);ctx.strokeStyle=treatment.borderColor;ctx.lineWidth=treatment.borderWidth*unit;ctx.stroke();}ctx.restore();return;
  }
  ctx.restore();drawBase();
 }

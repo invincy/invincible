@@ -1,5 +1,13 @@
 # Cleanup review — 2026-10-03
 
+## Artwork faction tints — November 18, 2026
+
+The optional image `tintColor` applies a shaded tint in Studio's styled/legacy image paths and native Map Editor images. White/missing colour preserves the original bitmap. The shared helper retains alpha and shading, caches variants without modifying original assets, and keeps preview/export source rendering consistent. The image inspector exposes this as Tint. Legacy image `color` remains inert. Native raster opacity uses zero transition duration so absolute-time fades do not depend on wall-clock CSS transitions. Versioned native module imports and entry points were refreshed together.
+
+The tint unit and browser tests cover transparent pixels, preserved source bytes, shade detail, cache reuse, identical Studio/native pixels and unchanged geographic corners. The associated Panipat finishing notes record the film-specific mapping, source caveats and continuous-review limits; those directions are project data, not global defaults.
+
+Verification: 65 focused map/animation/style/video/composition/tint unit checks passed, alongside real-pixel tint parity and map, animation, history, composition, single-flow and agent browser checks. Native map/audio and mixed-engine fixture MP4 encoding passed. Site references passed (755 files). The broader Studio browser suite still fails its missing-image placeholder preview/export pixel comparison: the identical failure was reproduced against the unmodified HEAD sources (7,147 differing channels), before decoding any artwork. This is a pre-existing fixture failure, not a tint regression. These fixture exports do not certify a production film export or a continuous voiceover playback review.
+
 ## Motion Studio in-place Sync — November 18, 2026
 
 Added Sync beside Save, using the existing account/project-scoped cloud draft loader and validation. A newer clean draft reloads without navigating away, preserving the selected scene and playhead. Unsaved local changes, pending review and focused editors retain the existing cloud-conflict protection. Versioned imports carry the new action through the project entry point.
@@ -1402,3 +1410,5 @@ locator was corrected to click the visible summary before finding its button.
 Broader CI failures include unchanged TTS layout and LIC CRM color assertions,
 a stale checked-in V2 bundle, and the universal test's missing Firebase Functions
 fixture exports (now repaired). These are not evidence of production permissions.
+
+Image tint is opt-in through `tintColor`; legacy image `color` remains inert so older saved artwork keeps its appearance.

@@ -1,5 +1,6 @@
 // Declarative Canvas scenes share the Studio compositor and clock with maps.
-import {drawStyledLayer} from './style-presets.js?v=2026111707';
+import {drawStyledLayer} from './style-presets.js?v=2026111813';
+import {tintedArtwork} from '../image-tint.js?v=2026111813';
 export const CANVAS_FONTS=['system-ui','Invincible Sans','Invincible Hindi','serif','monospace'];
 export const BACKGROUND_FIELDS=['background','backgroundStyle','gridColor','gridSpacing','backgroundAssetId','backgroundFit'];
 export function validateCanvas(data,assets){
@@ -52,6 +53,6 @@ export function drawCanvasLayer(ctx,l,brand,images,style=null){
  if(l.type==='rectangle')ctx.fillRect(-w/2,-h/2,w,h);
  if(l.type==='circle'){ctx.beginPath();ctx.ellipse(0,0,w/2,h/2,0,0,Math.PI*2);ctx.fill();}
  if(l.type==='arrow'||l.type==='line'){ctx.lineWidth=(l.lineWidth??5)*unit;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-w/2,0);ctx.lineTo(w/2,0);ctx.stroke();if(l.type==='arrow'){const tip=Math.min(w/3,24*unit);ctx.beginPath();ctx.moveTo(w/2,0);ctx.lineTo(w/2-tip,-tip*.45);ctx.lineTo(w/2-tip,tip*.45);ctx.closePath();ctx.fill();}}
- if(l.type==='image'){const image=images.get(l.assetId);if(!image)throw Error('Overlay artwork did not load.');const scale=Math.min(w/image.width,h/image.height);ctx.drawImage(image,-image.width*scale/2,-image.height*scale/2,image.width*scale,image.height*scale);}
+ if(l.type==='image'){const image=images.get(l.assetId);if(!image)throw Error('Overlay artwork did not load.');const scale=Math.min(w/image.width,h/image.height);ctx.drawImage(tintedArtwork(image,l.tintColor),-image.width*scale/2,-image.height*scale/2,image.width*scale,image.height*scale);}
  ctx.restore();
 }

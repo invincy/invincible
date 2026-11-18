@@ -1,13 +1,13 @@
 import {BUILTIN_MODELS, CAMERA_FIELDS, MODEL_FIELDS, MAX_MODELS, modelMotion, trainStage} from './three-scene.js';
 import {DEFAULT_PARALLAX,trainTemplate} from './parallax.js';
-import {mountObjectEditor} from './object-editor.js?v=2026111812';
+import {mountObjectEditor} from './object-editor.js?v=2026111813';
 import {createDefaultMap} from '../map-defaults.js?v=2026110903';
-import {appendProjectMaps,arrangeScenes,upgradeVideo,resizeScene} from './composition.js?v=2026111705';
+import {appendProjectMaps,arrangeScenes,upgradeVideo,resizeScene} from './composition.js?v=2026111813';
 import {emptyBattlefield} from './battlefield.js?v=2026111014';
 import {decodeVoiceover} from './audio.js?v=2026111604';
-import {validateManifest} from './model.js?v=2026111707';
-import {mapDraft} from './adapters.js?v=2026111707';
-import {mountMapEditor} from '../map-editor.js?v=2026111603';
+import {validateManifest} from './model.js?v=2026111813';
+import {mapDraft} from './adapters.js?v=2026111813';
+import {mountMapEditor} from '../map-editor.js?v=2026111813';
 import {safeRelativeAssetPath} from '../map-editor-model.js?v=2026111603';
 import {mountBattlefieldEditor} from './battlefield-editor.js?v=2026111014';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

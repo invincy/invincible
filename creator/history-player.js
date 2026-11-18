@@ -4,7 +4,7 @@ import {drawDefaultLabels,drawDefaultCredits} from './map-labels.js?v=2026111603
 import {locationVisible} from './map-globe.js';
 import {CanvasHistoricalMap} from './history-canvas.js';
 import {mapFrame,durationOf,sceneTimeline} from './history-model.js?v=2026111603';
-import {createVisualRenderer} from './map-editor-renderer.js?v=2026111603';
+import {createVisualRenderer} from './map-editor-renderer.js?v=2026111813';
 import {baseStyle,styleFor} from './map-style-library.js?v=2026111506';
 import {layerAlpha} from './map-editor-model.js?v=2026111603';
 import {exportDimensions,encodeMapVideo} from './map-video-export.js';
