@@ -1,8 +1,8 @@
 import {initializeMapProject} from './map-defaults.js?v=2026110903';
 import {attachImportedGroups} from './production-model.js?v=2026111002';
-import{createProductionWorkbench}from'./production-workbench.js?v=2026111813';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026111910';
 import{createMediaClient,createStartingVoiceoverManifest,inspectMedia}from'./media-library.js?v=2026111603';
-import{PRESETS}from'./video-studio/model.js?v=2026111813';
+import{PRESETS}from'./video-studio/model.js?v=2026111910';
 import{db,observeAuth,storageError}from'../shared/firebase-client.js';
 import{collection,deleteDoc,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 

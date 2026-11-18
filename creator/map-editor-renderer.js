@@ -1,8 +1,8 @@
-import {presentationAt} from './map-documentary.js?v=2026111002';
+import {presentationAt} from './map-documentary.js?v=2026111910';
 import {locationVisible} from './map-globe.js';
 import {resolveMapAsset} from './map-assets-client.js?v=2026111002';
-import {icons,layerActive,layerStart,layerAlpha,transformedCorners} from './map-editor-model.js?v=2026111603';
-import {routeAt,timeOf,lightingFrame} from './history-model.js?v=2026111603';
+import {icons,layerActive,layerStart,layerAlpha,transformedCorners} from './map-editor-model.js?v=2026111910';
+import {routeAt,timeOf,lightingFrame} from './history-model.js?v=2026111910';
 import {resolveOverlayPolicy} from './map-overlay-presets.js?v=2026110903';
 import {tintedArtworkUrl} from './image-tint.js?v=2026111813';
 // Each geographic object gets its own style layer, in the saved bottom-to-top order.

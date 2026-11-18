@@ -1,5 +1,11 @@
 # Cleanup review — 2026-10-03
 
+## Location emblems — November 19, 2026
+
+Presentation-based labels/events can opt into `markerStyle: "city"` or `"battle"`: a vector fort or crossed swords at the true geographic anchor. Missing/`dot` keeps the saved dot treatment and placement. The classic and documentary compositors share the emblem drawing helper and reserve more space beside it. The native inspector exposes Location marker when a presentation is active; animation import and scene packaging preserve the choice. No font glyph or external asset is required. Project choreography remains in the saved project, not global defaults.
+
+Verification: 76 focused map/defaults/documentary/animation/style/Studio/composition unit checks plus three marker checks passed. Browser pixel checks cover classic/documentary output, unchanged legacy dots, deterministic replay, distinct city/battle artwork and label clearance. Native Map Editor, history workspace, map animation and mixed-engine Studio composition browser checks passed, including fixture native-map/audio MP4 encoding. Site references and whitespace checks passed. The documentary-terrain browser fixture cannot start: its Firebase mock omits `firebaseApp`, imported by the unchanged `creator/tts-api.js`; a diagnostic run recorded that module error before the `.wb-more` timeout. That fixture does not establish current documentary MP4 verification. Representative production frames were reviewed through the actual native compositor; no production MP4/audio playback claim is made from fixture exports.
+
 ## Artwork faction tints — November 18, 2026
 
 The optional image `tintColor` applies a shaded tint in Studio's styled/legacy image paths and native Map Editor images. White/missing colour preserves the original bitmap. The shared helper retains alpha and shading, caches variants without modifying original assets, and keeps preview/export source rendering consistent. The image inspector exposes this as Tint. Legacy image `color` remains inert. Native raster opacity uses zero transition duration so absolute-time fades do not depend on wall-clock CSS transitions. Versioned native module imports and entry points were refreshed together.

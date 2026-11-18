@@ -80,6 +80,8 @@ Do not show every layer continuously. Reveal the feature when its meaning is int
 
 ## 5. Large typography and polished cards
 
+Presentation-based location labels/events support optional `markerStyle: "city"` (vector fort) and `"battle"` (crossed swords) alongside their location cards. Use the native Location marker inspector or animation layer metadata. These are illustrative place emblems, not verified buildings or exact battlefield footprints. They remain at the saved geographic anchor and share preview/export drawing. Existing missing/`dot` styles retain their prior appearance. Select markers explicitly for the current project; do not infer them globally from place names.
+
 Default film text is **essential geographic labels only**. Add short opening titles, years, statistics or other text only when the current user brief authorizes them. Do not automatically turn narration into captions, paragraphs, fact cards, equipment notes, debugging labels or editorial footers. Required provider attribution remains.
 
 Use one coherent type family with good shaping for the requested language. At a 1080-pixel **short edge** (`min(width,height)`), start with:

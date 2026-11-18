@@ -1,6 +1,6 @@
 import {createDefaultMap,DEFAULT_MAP_SETTINGS} from './map-defaults.js?v=2026110903';
-import {validateMap,sceneTimeline,productionId} from './history-model.js?v=2026111603';
-import {visualMap,icons} from './map-editor-model.js?v=2026111603';
+import {validateMap,sceneTimeline,productionId} from './history-model.js?v=2026111910';
+import {visualMap,icons} from './map-editor-model.js?v=2026111910';
 import {mapStyles,defaultTerrain,validateBasemap} from './map-style-library.js';
 import {validateOverlayConfig} from './map-overlay-presets.js?v=2026110903';
 
@@ -115,7 +115,7 @@ export function compileAnimation(project,input,{geometryReviewed=false,bindScene
    map.visual.layers.push({...layer,kind:'feature',ref});
   }else{
    const kind=l.type==='symbol'?'icon':l.type;
-   map.visual.layers.push({...layer,kind,classification:'illustrative',...Object.fromEntries(['fontSize','role','labelStyle','alignment','priority'].filter(k=>l[k]!==undefined).map(k=>[k,l[k]])),position:l.position,coordinates:l.coordinates,icon:l.icon,scale:l.scale??1,rotation:l.rotation??0,altitude:l.altitude??0,corners:l.corners,assetId:assets.get(l.assetId)});
+   map.visual.layers.push({...layer,kind,classification:'illustrative',...Object.fromEntries(['fontSize','role','labelStyle','alignment','priority','markerStyle'].filter(k=>l[k]!==undefined).map(k=>[k,l[k]])),position:l.position,coordinates:l.coordinates,icon:l.icon,scale:l.scale??1,rotation:l.rotation??0,altitude:l.altitude??0,corners:l.corners,assetId:assets.get(l.assetId)});
   }
  }
  if(plan.overlays){if(!Array.isArray(plan.overlays))throw Error('Information overlays must be a list.');map.visual.overlays??=[];for(const o of plan.overlays){if(!Number.isFinite(o.start)||!Number.isFinite(o.end)||o.start<0||o.end>plan.duration||o.end-o.start<.1)throw Error('Overlay timing must fit the animation.');const {start,end,...info}=o;map.visual.overlays.push({...info,id:productionId(),...anchor(start),duration:end-start});}}
