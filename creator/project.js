@@ -1,4 +1,4 @@
-import {mountAgentPanel} from './agent-panel.js?v=2026111711';
+import {mountAgentPanel} from './agent-panel.js?v=2026112201';
 import{makeScene}from'./storyboard-model.js?v=3';
 import{createProductionWorkbench}from'./production-workbench.js?v=2026112202';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
@@ -107,6 +107,7 @@ function render(){
   if(!project)return;
   $("projectTitle").textContent=project.title||"Untitled project";
   $("projectTitle").disabled=false;
+  $("openAgentNotebook").disabled=false;
   document.title=(project.title||"Content Project")+" · Invincible";
   const owner=project.ownerUid===user.uid,editors=project.editorEmails||[];
   $("shareProject").hidden=!owner||isNewDraft;
@@ -157,6 +158,7 @@ async function selectProjectArea(area,mode=""){
 $("projectStoryboard").addEventListener("invincible-map-review-complete",()=>setProjectAreaState("Video Studio",""));
 
 mountAgentPanel($("ai-agent-panel"), {
+ launcher: $("openAgentNotebook"),
  openMotion: () => {
   if ($("projectEditingStep").hidden) storyboard.open({area: "Video Studio"});
   else return selectProjectArea("Video Studio");

@@ -30,19 +30,22 @@ export function scenePatch(scene, revision, mapSources = []) {
  };
 }
 
-export function mountAgentPanel(root, {openMotion, getProject, getAccountId}) {
+export function mountAgentPanel(root, {launcher, openMotion, getProject, getAccountId}) {
  const find = id => root.querySelector('#' + id);
  const target = find('agentTarget');
  const input = find('agentPayload');
  const status = find('agentStatus');
  const save = find('agentSave');
+ const validate = find('agentValidate');
+ const read = find('agentRead');
+ const refreshButton = find('agentRefresh');
  let snapshot;
  let busy = false;
  async function withAgent(operation) {
   if (busy) return;
   busy = true;
   status.textContent = "Working…";
-  save.disabled = true;
+  refreshButton.disabled = read.disabled = validate.disabled = save.disabled = true;
   try {
    if (!getAccountId() || !getProject()) throw Error('Open a signed-in project first.');
    if (!window.invincibleAgent) await openMotion();
@@ -53,7 +56,9 @@ export function mountAgentPanel(root, {openMotion, getProject, getAccountId}) {
    status.textContent = error.message;
   } finally {
    busy = false;
-   save.disabled = !snapshot;
+   refreshButton.disabled = false;
+   read.disabled = !snapshot;
+   validate.disabled = save.disabled = !snapshot;
   }
  }
  function unwrap(result) {
@@ -73,7 +78,21 @@ export function mountAgentPanel(root, {openMotion, getProject, getAccountId}) {
   const {manifest, revision, availableAssets, audioTiming} = snapshot;
   const clips = Array.isArray(audioTiming) && audioTiming.length ? audioTiming : manifest.audio ? [manifest.audio] : [];
   const audio = clips.find(clip => clip.role === 'voiceover') || clips[0];
-  const transcript = checkpoint?.transcript;
+  const transcript = checkpoint?.transcript ?? project.voiceoverAnalysis?.transcript ??
+   project.aiDraft?.analysis?.transcript ?? project.scriptWorkspace?.transcript;
+  find('agentContext').value = JSON.stringify({
+   projectId: project.id,
+   title: project.title,
+   narration: checkpoint?.script ?? project.script,
+   animationInstructions: checkpoint?.creativeInstructions ?? project.instructions ?? project.notes,
+   revision,
+   staged: snapshot.staged,
+   audioClips: clips,
+   transcript,
+   scenes: manifest.scenes.map(({id, name, startSeconds, durationSeconds, engineType}) =>
+    ({id, name, startSeconds, durationSeconds, engineType}))
+  }, null, 2);
+  refreshButton.textContent = 'Refresh project data';
   find('agentState').textContent = [
    'MP3: ' + (audio ? [audio.durationSeconds && audio.durationSeconds.toFixed(2) + 's', audio.fileId].filter(Boolean).join(' · ') : checkpoint?.audioAvailable ? 'Ready in Script' : 'Unavailable'),
    'Timing: ' + (transcript?.segments?.length ? transcript.segments.length + ' segments' : 'Unavailable'),
@@ -97,12 +116,13 @@ export function mountAgentPanel(root, {openMotion, getProject, getAccountId}) {
    ? scenePatch(scene, snapshot.revision, snapshot.manifest.mapSources)
    : {...snapshot.manifest, expectedRevision: snapshot.revision}, null, 2);
  }
- root.addEventListener('toggle', () => {
-  if (root.open) withAgent(refresh);
- });
- find('agentRefresh').onclick = () => withAgent(refresh);
- find('agentRead').onclick = showJSON;
- target.onchange = showJSON;
+ launcher.onclick = () => {
+  root.showModal();
+  if (window.invincibleAgent && !snapshot) withAgent(refresh);
+ };
+ find('closeAgentNotebook').onclick = () => root.close();
+ refreshButton.onclick = () => withAgent(refresh);
+ read.onclick = showJSON;
  root.querySelector('form').addEventListener('submit', event => {
   event.preventDefault();
   withAgent(async agent => {
@@ -111,7 +131,14 @@ export function mountAgentPanel(root, {openMotion, getProject, getAccountId}) {
    const payload = JSON.parse(input.value);
    if (target.value && payload.patchSceneId !== target.value) throw Error('Patch ID must match the selected scene.');
    if (!target.value && !Array.isArray(payload.scenes)) throw Error('Select a target scene for a patch.');
-   payload.expectedRevision ??= snapshot.revision;
+   if (!Number.isInteger(payload.expectedRevision) || payload.expectedRevision !== latest.revision) {
+    throw Error('Draft revision changed or is missing. Refresh the data and use View JSON to read the latest revision before editing.');
+   }
+   if (event.submitter === validate) {
+    unwrap(await agent.validateJSON(payload));
+    status.textContent = 'Valid for revision ' + latest.revision + '.';
+    return;
+   }
    const result = unwrap(await agent.applyPatch(payload));
    status.textContent = 'Saved to your account · revision ' + result.revision;
    try { await refresh(agent); } catch (error) { snapshot = null; throw Error('Saved to your account. State refresh failed: ' + error.message); }

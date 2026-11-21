@@ -393,8 +393,11 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
 .project-workspace-nav .project-nav-spacer{flex:1;min-width:12px}
 .project-workspace-nav .primary{background:var(--studio-accent);border-color:transparent;color:#082025}
 .project-workspace-nav .project-tool-divider{flex:none;margin-left:8px;padding-left:14px;border-left:1px solid var(--studio-line);color:#78909e;font-size:11px;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
-.project-workflow-guide{display:flex;align-items:center;min-height:34px;padding:7px clamp(14px,2.2vw,38px);border-bottom:1px solid rgba(78,125,145,.22);background:rgba(8,18,27,.78);color:#a9c1ce;font-size:12px}
+.project-workflow-strip{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 clamp(12px,2.2vw,38px);border-bottom:1px solid rgba(78,125,145,.22);background:rgba(8,18,27,.78)}
+.project-workflow-guide{padding-block:7px;color:#a9c1ce;font-size:12px}
 .project-workflow-guide strong{margin-right:6px;color:var(--studio-accent)}
+#openAgentNotebook{min-height:44px;flex:none;padding:6px 8px;border:0;background:transparent;color:var(--studio-accent);font-size:13px;font-weight:600}
+#openAgentNotebook:hover{text-decoration:underline;transform:none}
 .project-page.creator-focus-mode>.project-workspace-nav{flex:none}
 .project-page.creator-focus-mode #app{display:flex;flex-direction:column}
 .project-page.creator-focus-mode .project-readiness{display:none}
@@ -597,11 +600,41 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
  .project-workspace-nav :is(button,a){min-height:48px;scroll-snap-align:start}
  .project-workspace-nav .project-nav-spacer{display:none}
  .project-workspace-nav .project-tool-divider{margin-left:2px;padding-left:10px}
- .project-workflow-guide{padding:7px 12px}
 }
 
-.project-agent { margin-block: .5rem; padding: .75rem; overflow-wrap: anywhere; }
-.project-agent > summary { cursor: pointer; font-weight: 600; }
-.project-agent textarea { display: block; box-sizing: border-box; width: 100%; font-family: monospace; }
-.project-agent button, .project-agent select { margin-block: .35rem; max-width: 100%; }
+.project-agent {
+  box-sizing: border-box;
+  width: min(700px, calc(100% - 20px));
+  max-height: calc(100dvh - 24px);
+  padding: 0;
+  border: 1px solid var(--studio-line);
+  border-radius: 14px;
+  background: #111c27;
+  color: var(--text);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.project-agent::backdrop { background: #070a10ad; }
+.project-agent > header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--studio-line);
+  background: #111c27;
+}
+.project-agent h2 { margin: 0; font-size: 20px; }
+.agent-notebook-body, .project-agent form { display: grid; gap: 12px; }
+.agent-notebook-body { padding: 12px 16px; overflow-wrap: anywhere; }
+.agent-notebook-state, .agent-notebook-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.agent-notebook-state > p { flex: 1 1 220px; margin: 0; }
+.project-agent summary { display: list-item; padding-block: 8px; cursor: pointer; font-weight: 600; }
+.project-agent textarea, .project-agent select { box-sizing: border-box; width: 100%; }
+.project-agent textarea { font-family: monospace; }
+.project-agent button { justify-self: start; min-height: 44px; }
+.project-agent a { color: var(--studio-accent); }
 #agentStatus { white-space: pre-wrap; }
+#agentStatus:empty { display: none; }

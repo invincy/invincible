@@ -56,6 +56,26 @@ const server=http.createServer((req,res)=>{
   await page.waitForURL(/project\.html\?draft=1&id=/);
   await page.locator('#projectTitle').filter({hasText:'Untitled project'}).waitFor();
   await page.locator('#projectVoiceoverStep:not([hidden])').waitFor();
+  for(const width of [390,1440]){
+   await page.setViewportSize({width,height:844});
+   const launcher=page.getByRole('button',{name:'Agent Notebook',exact:true});
+   const notebook=page.getByRole('dialog',{name:'Agent Notebook'});
+   const script=page.locator('#projectVoiceoverStep');
+   const before=await script.boundingBox();
+   await launcher.click();
+   await notebook.waitFor();
+   assert.deepEqual(await script.boundingBox(),before,'Opening the notebook does not move the editor');
+   assert.equal(await page.locator('[data-project-area="Voiceover"]').getAttribute('aria-current'),'step');
+   const bounds=await notebook.boundingBox();
+   assert.ok(bounds.x>=0&&bounds.x+bounds.width<=width&&bounds.y+bounds.height<=844,'Notebook fits its viewport');
+   await notebook.getByText('Runbook and plugin tools',{exact:true}).click();
+   assert.equal(await notebook.getByText('apply_creator_scene_patch',{exact:true}).isVisible(),true);
+   await notebook.getByText('Runbook and plugin tools',{exact:true}).click();
+   await page.keyboard.press('Escape');
+   await notebook.waitFor({state:'hidden'});
+   assert.equal(await launcher.evaluate(button=>button===document.activeElement),true);
+  }
+  await page.setViewportSize({width:1440,height:1000});
   assert.equal(await page.locator('[data-project-area="Voiceover"]').getAttribute('aria-current'),'step');
   assert.deepEqual(await page.locator('.project-workspace-nav [data-project-area]').allTextContents(),['1 Script','2 Sync plan','3 Review maps','4 Motion & export','Map Editor','Battlefield Editor','Assets & 3D']);
   assert.match(await page.locator('#workflowGuide').innerText(),/Step 1 of 4/);
