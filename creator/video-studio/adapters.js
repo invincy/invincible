@@ -3,7 +3,7 @@ import {drawCanvasBackground,drawCanvasLayer} from './canvas.js?v=2026111813';
 import {ensureDocumentaryFonts} from '../map-fonts.js';
 import {compileAnimation} from '../map-animation-import.js?v=2026111910';
 import {createHistoryPlayer} from '../history-player.js?v=2026112201';
-import {layerFrame,sceneAt,referencedMapAssets} from './model.js?v=2026112201';
+import {layerFrame,visualFrameAt,referencedMapAssets} from './model.js?v=2026112202';
 import {resolveMapAsset} from '../map-assets-client.js?v=2026112201';
 import {drawBattlefield} from './battlefield.js?v=2026111014';
 import {parallaxTransform,projectLayer} from './parallax.js';
@@ -123,8 +123,8 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
   // Export writes straight to the encoder canvas; only interactive preview needs a staging copy.
   ctx=exporting?presentCtx:frameCtx;
   if(exporting&&!allowPlaceholders&&missingAssets.size)throw Error('Missing visual assets: '+[...missingAssets.values()].map(a=>a.name).join(', '));
-  ctx.globalAlpha=1;ctx.fillStyle=brand.background;ctx.fillRect(0,0,width,height);const scene=sceneAt(timeline,time);if(scene?.engineType!=='three')releaseStage();if(!scene){if(!exporting)presentCtx.drawImage(frameCanvas,0,0);return;}
-  const local=time-scene.startSeconds,transition=scene.transition?.type==='fade'?scene.transition.durationSeconds:0,sceneStyle=resolveSceneStyle(manifest,scene);
+  ctx.globalAlpha=1;ctx.fillStyle=brand.background;ctx.fillRect(0,0,width,height);const frame=visualFrameAt(timeline,time),scene=frame?.scene;if(scene?.engineType!=='three')releaseStage();if(!scene){if(!exporting)presentCtx.drawImage(frameCanvas,0,0);return;}
+  const local=frame.local,transition=scene.transition?.type==='fade'?scene.transition.durationSeconds:0,sceneStyle=resolveSceneStyle(manifest,scene);
   ctx.save();try{
    if(transition)ctx.globalAlpha=Math.max(0,Math.min(1,local/transition,(scene.durationSeconds-local)/transition));
    if(sceneStyle){ctx.fillStyle=sceneStyle.tokens.palette.background;ctx.fillRect(0,0,width,height);}if(scene.engineData.background){ctx.fillStyle=scene.engineData.background;ctx.fillRect(0,0,width,height);}

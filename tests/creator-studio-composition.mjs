@@ -1,12 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {newStudioVideo,upgradeVideo,appendProjectMaps,arrangeScenes,resizeScene} from '../creator/video-studio/composition.js';
-import {emptyVideo,validateManifest,compileTimeline,PRESETS,sceneAt} from '../creator/video-studio/model.js';
+import {emptyVideo,validateManifest,compileTimeline,PRESETS,sceneAt,visualFrameAt} from '../creator/video-studio/model.js';
 import {emptyBattlefield,poseAt,elevationAt,projectBattlePoint} from '../creator/video-studio/battlefield.js';
 import {mixAudioChunk,audioGainAt,scheduleAudioTracks} from '../creator/video-studio/audio.js';
 import {compileAnimation} from '../creator/map-animation-import.js';
 const graphic=(id,durationSeconds=2)=>({id,startSeconds:0,durationSeconds,engineType:'graphic',engineData:{},overlays:[]});
 const source=()=>compileAnimation({scenes:[]},{format:'invincible-map-animation',version:1,duration:4,aspectRatio:'9:16',basemap:'physical',terrain:false,camera:[{time:0,center:[74,28],zoom:4,pitch:0,bearing:0},{time:4,center:[77,30],zoom:5,pitch:20,bearing:10}],layers:[]}).project;
+
+test('visual pauses hold the preceding native scene without changing locked timing',()=>{
+ const first={...graphic('first',2),engineType:'map'},next={...graphic('next',2),startSeconds:2.5};
+ const timeline={scenes:[first,next],duration:4.6},original=structuredClone(timeline);
+ assert.equal(sceneAt(timeline,2.2),undefined);
+ const held=visualFrameAt(timeline,2.2);assert.equal(held.scene,first);assert.ok(held.local<2&&held.local>1.99);
+ assert.deepEqual(visualFrameAt(timeline,2.5),{scene:next,local:0});
+ assert.equal(visualFrameAt(timeline,4.55).scene,next);
+ assert.equal(visualFrameAt(timeline,-.1),null);
+ assert.deepEqual(timeline,original);
+});
 test('native map JSON normalizes editor fields and round-trips without changing source trim',()=>{
  const manifest=appendProjectMaps(newStudioVideo(),source());
  const scene=manifest.scenes[0],snapshot=manifest.mapSources[0].project;

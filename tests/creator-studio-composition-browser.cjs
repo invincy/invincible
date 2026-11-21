@@ -20,6 +20,11 @@ const ready=page=>page.waitForFunction(()=>{const b=document.querySelector('[dat
   const input={format:'invincible-map-animation',version:1,duration:2,aspectRatio:'9:16',basemap:'physical',terrain:false,camera:[{time:0,center:[72,28],zoom:4,pitch:0,bearing:0},{time:2,center:[78,31],zoom:5,pitch:0,bearing:0}],layers:[{id:'route',type:'route',name:'Test route',start:0,end:2,coordinates:[[72,28],[78,31]],color:'#edc46a'}]},project=compileAnimation({scenes:[]},input).project;
   project.scenes=[{id:project.scenes[0].id,duration:1},{id:'second-map',duration:1}];project.historicalMap.camera[1].sceneId='second-map';project.historicalMap.camera[1].offset=1;
   const voice=await decodeVoiceover(voiceFixture()),files=new Map(),canvas=document.createElement('canvas');canvas.width=1080;canvas.height=1920;const m=appendProjectMaps(newStudioVideo(),project);m.audioClips=[{id:'voice',fileId:'voice',name:'Synthetic voice',role:'voiceover',startSeconds:.25,trimStart:0,durationSeconds:1,gain:1,fadeIn:0,fadeOut:0}];const t=compileTimeline(m,PRESETS[0]),renderer=await createStudioRenderer(canvas,m,t,PRESETS[0],{getFile:id=>files.get(id)});
+  // Test a measured narration pause through the actual native compositor.
+  t.scenes[1].startSeconds+=.25;t.duration+=.25;
+  await renderer.draw(.999999,{exporting:true});const pauseReference=canvas.toDataURL();
+  await renderer.draw(1.1,{exporting:true});if(canvas.toDataURL()!==pauseReference)throw Error('Narration pause cleared or changed the preceding native map.');
+  console.log('PROOF native map retained across narration pause');
   let mapBlob;try{mapBlob=await encodeStudioVideo({canvas,timeline:t,audioTracks:[{...t.audioClips[0],buffer:voice}],drawFrame:(time,signal)=>renderer.draw(time,{exporting:true,signal})});}finally{renderer.destroy();}console.log('PROOF two native maps + narration encoded');
   // Reuse an actual encoded map MP4 as a trimmed video scene; decode through the production MediaBunny sink.
   const art=document.createElement('canvas');art.width=art.height=64;const a=art.getContext('2d');a.fillStyle='#e6be62';a.beginPath();a.moveTo(32,2);a.lineTo(58,62);a.lineTo(6,62);a.fill();files.set('sprite',await new Promise(r=>art.toBlob(r)));files.set('video',mapBlob);

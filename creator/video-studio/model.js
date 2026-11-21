@@ -196,6 +196,13 @@ export function layerFrame(layer,time){
  return out;
 }
 export function sceneAt(timeline,time){return timeline.scenes.find(s=>time>=s.startSeconds&&time<s.startSeconds+s.durationSeconds);}
+// Speech timestamps can contain pauses. Keep the preceding native visual on screen
+// without extending its saved duration or moving any recording/animation cues.
+export function visualFrameAt(timeline,time){
+ const scene=sceneAt(timeline,time)||timeline.scenes.filter(s=>s.startSeconds<=time).at(-1);
+ if(!scene)return null;
+ return {scene,local:Math.max(0,Math.min(time-scene.startSeconds,scene.durationSeconds-1e-6))};
+}
 
 // Include only a profile's referenced assets when reusing it in another video.
 export function assetsForBrand(brand,existing,catalog){

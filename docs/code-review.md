@@ -1,5 +1,23 @@
 # Cleanup review — 2026-10-03
 
+## Native visuals during narration pauses — November 22, 2026
+
+Motion Studio now resolves a preceding visual frame during gaps between measured
+speech segments and the final fractional-frame audio tail. The native renderer
+clamps that frame inside the source scene; saved scene IDs, durations, camera
+keys and recordings stay unchanged. Timeline selection still distinguishes an
+actual gap. Preview and MP4 use the same visual resolver. No project-specific
+render path, screenshots, new background or timing migration was introduced.
+
+Verification: all 36 focused Studio/composition unit checks passed, including
+unaltered timing and exact next-scene boundaries. The composition browser suite
+passed with installed Google Chrome: native pixels matched across a narration
+pause, native-map/narration MP4 encoded, and mixed native maps, battlefields,
+image/video sources and overlapping audio encoded. Bundled test Chromium lacks
+the required H.264 encoder on this machine; its earlier codec failure was an
+environment limitation. Syntax, site references and diff whitespace passed.
+The production Punjab film still requires its final preview/export verification.
+
 ## Scene-attached audio — November 22, 2026
 
 Added optional version-2 scene audio clips to the existing native audio path. Scene-local starts resolve once to absolute timestamps; main narration remains independent. Safe public URLs and existing file references share the source cache, trim checks, preview fades and MP4 mixer. The existing Audio inspector edits/reviews/removes these cues. Scene moves preserve attachment, resizing moves starts without stretching recordings, and duplicate scenes receive fresh clip IDs. Schema rejects narration in scene cues, unsafe/ambiguous sources, out-of-scene starts, duplicate IDs and excessive clip counts. No Firebase/auth paths or backend deployment changed.
