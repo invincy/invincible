@@ -1,14 +1,14 @@
 import {styleControls,labelControls,informationControls} from './map-documentary-ui.js?v=2026110903';
 import {applyPresentationPreset} from './map-defaults.js?v=2026110903';
 import {initializeMapProject,imagePlacementCorners} from './map-defaults.js?v=2026110903';
-import {resolveMapAsset,uploadMapAsset} from './map-assets-client.js?v=2026111002';
+import {resolveMapAsset,uploadMapAsset} from './map-assets-client.js?v=2026112201';
 import {cameraPreset,surfacePosition,locationVisible} from './map-globe.js';
 import {validateMap,sceneTimeline,durationOf,productionId,mapFrame} from './history-model.js?v=2026111910';
 import {visualMap,icons,uid,imageCorners,moveLayer,scenePackage,appendScenePackage,assetLibrary,importAssetLibrary} from './map-editor-model.js?v=2026111910';
-import {createHistoryPlayer,downloadBlob,sizeMapFrame} from './history-player.js?v=2026111910';
+import {createHistoryPlayer,downloadBlob,sizeMapFrame} from './history-player.js?v=2026112201';
 import {mapStyles,defaultTerrain} from './map-style-library.js?v=2026111506';
 import {readAnimation,compileAnimation,animationBrief} from './map-animation-import.js?v=2026111910';
-import {mapLibraryPanel,instructionPanel,mapExportPanel,handleMapExport} from './map-editor-panels.js?v=2026111910';
+import {mapLibraryPanel,instructionPanel,mapExportPanel,handleMapExport} from './map-editor-panels.js?v=2026112201';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const button=(action,text)=>`<button type="button" data-edit="${action}">${text}</button>`;
 const number=(label,key,value,min,max,step='any')=>`<label>${label}<input type="number" data-prop="${key}" value="${esc(typeof value==='number'?Number(value.toFixed(6)):value)}" min="${min}" max="${max}" step="${step}"></label>`;
@@ -230,10 +230,10 @@ export function mountMapEditor(root,{getProject,onChange,onAdvanced,initialTime=
   if(action==='scene-export'){const sid=anchor().sceneId,start=sceneTimeline(project).find(r=>r.sceneId===sid).start;jsonDownload(scenePackage(project,validateMap(spec,project),sid,mapFrame(project,spec,start).camera),'creator-map-scene.json');status('Reusable scene exported. Import it in any Creator project to append a fresh copy.');return;}
   if(action==='apply'){await commit(visualMap(validateMap(JSON.parse(q('[data-json]').value),project)));return;}
   if(action==='shared-library'){
-  const [{createMediaClient},{auth,authReady}]=await Promise.all([import('./media-library.js?v=2026111603'),import('../shared/firebase-client.js')]);await authReady;const items=await createMediaClient(auth.currentUser?.uid).list();if(disposed)return;sharedMedia=items.filter(a=>['image','glb'].includes(a.kind));q('[data-shared-media]').innerHTML=sharedMedia.map(a=>'<option value="'+esc(a.id)+'">'+esc(a.name)+'</option>').join('');status(sharedMedia.length+' shared artwork assets available.');return;
+  const [{createMediaClient},{auth,authReady}]=await Promise.all([import('./media-library.js?v=2026112201'),import('../shared/firebase-client.js')]);await authReady;const items=await createMediaClient(auth.currentUser?.uid).list();if(disposed)return;sharedMedia=items.filter(a=>['image','glb'].includes(a.kind));q('[data-shared-media]').innerHTML=sharedMedia.map(a=>'<option value="'+esc(a.id)+'">'+esc(a.name)+'</option>').join('');status(sharedMedia.length+' shared artwork assets available.');return;
  }
  if(action==='shared-place'){
-  const info=sharedMedia.find(a=>a.id===q('[data-shared-media]').value);if(!info)throw Error('Browse the shared library and choose artwork first.');const {mapAssetFromMedia}=await import('./media-library.js?v=2026111603'),asset=mapAssetFromMedia(info),position=center(),timing=anchor();const next=structuredClone(spec);if(!next.visual.assets.some(a=>a.id===asset.id))next.visual.assets.push(asset);const l={id:uid(),kind:asset.type,name:asset.name,assetId:asset.id,classification:'illustrative',visible:true,opacity:1,color:'#d8b873',...timing,position,scale:asset.type==='glb'?1000:1,rotation:0,altitude:0};if(asset.type==='image')l.corners=await cornersFor(asset,position);next.visual.layers.push(l);await commit(next,{selectId:l.id});return;
+  const info=sharedMedia.find(a=>a.id===q('[data-shared-media]').value);if(!info)throw Error('Browse the shared library and choose artwork first.');const {mapAssetFromMedia}=await import('./media-library.js?v=2026112201'),asset=mapAssetFromMedia(info),position=center(),timing=anchor();const next=structuredClone(spec);if(!next.visual.assets.some(a=>a.id===asset.id))next.visual.assets.push(asset);const l={id:uid(),kind:asset.type,name:asset.name,assetId:asset.id,classification:'illustrative',visible:true,opacity:1,color:'#d8b873',...timing,position,scale:asset.type==='glb'?1000:1,rotation:0,altitude:0};if(asset.type==='image')l.corners=await cornersFor(asset,position);next.visual.layers.push(l);await commit(next,{selectId:l.id});return;
  }
  if(action==='upload'){
    if(!pendingFile)throw Error('Choose a file or drop one onto the map first.');

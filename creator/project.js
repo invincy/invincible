@@ -1,10 +1,10 @@
 import {mountAgentPanel} from './agent-panel.js?v=2026111711';
 import{makeScene}from'./storyboard-model.js?v=3';
-import{createProductionWorkbench}from'./production-workbench.js?v=2026111910';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026112201';
 import{projectProgress,canonicalScript}from'./production-model.js?v=2026111002';
 import{auth,db,authReady,observeAuth,storageError}from'../shared/firebase-client.js?v=2026111701';
 import{collection,doc,getDoc,getDocs,onSnapshot,query,runTransaction,serverTimestamp,where}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import{createProductionReadiness,mountProductionReadiness}from'./video-studio/production-readiness.js?v=2026111322';
+import{createProductionReadiness,mountProductionReadiness}from'./video-studio/production-readiness.js?v=2026112201';
 import{splitVoiceoverScript}from"./scene-tools.js?v=2";
 
 const queryParams=new URLSearchParams(location.search),$=id=>document.getElementById(id);

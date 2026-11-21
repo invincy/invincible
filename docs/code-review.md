@@ -1,5 +1,13 @@
 # Cleanup review — 2026-10-03
 
+## Scene-attached audio — November 22, 2026
+
+Added optional version-2 scene audio clips to the existing native audio path. Scene-local starts resolve once to absolute timestamps; main narration remains independent. Safe public URLs and existing file references share the source cache, trim checks, preview fades and MP4 mixer. The existing Audio inspector edits/reviews/removes these cues. Scene moves preserve attachment, resizing moves starts without stretching recordings, and duplicate scenes receive fresh clip IDs. Schema rejects narration in scene cues, unsafe/ambiguous sources, out-of-scene starts, duplicate IDs and excessive clip counts. No Firebase/auth paths or backend deployment changed.
+
+Added reusable CC0 elephant/horse recordings, distant crowd walla, sword/wood/arrow foley and original thud/heavy-movement foley, with per-source rights and processing records. None contain project narration or private original media. No sounds are automatically added to other projects. Native module references were refreshed together.
+
+Verification: 41 focused model/composition/scene-audio unit checks passed. A browser acceptance fixture verified source decoding, editable gain, cloud reload, duplicate identity and a real 1080p MP4 with the scene sound beginning at its expected absolute timestamp; decoded audio was silent before its cue and after its tail. Mixed native-map/battle/image/video/audio and agent browser suites passed. The single-flow suite reached its late new-mobile-context load but timed out waiting for page load; a full pass is not claimed. Site references/whitespace passed. Project-specific numerical effect-mix review is recorded in its private handoff; this is not a continuous listening review of an inaccessible private narration file or a production MP4 export.
+
 ## Location emblems — November 19, 2026
 
 Presentation-based labels/events can opt into `markerStyle: "city"` or `"battle"`: a vector fort or crossed swords at the true geographic anchor. Missing/`dot` keeps the saved dot treatment and placement. The classic and documentary compositors share the emblem drawing helper and reserve more space beside it. The native inspector exposes Location marker when a presentation is active; animation import and scene packaging preserve the choice. No font glyph or external asset is required. Project choreography remains in the saved project, not global defaults.

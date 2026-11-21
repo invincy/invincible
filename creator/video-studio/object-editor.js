@@ -1,5 +1,5 @@
 import {DEFAULT_PARALLAX,parallaxTransform,projectLayer} from './parallax.js';
-import {layerFrame as sampleLayer} from './model.js?v=2026111910';
+import {layerFrame as sampleLayer} from './model.js?v=2026112201';
 import {resolveOverlayLayout} from './weather-effects.js';
 import {CANVAS_FONTS} from './canvas.js?v=2026111813';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

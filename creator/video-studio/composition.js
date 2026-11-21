@@ -1,4 +1,4 @@
-import {emptyVideo,validateManifest} from './model.js?v=2026111910';
+import {emptyVideo,validateManifest} from './model.js?v=2026112201';
 import {sceneTimeline,validateMap} from '../history-model.js?v=2026111910';
 export function upgradeVideo(manifest,audioDuration=0){
  const out=structuredClone(manifest);if(out.schemaVersion===2)return out;
@@ -15,12 +15,13 @@ export function nativeMapScenes(project){
 export function appendProjectMaps(manifest,project){
  const rows=nativeMapScenes(project),out=structuredClone(manifest);if(!rows.length)throw Error('This project has no map scenes.');const sourceId=crypto.randomUUID();out.mapSources??=[];out.mapSources.push({id:sourceId,project:rows[0].engineData.project});for(const row of rows){delete row.engineData.project;row.engineData.sourceId=sourceId;}return arrangeScenes(out,[...out.scenes,...rows],{mapAssets:project.historicalMap.visual?.assets||[]});
 }
-// Scene changes are explicitly applied; audio keeps its absolute content timestamps.
+// Main recordings keep absolute timestamps; scene effects follow their owning scene.
 export function arrangeScenes(manifest,scenes,{mapAssets=[]}={}){
  const out=structuredClone(manifest);let at=0;out.scenes=scenes.map(s=>{const row={...structuredClone(s),startSeconds:at};at+=row.durationSeconds;return row;});return validateManifest(out,{mapAssets});
 }
 export function resizeScene(scene,duration){
  const out=structuredClone(scene),ratio=duration/out.durationSeconds;out.durationSeconds=duration;
+ for(const clip of out.audioClips||[])clip.startSeconds*=ratio;
  for(const layer of out.overlays){for(const p of ['startSeconds','endSeconds'])if(layer[p]!==undefined)layer[p]*=ratio;for(const key of layer.keyframes||[])key.timeSeconds*=ratio;}
  if(out.transition)out.transition.durationSeconds=Math.min(out.transition.durationSeconds,duration/2);
  if(out.engineType==='battlefield')for(const keys of [out.engineData.camera,...out.engineData.formations.map(f=>f.path)])for(const key of keys)key.timeSeconds*=ratio;

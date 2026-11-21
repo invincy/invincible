@@ -1,8 +1,8 @@
-import {decodeVoiceover} from './video-studio/audio.js?v=2026111604';
+import {decodeVoiceover} from './video-studio/audio.js?v=2026112201';
 export const isCloudFile=id=>typeof id==='string'&&/^cloud-[a-f0-9]{64}$/.test(id);
 export function createMediaClient(accountId){
  async function call(data){
-  const [{mapAssetCall},{auth,authReady}]=await Promise.all([import('./map-assets-client.js?v=2026111002'),import('../shared/firebase-client.js')]);await authReady;
+  const [{mapAssetCall},{auth,authReady}]=await Promise.all([import('./map-assets-client.js?v=2026112201'),import('../shared/firebase-client.js')]);await authReady;
   if(auth.currentUser?.uid!==accountId)throw Error('Your account changed. Reopen this project before continuing.');
   const result=await mapAssetCall('creatorMedia',data);
   if(auth.currentUser?.uid!==accountId)throw Error('Your account changed. Reopen this project before continuing.');return result;

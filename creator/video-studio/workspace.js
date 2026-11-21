@@ -1,20 +1,20 @@
-import {createAgentOperations} from './agent.js?v=2026111910';
+import {createAgentOperations} from './agent.js?v=2026112201';
 import {checkStudioGlb, MAX_MODEL_BYTES} from './three-scene.js';
 import {mountConnectedImageGenerator} from '../image-generator.js?v=2026111206';
 import {callImageRelay,draftRemoteImagePrompt} from '../../shared/firebase-image-relay.js?v=2026111205';
-import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=2026111603';
-import {studioBrief} from './handoff.js?v=2026111207';
-import {upgradeVideo,arrangeScenes} from './composition.js?v=2026111910';
-import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026111910';
-import {createStudioRenderer} from './adapters.js?v=2026111910';
-import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks} from './audio.js?v=2026111604';
-import {mountAssembly} from './assembly.js?v=2026111910';
-import {encodeStudioVideo} from './export.js?v=2026111209';
+import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=2026112201';
+import {studioBrief} from './handoff.js?v=2026112201';
+import {upgradeVideo,arrangeScenes} from './composition.js?v=2026112201';
+import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026112201';
+import {createStudioRenderer} from './adapters.js?v=2026112201';
+import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks,audioClipsForManifest} from './audio.js?v=2026112201';
+import {mountAssembly} from './assembly.js?v=2026112201';
+import {encodeStudioVideo} from './export.js?v=2026112201';
 import {openStudioStore} from './storage.js';
-import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026111910';
+import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026112201';
 import {runAiProduction} from '../ai-production-runner.mjs?v=2026111203';
 import {generateVoiceover} from '../tts-api.js';
-import {createProductionReadiness,selectProductionVoice} from './production-readiness.js?v=2026111322';
+import {createProductionReadiness,selectProductionVoice} from './production-readiness.js?v=2026112201';
 import {loadPendingAiDraft,loadPendingAiAudio,savePendingAiDraft} from '../ai-draft.js?v=2026111319';
 import {startBrowserSceneJpgBridge} from './browser-scene-jpg-bridge.js?v=2026111605';
 import {mountStyleGallery} from './style-gallery.js?v=2026111813';
@@ -344,7 +344,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   $('[data-vs-brand]').innerHTML=state.brands.map(b=>`<option value="${esc(b.id)}">${esc(b.name)}</option>`).join('');$('[data-vs-brand]').value=brand().id;
   $('[data-vs-intro]').checked=!!m.introEnabled;$('[data-vs-outro]').checked=!!m.outroEnabled;
   $('[data-vs-brand-json]').value=JSON.stringify(brand(),null,2);
-  $('[data-vs-audio-name]').textContent=m.audio?.name||(m.audioClips?.length?m.audioClips.length+' recordings in the Audio timeline':'No voiceover selected');$('[data-vs-audio-start]').value=m.audio?.startSeconds??m.audioClips?.find(a=>a.role==='voiceover')?.startSeconds??0;$('[data-vs-gain]').value=m.audio?.gain??m.audioClips?.find(a=>a.role==='voiceover')?.gain??1;
+  $('[data-vs-audio-name]').textContent=m.audio?.name||(audioClipsForManifest(m).length?audioClipsForManifest(m).length+' clips in the Audio timeline':'No voiceover selected');$('[data-vs-audio-start]').value=m.audio?.startSeconds??m.audioClips?.find(a=>a.role==='voiceover')?.startSeconds??0;$('[data-vs-gain]').value=m.audio?.gain??m.audioClips?.find(a=>a.role==='voiceover')?.gain??1;
   $('[data-vs-assets]').innerHTML=m.assets.map(a=>`<div>${esc(a.name)} · <code>${esc(a.id)}</code></div>`).join('');
   $('[data-vs-library]').innerHTML='<option value="">Choose existing map image</option>'+mapAssets().filter(a=>a.type==='image').map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
   assembly?.sync();
@@ -388,7 +388,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    const m=validateManifest(state.manifest,{mapAssets:mapAssets()}),b=validateBrand(brand(),new Set(m.assets.filter(a=>a.kind!=='glb').map(a=>a.id)));
    await loadPreviewAudio(m);
    timeline=compileTimeline(m,b,audioBuffer?.duration||0);const size=exportDimensions(m.aspectRatio);canvas.style.aspectRatio=`${size.width} / ${size.height}`;canvas.width=size.width;canvas.height=size.height;
-   const lead=timeline.audioClips[0]&&m.audioClips?.[0]?timeline.audioClips[0].startSeconds-m.audioClips[0].startSeconds:0;audioTracks=audioTracks.map(t=>({...t,startSeconds:t.startSeconds+lead}));time=Math.min(time,timeline.duration);
+   const lead=timeline.audioClips[0]&&audioClipsForManifest(m)[0]?timeline.audioClips[0].startSeconds-audioClipsForManifest(m)[0].startSeconds:0;audioTracks=audioTracks.map(t=>({...t,startSeconds:t.startSeconds+lead}));time=Math.min(time,timeline.duration);
    const next=await createStudioRenderer(canvas,m,timeline,b,{getFile,mapAssets:mapAssets(),signal:controller?.signal||lifecycle.signal});
    if(disposed){next.destroy();return;}renderer=next;
    $('[data-vs-seek]').max=timeline.duration||1;$('[data-vs-track]').innerHTML=timeline.scenes.map(s=>`<button data-vs-at="${s.startSeconds}" data-vs-scene-id="${esc(s.id)}" title="${esc(s.name||s.id)}">${esc(s.name||s.engineType)} · ${s.startSeconds.toFixed(1)}–${(s.startSeconds+s.durationSeconds).toFixed(1)}s</button>`).join('');
@@ -603,7 +603,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    validateManifest(next,{mapAssets:mapAssets()});await applyManifest(next);
   });
  });
- assembly=mountAssembly(assemblyRoot,{pause:stop,session:state,getManifest:()=>state.manifest,getProject,getFile,importFiles:uploadFiles,putFile:(id,file)=>state.files.set(id,file),deleteFile:id=>state.files.delete(id),run,status,getTime:()=>time,setTime:value=>{time=value;state.time=value;},releaseRenderer:async()=>{stop();if(drawing)await drawing.catch(()=>{});invalidate();},setManifest:applyManifest,saveMapDraft:next=>save(next,{preview:false,applying:true}),previewManifest:async next=>{if(next===state.manifest){invalidate();await draw();return;}invalidate();try{const b=brand(),t=compileTimeline(next,b);await loadPreviewAudio(next);const lead=t.audioClips[0]&&next.audioClips?.[0]?t.audioClips[0].startSeconds-next.audioClips[0].startSeconds:0;audioTracks=audioTracks.map(a=>({...a,startSeconds:a.startSeconds+lead}));const nextRenderer=await createStudioRenderer(canvas,next,t,b,{getFile,mapAssets:mapAssets(),signal:lifecycle.signal});if(disposed){nextRenderer.destroy();return;}renderer=nextRenderer;timeline=t;await renderer.draw(time);}catch(error){invalidate();try{await draw();}catch{}throw error;}}});
+ assembly=mountAssembly(assemblyRoot,{pause:stop,session:state,getManifest:()=>state.manifest,getProject,getFile,importFiles:uploadFiles,putFile:(id,file)=>state.files.set(id,file),deleteFile:id=>state.files.delete(id),run,status,getTime:()=>time,setTime:value=>{time=value;state.time=value;},releaseRenderer:async()=>{stop();if(drawing)await drawing.catch(()=>{});invalidate();},setManifest:applyManifest,saveMapDraft:next=>save(next,{preview:false,applying:true}),previewManifest:async next=>{if(next===state.manifest){invalidate();await draw();return;}invalidate();try{const b=brand(),t=compileTimeline(next,b);await loadPreviewAudio(next);const lead=t.audioClips[0]&&audioClipsForManifest(next)[0]?t.audioClips[0].startSeconds-audioClipsForManifest(next)[0].startSeconds:0;audioTracks=audioTracks.map(a=>({...a,startSeconds:a.startSeconds+lead}));const nextRenderer=await createStudioRenderer(canvas,next,t,b,{getFile,mapAssets:mapAssets(),signal:lifecycle.signal});if(disposed){nextRenderer.destroy();return;}renderer=nextRenderer;timeline=t;await renderer.draw(time);}catch(error){invalidate();try{await draw();}catch{}throw error;}}});
  styleGallery=mountStyleGallery(styleRoot,{getManifest:()=>state.manifest,getSelectedSceneId:()=>assembly?.selectedId||'',applyManifest,saveManifest:next=>save(next),status});
  const libraryReady = refreshLibrary();
  const ready=run(async()=>{

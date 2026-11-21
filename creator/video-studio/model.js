@@ -1,3 +1,4 @@
+import {audioClipsForManifest} from './audio.js?v=2026112201';
 import {validateThreeScene} from './three-scene.js';
 import {validateCanvas,CANVAS_FONTS,BACKGROUND_FIELDS} from './canvas.js?v=2026111813';
 import {compileAnimation} from '../map-animation-import.js?v=2026111910';
@@ -87,7 +88,8 @@ function validateNativeProject(nativeProject){
 }
 function validateScene(scene,assets,mapAssets,{template=false,version=1,mapSources=[],models=new Set()}={}){
  if(version===2&&scene?.engineType==='map'&&scene.engineData&&(scene.engineData.project||scene.engineData.sourceId)){
-  const data=scene.engineData;
+  if(scene.audioClips!==undefined){if(version!==2||!Array.isArray(scene.audioClips)||scene.audioClips.length>16)fail('Use up to 16 scene sound clips in a version 2 video.');for(const clip of scene.audioClips){validateAudioClip(clip);if(clip.role==='voiceover')fail('Keep narration on the main audio timeline.');num(clip.startSeconds,0,scene.durationSeconds,'sound start in scene');}}
+ const data=scene.engineData;
   for(const key of ['sourceStart','sourceEnd']){
    if(scene[key]===undefined)continue;
    if(data[key]!==undefined&&data[key]!==scene[key])fail('Conflicting map '+key+' values.');
@@ -100,8 +102,9 @@ function validateScene(scene,assets,mapAssets,{template=false,version=1,mapSourc
    delete data.sourceEnd;
   }
  }
- keys(scene,['id','name','startSeconds','durationSeconds','engineType','engineData','overlays','transition','visualStylePresetId','styleOverrides'],'scene');id(scene.id);if(scene.name!==undefined)str(scene.name,200,'scene name');num(scene.startSeconds,0,600,'scene start');num(scene.durationSeconds,1/30,600,'scene duration');
+ keys(scene,['id','name','startSeconds','durationSeconds','engineType','engineData','overlays','audioClips','transition','visualStylePresetId','styleOverrides'],'scene');id(scene.id);if(scene.name!==undefined)str(scene.name,200,'scene name');num(scene.startSeconds,0,600,'scene start');num(scene.durationSeconds,1/30,600,'scene duration');
  if(!(version===2?['map','lic','graphic','battlefield','image','video','three']:['map','lic','graphic']).includes(scene.engineType)||template&&scene.engineType!=='graphic')fail('Unsupported scene engine for this manifest version.');
+ if(scene.audioClips!==undefined){if(version!==2||!Array.isArray(scene.audioClips)||scene.audioClips.length>16)fail('Use up to 16 scene sound clips in a version 2 video.');for(const clip of scene.audioClips){validateAudioClip(clip);if(clip.role==='voiceover')fail('Keep narration on the main audio timeline.');num(clip.startSeconds,0,scene.durationSeconds,'sound start in scene');}}
  const data=scene.engineData;
  if(scene.engineType==='map'){
   const mapFields=version===2?['animation','geometryReviewed','project','sourceId','sourceStart']:['animation','geometryReviewed'];
@@ -139,6 +142,7 @@ function validateScene(scene,assets,mapAssets,{template=false,version=1,mapSourc
   validateLayer(l,scene.durationSeconds,assets);if(ids.has(l.id))fail('Duplicate layer ID.');ids.add(l.id);}
  if(scene.transition!==undefined){keys(scene.transition,['type','durationSeconds'],'transition');if(!['cut','fade'].includes(scene.transition.type))fail('Transition must be cut or fade.');num(scene.transition.durationSeconds,0,scene.durationSeconds/2,'transition duration');}
 }
+function validateAudioClip(a){keys(a,['id','fileId','url','credit','name','role','startSeconds','trimStart','durationSeconds','gain','fadeIn','fadeOut','loop','sourceDurationSeconds'],'audio clip');id(a.id);if(a.loop!==undefined&&typeof a.loop!=='boolean')fail('Audio loop must be boolean.');if(a.loop){if(a.role==='voiceover')fail('Voiceover cannot loop.');num(a.sourceDurationSeconds,1/48000,600,'loop source duration');}else if(a.sourceDurationSeconds!==undefined)fail('Source duration requires loop:true.');if((a.fileId!==undefined)+(a.url!==undefined)!==1)fail('Audio needs exactly one fileId or URL.');if(a.fileId!==undefined)id(a.fileId);if(a.url!==undefined&&!safeAssetUrl(a.url))fail('Sound URL must be HTTPS or a safe project path.');if(a.credit!==undefined)str(a.credit,2000,'sound credit');str(a.name,200,'audio name');if(!['voiceover','music','effect'].includes(a.role))fail('Invalid audio role.');num(a.startSeconds,0,600,'audio start');num(a.trimStart,0,600,'audio trim');num(a.durationSeconds,1/48000,600,'audio duration');num(a.gain,0,2,'gain');num(a.fadeIn,0,a.durationSeconds,'fade in');num(a.fadeOut,0,a.durationSeconds,'fade out');if(a.fadeIn+a.fadeOut>a.durationSeconds||a.startSeconds+a.durationSeconds>600)fail('Audio timing exceeds its bounds.');}
 export function validateManifest(input,{mapAssets=[]}={}){
  let m;try{m=typeof input==='string'?JSON.parse(input):structuredClone(input);}catch{fail('Choose a complete Video Studio JSON file.');}
  if(new TextEncoder().encode(JSON.stringify(m)).length>1000000)fail('Use a manifest under 1 MB.');
@@ -159,7 +163,7 @@ export function validateManifest(input,{mapAssets=[]}={}){
  if(m.schemaVersion===2){
   if(m.audio!=null)fail('Version 2 uses audioClips, not legacy audio.');
   if(!Array.isArray(m.audioClips)||m.audioClips.length>100)fail('Use up to 100 audio clips.');const ids=new Set();
-  for(const a of m.audioClips){keys(a,['id','fileId','name','role','startSeconds','trimStart','durationSeconds','gain','fadeIn','fadeOut','loop','sourceDurationSeconds'],'audio clip');id(a.id);if(a.loop!==undefined&&typeof a.loop!=='boolean')fail('Audio loop must be boolean.');if(a.loop){if(a.role==='voiceover')fail('Voiceover cannot loop.');num(a.sourceDurationSeconds,1/48000,600,'loop source duration');}else if(a.sourceDurationSeconds!==undefined)fail('Source duration requires loop:true.');if(ids.has(a.id))fail('Duplicate audio clip.');ids.add(a.id);id(a.fileId);str(a.name,200,'audio name');if(!['voiceover','music','effect'].includes(a.role))fail('Invalid audio role.');num(a.startSeconds,0,600,'audio start');num(a.trimStart,0,600,'audio trim');num(a.durationSeconds,1/48000,600,'audio duration');num(a.gain,0,2,'gain');num(a.fadeIn,0,a.durationSeconds,'fade in');num(a.fadeOut,0,a.durationSeconds,'fade out');if(a.fadeIn+a.fadeOut>a.durationSeconds||a.startSeconds+a.durationSeconds>600)fail('Audio timing exceeds its bounds.');}
+  const clips=audioClipsForManifest(m);if(clips.length>100)fail('Use up to 100 audio clips across the film.');for(const a of clips){validateAudioClip(a);if(ids.has(a.id))fail('Duplicate audio clip.');ids.add(a.id);}
  }
  validateStyleLibrary(m);
  return m;
@@ -174,7 +178,7 @@ export function compileTimeline(manifest,brand,audioDuration=0){
  const scenes=manifest.scenes.map(s=>({...s,startSeconds:s.startSeconds+lead}));
  if(lead)scenes.unshift({...brand.intro,id:'brand-intro',startSeconds:0});
  const audioStart=(manifest.audio?.startSeconds||0)+lead;
- const audioClips=(manifest.audioClips||[]).map(a=>({...a,startSeconds:a.startSeconds+lead}));
+ const audioClips=audioClipsForManifest(manifest).map(a=>({...a,startSeconds:a.startSeconds+lead}));
  let end=Math.max(lead,...scenes.map(s=>s.startSeconds+s.durationSeconds),manifest.audio?audioStart+audioDuration:0,...audioClips.map(a=>a.startSeconds+a.durationSeconds));
  if(manifest.outroEnabled&&brand?.outro){scenes.push({...brand.outro,id:'brand-outro',startSeconds:end});end+=brand.outro.durationSeconds;}
  if(end>600)fail('Scenes, branding and full voiceover must fit within ten minutes.');

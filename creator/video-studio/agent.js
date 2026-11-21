@@ -1,4 +1,5 @@
-import {validateManifest} from './model.js?v=2026111910';
+import {audioClipsForManifest} from './audio.js?v=2026112201';
+import {validateManifest} from './model.js?v=2026112201';
 import {applyStylePreset as applyVisualStyle,getStylePreset,listStylePresets,updateSavedStylePreset} from './style-presets.js?v=2026111813';
 const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 const fail=(code,message)=>{throw Object.assign(Error(message),{code});};
@@ -58,7 +59,7 @@ export function createAgentOperations({authorize,getManifest,getSavedManifest=ge
  let writing=false;
  const result=async fn=>{try{await authorize();return await fn();}catch(error){return {ok:false,errors:[{code:error.code||'VALIDATION_ERROR',message:error.message}]};}};
  return {
-  getProjectJSON:()=>result(async()=>{await read();await authorize();return {ok:true,revision:getRevision(),manifest:structuredClone(getSavedManifest()),staged:JSON.stringify(getSavedManifest())!==JSON.stringify(getManifest()),assets:structuredClone(getSavedManifest().assets),availableAssets:structuredClone(getAvailableAssets()),audioTiming:structuredClone(getSavedManifest().audioClips||getSavedManifest().audio||[])};}),
+  getProjectJSON:()=>result(async()=>{await read();await authorize();return {ok:true,revision:getRevision(),manifest:structuredClone(getSavedManifest()),staged:JSON.stringify(getSavedManifest())!==JSON.stringify(getManifest()),assets:structuredClone(getSavedManifest().assets),availableAssets:structuredClone(getAvailableAssets()),audioTiming:structuredClone(getSavedManifest().schemaVersion===2?audioClipsForManifest(getSavedManifest()):getSavedManifest().audio||[])};}),
   getSceneSummary:()=>result(async()=>({ok:true,revision:getRevision(),scenes:sceneSummary(validateManifest(getManifest(),{mapAssets:getMapAssets()}))})),
   listStylePresets:()=>result(async()=>({ok:true,revision:getRevision(),presets:listStylePresets(getManifest()).map(({id,name,category,description,custom=false})=>({id,name,category,description,custom}))})),
   getStylePreset:id=>result(async()=>({ok:true,revision:getRevision(),preset:getStylePreset(getManifest(),id)})),

@@ -1,6 +1,6 @@
 import {presentationAt} from './map-documentary.js?v=2026111910';
 import {locationVisible} from './map-globe.js';
-import {resolveMapAsset} from './map-assets-client.js?v=2026111002';
+import {resolveMapAsset} from './map-assets-client.js?v=2026112201';
 import {icons,layerActive,layerStart,layerAlpha,transformedCorners} from './map-editor-model.js?v=2026111910';
 import {routeAt,timeOf,lightingFrame} from './history-model.js?v=2026111910';
 import {resolveOverlayPolicy} from './map-overlay-presets.js?v=2026110903';

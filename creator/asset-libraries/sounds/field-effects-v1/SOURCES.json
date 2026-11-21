@@ -1,0 +1,149 @@
+{
+  "format": "invincible-sound-library",
+  "version": 1,
+  "name": "Field and historical-action effects",
+  "description": "Reusable real animal recordings and illustrative foley. No film narration or timing. All CC0. Source transformations are recorded per sound.",
+  "sounds": [
+    {
+      "id": "elephant-trumpet",
+      "name": "Elephant Trumpet",
+      "url": "./asset-libraries/sounds/field-effects-v1/elephant-trumpet.mp3",
+      "duration": 2.299979,
+      "license": "CC0-1.0",
+      "sources": [
+        {
+          "author": "ikbenraar",
+          "source": "https://freesound.org/people/ikbenraar/sounds/819668/",
+          "license": "CC0-1.0"
+        }
+      ],
+      "processing": "Real elephant recording; strongest 2.3-second passage, filtering, peak normalisation and short edge fades.",
+      "sha256": "db39c374181d56d02556f20700fa93e054749fa1e120c06d7ebfa67c860531b9",
+      "peak": 0.76084
+    },
+    {
+      "id": "horse-gallop",
+      "name": "Horse Gallop",
+      "url": "./asset-libraries/sounds/field-effects-v1/horse-gallop.mp3",
+      "duration": 5.6,
+      "license": "CC0-1.0",
+      "sources": [
+        {
+          "author": "Max_Headroom",
+          "source": "https://freesound.org/people/Max_Headroom/sounds/175356/",
+          "license": "CC0-1.0"
+        }
+      ],
+      "processing": "Real horse galloping; filtering and peak normalisation.",
+      "sha256": "9501cd85eabc36d0814771446d102df48b79fc0ef474591300bce8f6d0e63667",
+      "peak": 0.75697
+    },
+    {
+      "id": "horse-neigh",
+      "name": "Horse Neigh",
+      "url": "./asset-libraries/sounds/field-effects-v1/horse-neigh.mp3",
+      "duration": 2.04,
+      "license": "CC0-1.0",
+      "sources": [
+        {
+          "author": "Salsero_classic",
+          "source": "https://freesound.org/people/Salsero_classic/sounds/826753/",
+          "license": "CC0-1.0"
+        }
+      ],
+      "processing": "Real horse neigh; filtering, peak normalisation and short edge fades.",
+      "sha256": "6894e5684c741ba7059c2507bcec4426def76da68334d5b67437f55193185865",
+      "peak": 0.74241
+    },
+    {
+      "id": "distant-crowd",
+      "name": "Distant Crowd",
+      "url": "./asset-libraries/sounds/field-effects-v1/distant-crowd.mp3",
+      "duration": 14.0,
+      "license": "CC0-1.0",
+      "sources": [
+        {
+          "author": "DickBlox",
+          "source": "https://freesound.org/people/DickBlox/sounds/101871/",
+          "license": "CC0-1.0"
+        }
+      ],
+      "processing": "Overlaid and low-pass filtered crowd walla for distant, indistinct atmosphere; not historical dialogue.",
+      "sha256": "bae1727e70ce1a35c74f34be4148d1a43a0c3c9aed1ff5bd4e818a7f86b0dc96",
+      "peak": 0.76512
+    },
+    {
+      "id": "sword-clash",
+      "name": "Sword Clash",
+      "url": "./asset-libraries/sounds/field-effects-v1/sword-clash.mp3",
+      "duration": 0.517021,
+      "license": "CC0-1.0",
+      "sources": [
+        {
+          "author": "loudernoises",
+          "source": "https://freesound.org/people/loudernoises/sounds/334169/",
+          "license": "CC0-1.0"
+        }
+      ],
+      "processing": "Composite blade-hit foley; peak normalisation and short edge fades.",
+      "sha256": "bcfd8b5bdcc2fb2e09d043441afca8327b4936241868f8b84528f70fa3c53618",
+      "peak": 0.76627
+    },
+    {
+      "id": "wood-creak",
+      "name": "Wood Creak",
+      "url": "./asset-libraries/sounds/field-effects-v1/wood-creak.mp3",
+      "duration": 0.986521,
+      "license": "CC0-1.0",
+      "sources": [
+        {
+          "author": "Rudmer_Rotteveel",
+          "source": "https://freesound.org/people/Rudmer_Rotteveel/sounds/502505/",
+          "license": "CC0-1.0"
+        }
+      ],
+      "processing": "Creaking wood foley; peak normalisation and short edge fades.",
+      "sha256": "a52f04e60ee321115b8767852baabec8c4b78bfebacf4d6af3249bce78017962",
+      "peak": 0.76101
+    },
+    {
+      "id": "arrow-whoosh",
+      "name": "Arrow Whoosh",
+      "url": "./asset-libraries/sounds/field-effects-v1/arrow-whoosh.mp3",
+      "duration": 0.9,
+      "license": "CC0-1.0",
+      "sources": [
+        {
+          "author": "saturdaysoundguy",
+          "source": "https://freesound.org/people/saturdaysoundguy/sounds/388036/",
+          "license": "CC0-1.0"
+        }
+      ],
+      "processing": "Single 0.9-second pass extracted from arrow whooshes; peak normalisation and short edge fades.",
+      "sha256": "ee0b093b21d1ef7429aaaf289129000f0968ce548a8cf80f73d15321b1ed2da0",
+      "peak": 0.76364
+    },
+    {
+      "id": "soft-thud",
+      "name": "Soft Thud",
+      "url": "./asset-libraries/sounds/field-effects-v1/soft-thud.mp3",
+      "duration": 0.55,
+      "license": "CC0-1.0",
+      "sources": [],
+      "processing": "Original procedural cloth/wood thud foley, authored for reusable effects; not an animal recording.",
+      "sha256": "b10adf767543f2dcec07111ef8c625dd80bff3d10a8cceeb17d2d24fa994e4f6",
+      "peak": 0.61809
+    },
+    {
+      "id": "heavy-footsteps",
+      "name": "Heavy Footsteps",
+      "url": "./asset-libraries/sounds/field-effects-v1/heavy-footsteps.mp3",
+      "duration": 4.4,
+      "license": "CC0-1.0",
+      "sources": [],
+      "processing": "Original low thump foley arranged as heavy movement; illustrative, not a field recording of an elephant.",
+      "sha256": "1c8a8031f16c1bbf3e61afb826a0b1e171571dbe18bac2fed1a346aea52b193b",
+      "peak": 0.75608
+    }
+  ]
+}

@@ -23,16 +23,26 @@ export function mixAudioChunk(tracks,at,length,rate=48000){
  for(let i=0;i<data.length;i++)data[i]=Math.max(-1,Math.min(1,data[i]));return {data,channels};
 }
 export function audioTrimWithinSource(clip,buffer){return clip.trimStart+(clip.loop?clip.sourceDurationSeconds:clip.durationSeconds)<=buffer.duration+1/Math.min(48000,buffer.sampleRate)+Number.EPSILON;}
-export async function loadAudioTracks(manifest,getFile,{onUnavailable,decode=decodeVoiceover}={}){
+// Scene clips use local time in saved JSON and the same absolute-time mixer as recordings.
+export function audioClipsForManifest(manifest){
+ return [...(manifest.audioClips||[]),...(manifest.scenes||[]).flatMap(scene=>(scene.audioClips||[]).map(clip=>({...clip,startSeconds:scene.startSeconds+clip.startSeconds})))];
+}
+export function findAudioClip(manifest,id){
+ const global=manifest.audioClips?.find(clip=>clip.id===id);if(global)return {clip:global,scene:null};
+ for(const scene of manifest.scenes||[]){const clip=scene.audioClips?.find(clip=>clip.id===id);if(clip)return {clip,scene};}
+ return null;
+}
+export async function loadAudioTracks(manifest,getFile,{onUnavailable,decode=decodeVoiceover,fetchAsset=async url=>{const response=await fetch(url,{credentials:'omit'});if(!response.ok)throw Error('Sound could not be loaded (HTTP '+response.status+').');return response.blob();}}={}){
  const buffers = new Map(), tracks = [];
- for (const clip of manifest.audioClips || []) {
-  if (!buffers.has(clip.fileId)) buffers.set(clip.fileId, (async () => {
-   const file = await getFile(clip.fileId);
+ for (const clip of audioClipsForManifest(manifest)) {
+  const key=clip.fileId?'file:'+clip.fileId:'url:'+clip.url;
+  if (!buffers.has(key)) buffers.set(key, (async () => {
+   const file = clip.fileId?await getFile(clip.fileId):await fetchAsset(clip.url);
    if (!file) throw Error('Missing recording on this device: ' + clip.name);
    return decode(file);
   })());
   try {
-   const buffer = await buffers.get(clip.fileId);
+   const buffer = await buffers.get(key);
    if (!audioTrimWithinSource(clip, buffer)) throw Error('Audio trim exceeds original recording: ' + clip.name);
    tracks.push({...clip, buffer});
   } catch (error) {

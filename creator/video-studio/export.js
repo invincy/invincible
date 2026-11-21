@@ -1,4 +1,4 @@
-import {audioChunk,mixAudioChunk} from './audio.js?v=2026111604';
+import {audioChunk,mixAudioChunk} from './audio.js?v=2026112201';
 export async function checkStudioEncoding({width,height,channels=0}){
  if(!globalThis.VideoEncoder)throw Error('MP4 export needs WebCodecs in current Chrome or Edge.');
  const {canEncodeVideo,canEncodeAudio}=await import('../vendor/studio-video.mjs');
