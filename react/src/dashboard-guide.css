@@ -430,3 +430,32 @@
   .v2-theme-one #v2-region-dashboard .v2-orb-plan-preview { max-width:170px; font-size:12px }
   .v2-theme-three #v2-region-dashboard .v2-orb-plan { max-width:40%; font-size:clamp(18px,1.65vw,25px) }
 }
+
+/* Keep the desktop Orb icon-first; names stay available to screen readers and
+   appear on hover or keyboard focus. Coarse-pointer and phone layouts keep labels. */
+@media (min-width:901px) and (pointer:fine) {
+  .v2-shell #v2-region-dashboard .v2-constellation .v2-page-point {
+    width:56px; max-width:none; min-height:56px; padding:4px;
+  }
+  .v2-shell #v2-region-dashboard .v2-constellation .v2-page-glow,
+  .v2-shell #v2-region-dashboard .v2-constellation .v2-page-glow svg {
+    width:44px; height:44px;
+  }
+  .v2-shell #v2-region-dashboard .v2-constellation .v2-page-name {
+    position:absolute; top:calc(100% + 5px); left:50%; z-index:20;
+    width:max-content; max-width:160px; padding:6px 9px;
+    border:1px solid color-mix(in srgb,var(--glow) 38%,transparent); border-radius:8px;
+    background:#07131df2; color:#f1f8fa; box-shadow:0 8px 24px #0009;
+    font-size:12px; line-height:1.3; white-space:normal; text-align:center; text-shadow:none;
+    visibility:hidden; opacity:0; transform:translate(-50%,-4px);
+    transition:opacity .16s ease,transform .16s ease,visibility .16s; pointer-events:none;
+  }
+  .v2-shell #v2-region-dashboard .v2-constellation .v2-page-point:is(:hover,:focus-visible) .v2-page-name {
+    visibility:visible; opacity:1; transform:translate(-50%,0);
+  }
+  .v2-shell #v2-region-dashboard .v2-guide-timer-controls button {
+    display:grid; place-items:center; width:var(--ui-control-min); min-width:var(--ui-control-min); padding:0;
+  }
+  .v2-shell #v2-region-dashboard .v2-guide-timer-controls button svg { width:19px; height:19px }
+  .v2-shell #v2-region-dashboard .v2-guide-timer-label { display:none }
+}

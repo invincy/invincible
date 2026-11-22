@@ -243,7 +243,7 @@ function SignedInWorkspace({user, logout}) {
       {regions.map(region => <Region key={region.id} region={region} viewport={viewport} onScroll={moveOrb} active={active===region.id} connected={!['dashboard','workspace'].includes(region.id)}>
         {!['dashboard','workspace'].includes(region.id)?<ConnectedSpace region={region} active={active===region.id} initialPath={paths.current[region.id]} requestedPath={requestedPaths[region.id]} onNavigate={openSpace} onLocation={rememberLocation} onWheel={delta=>{if(viewport.current)viewport.current.scrollLeft+=delta;}}/>:
           !ready ? <div className="v2-panel v2-loading" role="status">Restoring tasks and your daily plan…</div> :
-          region.id === 'dashboard' ? <Dashboard uid={user.uid} data={data} plan={plan} timer={timer} onInspect={inspect} orbAnchor={mountOrbAnchor} onOpenWorkspace={() => navigate('workspace')} onTravel={travel} onPlan={()=>setTodayOpen(true)} onPanelScroll={moveOrb}/> :
+          region.id === 'dashboard' ? <Dashboard uid={user.uid} data={data} plan={plan} timer={timer} desktop={desktop} onInspect={inspect} orbAnchor={mountOrbAnchor} onOpenWorkspace={() => navigate('workspace')} onTravel={travel} onPlan={()=>setTodayOpen(true)} onPanelScroll={moveOrb}/> :
           <Workspace desktop={desktop} data={data} plan={plan} timer={timer} onInspect={inspect} uid={user.uid} onCreate={() => setSelected({id: newId('t'), create: true})} onPaste={() => setImportPlan({targetId: ''})}/>}
       </Region>)}
     </main>

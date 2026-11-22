@@ -11,7 +11,7 @@ const stages = [
   ['Done', 'Completed'],
 ];
 
-export default function DashboardRegion({uid, data, plan, timer, onInspect, orbAnchor, onOpenWorkspace, onTravel, onPlan, onPanelScroll}) {
+export default function DashboardRegion({uid, data, plan, timer, desktop, onInspect, orbAnchor, onOpenWorkspace, onTravel, onPlan, onPanelScroll}) {
   const scene = useRef(null);
   const focus = plan.active?.task;
   const next = plan.active?.step || taskSteps(focus).find(step => !step.done && step.status !== 'Done');
@@ -50,8 +50,14 @@ export default function DashboardRegion({uid, data, plan, timer, onInspect, orbA
         <span className="v2-guide-kicker">FOCUS SESSION</span>
         <output aria-label="Time remaining">{formatTimer(timer.seconds)}</output>
         <div className="v2-guide-timer-controls">
-          <button aria-label={timer.running ? 'Pause focus' : 'Start focus'} onClick={timer.running ? timer.pause : timer.start}>{timer.running ? 'Pause' : 'Start'}</button>
-          <button aria-label="Reset timer" onClick={timer.reset}>Reset</button>
+          <button type="button" aria-label={timer.running ? 'Pause focus' : 'Start focus'} title={timer.running ? 'Pause focus' : 'Start focus'} onClick={timer.running ? timer.pause : timer.start}>
+            {desktop&&<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{timer.running?<><path d="M8 5h3v14H8z"/><path d="M15 5h3v14h-3z"/></>:<path d="m8 5 11 7-11 7V5Z"/>}</svg>}
+            <span className="v2-guide-timer-label">{timer.running ? 'Pause' : 'Start'}</span>
+          </button>
+          <button type="button" aria-label="Reset timer" title="Reset timer" onClick={timer.reset}>
+            {desktop&&<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/></svg>}
+            <span className="v2-guide-timer-label">Reset</span>
+          </button>
         </div>
       </div>
 

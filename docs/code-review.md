@@ -1,5 +1,19 @@
 # Cleanup review — 2026-10-03
 
+## Dashboard icon-first pass — November 22, 2026
+
+Desktop Orb destinations now show the native line icons first; names appear on
+hover or keyboard focus, and each link keeps an accessible name and tooltip.
+Desktop focus-session controls use play/pause and reset icons with accessible
+names; phone and coarse-pointer layouts keep their visible text. Removed nine
+older Orb coordinate declarations from `dashboard.css` after confirming the
+newer ID-scoped positions in `dashboard-guide.css` supersede them. No routes,
+account state, reminders, tasks or mobile layouts changed.
+
+Verified source ownership, cascade order and overlapping selectors. `npm run
+build` passed. Automated tests were not run; the post-change browser visual
+review remains unverified in this session.
+
 ## Documentary masters and reusable Shorts — November 22, 2026
 
 Added optional stable-scene Short cuts to the existing manifest and Settings

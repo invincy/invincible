@@ -10,7 +10,7 @@ export default function ConstellationNav({task, onInspect, onTravel}) {
     <nav className="v2-orb-pages" aria-label="Explore Invincible pages">
       {destinations.map(page => <a key={page.id} className="v2-page-point" data-page={page.id}
         href={page.href} target={page.external ? '_blank' : undefined}
-        rel={page.external ? 'noopener noreferrer' : undefined}
+        rel={page.external ? 'noopener noreferrer' : undefined} aria-label={page.label} title={page.label}
         onClick={event => {
           if (page.external || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
           event.preventDefault();
