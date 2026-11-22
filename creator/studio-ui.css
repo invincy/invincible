@@ -19,6 +19,23 @@ body.studio-ui{
  font-family:Roboto,"Noto Sans Devanagari",system-ui,sans-serif;
  scrollbar-color:#345c6b var(--studio-canvas);scrollbar-width:thin;
 }
+/* Keep Creator controls on the selected dashboard palette. */
+:root{--creator-accent:#f1c578;--creator-muted:#d3bd95;--creator-surface:#211b12;--creator-panel:#17140e;--creator-border:#705633}
+html[data-visual-theme="two"]{--creator-accent:#b4ee88;--creator-muted:#b5caa9;--creator-surface:#12251b;--creator-panel:#0a1b13;--creator-border:#43663a}
+html[data-visual-theme="three"]{--creator-accent:#69def0;--creator-muted:#aac5ce;--creator-surface:#102a38;--creator-panel:#091a25;--creator-border:#326476}
+
+.studio-ui:is(.creator-page,.project-page),
+html:not(.ai-voiceover-embed) .studio-ui.voiceover-page {
+ --studio-accent:var(--creator-accent);
+}
+.studio-ui:is(.creator-page,.project-page) .global-nav[data-icon-nav] .desktop-nav :is([data-page="dashboard"], [aria-current="page"]),
+html:not(.ai-voiceover-embed) .studio-ui.voiceover-page .global-nav[data-icon-nav] .desktop-nav :is([data-page="dashboard"], [aria-current="page"]) {
+ color:var(--creator-accent);
+ background:var(--creator-surface);
+}
+.studio-ui:is(.creator-page,.project-page,.voiceover-page) .global-nav[data-icon-nav] .desktop-nav [aria-current="page"] {
+ border-color:var(--creator-accent);
+}
 /* A composited water layer: no canvas, input handlers or per-frame script. */
 .studio-ui::before{
  content:"";position:fixed;inset:-12%;z-index:-1;pointer-events:none;
@@ -36,7 +53,7 @@ body.studio-ui{
 .studio-ui :where(button,select,input:not([type=checkbox]):not([type=radio]),summary){min-height:44px}
 .studio-ui :where(input,select,textarea){color-scheme:dark}
 .studio-ui .primary,.studio-ui #contentDialog .primary{background:var(--studio-accent);border-color:transparent;color:#082025;box-shadow:none;font-weight:600}
-.studio-ui .primary:hover:not(:disabled){background:#98e7df}
+.studio-ui .primary:hover:not(:disabled){background:color-mix(in srgb,var(--studio-accent) 78%,white)}
 .studio-ui .secondary,.studio-ui .tts-launch{background:#172b39;border-color:var(--studio-line);color:#e7eff5}
 .studio-ui .production-workbench{--wb-line:var(--studio-line);--wb-accent:var(--studio-accent);--wb-cyan:var(--studio-accent);--wb-surface:var(--studio-surface)}
 .studio-ui :is(.studio-header,.project-header),.studio-ui>main{max-width:none;padding-inline:clamp(16px,2vw,36px)}
@@ -66,7 +83,7 @@ body.studio-ui{
 .studio-ui .video-studio :is(input,select,textarea),.studio-ui .production-workbench .video-studio :is(input,select){background:#09131f;border-color:var(--studio-line);color:var(--text)}
 .studio-ui .video-studio button{background:#172b39;border-color:#34505d;color:var(--text);min-height:44px}
 .studio-ui .video-studio [data-vs=export]{background:var(--studio-accent);border-color:transparent;color:#082025}
-.studio-ui .video-studio [data-vs=export]:hover{background:#98e7df;border-color:transparent}
+.studio-ui .video-studio [data-vs=export]:hover{background:color-mix(in srgb,var(--studio-accent) 78%,white);border-color:transparent}
 .studio-ui .video-studio :is([data-vs=copy-brief],[data-vs=apply]:not(:disabled),button[aria-pressed=true]){background:#183b43;border-color:#478e93;color:#d2f4ef}
 .studio-ui .video-studio :is(button,input,select,textarea):focus-visible{outline-color:var(--studio-accent)}
 .studio-ui .vs-audio-track>div{background:#183b43;color:#d2f4ef;border-color:#478e93}
@@ -77,7 +94,7 @@ body.studio-ui{
 .studio-ui .wb-tabs button{min-height:44px}
 .studio-ui .production-workbench.wb-studio-home .wb-tabs button[aria-current=page]{background:#15313d;border-color:#478e93;color:#bceae5;box-shadow:none}
 .studio-ui .wb-studio-home .wb-tabs button{background:#112331;border-color:var(--studio-line);color:#b5cbd6}
-.studio-ui .project-progress span{background:linear-gradient(90deg,#458e9c,var(--studio-accent));box-shadow:none}
+.studio-ui .project-progress span{background:var(--studio-accent);box-shadow:none}
 
 /* One Creator scrollbar system. Keep the existing solid treatment on small
    screens; desktop tracks stay clear so they never read as extra panels. */

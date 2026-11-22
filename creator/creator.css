@@ -221,10 +221,6 @@ body.creator-page{display:flex;min-height:0;flex-direction:column}
  .creator-page .tool-grid .tool-copy>span{display:none}
 }
 
-/* Creator home follows the dashboard's chosen visual theme. */
-html[data-visual-theme="one"]{--creator-accent:#f1c578;--creator-muted:#d3bd95;--creator-surface:#211b12;--creator-panel:#17140e;--creator-border:#705633}
-html[data-visual-theme="two"]{--creator-accent:#b4ee88;--creator-muted:#b5caa9;--creator-surface:#12251b;--creator-panel:#0a1b13;--creator-border:#43663a}
-html[data-visual-theme="three"]{--creator-accent:#69def0;--creator-muted:#aac5ce;--creator-surface:#102a38;--creator-panel:#091a25;--creator-border:#326476}
 .creator-page .creator-projects,.creator-page .creator-toolbox{background:var(--creator-panel);border-color:var(--creator-border)}
 .creator-page .project-grid .project-home-card,.creator-page .tool-grid>a,.creator-page .tool-grid>button{background:var(--creator-surface);border-color:var(--creator-border)}
 .creator-page .tool-grid>a:hover,.creator-page .tool-grid>button:hover,.creator-page .project-grid .project-home-card:hover{border-color:var(--creator-accent);background:var(--creator-surface)}

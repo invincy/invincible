@@ -149,6 +149,14 @@ centered in the shared Electric backdrop with the circuit grid and lines.
 The ring is decorative on Creator pages. Gold and Forest keep their own
 backgrounds.
 
+Creator home and project pages use the same theme palette for navigation
+and primary actions. The embedded Script and Sync plan share the selected
+accent while the project supplies the backdrop. The Voiceover tool uses
+the dashboard backdrop when opened on its own, and the Invincible AI
+embed uses a neutral surface. A 390 px Chromium check switched Golden
+Orbit → Emerald Forest → Electric Blue → Golden Orbit on already-open
+Creator pages and inspected accents, artwork and circuits.
+
 Open on the editing workspace: scenes on the left, preview in the center,
 selected-scene controls on the right, and the timeline below. Keep Save and
 Export in one compact toolbar. Place AI generation, media, JSON import, and
