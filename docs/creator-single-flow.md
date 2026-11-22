@@ -1,5 +1,37 @@
 # Creator Studio: one video flow
 
+## Long documentaries and reusable Shorts
+
+Landscape 16:9 masters already use the native Studio renderer and MP4 exporter.
+Keep the first documentary within the existing ten-minute limit. The optional
+`shortCuts` manifest field saves up to 30 named cuts, each with `id`, `title`,
+optional `hook`, `firstSceneId`, and `lastSceneId`. Cuts span complete existing
+scenes, in order, for up to 180 seconds. The hook is planning metadata, never
+additional synthesized narration. Source changes appear in the next cut review.
+
+In Motion Studio, open Settings → Advanced → **Shorts from this video** (the
+standalone Studio has the same Advanced disclosure). Choose the first and last
+scene, give the cut an independent title/hook, and Save cut, then Save the video.
+Review portrait opens a temporary native preview with the exact source recording
+trimmed to those scenes. Play, seek, export a narrated portrait MP4, or download
+editable JSON for individual framing adjustments through the existing reviewed
+import in a separate project. This does not replace the landscape master.
+Remove cut changes only the cut metadata; the underlying scenes and media remain.
+
+Scene IDs, local animation keys, map source offsets, media IDs and source bytes
+are retained. Main and scene-attached sounds are cropped at measured source
+positions; no audio speed conversion runs here. Missing media, invalid scene
+references, boundaries through sound fades and cuts beginning midway through
+looping audio fail with actionable messages. Repeating audio is supported when
+the cut starts at a loop boundary. The native portrait compositor must be reviewed;
+this is not automatic per-object reframing or a guarantee of readable map labels.
+
+Verification: `node --test tests/creator-short-cuts.mjs` and
+`node tests/creator-short-cuts-browser.cjs` cover preservation, source gaps,
+voiceover samples, source trimming, loop boundaries, cloud reload and a real native
+1080×1920 MP4 containing audio. The original film still needs its measured audio,
+reviewed animation, preview and full MP4 verification.
+
 Motion Studio opens its saved video draft without importing a plugin plan in the
 background. Plans enter through explicit review/apply; an existing draft still needs
 confirmation before replacement. Old plugin metadata remains readable without locking

@@ -3,11 +3,11 @@ import {drawCanvasBackground,drawCanvasLayer} from './canvas.js?v=2026111813';
 import {ensureDocumentaryFonts} from '../map-fonts.js';
 import {compileAnimation} from '../map-animation-import.js?v=2026111910';
 import {createHistoryPlayer} from '../history-player.js?v=2026112201';
-import {layerFrame,visualFrameAt,referencedMapAssets} from './model.js?v=2026112202';
+import {layerFrame,visualFrameAt,referencedMapAssets} from './model.js?v=2026112204';
 import {resolveMapAsset} from '../map-assets-client.js?v=2026112201';
 import {drawBattlefield} from './battlefield.js?v=2026111014';
 import {parallaxTransform,projectLayer} from './parallax.js';
-import {fitMedia} from './composition.js?v=2026112201';
+import {fitMedia} from './composition.js?v=2026112204';
 import {applyStyleToMapProject,drawStyleFrame,resolveSceneStyle,styledLayerFrame} from './style-presets.js?v=2026111813';
 import {drawWeatherEffect,orderOverlays,resolveOverlayLayout} from './weather-effects.js';
 export function mapDraft(animation,geometryReviewed,mapAssets=[]){

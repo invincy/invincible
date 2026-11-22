@@ -1,4 +1,5 @@
 import {audioClipsForManifest} from './audio.js?v=2026112201';
+import {validateShortCuts} from './short-cuts.js';
 import {validateThreeScene} from './three-scene.js';
 import {validateCanvas,CANVAS_FONTS,BACKGROUND_FIELDS} from './canvas.js?v=2026111813';
 import {compileAnimation} from '../map-animation-import.js?v=2026111910';
@@ -146,7 +147,7 @@ function validateAudioClip(a){keys(a,['id','fileId','url','credit','name','role'
 export function validateManifest(input,{mapAssets=[]}={}){
  let m;try{m=typeof input==='string'?JSON.parse(input):structuredClone(input);}catch{fail('Choose a complete Video Studio JSON file.');}
  if(new TextEncoder().encode(JSON.stringify(m)).length>1000000)fail('Use a manifest under 1 MB.');
- keys(m,['schemaVersion','title','aspectRatio','fps','brandPresetId','scenes','assets','audio','visualStylePresetId','visualStylePresets',...(m.schemaVersion===2?['audioClips','mapSources']:[]),'introEnabled','outroEnabled'],'manifest');
+ keys(m,['schemaVersion','title','aspectRatio','fps','brandPresetId','scenes','assets','audio','visualStylePresetId','visualStylePresets',...(m.schemaVersion===2?['audioClips','mapSources']:[]),'introEnabled','outroEnabled','shortCuts'],'manifest');
  if(![1,2].includes(m.schemaVersion)||m.fps!==30||!['9:16','16:9'].includes(m.aspectRatio))fail('Use schemaVersion 1 or 2, fps 30 and 9:16 or 16:9.');str(m.title,200,'title');id(m.brandPresetId);
  for(const p of ['introEnabled','outroEnabled'])if(m[p]!==undefined&&typeof m[p]!=='boolean')fail(p+' must be boolean.');
  if(!Array.isArray(m.assets)||m.assets.length>200)fail('Use up to 200 asset references.');const assets=new Set(),models=new Set(),assetIds=new Set();
@@ -165,6 +166,7 @@ export function validateManifest(input,{mapAssets=[]}={}){
   if(!Array.isArray(m.audioClips)||m.audioClips.length>100)fail('Use up to 100 audio clips.');const ids=new Set();
   const clips=audioClipsForManifest(m);if(clips.length>100)fail('Use up to 100 audio clips across the film.');for(const a of clips){validateAudioClip(a);if(ids.has(a.id))fail('Duplicate audio clip.');ids.add(a.id);}
  }
+ validateShortCuts(m.shortCuts,m.scenes);
  validateStyleLibrary(m);
  return m;
 }

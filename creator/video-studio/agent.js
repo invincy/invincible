@@ -1,5 +1,5 @@
 import {audioClipsForManifest} from './audio.js?v=2026112201';
-import {validateManifest} from './model.js?v=2026112201';
+import {validateManifest} from './model.js?v=2026112204';
 import {applyStylePreset as applyVisualStyle,getStylePreset,listStylePresets,updateSavedStylePreset} from './style-presets.js?v=2026111813';
 const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 const fail=(code,message)=>{throw Object.assign(Error(message),{code});};

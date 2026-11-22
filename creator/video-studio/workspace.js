@@ -1,23 +1,24 @@
-import {createAgentOperations} from './agent.js?v=2026112201';
+import {createAgentOperations} from './agent.js?v=2026112204';
 import {checkStudioGlb, MAX_MODEL_BYTES} from './three-scene.js';
 import {mountConnectedImageGenerator} from '../image-generator.js?v=2026111206';
 import {callImageRelay,draftRemoteImagePrompt} from '../../shared/firebase-image-relay.js?v=2026111205';
 import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=2026112201';
-import {studioBrief} from './handoff.js?v=2026112201';
-import {upgradeVideo,arrangeScenes} from './composition.js?v=2026112201';
-import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026112201';
-import {createStudioRenderer} from './adapters.js?v=2026112202';
+import {studioBrief} from './handoff.js?v=2026112204';
+import {upgradeVideo,arrangeScenes} from './composition.js?v=2026112204';
+import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026112204';
+import {createStudioRenderer} from './adapters.js?v=2026112204';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks,audioClipsForManifest} from './audio.js?v=2026112201';
-import {mountAssembly} from './assembly.js?v=2026112201';
+import {mountAssembly} from './assembly.js?v=2026112204';
 import {encodeStudioVideo} from './export.js?v=2026112201';
 import {openStudioStore} from './storage.js';
-import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026112201';
+import {compileAiStoryboardManifest} from '../ai-preview.js?v=2026112204';
 import {runAiProduction} from '../ai-production-runner.mjs?v=2026111203';
 import {generateVoiceover} from '../tts-api.js';
 import {createProductionReadiness,selectProductionVoice} from './production-readiness.js?v=2026112201';
 import {loadPendingAiDraft,loadPendingAiAudio,savePendingAiDraft} from '../ai-draft.js?v=2026111319';
 import {startBrowserSceneJpgBridge} from './browser-scene-jpg-bridge.js?v=2026111605';
 import {mountStyleGallery} from './style-gallery.js?v=2026111813';
+import {mountShortsPanel} from './shorts-panel.js';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>crypto.randomUUID();
 const template=(name,text)=>({id:name,startSeconds:0,durationSeconds:2,engineType:'graphic',engineData:{},transition:{type:'fade',durationSeconds:.3},overlays:[{id:'title',type:'text',text,x:.5,y:.5,fontSize:64}]});
@@ -219,7 +220,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  setup.ondragover=e=>{e.preventDefault();};setup.ondrop=e=>{e.preventDefault();if(e.dataTransfer.files.length)run(()=>uploadFiles([...e.dataTransfer.files]));};
  const lifecycle=new AbortController();
  let drawing=null,lastPreviewFrameAt=-Infinity;
- let renderer=null,timeline=null,audioBuffer=null,audioTracks=[],stopTracks=null,assembly=null,styleGallery=null,playing=false,raf=0,time=state.time||0,context=null,source=null,gainNode=null,clock=0,clockTime=0,disposed=false,busy=false,pending=null,controller=null,drawBusy=false,preparing=null;
+ let renderer=null,timeline=null,audioBuffer=null,audioTracks=[],stopTracks=null,assembly=null,styleGallery=null,shortsPanel=null,playing=false,raf=0,time=state.time||0,context=null,source=null,gainNode=null,clock=0,clockTime=0,disposed=false,busy=false,pending=null,controller=null,drawBusy=false,preparing=null;
  const status=text=>{if(!disposed)$('[data-vs-status]').textContent=text;};
  const canSync=()=>getProject()?.ownerUid===account||!!mediaService;
  const cloudNotice=document.createElement('div');
@@ -349,6 +350,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   $('[data-vs-library]').innerHTML='<option value="">Choose existing map image</option>'+mapAssets().filter(a=>a.type==='image').map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
   assembly?.sync();
   styleGallery?.sync();
+  shortsPanel?.sync();
  }
  async function loadPreviewAudio(manifest) {
   const unavailable = [];
@@ -570,7 +572,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   if(event.target.matches('[data-vs-seek]')&&!busy){stop();time=Number(event.target.value);if(!drawBusy){drawBusy=true;draw().catch(e=>status(e.message)).finally(()=>drawBusy=false);}}
  });
  root.addEventListener('change',event=>{
-  if(event.target.closest('[data-assembly]'))return;
+  if(event.target.closest('[data-assembly],.vs-shorts,.vs-short-review'))return;
   const target=event.target;if(target.matches('[data-vs-seek]'))return;
   run(async()=>{
    if(target.matches('[data-media-upload]')){await uploadFiles([...target.files]);target.value='';return;}
@@ -605,6 +607,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  });
  assembly=mountAssembly(assemblyRoot,{pause:stop,session:state,getManifest:()=>state.manifest,getProject,getFile,importFiles:uploadFiles,putFile:(id,file)=>state.files.set(id,file),deleteFile:id=>state.files.delete(id),run,status,getTime:()=>time,setTime:value=>{time=value;state.time=value;},releaseRenderer:async()=>{stop();if(drawing)await drawing.catch(()=>{});invalidate();},setManifest:applyManifest,saveMapDraft:next=>save(next,{preview:false,applying:true}),previewManifest:async next=>{if(next===state.manifest){invalidate();await draw();return;}invalidate();try{const b=brand(),t=compileTimeline(next,b);await loadPreviewAudio(next);const lead=t.audioClips[0]&&audioClipsForManifest(next)[0]?t.audioClips[0].startSeconds-audioClipsForManifest(next)[0].startSeconds:0;audioTracks=audioTracks.map(a=>({...a,startSeconds:a.startSeconds+lead}));const nextRenderer=await createStudioRenderer(canvas,next,t,b,{getFile,mapAssets:mapAssets(),signal:lifecycle.signal});if(disposed){nextRenderer.destroy();return;}renderer=nextRenderer;timeline=t;await renderer.draw(time);}catch(error){invalidate();try{await draw();}catch{}throw error;}}});
  styleGallery=mountStyleGallery(styleRoot,{getManifest:()=>state.manifest,getSelectedSceneId:()=>assembly?.selectedId||'',applyManifest,saveManifest:next=>save(next),status});
+ shortsPanel=mountShortsPanel(advanced,{getManifest:()=>state.manifest,setManifest:applyManifest,getFile,mapAssets,brand,run,status,pause:stop});
  const libraryReady = refreshLibrary();
  const ready=run(async()=>{
   if(!state.loaded){
@@ -685,5 +688,5 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   try{return {cloud:await save(next,{preview:false})};}
   finally{if(!disposed)lock(false);}
  }
- return {ready,save:async()=>{if(busy||disposed)throw Error('Wait for the current editor operation to finish.');lock(true);try{return await save();}finally{if(!disposed)lock(false);}},get manifest(){return state.manifest;},get mapFocused(){return assembly.mapFocused;},saveFocusedMap,importAiProduction,reviewGeneratedMaps,destroy(){if(window.invincibleAgent===exposedAgent)delete window.invincibleAgent;stopBrowserSceneJpgBridge();images.destroy();disposed=true;state.time=time;styleGallery?.destroy();assembly?.destroy();stop();lifecycle.abort(new DOMException('Workspace closed','AbortError'));controller?.abort(new DOMException('Workspace closed','AbortError'));renderer?.destroy();context?.close();if(lastExportUrl)URL.revokeObjectURL(lastExportUrl);store?.close();document.removeEventListener('visibilitychange',hidden);}};
+ return {ready,save:async()=>{if(busy||disposed)throw Error('Wait for the current editor operation to finish.');lock(true);try{return await save();}finally{if(!disposed)lock(false);}},get manifest(){return state.manifest;},get mapFocused(){return assembly.mapFocused;},saveFocusedMap,importAiProduction,reviewGeneratedMaps,destroy(){if(window.invincibleAgent===exposedAgent)delete window.invincibleAgent;stopBrowserSceneJpgBridge();images.destroy();disposed=true;state.time=time;shortsPanel?.destroy();styleGallery?.destroy();assembly?.destroy();stop();lifecycle.abort(new DOMException('Workspace closed','AbortError'));controller?.abort(new DOMException('Workspace closed','AbortError'));renderer?.destroy();context?.close();if(lastExportUrl)URL.revokeObjectURL(lastExportUrl);store?.close();document.removeEventListener('visibilitychange',hidden);}};
 }

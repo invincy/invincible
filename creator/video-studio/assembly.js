@@ -1,12 +1,12 @@
 import {BUILTIN_MODELS, CAMERA_FIELDS, MODEL_FIELDS, MAX_MODELS, modelMotion, trainStage} from './three-scene.js';
 import {DEFAULT_PARALLAX,trainTemplate} from './parallax.js';
-import {mountObjectEditor} from './object-editor.js?v=2026112201';
+import {mountObjectEditor} from './object-editor.js?v=2026112204';
 import {createDefaultMap} from '../map-defaults.js?v=2026110903';
-import {appendProjectMaps,arrangeScenes,upgradeVideo,resizeScene} from './composition.js?v=2026112201';
+import {appendProjectMaps,arrangeScenes,upgradeVideo,resizeScene} from './composition.js?v=2026112204';
 import {emptyBattlefield} from './battlefield.js?v=2026111014';
 import {decodeVoiceover,audioClipsForManifest,findAudioClip} from './audio.js?v=2026112201';
-import {validateManifest} from './model.js?v=2026112201';
-import {mapDraft} from './adapters.js?v=2026112201';
+import {validateManifest} from './model.js?v=2026112204';
+import {mapDraft} from './adapters.js?v=2026112204';
 import {mountMapEditor} from '../map-editor.js?v=2026112201';
 import {safeRelativeAssetPath} from '../map-editor-model.js?v=2026111910';
 import {mountBattlefieldEditor} from './battlefield-editor.js?v=2026111014';

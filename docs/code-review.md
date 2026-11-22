@@ -1,5 +1,34 @@
 # Cleanup review — 2026-10-03
 
+## Documentary masters and reusable Shorts — November 22, 2026
+
+Added optional stable-scene Short cuts to the existing manifest and Settings
+panel. The portrait review uses the native Studio compositor, source media and
+MP4 encoder. Short narration is trimmed from the final recording; neither source
+bytes nor speed are changed. Scene-local animation and map offsets are retained,
+while the landscape master remains unchanged. Editable portrait JSON is available
+for independent framing through the existing reviewed import. Cuts are saved
+through the current account/revision-aware draft path. No Firebase rules, paths,
+Functions or auth behavior changed.
+
+Verified: 47 focused Shorts, Studio, composition and scene-audio unit tests;
+Shorts UI/cloud-reload/source-preservation test with a decoded narrated
+1080x1920 MP4; native composition browser suite including map/battle/image/video
+and overlapping audio; single-flow browser suite; agent browser suite; site
+references and whitespace. The broad Studio browser suite stops at its unchanged
+assertion expecting “recordings in the Audio timeline”, while HEAD already renders
+“clips in the Audio timeline”. Its later checks are not claimed. The new feature's
+native export was tested separately. These synthetic checks do not certify the
+new documentary's final voiceover or production export. Live signed-in script
+creation was impeded by the existing TTS frame remaining on account restoration;
+project naming itself saved successfully.
+
+Limitations: complete-scene boundaries only, 180 seconds per Short, existing
+600-second master ceiling; no automatic per-object portrait reframing. Audio cuts
+inside fades or mid-loop fail explicitly. Reopen portrait review after source
+edits; deleted/reordered boundary scenes need corrected cut metadata before save.
+
+
 ## Native visuals during narration pauses — November 22, 2026
 
 Motion Studio now resolves a preceding visual frame during gaps between measured

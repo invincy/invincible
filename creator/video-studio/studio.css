@@ -50,3 +50,11 @@ body.creator-page{--bg:#0f0f0f;--panel:#181818;--panel2:#202020;--line:#333;--te
 
 .vs-flow .vs-agent-instructions>summary{display:list-item;cursor:pointer;min-height:44px;padding-block:12px;color:inherit}
  .vs-quick-preview .vs-flow,.vs-quick-preview .vs-assembly,.vs-quick-preview .vs-advanced,.vs-quick-preview .vs-review-heading{display:none}.vs-quick-preview .vs-layout{display:block}.vs-quick-preview .vs-preview{position:static;max-width:720px;margin:0 auto}.vs-quick-preview .vs-preview canvas{max-height:72vh}.vs-quick-preview .vs-preview:before{content:'Quick scene preview · blank JPG moment uses midpoint';display:block;color:#b9b9b9;font-size:12px;margin-bottom:10px}
+.vs-shorts { min-width:0; padding:16px; }
+.vs-shorts input,.vs-shorts textarea,.vs-shorts select { max-width:100%; }
+.vs-shorts article { margin-top:16px; padding-top:12px; border-top:1px solid #475569; }
+.vs-short-review { width:min(640px,calc(100vw - 24px)); max-height:calc(100dvh - 24px); overflow:auto; box-sizing:border-box; background:#101c2b; color:#f4f5f7; border:1px solid #65758a; border-radius:12px; padding:20px; }
+.vs-short-review::backdrop { background:#000b; }
+.vs-short-review canvas { display:block; width:auto; max-width:100%; height:min(52dvh,580px); aspect-ratio:9/16; margin:12px auto; }
+.vs-short-review input[type=range] { width:100%; }
+.vs-short-review button { min-height:44px; }
