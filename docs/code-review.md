@@ -1537,3 +1537,20 @@ the centered curved navigation and selected Reminders state. The focused
 automated navigation check could not launch because this workspace has no
 installed Chromium executable; the screenshot was a manual production check,
 not the full responsive viewport matrix.
+
+## Task Workspace cleanup — November 23, 2026
+
+The no-selection, loading, unavailable-task and load-error states now share a
+compact icon-led panel with a clear route back to the Dashboard. The Task
+Workspace stylesheet is loaded only by `/task/`; a scan of the active React
+source and route markup confirmed the older hero and accordion selectors had
+no remaining consumers, so those rules and their obsolete responsive overrides
+were removed. Task records, edit/save behavior, attachments and the spatial
+workflow remain unchanged. The hashed React asset references were also aligned
+across all React entry pages so deployments cannot strand a route on a removed
+chunk.
+
+Verification: production build, UI design-system checks, site reference check
+and repository test suite passed. Live Chrome confirmed `/task/` loads and
+shows the task-selection state when opened without a project ID. The full saved
+project editor was not opened, so this check did not inspect or change task data.
