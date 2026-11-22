@@ -52,6 +52,16 @@ const server = http.createServer((req, res) => {
       }
       if (width === 1920) assert.ok(measurements.main.width >= 1600, `Desktop workspace too narrow: ${JSON.stringify(measurements)}`);
       if (width <= 390) assert.ok(measurements.height > height, 'Populated phone content must remain scrollable');
+      if (width <= 900) {
+        const sections = page.getByRole('navigation', {name:'Garage sections'});
+        for (const [label,id] of [['Reminders','garage-reminders'],['Service','garage-service'],['Usage','garage-usage']]) {
+          await sections.getByRole('link', {name:label,exact:true}).click();
+          await page.waitForFunction(id => {
+            const panel = document.getElementById(id);
+            return Math.abs(panel.getBoundingClientRect().left - panel.parentElement.getBoundingClientRect().left) < 3;
+          }, id);
+        }
+      }
       await page.locator('#editVehicle').click();
       assert.equal(await page.locator('#vehicleDialog').isVisible(), true);
       await page.locator('#vehicleForm [name=odometer]').scrollIntoViewIfNeeded();

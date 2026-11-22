@@ -6,7 +6,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/invincible/assets/branding/invincible-cyan-orb-v1-180.png">
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#000000"><title>LIC Follow-up Manager · Invincible</title>
-  <link rel="stylesheet" href="../../site-nav.css?v=19"><link rel="stylesheet" href="follow-up.css?v=3">
+  <link rel="stylesheet" href="../../site-nav.css?v=19"><link rel="stylesheet" href="follow-up.css?v=4">
 </head><body>
   <nav class="global-nav" aria-label="Primary navigation"><a class="nav-brand" href="/invincible/">INVINCIBLE</a></nav>
   <main class="workspace">
@@ -15,8 +15,16 @@
     <p id="status" role="status" aria-live="polite">Restoring your Invincible account…</p>
     <div id="metrics" class="metrics" aria-label="Policy overview"></div>
     <section class="list-section" aria-label="Policy follow-ups">
-      <div class="filters"><label class="search">Search policies<input id="search" type="search" placeholder="Name, policy, phone or OP-NEFT policy"></label><label class="contact-filter">Contact Availability<select id="contactAvailability" aria-label="Contact Availability" aria-describedby="contactHelp" title="Counts follow search, View, Plan and the NEFT filter"><option value="all">All Policies</option><option value="mobile">Mobile Available</option><option value="no_mobile">No Mobile</option><option value="op">OP-NEFT Available</option><option value="no_mobile_op">No Mobile + OP-NEFT</option><option value="neither">Neither Mobile / OP-NEFT</option></select></label><label class="neft-filter">This-policy NEFT<select id="neftAvailability" aria-label="This-policy NEFT" title="This-policy NEFT only; counts follow search, View, Plan and Contact Availability"><option value="all">All NEFT statuses</option><option value="yes">NEFT: Yes</option><option value="no">NEFT: No</option><option value="unknown">NEFT: Unknown</option></select></label><label>View<select id="view"><option value="all">Active cases</option><option value="archived">Archived cases</option><option value="everything">All saved cases + history</option><option value="due">Follow-ups due today / overdue</option><option value="new">Not yet contacted · valid mobile</option><option value="uncontactable">Uncontactable</option><option value="op">With OP-NEFT policies</option><option value="missing_op">Missing/invalid mobile + OP-NEFT</option><option value="completed">Completed</option></select></label><label>Plan<select id="plan"><option value="">All plans</option></select></label></div>
-      <p class="help" id="contactHelp">NEFT is for this policy; OP-NEFT is in another policy. Unknown does not mean No. Invalid or reported-wrong mobiles are excluded.</p>
+      <div class="filters"><label class="search">Search policies<input id="search" type="search" placeholder="Name, policy, phone or OP-NEFT policy"></label><label>View<select id="view"><option value="all">Active cases</option><option value="archived">Archived cases</option><option value="everything">All saved cases + history</option><option value="due">Follow-ups due today / overdue</option><option value="new">Not yet contacted · valid mobile</option><option value="uncontactable">Uncontactable</option><option value="op">With OP-NEFT policies</option><option value="missing_op">Missing/invalid mobile + OP-NEFT</option><option value="completed">Completed</option></select></label><label>Plan<select id="plan"><option value="">All plans</option></select></label>
+        <details id="contactFilters" open>
+          <summary>Contact &amp; NEFT filters <span id="contactFilterCount" hidden></span></summary>
+          <div class="contact-filter-fields">
+            <label class="contact-filter">Contact Availability<select id="contactAvailability" aria-label="Contact Availability" aria-describedby="contactHelp" title="Counts follow search, View, Plan and the NEFT filter"><option value="all">All Policies</option><option value="mobile">Mobile Available</option><option value="no_mobile">No Mobile</option><option value="op">OP-NEFT Available</option><option value="no_mobile_op">No Mobile + OP-NEFT</option><option value="neither">Neither Mobile / OP-NEFT</option></select></label><label class="neft-filter">This-policy NEFT<select id="neftAvailability" aria-label="This-policy NEFT" title="This-policy NEFT only; counts follow search, View, Plan and Contact Availability"><option value="all">All NEFT statuses</option><option value="yes">NEFT: Yes</option><option value="no">NEFT: No</option><option value="unknown">NEFT: Unknown</option></select></label>
+            <p class="help" id="contactHelp">NEFT is for this policy; OP-NEFT is in another policy. Unknown does not mean No. Invalid or reported-wrong mobiles are excluded.</p>
+          </div>
+        </details>
+      </div>
+
       <div class="list-meta"><span id="resultCount" role="status" aria-live="polite">Loading…</span><span>Amounts in INR</span></div>
       <div id="records" class="records"></div>
       <div class="pagination"><button id="previous" disabled>← Previous</button><span id="pageLabel"></span><button id="next" disabled>Next →</button></div>
@@ -41,5 +49,13 @@
     </form>
     <section class="history-section"><h3>Conversation history</h3><p id="historyStatus" role="status"></p><ol id="history"></ol></section>
   </dialog>
-  <script type="module" src="../../site-nav.js?v=7"></script><script type="module" src="follow-up.js?v=3"></script>
+  <script type="module" src="../../site-nav.js?v=7"></script><script type="module" src="follow-up.js?v=4"></script>
+<script>
+  const contactFilters = document.getElementById('contactFilters');
+  const contactFilterViewport = matchMedia('(max-width: 600px)');
+  const setContactFilterLayout = () => { contactFilters.open = !contactFilterViewport.matches; };
+  contactFilterViewport.addEventListener('change', setContactFilterLayout);
+  setContactFilterLayout();
+
+</script>
 </body></html>

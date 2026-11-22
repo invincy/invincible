@@ -113,6 +113,14 @@ selection and arrow keys. Tools links to both Plans and Cashier. Plan
 artwork and copy use separate columns on phones, and Agent CRM gives its
 workspace selector its own row beside the workspace creation action.
 
+On phones, staff follow-ups show Search, View and Plan directly above the
+results. The contact and NEFT disclosure shows a count when either filter
+is active and retains the selections when closed.
+
+Garage provides tap targets for Usage, Service and Reminders above its
+swipeable panels. On the separate Reminders page, Overdue, Today and
+Upcoming use one vertical scroll.
+
 ### Motion Studio desktop
 
 The Motion Studio launcher opens a dedicated project selector without creating

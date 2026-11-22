@@ -34,3 +34,27 @@ body.reminders-page{--bg:#061013;--panel:#102226;--line:#74e2ef21;--cyan:#65e7f5
 .reminder-shell .space-panel :is(.reminder-list,.date-group) { grid-template-columns:minmax(0,1fr) }
 .reminder-shell .space-panel .reminder-card { grid-template-columns:minmax(0,1fr) 44px 44px }
 .reminder-shell .space-panel .reminder-card .time { grid-column:1/-1 }
+
+@media (max-width: 900px) {
+  .reminder-shell .space-panels.space-panels {
+    grid-template: auto / minmax(0, 1fr);
+    grid-auto-flow: row;
+    overflow: visible;
+    scroll-snap-type: none;
+  }
+  .reminder-shell .space-panels > .space-panel {
+    max-height: none;
+    overflow: visible;
+  }
+  .reminder-shell .space-panel > :is(.section-heading, h2),
+  .reminder-shell .space-panel .overdue-block > .section-heading {
+    margin: 4px 0 12px;
+  }
+  .reminder-shell .space-panel > h2 { font-size: 16px; }
+  .reminder-shell .space-panel > h2 + p { margin: 0; }
+}
+@media (min-width: 1101px) {
+  .reminders-page .react-app-shell .fab {
+    bottom: calc(var(--desktop-dock-height, 0px) + max(16px, env(safe-area-inset-bottom)));
+  }
+}

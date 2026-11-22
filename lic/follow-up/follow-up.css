@@ -15,3 +15,31 @@
 .availability-badge.op{color:#deccff;border-color:#78609f;background:#34264b}
 .availability-badge.neft-no{color:#ffbdb4;border-color:#8b5b55;background:#422b2b}
 .availability-badge.unavailable{color:#a6b7c9;background:#172433}
+
+#contactFilters { grid-column: 1 / -1; min-width: 0; margin-bottom: 8px; }
+#contactFilters summary {
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 11px 10px;
+  border: 1px solid #33455a;
+  border-radius: 9px;
+  color: #d9e8f6;
+  cursor: pointer;
+}
+#contactFilterCount { color: #a6dcd8; }
+.contact-filter-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 14px;
+}
+.contact-filter-fields #contactHelp { grid-column: 1 / -1; margin: 0 0 8px; }
+@media (min-width: 601px) { #contactFilters summary { display: none; } }
+@media (max-width: 600px) {
+  .contact-filter-fields { grid-template-columns: minmax(0, 1fr); padding-top: 12px; }
+  .contact-filter-fields :is(.contact-filter, .neft-filter) { grid-row: auto; }
+  .filters :is(input,select) { font-size: 16px; }
+}
+@media (min-width: 601px) {
+  #contactFilters, .contact-filter-fields { display: contents; }
+  .contact-filter-fields #contactHelp { order: 1; }
+}

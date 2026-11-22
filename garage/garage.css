@@ -33,3 +33,27 @@ main{max-width:1680px}
 	.main-column,.side-column{gap:12px}
 	.layout{gap:12px}
 }
+
+.garage-panel-links { display: none; }
+@media (max-width: 900px) {
+  .garage-panel-links {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .garage-panel-links a {
+    display: grid;
+    place-items: center;
+    min-height: 44px;
+    padding: 4px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--panel);
+    color: var(--cyan);
+    font-size: 14px;
+    text-decoration: none;
+  }
+  .garage-panel-links a:focus-visible { outline: 2px solid var(--cyan); outline-offset: -3px; }
+  .garage-page .layout > .space-panel { scroll-margin-block-start: 130px; }
+}

@@ -45,6 +45,9 @@ function render() {
   $('contactAvailability').value = contact;
   $('neftAvailability').replaceChildren(...neftFilters.map(([key, label]) => new Option(`${label} (${neftCounts[key]})`, key)));
   $('neftAvailability').value = neft;
+  const activeFilterCount = Number(contact !== 'all') + Number(neft !== 'all');
+  $('contactFilterCount').hidden = !activeFilterCount;
+  $('contactFilterCount').textContent = activeFilterCount ? '(' + activeFilterCount + ' active)' : '';
   filtered.sort((a, b) => (a.followUpDate || '9999').localeCompare(b.followUpDate || '9999') || a.name.localeCompare(b.name));
   const pages = Math.max(1, Math.ceil(filtered.length / 30)); page = Math.min(page, pages - 1);
   $('resultCount').textContent = `${filtered.length} of ${records.length} policies`;
