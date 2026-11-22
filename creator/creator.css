@@ -390,3 +390,35 @@ body.creator-page.studio-ui::before { display: none; }
   .creator-page .tool-grid .tool-copy > span,
   .creator-page .tool-grid > * > i { display: none; }
 }
+
+/* At wide desktop sizes, replace six text-heavy tool rows with three compact
+   icon rows. The project list and all phone/tablet layouts remain unchanged. */
+@media (min-width: 1151px) {
+  .creator-page .creator-toolbox .tool-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(3, minmax(88px, auto));
+    grid-auto-rows: auto;
+    gap: 8px;
+    align-content: start;
+    overflow: visible;
+  }
+  .creator-page .creator-toolbox .tool-grid > :is(a, button) {
+    display: flex;
+    min-height: 88px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 8px 6px;
+    border: 1px solid var(--creator-border);
+    border-radius: 12px;
+    background: var(--creator-surface);
+    text-align: center;
+    transform: none;
+  }
+  .creator-page .creator-toolbox .tool-icon { width: 42px; height: 42px; }
+  .creator-page .creator-toolbox .tool-icon svg { width: 30px; height: 30px; }
+  .creator-page .creator-toolbox .tool-copy > strong { font-size: 13px; line-height: 1.25; }
+  .creator-page .creator-toolbox .tool-copy > span,
+  .creator-page .creator-toolbox .tool-grid > :is(a, button) > i { display: none; }
+}
