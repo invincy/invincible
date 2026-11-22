@@ -338,8 +338,10 @@ async function checkGlobeWithoutWebGL(browser,base) {
         assert.equal(await page.locator('.v2-orb-plan-preview').isVisible(),false,'Forest keeps secondary plan text out of the center');
         assert.equal(await page.locator('.v2-orb-plan strong').count(),0,'Dashboard center does not repeat an unexplained remaining count');
         assert.equal(await page.locator('.v2-theme-three-timer-ring').isVisible(),false,'Forest does not leak the Electric timer ring');
-        const forestPortal=await page.locator('.v2-forest-portal').evaluate(node=>{const portal=node.getBoundingClientRect(),anchor=document.querySelector('.v2-guide-orb-anchor').getBoundingClientRect();return {width:portal.width/innerWidth,height:portal.height/innerWidth,portalCenter:portal.top+portal.height/2,anchorCenter:anchor.top+anchor.height/2};});
-        assert.ok(forestPortal.width>=.36&&forestPortal.width<=.39&&forestPortal.height>=.31&&forestPortal.height<=.35,'Forest portal fills the stone arch opening');
+        const forestPortal=await page.locator('.v2-forest-portal').evaluate(node=>{const portal=node.getBoundingClientRect(),anchor=document.querySelector('.v2-guide-orb-anchor').getBoundingClientRect();return {width:portal.width/innerWidth,height:portal.height/innerWidth,portalCenter:portal.top+portal.height/2,anchorCenter:anchor.top+anchor.height/2,display:getComputedStyle(node).display,parent:node.parentElement.className};});
+        assert.equal(forestPortal.display,'block','Forest portal is visible above the background canvas');
+        assert.equal(forestPortal.parent,'v2-guide-globe-panel','Forest portal shares the dashboard visual stage');
+        assert.ok(forestPortal.width>=.32&&forestPortal.width<=.36&&forestPortal.height>=.28&&forestPortal.height<=.32,'Forest portal fits the more compact Emerald scene');
         assert.ok(forestPortal.portalCenter<forestPortal.anchorCenter-25,'Forest portal aligns behind the higher stone arch instead of floating on the navigation ring');
         assert.equal(await page.locator('.v2-theme-two-brand span').evaluate(node=>node.scrollWidth<=node.clientWidth),true,'Forest tagline stays on one line');
         assert.equal(await page.evaluate(()=>{const labels=[...document.querySelectorAll('.v2-page-name')].map(node=>node.getBoundingClientRect()),parts=[...document.querySelectorAll('.v2-orb-plan>span:first-child,.v2-orb-plan>strong')].map(node=>node.getBoundingClientRect());return parts.every(part=>labels.every(label=>part.right+4<=label.left||label.right+4<=part.left||part.bottom+4<=label.top||label.bottom+4<=part.top));}),true,'Forest plan text clears every destination label');
@@ -377,11 +379,12 @@ async function checkGlobeWithoutWebGL(browser,base) {
         assert.equal(await page.locator('.v2-shell').evaluate(node=>node.classList.contains('v2-theme-one')),true);
         assert.equal(await page.locator('.v2-theme-three-timer-ring').isVisible(),false);
         assert.equal(await controls.getAttribute('open'),null,'Golden selection leaves workspace controls collapsed');
-        assert.equal(await page.evaluate(()=>{
+        const goldenClearance=await page.evaluate(()=>{
           const labels=[...document.querySelectorAll('#v2-region-dashboard .v2-page-name')].map(node=>node.getBoundingClientRect());
           const center=document.querySelector('#v2-region-dashboard .v2-orb-plan').getBoundingClientRect();
-          return labels.every(label=>center.right+4<=label.left||label.right+4<=center.left||center.bottom+4<=label.top||label.bottom+4<=center.top);
-        }),true,'Golden plan text clears every destination label in a short desktop window');
+          return {clear:labels.every(label=>center.right+4<=label.left||label.right+4<=center.left||center.bottom+4<=label.top||label.bottom+4<=center.top),center:center.toJSON(),overlaps:labels.map(label=>label.toJSON()).filter(label=>!(center.right+4<=label.left||label.right+4<=center.left||center.bottom+4<=label.top||label.bottom+4<=center.top)),shell:document.querySelector('.v2-shell').className};
+        });
+        assert.equal(goldenClearance.clear,true,`Golden plan text clears every destination label in a short desktop window: ${JSON.stringify(goldenClearance)}`);
         const goldenBounds=await page.evaluate(()=>{
           const left=document.querySelector('.v2-guide-left'),session=document.querySelector('.v2-guide-session-panel'),nav=document.querySelector('.v2-arc-nav').getBoundingClientRect();
           const cardBottom=container=>Math.max(...[...container.children].map(child=>child.getBoundingClientRect().bottom));

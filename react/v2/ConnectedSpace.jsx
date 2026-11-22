@@ -3,12 +3,13 @@ import {APP_BASE, spatialDestination} from '../../shared/navigation';
 
 // Existing editors retain their runtime, auth adapter, recovery and export paths.
 // Once visited, the frame stays mounted until account changes or the shell closes.
-export default function ConnectedSpace({region, active, onNavigate, onLocation, onWheel, initialPath, requestedPath}) {
+export default function ConnectedSpace({region, active, preload=false, onNavigate, onLocation, onWheel, initialPath, requestedPath}) {
   const frame=useRef(null),cleanup=useRef(null),callbacks=useRef({onNavigate,onLocation,onWheel});
   callbacks.current={onNavigate,onLocation,onWheel};
-  const [visited,setVisited]=useState(active),[loading,setLoading]=useState(true),[failed,setFailed]=useState(false);
+  const [visited,setVisited]=useState(active||preload),[loading,setLoading]=useState(true),[failed,setFailed]=useState(false);
   const [src,setSrc]=useState(()=>initialPath||region.href);
   useEffect(()=>{if(active&&!visited){setSrc(requestedPath||initialPath||region.href);setVisited(true);}},[active,visited,initialPath,requestedPath,region.href]);
+  useEffect(()=>{if(preload&&!visited){setSrc(requestedPath||initialPath||region.href);setVisited(true);}},[preload,visited,initialPath,requestedPath,region.href]);
   useEffect(()=>{if(visited&&requestedPath){setSrc(requestedPath);setLoading(true);}},[requestedPath]);
   useEffect(()=>()=>cleanup.current?.(),[]);
   const loaded=()=>{

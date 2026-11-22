@@ -15,7 +15,8 @@ exports.check=async({browser,base,output,name})=>{
     await page.goto(base+'/fixture');await page.locator('.v2-guide-mission h2').waitFor();
     const ids=await page.locator('.v2-canvas>.v2-region').evaluateAll(nodes=>nodes.map(node=>node.id.replace('v2-region-','')));
     assert.deepEqual(ids.slice(ids.indexOf('finance'),ids.indexOf('ai')+1),['finance','dashboard','workspace','creator','voiceover','images','ai']);
-    assert.equal(await page.locator('.v2-connected-space iframe').count(),0,'Only visited tools load');
+    const preloaded=await page.locator('.v2-connected-space iframe').evaluateAll(frames=>frames.map(frame=>frame.title));
+    assert.equal(preloaded.length,1,`The next nearby desktop tool prewarms without opening every tool: ${preloaded.join(', ')}`);
     await page.getByRole('navigation',{name:'Explore spaces'}).getByRole('button',{name:'Finance',exact:true}).click();
     const finance=page.frameLocator('iframe[title="Finance workspace"]');await page.locator('#v2-region-finance:not([inert])').waitFor();await finance.getByLabel('Draft').click();await finance.getByLabel('Draft').fill('Unsaved finance draft');assert.equal(await finance.getByLabel('Draft').inputValue(),'Unsaved finance draft');
     await finance.locator('html.connected-space-document').waitFor();

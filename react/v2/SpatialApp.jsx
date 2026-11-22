@@ -20,7 +20,7 @@ const DashboardTools = lazy(() => import('./DashboardTools'));
 const CanvasIdeas = lazy(() => import('./CanvasIdeas'));
 const TodayPlanPanel = lazy(() => import('./TodayPlanPanel'));
 
-function Region({region, viewport, children, onScroll, active, connected}) {
+function Region({region, viewport, children, onScroll, active, connected, desktop, preloadSpace}) {
   const element = useRef(null);
   const scrollTop = useRef(0);
   const contentHeight = useRef(600);
@@ -30,15 +30,16 @@ function Region({region, viewport, children, onScroll, active, connected}) {
       if (!entries[0].isIntersecting && element.current) contentHeight.current = element.current.scrollHeight;
       setNearby(entries[0].isIntersecting);
     },
-      {root: viewport.current, rootMargin: '0px 20% 0px 20%'});
+      {root: viewport.current, rootMargin: desktop ? '0px 100% 0px 100%' : '0px 20% 0px 20%'});
     observer.observe(element.current);
     return () => observer.disconnect();
   }, [viewport]);
   useLayoutEffect(() => {if (nearby && element.current) element.current.scrollTop = scrollTop.current;}, [nearby]);
+  const regionContent=connected&&React.isValidElement(children)?React.cloneElement(children,{preload:desktop&&preloadSpace&&nearby}):children;
   return <section ref={element} className={'v2-region'+(connected?' v2-region-connected':'')} id={'v2-region-'+region.id} aria-labelledby={region.id+'-title'} inert={connected&&!active?'':undefined}
     onScroll={event => {scrollTop.current = event.currentTarget.scrollTop; onScroll();}}>
     <header className="v2-region-heading"><span>{region.number} /</span><h1 id={region.id+'-title'} tabIndex={-1}>{region.label}</h1><span className="v2-region-tag">CONNECTED SPACE</span></header>
-    {connected||nearby ? <Suspense fallback={<p role="status">Opening this space…</p>}>{children}</Suspense> : <div className="v2-region-placeholder" style={{minHeight:contentHeight.current}} aria-hidden="true"/>}
+    {connected||nearby ? <Suspense fallback={<p role="status">Opening this space…</p>}>{regionContent}</Suspense> : <div className="v2-region-placeholder" style={{minHeight:contentHeight.current}} aria-hidden="true"/>}
   </section>;
 }
 
@@ -175,6 +176,8 @@ function SignedInWorkspace({user, logout}) {
   const ready = data.tasksReady && data.planReady;
   const error = data.taskError || data.planError;
   const activeIndex=regions.findIndex(region=>region.id===active);
+  const nextConnected=regions.slice(activeIndex+1).find(region=>!['dashboard','workspace'].includes(region.id))
+    || regions.slice(0,activeIndex).reverse().find(region=>!['dashboard','workspace'].includes(region.id));
   const openSpace=(id,href)=>{
     if(href&&spatialDestination(href,location.href)?.id===id&&id!=='dashboard'&&id!=='workspace'){
       const url=new URL(href,location.href),path=url.pathname+url.search+url.hash;
@@ -241,7 +244,7 @@ function SignedInWorkspace({user, logout}) {
     {(authError || error || !ready || data.tasksCached || data.planCached) && <div className="v2-connection" role="status"><span className={error ? 'v2-dot error' : 'v2-dot'}/>{authError || error || (!ready ? 'Loading workspace…' : 'Offline · Showing saved records')}{error && <button onClick={data.retry}>Retry sync</button>}</div>}
     <main ref={viewport} className="v2-canvas" aria-label="Continuous spatial workspace" tabIndex={0} onScroll={scroll}
       onKeyDown={event => {if (event.target !== event.currentTarget) return;let index = regions.findIndex(region => region.id === active);if (event.key === 'ArrowRight') index++;else if (event.key === 'ArrowLeft') index--;else if (event.key === 'Home') index=0;else if (event.key === 'End') index=regions.length-1;else return;event.preventDefault();navigate(regions[Math.max(0,Math.min(regions.length-1,index))].id);}}>
-      {regions.map(region => <Region key={region.id} region={region} viewport={viewport} onScroll={moveOrb} active={active===region.id} connected={!['dashboard','workspace'].includes(region.id)}>
+      {regions.map(region => <Region key={region.id} region={region} viewport={viewport} onScroll={moveOrb} active={active===region.id} connected={!['dashboard','workspace'].includes(region.id)} desktop={desktop} preloadSpace={region.id===nextConnected?.id}>
         {!['dashboard','workspace'].includes(region.id)?<ConnectedSpace region={region} active={active===region.id} initialPath={paths.current[region.id]} requestedPath={requestedPaths[region.id]} onNavigate={openSpace} onLocation={rememberLocation} onWheel={delta=>{if(viewport.current)viewport.current.scrollLeft+=delta;}}/>:
           !ready ? <div className="v2-panel v2-loading" role="status">Restoring tasks and your daily plan…</div> :
           region.id === 'dashboard' ? <Dashboard uid={user.uid} data={data} plan={plan} timer={timer} desktop={desktop} onInspect={inspect} orbAnchor={mountOrbAnchor} onOpenWorkspace={() => navigate('workspace')} onTravel={travel} onPlan={()=>setTodayOpen(true)} onPanelScroll={moveOrb}/> :
@@ -251,7 +254,6 @@ function SignedInWorkspace({user, logout}) {
     <div className={'v2-orb v2-orb-'+(!desktop?'golden':visualTheme)+(orbBox.compact ? ' is-compact' : travelPage && active === 'dashboard' ? ' is-approaching' : '')} style={{left: orbBox.left, top: orbBox.top, width: orbBox.width, height: orbBox.height}}
       onWheel={event => {const distance = event.deltaX + (event.shiftKey ? event.deltaY : 0); if (distance && viewport.current) {event.preventDefault(); viewport.current.scrollLeft += distance;}}}>
       {(!desktop||visualTheme==='one')&&<FocusOrb theme={orbTheme} spin={false} richParticles dashboardMotion interactionSurface={viewport}/>}
-      {desktop&&visualTheme==='two'&&<div className="v2-forest-portal" aria-hidden="true"><span/><span/><span/><i/></div>}
     </div>
     {desktop?<ArcNavigation regions={regions} activeIndex={activeIndex} onNavigate={navigate}/>:<footer className="v2-footer"><><span>PERSONAL WORKSPACE</span><span>{active==='dashboard'?'Tap the centre for today’s plan':'Move cards or open a project'}</span><span>{active==='dashboard'?'01':'02'} / 02</span></></footer>}
     {travelPage && <div className="v2-travel" role="status" aria-live="polite"><span>ENTERING</span><strong>{travelPage.label}</strong><i aria-hidden="true"/></div>}
