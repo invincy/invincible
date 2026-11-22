@@ -56,6 +56,23 @@ const server=http.createServer((req,res)=>{
   await page.waitForURL(/project\.html\?draft=1&id=/);
   await page.locator('#projectTitle').filter({hasText:'Untitled project'}).waitFor();
   await page.locator('#projectVoiceoverStep:not([hidden])').waitFor();
+  const mobileScript=page.frameLocator('#projectVoiceoverFrame');
+  for(const [width,height] of [[320,568],[390,844],[430,932]]){
+   await page.setViewportSize({width,height});
+   const steps=await page.locator('.project-workspace-nav > button').evaluateAll(buttons=>
+    buttons.slice(0,4).map(button=>button.getBoundingClientRect().right));
+   assert.ok(steps.every(right=>right<=width),'All four workflow steps fit at '+width);
+   const panes=await mobileScript.locator('.voice-script-pane').evaluate(pane=>{
+    const bounds=selector=>pane.querySelector(selector).getBoundingClientRect();
+    return {editor:bounds('#script').bottom,script:bounds('.script-panel').bottom,recording:bounds('.result-panel').top};
+   });
+   assert.ok(panes.editor<=panes.script&&panes.script<=panes.recording,'Script stays above Recording at '+width);
+   const recent=page.getByLabel('Recent projects',{exact:true});
+   await recent.click();
+   const menu=await page.locator('#recentProjects[open] .project-recent-menu').boundingBox();
+   assert.ok(menu.x>=0&&menu.x+menu.width<=width,'Recent Projects fits at '+width);
+   await recent.click();
+  }
   for(const width of [390,1440]){
    await page.setViewportSize({width,height:844});
    const launcher=page.getByRole('button',{name:'Agent Notebook',exact:true});
@@ -77,7 +94,7 @@ const server=http.createServer((req,res)=>{
   }
   await page.setViewportSize({width:1440,height:1000});
   assert.equal(await page.locator('[data-project-area="Voiceover"]').getAttribute('aria-current'),'step');
-  assert.deepEqual(await page.locator('.project-workspace-nav [data-project-area]').allTextContents(),['1 Script','2 Sync plan','3 Review maps','4 Motion & export','Map Editor','Battlefield Editor','Assets & 3D']);
+  assert.deepEqual(await page.locator('.project-workspace-nav [data-project-area]').allTextContents(),['1 Script','2 Sync plan','3 Review maps','4 Motion & export','▶ Quick scene preview','Map Editor','Battlefield Editor','Assets & 3D']);
   assert.match(await page.locator('#workflowGuide').innerText(),/Step 1 of 4/);
   assert.equal(await page.frameLocator('#projectVoiceoverFrame').locator('[name="aiProvider"][value="cloud"]').isChecked(),true,'Creator Studio reuses OpenAI by default while keeping Local AI selectable');
   assert.equal(await page.evaluate(()=>window.writes||0),0,'Opening an untitled project does not save it before the user edits it');

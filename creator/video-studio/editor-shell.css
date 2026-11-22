@@ -56,6 +56,7 @@
  border-radius: 12px; background: #121c28; box-shadow: 0 18px 55px #0009;
 }
 .vs-human-editor .vs-export-menu .vs-tool-content { width: min(330px, calc(100vw - 48px)); display: grid; gap: 10px; }
+.vs-human-editor .vs-tool-menu:not([open]) > .vs-tool-content { display: none; }
 .vs-human-editor .vs-tool-content > label:has(input[type=checkbox]) { display: flex; align-items: start; }
 .vs-human-editor .vs-tool-content input[type=checkbox] { width: 18px; min-height: 18px; flex: none; }
 .vs-human-editor .vs-tool-content :is(.vs-advanced,.vs-style-settings) { margin: 0; padding: 0; border: 0; }
@@ -160,9 +161,15 @@
 }
 @media(max-width:700px) {
  .project-page .vs-human-editor { padding: 10px; }
- .vs-human-editor .vs-studio-header { position: relative; }
+ .vs-human-editor .vs-studio-header { position: relative; gap: 10px; }
  .vs-human-editor .vs-tool-menu { position: static; }
- .vs-human-editor .vs-tool-content { left: 0; right: 0; width: auto; max-height: 65vh; }
+ .vs-human-editor .vs-tool-menu .vs-tool-content {
+  left: 0; right: 0; width: auto; max-height: 60dvh; padding: 12px;
+ }
+ .project-page .video-studio.vs-human-editor .vs-settings-menu[open] .vs-advanced { display: block; }
+ .vs-human-editor [data-studio-actions] { justify-content: flex-start; max-width: 100%; }
+ .vs-human-editor [data-studio-actions] > :is(button, a, details) { max-width: 100%; }
+ .vs-human-editor [data-studio-actions] :is(button, a, summary) { white-space: normal; overflow-wrap: anywhere; }
  .project-page .vs-human-editor:not(.vs-focusing) .vs-layout,
  .project-page .vs-human-editor:not(.vs-focusing) .vs-layout:has(.vs-inspector) { display: flex; flex-direction: column; gap: 0; }
  .project-page .vs-human-editor:not(.vs-focusing) .vs-preview { width: 100%; box-sizing: border-box; order: 1; }

@@ -93,6 +93,19 @@ publishing pipeline and filters below the project list.
 The landing-page browser check covers the layout from 320 to 1440 px and
 checks that the first project’s Open button is visible at 390 × 844 px.
 
+### Creator project on phones
+
+All four workflow steps fit in the initial toolbar view. Optional tools
+remain available by swiping the same toolbar. The embedded Script and
+Recording panels scroll together in reading order. The project header
+anchors Recent Projects to the viewport, and Motion Studio menus fit
+within the editor header.
+
+Chromium layout checks covered all three dashboard themes at 320, 390 and
+430 px with fixture projects, including Script, Sync plan, map review,
+Motion Studio, quick preview, Map Editor, Battlefield Editor, Assets and
+the Agent Notebook.
+
 ### Motion Studio desktop
 
 The Motion Studio launcher opens a dedicated project selector without creating
