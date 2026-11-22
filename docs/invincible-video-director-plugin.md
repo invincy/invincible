@@ -84,3 +84,22 @@ tool surface and patch/manifest guards. Run `node --check` on the changed
 server and Motion Studio files. Deploy only the existing Firebase function
 `creatorPluginMcp`; do not change the OAuth resource URL or create a second
 plugin connection.
+
+## Connection entry point — November 22, 2026
+
+Creator Studio exposes **Connect ChatGPT** in its header. The existing
+`creator/plugin-connect.html` page now shows setup actions without an OAuth
+request, links to ChatGPT settings, and lets users copy the canonical MCP address.
+The OAuth consent action still requires a request initiated by ChatGPT. An
+Invincible Firebase sign-in alone does not establish a ChatGPT connection.
+
+Malformed OAuth input remains an error after account restoration. Callback
+navigation stops if the signed-in account changes during authorization. The
+permission description includes scene writes supported by the current plugin.
+The page never infers ChatGPT account linking from Firebase sign-in.
+
+Verification: JavaScript syntax and six focused Node tests passed for the entry
+link, signed-out/signed-in setup, malformed requests, the callback, account change
+and clipboard fallback. The full repository build/browser checks could not run
+in the partial connector checkout. Live authenticated linking and refresh still
+require an actual ChatGPT OAuth request. No Firebase deployment is included.
