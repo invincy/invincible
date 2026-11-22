@@ -108,3 +108,12 @@ body{padding-top:var(--app-top)}
 .route-loading{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:24px;padding:24px}.route-loading span{min-height:160px;border-radius:16px;background:linear-gradient(100deg,#10252a 30%,#203c43 50%,#10252a 70%);background-size:220% 100%;animation:route-loading 1.5s infinite}@keyframes route-loading{to{background-position:-220% 0}}@media(prefers-reduced-motion:reduce){.route-loading span{animation:none}}
 
 .app-loading{align-content:center;gap:16px}.app-loading p{margin:0}.auth-skeleton{display:grid;gap:16px;width:min(440px,calc(100vw - 48px))}.auth-skeleton i{display:block;min-height:64px;border-radius:16px;background:#10252a}
+
+/* Keep desktop scrolling quiet and consistent without changing touch layouts. */
+@media (min-width: 1101px) {
+  html, body, body * { scrollbar-width: thin; scrollbar-color: rgba(100,230,247,.3) transparent; }
+  html::-webkit-scrollbar, body::-webkit-scrollbar, body *::-webkit-scrollbar { width: 8px; height: 8px; }
+  html::-webkit-scrollbar-track, body::-webkit-scrollbar-track, body *::-webkit-scrollbar-track { background: transparent; }
+  html::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb, body *::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 999px; background: rgba(100,230,247,.28); background-clip: padding-box; }
+  html::-webkit-scrollbar-thumb:hover, body::-webkit-scrollbar-thumb:hover, body *::-webkit-scrollbar-thumb:hover { background: rgba(100,230,247,.46); background-clip: padding-box; }
+}

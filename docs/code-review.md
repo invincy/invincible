@@ -1531,6 +1531,10 @@ stay above the navigation. Routes, destination registry, tab preferences and
 mobile tabs are unchanged. Only the React app shell changed; native pages retain
 their own navigation.
 
+Desktop scrolling in React pages now uses one narrow cyan thumb with a
+transparent track, including nested panels. The mobile scrollbar and navigation
+styles are unchanged.
+
 Verification: production build, UI contract checks, site reference check and
 repository unit suites passed. A live desktop Chrome view of Reminders confirmed
 the centered curved navigation and selected Reminders state. The focused
