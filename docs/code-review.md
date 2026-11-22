@@ -1503,3 +1503,11 @@ a stale checked-in V2 bundle, and the universal test's missing Firebase Function
 fixture exports (now repaired). These are not evidence of production permissions.
 
 Image tint is opt-in through `tintColor`; legacy image `color` remains inert so older saved artwork keeps its appearance.
+
+## Creator scrollbar cleanup — November 22, 2026
+
+Creator home, project editing and the scene workbench repeated the same
+opaque scrollbar rules. Consolidated those identical rules in `studio-ui.css`;
+small-screen colors and tracks remain unchanged, while desktop tracks are
+transparent and thumbs use a faint cyan accent. Cache keys were advanced on
+the affected Creator pages. No scene data, agent API or plugin behavior changed.

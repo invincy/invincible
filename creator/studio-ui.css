@@ -78,6 +78,20 @@ body.studio-ui{
 .studio-ui .production-workbench.wb-studio-home .wb-tabs button[aria-current=page]{background:#15313d;border-color:#478e93;color:#bceae5;box-shadow:none}
 .studio-ui .wb-studio-home .wb-tabs button{background:#112331;border-color:var(--studio-line);color:#b5cbd6}
 .studio-ui .project-progress span{background:linear-gradient(90deg,#458e9c,var(--studio-accent));box-shadow:none}
+
+/* One Creator scrollbar system. Keep the existing solid treatment on small
+   screens; desktop tracks stay clear so they never read as extra panels. */
+.studio-ui :where(*){scrollbar-color:#28566a #0b151d;scrollbar-width:thin}
+.studio-ui :where(*)::-webkit-scrollbar{width:6px;height:5px}
+.studio-ui :where(*)::-webkit-scrollbar-track{background:#0b151d;border-radius:8px}
+.studio-ui :where(*)::-webkit-scrollbar-thumb{background:#28566a;border-radius:8px}
+.studio-ui :where(*)::-webkit-scrollbar-thumb:hover{background:#3a93ad}
+@media(min-width:901px){
+ .studio-ui :where(*){scrollbar-color:rgba(117,217,208,.32) transparent}
+ .studio-ui :where(*)::-webkit-scrollbar-track{background:transparent}
+ .studio-ui :where(*)::-webkit-scrollbar-thumb{border:1px solid transparent;border-radius:999px;background:rgba(117,217,208,.32);background-clip:padding-box}
+ .studio-ui :where(*)::-webkit-scrollbar-thumb:hover{background:rgba(117,217,208,.5);background-clip:padding-box}
+}
 @media(max-width:700px){
  .studio-ui :is(.studio-header,.project-header),.studio-ui>main{padding-inline:12px}
  .studio-ui .studio-header{padding-block:18px 12px}

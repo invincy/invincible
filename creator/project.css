@@ -335,8 +335,6 @@ main{max-width:1540px;margin:auto;padding:10px clamp(18px,4vw,56px) 70px}
 body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;--line-strong:#2b8ca0;--text:#eef5f9;--muted:#9bb0be;--dim:#738d9d;--hot:#4fdcf2;--pink:#4fdcf2;background:#0b141c;color:#edf4f8}
 .project-page .project-progress{height:1px;background:#263640}.project-page .project-progress span{background:#33d7ef}
 .project-page .project-icon{color:#b2c6d2}.project-page .project-stats>span{color:#a6bac7}
-.project-page,.project-page *{scrollbar-width:thin;scrollbar-color:#28566a #0b151d}
-.project-page ::-webkit-scrollbar{width:6px;height:5px}.project-page ::-webkit-scrollbar-track{background:#0b151d;border-radius:8px}.project-page ::-webkit-scrollbar-thumb{background:#28566a;border-radius:8px}.project-page ::-webkit-scrollbar-thumb:hover{background:#3a93ad}
 .conflict-banner{display:flex;align-items:center;justify-content:space-between;gap:14px;width:min(1540px,calc(100% - 32px));margin:10px auto 0;padding:12px 16px;border:1px solid rgba(255,198,109,.45);border-radius:14px;background:rgba(38,28,16,.92);color:var(--text);box-sizing:border-box}
 .conflict-banner[hidden]{display:none}
 .conflict-copy{min-width:0}

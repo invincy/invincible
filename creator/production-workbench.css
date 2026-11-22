@@ -243,9 +243,6 @@ html.invincible-page-chrome .creator-focus-mode .wb-scene-content{padding-bottom
 html.invincible-page-chrome .creator-focus-mode .wb-scene-content :is(button,input,select,textarea,summary){scroll-margin-bottom:calc(62px + env(safe-area-inset-bottom))}
 html.invincible-page-chrome .creator-focus-mode .wb-scene-footer{position:relative;z-index:2;transform:translateY(calc(-90px - env(safe-area-inset-bottom)));margin-bottom:calc(-50px - env(safe-area-inset-bottom))}
 html.invincible-page-chrome .creator-focus-mode .wb-status:not(:empty){bottom:calc(62px + env(safe-area-inset-bottom))}
-/* A thin cyan thumb replaces native grey scrollbars, including horizontal lists. */
-.production-workbench,.production-workbench *{scrollbar-width:thin;scrollbar-color:#28566a #0b151d}
-.production-workbench ::-webkit-scrollbar{width:6px;height:5px}.production-workbench ::-webkit-scrollbar-track{background:#0b151d;border-radius:8px}.production-workbench ::-webkit-scrollbar-thumb{background:#28566a;border-radius:8px}.production-workbench ::-webkit-scrollbar-thumb:hover{background:#3a93ad}
 @media(min-width:1100px){
  .project-page .wb-commandbar{height:0;margin:0;padding:0;border:0}
  .project-page .wb-commandbar>.wb-tabs{position:fixed;top:5px;left:300px;z-index:10001;padding:0;gap:4px}
