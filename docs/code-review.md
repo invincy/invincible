@@ -28,6 +28,11 @@ Limitations: complete-scene boundaries only, 180 seconds per Short, existing
 inside fades or mid-loop fail explicitly. Reopen portrait review after source
 edits; deleted/reordered boundary scenes need corrected cut metadata before save.
 
+## Desktop arc navigation and scrolling — November 22, 2026
+
+The spatial workspace keeps its existing curved icon navigation, but removes the solid full-width tray and blur that obscured page content. The faint theme-colored arc remains visible; only icon controls capture pointer input, so the transparent space around them passes interaction through. Desktop nested scroll areas now share a thin tinted thumb on a transparent track, while the page-to-page canvas scrollbar remains hidden. The active arc still marks the current space. These rules are limited to desktop; mobile navigation and scrolling styles are unchanged.
+
+Source and whitespace review completed. No automated or browser tests were run for this visual pass.
 
 ## Native visuals during narration pauses — November 22, 2026
 
