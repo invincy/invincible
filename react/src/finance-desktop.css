@@ -7,7 +7,7 @@
   .finance-react .finance-hero-actions { gap:8px; font-size:15px }
   .finance-react .finance-hero-actions button { min-height:44px }
   .finance-react .finance-hero-actions button { display:grid; place-items:center; width:48px; height:48px; padding:0 }
-  .finance-action-icon { display:block; width:20px; height:20px; flex:none }
+  .finance-react .action-icon { display:block; width:20px; height:20px; flex:none }
   .finance-react .finance-action-label { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0 }
   .finance-react .finance-desktop-card .finance-import-button { display:grid; place-items:center; width:44px; height:44px; padding:0 }
   .finance-desktop-panels { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:clamp(12px,1.2vw,22px); flex:1; min-height:0; width:100%; margin:0; padding:0 }

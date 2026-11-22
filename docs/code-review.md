@@ -1,5 +1,19 @@
 # Cleanup review — 2026-10-03
 
+## Task desktop utility controls — November 23, 2026
+
+Copy notes, Add image and Draw note use native shared SVG icons with accessible
+names and hover titles at desktop widths. All step-toolbar controls now meet a
+44px desktop target; the primary Add to today and destructive Delete step actions
+remain labeled. Tablet and phone styling keeps the original visible labels. The
+shared ActionIcon module also supplies Finance's income, expense and upload icons.
+
+Verification: the Task browser fixture passed at desktop and 393px/320px phone
+widths, including icon target dimensions, text-preserving phone controls, verbatim
+copy, step switching, blocked clipboard feedback and unchanged task state. Full
+page screenshots at 1160×600 and 393×700 were visually reviewed. Fixture task
+data is mocked; image upload and drawing persistence were not exercised here.
+
 ## Finance desktop quick actions — November 23, 2026
 
 Income, expense and month import now use compact native SVG controls on desktop.

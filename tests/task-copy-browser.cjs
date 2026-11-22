@@ -59,6 +59,9 @@ const testRunsNotes = 'Test Runs\nRun the exact checks listed here.\nWait for ap
     await page.goto('http://127.0.0.1:8770/fixture?id=task');
     const copy = page.getByRole('button', { name: 'Copy', exact: false });
     await copy.waitFor();
+    const desktopActions = await page.evaluate(() => [...document.querySelectorAll('.mission-tools .task-icon-tool')].map(node => ({ title: node.title, label: node.querySelector('.task-tool-label')?.textContent.trim(), icon: getComputedStyle(node.querySelector('.task-action-icon')).display !== 'none', target: [Math.round(node.getBoundingClientRect().width), Math.round(node.getBoundingClientRect().height)], labelHidden: getComputedStyle(node.querySelector('.task-tool-label')).position === 'absolute' })));
+    assert.deepEqual(desktopActions, [{ title: 'Copy working notes', label: 'Copy', icon: true, target: [44, 44], labelHidden: true }, { title: 'Add image', label: 'Add image', icon: true, target: [44, 44], labelHidden: true }, { title: 'Draw note', label: 'Draw note', icon: true, target: [44, 44], labelHidden: true }], `Desktop secondary actions are icon-first, 44px and accessible: ${JSON.stringify(desktopActions)}`);
+    await page.screenshot({ path: path.join(output, 'task-page-desktop-1160x600.png'), fullPage: true });
     const today = await page.getByRole('button', { name: /Add to today/ }).boundingBox();
     const copyBox = await copy.boundingBox();
     assert.ok(copyBox.x > today.x && Math.abs(copyBox.y - today.y) < 2, 'Copy sits beside Add to today');
@@ -68,6 +71,8 @@ const testRunsNotes = 'Test Runs\nRun the exact checks listed here.\nWait for ap
     assert.deepEqual(await page.evaluate(() => window.saved), []);
     for (const width of [393, 320]) {
       await page.setViewportSize({ width, height: 700 });
+      const mobileTools = await page.locator('.mission-tools .task-icon-tool').evaluateAll(nodes => nodes.map(node => ({ iconHidden: getComputedStyle(node.querySelector('.task-action-icon')).display === 'none', labelVisible: getComputedStyle(node.querySelector('.task-tool-label')).position !== 'absolute' })));
+      assert.deepEqual(mobileTools, [{ iconHidden: true, labelVisible: true }, { iconHidden: true, labelVisible: true }, { iconHidden: true, labelVisible: true }], `${width}px: task utility labels and existing controls remain visible`);
       const mobileToday = await page.getByRole('button', { name: /Add to today/ }).boundingBox();
       const mobileCopy = await copy.boundingBox();
       assert.ok(mobileCopy.x > mobileToday.x && Math.abs(mobileCopy.y - mobileToday.y) < 2, `${width}px: Copy stays beside Add to today`);
@@ -75,6 +80,7 @@ const testRunsNotes = 'Test Runs\nRun the exact checks listed here.\nWait for ap
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true, `${width}px: no horizontal overflow`);
       await copy.click();
       assert.equal(await page.evaluate(() => window.copied), notes);
+      if (width === 393) await page.screenshot({ path: path.join(output, 'task-page-phone-393x700.png'), fullPage: true });
     }
     await page.getByRole('button', { name: /Test Runs/ }).click();
     await page.getByText('Synced', { exact: true }).waitFor();
