@@ -22,15 +22,13 @@ function Message({message}){
  const assistant=message.role==='assistant';return <article className={'ai-message '+(assistant?'assistant':'user')}><div className="ai-message-mark">{assistant?'I':'YOU'}</div><div className="ai-message-body"><p>{message.content}</p>{assistant&&Array.isArray(message.actions)&&message.actions.length>0&&<div className="ai-message-actions">{message.actions.map((action,index)=><ActionStatus key={`${action.tool}-${index}`} action={action}/>)}</div>}</div></article>;
 }
 
+function ToolIcon({id}){
+ const paths={chat:'M4 5h16v12H8l-4 4V5Zm4 4h8m-8 4h5',images:'M4 5.5h16v13H4Zm0 9.5 4-4 3 3 3-4 6 7m-5.5-8h.01',voiceover:'M3 10v4m4-7v10m4-13v16m4-12v8m4-10v12m4-8v4'};
+ return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[id]||paths.chat}/></svg>;
+}
+
 export function InvincibleAiPage(){
  const{user}=useAuth(),[mode,setMode]=useState(()=>{const tool=new URLSearchParams(window.location.search).get('tool');return tools.some(([id])=>id===tool)?tool:'chat'});
- const [desktop,setDesktop]=useState(()=>window.matchMedia('(min-width: 900px)').matches);
- useEffect(()=>{
-  const query=window.matchMedia('(min-width: 900px)');
-  const resize=()=>setDesktop(query.matches);
-  query.addEventListener('change',resize);
-  return ()=>query.removeEventListener('change',resize);
- },[]);
  const imageConnectionRef=useRef(null),[imageConnection,setImageConnection]=useState(null);
  const{messages,pending,actions,sending,error,send,newConversation,provider,setProvider}=useAiConversation(),[draft,setDraft]=useState(''),end=useRef(null),input=useRef(null);
  useEffect(()=>{const stream=end.current?.parentElement;if(stream)stream.scrollTop=stream.scrollHeight},[messages,pending,sending]);
@@ -55,16 +53,16 @@ export function InvincibleAiPage(){
   <div className="ai-ambient" aria-hidden="true"></div>
   <header className="ai-page-header"><h1>Invincible <em>AI</em></h1></header>
   <ServiceConnections key={user?.uid} accountId={user?.uid} imageConnection={imageConnection?.accountId===user?.uid ? imageConnection : null} imageConnectionRef={imageConnectionRef}/>
-  {!desktop&&<nav className="ai-tool-tabs" role="tablist" aria-label="Invincible AI tools">
-   {tools.map(([value,label],index)=><button key={value} type="button" id={'ai-tool-'+value} role="tab" aria-selected={mode===value} aria-controls={'ai-panel-'+value} tabIndex={mode===value?0:-1} onClick={()=>selectTool(value)} onKeyDown={event=>handleTabKey(event,index)}>{label}</button>)}
-  </nav>}
+  <nav className="ai-tool-tabs" role="tablist" aria-label="Invincible AI tools">
+   {tools.map(([value,label],index)=><button key={value} type="button" id={'ai-tool-'+value} role="tab" aria-selected={mode===value} aria-controls={'ai-panel-'+value} tabIndex={mode===value?0:-1} onClick={()=>selectTool(value)} onKeyDown={event=>handleTabKey(event,index)}><span className="ai-tool-tab-icon"><ToolIcon id={value}/></span>{label}</button>)}
+  </nav>
 
   <div className="ai-workspace">
-   <section id="ai-panel-images" className="ai-workspace-card ai-images-panel" role={desktop?undefined:'tabpanel'} aria-labelledby={desktop?'ai-images-title':'ai-tool-images'} hidden={!desktop&&mode!=='images'}>
+   <section id="ai-panel-images" className="ai-workspace-card ai-images-panel" role="tabpanel" aria-labelledby="ai-tool-images" hidden={mode!=='images'}>
     <header className="ai-card-heading"><h2 id="ai-images-title">Images</h2></header>
     <ImageStudio accountId={user?.uid||null} connectionRef={imageConnectionRef} onConnectionChange={setImageConnection}/>
    </section>
-   <section id="ai-panel-chat" role={desktop?undefined:'tabpanel'} aria-labelledby={desktop?'ai-chat-title':'ai-tool-chat'} className="ai-workspace-card ai-chat-panel" hidden={!desktop&&mode!=='chat'}>
+   <section id="ai-panel-chat" role="tabpanel" aria-labelledby="ai-tool-chat" className="ai-workspace-card ai-chat-panel" hidden={mode!=='chat'}>
     <header className="ai-card-heading"><h2 id="ai-chat-title">Chat</h2><div className="ai-page-actions"><label className="ai-provider-picker">PROVIDER<select aria-label="AI provider" value={provider} onChange={event=>setProvider(event.target.value)}><option value={PROVIDERS.cloud}>Cloud · OpenAI</option><option value={PROVIDERS.local} disabled={!isLocalAiAvailable}>Local · Qwen3 4B</option></select></label><button type="button" onClick={newConversation} aria-label="New chat" title="New chat"><span aria-hidden="true">＋</span></button></div></header>
    <div className="ai-chat-stream" aria-live="polite">
     {!messages.length&&!pending&&<section className="ai-welcome"><div className="ai-brain-orbit"><span>✦</span></div><h2>What are we moving forward?</h2><div>{starterPrompts.map(prompt=><button key={prompt} onClick={()=>ask(prompt)}>{prompt}<span>→</span></button>)}</div></section>}
@@ -77,9 +75,9 @@ export function InvincibleAiPage(){
    </div>
    <form className="ai-composer" onSubmit={submit}><textarea aria-label="Message" ref={input} rows="1" value={draft} onChange={event=>setDraft(event.target.value)} onKeyDown={event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.nativeEvent.isComposing){event.preventDefault();submit(event)}}} placeholder="Type a message…" maxLength="4000"/><button type="submit" disabled={sending||!draft.trim()} aria-label="Send message"><span>Send</span>↗</button></form>
    </section>
-   <section id="ai-panel-voiceover" className="ai-workspace-card ai-voiceover-panel" role={desktop?undefined:'tabpanel'} aria-labelledby={desktop?'ai-voiceover-title':'ai-tool-voiceover'} hidden={!desktop&&mode!=='voiceover'}>
+   <section id="ai-panel-voiceover" className="ai-workspace-card ai-voiceover-panel" role="tabpanel" aria-labelledby="ai-tool-voiceover" hidden={mode!=='voiceover'}>
     <header className="ai-card-heading"><h2 id="ai-voiceover-title">Voiceover</h2></header>
-    {(desktop||voiceoverOpened)&&<iframe className="ai-voiceover-frame" title="Voiceover Studio" src="/invincible/creator/tts.html?embed=ai"/>}
+    {voiceoverOpened&&<iframe className="ai-voiceover-frame" title="Voiceover Studio" src="/invincible/creator/tts.html?embed=ai"/>}
    </section>
   </div>
  </div>;

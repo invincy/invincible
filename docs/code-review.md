@@ -1542,6 +1542,15 @@ automated navigation check could not launch because this workspace has no
 installed Chromium executable; the screenshot was a manual production check,
 not the full responsive viewport matrix.
 
+## Invincible AI workspace tools — November 23, 2026
+
+The desktop AI workspace now opens on Chat and switches between Chat, Images
+and Voiceover through one compact, labeled tool strip. Desktop tabs include
+small icons; the existing mobile text tabs are unchanged. The Voiceover frame
+loads when opened, avoiding hidden studio work on the default chat view. Chat
+providers, prompts, image generation, voiceover controls and agent actions use
+their existing services and persistence paths.
+
 ## Task Workspace cleanup — November 23, 2026
 
 The no-selection, loading, unavailable-task and load-error states now share a

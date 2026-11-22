@@ -74,6 +74,7 @@
 .ai-service-connections button:focus-visible { outline: 2px solid #89e3e9; outline-offset: 2px }
 .ai-service-connections button[aria-disabled="true"] { color: #a5bec4; cursor: wait }
 .ai-tool-tabs { margin-block: 10px 12px }
+.ai-tool-tab-icon { display: none }
 .invincible-ai-page .ai-chat-panel > form.ai-composer { display: grid; gap: 10px; align-items: stretch }
 .invincible-ai-page .ai-chat-panel > form.ai-composer textarea { width: 100%; min-height: 52px }
 .ai-voiceover-frame {
@@ -154,7 +155,7 @@ html.connected-space-document .invincible-ai-page .ai-chat-panel > form.ai-compo
 @media (min-width: 900px) {
   .invincible-ai-page {
     display: grid;
-    grid-template-rows: auto auto minmax(0,1fr);
+    grid-template-rows: auto auto auto minmax(0,1fr);
     height: calc(100dvh - var(--app-top,0px));
     min-height: 270px;
     box-sizing: border-box;
@@ -166,12 +167,18 @@ html.connected-space-document .invincible-ai-page .ai-chat-panel > form.ai-compo
   }
   .ai-workspace {
     display: grid;
-    grid-template-columns: minmax(0,1fr) minmax(0,1.15fr) minmax(0,1.35fr);
-    gap: clamp(10px,1vw,20px);
-    margin-top: 10px;
+    grid-template-columns: minmax(0,1fr);
+    width: min(1440px,100%);
+    gap: 0;
+    margin: 0 auto;
     min-height: 0;
   }
-  .ai-workspace-card { height: auto; min-height: 0 }
+  .ai-workspace-card { height: 100%; min-height: 0 }
+  .ai-chat-panel { height: auto; margin: 0 }
+  .ai-tool-tabs { min-height: 44px; margin: 10px auto 12px; }
+  .ai-tool-tabs button { min-height: 44px; display: flex; align-items: center; gap: 9px; }
+  .ai-tool-tab-icon { display: grid; place-items: center; width: 20px; height: 20px; color: var(--ai-cyan); }
+  .ai-tool-tab-icon svg { display: block; width: 20px; height: 20px; }
   .ai-chat-panel .ai-chat-stream { min-height: 0; overflow-y: auto }
   .ai-chat-panel .ai-composer textarea { resize: none }
   .ai-images-panel { overflow-y: auto }
