@@ -1519,3 +1519,19 @@ clips render that code in a fixed badge; accessible names also include the
 code, clip title and time range. Intro/outro clips keep their own labels, and
 the phone timeline keeps its prior visible text. Scene order, timing, JSON,
 save/export and agent operations are unchanged.
+
+## React desktop navigation arc — November 23, 2026
+
+React app pages now use the same curved, transparent icon navigation as the
+Dashboard instead of the opaque horizontal bottom tray. The active destination
+is emphasized and labels remain available as visible captions, tooltips and
+accessible link text. The arc leaves the scene visible behind it and reserves
+bottom space; the floating AI assistant, reminder add action and status toasts
+stay above the navigation. Routes, destination registry, tab preferences and
+mobile tabs are unchanged. Only the React app shell changed; native pages retain
+their own navigation.
+
+Verification: production build, UI contract checks, site reference check and
+repository unit suites passed. The focused navigation browser check could not
+launch because this workspace has no installed Chromium executable, so visual
+browser inspection remains open.
