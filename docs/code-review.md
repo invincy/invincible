@@ -1511,3 +1511,11 @@ opaque scrollbar rules. Consolidated those identical rules in `studio-ui.css`;
 small-screen colors and tracks remain unchanged, while desktop tracks are
 transparent and thumbs use a faint cyan accent. Cache keys were advanced on
 the affected Creator pages. No scene data, agent API or plugin behavior changed.
+
+## Motion Studio timeline scene identity — November 23, 2026
+
+Timeline clips now expose the same C1/C2 identity as the scene rail. Desktop
+clips render that code in a fixed badge; accessible names also include the
+code, clip title and time range. Intro/outro clips keep their own labels, and
+the phone timeline keeps its prior visible text. Scene order, timing, JSON,
+save/export and agent operations are unchanged.

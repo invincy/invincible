@@ -393,7 +393,13 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    const lead=timeline.audioClips[0]&&audioClipsForManifest(m)[0]?timeline.audioClips[0].startSeconds-audioClipsForManifest(m)[0].startSeconds:0;audioTracks=audioTracks.map(t=>({...t,startSeconds:t.startSeconds+lead}));time=Math.min(time,timeline.duration);
    const next=await createStudioRenderer(canvas,m,timeline,b,{getFile,mapAssets:mapAssets(),signal:controller?.signal||lifecycle.signal});
    if(disposed){next.destroy();return;}renderer=next;
-   $('[data-vs-seek]').max=timeline.duration||1;$('[data-vs-track]').innerHTML=timeline.scenes.map(s=>`<button data-vs-at="${s.startSeconds}" data-vs-scene-id="${esc(s.id)}" title="${esc(s.name||s.id)}">${esc(s.name||s.engineType)} · ${s.startSeconds.toFixed(1)}–${(s.startSeconds+s.durationSeconds).toFixed(1)}s</button>`).join('');
+   $('[data-vs-seek]').max=timeline.duration||1;
+   const sceneOrder=new Map(m.scenes.map((scene,index)=>[scene.id,index+1]));
+   $('[data-vs-track]').innerHTML=timeline.scenes.map(scene=>{
+    const index=sceneOrder.get(scene.id),code=index?`C${index}`:scene.id==='brand-intro'?'Intro':scene.id==='brand-outro'?'Outro':'Clip';
+    const name=scene.name||scene.engineType,range=`${scene.startSeconds.toFixed(1)}–${(scene.startSeconds+scene.durationSeconds).toFixed(1)}s`;
+    return `<button data-vs-at="${scene.startSeconds}" data-vs-scene-id="${esc(scene.id)}" data-vs-clip-code="${esc(code)}" aria-label="${esc(`${code}: ${name}, ${range}`)}" title="${esc(`${code} · ${name} · ${range}`)}">${esc(name)} · ${range}</button>`;
+   }).join('');
    let audioTrack=$('[data-vs-audio-track]');if(!audioTrack){audioTrack=document.createElement('div');audioTrack.dataset.vsAudioTrack='';audioTrack.className='vs-audio-track';$('[data-vs-track]').after(audioTrack);}audioTrack.innerHTML=timeline.audioClips.map(a=>`<div style="margin-left:${a.startSeconds/Math.max(1,timeline.duration)*100}%;width:${Math.max(2,a.durationSeconds/Math.max(1,timeline.duration)*100)}%" title="${esc(a.name)}">${esc(a.role)} · ${esc(a.name)}</div>`).join('');
   })().finally(()=>preparing=null);return preparing;
  }
