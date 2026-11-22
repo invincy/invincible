@@ -211,13 +211,14 @@ function SignedInWorkspace({user, logout}) {
     return()=>{document.removeEventListener('visibilitychange',update);document.documentElement.classList.remove('v2-page-hidden');};
   },[]);
   const themeNames={one:'Golden Orbit',two:'Emerald Forest',three:'Electric Blue'};
+  const orbTheme=desktop?'gold':{one:'gold',two:'emerald',three:'cyan'}[visualTheme];
   const planTotal=plan.items.filter(item=>!item.missing).length,planDone=plan.items.filter(item=>item.done&&!item.missing).length;
   return <div className={'v2-shell'+(desktop?' v2-desktop-connected v2-theme-'+visualTheme:' v2-mobile-theme-'+visualTheme)+(authError || error || !ready || data.tasksCached || data.planCached ? ' has-status' : '')} data-motion={animationIntensity}>
     {desktop&&visualTheme==='two'&&<div className="v2-theme-two-scene" style={{'--theme-two-forest-background':"url('/invincible/assets/theme-two-forest.webp')"}} aria-hidden="true"/>}
     {desktop&&visualTheme==='three'&&<><div className="v2-theme-three-scene" aria-hidden="true"/><svg className="v2-theme-three-circuits" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true"><path d="M0 142H142l32 30h156l38 37h90M0 460h196l39-38h114l32-33h59M1000 245H872l-35 34H716l-32 32h-66M1000 512H848l-42-42H676l-28-28h-32"/><path className="is-live" d="M0 142H142l32 30h156l38 37h90M0 460h196l39-38h114l32-33h59M1000 245H872l-35 34H716l-32 32h-66M1000 512H848l-42-42H676l-28-28h-32"/></svg></>}
     {active==='dashboard'&&(!desktop||visualTheme==='one') && <div className={'v2-ambient-field'+(orbBox.compact?'':' has-globe')} aria-hidden="true"
       style={{'--globe-x':(orbBox.left+orbBox.width/2)+'px','--globe-y':(orbBox.top+orbBox.height/2)+'px','--globe-radius':(orbBox.width*.55)+'px'}}>
-      <AmbientParticles theme="gold" intensity="full"/>
+      <AmbientParticles theme={orbTheme} intensity="full"/>
     </div>}
     {desktop&&visualTheme==='two'&&<div className="v2-theme-two-brand" role="img" aria-label="Invincible. Plan, create, track, grow.">
       <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M39 6C23 7 10 13 9 25c-.5 6 3 10 8 11 11 2 20-12 22-30ZM8 42c5-12 13-20 25-29"/></svg>
@@ -249,7 +250,7 @@ function SignedInWorkspace({user, logout}) {
     </main>
     <div className={'v2-orb v2-orb-'+(!desktop?'golden':visualTheme)+(orbBox.compact ? ' is-compact' : travelPage && active === 'dashboard' ? ' is-approaching' : '')} style={{left: orbBox.left, top: orbBox.top, width: orbBox.width, height: orbBox.height}}
       onWheel={event => {const distance = event.deltaX + (event.shiftKey ? event.deltaY : 0); if (distance && viewport.current) {event.preventDefault(); viewport.current.scrollLeft += distance;}}}>
-      {(!desktop||visualTheme==='one')&&<FocusOrb theme="gold" spin={false} richParticles dashboardMotion interactionSurface={viewport}/>}
+      {(!desktop||visualTheme==='one')&&<FocusOrb theme={orbTheme} spin={false} richParticles dashboardMotion interactionSurface={viewport}/>}
       {desktop&&visualTheme==='two'&&<div className="v2-forest-portal" aria-hidden="true"><span/><span/><span/><i/></div>}
     </div>
     {desktop?<ArcNavigation regions={regions} activeIndex={activeIndex} onNavigate={navigate}/>:<footer className="v2-footer"><><span>PERSONAL WORKSPACE</span><span>{active==='dashboard'?'Tap the centre for today’s plan':'Move cards or open a project'}</span><span>{active==='dashboard'?'01':'02'} / 02</span></></footer>}
