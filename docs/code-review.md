@@ -1532,6 +1532,8 @@ mobile tabs are unchanged. Only the React app shell changed; native pages retain
 their own navigation.
 
 Verification: production build, UI contract checks, site reference check and
-repository unit suites passed. The focused navigation browser check could not
-launch because this workspace has no installed Chromium executable, so visual
-browser inspection remains open.
+repository unit suites passed. A live desktop Chrome view of Reminders confirmed
+the centered curved navigation and selected Reminders state. The focused
+automated navigation check could not launch because this workspace has no
+installed Chromium executable; the screenshot was a manual production check,
+not the full responsive viewport matrix.
