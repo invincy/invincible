@@ -6,6 +6,10 @@
   .finance-react .finance-hero-copy h1 { font-size:clamp(20px,1.7vw,28px) }
   .finance-react .finance-hero-actions { gap:8px; font-size:15px }
   .finance-react .finance-hero-actions button { min-height:44px }
+  .finance-react .finance-hero-actions button { display:grid; place-items:center; width:48px; height:48px; padding:0 }
+  .finance-action-icon { display:block; width:20px; height:20px; flex:none }
+  .finance-react .finance-action-label { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0 }
+  .finance-react .finance-desktop-card .finance-import-button { display:grid; place-items:center; width:44px; height:44px; padding:0 }
   .finance-desktop-panels { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:clamp(12px,1.2vw,22px); flex:1; min-height:0; width:100%; margin:0; padding:0 }
   .finance-desktop-card { display:flex; flex-direction:column; gap:12px; min-height:0; min-width:0; padding:clamp(12px,1.25vw,22px); border:1px solid #8ce1bf30; border-radius:18px; background:linear-gradient(145deg,#10251f,#060f10); box-shadow:0 20px 44px #0006,inset 0 1px #c4ffe716 }
   .finance-desktop-card>header { display:flex; align-items:center; justify-content:space-between; gap:8px; flex:none; min-height:44px }

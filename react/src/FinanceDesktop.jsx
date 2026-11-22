@@ -1,4 +1,5 @@
 import {useRef,useState} from 'react';
+import {FinanceActionIcon} from './FinanceActionIcon';
 
 function Section({title,meta,action,children,className=''}) {
   return <section className={`finance-flat-section ${className}`.trim()}>
@@ -43,7 +44,7 @@ export default function FinanceDesktop({totals,accounts,bills,transactions,check
     </section>
 
     <section className="finance-desktop-card" aria-label="Accounts and wealth">
-      <header><h2>Accounts & wealth</h2><div><button type="button" className="finance-import-button" onClick={onImport} title="Import month" aria-label="Import month">Import</button><button type="button" onClick={()=>onAccount()} title="Add account" aria-label="Add account">+</button></div></header>
+      <header><h2>Accounts & wealth</h2><div><button type="button" className="finance-import-button" onClick={onImport} title="Import month" aria-label="Import month"><FinanceActionIcon name="upload"/><span className="finance-action-label">Import</span></button><button type="button" onClick={()=>onAccount()} title="Add account" aria-label="Add account">+</button></div></header>
       <Section title="Bank accounts" meta={`${cashAccounts.length} accounts`}>
         <div className="finance-compact-list">{cashAccounts.map(accountRow)}{!cashAccounts.length&&<Empty>Add your first bank account.</Empty>}</div>
       </Section>

@@ -1,5 +1,19 @@
 # Cleanup review — 2026-10-03
 
+## Finance desktop quick actions — November 23, 2026
+
+Income, expense and month import now use compact native SVG controls on desktop.
+Their accessible names and hover titles remain explicit; tablet and phone actions
+keep visible text. Account data, finance calculations, project navigation and
+mobile layouts are unchanged.
+
+Verification: the Finance browser fixture passed 11 standalone/embedded desktop
+viewports, save and denied-save recovery, theme states and its existing phone
+cockpit checks. The Finance month unit check, UI design-system check, production
+build, site-reference check and diff whitespace check passed. A 1366×768 fixture
+view was inspected. The fixture uses mocked finance records and does not verify a
+signed-in production account or live Firebase permissions.
+
 ## Dashboard icon-first pass — November 22, 2026
 
 Desktop Orb destinations now show the native line icons first; names appear on
