@@ -70,6 +70,8 @@
   const group=document.querySelector('.toolbar')?.firstElementChild;
   if(group&&!group.querySelector('.journal-pan-tool')){const pan=document.createElement('button');pan.type='button';pan.className='icon-btn journal-pan-tool';pan.title='Pan';pan.setAttribute('aria-label','Pan');pan.innerHTML=tools.querySelector('[data-action=pan]').innerHTML;pan.onclick=()=>{window.dispatchEvent(new Event('journal-controls-dismiss'));window.__journalCards?.setEditing(false);tools.querySelector('[data-action=pan]').click();};group.prepend(pan);}
 
+  if(group&&!group.querySelector('.journal-snapshot-tool')){const button=document.createElement('button');button.type='button';button.className='journal-snapshot-tool';button.setAttribute('aria-label','Save snapshot');button.title='Snapshot · select writing to save as an idea';button.textContent='▣ Snapshot';button.onclick=()=>tools.querySelector('[data-action=snap]').click();group.prepend(button);}
+  group?.querySelector('.journal-snapshot-tool')?.setAttribute('aria-pressed',String(snap));
   window.__journalViewport={get view(){return view;},set view(v){view=v;},point,transform,touch,overlay,change,cancelTouch:finish,get panning(){return hand||snap;}};change(view);
  }
  window.addEventListener('journal-tool-change',()=>{hand=false;space=false;snap=false;clearSelection();document.body.classList.remove('journal-panning');surface?.classList.remove('journal-snapping');document.querySelector('.journal-pan-tool')?.setAttribute('aria-pressed','false');tools?.querySelectorAll('[aria-pressed]').forEach(b=>b.setAttribute('aria-pressed','false'));});

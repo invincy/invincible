@@ -1551,13 +1551,6 @@ loads when opened, avoiding hidden studio work on the default chat view. Chat
 providers, prompts, image generation, voiceover controls and agent actions use
 their existing services and persistence paths.
 
-## Journal toolbar cleanup — November 23, 2026
-
-Removed the duplicate Snapshot button from the drawing toolbar. The same
-selection-and-save action remains in the Journal canvas controls; its dialog,
-draft recovery and saved-idea flow are unchanged. Bumped the affected asset
-URLs so browsers load the cleaned toolbar immediately.
-
 ## Task Workspace cleanup — November 23, 2026
 
 The no-selection, loading, unavailable-task and load-error states now share a
