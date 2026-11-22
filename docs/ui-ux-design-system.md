@@ -106,6 +106,13 @@ Chromium layout checks covered all three dashboard themes at 320, 390 and
 Motion Studio, quick preview, Map Editor, Battlefield Editor, Assets and
 the Agent Notebook.
 
+### LIC on phones
+
+The LIC hub presents Staff, CRM and Tools in one card. Tabs support direct
+selection and arrow keys. Tools links to both Plans and Cashier. Plan
+artwork and copy use separate columns on phones, and Agent CRM gives its
+workspace selector its own row beside the workspace creation action.
+
 ### Motion Studio desktop
 
 The Motion Studio launcher opens a dedicated project selector without creating

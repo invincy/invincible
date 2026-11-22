@@ -27,6 +27,122 @@
 .plan-showcase-advisor{position:absolute;z-index:1;right:0;bottom:-8%;width:auto;height:110%;pointer-events:none;filter:drop-shadow(-20px 0 30px #020b1c70);mask-image:linear-gradient(#000 88%,transparent)}
 .plan-showcase .actions{display:grid;grid-template-columns:1fr 1fr;padding:18px;gap:12px;background:#091426}.plan-showcase .button{min-height:56px;border-radius:14px;gap:10px;font-size:15px}.plan-showcase .button svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.plan-showcase .primary{background:linear-gradient(110deg,#f5d88f,#dfb85f);border-color:#e9c779}.plan-showcase .primary>span{margin-left:auto}
 @keyframes lic-icon-breathe{0%,100%{transform:translateY(0);filter:brightness(1)}50%{transform:translateY(-3px);filter:brightness(1.13)}}
-@media(max-width:760px){.lic-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.lic-hub .hub,.lic-agent-tools .hub{padding:22px 14px 20px}.lic-hub .hub>header{margin-bottom:25px}.lic-shortcut{min-height:186px;padding:20px 9px;border-radius:20px}.shortcut-icon{width:78px;height:78px;border-radius:24px}.shortcut-icon::before{border-radius:18px}.shortcut-icon svg{width:43px;height:43px}.lic-shortcut h2{font-size:17px;margin-top:17px}.shortcut-role{font-size:11px}.plan-showcase-art{min-height:310px}.plan-showcase-copy{padding:26px 22px}.plan-showcase h2{font-size:38px}.plan-showcase-logo{width:60px}.plan-showcase-advisor{right:-27%;bottom:-2%;width:auto;height:108%}.plan-showcase .actions{padding:12px;gap:9px}.plan-showcase .button{font-size:14px;padding:10px;min-height:52px}}
-@media(max-width:360px),(max-height:640px) and (max-width:760px){.lic-shortcut{min-height:162px;padding:16px 8px}.shortcut-icon{width:68px;height:68px;border-radius:22px}.shortcut-icon svg{width:38px;height:38px}.lic-shortcut h2{font-size:15px;margin:14px 0 5px}.shortcut-role{font-size:10px}.lic-shortcuts{gap:12px}.plan-showcase-art{min-height:275px}.plan-showcase h2{font-size:34px}.plan-showcase-copy p{font-size:11px}}
+@media (max-width: 760px) {
+  .lic-agent-tools .hub { padding: 22px 14px 20px; }
+  .plan-showcase-logo { width: 60px; }
+  .plan-showcase .actions { padding: 12px; gap: 9px; }
+  .plan-showcase .button { font-size: 14px; padding: 10px; min-height: 52px; }
+}
 @media(prefers-reduced-motion:reduce){.lic-shortcut,.lic-shortcut::after,.shortcut-icon svg{transition:none}.shortcut-icon{animation:none}.lic-shortcut:hover,.lic-shortcut:focus-visible{transform:none}}
+
+.lic-workspace-tabs[hidden], .lic-shortcuts > .space-panel[hidden] { display: none; }
+
+@media (max-width: 900px) {
+  .lic-hub .hub { padding: 22px 14px 20px; }
+  .lic-hub .hub > header { margin-bottom: 16px; }
+  .lic-hub .lic-workspaces {
+    border: 1px solid #304357;
+    border-radius: 16px;
+    background: #0d1927;
+    padding: 10px;
+  }
+  .lic-workspace-tabs:not([hidden]) {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .lic-workspace-tabs button {
+    min-width: 0;
+    padding: 6px;
+    border-color: transparent;
+    background: #142437;
+    color: #acbed0;
+    font-size: 14px;
+  }
+  .lic-workspace-tabs button[aria-selected="true"] {
+    border-color: #e9bd68;
+    color: #142033;
+    background: #e9bd68;
+    font-weight: 700;
+  }
+  .lic-hub .lic-shortcuts.space-panels {
+    grid-template: auto / minmax(0, 1fr);
+    grid-auto-flow: row;
+    gap: 4px;
+    overflow: visible;
+    scroll-snap-type: none;
+  }
+  .lic-hub .lic-shortcuts > .space-panel {
+    max-height: none;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+  .lic-hub .lic-shortcut {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: 12px;
+    justify-items: start;
+    min-height: 64px;
+    padding: 10px 30px 10px 8px;
+    border: 0;
+    border-radius: 8px;
+    text-align: left;
+    background: transparent;
+    box-shadow: none;
+    transform: none;
+  }
+  .lic-hub .lic-shortcut + .lic-shortcut { border-top: 1px solid #24364a; }
+  .lic-hub .lic-shortcut:focus-visible { outline-offset: -2px; }
+  .lic-hub .lic-shortcut::before, .lic-hub .shortcut-icon::before { display: none; }
+  .lic-hub .lic-shortcut::after { content: '›'; right: 10px; top: 20px; font-size: 24px; line-height: 1; }
+  .lic-hub .shortcut-icon {
+    grid-row: span 2;
+    width: 40px;
+    height: 40px;
+    border-radius: 9px;
+    box-shadow: none;
+    animation: none;
+  }
+  .lic-hub .shortcut-icon svg { width: 22px; height: 22px; }
+  .lic-hub .lic-shortcut h2 { margin: 0; font-size: 16px; }
+  .lic-hub .shortcut-role { font-size: 12px; }
+}
+
+@media (min-width: 761px) {
+  .plan-showcase-lakshya .plan-showcase-advisor {
+    height: 88%;
+    bottom: 6%;
+    right: 4%;
+    filter: drop-shadow(-15px 0 25px #020b1cda);
+  }
+}
+@media (max-width: 760px) {
+  .lic-agent-tools .plan-showcase-art {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, .9fr);
+    align-items: center;
+    gap: 4px;
+    min-height: 0;
+    padding: 16px 8px 16px 16px;
+  }
+  .lic-agent-tools .plan-showcase-copy { width: auto; padding: 0; }
+  .lic-agent-tools .plan-showcase h2 {
+    margin: 14px 0 8px;
+    font-size: clamp(24px, 8vw, 43px);
+    overflow-wrap: anywhere;
+  }
+  .lic-agent-tools .plan-showcase-advisor {
+    position: static;
+    width: 100%;
+    height: auto;
+    align-self: end;
+    max-height: 260px;
+    object-fit: contain;
+    object-position: bottom;
+  }
+}

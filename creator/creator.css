@@ -416,3 +416,35 @@ body.creator-page.studio-ui::before { display: none; }
   .creator-page .creator-toolbox .tool-copy > span,
   .creator-page .creator-toolbox .tool-grid > :is(a, button) > i { display: none; }
 }
+
+.creator-page .creator-connect {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 1px solid var(--creator-border);
+  border-radius: 10px;
+  background: var(--creator-panel);
+  color: var(--creator-accent);
+  text-decoration: none;
+}
+.creator-page .creator-connect svg { display: none; }
+@media (max-width: 700px) {
+  .creator-page .studio-header { gap: 8px; padding-inline: 12px; }
+  .creator-page .studio-header h1 { font-size: clamp(19px, 5.4vw, 25px); }
+  .creator-page .studio-header .header-actions { flex: none; gap: 6px; flex-wrap: nowrap; }
+  .creator-page .creator-connect { width: 44px; padding: 0; }
+  .creator-page .creator-connect span { display: none; }
+  .creator-page .creator-connect svg {
+    display: block;
+    width: 21px;
+    height: 21px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+  }
+  .creator-page .creator-new-project { padding: 0 8px; gap: 5px; font-size: 13px; }
+  .creator-page .creator-new-project > span { width: 19px; height: 19px; font-size: 16px; }
+}

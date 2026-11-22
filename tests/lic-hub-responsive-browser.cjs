@@ -35,7 +35,7 @@ async function checkAction(locator) {
   let browser;
   try {
     browser = await chromium.launch({headless:true, executablePath});
-    for (const [width, height] of [[320,568], [360,640], [393,699], [999,700], [1000,700], [1280,720], [1920,1080]]) {
+    for (const [width, height] of [[320,568], [360,640], [393,699], [844,390], [999,700], [1000,700], [1280,720], [1920,1080]]) {
       const page = await browser.newPage({viewport:{width,height}, reducedMotion:'reduce'});
       const errors = [];
       page.on('pageerror', error => errors.push(error.message));
@@ -46,9 +46,26 @@ async function checkAction(locator) {
       assert.equal(await page.locator('.lic-shortcut').count(), 4);
       assert.deepEqual(await page.locator('.lic-shortcut').evaluateAll(els => els.map(el => el.getAttribute('href'))), ['follow-up/', 'crm/agent.html', 'agent/', 'cashier/']);
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `hub horizontal overflow ${width}x${height}`);
-      const grid = await page.locator('.lic-shortcuts').boundingBox();
+      const grid = await page.locator('.lic-workspaces').boundingBox();
       assert.ok(grid.width >= Math.min(width * .9, 1500), `hub gutters ${width}: ${grid.width}`);
-      for (const link of await page.locator('.lic-shortcut').all()) await checkAction(link);
+      const tabs = page.getByRole('tablist', {name:'LIC workspaces'});
+      if (width <= 900) {
+        assert.equal(await tabs.getByRole('tab').count(), 3);
+        assert.equal(await page.getByRole('tabpanel').count(), 1);
+        await checkAction(page.locator('.lic-shortcut.staff'));
+        await tabs.getByRole('tab', {name:'Staff'}).focus();
+        await page.keyboard.press('ArrowRight');
+        assert.equal(await tabs.getByRole('tab', {name:'CRM'}).getAttribute('aria-selected'), 'true');
+        await checkAction(page.locator('.lic-shortcut.customers'));
+        await page.keyboard.press('End');
+        assert.equal(await tabs.getByRole('tab', {name:'Tools'}).getAttribute('aria-selected'), 'true');
+        assert.equal(await page.getByRole('tabpanel').count(), 1);
+        await checkAction(page.locator('.lic-shortcut.cashier'));
+        await checkAction(page.locator('.lic-shortcut.agent'));
+      } else {
+        assert.equal(await tabs.count(), 0);
+        for (const link of await page.locator('.lic-shortcut').all()) await checkAction(link);
+      }
       if (width <= 760) {
         await page.locator('.mobile-more-trigger').click();
         assert.equal(await page.locator('#appMoreSheet').evaluate(el => el.open), true);
@@ -68,6 +85,11 @@ async function checkAction(locator) {
       if (width >= 1280) assert.ok(cards[1].y + cards[1].height < height, `desktop plans unnecessarily scroll ${width}`);
       for (const link of await page.locator('.plan-showcase .button').all()) await checkAction(link);
       if (width <= 760) {
+        const artwork = await page.locator('.plan-showcase-art').evaluateAll(cards => cards.map(card => ({
+          textEnd: card.querySelector('.plan-showcase-copy').getBoundingClientRect().right,
+          imageStart: card.querySelector('.plan-showcase-advisor').getBoundingClientRect().left
+        })));
+        assert.ok(artwork.every(({textEnd,imageStart}) => textEnd <= imageStart), 'Plan artwork stays clear of the text');
         assert.ok(await page.evaluate(() => document.documentElement.scrollHeight > innerHeight), 'phone plans retain content scrolling');
         const tail = await page.evaluate(() => document.documentElement.scrollHeight - (document.querySelector('.plan-showcase:last-child').getBoundingClientRect().bottom + scrollY));
         assert.ok(tail < 110, `no duplicate mobile bottom gutter: ${tail}`);
