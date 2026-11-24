@@ -13,11 +13,11 @@ import {drawWeatherEffect,orderOverlays,resolveOverlayLayout} from './weather-ef
 export function mapDraft(animation,geometryReviewed,mapAssets=[]){
  return compileAnimation({scenes:[],historicalMap:{version:1,theme:'night',events:[],features:{type:'FeatureCollection',features:[]},camera:[],visual:{version:1,assets:referencedMapAssets(mapAssets,animation),layers:[]}}},animation,{geometryReviewed}).project;
 }
-export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFile,mapAssets=[],signal}={}){
+export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFile,mapAssets=[],signal,allowShortClipsInPreview=false}={}){
  // Compose offscreen so async map/video work never exposes a cleared preview frame.
  const frameCanvas=document.createElement('canvas');frameCanvas.width=canvas.width;frameCanvas.height=canvas.height;
  const frameCtx=frameCanvas.getContext('2d',{alpha:false}),presentCtx=canvas.getContext('2d',{alpha:false}),images=new Map(),maps=new Map(),videos=new Map();let ctx=frameCtx,disposed=false,stage=null;
- const ownedUrls=[],hosts=[],missingAssets=new Map();
+ const ownedUrls=[],hosts=[],missingAssets=new Map(),shortClips=new Map();
  const releaseStage=()=>{stage?.renderer.destroy();stage=null;};
  const destroy=()=>{if(disposed)return;disposed=true;releaseStage();for(const {player} of maps.values())player.destroy();for(const v of videos.values())v.input.dispose();for(const h of hosts)h.remove();for(const url of ownedUrls)URL.revokeObjectURL(url);};
  try{
@@ -32,7 +32,15 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
    if(videoIds.has(asset.id)){
     const {Input,BlobSource,UrlSource,ALL_FORMATS,CanvasSink}=await import('../vendor/studio-video.mjs');
     const input=new Input({source:asset.fileId?new BlobSource(await getFile(asset.fileId)):new UrlSource(url),formats:ALL_FORMATS});videos.set(asset.id,{input});const track=await input.getPrimaryVideoTrack();if(!track||!await track.canDecode())throw Error('Cannot decode clip: '+asset.name);const duration=await track.computeDuration();
-    for(const scene of timeline.scenes.filter(s=>s.engineType==='video'&&s.engineData.assetId===asset.id))if(scene.engineData.trimStart+scene.durationSeconds>duration+1e-6)throw Error('Video trim exceeds original clip: '+asset.name);videos.set(asset.id,{input,sink:new CanvasSink(track,{poolSize:2})});continue;
+    for(const scene of timeline.scenes){
+     if(scene.engineType!=='video'||scene.engineData.assetId!==asset.id)continue;
+     const requiredEnd=scene.engineData.trimStart+scene.durationSeconds;
+     if(requiredEnd<=duration+1e-6)continue;
+     const message=`Video trim exceeds original clip: ${asset.name}. ${scene.name||scene.id} needs footage through ${requiredEnd.toFixed(3)}s, but the clip ends at ${duration.toFixed(3)}s.`;
+     if(!allowShortClipsInPreview)throw Error(message);
+     shortClips.set(scene.id,{name:asset.name,duration,message});
+    }
+    videos.set(asset.id,{input,sink:new CanvasSink(track,{poolSize:2})});continue;
    }
    const image=new Image();image.crossOrigin='anonymous';image.src=url;
    await image.decode().catch(()=>{throw Error(`Cannot load image ${asset.name}. Check its URL and CORS permissions.`);});images.set(asset.id,image);
@@ -93,13 +101,13 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
    ctx.restore();
   }else drawCanvasLayer(ctx,projected,brand,images,style);
  }}
- function placeholder(asset,x,y,w,h){
+ function placeholder(asset,x,y,w,h,label=`Missing: ${asset.name} (${asset.id})`){
   ctx.save();
   ctx.fillStyle='#142238';ctx.fillRect(x,y,w,h);
   ctx.strokeStyle='#f4c970';ctx.lineWidth=3;ctx.setLineDash([12,8]);
   ctx.strokeRect(x,y,w,h);ctx.setLineDash([]);
   ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='600 24px system-ui';
-  ctx.fillStyle='#ffffff';ctx.fillText(`[Missing: ${asset.name} (${asset.id})]`,x+w/2,y+h/2,Math.max(1,w-16));
+  ctx.fillStyle='#ffffff';ctx.fillText(`[${label}]`,x+w/2,y+h/2,Math.max(1,w-16));
   ctx.restore();
  }
  function background(data){
@@ -149,8 +157,25 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
     else fitMedia(ctx,images.get(scene.engineData.assetId),scene.engineData.fit);
    }
    else if(scene.engineType==='video'){
-    frameSignal?.throwIfAborted();const video=videos.get(scene.engineData.assetId),abort=()=>video.input.dispose();frameSignal?.addEventListener('abort',abort,{once:true});
-    try{const frame=await video.sink.getCanvas(scene.engineData.trimStart+local);frameSignal?.throwIfAborted();if(!frame)throw Error('No video frame at requested source time.');fitMedia(ctx,frame.canvas,scene.engineData.fit);}catch(error){frameSignal?.throwIfAborted();throw error;}finally{frameSignal?.removeEventListener('abort',abort);}
+    const sourceTime=scene.engineData.trimStart+local,shortClip=shortClips.get(scene.id);
+    if(shortClip&&sourceTime>=shortClip.duration){
+     placeholder(shortClip,0,0,width,height,'Clip ended: '+shortClip.name);
+    }else{
+     frameSignal?.throwIfAborted();
+     const video=videos.get(scene.engineData.assetId),abort=()=>video.input.dispose();
+     frameSignal?.addEventListener('abort',abort,{once:true});
+     try{
+      const frame=await video.sink.getCanvas(sourceTime);
+      frameSignal?.throwIfAborted();
+      if(!frame)throw Error('No video frame at requested source time.');
+      fitMedia(ctx,frame.canvas,scene.engineData.fit);
+     }catch(error){
+      frameSignal?.throwIfAborted();
+      throw error;
+     }finally{
+      frameSignal?.removeEventListener('abort',abort);
+     }
+    }
    }
    drawStyleFrame(ctx,sceneStyle);
    graphics(scene,local);
@@ -160,5 +185,5 @@ export async function createStudioRenderer(canvas,manifest,timeline,brand,{getFi
  }
  let frameQueue=Promise.resolve();
  function draw(time,options){const task=frameQueue.then(()=>renderFrame(time,options));frameQueue=task.catch(()=>{});return task;}
- return {draw,destroy,missingAssets:[...missingAssets.values()]};
+ return {draw,destroy,missingAssets:[...missingAssets.values()],shortClipWarnings:[...shortClips.values()].map(clip=>clip.message)};
 }

@@ -119,5 +119,47 @@ await ready(mobile);
 assert.match(await mobile.locator('[data-vs-status]').textContent(),/Check the cloud draft before saving/);
 await fresh.close();
 
+// A short source clip leaves the rest of the draft reviewable at the original timings.
+await p3.goto(url+'?account=another-reviewer');
+await ready(p3);
+await p3.locator('[data-media-upload]').setInputFiles({
+ name:'short-clip.mp4',mimeType:'video/mp4',buffer:fs.readFileSync(await mp4.path())
+});
+await ready(p3);
+await p3.getByRole('button',{name:'View current draft JSON'}).click();
+await ready(p3);
+const shortDraft=JSON.parse(await p3.locator('[data-vs-json]').inputValue());
+shortDraft.scenes=[
+ {id:'short-video',name:'Short video',startSeconds:0,durationSeconds:4,engineType:'video',
+  engineData:{assetId:shortDraft.assets[0].id,trimStart:0,fit:'contain'},overlays:[]},
+ {id:'next-scene',name:'Next scene',startSeconds:4,durationSeconds:1,engineType:'graphic',
+  engineData:{background:'#12ac34'},overlays:[]}
+];
+await p3.locator('[data-vs-json]').fill(JSON.stringify(shortDraft));
+await p3.locator('[data-vs=validate]').click();
+await ready(p3);
+await p3.locator('[data-vs=apply]').click();
+await ready(p3);
+const clipWarning=p3.locator('[data-vs-video-warning]');
+assert.match(await clipWarning.textContent(),/short-clip\.mp4.*needs footage through 4\.000s/);
+await p3.locator('[data-vs=export]').click();
+await ready(p3);
+assert.match(await p3.locator('[data-vs-status]').textContent(),/Video trim exceeds original clip/);
+await p3.evaluate(()=>workbench.open({area:'Video Studio',quickPreview:true}));
+const shortReview=p3.getByRole('region',{name:'Quick Review'});
+const shortPicker=shortReview.getByRole('combobox',{name:'Scene'});
+const pixel=()=>shortReview.locator('canvas').evaluate(canvas=>Array.from(canvas.getContext('2d').getImageData(16,16,1,1).data));
+await shortPicker.selectOption('short-video');
+await ready(p3);
+assert.notDeepEqual(await pixel(),[20,34,56,255]);
+await shortReview.getByRole('slider',{name:'Time in scene'}).evaluate(input=>{
+ input.value='3';input.dispatchEvent(new Event('input',{bubbles:true}));
+});
+await p3.waitForFunction(()=>document.querySelector('.vs-quick-review [data-vs-time]').textContent.startsWith('3.00'));
+assert.deepEqual(await pixel(),[20,34,56,255]);
+await shortPicker.selectOption('next-scene');
+await ready(p3);
+assert.deepEqual(await pixel(),[18,172,52,255]);
+
 assert.deepEqual(errors,[]);console.log('Single upload, full JSON, map army overlay, audio MP4, independent-device retrieval, revision conflict and account isolation passed.');
 }finally{await browser?.close();await new Promise(r=>server.close(r));}})().catch(e=>{console.error(e);process.exitCode=1;});

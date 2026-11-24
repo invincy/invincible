@@ -1,5 +1,17 @@
 # Creator Studio: one video flow
 
+## Video clips shorter than their scenes
+
+Quick Review and Motion Studio load the timeline when a source clip ends before
+its scene. Both show the required source end and the available footage duration.
+Review plays available footage and marks the missing portion of that scene.
+MP4 export requires a clip that covers the full trim. Use a longer source or a
+valid trim in Motion Studio, keeping the narration and scene boundaries in sync.
+
+The focused Chromium regression covered valid footage, the missing portion, the
+next scene, and the MP4 export guard with synthetic media and fixture project
+storage. It did not change or verify the signed-in Winter project.
+
 ## Long documentaries and reusable Shorts
 
 Landscape 16:9 masters already use the native Studio renderer and MP4 exporter.

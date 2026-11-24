@@ -6,7 +6,7 @@ import {createMediaClient,inspectMedia,isCloudFile} from '../media-library.js?v=
 import {studioBrief} from './handoff.js?v=2026112204';
 import {upgradeVideo,arrangeScenes} from './composition.js?v=2026112204';
 import {emptyVideo,PRESETS,validateManifest,validateBrand,compileTimeline,exportDimensions,assetsForBrand} from './model.js?v=2026112204';
-import {createStudioRenderer} from './adapters.js?v=2026112204';
+import {createStudioRenderer} from './adapters.js?v=2026112404';
 import {decodeVoiceover,loadAudioTracks,scheduleAudioTracks,audioClipsForManifest} from './audio.js?v=2026112201';
 import {mountAssembly} from './assembly.js?v=2026112204';
 import {encodeStudioVideo} from './export.js?v=2026112201';
@@ -69,7 +69,16 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  audioWarning.className = 'vs-help';
  audioWarning.setAttribute('role', 'status');
  audioWarning.hidden = true;
- header.after(audioWarning);
+ const videoWarning = document.createElement('p');
+ videoWarning.dataset.vsVideoWarning = '';
+ videoWarning.className = 'vs-help';
+ videoWarning.setAttribute('role', 'status');
+ videoWarning.hidden = true;
+ header.after(videoWarning,audioWarning);
+ function showClipWarnings(warnings){
+  videoWarning.textContent=warnings.join(' ');
+  videoWarning.hidden=!warnings.length;
+ }
  const allowPlaceholders=document.createElement('label');
  const placeholderConsent=document.createElement('input');
  placeholderConsent.type='checkbox';
@@ -340,7 +349,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
 
  const brand=()=>state.brands.find(b=>b.id===state.manifest.brandPresetId)||state.brands[0];
  function stop(){playing=false;quickReview?.setPlaying(false);cancelAnimationFrame(raf);stopTracks?.();stopTracks=null;if(source){try{source.stop();}catch{}source.disconnect();source=null;}gainNode?.disconnect();gainNode=null;}
- function invalidate(){stop();renderer?.destroy();renderer=null;audioBuffer=null;audioTracks=[];pending=null;$('[data-vs=apply]').disabled=true;}
+ function invalidate(){stop();renderer?.destroy();renderer=null;audioBuffer=null;audioTracks=[];pending=null;showClipWarnings([]);$('[data-vs=apply]').disabled=true;}
  function sync(){
   const m=state.manifest;$('[data-vs-title]').value=m.title;$('[data-vs-ratio]').value=m.aspectRatio;
   $('[data-vs-brand]').innerHTML=state.brands.map(b=>`<option value="${esc(b.id)}">${esc(b.name)}</option>`).join('');$('[data-vs-brand]').value=brand().id;
@@ -392,8 +401,8 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    await loadPreviewAudio(m);
    timeline=compileTimeline(m,b,audioBuffer?.duration||0);const size=exportDimensions(m.aspectRatio);canvas.style.aspectRatio=`${size.width} / ${size.height}`;canvas.width=size.width;canvas.height=size.height;
    const lead=timeline.audioClips[0]&&audioClipsForManifest(m)[0]?timeline.audioClips[0].startSeconds-audioClipsForManifest(m)[0].startSeconds:0;audioTracks=audioTracks.map(t=>({...t,startSeconds:t.startSeconds+lead}));time=Math.min(time,timeline.duration);
-   const next=await createStudioRenderer(canvas,m,timeline,b,{getFile,mapAssets:mapAssets(),signal:controller?.signal||lifecycle.signal});
-   if(disposed){next.destroy();return;}renderer=next;
+   const next=await createStudioRenderer(canvas,m,timeline,b,{getFile,mapAssets:mapAssets(),signal:controller?.signal||lifecycle.signal,allowShortClipsInPreview:true});
+   if(disposed){next.destroy();return;}renderer=next;showClipWarnings(renderer.shortClipWarnings);
    $('[data-vs-seek]').max=timeline.duration||1;
    if(quickReview){
     quickReview.setScenes(timeline.scenes);
@@ -418,7 +427,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  }
  async function applyManifest(next,{brands:nextBrands=null}={}){
   next=validateManifest(next,{mapAssets:mapAssets()});
-  stop();renderer?.destroy();renderer=null;audioBuffer=null;audioTracks=[];
+  stop();renderer?.destroy();renderer=null;audioBuffer=null;audioTracks=[];showClipWarnings([]);
   state.manifest=next;if(nextBrands)state.brands=nextBrands;
   pending=null;$('[data-vs=apply]').disabled=true;sync();
   try{await draw();state.previewError=null;}catch(error){state.previewError=error.message;status('Draft retained. Preview unavailable: '+error.message);}
@@ -496,7 +505,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  }
  const run=async fn=>{if(busy||disposed)return;lock(true);stop();try{if(drawing)await drawing.catch(()=>{});await fn();}catch(e){if(!disposed)sync();status(e.name==='AbortError'?'Export cancelled.':e.message);}finally{if(!disposed)lock(false);}};
  async function renderExport(){
-  stop();controller=new AbortController();$('[data-vs=cancel]').disabled=false;root.dataset.exporting='true';let codec=null;try{await prepare();if(!placeholderConsent.checked&&(!audioWarning.hidden||renderer.missingAssets.length))throw Error('Resolve unavailable media or enable Allow placeholders before exporting.');status('Rendering MP4…');const blob=await encodeStudioVideo({canvas,timeline,audioBuffer,audioTracks,audioGain:state.manifest.audio?.gain??1,signal:controller.signal,onAudioCodec:value=>{codec=value;status(`Rendering H.264 + ${value.toUpperCase()} audio…`);},onProgress:p=>{if(!disposed)$('[data-vs-progress]').value=p.progress;},drawFrame:(t,signal)=>renderer.draw(t,{exporting:true,allowPlaceholders:placeholderConsent.checked,signal})});if(!disposed){const name=(state.manifest.title||'video').replace(/[^\p{L}\p{N}_-]/gu,'_')+'.mp4';if(lastExportUrl)URL.revokeObjectURL(lastExportUrl);lastExportBlob=blob;lastExportName=name;lastExportUrl=URL.createObjectURL(blob);lastExport.href=lastExportUrl;lastExport.download=name;lastExport.hidden=false;saveLastExport.hidden=false;cloudExport.hidden=true;download(blob,name);status(audioBuffer||audioTracks.length?`MP4 exported with synchronized ${codec.toUpperCase()} voiceover and audio. Download it now or save it to your private library.${codec==='opus'?' Opus MP4 needs a compatible player.':''}`:(audioWarning.hidden?'MP4 exported without audio.':'MP4 exported with unavailable audio muted.')+' Download it now or save it to your private library.');}return blob;}finally{if(controller?.signal.aborted)invalidate();controller=null;$('[data-vs=cancel]').disabled=true;root.dataset.exporting='false';if(!disposed)await draw();}
+  stop();controller=new AbortController();$('[data-vs=cancel]').disabled=false;root.dataset.exporting='true';let codec=null;try{await prepare();if(renderer.shortClipWarnings.length)throw Error(renderer.shortClipWarnings[0]);if(!placeholderConsent.checked&&(!audioWarning.hidden||renderer.missingAssets.length))throw Error('Resolve unavailable media or enable Allow placeholders before exporting.');status('Rendering MP4…');const blob=await encodeStudioVideo({canvas,timeline,audioBuffer,audioTracks,audioGain:state.manifest.audio?.gain??1,signal:controller.signal,onAudioCodec:value=>{codec=value;status(`Rendering H.264 + ${value.toUpperCase()} audio…`);},onProgress:p=>{if(!disposed)$('[data-vs-progress]').value=p.progress;},drawFrame:(t,signal)=>renderer.draw(t,{exporting:true,allowPlaceholders:placeholderConsent.checked,signal})});if(!disposed){const name=(state.manifest.title||'video').replace(/[^\p{L}\p{N}_-]/gu,'_')+'.mp4';if(lastExportUrl)URL.revokeObjectURL(lastExportUrl);lastExportBlob=blob;lastExportName=name;lastExportUrl=URL.createObjectURL(blob);lastExport.href=lastExportUrl;lastExport.download=name;lastExport.hidden=false;saveLastExport.hidden=false;cloudExport.hidden=true;download(blob,name);status(audioBuffer||audioTracks.length?`MP4 exported with synchronized ${codec.toUpperCase()} voiceover and audio. Download it now or save it to your private library.${codec==='opus'?' Opus MP4 needs a compatible player.':''}`:(audioWarning.hidden?'MP4 exported without audio.':'MP4 exported with unavailable audio muted.')+' Download it now or save it to your private library.');}return blob;}finally{if(controller?.signal.aborted)invalidate();controller=null;$('[data-vs=cancel]').disabled=true;root.dataset.exporting='false';if(!disposed)await draw();}
  }
  async function renderJpgPreviews(){
   stop();await prepare();if(!renderer||!timeline?.scenes?.length)throw Error('Add or apply a video scene before generating previews.');
@@ -624,7 +633,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  if(quickPreview){
   quickReview=mountQuickReview(root,{
    canvas,seek:$('[data-vs-seek]'),timeOutput:$('[data-vs-time]'),play:$('[data-vs=play]'),jpg:jpgSceneButton,
-   notices:[cloudNotice,audioWarning,$('[data-vs-status]')],
+   notices:[cloudNotice,videoWarning,audioWarning,$('[data-vs-status]')],
    onSelect:id=>run(async()=>{
     const scene=timeline?.scenes.find(item=>item.id===id);
     if(!scene)return;
@@ -634,7 +643,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    onOpenEditor:()=>root.dispatchEvent(new CustomEvent('invincible-review-open-editor',{bubbles:true}))
   });
  }else{
- assembly=mountAssembly(assemblyRoot,{pause:stop,session:state,getManifest:()=>state.manifest,getProject,getFile,importFiles:uploadFiles,putFile:(id,file)=>state.files.set(id,file),deleteFile:id=>state.files.delete(id),run,status,getTime:()=>time,setTime:value=>{time=value;state.time=value;},releaseRenderer:async()=>{stop();if(drawing)await drawing.catch(()=>{});invalidate();},setManifest:applyManifest,saveMapDraft:next=>save(next,{preview:false,applying:true}),previewManifest:async next=>{if(next===state.manifest){invalidate();await draw();return;}invalidate();try{const b=brand(),t=compileTimeline(next,b);await loadPreviewAudio(next);const lead=t.audioClips[0]&&audioClipsForManifest(next)[0]?t.audioClips[0].startSeconds-audioClipsForManifest(next)[0].startSeconds:0;audioTracks=audioTracks.map(a=>({...a,startSeconds:a.startSeconds+lead}));const nextRenderer=await createStudioRenderer(canvas,next,t,b,{getFile,mapAssets:mapAssets(),signal:lifecycle.signal});if(disposed){nextRenderer.destroy();return;}renderer=nextRenderer;timeline=t;await renderer.draw(time);}catch(error){invalidate();try{await draw();}catch{}throw error;}}});
+ assembly=mountAssembly(assemblyRoot,{pause:stop,session:state,getManifest:()=>state.manifest,getProject,getFile,importFiles:uploadFiles,putFile:(id,file)=>state.files.set(id,file),deleteFile:id=>state.files.delete(id),run,status,getTime:()=>time,setTime:value=>{time=value;state.time=value;},releaseRenderer:async()=>{stop();if(drawing)await drawing.catch(()=>{});invalidate();},setManifest:applyManifest,saveMapDraft:next=>save(next,{preview:false,applying:true}),previewManifest:async next=>{if(next===state.manifest){invalidate();await draw();return;}invalidate();try{const b=brand(),t=compileTimeline(next,b);await loadPreviewAudio(next);const lead=t.audioClips[0]&&audioClipsForManifest(next)[0]?t.audioClips[0].startSeconds-audioClipsForManifest(next)[0].startSeconds:0;audioTracks=audioTracks.map(a=>({...a,startSeconds:a.startSeconds+lead}));const nextRenderer=await createStudioRenderer(canvas,next,t,b,{getFile,mapAssets:mapAssets(),signal:lifecycle.signal,allowShortClipsInPreview:true});if(disposed){nextRenderer.destroy();return;}renderer=nextRenderer;showClipWarnings(renderer.shortClipWarnings);timeline=t;await renderer.draw(time);}catch(error){invalidate();try{await draw();}catch{}throw error;}}});
  styleGallery=mountStyleGallery(styleRoot,{getManifest:()=>state.manifest,getSelectedSceneId:()=>assembly?.selectedId||'',applyManifest,saveManifest:next=>save(next),status});
  shortsPanel=mountShortsPanel(advanced,{getManifest:()=>state.manifest,setManifest:applyManifest,getFile,mapAssets,brand,run,status,pause:stop});
  }
