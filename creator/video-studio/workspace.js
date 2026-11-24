@@ -19,12 +19,13 @@ import {loadPendingAiDraft,loadPendingAiAudio,savePendingAiDraft} from '../ai-dr
 import {startBrowserSceneJpgBridge} from './browser-scene-jpg-bridge.js?v=2026111605';
 import {mountStyleGallery} from './style-gallery.js?v=2026111813';
 import {mountShortsPanel} from './shorts-panel.js';
+import {mountQuickReview} from './quick-review.js';
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>crypto.randomUUID();
 const template=(name,text)=>({id:name,startSeconds:0,durationSeconds:2,engineType:'graphic',engineData:{},transition:{type:'fade',durationSeconds:.3},overlays:[{id:'title',type:'text',text,x:.5,y:.5,fontSize:64}]});
 export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session={},mediaService=null,readiness=createProductionReadiness(getAccountId),quickPreview=false}){
- root.classList.toggle('vs-quick-preview',quickPreview);
  root.className='video-studio';
+ root.classList.toggle('vs-quick-preview',quickPreview);
  root.innerHTML=`<div class="vs-layout space-panels" tabindex="0" aria-label="Motion Studio panels"><div><strong>Video Studio · Phase 1</strong><p class="vs-help">Separate video draft. Existing storyboard, map and LIC pages are preserved. Use the shared uploader above for cloud media. The owner can Save the complete video draft to sync it across devices.</p>
  <div class="vs-actions"><button data-vs="save">Save video draft</button><button data-vs="download">Download JSON</button><button data-vs="example">Load example</button></div>
  <label>Video title<input data-vs-title maxlength="200"></label><div class="vs-grid"><label>Frame<select data-vs-ratio><option value="9:16">Portrait · 1080 × 1920</option><option value="16:9">Landscape · 1920 × 1080</option></select></label><label>Brand<select data-vs-brand></select></label></div>
@@ -97,7 +98,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  const styleRoot=document.createElement('section');styleRoot.className='vs-style-library space-panel';styleRoot.setAttribute('aria-label','Visual styling library');$('.vs-layout').before(styleRoot);
  $('.vs-layout').before(Object.assign(document.createElement('h3'),{textContent:'3 · Review scenes & audio',className:'vs-review-heading'}));
  const exportNote=document.createElement('p');exportNote.className='vs-help';exportNote.textContent='4 · Export your complete MP4 with audio';$('.vs-preview').prepend(exportNote);
- if(root.closest('.project-page')){
+ if(!quickPreview&&root.closest('.project-page')){
   root.classList.add('vs-editing-first');
   header.querySelector('.vs-eyebrow').remove();
   $('.vs-review-heading').remove();
@@ -171,7 +172,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   });
   root.addEventListener('click',event=>{
    for(const popup of actions.querySelectorAll('.vs-tool-menu[open],.vs-create[open]')){
-    if(!popup.contains(event.target)&&!event.target.closest('.vs-workspace-shortcuts,.vs-mobile-tabs,.vs-creation-tools'))popup.open=false;
+    if(!popup.contains(event.target)&&!event.target.closest('.vs-workspace-shortcuts,.vs-mobile-tabs,.vs-creation-tools,[data-empty-create]'))popup.open=false;
    }
   });
   styles.open=true;
@@ -219,7 +220,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  }
  setup.ondragover=e=>{e.preventDefault();};setup.ondrop=e=>{e.preventDefault();if(e.dataTransfer.files.length)run(()=>uploadFiles([...e.dataTransfer.files]));};
  const lifecycle=new AbortController();
- let drawing=null,lastPreviewFrameAt=-Infinity;
+ let drawing=null,lastPreviewFrameAt=-Infinity,quickReview=null,reviewScene=null;
  let renderer=null,timeline=null,audioBuffer=null,audioTracks=[],stopTracks=null,assembly=null,styleGallery=null,shortsPanel=null,playing=false,raf=0,time=state.time||0,context=null,source=null,gainNode=null,clock=0,clockTime=0,disposed=false,busy=false,pending=null,controller=null,drawBusy=false,preparing=null;
  const status=text=>{if(!disposed)$('[data-vs-status]').textContent=text;};
  const canSync=()=>getProject()?.ownerUid===account||!!mediaService;
@@ -338,7 +339,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  const images=mountConnectedImageGenerator(imageRoot,{getAccountId,callRelay:callImageRelay,draftPrompt:draftRemoteImagePrompt,getProjectId:()=>getProject()?.id,onReveal:()=>selectAssetTool('images'),onAttach:async file=>{if(disposed||getAccountId()!==account||getProject()?.id!==projectId||getProject()?.ownerUid!==account)throw Error('Only the current project owner can attach generated artwork.');await uploadFiles([file]);}});
 
  const brand=()=>state.brands.find(b=>b.id===state.manifest.brandPresetId)||state.brands[0];
- function stop(){playing=false;cancelAnimationFrame(raf);stopTracks?.();stopTracks=null;if(source){try{source.stop();}catch{}source.disconnect();source=null;}gainNode?.disconnect();gainNode=null;}
+ function stop(){playing=false;quickReview?.setPlaying(false);cancelAnimationFrame(raf);stopTracks?.();stopTracks=null;if(source){try{source.stop();}catch{}source.disconnect();source=null;}gainNode?.disconnect();gainNode=null;}
  function invalidate(){stop();renderer?.destroy();renderer=null;audioBuffer=null;audioTracks=[];pending=null;$('[data-vs=apply]').disabled=true;}
  function sync(){
   const m=state.manifest;$('[data-vs-title]').value=m.title;$('[data-vs-ratio]').value=m.aspectRatio;
@@ -394,6 +395,13 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    const next=await createStudioRenderer(canvas,m,timeline,b,{getFile,mapAssets:mapAssets(),signal:controller?.signal||lifecycle.signal});
    if(disposed){next.destroy();return;}renderer=next;
    $('[data-vs-seek]').max=timeline.duration||1;
+   if(quickReview){
+    quickReview.setScenes(timeline.scenes);
+    reviewScene=timeline.scenes.find(scene=>scene.id===state.selected)||timeline.scenes[0]||null;
+    if(reviewScene&&(time<reviewScene.startSeconds||time>=reviewEnd()))time=reviewScene.startSeconds;
+    quickReview.update(reviewScene,time,busy);
+    return;
+   }
    const sceneOrder=new Map(m.scenes.map((scene,index)=>[scene.id,index+1]));
    $('[data-vs-track]').innerHTML=timeline.scenes.map(scene=>{
     const index=sceneOrder.get(scene.id),code=index?`C${index}`:scene.id==='brand-intro'?'Intro':scene.id==='brand-outro'?'Outro':'Clip';
@@ -403,9 +411,10 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    let audioTrack=$('[data-vs-audio-track]');if(!audioTrack){audioTrack=document.createElement('div');audioTrack.dataset.vsAudioTrack='';audioTrack.className='vs-audio-track';$('[data-vs-track]').after(audioTrack);}audioTrack.innerHTML=timeline.audioClips.map(a=>`<div style="margin-left:${a.startSeconds/Math.max(1,timeline.duration)*100}%;width:${Math.max(2,a.durationSeconds/Math.max(1,timeline.duration)*100)}%" title="${esc(a.name)}">${esc(a.role)} · ${esc(a.name)}</div>`).join('');
   })().finally(()=>preparing=null);return preparing;
  }
+ function reviewEnd(){return reviewScene.startSeconds+reviewScene.durationSeconds-Math.min(.001,reviewScene.durationSeconds/2);}
  async function draw(){
   if(drawing)await drawing.catch(()=>{});
-  const task=(async()=>{await prepare();if(disposed||!renderer)return;await renderer.draw(time);assembly?.highlight();state.time=time;$('[data-vs-seek]').value=time;$('[data-vs-time]').textContent=`${time.toFixed(2)} / ${timeline.duration.toFixed(2)}s`;})();drawing=task;try{await task;}finally{if(drawing===task)drawing=null;}
+  const task=(async()=>{await prepare();if(disposed||!renderer)return;await renderer.draw(time);assembly?.highlight();state.time=time;if(quickReview){quickReview.update(reviewScene,time,busy);return;}$('[data-vs-seek]').value=time;$('[data-vs-time]').textContent=`${time.toFixed(2)} / ${timeline.duration.toFixed(2)}s`;})();drawing=task;try{await task;}finally{if(drawing===task)drawing=null;}
  }
  async function applyManifest(next,{brands:nextBrands=null}={}){
   next=validateManifest(next,{mapAssets:mapAssets()});
@@ -415,16 +424,16 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   try{await draw();state.previewError=null;}catch(error){state.previewError=error.message;status('Draft retained. Preview unavailable: '+error.message);}
  }
  async function tick(now){
-  if(!playing||disposed)return;time=Math.min(timeline.duration,clockTime+context.currentTime-clock);
-  if(!drawBusy&&(now-lastPreviewFrameAt>=1000/30||time>=timeline.duration)){drawBusy=true;lastPreviewFrameAt=now;try{await draw();}catch(e){stop();status(e.message);}finally{drawBusy=false;}}
-  if(time>=timeline.duration)stop();if(playing)raf=requestAnimationFrame(tick);
+  if(!playing||disposed)return;const end=reviewScene?reviewEnd():timeline.duration;time=Math.min(end,clockTime+context.currentTime-clock);
+  if(!drawBusy&&(now-lastPreviewFrameAt>=1000/30||time>=end)){drawBusy=true;lastPreviewFrameAt=now;try{await draw();}catch(e){stop();status(e.message);}finally{drawBusy=false;}}
+  if(time>=end)stop();if(playing)raf=requestAnimationFrame(tick);
  }
  async function play(){
-  stop();await prepare();if(!timeline.duration)throw Error('Import or add a scene before playback.');if(time>=timeline.duration)time=0;
+  stop();await prepare();if(!timeline.duration)throw Error('Import or add a scene before playback.');if(reviewScene){if(time>=reviewEnd())time=reviewScene.startSeconds;}else if(time>=timeline.duration)time=0;
   context??=new AudioContext();await context.resume();clock=context.currentTime;clockTime=time;
   if(audioBuffer){const offset=Math.max(0,time-timeline.audioStart);if(offset<audioBuffer.duration){source=context.createBufferSource();source.buffer=audioBuffer;gainNode=context.createGain();gainNode.gain.value=state.manifest.audio.gain;source.connect(gainNode);gainNode.connect(context.destination);source.start(clock+Math.max(0,timeline.audioStart-time),offset);}}
   stopTracks=scheduleAudioTracks(context,audioTracks,time);
-  lastPreviewFrameAt=-Infinity;playing=true;raf=requestAnimationFrame(tick);
+  lastPreviewFrameAt=-Infinity;playing=true;quickReview?.setPlaying(true);raf=requestAnimationFrame(tick);
  }
  async function save(manifest=state.manifest,{preview=true,applying=false}={}){
   if(assembly?.pending&&!applying)throw Error('Apply or discard the pending scene change before saving.');
@@ -479,7 +488,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   return result;
  }
  function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
- function lock(value){busy=value;root.querySelectorAll('button,input,textarea,select').forEach(n=>{if(!imageRoot.contains(n))n.disabled=value;});imageRoot.inert=value;$('[data-vs=cancel]').disabled=!value||!controller;$('[data-vs=apply]').disabled=value||!pending;}
+ function lock(value){busy=value;root.querySelectorAll('button,input,textarea,select').forEach(n=>{if(!imageRoot.contains(n))n.disabled=value;});imageRoot.inert=value;$('[data-vs=cancel]').disabled=!value||!controller;$('[data-vs=apply]').disabled=value||!pending;quickReview?.update(reviewScene,time,value);}
  function clearImportReview(){
   pendingCloud=null;pending=null;
   $('[data-vs=apply]').disabled=true;
@@ -497,18 +506,19 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  }
  async function renderSelectedJpg(){
   stop();await prepare();if(!renderer||!timeline?.scenes?.length)throw Error('Add or apply a video scene before generating a preview.');
-  const selectedId=state.selected||timeline.scenes[0].id,scene=timeline.scenes.find(item=>item.id===selectedId)||timeline.scenes[0];
+  const selectedId=reviewScene?.id||state.selected||timeline.scenes[0].id,scene=timeline.scenes.find(item=>item.id===selectedId)||timeline.scenes[0];
   const rawText=String(jpgOffset.value||'').trim(),rawOffset=rawText===''?NaN:Number(rawText),offset=Number.isFinite(rawOffset)?Math.max(0,Math.min(scene.durationSeconds,rawOffset)):scene.durationSeconds/2,captureAt=scene.startSeconds+offset;
   await renderer.draw(captureAt,{exporting:true});
   const blob=await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(Error('Canvas could not be exported as JPG.')),'image/jpeg',.92));
   const index=timeline.scenes.findIndex(item=>item.id===scene.id)+1;
   const name=(state.manifest.title||'invincible').replace(/[^\p{L}\p{N}_-]/gu,'_')+'-scene-'+String(index).padStart(2,'0')+'-t-'+offset.toFixed(2)+'s.jpg';
-  download(blob,name);status(`Scene ${index} JPG preview exported at ${offset.toFixed(2)}s.`);return {sceneId:scene.id,name,offsetSeconds:offset};
+  download(blob,name);if(quickReview)await draw();status(`Scene ${index} JPG preview exported at ${offset.toFixed(2)}s.`);return {sceneId:scene.id,name,offsetSeconds:offset};
  }
  root.addEventListener('click',event=>{
   if(event.target.closest('[data-assembly]'))return;
   const at=event.target.closest('[data-vs-at]');if(at&&!busy){stop();time=Number(at.dataset.vsAt);assembly?.select(at.dataset.vsSceneId);run(draw);return;}
   const button=event.target.closest('[data-vs]');if(!button)return;const action=button.dataset.vs;
+  if(action==='play'&&quickReview&&playing){stop();return;}
   if(action==='cancel'){controller?.abort(new DOMException('Export cancelled','AbortError'));return;}
   run(async()=>{
    if(action==='save')await save();
@@ -575,7 +585,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  root.addEventListener('input',event=>{
   if(event.target.matches('[data-media-search]'))renderLibrary();
   if(event.target.matches('[data-vs-json]'))clearImportReview();
-  if(event.target.matches('[data-vs-seek]')&&!busy){stop();time=Number(event.target.value);if(!drawBusy){drawBusy=true;draw().catch(e=>status(e.message)).finally(()=>drawBusy=false);}}
+  if(event.target.matches('[data-vs-seek]')&&!busy){stop();const requested=Number(event.target.value);time=reviewScene?Math.min(reviewEnd(),reviewScene.startSeconds+requested):requested;if(!drawBusy){drawBusy=true;draw().catch(e=>status(e.message)).finally(()=>drawBusy=false);}}
  });
  root.addEventListener('change',event=>{
   if(event.target.closest('[data-assembly],.vs-shorts,.vs-short-review'))return;
@@ -611,9 +621,23 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
    validateManifest(next,{mapAssets:mapAssets()});await applyManifest(next);
   });
  });
+ if(quickPreview){
+  quickReview=mountQuickReview(root,{
+   canvas,seek:$('[data-vs-seek]'),timeOutput:$('[data-vs-time]'),play:$('[data-vs=play]'),jpg:jpgSceneButton,
+   notices:[cloudNotice,audioWarning,$('[data-vs-status]')],
+   onSelect:id=>run(async()=>{
+    const scene=timeline?.scenes.find(item=>item.id===id);
+    if(!scene)return;
+    reviewScene=scene;state.selected=scene.id;time=scene.startSeconds;
+    await draw();
+   }),
+   onOpenEditor:()=>root.dispatchEvent(new CustomEvent('invincible-review-open-editor',{bubbles:true}))
+  });
+ }else{
  assembly=mountAssembly(assemblyRoot,{pause:stop,session:state,getManifest:()=>state.manifest,getProject,getFile,importFiles:uploadFiles,putFile:(id,file)=>state.files.set(id,file),deleteFile:id=>state.files.delete(id),run,status,getTime:()=>time,setTime:value=>{time=value;state.time=value;},releaseRenderer:async()=>{stop();if(drawing)await drawing.catch(()=>{});invalidate();},setManifest:applyManifest,saveMapDraft:next=>save(next,{preview:false,applying:true}),previewManifest:async next=>{if(next===state.manifest){invalidate();await draw();return;}invalidate();try{const b=brand(),t=compileTimeline(next,b);await loadPreviewAudio(next);const lead=t.audioClips[0]&&audioClipsForManifest(next)[0]?t.audioClips[0].startSeconds-audioClipsForManifest(next)[0].startSeconds:0;audioTracks=audioTracks.map(a=>({...a,startSeconds:a.startSeconds+lead}));const nextRenderer=await createStudioRenderer(canvas,next,t,b,{getFile,mapAssets:mapAssets(),signal:lifecycle.signal});if(disposed){nextRenderer.destroy();return;}renderer=nextRenderer;timeline=t;await renderer.draw(time);}catch(error){invalidate();try{await draw();}catch{}throw error;}}});
  styleGallery=mountStyleGallery(styleRoot,{getManifest:()=>state.manifest,getSelectedSceneId:()=>assembly?.selectedId||'',applyManifest,saveManifest:next=>save(next),status});
  shortsPanel=mountShortsPanel(advanced,{getManifest:()=>state.manifest,setManifest:applyManifest,getFile,mapAssets,brand,run,status,pause:stop});
+ }
  const libraryReady = refreshLibrary();
  const ready=run(async()=>{
   if(!state.loaded){
@@ -664,7 +688,7 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
   authorize:async()=>{await ready;if(disposed||!account||getAccountId()!==account||getProject()?.id!==projectId||(getProject()?.ownerUid!==account&&!mediaService))throw Object.assign(Error('Sign in as the project owner to use the agent API.'),{code:'UNAUTHORIZED'});},
   getManifest:()=>state.manifest,getSavedManifest:()=>state.savedManifest||state.manifest,getRevision:()=>state.cloudRevision,getMapAssets:mapAssets,getAvailableAssets:()=>catalogue.map(({id,name,kind,mimeType,duration,width,height})=>({id,name,kind,mimeType,duration,width,height})),
   read:()=>libraryReady,
-  isBlocked:()=>assembly.focused||assembly.pending,
+  isBlocked:()=>assembly?.focused||assembly?.pending,
   checkResources:async manifest=>{
    const profile=state.brands.find(b=>b.id===manifest.brandPresetId);if(!profile)throw Error('Choose or create the referenced brand profile first.');validateBrand(profile,new Set(manifest.assets.filter(a=>a.kind!=='glb').map(a=>a.id)));
    const checked=new Set();
@@ -688,11 +712,11 @@ export function mountVideoStudio(root,{getProject,getAccountId=()=>null,session=
  async function reviewGeneratedMaps(){await ready;return assembly?.startMapReview()||false;}
  async function saveFocusedMap(){
   if(busy||disposed)throw Error('Wait for the current operation to finish, then save again.');
-  const next=assembly.focusedMapDraft();
+  const next=assembly?.focusedMapDraft();
   if(!next)return null;
   lock(true);
   try{return {cloud:await save(next,{preview:false})};}
   finally{if(!disposed)lock(false);}
  }
- return {ready,save:async()=>{if(busy||disposed)throw Error('Wait for the current editor operation to finish.');lock(true);try{return await save();}finally{if(!disposed)lock(false);}},get manifest(){return state.manifest;},get mapFocused(){return assembly.mapFocused;},saveFocusedMap,importAiProduction,reviewGeneratedMaps,destroy(){if(window.invincibleAgent===exposedAgent)delete window.invincibleAgent;stopBrowserSceneJpgBridge();images.destroy();disposed=true;state.time=time;shortsPanel?.destroy();styleGallery?.destroy();assembly?.destroy();stop();lifecycle.abort(new DOMException('Workspace closed','AbortError'));controller?.abort(new DOMException('Workspace closed','AbortError'));renderer?.destroy();context?.close();if(lastExportUrl)URL.revokeObjectURL(lastExportUrl);store?.close();document.removeEventListener('visibilitychange',hidden);}};
+ return {ready,save:async()=>{if(busy||disposed)throw Error('Wait for the current editor operation to finish.');lock(true);try{return await save();}finally{if(!disposed)lock(false);}},get manifest(){return state.manifest;},get mapFocused(){return !!assembly?.mapFocused;},saveFocusedMap,importAiProduction,reviewGeneratedMaps,destroy(){if(window.invincibleAgent===exposedAgent)delete window.invincibleAgent;stopBrowserSceneJpgBridge();images.destroy();disposed=true;state.time=time;shortsPanel?.destroy();styleGallery?.destroy();assembly?.destroy();stop();lifecycle.abort(new DOMException('Workspace closed','AbortError'));controller?.abort(new DOMException('Workspace closed','AbortError'));renderer?.destroy();context?.close();if(lastExportUrl)URL.revokeObjectURL(lastExportUrl);store?.close();document.removeEventListener('visibilitychange',hidden);}};
 }

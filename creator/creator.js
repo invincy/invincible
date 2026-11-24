@@ -1,6 +1,6 @@
 import {initializeMapProject} from './map-defaults.js?v=2026110903';
 import {attachImportedGroups} from './production-model.js?v=2026111002';
-import{createProductionWorkbench}from'./production-workbench.js?v=2026112301';
+import{createProductionWorkbench}from'./production-workbench.js?v=2026112403';
 import{createMediaClient,createStartingVoiceoverManifest,inspectMedia}from'./media-library.js?v=2026112201';
 import{PRESETS}from'./video-studio/model.js?v=2026112204';
 import{db,observeAuth,storageError}from'../shared/firebase-client.js';

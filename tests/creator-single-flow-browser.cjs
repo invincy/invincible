@@ -79,7 +79,26 @@ const updated=await writeExternalRevision(p2,{name:'Plugin updated scene 1'});
 await page.evaluate(()=>workbench.open({area:'Video Studio',quickPreview:true}));
 await ready(page);
 await page.waitForFunction(revision=>document.querySelector('[data-vs-cloud-notice]').textContent.includes('revision '+revision),updated.revision);
-assert.match(await page.locator('[data-vs-scene-id=map-army]').textContent(),/Plugin updated scene 1/);
+const review=page.getByRole('region',{name:'Quick Review'});
+const picker=review.getByRole('combobox',{name:'Scene'});
+assert.match(await picker.locator('option[value=map-army]').textContent(),/Plugin updated scene 1/);
+assert.equal(await page.getByRole('button',{name:'Export MP4',exact:true}).isVisible(),false);
+for(const width of [1440,390,320]){
+ await page.setViewportSize({width,height:844});
+ const controls=await review.locator('.vs-review-controls').boundingBox();
+ const frame=await review.locator('canvas').boundingBox();
+ assert.ok(width>700 ? controls.x+controls.width<=frame.x : frame.y+frame.height<=controls.y);
+ assert.ok(frame.x>=0&&frame.x+frame.width<=width);
+}
+await picker.selectOption('map-army');
+await ready(page);
+const sceneJpg=page.waitForEvent('download');
+await review.getByRole('button',{name:'Download midpoint JPG'}).click();
+const image=await sceneJpg;
+assert.match(image.suggestedFilename(),/-scene-01-t-0.50s\.jpg$/);
+assert.ok(fs.statSync(await image.path()).size>1000);
+await page.evaluate(()=>workbench.open({area:'Video Studio'}));
+await ready(page);
 await page.locator('[data-vs=save]').click();
 await ready(page);
 assert.match(await page.locator('[data-vs-status]').textContent(),/Saved to your account/);

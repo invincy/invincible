@@ -503,3 +503,24 @@ audio{width:100%;height:36px}
     border: 1px solid #2a4154;
   }
 }
+
+/* Keep the native player usable when a side panel narrows the recording column. */
+.voiceover-page .result-panel { container-type: inline-size; }
+@container (max-width: 460px) {
+ .voiceover-page #recording {
+  display: grid;
+  grid-template-columns: minmax(0,1fr);
+  grid-template-areas: 'player' 'actions' 'playback' 'info';
+  gap: 6px;
+ }
+ .voiceover-page #player { grid-area: player; min-width: 0; }
+ .voiceover-page .download-row { display: contents; }
+ .voiceover-page .recording-actions {
+  grid-area: actions;
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(min(100%,120px),1fr));
+  margin-left: 0;
+ }
+ .voiceover-page .playback-controls { grid-area: playback; }
+ .voiceover-page #recordingInfo { grid-area: info; }
+}

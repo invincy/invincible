@@ -426,7 +426,7 @@
   .v2-theme-one #v2-region-dashboard .v2-page-glow { width:38px; height:38px }
   .v2-theme-one #v2-region-dashboard .v2-page-glow svg { width:30px; height:30px }
   .v2-theme-one #v2-region-dashboard .v2-page-name { max-width:88px; font-size:11px; line-height:1.15 }
-  .v2-theme-one #v2-region-dashboard .v2-orb-plan { padding-inline:0; font-size:clamp(17px,1.15vw,18px); scale:.92 }
+  .v2-theme-one #v2-region-dashboard .v2-orb-plan { top:calc(50% + 8px); padding-inline:0; font-size:clamp(17px,1.15vw,18px); scale:.92 }
   .v2-theme-one #v2-region-dashboard .v2-orb-plan-preview { max-width:170px; font-size:12px }
   .v2-theme-three #v2-region-dashboard .v2-orb-plan { max-width:40%; font-size:clamp(18px,1.65vw,25px) }
 }

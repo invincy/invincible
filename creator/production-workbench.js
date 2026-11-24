@@ -1,5 +1,5 @@
 import {confirmAction} from './confirm-action.js?v=2026111602';
-import {mountVideoStudio} from './video-studio/workspace.js?v=2026112301';
+import {mountVideoStudio} from './video-studio/workspace.js?v=2026112403';
 import {mountHistoryWorkspace} from './history-workspace.js?v=2026112201';
 import {makeScene} from './storyboard-model.js?v=3';
 import {METHODS,IMPORT_FIELDS,uid,methodsOf,inspectImport,parseProductionImport,uniqueScenes,groupFor,taskFor,setTask,animationStage,requirements,sceneState,projectProgress,queueScenes,canonicalScript,scriptReview,filterScenes,productionReadiness} from './production-model.js?v=2026111112';
@@ -147,13 +147,13 @@ export function createProductionWorkbench(root,{getProject,onChange,onFocus,copy
   if(!Array.isArray(aiScenes)||!aiScenes.length)throw Error('This AI draft has no executable scene plan yet. Generate an animation-ready draft first.');
   if(!aiScenes.every(scene=>scene.mapAnimation||scene.canvasScene||scene.contextCard===true))throw Error('Review the missing or unverified scene information before applying this draft.');
   if(!audio)throw Error('The original MP3 is missing from this device. Run AI timing again to attach it.');
-  tab='Video Studio';render();await videoWorkspace?.ready;if(!videoWorkspace)throw Error('Video Studio could not be opened.');
+  tab='Video Studio';videoQuickPreview=false;render();await videoWorkspace?.ready;if(!videoWorkspace)throw Error('Video Studio could not be opened.');
   const current=videoWorkspace.manifest,hasDraft=current&&(current.scenes.length||(current.audioClips||[]).length||current.audio);
   if(hasDraft&&!await confirmAction('Replace the current Motion Studio draft with this reviewed sync plan? The existing local video draft will be replaced; the Creator project and source MP3 remain saved.','Replace')){message('Existing Motion Studio draft kept. The reviewed sync plan is still available in Script & scenes.');return;}
   await videoWorkspace.importAiProduction(aiScenes,audio,{title:draft.title||'Invincible AI production',allowContextCards:true,replaceExisting:!!hasDraft});
   const reviewingMaps=reviewMaps&&await videoWorkspace.reviewGeneratedMaps();message(reviewingMaps?'Review each generated map. Save or discard to continue; Motion Studio opens automatically after the last map.':`${aiScenes.length} scenes and the exact MP3 are saved in Motion Studio. Preview the full timeline, then Export MP4.`);return {reviewingMaps};
  }
- async function reviewMaps(){tab='Video Studio';render();await videoWorkspace?.ready;if(!videoWorkspace)throw Error('Motion Studio could not be opened.');const reviewingMaps=await videoWorkspace.reviewGeneratedMaps();if(!reviewingMaps)message('This plan has no map scenes. Continue to Motion & export.');return reviewingMaps;}
+ async function reviewMaps(){tab='Video Studio';videoQuickPreview=false;render();await videoWorkspace?.ready;if(!videoWorkspace)throw Error('Motion Studio could not be opened.');const reviewingMaps=await videoWorkspace.reviewGeneratedMaps();if(!reviewingMaps)message('This plan has no map scenes. Continue to Motion & export.');return reviewingMaps;}
  function groupEditor(group){
   return '<section class="wb-group" data-group="'+esc(group.id)+'"><div class="wb-detail-grid"><label>Project name<input data-group-field="name" value="'+esc(group.name)+'"></label><label>Blender file<input data-group-field="blenderFile" value="'+esc(group.blenderFile||'')+'"></label>'+
    field('Resources','resources',group.resources||'','data-group-field="resources"')+'</div></section>';

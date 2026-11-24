@@ -117,6 +117,8 @@ The LIC hub presents Staff, CRM and Tools in one card. Tabs support direct
 selection and arrow keys. Tools links to both Plans and Cashier. Plan
 artwork and copy use separate columns on phones, and Agent CRM gives its
 workspace selector its own row beside the workspace creation action.
+Plans places Presentation Builder in the header beside the page title. The
+two desktop plan cards fit above the fold at 1280 × 720 with standard copy.
 
 On phones, staff follow-ups show Search, View and Plan directly above the
 results. The contact and NEFT disclosure shows a count when either filter
@@ -125,6 +127,17 @@ is active and retains the selections when closed.
 Garage provides tap targets for Usage, Service and Reminders above its
 swipeable panels. On the separate Reminders page, Overdue, Today and
 Upcoming use one vertical scroll.
+
+### Quick Review
+
+Open Quick Review from the project Tools menu. It loads the same draft and
+renderer as Motion Studio, with a scene picker, previous and next controls,
+a scene-local playhead, and a midpoint JPG download. Desktop puts controls
+beside the frame. Phones put the frame first and keep the controls underneath.
+Open Motion Studio returns to the full timeline and edit/export controls.
+Keep the legacy workbench bar and connection settings out of the review view.
+On narrow Voiceover panels, the recording player gets its own row above
+Download and Next so the actions cannot squeeze the playback controls.
 
 ### Motion Studio desktop
 
@@ -191,6 +204,20 @@ Mobile is not a scaled-down desktop. Multi-column cards stack, secondary actions
 move into menus or disclosures, long labels wrap, and primary actions remain
 reachable. Desktop uses additional width for hierarchy and parallel information,
 not for stretching text or filling space with oversized empty cards.
+
+## November interface audit
+
+Checked the main app destinations and the linked Creator and LIC tools at
+320 and 1440 px. Fixture checks exercised Dashboard, Creator, LIC hub and
+plans, staff follow-ups, CRM, Presentation Builder, Garage, Reminders,
+Finance, Workday, Task Workspace, Portfolio, and profile settings. Quick
+Review was also exercised at 390 px with scene playback, keyboard seeking,
+a native JPG download, and the Motion Studio handoff. Golden Orbit's central
+plan sits clear of destination labels in the short desktop layout.
+
+This coverage uses local fixtures and the public entry points. Signed-in
+production records, external media, and some legacy workflow browser suites
+still require separate verification.
 
 ## Product principles
 

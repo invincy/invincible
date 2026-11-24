@@ -391,7 +391,6 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
 .project-workspace-nav :is(button,a):hover,.project-workspace-nav button[aria-current=page]{border-color:#478e93;background:#15313d;color:#d2f4ef}
 .project-workspace-nav .project-nav-spacer{flex:1;min-width:12px}
 .project-workspace-nav .primary{background:var(--studio-accent);border-color:transparent;color:#082025}
-.project-workspace-nav .project-tool-divider{flex:none;margin-left:8px;padding-left:14px;border-left:1px solid var(--studio-line);color:#78909e;font-size:11px;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
 .project-workflow-strip{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 clamp(12px,2.2vw,38px);border-bottom:1px solid rgba(78,125,145,.22);background:rgba(8,18,27,.78)}
 .project-workflow-guide{padding-block:7px;color:#a9c1ce;font-size:12px}
 .project-workflow-guide strong{margin-right:6px;color:var(--studio-accent)}
@@ -613,7 +612,6 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
  }
  .project-workspace-nav > button:nth-child(-n+4) > span{margin:0;font-weight:700}
  .project-workspace-nav .project-nav-spacer{display:none}
- .project-workspace-nav .project-tool-divider{margin-left:2px;padding-left:10px}
 }
 
 .project-agent {
@@ -675,7 +673,7 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
   font-size: 14px;
 }
 #projectToolsContent #projectExtras > .primary { color: var(--studio-accent); }
-#projectToolsContent :is(.project-tool-divider,.project-nav-spacer) { display: none; }
+#projectToolsContent .project-nav-spacer { display: none; }
 
 @media (max-width: 900px) {
   .project-workspace-nav {
@@ -685,6 +683,7 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
     padding: 0 clamp(8px, 2vw, 18px);
     overflow: visible;
   }
+  .project-workspace-nav > #projectExtras { display: none; }
   .project-workspace-nav > button:nth-child(-n+4) {
     flex-direction: column;
     gap: 3px;
@@ -706,3 +705,13 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
   .project-page #openAgentNotebook { padding: 0; }
   .project-workflow-guide { margin-inline-end: auto; }
 }
+
+.project-quick-review-active .project-services,
+.project-quick-review-active #projectStoryboard .wb-commandbar { display: none; }
+.project-quick-review-active #projectEditingStep {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding-inline: 0;
+}
+.project-quick-review-active .project-workflow-guide:empty { padding: 0; }

@@ -49,7 +49,6 @@ body.creator-page{--bg:#0f0f0f;--panel:#181818;--panel2:#202020;--line:#333;--te
 @media(max-width:700px){.vs-style-library{padding:14px}.vs-style-library>header{display:grid;align-items:stretch}.vs-style-library header>label{min-width:0}.vs-style-cards{grid-template-columns:1fr}.vs-style-editor .vs-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 .vs-flow .vs-agent-instructions>summary{display:list-item;cursor:pointer;min-height:44px;padding-block:12px;color:inherit}
- .vs-quick-preview .vs-flow,.vs-quick-preview .vs-assembly,.vs-quick-preview .vs-advanced,.vs-quick-preview .vs-review-heading{display:none}.vs-quick-preview .vs-layout{display:block}.vs-quick-preview .vs-preview{position:static;max-width:720px;margin:0 auto}.vs-quick-preview .vs-preview canvas{max-height:72vh}.vs-quick-preview .vs-preview:before{content:'Quick scene preview · blank JPG moment uses midpoint';display:block;color:#b9b9b9;font-size:12px;margin-bottom:10px}
 .vs-shorts { min-width:0; padding:16px; }
 .vs-shorts input,.vs-shorts textarea,.vs-shorts select { max-width:100%; }
 .vs-shorts article { margin-top:16px; padding-top:12px; border-top:1px solid #475569; }
@@ -58,3 +57,52 @@ body.creator-page{--bg:#0f0f0f;--panel:#181818;--panel2:#202020;--line:#333;--te
 .vs-short-review canvas { display:block; width:auto; max-width:100%; height:min(52dvh,580px); aspect-ratio:9/16; margin:12px auto; }
 .vs-short-review input[type=range] { width:100%; }
 .vs-short-review button { min-height:44px; }
+
+/* A single-scene player for the review route. */
+.video-studio.vs-quick-preview {
+ background:transparent;border:0;box-shadow:none;padding:clamp(8px,2vw,24px);
+}
+.vs-quick-preview [hidden] {display:none!important}
+.vs-quick-review {max-width:1120px;margin-inline:auto}
+.vs-quick-review > header {
+ display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;
+}
+.vs-quick-review h2 {margin:0;font-size:clamp(20px,3vw,28px);line-height:1.1}
+.vs-quick-review button {min-height:44px;font-size:14px}
+.vs-quick-review button:focus-visible,.vs-quick-review select:focus-visible,.vs-quick-review input:focus-visible {
+ outline:2px solid var(--studio-accent,#96e8e0);outline-offset:2px;
+}
+.vs-review-body {display:grid;grid-template-columns:minmax(235px, .8fr) minmax(0,2fr);gap:16px;align-items:start}
+.vs-review-frame {
+ display:grid;place-items:center;min-width:0;background:#080b10;border-radius:12px;overflow:hidden;
+}
+.vs-review-frame canvas {
+ display:block;width:auto;height:auto;max-width:100%;max-height:min(62dvh,680px);object-fit:contain;
+}
+.vs-review-controls {
+ display:grid;gap:12px;padding:14px;border:1px solid var(--studio-line,#3a434e);border-radius:12px;
+ background:var(--studio-panel,#111821);
+}
+.vs-quick-review .vs-review-controls label {margin:0;font-size:14px}
+.vs-review-controls select {min-width:0;min-height:44px}
+.vs-review-navigation {display:grid;grid-template-columns:44px 1fr 44px;align-items:center;text-align:center;gap:8px}
+.vs-review-navigation button {display:grid;place-items:center;padding:0}
+.vs-review-navigation svg {
+ width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;
+}
+.vs-review-seek {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+.vs-review-seek input {padding:0;min-height:44px;accent-color:var(--studio-accent,#96e8e0)}
+.vs-review-seek output {white-space:nowrap;font-variant-numeric:tabular-nums;font-size:12px}
+.vs-review-actions {display:flex;flex-wrap:wrap;gap:8px}
+.vs-quick-review [data-vs="play"] {color:var(--studio-accent,#96e8e0)}
+.vs-review-notices {margin-block-start:10px;overflow-wrap:anywhere}
+.vs-review-notices [data-vs-cloud-notice]:not(:has([data-vs="cloud-retry"]:not([hidden]),[data-vs="cloud-download"]:not([hidden]))) {display:none}
+@media(max-width:700px){
+ .vs-review-body {grid-template-columns:minmax(0,1fr);gap:10px}
+ .vs-review-frame {grid-row:1}
+ .vs-review-frame canvas {max-height:min(38dvh,430px)}
+ .vs-review-controls {gap:6px;padding:10px}
+ .vs-review-actions > button {flex:1;min-height:48px}
+ .vs-review-navigation {grid-template-columns:48px 1fr 48px}
+ .vs-review-navigation button {min-height:48px}
+}
