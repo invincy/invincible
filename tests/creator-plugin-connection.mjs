@@ -28,7 +28,10 @@ function fixture(search = '', authorize = async () => ({data: {redirectUrl: 'htt
 }
 
 test('Creator Studio exposes the connection page', () => {
-  assert.match(home, /href="plugin-connect.html">Connect ChatGPT/);
+  const link = home.match(/<a\b[^>]*href="plugin-connect\.html"[^>]*>[\s\S]*?<\/a>/)?.[0];
+  assert.ok(link, 'Creator Studio must link to the connection page');
+  assert.match(link, /aria-label="Connect ChatGPT"/);
+  assert.match(link, /<span>Connect ChatGPT<\/span>/);
 });
 
 test('setup stays visible with signed-out and signed-in accounts', () => {
