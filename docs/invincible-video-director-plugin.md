@@ -103,3 +103,18 @@ link, signed-out/signed-in setup, malformed requests, the callback, account chan
 and clipboard fallback. The full repository build/browser checks could not run
 in the partial connector checkout. Live authenticated linking and refresh still
 require an actual ChatGPT OAuth request. No Firebase deployment is included.
+
+
+## Session connection diagnosis — November 25, 2026
+
+The packaged workflow now discovers live tools before selecting operations and
+distinguishes missing host tools, an authenticated authorization error, and a
+signed-out Creator browser. Anonymous MCP probes establish server availability
+only. They cannot establish whether the host holds a valid saved connection.
+The source OAuth implementation issues one-hour access tokens and rotating
+90-day refresh tokens. An authenticated cross-session refresh remains unverified.
+
+The skill feature-detects optional tools, uses native creation for new films when
+the live server lacks a creation tool, and retains the selected timing provider.
+Verification covers package JSON/YAML, live tool names, retained connection
+configuration and source diff checks. No server authentication logic changed.
