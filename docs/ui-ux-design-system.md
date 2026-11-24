@@ -90,7 +90,9 @@ require attention and keep routine success messages out of the visual layout.
 At widths up to 900 px, Creator Studio home uses a single vertical scroll area.
 The project list comes first, with the publishing pipeline and filters below.
 The Tools button opens a two-column dialog with six icon-and-name shortcuts
-and the connection link.
+and the connection link. Phone headers and project cards use icons for New
+project, Tools, Open and Edit. Stage changes are available in the publishing
+pipeline. Desktop keeps the action labels and the project card stage controls.
 The landing-page browser check covers the layout from 320 to 1440 px and
 checks that the first project’s Open button is visible at 390 × 844 px.
 
@@ -98,8 +100,9 @@ checks that the first project’s Open button is visible at 390 × 844 px.
 
 All four workflow steps fit in the initial toolbar view, with an underline
 marking the active step. The Tools button opens a dialog for secondary actions.
-Escape closes the dialog and returns focus to Tools. The embedded Script and
-Recording panels scroll together in reading order. The project header
+On phones, the Tools and Agent Notebook buttons use labeled icons with
+44 px tap targets. Escape closes the dialog and returns focus to Tools. The
+embedded Script and Recording panels scroll together in reading order. The project header
 anchors Recent Projects to the viewport, and Motion Studio menus fit
 within the editor header.
 

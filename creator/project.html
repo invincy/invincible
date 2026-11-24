@@ -14,13 +14,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../site-nav.css?v=19">
   <link rel="stylesheet" href="../shared/dashboard-backdrop.css?v=4">
-  <link rel="stylesheet" href="project.css?v=2026112401">
+  <link rel="stylesheet" href="project.css?v=2026112402">
   <link rel="stylesheet" href="video-studio/editor-shell.css?v=2026112302">
   <link rel="stylesheet" href="storyboard.css?v=5">
   <link rel="stylesheet" href="production-workbench.css?v=13">
   <link rel="stylesheet" href="history-workspace.css?v=2026110903">
   <link rel="stylesheet" href="video-studio/studio.css?v=2026112203">
-  <link rel="stylesheet" href="studio-ui.css?v=7">
+  <link rel="stylesheet" href="studio-ui.css?v=8">
   <link rel="stylesheet" href="image-generator.css?v=2026111205">
 <link rel="stylesheet" href="../shared/spatial-workspace.css?v=4">
 </head>
@@ -88,8 +88,8 @@
   </nav>
   <div class="project-workflow-strip">
     <div id="workflowGuide" class="project-workflow-guide" role="status" aria-live="polite"></div>
-    <button id="openProjectTools" type="button" aria-haspopup="dialog" aria-controls="projectToolsDialog" hidden>Tools</button>
-    <button id="openAgentNotebook" type="button" aria-haspopup="dialog" aria-controls="ai-agent-panel" disabled>Agent Notebook</button>
+    <button id="openProjectTools" class="studio-compact-action" type="button" aria-label="Tools" title="Tools" aria-haspopup="dialog" aria-controls="projectToolsDialog" hidden><svg class="studio-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg></button>
+    <button id="openAgentNotebook" class="studio-compact-action" type="button" aria-label="Agent Notebook" title="Agent Notebook" aria-haspopup="dialog" aria-controls="ai-agent-panel" disabled><svg class="studio-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h13v18H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2ZM9 3v18m3-13h5m-5 4h5"/></svg><span class="studio-action-label">Agent Notebook</span></button>
   </div>
   <div id="status" class="sync-status" role="status" aria-live="polite" hidden></div>
   <aside id="conflictBanner" class="conflict-banner" role="alert" hidden>

@@ -657,12 +657,10 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
 #openProjectTools[hidden] { display: none; }
 #openProjectTools {
   min-height: 44px;
-  padding: 6px 9px;
+  padding: 0;
   border-color: transparent;
   background: transparent;
   color: var(--studio-accent);
-  font-size: 13px;
-  font-weight: 600;
 }
 #projectToolsDialog header form { display: block; }
 #projectToolsContent #projectExtras { display: grid; padding: 10px 16px 16px; gap: 4px; }
@@ -704,6 +702,7 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
   }
   .project-workspace-nav > button:nth-child(-n+4) > span { margin: 0; font-weight: 700; }
   .project-workspace-nav > button[aria-current=step] { border-bottom-color: var(--studio-accent); }
-  .project-workflow-strip { gap: 3px; }
+  .project-workflow-strip { gap: 2px; }
+  .project-page #openAgentNotebook { padding: 0; }
   .project-workflow-guide { margin-inline-end: auto; }
 }

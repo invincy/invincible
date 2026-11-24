@@ -22,11 +22,11 @@
     } catch {}
   </script>
   <link rel="stylesheet" href="../shared/dashboard-backdrop.css?v=4">
-  <link rel="stylesheet" href="creator.css?v=2026112401">
+  <link rel="stylesheet" href="creator.css?v=2026112402">
   <link rel="stylesheet" href="production-workbench.css?v=13">
 <meta name="theme-color" content="#000000">  <link rel="stylesheet" href="history-workspace.css?v=2026110903">
   <link rel="stylesheet" href="video-studio/studio.css?v=2026112203">
-  <link rel="stylesheet" href="studio-ui.css?v=7">
+  <link rel="stylesheet" href="studio-ui.css?v=8">
   <link rel="stylesheet" href="image-generator.css?v=2026111205">
 <link rel="stylesheet" href="../shared/spatial-workspace.css?v=4">
 </head>
@@ -43,14 +43,14 @@
 
   <header class="studio-header">
     <div class="studio-header-title"><a id="creatorHomeBack" href="./" hidden>← Creator Studio</a><h1 id="creatorPageTitle">Creator Studio</h1></div>
-    <div class="header-actions"><button id="openCreatorTools" type="button" aria-haspopup="dialog" aria-controls="creatorToolsDialog" hidden>Tools</button><a class="secondary creator-connect" href="plugin-connect.html" aria-label="Connect ChatGPT" title="Connect ChatGPT"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 17l-2 2a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0m0-2 2-2a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-6 0m-3 1 8-8"/></svg><span>Connect ChatGPT</span></a><button id="addContent" class="primary creator-new-project" disabled><span aria-hidden="true">+</span> New project</button></div>
+    <div class="header-actions"><button id="openCreatorTools" class="studio-compact-action" type="button" aria-label="Tools" title="Tools" aria-haspopup="dialog" aria-controls="creatorToolsDialog" hidden><svg class="studio-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg></button><a class="secondary creator-connect" href="plugin-connect.html" aria-label="Connect ChatGPT" title="Connect ChatGPT"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 17l-2 2a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0m0-2 2-2a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-6 0m-3 1 8-8"/></svg><span>Connect ChatGPT</span></a><button id="addContent" class="primary creator-new-project studio-compact-action" aria-label="New project" title="New project" disabled><svg class="studio-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="studio-action-label">New project</span></button></div>
   </header>
   <div id="status" class="sync-status" role="status" aria-live="polite">Connecting to Firebase…</div>
 
   <main id="app" hidden>
     <section class="creator-home" aria-label="Creator Studio home">
       <section class="creator-projects" aria-labelledby="projectsHeading">
-        <div class="creator-section-head"><h2 id="projectsHeading">Projects</h2><span id="projectCount" hidden>0</span><label class="search"><span>Search projects</span><input id="searchInput" type="search" placeholder="Search by title or series"></label></div>
+        <div class="creator-section-head"><h2 id="projectsHeading">Projects</h2><span id="projectCount" hidden>0</span><label class="search"><span aria-hidden="true">Search projects</span><svg class="studio-search-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 15.5 20 20M17 11a6 6 0 1 1-12 0 6 6 0 0 1 12 0Z"/></svg><input id="searchInput" type="search" aria-label="Search projects by title or series" placeholder="Title or series"></label></div>
         <div id="projectGrid" class="project-grid"></div>
         <p id="projectEmpty" class="project-empty" hidden>No projects match this view.</p>
       </section>
@@ -93,7 +93,6 @@
   <dialog id="contentDialog">
     <form id="contentForm">
       <div class="dialog-title"><div><h2 id="dialogHeading">New project</h2></div><button type="button" class="icon close" aria-label="Close">×</button></div>
-      <p class="new-project-intro">Add the essentials now. You can change everything later inside the project.</p>
       <label class="content-title-field">Project name<input name="title" maxlength="120" required placeholder="For example: The Battle of Panipat"></label>
       <label class="project-start-field">Voiceover <span>Optional · MP3 or WAV, up to 10 minutes</span><input id="projectVoiceover" name="voiceoverFile" type="file" accept=".mp3,.wav,audio/mpeg,audio/wav"></label>
       <label class="project-start-field">Instructions <span>Optional · describe the story, look, maps or scenes you need</span><textarea name="instructions" rows="5" maxlength="12000" placeholder="Create a cinematic historical short. Use a clear map opening, then move into the battlefield…"></textarea></label>
@@ -124,6 +123,6 @@
       <div class="dialog-actions"><button value="cancel" class="secondary">Cancel</button><button id="toolNewProject" type="button" class="primary">New project</button></div>
     </form>
   </dialog>
-  <script type="module" src="creator.js?v=2026112401"></script>
+  <script type="module" src="creator.js?v=2026112402"></script>
 </body>
 </html>

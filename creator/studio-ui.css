@@ -130,3 +130,17 @@ html:not(.ai-voiceover-embed) .studio-ui.voiceover-page .global-nav[data-icon-na
  border-color:color-mix(in srgb,var(--studio-accent) 42%,transparent);
  color:var(--studio-accent);
 }
+
+/* Creator controls retain accessible names when the visible labels are hidden. */
+.studio-ui:is(.creator-page,.project-page) .studio-compact-action:not([hidden]) {
+ display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;
+}
+.studio-ui :is(.studio-action-icon,.studio-search-icon) {
+ fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
+}
+.studio-ui .studio-action-icon {width:20px;height:20px;flex:none}
+
+@media(max-width:900px){
+ .studio-ui:is(.creator-page,.project-page) .studio-compact-action:not([hidden]){min-width:44px;min-height:44px}
+ .studio-ui:is(.creator-page,.project-page) .studio-compact-action .studio-action-label{display:none}
+}
