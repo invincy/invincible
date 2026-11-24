@@ -652,3 +652,58 @@ body.project-page{--bg:#0a131b;--panel:#14202a;--panel-2:#16242e;--line:#293944;
 .project-agent a { color: var(--studio-accent); }
 #agentStatus { white-space: pre-wrap; }
 #agentStatus:empty { display: none; }
+
+#projectExtras { display: contents; }
+#openProjectTools[hidden] { display: none; }
+#openProjectTools {
+  min-height: 44px;
+  padding: 6px 9px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--studio-accent);
+  font-size: 13px;
+  font-weight: 600;
+}
+#projectToolsDialog header form { display: block; }
+#projectToolsContent #projectExtras { display: grid; padding: 10px 16px 16px; gap: 4px; }
+#projectToolsContent #projectExtras > :is(button,a) {
+  justify-content: flex-start;
+  white-space: normal;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--studio-line);
+  border-radius: 0;
+  font-size: 14px;
+}
+#projectToolsContent #projectExtras > .primary { color: var(--studio-accent); }
+#projectToolsContent :is(.project-tool-divider,.project-nav-spacer) { display: none; }
+
+@media (max-width: 900px) {
+  .project-workspace-nav {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    padding: 0 clamp(8px, 2vw, 18px);
+    overflow: visible;
+  }
+  .project-workspace-nav > button:nth-child(-n+4) {
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    min-height: 55px;
+    padding: 5px 3px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    white-space: normal;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.15;
+  }
+  .project-workspace-nav > button:nth-child(-n+4) > span { margin: 0; font-weight: 700; }
+  .project-workspace-nav > button[aria-current=step] { border-bottom-color: var(--studio-accent); }
+  .project-workflow-strip { gap: 3px; }
+  .project-workflow-guide { margin-inline-end: auto; }
+}

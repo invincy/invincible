@@ -88,15 +88,17 @@ the theme backdrop, and readable flat rows with unboxed icons. Page headers
 need the page title and primary action. Surface sync problems when they
 require attention and keep routine success messages out of the visual layout.
 At widths up to 900 px, Creator Studio home uses a single vertical scroll area.
-Six icon-and-name shortcuts form three rows of two above Projects, with the
-publishing pipeline and filters below the project list.
+The project list comes first, with the publishing pipeline and filters below.
+The Tools button opens a two-column dialog with six icon-and-name shortcuts
+and the connection link.
 The landing-page browser check covers the layout from 320 to 1440 px and
 checks that the first project’s Open button is visible at 390 × 844 px.
 
 ### Creator project on phones
 
-All four workflow steps fit in the initial toolbar view. Optional tools
-remain available by swiping the same toolbar. The embedded Script and
+All four workflow steps fit in the initial toolbar view, with an underline
+marking the active step. The Tools button opens a dialog for secondary actions.
+Escape closes the dialog and returns focus to Tools. The embedded Script and
 Recording panels scroll together in reading order. The project header
 anchors Recent Projects to the viewport, and Motion Studio menus fit
 within the editor header.

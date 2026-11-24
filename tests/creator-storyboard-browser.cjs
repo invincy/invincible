@@ -62,6 +62,15 @@ const server=http.createServer((req,res)=>{
    const steps=await page.locator('.project-workspace-nav > button').evaluateAll(buttons=>
     buttons.slice(0,4).map(button=>button.getBoundingClientRect().right));
    assert.ok(steps.every(right=>right<=width),'All four workflow steps fit at '+width);
+   const projectTools=page.locator('#projectToolsDialog');
+   const projectToolsButton=page.locator('#openProjectTools');
+   assert.equal(await projectTools.isVisible(),false);
+   await projectToolsButton.click();
+   await projectTools.waitFor();
+   assert.equal(await projectTools.getByRole('button',{name:'Save & return'}).isVisible(),true);
+   await page.keyboard.press('Escape');
+   await projectTools.waitFor({state:'hidden'});
+   assert.equal(await projectToolsButton.evaluate(el=>document.activeElement===el),true);
    const panes=await mobileScript.locator('.voice-script-pane').evaluate(pane=>{
     const bounds=selector=>pane.querySelector(selector).getBoundingClientRect();
     return {editor:bounds('#script').bottom,script:bounds('.script-panel').bottom,recording:bounds('.result-panel').top};
@@ -288,6 +297,12 @@ const server=http.createServer((req,res)=>{
    if(width>900){
     assert.ok(homeBounds.home.bottom<=homeBounds.viewportHeight+1&&homeBounds.panels.every(panel=>panel.bottom<=homeBounds.viewportHeight+1),'Desktop Creator panels fit the current window at '+width+'x'+height+': '+JSON.stringify(homeBounds));
    }else{
+    const tools=page.locator('#creatorToolsDialog');
+    assert.equal(await page.locator('.tool-grid').isVisible(),false);
+    const projects=await page.locator('#projectsHeading').boundingBox();
+    assert.ok(projects.y+projects.height<height-50,'Projects are visible before opening tools');
+    await page.locator('#openCreatorTools').click();
+    await tools.waitFor();
     const tiles=await page.locator('.tool-grid>*').evaluateAll(nodes=>nodes.map(node=>{
      const {x,y,width,height}=node.getBoundingClientRect();
      return{x,y,width,height,description:getComputedStyle(node.querySelector('.tool-copy>span')).display};
@@ -295,15 +310,15 @@ const server=http.createServer((req,res)=>{
     assert.equal(new Set(tiles.map(tile=>tile.x)).size,2,'Tools use two columns');
     assert.equal(new Set(tiles.map(tile=>tile.y)).size,3,'Tools use three rows');
     assert.ok(tiles.every(tile=>Math.min(tile.width,tile.height)>=48&&tile.description==='none'),'Tool shortcuts keep comfortable tap targets and show compact labels');
-    const projects=await page.locator('#projectsHeading').boundingBox();
-    assert.ok(projects.y>Math.max(...tiles.map(tile=>tile.y+tile.height))&&projects.y+projects.height<height-50,'Projects are visible below the tools on first load');
+    await page.keyboard.press('Escape');
+    await tools.waitFor({state:'hidden'});
     if(width===390){
      const open=await page.locator('#projectGrid .open-project').first().boundingBox();
      assert.ok(open.y+open.height<height-50,'The first project can be opened without scrolling on a typical phone');
     }
    }
    assert.equal(await page.locator('#addContent').isVisible(),true);
-   assert.equal(await page.locator('.tool-grid').isVisible(),true);
+   assert.equal(await page.locator('.tool-grid').isVisible(),width>900);
    if(width===390)await page.screenshot({path:path.join(root,'.test-output/creator-home-390.png'),fullPage:true});
   }
   await page.setViewportSize({width:1440,height:1000});

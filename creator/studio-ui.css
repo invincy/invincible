@@ -123,3 +123,10 @@ html:not(.ai-voiceover-embed) .studio-ui.voiceover-page .global-nav[data-icon-na
  .studio-ui::before{animation:none;transform:none}
  .studio-ui *{scroll-behavior:auto!important;transition:none!important}
 }
+
+/* Keep the account photo at a consistent touch size in Creator. */
+.studio-ui:is(.creator-page,.project-page) .inv-account .inv-profile {
+ width:44px;height:44px;min-width:44px;
+ border-color:color-mix(in srgb,var(--studio-accent) 42%,transparent);
+ color:var(--studio-accent);
+}

@@ -14,13 +14,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../site-nav.css?v=19">
   <link rel="stylesheet" href="../shared/dashboard-backdrop.css?v=4">
-  <link rel="stylesheet" href="project.css?v=2026112301">
+  <link rel="stylesheet" href="project.css?v=2026112401">
   <link rel="stylesheet" href="video-studio/editor-shell.css?v=2026112302">
   <link rel="stylesheet" href="storyboard.css?v=5">
   <link rel="stylesheet" href="production-workbench.css?v=13">
   <link rel="stylesheet" href="history-workspace.css?v=2026110903">
   <link rel="stylesheet" href="video-studio/studio.css?v=2026112203">
-  <link rel="stylesheet" href="studio-ui.css?v=6">
+  <link rel="stylesheet" href="studio-ui.css?v=7">
   <link rel="stylesheet" href="image-generator.css?v=2026111205">
 <link rel="stylesheet" href="../shared/spatial-workspace.css?v=4">
 </head>
@@ -74,18 +74,21 @@
     <button type="button" data-project-area="Storyboard"><span aria-hidden="true">2</span> Sync plan</button>
     <button type="button" data-project-area="Video Studio" data-tool-mode="map-review"><span aria-hidden="true">3</span> Review maps</button>
     <button type="button" data-project-area="Video Studio"><span aria-hidden="true">4</span> Motion &amp; export</button>
-    <button type="button" data-project-area="Video Studio" data-tool-mode="quick-preview"><span aria-hidden="true">▶</span> Quick scene preview</button>
-    <span class="project-tool-divider" aria-hidden="true">Optional tools</span>
-    <button type="button" data-project-area="Maps">Map Editor</button>
-    <button type="button" data-project-area="Video Studio" data-tool-mode="battlefield">Battlefield Editor</button>
-    <button type="button" data-project-area="Assets">Assets &amp; 3D</button>
-    <a href="images.html">Image Studio</a>
-    <span class="project-nav-spacer"></span>
-    <button id="saveProjectNow" type="button">Save now</button>
-    <button id="saveAndReturn" type="button" class="primary">Save &amp; return</button>
+    <div id="projectExtras">
+      <button type="button" data-project-area="Video Studio" data-tool-mode="quick-preview"><span aria-hidden="true">▶</span> Quick scene preview</button>
+      <span class="project-tool-divider" aria-hidden="true">Optional tools</span>
+      <button type="button" data-project-area="Maps">Map Editor</button>
+      <button type="button" data-project-area="Video Studio" data-tool-mode="battlefield">Battlefield Editor</button>
+      <button type="button" data-project-area="Assets">Assets &amp; 3D</button>
+      <a href="images.html">Image Studio</a>
+      <span class="project-nav-spacer"></span>
+      <button id="saveProjectNow" type="button">Save now</button>
+      <button id="saveAndReturn" type="button" class="primary">Save &amp; return</button>
+    </div>
   </nav>
   <div class="project-workflow-strip">
     <div id="workflowGuide" class="project-workflow-guide" role="status" aria-live="polite"></div>
+    <button id="openProjectTools" type="button" aria-haspopup="dialog" aria-controls="projectToolsDialog" hidden>Tools</button>
     <button id="openAgentNotebook" type="button" aria-haspopup="dialog" aria-controls="ai-agent-panel" disabled>Agent Notebook</button>
   </div>
   <div id="status" class="sync-status" role="status" aria-live="polite" hidden></div>
@@ -120,6 +123,14 @@
     </section>
 
   </main>
+
+  <dialog id="projectToolsDialog" class="project-agent" aria-labelledby="projectToolsTitle">
+    <header>
+      <h2 id="projectToolsTitle">Project tools</h2>
+      <form method="dialog"><button type="submit" aria-label="Close project tools">×</button></form>
+    </header>
+    <div id="projectToolsContent"></div>
+  </dialog>
 
   <dialog id="ai-agent-panel" class="project-agent" aria-labelledby="agentNotebookTitle">
     <header>
@@ -173,6 +184,6 @@
       <div class="share-footer"><button id="copyProjectLink" type="button" class="secondary">Copy project link</button><button value="cancel" class="primary">Done</button></div>
     </form>
   </dialog>
-<script type="module" src="project.js?v=2026112301"></script>
+<script type="module" src="project.js?v=2026112401"></script>
 </body>
 </html>

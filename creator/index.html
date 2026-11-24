@@ -22,11 +22,11 @@
     } catch {}
   </script>
   <link rel="stylesheet" href="../shared/dashboard-backdrop.css?v=4">
-  <link rel="stylesheet" href="creator.css?v=2026112302">
+  <link rel="stylesheet" href="creator.css?v=2026112401">
   <link rel="stylesheet" href="production-workbench.css?v=13">
 <meta name="theme-color" content="#000000">  <link rel="stylesheet" href="history-workspace.css?v=2026110903">
   <link rel="stylesheet" href="video-studio/studio.css?v=2026112203">
-  <link rel="stylesheet" href="studio-ui.css?v=6">
+  <link rel="stylesheet" href="studio-ui.css?v=7">
   <link rel="stylesheet" href="image-generator.css?v=2026111205">
 <link rel="stylesheet" href="../shared/spatial-workspace.css?v=4">
 </head>
@@ -43,7 +43,7 @@
 
   <header class="studio-header">
     <div class="studio-header-title"><a id="creatorHomeBack" href="./" hidden>← Creator Studio</a><h1 id="creatorPageTitle">Creator Studio</h1></div>
-    <div class="header-actions"><a class="secondary creator-connect" href="plugin-connect.html" aria-label="Connect ChatGPT" title="Connect ChatGPT"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 17l-2 2a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0m0-2 2-2a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-6 0m-3 1 8-8"/></svg><span>Connect ChatGPT</span></a><button id="addContent" class="primary creator-new-project" disabled><span aria-hidden="true">+</span> New project</button></div>
+    <div class="header-actions"><button id="openCreatorTools" type="button" aria-haspopup="dialog" aria-controls="creatorToolsDialog" hidden>Tools</button><a class="secondary creator-connect" href="plugin-connect.html" aria-label="Connect ChatGPT" title="Connect ChatGPT"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 17l-2 2a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0m0-2 2-2a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-6 0m-3 1 8-8"/></svg><span>Connect ChatGPT</span></a><button id="addContent" class="primary creator-new-project" disabled><span aria-hidden="true">+</span> New project</button></div>
   </header>
   <div id="status" class="sync-status" role="status" aria-live="polite">Connecting to Firebase…</div>
 
@@ -109,6 +109,13 @@
       <div class="dialog-actions"><button id="deleteContent" type="button" class="danger">Delete</button><span id="contentShotSummary" role="status" aria-live="polite">No scenes</span><button type="button" class="secondary close">Cancel</button><button id="saveContent" class="primary">Create</button></div>
     </form>
   </dialog>
+  <dialog id="creatorToolsDialog" class="tool-dialog" aria-labelledby="creatorToolsTitle">
+    <header class="creator-tools-dialog-header">
+      <h2 id="creatorToolsTitle">Creator tools</h2>
+      <form method="dialog"><button class="icon" aria-label="Close creator tools">×</button></form>
+    </header>
+    <div id="creatorToolsContent"></div>
+  </dialog>
   <dialog id="toolDialog" class="tool-dialog">
     <form method="dialog">
       <div class="dialog-title"><div><span class="eyebrow">OPEN TOOL</span><h2 id="toolDialogTitle">Choose a project</h2></div><button value="cancel" class="icon" aria-label="Close">×</button></div>
@@ -117,6 +124,6 @@
       <div class="dialog-actions"><button value="cancel" class="secondary">Cancel</button><button id="toolNewProject" type="button" class="primary">New project</button></div>
     </form>
   </dialog>
-  <script type="module" src="creator.js?v=2026112301"></script>
+  <script type="module" src="creator.js?v=2026112401"></script>
 </body>
 </html>

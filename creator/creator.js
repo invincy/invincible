@@ -215,6 +215,27 @@ function openToolPicker(area,mode=""){
   $("toolProjectList").innerHTML=state.items.length?state.items.map(item=>'<a href="project.html?id='+encodeURIComponent(item.id)+'&area='+encodeURIComponent(area)+(mode?'&tool='+encodeURIComponent(mode):'')+'"><strong>'+esc(item.title||"Untitled project")+'</strong><span>'+esc(item.stage||"Ideas")+' · '+(item.scenes?.length||0)+' scenes</span></a>').join(""):'<p class="project-empty">No projects yet. Start one to open this tool.</p>';
   $("toolDialog").showModal();
 }
+const creatorToolsButton=$("openCreatorTools"),creatorToolsDialog=$("creatorToolsDialog");
+if(!motionStudioMode){
+ const narrow=matchMedia("(max-width: 900px)");
+ const toolbox=document.querySelector(".creator-toolbox"),grid=toolbox.querySelector(".tool-grid");
+ const connect=document.querySelector(".creator-connect"),actions=connect.parentElement;
+ function arrangeTools(){
+  if(narrow.matches){
+   $("creatorToolsContent").append(grid,connect);
+   toolbox.hidden=true;
+  }else{
+   creatorToolsDialog.close();
+   toolbox.append(grid);
+   actions.insertBefore(connect,$("addContent"));
+   toolbox.hidden=false;
+  }
+  creatorToolsButton.hidden=!narrow.matches;
+ }
+ creatorToolsButton.onclick=()=>creatorToolsDialog.showModal();
+ narrow.addEventListener("change",arrangeTools);
+ arrangeTools();
+}
 document.querySelector(".tool-grid").onclick=event=>{const button=event.target.closest("[data-project-tool]");if(button)openToolPicker(button.dataset.projectTool,button.dataset.toolMode||"");};
 $("toolNewProject").onclick=()=>{$("toolDialog").close();openDialog(null,{area:pendingProjectArea,mode:pendingToolMode});};
 

@@ -428,9 +428,25 @@ $("copyProjectLink").onclick=async()=>{
   catch(error){$("shareFeedback").textContent=error.message;}
 };
 
-document.querySelector(".project-workspace-nav").addEventListener("click",async event=>{
+const projectNav=document.querySelector(".project-workspace-nav");
+const projectExtras=$("projectExtras"),projectToolsDialog=$("projectToolsDialog"),projectToolsButton=$("openProjectTools");
+const compactProjectTools=matchMedia("(max-width: 900px)");
+projectNav.append(projectToolsDialog);
+function arrangeProjectTools(){
+  if(compactProjectTools.matches)$("projectToolsContent").append(projectExtras);
+  else{
+    projectToolsDialog.close();
+    projectToolsDialog.before(projectExtras);
+  }
+  projectToolsButton.hidden=!compactProjectTools.matches;
+}
+compactProjectTools.addEventListener("change",arrangeProjectTools);
+arrangeProjectTools();
+projectToolsButton.onclick=()=>projectToolsDialog.showModal();
+projectNav.addEventListener("click",async event=>{
   const button=event.target.closest("[data-project-area]");
   if(!button)return;
+  if(projectToolsDialog.open)projectToolsDialog.close();
   await selectProjectArea(button.dataset.projectArea,button.dataset.toolMode||"");
 });
 async function saveFromProjectBar(){
@@ -448,8 +464,8 @@ async function saveFromProjectBar(){
   return true;
  }catch(error){status(error.message||"Could not save the map scene.","error");return false;}
 }
-$("saveProjectNow").onclick=async()=>{const button=$("saveProjectNow");button.disabled=true;try{await saveFromProjectBar();}finally{button.disabled=false;}};
-$("saveAndReturn").onclick=async()=>{const button=$("saveAndReturn");button.disabled=true;button.textContent="Saving…";if(await saveFromProjectBar())location.href="/invincible/creator/";else{button.disabled=false;button.textContent="Save & return";}};
+$("saveProjectNow").onclick=async()=>{const button=$("saveProjectNow");button.disabled=true;try{await saveFromProjectBar();}finally{button.disabled=false;projectToolsDialog.close();}};
+$("saveAndReturn").onclick=async()=>{const button=$("saveAndReturn");button.disabled=true;button.textContent="Saving…";if(await saveFromProjectBar())location.href="/invincible/creator/";else{button.disabled=false;button.textContent="Save & return";projectToolsDialog.close();}};
 
 function applyIncomingProject(data){
   const incoming={...data,id:projectId};
