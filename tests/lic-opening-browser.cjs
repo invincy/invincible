@@ -57,12 +57,15 @@ fs.mkdirSync(out,{recursive:true});
    }
    await auto.waitForFunction(()=>Number.isFinite(window.testAudios[0].duration)&&window.testAudios[0].src.endsWith('page4.mp3'));
    await auto.evaluate(()=>{const a=window.testAudios[0];a.currentTime=a.duration-.03;});
+   await auto.waitForFunction(()=>document.querySelector('#storyChart').dataset.playback==='idle');
+   assert.equal(await auto.locator('#stageContainer').getAttribute('data-story-step'),'4','Wait for the customer to finish setup');
+   await auto.click('#sceneTwoNextBtn');
    await auto.waitForFunction(()=>document.querySelector('#stageContainer').dataset.storyStep==='5');
    assert.equal(await auto.locator('#stageContainer').getAttribute('data-story-step'),'5');
    await auto.waitForFunction(()=>document.querySelector('#journeyFinancialGraph svg'));
    assert.equal(await auto.locator('.journey-stage[aria-expanded="true"]').count(),1);
    assert.equal(await auto.evaluate(()=>window.testAudios.length),1,'Journey reuses the unlocked player');
-   await auto.close();console.log('Real audio automatically advances 1–5, with Manual hold and one player.');
+   await auto.close();console.log('Real audio advances 1–4, waits for setup confirmation, then plays the journey with one player.');
   }
   if(!process.env.LIC_LAYOUT_ONLY) for(const [width,height] of [[320,568],[360,640],[390,844],[320,480],[1440,900]]) {
    const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
@@ -152,9 +155,18 @@ fs.mkdirSync(out,{recursive:true});
    for(const [height,offsetTop,event] of [[760,24,'resize'],[640,12,'resize'],[480,0,'resize'],[760,32,'scroll']]) {
     await mobile.evaluate(({height,offsetTop,event})=>{Object.assign(window.viewportMock,{height,offsetTop});window.viewportMock.dispatchEvent(new Event(event));},{height,offsetTop,event});
     if(step>=4) await mobile.locator('#sceneTwoNextBtn').scrollIntoViewIfNeeded();
+    if(step===4) {
+     // Custom setup intentionally scrolls; every control must be reachable at
+     // the real visible height, rather than shrinking the form into one frame.
+     for(const selector of ['#sceneTwoDialogueBtn','#policyExampleAge','#policyExampleBsa','#policyExamplePpt','#policyExampleTerm','#policyExampleMode','#policyExampleChannel','#sceneTwoNextBtn']) {
+      await mobile.locator(selector).scrollIntoViewIfNeeded();
+      const bounds=await mobile.locator(selector).boundingBox();
+      assert.ok(bounds.y>=offsetTop-.5&&bounds.y+bounds.height<=offsetTop+height+.5&&bounds.height>=44,JSON.stringify({selector,height,offsetTop,bounds}));
+     }
+    }
     const visible=await mobile.evaluate(step=>{
      const v=window.viewportMock,frame=document.querySelector('#deviceFrame').getBoundingClientRect();
-     const controls=[step===1?'#ctaForwardBtn':'#sceneTwoNextBtn',step===1?'#advisorAudioBtn':step===5?'#journeyPlayPause':'#sceneTwoDialogueBtn'];
+     const controls=step===4?['#sceneTwoNextBtn']:[step===1?'#ctaForwardBtn':'#sceneTwoNextBtn',step===1?'#advisorAudioBtn':step===5?'#journeyPlayPause':'#sceneTwoDialogueBtn'];
      const bounds=controls.map(selector=>{const e=document.querySelector(selector),r=e.getBoundingClientRect();return {selector,top:r.top,bottom:r.bottom,height:r.height};});
      const container=step===1?document.querySelector('#stageContainer'):document.querySelector('#stagePreviewModal');
      return {frame:{top:frame.top,height:frame.height,bottom:frame.bottom},bounds,bottom:v.offsetTop+v.height,top:v.offsetTop,overflow:container.scrollHeight-container.clientHeight};

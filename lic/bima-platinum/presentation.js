@@ -35,20 +35,7 @@ const JOURNEY_STEPS = [
   { id:'booster', title:'70% Booster', visual:'booster', audio:'assets/audio/page6-step4.mp3', fallbackDuration:3600, script:'इसके अलावा plan में 70% का Booster Income Benefit भी मिलता है।' },
   { id:'maturity', title:'Maturity', visual:'maturity', audio:'assets/audio/page6-step5.mp3', fallbackDuration:3900, script:'और policy के अंत में Basic Sum Assured के साथ accrued Guaranteed Additions मिलते हैं।' }
 ];
-const BOOSTER_YEAR_BY_PPT = Object.freeze({7:12,10:15,12:17,15:20,18:23});
-
-// LIC sales brochure, Sample Illustrative Premium (printed pp.15–16).
-// BSA ₹3,00,000, policy term 30 years, offline, standard lives; taxes excluded.
-// Fixed examples only: never interpolate, scale or extrapolate premiums.
-const LIC_SAMPLE_PREMIUMS = Object.freeze({
-  15: Object.freeze({ 7:81810, 10:54735, 12:43020, 15:32145, 18:24990 }),
-  25: Object.freeze({ 7:83145, 10:55275, 12:43290, 15:32220, 18:25005 }),
-  35: Object.freeze({ 7:87495, 10:57015, 12:44160, 15:32445, 18:25005 }),
-  45: Object.freeze({ 7:100365, 10:62025, 12:46770, 15:33465, 18:25425 })
-});
-function getLicSamplePremium(age, ppt) {
-  return LIC_SAMPLE_PREMIUMS[age]?.[ppt] ?? null;
-}
+const BENEFITS = globalThis.BimaPlatinumBenefits;
 
 document.addEventListener('DOMContentLoaded', () => {
   const stageContainer = document.getElementById('stageContainer');
@@ -123,17 +110,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggle3DExploded = document.getElementById('toggle3DExploded');
   const toggleDeviceFrame = document.getElementById('toggleDeviceFrame');
   const layerCheckboxes = document.querySelectorAll('.layer-toggle-input');
-  let selectedSampleAge = 25;
-  let selectedSamplePpt = 15;
+  let selectedPolicy = BENEFITS.calculate({...BENEFITS.defaults});
   const exampleSelection = document.getElementById('policyExampleSelection');
-  document.getElementById('policyExampleAge').addEventListener('change', event => {
-    const age = Number(event.target.value);
-    if (LIC_SAMPLE_PREMIUMS[age]) selectedSampleAge = age;
-  });
-  document.getElementById('policyExamplePpt').addEventListener('change', event => {
-    const ppt = Number(event.target.value);
-    if (BOOSTER_YEAR_BY_PPT[ppt]) selectedSamplePpt = ppt;
-  });
   let currentPage = 1;
   let automaticStory = true;
   let audioEvents = null;
@@ -192,15 +170,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function renderJourneyStep() {
     const step = JOURNEY_STEPS[journeyStep];
-    const ppt = selectedSamplePpt;
-    const premium = getLicSamplePremium(selectedSampleAge, ppt);
-    const boosterYear = BOOSTER_YEAR_BY_PPT[ppt];
+    if (!selectedPolicy) return;
+    const {ppt,installment,period,ga,regular,booster,boosterYear,term,maturity} = selectedPolicy;
+    const money = BENEFITS.money;
     const descriptions = [
-      `Pay for ${ppt} years · ₹${premium?.toLocaleString('en-IN') ?? '—'}/year`,
-      `₹${Math.round(premium * .07 * ppt * (ppt + 1) / 2).toLocaleString('en-IN')} base additions · during PPT`,
-      `₹30,000/year · from end of policy year ${ppt}`,
-      `₹2,10,000 · end of year ${boosterYear}`,
-      `Year 30 · ₹${Math.round(300000 + premium * .07 * ppt * (ppt + 1) / 2).toLocaleString('en-IN')} with base additions`
+      `${ppt} years · ${money(installment)}/${period}`,
+      `${money(ga)} · PPT के दौरान जुड़ेंगे`,
+      `${money(regular)}/year · year ${ppt} के end से`,
+      `${money(booster)} · year ${boosterYear} के end पर`,
+      `Year ${term} · ${money(maturity)}`
     ];
     journeyNodes.forEach((node,index)=>{
       node.classList.toggle('is-active',index===journeyStep);
@@ -216,8 +194,8 @@ document.addEventListener('DOMContentLoaded', () => {
     journeyPage.dataset.advisor=journeyStep>=3?'celebrate':'explain';
     const root=document.getElementById('journeyFinancialGraph');
     if(step) window.renderBimaFinancialJourney?.(root,{
-      step:journeyStep,ppt,premium,age:selectedSampleAge,boosterYear,
-      baseSA:300000,term:30
+      step:journeyStep,ppt,premium:selectedPolicy.annualPremium,age:selectedPolicy.age,boosterYear,
+      baseSA:selectedPolicy.bsa,term,ga,installment,period
     });
     else if(root)root.textContent='Select a stage to explore the policy journey';
     updateJourneyControls();
@@ -397,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (page <= 3) chartComplete = true;
         audio.currentTime = 0;
         updateAudioUI('idle');
-        if (automaticStory && page <= 4) showPage(page + 1, false, audio);
+        if (automaticStory && page <= 3) showPage(page + 1, false, audio);
       });
       for (const event of ['timeupdate', 'seeked', 'loadedmetadata', 'durationchange']) listen(event, () => { if (isCurrent()) syncChart(); });
       listen('error', () => {
@@ -424,6 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function showPage(page, focus = true, continuation = null) {
     if (!STORY_SCENES[page]) return;
+    if (page === 5 && !selectedPolicy) return;
     const reusableAudio = continuation || audioElement;
     stopJourney();
     stopAllAudio();
@@ -436,6 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
     stageContainer.setAttribute('data-story-step', String(page));
     const isReveal = page === 4;
     exampleSelection.hidden = !isReveal;
+    document.getElementById('policyCalculatorLink').hidden = !isReveal || !selectedPolicy;
     const isJourney = page === 5;
     document.getElementById('productReveal').hidden = !isReveal;
     journeyPage.hidden = !isJourney;
@@ -485,7 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
         audioElement = reusableAudio;
         journeyAutoplay = true;
         startJourneyStep(0);
-      } else journeyNext.disabled = false;
+      } else journeyNext.disabled = isReveal && !selectedPolicy;
     }
     advisorAudioBtn.title = STORY_SCENES[1].script;
     sceneTwoDialogueBtn.title = STORY_SCENES[page].script;
@@ -503,7 +483,7 @@ document.addEventListener('DOMContentLoaded', () => {
   storyModeButtons.forEach(button => button.addEventListener('click', () => {
     automaticStory = !automaticStory;
     updateStoryMode();
-    if (automaticStory && currentPage <= 4 && narrationComplete) showPage(currentPage + 1, false, audioElement);
+    if (automaticStory && currentPage <= 3 && narrationComplete) showPage(currentPage + 1, false, audioElement);
   }));
   updateStoryMode();
   advisorAudioBtn.addEventListener('click', () => toggleAudioPlayback());
@@ -522,6 +502,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.hidden) { if (currentPage === 5) pauseJourney(); else stopAllAudio(); }
   });
   window.addEventListener('pagehide', () => { stopAllAudio(); stopJourney(); });
+  window.mountBimaProfile(exampleSelection, result => {
+    selectedPolicy = result;
+    if (currentPage === 4) journeyNext.disabled = !result;
+    const link = document.getElementById('policyCalculatorLink');
+    link.hidden = currentPage !== 4 || !result;
+    if (result) {
+      const params = new URLSearchParams();
+      for (const key of ['age','ppt','term','bsa','mode','channel','existing']) params.set(key,String(result[key]));
+      link.href = `calculator.html?${params}`;
+    }
+  });
   showPage(1, false);
 
   // Developer Tooling: Layer Inspector
@@ -590,7 +581,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Keyboard navigation & accessibility
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Tab' && stagePreviewModal.classList.contains('active')) {
-      const focusable = Array.from(stagePreviewModal.querySelectorAll('button, a[href], iframe')).filter(el => !el.hidden && !el.closest('[hidden]'));
+      const focusable = Array.from(stagePreviewModal.querySelectorAll('button, a[href], input, select, iframe')).filter(el => !el.disabled && !el.hidden && !el.closest('[hidden]'));
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
       if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
@@ -605,7 +596,7 @@ document.addEventListener('DOMContentLoaded', () => {
       toggleAudioPlayback();
     } else if (e.key === 'd' || e.key === 'D') {
       // Toggle developer mode
-      if (!['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+      if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
         document.body.classList.toggle('dev-mode');
         if (inspectorPanel) inspectorPanel.classList.toggle('active');
       }
