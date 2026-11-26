@@ -22,6 +22,7 @@
   <link rel="preload" as="image" href="assets/advisor-reassuring-19294.jpg">
   <link rel="stylesheet" href="presentation.css?v=37">
   <link rel="stylesheet" href="../../shared/app-theme.css?v=1">
+  <link rel="stylesheet" href="profile.css?v=1">
 </head>
 <body>
 
@@ -313,11 +314,8 @@
             <span id="journeyProgress" class="journey-progress" aria-live="polite">1 of 5</span>
             <button id="journeyReplay" type="button" class="journey-replay" aria-label="Replay story" hidden>↻ Replay</button>
           </div>
-          <fieldset id="policyExampleSelection" class="policy-example-selection" hidden>
-            <legend>Your example <small>₹3 lakh BSA · 30 years · Offline</small></legend>
-            <div><label for="policyExampleAge">Age</label><select id="policyExampleAge"><option>15</option><option selected>25</option><option>35</option><option>45</option></select>
-            <label for="policyExamplePpt">Pay for</label><select id="policyExamplePpt"><option value="7">7 years</option><option value="10">10 years</option><option value="12">12 years</option><option value="15" selected>15 years</option><option value="18">18 years</option></select></div>
-          </fieldset>
+          <fieldset id="policyExampleSelection" class="policy-example-selection" hidden></fieldset>
+          <a id="policyCalculatorLink" class="policy-calculator-link" href="calculator.html" hidden>View all amounts</a>
           <p id="revealCtaIntro" class="reveal-cta-intro" hidden>अब देखें Bima Platinum कैसे काम करता है</p>
           <button id="sceneTwoNextBtn" class="scene-two-next" type="button" aria-controls="stagePreviewModal"><span id="storyNextLabel">अब Stability कैसे मिलेगी?</span> <span aria-hidden="true">→</span></button>
           <p id="sceneThreeStatus" class="scene-three-status" role="status" hidden>आगे Bima Platinum को समझेंगे।</p>
@@ -349,7 +347,10 @@
 
 </div><!-- /.app-viewport-wrapper -->
 
-<script src="financial-journey.js?v=6"></script>
-<script src="presentation.js?v=33"></script>
+<script src="premium-rates.js?v=1"></script>
+<script src="benefits.js?v=1"></script>
+<script src="profile.js?v=1"></script>
+<script src="financial-journey.js?v=7"></script>
+<script src="presentation.js?v=34"></script>
 </body>
 </html>

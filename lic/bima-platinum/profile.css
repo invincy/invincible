@@ -1,0 +1,23 @@
+.policy-example-selection { margin:0; padding:12px; min-width:0; border:1px solid #d7b96977; border-radius:14px; color:#f2d48c; background:#061c32; font:500 14px/1.4 system-ui,sans-serif; }
+.policy-example-selection[hidden] { display:none; }
+.policy-example-selection legend { padding:0 5px; color:#f6d77f; font-size:16px; }
+.policy-example-selection .policy-profile-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.policy-profile-grid label { display:flex; flex-direction:column; gap:4px; min-width:0; color:#cad9e7; font-size:14px; }
+.policy-profile-grid select,.policy-profile-grid input { width:100%; min-width:0; min-height:44px; border:1px solid #476a88; border-radius:8px; padding:7px 8px; color:#fff0d2; background:#0c2944; font:500 16px system-ui,sans-serif; }
+.policy-profile-grid :is(input,select):focus-visible { outline:2px solid #ffe3a3; outline-offset:2px; }
+.policy-profile-grid input[aria-invalid="true"] { border-color:#ffabb1; }
+.policy-example-selection .policy-existing { display:flex; flex-direction:row; align-items:center; gap:8px; min-height:44px; margin-top:8px; font-size:14px; }
+.policy-existing input { width:20px; height:20px; accent-color:#e8c46f; flex:none; }
+.policy-example-selection .policy-profile-error { color:#ffb9bf; font-size:14px; }
+.policy-profile-error:empty { display:none; }
+.policy-example-selection .policy-premium-preview { margin-top:6px; font-size:18px; font-weight:600; color:#ffe39a; }
+.policy-example-selection .policy-profile-note { margin-top:5px; color:#b3c5d5; font:400 12px/1.5 system-ui,sans-serif; }
+/* Keep the existing product reveal above a scrollable, readable setup on phones. */
+#stageContainer[data-story-step="4"] .scene-two { overflow-y:auto; justify-content:flex-start; }
+#stageContainer[data-story-step="4"] .scene-two-visual { flex:0 0 365px; min-height:365px; }
+#stageContainer[data-story-step="4"] .scene-two-footer { flex-shrink:0; }
+#stageContainer[data-story-step="4"] .reveal-credentials { display:none; }
+#stageContainer[data-story-step="4"] .scene-two-next:disabled { opacity:.45; cursor:not-allowed; }
+.policy-calculator-link { align-self:center; min-height:44px; display:flex; align-items:center; color:#f2d48c; font:500 14px system-ui,sans-serif; }
+.policy-calculator-link[hidden] { display:none; }
+.benefit-journey-legend strong { white-space:normal; overflow-wrap:anywhere; }

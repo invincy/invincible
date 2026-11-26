@@ -31,6 +31,15 @@ function setup(play, {automatic=false, selection=false, clock=null}={}) {
   }
   const context={document:doc, Audio, AbortController, URLSearchParams, setTimeout:clock?.setTimeout || setTimeout, clearTimeout:clock?.clearTimeout || clearTimeout,
     window:{location:{search:'',hash:''},addEventListener(k,fn) { windowEvents[k]=fn; }}};
+  for(const name of ['premium-rates.js','benefits.js'])vm.runInNewContext(readFileSync(new URL('../lic/bima-platinum/'+name,import.meta.url),'utf8'),context);
+  context.window.mountBimaProfile=(host,onChange)=>{
+    const profile={...context.BimaPlatinumBenefits.defaults};
+    for(const [id,key] of [['Age','age'],['Ppt','ppt'],['Bsa','bsa'],['Term','term']])el('policyExample'+id).events.change=event=>{
+      profile[key]=Number(event.target.value);
+      try{onChange(context.BimaPlatinumBenefits.calculate(profile));}catch{onChange(null);}
+    };
+    onChange(context.BimaPlatinumBenefits.calculate(profile));
+  };
   vm.runInNewContext(source,context);
   doc.events.DOMContentLoaded();
   if(!automatic) el('storyModeToggleOne').events.click();
@@ -43,7 +52,7 @@ function setup(play, {automatic=false, selection=false, clock=null}={}) {
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 const focus=s=>s.el('storyChart').attrs['data-focus'];
 
-test('Auto continues through reveal to Page 5 using one audio element',async()=>{
+test('Auto reaches setup and waits for confirmation before Page 5 using one audio element',async()=>{
   const s=setup(undefined,{automatic:true});
   await flush();
   const audio=s.audios[0],oldEnded=audio.events.ended;
@@ -56,7 +65,9 @@ test('Auto continues through reveal to Page 5 using one audio element',async()=>
     assert.equal(s.el('stageContainer').attrs['data-story-step'],String(page+1),'Ignore a stale ended callback');
   }
   audio.ended=true;audio.events.ended();await flush();
-  assert.equal(s.el('stageContainer').attrs['data-story-step'],'5','Reveal continues to the example');
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'4','Setup waits for customer choices');
+  s.click('sceneTwoNextBtn');
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'5');
   assert.equal(s.el('planJourneyPage').hidden,false);
   assert.match(audio.src,/page6-step1.mp3$/);
   assert.equal(s.audios.length,1,'Journey reuses the unlocked player');
@@ -230,11 +241,6 @@ test('Page 4 offers the only selectors; Page 5 opens its chart and Back preserve
   s.click('previewDismissBtn');s.click('sceneTwoNextBtn');
   assert.match(s.el('journeyStageBody0').textContent,/7 years.*87,495/);
   s.windowEvents.pagehide();
-});
-test('all 20 fixed premiums remain exact and unsupported samples return null',()=>{
-  const s=setup();const fixtures={15:[81810,54735,43020,32145,24990],25:[83145,55275,43290,32220,25005],35:[87495,57015,44160,32445,25005],45:[100365,62025,46770,33465,25425]};
-  for(const [age,premiums] of Object.entries(fixtures)) [7,10,12,15,18].forEach((ppt,i)=>assert.equal(s.premium(age,ppt),premiums[i]));
-  assert.equal(s.premium(34,7),null);assert.equal(s.premium(25,8),null);s.windowEvents.pagehide();
 });
 test('narration advances one expanded accordion stage, completes and replays on Page 5',async()=>{
   const s=setup();enterJourney(s);await flush();const audio=s.audios.at(-1);

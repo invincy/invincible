@@ -53,8 +53,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: node --test tests/lic-presentation.mjs
-      - run: node tests/lic-opening-browser.cjs && node tests/lic-business-events-browser.cjs && node tests/lic-journey-browser.cjs
+      - run: node --test tests/lic-presentation.mjs tests/lic-bima-benefits.mjs
+      - run: node tests/lic-bima-custom-browser.cjs && node tests/lic-opening-browser.cjs && node tests/lic-business-events-browser.cjs && node tests/lic-journey-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
