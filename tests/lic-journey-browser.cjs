@@ -36,7 +36,7 @@ const server=http.createServer((req,res)=>{
    if([320,390,1440].includes(width))await page.screenshot({path:`${out}/${width}x${height}-page4-deadline.png`});
    await page.selectOption('#policyExampleAge','35');await page.selectOption('#policyExamplePpt','7');
    await page.click('#sceneTwoNextBtn');
-   assert.equal(await page.locator('#storyStageCounter').innerText(),'5 / 5');
+   assert.equal(await page.locator('#storyStageCounter').innerText(),'5 / 6');
    assert.equal(await page.locator('#policyExampleSelection').isVisible(),false);
    assert.equal(await page.locator('#planJourneyPage select, #planJourneyPage .journey-sample-options').count(),0);
    assert.equal(await page.locator('#journeyFinancialGraph svg').count(),1);
@@ -83,10 +83,10 @@ const server=http.createServer((req,res)=>{
    }
    await page.evaluate(()=>{const a=window.testAudios.at(-1);a.currentTime=a.duration-.05;});
    await page.waitForFunction(()=>document.querySelector('#planJourneyPage').dataset.complete==='true');
-   assert.equal(await page.locator('#storyNextLabel').innerText(),'Replay journey');
+   assert.equal(await page.locator('#storyNextLabel').innerText(),'अब Booster की choice देखें');
    assert.equal(await page.locator('.journey-reveal').evaluate(el=>el.getBBox().width),600,'Completion retains the entire revealed journey');
    assert.equal(await page.locator('.journey-money.is-current').evaluate(el=>getComputedStyle(el).opacity),'1','Completed maturity illustration remains visible');
-   await page.click('#sceneTwoNextBtn');await page.waitForFunction(()=>document.querySelector('#journeyFinancialGraph').dataset.stage==='0');
+   await page.click('#journeyPlayPause');await page.waitForFunction(()=>document.querySelector('#journeyFinancialGraph').dataset.stage==='0');
    assert.equal(await page.locator('.journey-path').count(),1,'Replay resets the extent');
    assert.ok(await page.locator('.journey-reveal').evaluate(el=>el.getBBox().width<=205),'Replay clears the completed extension');
    await page.click('[data-journey-step="3"]');
