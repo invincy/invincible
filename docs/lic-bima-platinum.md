@@ -1,6 +1,6 @@
 # Bima Platinum custom selections
 
-Updated November 26, 2026. The existing presentation at `lic/bima-platinum/`
+Updated November 27, 2026. The existing presentation at `lic/bima-platinum/`
 and calculator at `lic/bima-platinum/calculator.html` share `benefits.js`,
 `premium-rates.js` and `profile.js`. No Firebase/customer data is read or saved.
 
@@ -69,9 +69,29 @@ the graph still marks the premium period in policy years.
 The standalone calculator's old fixed-policy options, comparison and unrelated
 affordability illustrations are replaced with the same custom profile, live
 rupee amounts, expandable life-cover details and a year-by-year payout table.
-The separate optional booster-compounding section is not introduced by this
-selection/calculation change; future due-period rates must never be presented
-as locked today.
+Page 6 now explains optional booster deferral after completion of the five-stage
+journey. Its receive/grow cards use the carried selection, without new profile
+controls. The graph progresses from the due date to maturity; the illustrated
+amount is **only the deferred booster**, separate from regular income and base
+maturity. Back restores completed maturity; the journey can still replay.
+
+`boosterProjection` requires an explicit assumed rate and accumulates only from
+the booster due date, for completed months. The page uses 5.78% annual effective
+interest as a **dated reference assumption**: LIC policy Part D clause 10 gives
+that rate for benefits due May 1, 2026-April 30, 2027. The selected new policy's
+future booster rate is unknown. Visible copy says the output is an example and
+the future rate is not yet determined. Details explain the five-year semi-annual
+G-Sec yield minus one percentage point, the rate lock for each deferred benefit,
+written request three months before due date, no outstanding loan, withdrawal
+of the entire accumulated booster and possible loan effects.
+
+The new page uses browser-provided Hindi speech when available, with visible
+Device voice status. It does not pretend to have a new recorded MP3. Narration
+chunks drive due/growth/final phases; pause/resume and stale-event cancellation
+are implemented. With no device voice the timed animation still completes and
+pauses correctly. Hiding the tab pauses; Back/pagehide cancels callbacks and
+speech. Existing five recorded journey clips and the unlocked player remain.
+Actual platform voice quality and pronunciations have not been verified.
 
 ## Verification
 
@@ -80,14 +100,15 @@ Focused commands:
 ```
 node --test tests/lic-bima-benefits.mjs tests/lic-presentation.mjs
 node tests/lic-bima-custom-browser.cjs
+node tests/lic-booster-browser.cjs
 node tests/lic-opening-browser.cjs
 node tests/lic-business-events-browser.cjs
 node tests/lic-journey-browser.cjs
 ```
 
 The existing LIC CI job includes the new model and custom-profile checks.
-Screenshots are saved under `.test-output/lic-bima-custom` and
-`.test-output/lic-journey` and uploaded by CI. Custom checks cover invalid
+Screenshots are saved under `.test-output/lic-bima-custom`,
+`.test-output/lic-booster` and `.test-output/lic-journey` and uploaded by CI. Custom checks cover invalid
 inputs/no stale results, high-SA/channel/existing incentives, all displayed
 benefits, valid combinations, payment modes, both cross-links and Back.
 Responsive checks cover 320x480, 360x640, 390x844, 430x932, 844x390 and 1440x900;
@@ -97,3 +118,30 @@ external Google Fonts for deterministic fallback-font rendering.
 Production issuance, physical-device Safari/iOS, DOB underwriting and a real
 LIC issued quote are unverified. Local check results and publication are
 recorded in the accompanying PR and `docs/code-review.md`.
+
+
+## Full official illustration comparison, November 27
+
+The official brochure section 22 (printed/PDF pp.34-36) has one complete
+25-year standard-life illustration: age 35, BSA Rs.10 lakh, PPT 12, term 25,
+offline/yearly, no existing-policyholder incentive. The full table is preserved
+as independent numeric expectations in `tests/fixtures/lic-bima-illustration.json`.
+Every one of its 25 rows matches the model for cumulative annualized premiums,
+regular income, booster, cumulative GA and maturity. The illustrated death
+benefit also matches death SA plus that year's accrued GA throughout this
+specific example; this does not calculate arbitrary surrender-value floors.
+The illustration's non-guaranteed GSV/SSV columns are outside the calculator.
+
+| Amount | Official illustration | Shared model |
+| --- | ---: | ---: |
+| Yearly premium | 146,650 | 146,650 |
+| Sum Assured on Death at inception | 1,613,150 | 1,613,150 |
+| Total premiums | 1,759,800 | 1,759,800 |
+| Annual income, year 12 end through 24 | 100,000 | 100,000 |
+| Booster, year 17 end | 700,000 | 700,000 |
+| Guaranteed Additions after PPT | 915,096 | 915,096 |
+| Maturity, year 25 | 1,915,096 | 1,915,096 |
+
+These checks supplement the 20 independent annual-premium samples and the
+rate-book worked example already tested. They establish agreement for those
+illustrated inputs, not underwriting approval for every custom profile.

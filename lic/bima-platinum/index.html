@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="presentation.css?v=37">
   <link rel="stylesheet" href="../../shared/app-theme.css?v=1">
   <link rel="stylesheet" href="profile.css?v=1">
+  <link rel="stylesheet" href="booster.css?v=1">
 </head>
 <body>
 
@@ -133,8 +134,8 @@
              ========================================== -->
         <div id="layerNav" class="scene-layer layer-nav interactive">
           <a href="../" class="nav-btn" title="Back to LIC Plans" aria-label="Back">←</a>
-          <div class="story-nav-group"><div class="nav-stage-badge" title="Stage 1 of 5">
-            <span class="stage-counter-text">1 / 5</span>
+          <div class="story-nav-group"><div class="nav-stage-badge" title="Stage 1 of 6">
+            <span class="stage-counter-text">1 / 6</span>
             <div class="stage-progress-bar">
               <div class="stage-progress-fill"></div>
             </div>
@@ -205,8 +206,8 @@
         <nav class="scene-two-nav" aria-label="Scene 2 navigation">
           <button id="previewDismissBtn" type="button" class="nav-btn" aria-label="Back to Scene 1">←</button>
           <div id="incomeNavBrand" class="income-nav-brand" hidden><img class="income-nav-logo" src="assets/lic-logo.svg" alt="LIC" width="200" height="97"><strong>Bima Platinum</strong></div>
-          <div class="story-nav-group"><div id="storyStageBadge" class="nav-stage-badge" aria-label="Scene 2 of 5">
-            <span id="storyStageCounter" class="stage-counter-text">2 / 5</span>
+          <div class="story-nav-group"><div id="storyStageBadge" class="nav-stage-badge" aria-label="Scene 2 of 6">
+            <span id="storyStageCounter" class="stage-counter-text">2 / 6</span>
             <div class="stage-progress-bar"><div id="storyProgress" class="stage-progress-fill" style="width:20%"></div></div>
           </div>
           <button id="storyModeToggle" class="story-mode-toggle" type="button" aria-pressed="true" aria-label="Automatic scene progression enabled">Auto</button></div>
@@ -254,6 +255,7 @@
 
             </div>
           </section>
+          <section id="boosterPage" aria-label="Booster income choice and illustrative accumulation" hidden></section>
           <figure id="storyChart" class="balance-chart scenario-chart" data-step="1" aria-labelledby="balanceChartTitle" aria-describedby="balanceChartCaption">
             <figcaption id="balanceChartTitle" class="scenario-chart-heading">Profit potential. Natural fluctuations.</figcaption>
             <svg class="balance-plot" viewBox="0 0 350 285" role="img" aria-labelledby="balancePlotTitle balancePlotDesc">
@@ -314,6 +316,7 @@
             <span id="journeyProgress" class="journey-progress" aria-live="polite">1 of 5</span>
             <button id="journeyReplay" type="button" class="journey-replay" aria-label="Replay story" hidden>↻ Replay</button>
           </div>
+          <div id="boosterControls" hidden><button id="boosterPlayPause" type="button" aria-pressed="false">Pause explanation</button><p id="boosterVoiceStatus" role="status"></p></div>
           <fieldset id="policyExampleSelection" class="policy-example-selection" hidden></fieldset>
           <a id="policyCalculatorLink" class="policy-calculator-link" href="calculator.html" hidden>View all amounts</a>
           <p id="revealCtaIntro" class="reveal-cta-intro" hidden>अब देखें Bima Platinum कैसे काम करता है</p>
@@ -348,9 +351,10 @@
 </div><!-- /.app-viewport-wrapper -->
 
 <script src="premium-rates.js?v=1"></script>
-<script src="benefits.js?v=1"></script>
+<script src="benefits.js?v=2"></script>
 <script src="profile.js?v=1"></script>
 <script src="financial-journey.js?v=7"></script>
-<script src="presentation.js?v=34"></script>
+<script src="booster.js?v=1"></script>
+<script src="presentation.js?v=35"></script>
 </body>
 </html>

@@ -7,6 +7,31 @@ for(const file of ['premium-rates.js','benefits.js'])vm.runInNewContext(readFile
 const model=context.BimaPlatinumBenefits;
 const calculate=changes=>model.calculate({...model.defaults,...changes});
 
+test('complete official benefit illustration agrees for all 25 policy years',()=>{
+  const fixture=JSON.parse(readFileSync(new URL('./fixtures/lic-bima-illustration.json',import.meta.url),'utf8'));
+  const r=model.calculate(fixture.profile);
+  assert.equal(r.annualPremium,fixture.annualPremium);assert.equal(r.deathSA,fixture.deathSA);
+  for(const [i,row] of model.schedule(r).entries()) {
+    const expected=fixture.rows[i];
+    for(const key of ['year','cumulativeAnnualizedPremium','regular','booster','ga','maturity'])assert.equal(Math.round(row[key]*100),Math.round(expected[key]*100),`year ${i+1}: ${key}`);
+    // In this specific illustration the surrender-value floor never exceeds
+    // death SA + GA. This comparison does not implement arbitrary surrender claims.
+    assert.equal(r.deathSA+row.ga,expected.death,`year ${i+1}: illustrated death benefit`);
+  }
+  assert.equal(r.totalPremium,1759800);assert.equal(r.maturity,1915096);
+});
+test('booster compounds only from its due date and uses completed months and an explicit assumed rate',()=>{
+  const r=calculate();const p=model.boosterProjection(r,.0578);
+  assert.equal(p.principal,210000);assert.equal(p.completedMonths,120);
+  assert.equal(Math.round(p.value),368345);assert.equal(p.points[0].value,210000);
+  assert.equal(model.boosterProjection(r,0).value,210000);
+  assert.equal(model.boosterProjection(r,.0578,0).value,210000);
+  assert.equal(model.boosterProjection(r,.0578,13.9).value,210000*Math.pow(1.0578,13/12));
+  for(const args of [[undefined],[-.01],[Infinity],[.0578,-1],[.0578,121]])assert.throws(()=>model.boosterProjection(r,...args));
+  assert.equal(model.boosterProjection(calculate({bsa:500000,ppt:12,term:25}),.0578).completedMonths,96);
+  assert.equal(model.schedule(r)[r.boosterYear-1].booster,210000,'Projection does not rewrite contractual payouts');
+});
+
 test('all 3,603 extracted rates cover exactly the eligible age/PPT/term combinations',()=>{
   let count=0;
   for(let age=0;age<=55;age++)for(const ppt of [7,10,12,15,18])for(let term=17;term<=40;term++) {

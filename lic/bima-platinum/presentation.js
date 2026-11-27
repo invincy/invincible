@@ -22,7 +22,8 @@ const STORY_SCENES = {
     script: 'यहीं Bima Platinum आपकी financial journey में stability जोड़ता है। यह आपके portfolio के एक हिस्से को guaranteed और predictable structure देने के लिए बनाया गया है।',
     cues: []
   },
-  5: { src: null, script: '', cues: [] }
+  5: { src: null, script: '', cues: [] },
+  6: { src: null, script: '', cues: [] }
 };
 
 // Original supplied portraits: concern for volatility, reassurance for stability.
@@ -140,6 +141,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let journeyRemaining = 0;
   let journeyMode = 'fallback';
   let journeyGeneration = 0;
+  const boosterPage = document.getElementById('boosterPage');
+  const boosterControls = document.getElementById('boosterControls');
+  const boosterStory = window.createBimaBoosterStory(boosterPage,document.getElementById('boosterPlayPause'),document.getElementById('boosterVoiceStatus'));
 
   function clearJourneyRun() {
     journeyGeneration++;
@@ -160,12 +164,13 @@ document.addEventListener('DOMContentLoaded', () => {
     journeyPage.dataset.paused = String(!journeyAutoplay || journeyComplete);
     journeyPage.dataset.complete = String(journeyComplete);
     journeyToggle.innerHTML = journeyAutoplay ? '<span class="advisor-audio-icon" aria-hidden="true">⏸</span><span>Pause Story</span>' : '<span class="advisor-audio-icon" aria-hidden="true">▶</span><span>Auto Play Story</span>';
-    journeyToggle.setAttribute('aria-label', journeyAutoplay ? 'Pause story' : 'Resume story');
+    if (journeyComplete) journeyToggle.innerHTML = '<span class="advisor-audio-icon" aria-hidden="true">↻</span><span>Replay journey</span>';
+    journeyToggle.setAttribute('aria-label', journeyComplete ? 'Replay journey' : journeyAutoplay ? 'Pause story' : 'Resume story');
     journeyToggle.setAttribute('aria-pressed', String(journeyAutoplay));
-    journeyToggle.title = journeyAutoplay ? 'Pause story' : 'Resume story';
+    journeyToggle.title = journeyComplete ? 'Replay journey' : journeyAutoplay ? 'Pause story' : 'Resume story';
     journeyReplay.hidden = true;
     document.getElementById('journeyProgress').textContent = journeyStep < 0 ? '0 of 5' : `${journeyStep + 1} of 5`;
-    if (currentPage === 5) document.getElementById('storyNextLabel').textContent = journeyComplete ? 'Replay journey' : 'Tap to reveal next benefit';
+    if (currentPage === 5) document.getElementById('storyNextLabel').textContent = journeyComplete ? 'अब Booster की choice देखें' : 'Tap to reveal next benefit';
     journeyNext.disabled = false;
   }
   function renderJourneyStep() {
@@ -402,8 +407,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function showPage(page, focus = true, continuation = null) {
     if (!STORY_SCENES[page]) return;
-    if (page === 5 && !selectedPolicy) return;
+    if (page >= 5 && !selectedPolicy) return;
+    const returningFromBooster = currentPage === 6 && page === 5;
     const reusableAudio = continuation || audioElement;
+    boosterStory.stop();
     stopJourney();
     stopAllAudio();
     currentPage = page;
@@ -417,11 +424,14 @@ document.addEventListener('DOMContentLoaded', () => {
     exampleSelection.hidden = !isReveal;
     document.getElementById('policyCalculatorLink').hidden = !isReveal || !selectedPolicy;
     const isJourney = page === 5;
+    const isBooster = page === 6;
     document.getElementById('productReveal').hidden = !isReveal;
     journeyPage.hidden = !isJourney;
+    boosterPage.hidden = !isBooster;
+    boosterControls.hidden = !isBooster;
     journeyControls.hidden = !isJourney;
-    sceneTwoDialogueBtn.hidden = isJourney;
-    document.getElementById('incomeNavBrand').hidden = !isJourney;
+    sceneTwoDialogueBtn.hidden = isJourney || isBooster;
+    document.getElementById('incomeNavBrand').hidden = !isJourney && !isBooster;
     document.getElementById('presenterChartHost').hidden = page >= 4;
     storyChart.hidden = page >= 4;
     document.getElementById('revealCtaIntro').hidden = !isReveal;
@@ -448,29 +458,30 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       stagePreviewModal.classList.add('active');
       stageContainer.classList.add('scene-two-open');
-      document.getElementById('storyStageBadge').setAttribute('aria-label', `Scene ${page} of 5`);
-      document.getElementById('storyStageCounter').textContent = `${page} / 5`;
+      document.getElementById('storyStageBadge').setAttribute('aria-label', `Scene ${page} of 6`);
+      document.getElementById('storyStageCounter').textContent = `${page} / 6`;
       document.querySelector('.scene-two-nav').setAttribute('aria-label', `Scene ${page} navigation`);
-      document.getElementById('storyProgress').style.width = `${page * 20}%`;
-      document.getElementById('storyEyebrow').textContent = page === 2 ? 'GROWTH + VOLATILITY' : page === 3 ? 'GROWTH + STABILITY' : page === 4 ? 'THE STABILITY LAYER' : 'THE FIVE-STEP JOURNEY';
+      document.getElementById('storyProgress').style.width = `${page / 6 * 100}%`;
+      document.getElementById('storyEyebrow').textContent = page === 2 ? 'GROWTH + VOLATILITY' : page === 3 ? 'GROWTH + STABILITY' : page === 4 ? 'THE STABILITY LAYER' : page === 6 ? 'BOOSTER INCOME' : 'THE FIVE-STEP JOURNEY';
       const title = document.getElementById('stagePreviewTitle');
-      title.textContent = page === 2 ? 'When everything fluctuates…' : page === 3 ? 'Add Stability' : page === 4 ? 'अब Growth के साथ Stability' : page === 5 ? 'How Bima Platinum Works' : 'How Bima Platinum Works';
+      title.textContent = page === 2 ? 'When everything fluctuates…' : page === 3 ? 'Add Stability' : page === 4 ? 'अब Growth के साथ Stability' : page === 5 ? 'How Bima Platinum Works' : 'Your booster. Your choice.';
       previewDismissBtn.setAttribute('aria-label', `Back to Scene ${page - 1}`);
       journeyNext.hidden = false;
-      document.getElementById('storyNextLabel').textContent = page === 2 ? 'अब Stability कैसे मिलेगी?' : page === 3 ? 'Stability का अगला कदम' : page === 4 ? 'Plan समझें' : 'अब protection भी देखें';
+      document.getElementById('storyNextLabel').textContent = page === 2 ? 'अब Stability कैसे मिलेगी?' : page === 3 ? 'Stability का अगला कदम' : page === 4 ? 'Plan समझें' : page === 6 ? 'Replay explanation' : 'अब Booster की choice देखें';
       sceneThreeStatus.hidden = true;
       stagePreviewModal.scrollTop = 0;
       if (focus) previewDismissBtn.focus();
       if (isJourney) {
         audioElement = reusableAudio;
-        journeyAutoplay = true;
-        startJourneyStep(0);
+        if (returningFromBooster) {journeyStep=4;journeyComplete=true;journeyAutoplay=false;renderJourneyStep();}
+        else {journeyAutoplay = true;startJourneyStep(0);}
       } else journeyNext.disabled = isReveal && !selectedPolicy;
+      if (isBooster) {audioElement=reusableAudio;boosterStory.start(selectedPolicy);}
     }
     advisorAudioBtn.title = STORY_SCENES[1].script;
     sceneTwoDialogueBtn.title = STORY_SCENES[page].script;
     updateAudioUI('idle');
-    if (!isJourney) toggleAudioPlayback(continuation);
+    if (!isJourney && !isBooster) toggleAudioPlayback(continuation);
   }
 
   function updateStoryMode() {
@@ -496,12 +507,13 @@ document.addEventListener('DOMContentLoaded', () => {
   journeyNext.addEventListener('click', () => {
     if (currentPage >= 2 && currentPage < 5) showPage(currentPage + 1);
     else if (currentPage === 5 && !journeyComplete) advanceJourney();
-    else if (currentPage === 5) { journeyAutoplay = true; startJourneyStep(0); }
+    else if (currentPage === 5) showPage(6);
+    else if (currentPage === 6) boosterStory.replay();
   });
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { if (currentPage === 5) pauseJourney(); else stopAllAudio(); }
+    if (document.hidden) { if (currentPage === 6) boosterStory.pause(); else if (currentPage === 5) pauseJourney(); else stopAllAudio(); }
   });
-  window.addEventListener('pagehide', () => { stopAllAudio(); stopJourney(); });
+  window.addEventListener('pagehide', () => { stopAllAudio(); stopJourney(); boosterStory.stop(); });
   window.mountBimaProfile(exampleSelection, result => {
     selectedPolicy = result;
     if (currentPage === 4) journeyNext.disabled = !result;

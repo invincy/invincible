@@ -1,0 +1,242 @@
+{
+  "source": "LIC Bima Platinum sales brochure, section 22, printed/PDF pages 34-36",
+  "sourceUrl": "https://licindia.in/documents/20121/1860176/LIC%2BBima%2Bplatinum%2BSales%2Bbrochure.pdf/ae9590c9-2c2d-6dca-c180-5bbb3f956dab?t=1788330413553",
+  "profile": {
+    "age": 35,
+    "bsa": 1000000,
+    "ppt": 12,
+    "term": 25,
+    "mode": "yearly",
+    "channel": "agent",
+    "existing": false
+  },
+  "annualPremium": 146650,
+  "deathSA": 1613150,
+  "rows": [
+    {
+      "year": 1.0,
+      "cumulativeAnnualizedPremium": 146650.0,
+      "regular": 0.0,
+      "booster": 0.0,
+      "ga": 11732.0,
+      "maturity": 0.0,
+      "death": 1624882.0
+    },
+    {
+      "year": 2.0,
+      "cumulativeAnnualizedPremium": 293300.0,
+      "regular": 0.0,
+      "booster": 0.0,
+      "ga": 35196.0,
+      "maturity": 0.0,
+      "death": 1648346.0
+    },
+    {
+      "year": 3.0,
+      "cumulativeAnnualizedPremium": 439950.0,
+      "regular": 0.0,
+      "booster": 0.0,
+      "ga": 70392.0,
+      "maturity": 0.0,
+      "death": 1683542.0
+    },
+    {
+      "year": 4.0,
+      "cumulativeAnnualizedPremium": 586600.0,
+      "regular": 0.0,
+      "booster": 0.0,
+      "ga": 117320.0,
+      "maturity": 0.0,
+      "death": 1730470.0
+    },
+    {
+      "year": 5.0,
+      "cumulativeAnnualizedPremium": 733250.0,
+      "regular": 0.0,
+      "booster": 0.0,
+      "ga": 175980.0,
+      "maturity": 0.0,
+      "death": 1789130.0
+    },
+    {
+      "year": 6.0,
+      "cumulativeAnnualizedPremium": 879900.0,
+      "regular": 0.0,
+      "booster": 0.0,
+      "ga": 246372.0,
+      "maturity": 0.0,
+      "death": 1859522.0
+    },
+    {
+      "year": 7.0,
+      "cumulativeAnnualizedPremium": 1026550.0,
+      "regular": 0.0,
+      "booster": 0.0,
+      "ga": 328496.0,
+      "maturity": 0.0,
+      "death": 1941646.0
+    },
+    {
+      "year": 8.0,
+      "cumulativeAnnualizedPremium": 1173200.0,
+      "regular": 0.0,
+      "booster": 0.0,
+      "ga": 422352.0,
+      "maturity": 0.0,
+      "death": 2035502.0
+    },
+    {
+      "year": 9.0,
+      "cumulativeAnnualizedPremium": 1319850.0,
+      "regular": 0.0,
+      "booster": 0.0,
+      "ga": 527940.0,
+      "maturity": 0.0,
+      "death": 2141090.0
+    },
+    {
+      "year": 10.0,
+      "cumulativeAnnualizedPremium": 1466500.0,
+      "regular": 0.0,
+      "booster": 0.0,
+      "ga": 645260.0,
+      "maturity": 0.0,
+      "death": 2258410.0
+    },
+    {
+      "year": 11.0,
+      "cumulativeAnnualizedPremium": 1613150.0,
+      "regular": 0.0,
+      "booster": 0.0,
+      "ga": 774312.0,
+      "maturity": 0.0,
+      "death": 2387462.0
+    },
+    {
+      "year": 12.0,
+      "cumulativeAnnualizedPremium": 1759800.0,
+      "regular": 100000.0,
+      "booster": 0.0,
+      "ga": 915096.0,
+      "maturity": 0.0,
+      "death": 2528246.0
+    },
+    {
+      "year": 13.0,
+      "cumulativeAnnualizedPremium": 1759800.0,
+      "regular": 100000.0,
+      "booster": 0.0,
+      "ga": 915096.0,
+      "maturity": 0.0,
+      "death": 2528246.0
+    },
+    {
+      "year": 14.0,
+      "cumulativeAnnualizedPremium": 1759800.0,
+      "regular": 100000.0,
+      "booster": 0.0,
+      "ga": 915096.0,
+      "maturity": 0.0,
+      "death": 2528246.0
+    },
+    {
+      "year": 15.0,
+      "cumulativeAnnualizedPremium": 1759800.0,
+      "regular": 100000.0,
+      "booster": 0.0,
+      "ga": 915096.0,
+      "maturity": 0.0,
+      "death": 2528246.0
+    },
+    {
+      "year": 16.0,
+      "cumulativeAnnualizedPremium": 1759800.0,
+      "regular": 100000.0,
+      "booster": 0.0,
+      "ga": 915096.0,
+      "maturity": 0.0,
+      "death": 2528246.0
+    },
+    {
+      "year": 17.0,
+      "cumulativeAnnualizedPremium": 1759800.0,
+      "regular": 100000.0,
+      "booster": 700000.0,
+      "ga": 915096.0,
+      "maturity": 0.0,
+      "death": 2528246.0
+    },
+    {
+      "year": 18.0,
+      "cumulativeAnnualizedPremium": 1759800.0,
+      "regular": 100000.0,
+      "booster": 0.0,
+      "ga": 915096.0,
+      "maturity": 0.0,
+      "death": 2528246.0
+    },
+    {
+      "year": 19.0,
+      "cumulativeAnnualizedPremium": 1759800.0,
+      "regular": 100000.0,
+      "booster": 0.0,
+      "ga": 915096.0,
+      "maturity": 0.0,
+      "death": 2528246.0
+    },
+    {
+      "year": 20.0,
+      "cumulativeAnnualizedPremium": 1759800.0,
+      "regular": 100000.0,
+      "booster": 0.0,
+      "ga": 915096.0,
+      "maturity": 0.0,
+      "death": 2528246.0
+    },
+    {
+      "year": 21.0,
+      "cumulativeAnnualizedPremium": 1759800.0,
+      "regular": 100000.0,
+      "booster": 0.0,
+      "ga": 915096.0,
+      "maturity": 0.0,
+      "death": 2528246.0
+    },
+    {
+      "year": 22.0,
+      "cumulativeAnnualizedPremium": 1759800.0,
+      "regular": 100000.0,
+      "booster": 0.0,
+      "ga": 915096.0,
+      "maturity": 0.0,
+      "death": 2528246.0
+    },
+    {
+      "year": 23.0,
+      "cumulativeAnnualizedPremium": 1759800.0,
+      "regular": 100000.0,
+      "booster": 0.0,
+      "ga": 915096.0,
+      "maturity": 0.0,
+      "death": 2528246.0
+    },
+    {
+      "year": 24.0,
+      "cumulativeAnnualizedPremium": 1759800.0,
+      "regular": 100000.0,
+      "booster": 0.0,
+      "ga": 915096.0,
+      "maturity": 0.0,
+      "death": 2528246.0
+    },
+    {
+      "year": 25.0,
+      "cumulativeAnnualizedPremium": 1759800.0,
+      "regular": 0.0,
+      "booster": 0.0,
+      "ga": 915096.0,
+      "maturity": 1915096.0,
+      "death": 2528246.0
+    }
+  ]
+}

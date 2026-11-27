@@ -45,11 +45,25 @@
   function schedule(result) {
     return Array.from({length:result.term},(_,i)=>{
       const year=i+1;
+      const paidYears=Math.min(year,result.ppt);
       return {year,premium:year<=result.ppt?result.annualOutgo:0,
+        cumulativeAnnualizedPremium:result.annualPremium*paidYears,
+        ga:result.annualPremium*result.gaRate/1000*paidYears*(paidYears+1)/2,
         regular:year>=result.ppt&&year<result.term?result.regular:0,
         booster:year===result.boosterYear?result.booster:0,
         maturity:year===result.term?result.maturity:0};
     });
   }
-  root.BimaPlatinumBenefits = {defaults,rules,modes,money,validPpts,validTerms,calculate,schedule};
+  const accumulationReference=Object.freeze({annualRate:.0578,dueFrom:'2026-05-01',dueThrough:'2027-04-30'});
+  // An explicit rate assumption: never silently lock today's rate for a future booster.
+  function boosterProjection(result,annualRate,months=(result.term-result.boosterYear)*12) {
+    const maximum=(result.term-result.boosterYear)*12;
+    if(!Number.isFinite(annualRate)||annualRate<0||annualRate>1||!Number.isFinite(months)||months<0||months>maximum)throw new Error('Invalid booster illustration');
+    const completedMonths=Math.floor(months);
+    const valueAt=month=>result.booster*Math.pow(1+annualRate,month/12);
+    const points=Array.from({length:Math.floor(completedMonths/12)+1},(_,i)=>({month:i*12,value:valueAt(i*12)}));
+    if(completedMonths%12)points.push({month:completedMonths,value:valueAt(completedMonths)});
+    return {principal:result.booster,annualRate,completedMonths,value:valueAt(completedMonths),points};
+  }
+  root.BimaPlatinumBenefits = {defaults,rules,modes,money,validPpts,validTerms,calculate,schedule,accumulationReference,boosterProjection};
 })(globalThis);

@@ -40,6 +40,8 @@ function setup(play, {automatic=false, selection=false, clock=null}={}) {
     };
     onChange(context.BimaPlatinumBenefits.calculate(profile));
   };
+  vm.runInNewContext(readFileSync(new URL('../lic/bima-platinum/booster.js',import.meta.url),'utf8'),context);
+  context.window.createBimaBoosterStory=context.createBimaBoosterStory;
   vm.runInNewContext(source,context);
   doc.events.DOMContentLoaded();
   if(!automatic) el('storyModeToggleOne').events.click();
@@ -98,7 +100,7 @@ test('one original chart moves through pages 1 → 2 → 3 and back without clon
   assert.equal(s.el('stagePreviewModal').inert,false);
   s.click('sceneTwoNextBtn');
   assert.equal(chart.attrs['data-step'],'3');
-  assert.equal(s.el('storyStageCounter').textContent,'3 / 5');
+  assert.equal(s.el('storyStageCounter').textContent,'3 / 6');
   assert.equal(s.el('sceneTwoNextBtn').hidden,false);
   assert.equal(s.el('presenterChartHost').children.length,1);
   s.click('previewDismissBtn');
@@ -250,8 +252,8 @@ test('narration advances one expanded accordion stage, completes and replays on 
     audio.events.ended();await flush();
   }
   assert.equal(s.el('planJourneyPage').dataset.complete,'true');
-  assert.equal(s.el('storyNextLabel').textContent,'Replay journey');
-  s.click('sceneTwoNextBtn');assert.equal(s.el('journey0').attrs['aria-expanded'],'true');s.windowEvents.pagehide();
+  assert.equal(s.el('storyNextLabel').textContent,'अब Booster की choice देखें');
+  s.click('journeyPlayPause');assert.equal(s.el('journey0').attrs['aria-expanded'],'true');s.windowEvents.pagehide();
 });
 test('pause, resume, manual stage selection and Back cancel stale journey audio',async()=>{
   const s=setup();enterJourney(s);await flush();const audio=s.audios.at(-1),oldEnded=audio.events.ended;
@@ -260,6 +262,19 @@ test('pause, resume, manual stage selection and Back cancel stale journey audio'
   s.click('journey3');await flush();oldEnded();assert.equal(s.el('journey3').attrs['aria-expanded'],'true');
   const ended=audio.events.ended;s.click('previewDismissBtn');ended();
   assert.equal(s.el('stageContainer').attrs['data-story-step'],'4');assert.equal(audio.paused,true);s.windowEvents.pagehide();
+});
+
+test('completed journey opens booster with selected values; Back restores maturity and the same recording player',async()=>{
+  const s=setup();enterJourney(s);await flush();
+  const player=s.audios.at(-1),count=s.audios.length;
+  s.click('journey4');s.click('sceneTwoNextBtn');s.click('sceneTwoNextBtn');
+  assert.equal(s.el('stageContainer').attrs['data-story-step'],'6');
+  assert.equal(s.el('boosterPage').hidden,false);assert.match(s.el('boosterPage').innerHTML,/₹2,10,000/);
+  assert.match(s.el('boosterPage').innerHTML,/₹3,68,345/);assert.equal(player.paused,true);
+  s.click('previewDismissBtn');assert.equal(s.el('planJourneyPage').dataset.complete,'true');
+  assert.equal(s.el('journey4').attrs['aria-expanded'],'true');
+  s.click('journeyPlayPause');await flush();assert.equal(s.audios.length,count);assert.equal(s.audios.at(-1),player);
+  s.windowEvents.pagehide();
 });
 test('stages cumulatively reveal their path, benefits and accessible description',()=>{
   const ctx={window:{}};vm.runInNewContext(readFileSync(new URL('../lic/bima-platinum/financial-journey.js',import.meta.url),'utf8'),ctx);
