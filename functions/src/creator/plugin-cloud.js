@@ -71,7 +71,7 @@ async function exchangeCode(data,response){
  }catch(error){return json(response,400,{error:'invalid_grant',error_description:error.message});}
 }
 async function refreshAccess(data,response){
- const raw=oauth.clean(data.refresh_token,1000),clientId=oauth.clean(data.client_id,200),resource=oauth.clean(data.resource,1000),ref=oauthCollection('Tokens').doc(oauth.digest(raw));
+ const raw=oauth.clean(data.refresh_token,1000),clientId=oauth.clean(data.client_id,200),resource=data.resource===undefined?MCP_RESOURCE:oauth.clean(data.resource,1000),ref=oauthCollection('Tokens').doc(oauth.digest(raw));
  try{
   const issued=await db().runTransaction(async transaction=>{
    const snap=await transaction.get(ref);if(!snap.exists)throw Error('Refresh token is invalid.');
