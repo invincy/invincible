@@ -365,6 +365,8 @@ exports.creatorPluginMcp=onRequest({region:REGION,timeoutSeconds:120,memory:'512
  if(path!=='/mcp')return json(response,404,{error:'not_found'});
  if(request.method!=='POST')return response.status(405).set('Allow','POST').end();
  const identity=await authenticate(request);
+ // Signal OAuth discovery/refresh at the HTTP transport boundary before MCP dispatch.
+ if(!identity)return challengeResponse(response);
  const server=createServer(identity),transport=new StreamableHTTPServerTransport({sessionIdGenerator:undefined});
  try{await server.connect(transport);await transport.handleRequest(request,response,request.body);}
  catch(error){if(!response.headersSent)json(response,500,{jsonrpc:'2.0',error:{code:-32603,message:'Invincible plugin request failed.'},id:null});}

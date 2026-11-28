@@ -118,3 +118,29 @@ The skill feature-detects optional tools, uses native creation for new films whe
 the live server lacks a creation tool, and retains the selected timing provider.
 Verification covers package JSON/YAML, live tool names, retained connection
 configuration and source diff checks. No server authentication logic changed.
+
+## HTTP OAuth discovery repair — November 25, 2026
+
+The MCP HTTP handler now rejects missing, invalid or expired access tokens with
+HTTP 401 and a WWW-Authenticate header pointing to the existing protected-resource
+metadata URL. Previously the handler created an anonymous MCP server and relied
+only on a tool-result challenge. HTTP clients may therefore miss the trigger for
+authorization or token refresh. The issuer, resource URL, PKCE registration,
+token storage, scopes and ownership checks are unchanged.
+
+Resource metadata and health remain public. Authenticated requests continue
+through the existing server and transport. The existing tool-level linking
+challenge is retained as a defensive fallback.
+
+Verification: eight dependency-free regression tests passed locally against the
+production HTTP handler. They cover missing/invalid/expired identities, public
+discovery and health, unsupported routes/methods, authenticated dispatch and safe
+cleanup on dispatch failure. The repository's existing PR verification workflow
+runs broader unit, Functions, build and browser checks. Local execution became
+unavailable after the focused run; production deployment was not performed.
+
+Deploy only creatorPluginMcp in the existing life-by-adichimp Firebase project.
+After deployment, confirm an unauthenticated request returns HTTP 401 with the
+metadata header, then link the existing host connection and verify get_my_profile
+and list_creator_projects. An HTTP challenge alone does not establish a working
+authenticated connection or cross-session refresh.
